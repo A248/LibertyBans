@@ -1,0 +1,20 @@
+#
+#
+# ${name} Configuration
+# v${version}
+#
+
+
+# Types of Punishments
+#
+#ban
+#mute
+#warn
+#kick
+
+# Types of Commands
+#
+# 
+
+#DO NOT TOUCH
+version: '${version}'

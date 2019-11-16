@@ -1,0 +1,10 @@
+name: ${name}
+main: ${groupId}.${artifactId}.ArimBansBukkit
+version: ${version}
+author: Aerodactyl_
+description: Fully re-coded java-based version of ArimBans2.sk
+
+commands:
+  arimbans:
+    description: Everything related to ArimBans
+    usage: /arimbans <arguments>
