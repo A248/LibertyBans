@@ -1,0 +1,1220 @@
+options:
+# Permissions
+	NotifyPerm: arimbans.notify.%{_type}%
+	UsePerm: arimbans.use.%{_type}%
+# Available types for permissions
+#
+#ban
+#mute
+#warn
+#kick
+#unban
+#unmute
+#unwarn
+#banlist
+#mutelist
+#history
+#warns
+#check
+#admin
+#
+	UseJson: true
+	CancelChat: true
+	NoPermission: &6&lArim&r &8» &cSorry, you can't use this.
+	BanCommands: "ban" or "tempban"
+	UnbanCommands: "unban"
+	IpBanCommands: "ipban" or "banip" or "tempipban" or "iptempban"
+	IpUnbanCommands: "unipban" or "unbanip" or "ipunban"
+	MuteCommands: "mute" or "tempmute"
+	UnmuteCommands: "unmute"
+	WarnCommands: "warn" or "tempwarn"
+	UnwarnCommands: "unwarn"
+	KickCommands: "kick"
+	BanListCommands: "banlist"
+	MuteListCommands: "mutelist"
+	HistoryCommands: "history"
+	WarnsCommands: "warns"
+	CheckCommands: "bancheck"
+	BanUsage: &6&lArim&r &8» &cUsage: /ban &e<player> <time> <reason>&c.
+	IpBanUsage: &6&lArim&r &8» &cUsage: /ipban &e<player> <time> <reason>&c.
+	UnbanUsage: &6&lArim&r &8» &cUsage: /unban &e<player>&c.
+	IpUnbanUsage: &6&lArim&r &8» &cUsage: /unipban &e<player>&c.
+	MuteUsage: &6&lArim&r &8» &cUsage: /mute &e<player> <time> <reason>&c.
+	UnmuteUsage: &6&lArim&r &8» &cUsage: /unmute &e<player>&c.
+	WarnUsage: &6&lArim&r &8» &cUsage: /warn &e<player> <time> <reason>&c.
+	UnwarnUsage: &6&lArim&r &8» &cUsage: /unwarn &e<player> <number>&c.
+	KickUsage: &6&lArim&r &8» &cUsage: /kick &e<player> <reason>&c.
+	BanListUsage: &6&lArim&r &8» &cUsage: /banlist &e[number]&c.
+	MuteListUsage: &6&lArim&r &8» &cUsage: /mutelist &e[number]&c.
+	HistoryUsage: &6&lArim&r &8» &cUsage: /history &e<player> [number]&c.
+	WarnsUsage: &6&lArim&r &8» &cUsage: /warns &e<player> [number]&c.
+	CheckUsage: &6&lArim&r &8» &cUsage: /bancheck &e<player>&c.
+	PermanentArgument: perm
+	InvalidTarget: &6&lArim&r &8» &e%{_target}%&c has never been online. &7Please enter a valid player name, IP, or UUID.
+	InvalidTime: &6&lArim&r &8» &cInvalid time specified. &7(%{_time}%)
+	InvalidNumber: &6&lArim&r &8» &cInvalid number specified. &7(%{_number}%)
+	NoCharacter: &6&lArim&r &8» &cSorry, you may not use ""|"" in your message, because it is used for backend purposes.
+	NoIpFound: &6&lArim&r &8» &cNo IP addresses were found for &e%{_target}%&c.
+	NoIpBannedFound: &6&lArim&r &8» &cNo banned IP addresses were found for &e%{_target}%&c.
+	MultipleIpFound: &6&lArim&r &8» &7You must select one of the following IPs to ban: ||%{_ipselector}%&r&7.
+	MultipleBannedIpFound: &6&lArim&r &8» &7You must select one of the following IPs to unban: ||%{_ipselector}%&r&7.
+	IpSelector1: &e%{_ip}%||ttp:&7Click to select &a%{_ip}%&7.||cmd:/ipban %{_ip}% %{_time}% %{_reason}%||
+	IpSelector2: &e%loop-value%||ttp:&7Click to select &a%{_ip}%&7.||cmd:/ipunban %{_ip}%||
+	IpSelectorUseAnd: true
+	SuccessfulBan: &6&lArim&r &8» &7Successfully banned &c&o%parseSubject({_subject})% &r&7for &e&o%{_relative}%&r%nl%&7For: &o%{_reason}%
+	SuccessfulMute: &6&lArim&r &8» &7Successfully muted &c&o%parseSubject({_subject})% &r&7for &e&o%{_relative}%&r%nl%&7For: &o%{_reason}%
+	SuccessfulWarn: &6&lArim&r &8» &7Successfully warned &c&o%parseSubject({_subject})% &r&7for &e&o%{_relative}%&r%nl%&7For: &o%{_reason}%
+	SuccessfulKick: &6&lArim&r &8» &7Successfully kicked &c&o%parseSubject({_subject})% &r&7for &e&o%{_relative}%&r%nl%&7For: &o%{_reason}%
+	SuccessfulUnban: &6&lArim&r &8» &7Successfully unbanned &a%parseSubject({_subject})%&7.
+	SuccessfulUnmute: &6&lArim&r &8» &7Successfully unmuted &a%parseSubject({_subject})%&7.
+	SuccessfulUnwarn: &6&lArim&r &8» &7Successfully unwarned &a%parseSubject({_subject})%&7. (ID: %{_number}%)
+	AlreadyBanned: &6&lArim&r &8» &e%parseSubject({_subject})%&7 is already banned.
+	AlreadyMuted: &6&lArim&r &8» &e%parseSubject({_subject})%&7 is already muted.
+	NotBanned: &6&lArim&r &8» &e%parseSubject({_subject})%&7 is not banned.
+	NotBannedButIpBanned: &6&lArim&r &8» &e%parseSubject({_subject})%&7 is not banned. However, &e%parseSubject({_subject})%&7 is ip-banned. Click the IP to unban it: ||%{_ipselector}%&r&7.
+	IpSelector3: &e%{_ip}%||ttp:&7Click to unban &a%{_ip}%&7.||cmd:/unipban %{_ip}%||
+	NotMuted: &6&lArim&r &8» &e%parseSubject({_subject})%&7 is not muted.
+# Notifications
+	BanNotif: &c&o%parseSubject({_subject})% &r&7banned by &e&o%parseSubject({_operator})% &r&7for &e&o%{_relative}%&r%nl%&7For: &o%{_reason}%
+	UnbanNotif: &c&o%parseSubject({_subject})% &7unbanned by &e&o%parseSubject({_operator})%
+	MuteNotif: &c&o%parseSubject({_subject})% &r&7muted by &e&o%parseSubject({_operator})% &r&7for &e&o%{_relative}%&r%nl%&7For: &o%{_reason}%
+	UnmuteNotif: &c&o%parseSubject({_subject})% &7unmuted by &e&o%parseSubject({_operator})%
+	WarnNotif: &c&o%parseSubject({_subject})% &r&7warned by &e&o%parseSubject({_operator})% &r&7for &e&o%{_relative}%&r%nl%&7For: &o%{_reason}%
+	UnwarnNotif: &c&o%parseSubject({_subject})% &7unwarned by &e&o%parseSubject({_operator})%
+	KickNotif: &c&o%parseSubject({_subject})% &7kicked by &e&o%parseSubject({_operator})%&r%nl%&7For: &o%{_reason}%
+# Message formats
+	BanFormat: &6&lArim&r &8» &f&lBanned&r%nl%&c&lDuration:&r &7%{_relative}%&r%nl%&7%nl%&7%nl%&c&lReason&r%nl%&7%{_reason}%&r%nl%&7%nl%&7%nl%&aAppeal on the forums&r%nl%&7Forums: &c&nArim.Enjin.Com
+	MuteFormat: &6&lArim&r &8» &f&lMuted&r%nl%&c&lDuration:&r &7%{_relative}% &c&lReason:&r &7%{_reason}%&r%nl%&7Appeal your mute at &c&nArim.Enjin.Com
+	WarnFormat: &6&lArim&r &8» &f&lWarning!&r%nl%&c&lDuration:&r &7%{_relative}% &c&lReason:&r &7%{_reason}%&r%nl%&7Total warnings: %{_count}%
+	KickFormat: &6&lArim&r &8» &f&lKicked&r%nl%&7%nl%&7%nl%&c&lReason&r%nl%&7%{_reason}%&r%nl%&7%nl%&7%nl%&aUnfair kick? Tell us here:&r%nl%&7Forums: &c&nArim.Enjin.Com&r%nl%&7Discord: &c&n8pRkq8u
+# Banlist, Mutelist, History, Warns
+	BanListHeader: &6&lArim&r &8» &f&lActive Bans&r%nl%&7[  &c&lID&r&7  ] &8[&eDate&8]&r%nl%&c&oPlayer / IP &r&8/ &c&oDuration &r&8/ &c&oOperator&r%nl%&c&oType &r&8> &7&oReason&r
+	MuteListHeader: &6&lArim&r &8» &f&lActive Mutes&r%nl%&7[  &c&lID&r&7  ] &8[&eDate&8]&r%nl%&c&oPlayer / IP &r&8/ &c&oDuration &r&8/ &c&oOperator&r%nl%&c&oType &r&8> &7&oReason&r
+	HistoryHeader: &6&lArim&r &8» &f&lHistory&r%nl%&7[  &c&lID&r&7  ] &8[&eDate&8]&r%nl%&c&oPlayer / IP &r&8/ &c&oDuration &r&8/ &c&oOperator&r%nl%&c&oType &r&8> &7&oReason&r
+	WarnsHeader:  &6&lArim&r &8» &f&lActive Warns&r%nl%&7[  &c&lID&r&7  ] &8[&eDate&8]&r%nl%&c&oPlayer / IP &r&8/ &c&oDuration &r&8/ &c&oOperator&r%nl%&c&oType &r&8> &7&oReason&r
+	BanEntry: &7[  &c&l%{_number}%&r&7  ] &8[&e%{_stamp}%&8]&r%nl%&c&o%parseSubject({_subject})% &r&8/ &c&o%{_relative}% &r&8/ &c&o%parseSubject({_operator})%&r%nl%&c&o%{_type}% &r&8> &7&o%{_reason}%&r
+	MuteEntry: &7[  &c&l%{_number}%&r&7  ] &8[&e%{_stamp}%&8]&r%nl%&c&o%parseSubject({_subject})% &r&8/ &c&o%{_relative}% &r&8/ &c&o%parseSubject({_operator})%&r%nl%&c&o%{_type}% &r&8> &7&o%{_reason}%&r
+	HistoryEntry: &7[  &c&l%{_number}%&r&7  ] &8[&e%{_stamp}%&8]&r%nl%&c&o%parseSubject({_subject})% &r&8/ &c&o%{_relative}% &r&8/ &c&o%parseSubject({_operator})%&r%nl%&c&o%{_type}% &r&8> &7&o%{_reason}%&r
+	WarnsEntry: &7[  &c&l%{_number}%&r&7  ] &8[&e%{_stamp}%&8]&r%nl%&c&o%parseSubject({_subject})% &r&8/ &c&o%{_relative}% &r&8/ &c&o%parseSubject({_operator})%&r%nl%&c&o%{_type}% &r&8> &7&o%{_reason}%&r
+	BanListPerPage: 10
+	MuteListPerPage: 10
+	HistoryPerPage: 10
+	WarnsPerPage: 10
+	BanListEmpty: &6&lArim&r &8» &r&cNo active bans found.
+	MuteListEmpty: &6&lArim&r &8» &r&cNo active mutes found.
+	HistoryEmpty: &6&lArim&r &8» &r&cNo history found for &e%parseSubject({_subject})%&c.
+	WarnsEmpty: &6&lArim&r &8» &r&cNo active warns found for &e%parseSubject({_subject})%&c.
+	BanListAboveMax: &6&lArim&r &8» &r&cPage %{_page}%/%{_totalpages}% does not exist.
+	MuteListAboveMax: &6&lArim&r &8» &r&cPage %{_page}%/%{_totalpages}% does not exist.
+	HistoryAboveMax: &6&lArim&r &8» &r&cPage %{_page}%/%{_totalpages}% does not exist.
+	WarnsAboveMax: &6&lArim&r &8» &r&cPage %{_page}%/%{_totalpages}% does not exist.
+	ExpiredDisplay: &8&oExpired&r
+	BanListFooter: &6&lArim&r &8» &f&lPage %{_page}%/%{_totalpages}%&r ||&7(Click for next page)||ttp:&7Click here.||cmd:/banlist %{_page} + 1%
+	MuteListFooter: &6&lArim&r &8» &f&lPage %{_page}%/%{_totalpages}%&r ||&7(Click for next page)||ttp:&7Click here.||cmd:/mutelist %{_page} + 1%
+	HistoryFooter: &6&lArim&r &8» &f&lPage %{_page}%/%{_totalpages}%&r ||&7(Click for next page)||ttp:&7Click here.||cmd:/history %{_subject}% %{_page} + 1%
+	WarnsFooter: &6&lArim&r &8» &f&lPage %{_page}%/%{_totalpages}%&r ||&7(Click for next page)||ttp:&7Click here.||cmd:/warns %{_subject}% %{_page} + 1%
+# Check
+	CheckUUID: &3&lUUID &r&8» &7%{_subject}%.
+	CheckIP: &3&lIP &r&8» &7%{_subject}%.
+	CheckIpsEntry: &7%{_ip}%||ttp:&7Click to view history for &e%{_ip}%&7.||cmd:/history %{_ip}%||
+	CheckIps: &cIPs &r&8» ||%{_ipdisplay}%.
+	CheckBannedFalse: &cBanned &8» &7No
+	CheckBannedTrue: &cBanned &8» &7Yes||ttp:%{_relative}%
+	CheckBannedReason:     &cReason &8» &7%{_reason}%
+	CheckMutedFalse: &cMuted &8» &7No
+	CheckMutedTrue: &cMuted &8» &7Yes||ttp:%{_relative}%
+	CheckMutedReason:     &cReason &8» &7%{_reason}%
+	CheckWarns: &cWarns &8» &7%{_count}%||ttp:&7Click to see all warns.||cmd:/warns %{_subject}%
+#
+#
+# Time Formatting
+#
+#
+# Absolute
+	TimeFormat: %{_day}% %{_month}% %{_year}% at %{_time}% EST (UTC-5)
+#
+# Relative Time Formatting
+	Months: %{_months}%month
+	Days: %{_days}%day
+	Hours: %{_hours}%hr
+	Minutes: %{_minutes}%min
+	Seconds: %{_total}%sec
+	TimeSeparator: ", "
+	TimeUseAnd: true
+# What duration should permanently be shown as?
+	PermanentDisplay: Permanently
+# Months
+	January: Jan
+	February: Feb
+	March: Mar
+	April: Apr
+	May: May
+	June: Jun
+	July: Jul
+	August: Aug
+	September: Sept
+	October: Oct
+	November: Nov
+	December: Dec
+# Admin Command
+	AdminCommands: "punishment"
+	AdminUsage: &6&lArim&r &8» &cUsage: /punishment &e<help|cache|commands>&c.||&7 Click for cache.||ttp:&7Click for cache.||cmd:/punishment cache||&7 Click for all commands.||ttp:&7Click for commands.||cmd:/punishment commands
+	AdminCommandsDisplay: &6&lArim&r &8» &7Available commands: ban, unban, ipban, ipunban, mute, unmute, warn, unwarn, banlist, mutelist, history, and warns.
+	AdminConfirmCache: &6&lArim&r &8» &aThe cache can get very large. Would you like to display it in a GUI or text?|| &7Click for GUI.||ttp:&7(Prevents chat spam).||cmd:/punishment confirmcache gui %concat({_a::*})%|| Click for text.||ttp:&7This may spam your chat! &oOnly use if the GUI is not an option.||cmd:/punishment confirmcache text %concat({_a::*})%
+	AdminCacheTextItem: %{_name}%||ttp:%{_uuid}%, %getIps({_uuid})%||
+	AdminCacheTextSplitter: ", "
+	AdminCacheTextUseAnd: true
+	AdminCacheTextFinal: &6&lArim&r &8» &aPlayer names, UUIDs, and IPs: ||&7%{_display}%.
+	AdminCacheGuiTitle: &8&lPlayer names, UUIDs, and IPs
+	AdminCacheGuiItem: paper
+	AdminCacheGuiItemName: &r%{_name}%
+	AdminCacheGuiItemLore: &r&7UUID: %{_uuid}%||&r&7IPs: %getIps({_uuid})%
+	AdminCacheGuiNextPageItem: stone button
+	AdminCacheGuiNextPageItemName: &rNext Page
+	AdminCacheGuiLastPageItem: stone button
+	AdminCacheGuiLastPageItemName: &rLast Page
+# Error Processing and Internal Messages
+	InvalidSender: &6&lArim&r &8» &cInvalid sender.
+# Do not change this unless this is your first installation.
+# If you change this during operation it will mess up your data storage.
+	ConsoleSender: -CONSOLE-
+	DataFormatError: Date_Format_Error
+	NullId: Unknown-Id
+	ApiError: &6&lArim&r &8» &cAPI usage error. Please report this to an admin on the Discord. Node
+
+function concat(input: texts, splitter: text = " ", and: boolean = false) :: text:
+	set {_m} to ""
+	set {_n} to 0
+	loop {_input::*}:
+		increase {_n} by 1
+		if {_m} = "":
+			set {_m} to loop-value
+		else if {_and} = true:
+			if {_n} = size of {_input::*}:
+				set {_m} to "%{_m}%%{_splitter}%and %loop-value%"
+			else:
+				set {_m} to "%{_m}%%{_splitter}%%loop-value%"
+		else:
+			set {_m} to "%{_m}%%{_splitter}%%loop-value%"
+	return {_m}
+
+function PlayerUUID(uuid: text) :: text:
+	loop {save_arimban::uuids::raw::*}:
+		if {save_arimban::uuids::list::%loop-index%::uuid} = {_uuid}:
+			return {save_arimban::uuids::list::%loop-index%::name}
+	return "Never-Been-Online"
+
+function UUIDPlayer(name: text) :: text:
+	loop {save_arimban::uuids::raw::*}:
+		if {save_arimban::uuids::list::%loop-index%::name} = {_name}:
+			return {save_arimban::uuids::list::%loop-index%::uuid}
+	return "Never-Been-Online"
+
+function updateUUID(uuid: text, name: text):
+	loop {save_arimban::uuids::raw::*}:
+		if {save_arimban::uuids::list::%loop-index%::uuid} = {_uuid}:
+			if {save_arimban::uuids::list::%loop-index%::name} != {_name}:
+				set {save_arimban::uuids::list::%loop-index%::name} to {_name}
+			stop
+	set {_n} to (size of {save_arimban::uuids::raw::*}) + 1
+	set {save_arimban::uuids::raw::%{_n}%} to {_n}
+	set {save_arimban::uuids::list::%{_n}%::uuid} to {_uuid}
+	set {save_arimban::uuids::list::%{_n}%::name} to {_name}
+
+function getIps(uuid: text) :: texts:
+	loop {save_arimban::ips::raw::*}:
+		if {save_arimban::ips::list::%loop-index%::uuid} = {_uuid}:
+			return {save_arimban::ips::list::%loop-index%::ips::*}
+	return {_null::*}
+
+function addIp(uuid: text, ip: text):
+	loop {save_arimban::ips::raw::*}:
+		if {save_arimban::ips::list::%loop-index%::uuid} = {_uuid}:
+			loop {save_arimban::ips::list::%loop-index%::ips::*}:
+				if loop-value-2 = {_ip}:
+					stop
+			add {_ip} to {save_arimban::ips::list::%loop-index%::ips::*}
+			stop
+	set {_n} to (size of {save_arimban::ips::raw::*}) + 1
+	set {save_arimban::ips::raw::%{_n}%} to {_n}
+	set {save_arimban::ips::list::%{_n}%::uuid} to {_uuid}
+	add {_ip} to {save_arimban::ips::list::%{_n}%::ips::*}
+
+function sendJson(target: text, msg: text):
+	if {@UseJson} = true:
+		if {_target} != "{@ConsoleSender}":
+			set {_p} to PlayerUUID({_target})
+			if {_p} != "Never-Been-Online":
+				if "%{_p}%" parsed as player is online:
+					json({_p}, {_msg})
+		else:
+			set {_nodes::*} to {_msg} split by "||"
+			set {_m} to ""
+			loop {_nodes::*}:
+				set {_txt} to "%loop-value%"
+				if subtext of {_txt} from characters 1 to 4 = "ttp:" or "url:" or "cmd:" or "ins:" or "sgt:":
+					delete {_nodes::%loop-index%}
+				else if {_m} = "":
+					set {_m} to {_txt}
+				else:
+					set {_m} to "%{_m}%%{_txt}%"
+			send {_m} to console
+	else if {_target} != "{@ConsoleSender}":
+		set {_p} to PlayerUUID({_target})
+		if {_p} != "Never-Been-Online":
+			if "%{_p}%" parsed as player is online:
+				send {_msg} to {_p}
+	else:
+		send {_msg} to console
+
+function parseIp(ip: text) :: boolean:
+	set {_ipv4::*} to {_ip} split by "."
+	set {_ipv6::*} to {_ip} split by ":"
+	if size of {_ipv4::*} = 4:
+		return true
+	else if size of {_ipv6::*} = 8:
+		return true
+	return false
+
+function parseSubject(subject: text) :: text:
+	if {_subject} = "{@ConsoleSender}":
+		return {_subject}
+	else if parseIp({_subject}) = true:
+		return {_subject}
+	else:
+		return PlayerUUID({_subject})
+
+function formatMonth(month: text) :: text:
+	if {_month} = "1" or "01":
+		return "{@January}"
+	else if {_month} = "2" or "02":
+		return "{@February}"
+	else if {_month} = "3" or "03":
+		return "{@March}"
+	else if {_month} = "4" or "04":
+		return "{@April}"
+	else if {_month} = "5" or "05":
+		return "{@May}"
+	else if {_month} = "6" or "06":
+		return "{@June}"
+	else if {_month} = "7" or "07":
+		return "{@July}"
+	else if {_month} = "8" or "08":
+		return "{@August}"
+	else if {_month} = "9" or "09":
+		return "{@September}"
+	else if {_month} = "10":
+		return "{@October}"
+	else if {_month} = "11":
+		return "{@November}"
+	else:
+		return "{@December}"
+
+function absoluteTime(unix: number) :: text:
+	if {_unix} < 0:
+		return "{@PermanentDisplay}"
+	set {_d} to convert unix {_unix} to date
+	set {_formatdate} to "%{_d}%"
+	set {_t::*} to {_formatdate} split by " "
+	set {_date::*} to {_t::1} split by "/"
+#year = {_date::3}
+#month = {_date::2}
+#day = {_date::1}
+	set {_day} to {_date::1}
+	set {_month} to formatMonth({_date::2})
+	set {_year} to {_date::3}
+	if subtext of {_t::2} from characters 1 to 1 = "0":
+		set {_time} to "%subtext of {_t::2} from characters 2 to (length of {_t::2})%AM"
+	else:
+		set {_h} to "%subtext of {_t::2} from characters 1 to 2%" parsed as number
+		if {_h} > 12:
+			increase {_h} by -12
+			set {_time} to "%{_h}%:%subtext of {_t::2} from characters 4 to 5%PM"
+		else if {_h} > 11:
+			set {_time} to "%{_h}%:%subtext of {_t::2} from characters 4 to 5%PM"
+		else:
+			set {_time} to "%{_h}%:%subtext of {_t::2} from characters 4 to 5%AM"
+	return "{@TimeFormat}"
+
+function relativeTime(unix: number) :: text:
+	set {_now} to convert date now to unix
+	if {_unix} < 0:
+		return "{@PermanentDisplay}"
+	else if {_unix} > {_now}:
+		set {_total} to {_unix} - {_now}
+	else if {_unix} < {_now}:
+		return "{@ExpiredDisplay}"
+	else:
+		set {_total} to 0
+		return "{@Seconds}"
+	set {_months} to 0
+	set {_days} to 0
+	set {_hours} to 0
+	set {_minutes} to 0
+	if {_total} > 2592000:
+		set {_months} to floor({_total}/2592000)
+		increase {_total} by {_months}*(-2592000)
+	if {_total} > 86400:
+		set {_days} to floor({_total}/86400)
+		increase {_total} by {_days}*(-86400)
+	if {_total} > 3600:
+		set {_hours} to floor({_total}/3600)
+		increase {_total} by {_hours}*(-3600)
+	if {_total} > 60:
+		set {_minutes} to floor({_total}/60)
+		increase {_total} by {_minutes}*(-60)
+	if {_months} > 0:
+		add "{@Months}" to {_times::*}
+	if {_days} > 0:
+		add "{@Days}" to {_times::*}
+	if {_hours} > 0:
+		add "{@Hours}" to {_times::*}
+	if {_minutes} > 0:
+		add "{@Minutes}" to {_times::*}
+	return concat({_times::*}, {@TimeSeparator}, {@TimeUseAnd})
+
+function targetIp(input: text) :: texts:
+	if length of {_input} = 36:
+		set {_uuid} to {_input}
+	else if length of {_input} = 32:
+#
+# UUID converter
+# ed5f12cd600745d9a4b9940524ddaecf  -->  ed5f12cd-6007-45d9-a4b9-940524ddaecf
+#
+		set {_uuid} to "%subtext of {_input} from characters 1 to 8%-%subtext of {_input} from characters 9 to 12%-%subtext of {_input} from characters 13 to 16%-%subtext of {_input} from characters 17 to 20%-%subtext of {_input} from characters 21 to length of {_input}%"
+	else if parseIp({_input}) = true:
+		add {_input} to {_ips::*}
+		return {_ips::*}
+	else:
+		set {_uuid} to UUIDPlayer({_input})
+		if {_uuid} = "Never-Been-Online":
+			return "{@NullId}"
+	set {_ips::*} to getIps({_uuid})
+	return {_ips::*}
+
+function getEntry(subject: text, type: text, reason: text, operator: text, expiry: number, date: number, number: number) :: text:
+	set {_relative} to relativeTime({_expiry})
+	set {_absolute} to absoluteTime({_expiry})
+	set {_stamp} to absoluteTime({_date})
+	if {_type} = "ban":
+		return "{@BanEntry}"
+	else if {_type} = "mute":
+		return "{@MuteEntry}"
+	else if {_type} = "warn":
+		return "{@WarnsEntry}"
+	else:
+		return "{@HistoryEntry}"
+
+function getMessage(type: text, reason: text, operator: text, expiry: number, date: number) :: text:
+	set {_relative} to relativeTime({_expiry})
+	set {_absolute} to absoluteTime({_expiry})
+	set {_stamp} to absoluteTime({_date})
+	if {_type} = "ban":
+		return "{@BanFormat}"
+	else if {_type} = "mute":
+		return "{@MuteFormat}"
+	else if {_type} = "warn":
+		return "{@WarnFormat}"
+	else if {_type} = "kick":
+		return "{@KickFormat}"
+	return "{@ApiError}=getMessage()"
+
+function getSuccessfulMessage(subject: text, type: text, reason: text, operator: text, expiry: number) :: text:
+	set {_relative} to relativeTime({_expiry})
+	set {_absolute} to absoluteTime({_expiry})
+	if {_type} = "ban":
+		return "{@SuccessfulBan}"
+	else if {_type} = "mute":
+		return "{@SuccessfulMute}"
+	else if {_type} = "warn":
+		return "{@SuccessfulWarn}"
+	else if {_type} = "kick":
+		return "{@SuccessfulKick}"
+	else if {_type} = "unban":
+		return "{@SuccessfulUnban}"
+	else if {_type} = "unmute":
+		return "{@SuccessfulUnmute}"
+	else if {_type} = "unwarn":
+		set {_number} to "%{_reason}%" parsed as number
+		return "{@SuccessfulUnwarn}"
+	return "{@ApiError}=getSuccessfulMessage()"
+
+function getNotif(subject: text, type: text, reason: text, operator: text, expiry: number, date: number) :: text:
+	set {_relative} to relativeTime({_expiry})
+	set {_absolute} to absoluteTime({_expiry})
+	set {_stamp} to absoluteTime({_date})
+	if {_type} = "ban":
+		return "{@BanNotif}"
+	else if {_type} = "mute":
+		return "{@MuteNotif}"
+	else if {_type} = "warn":
+		return "{@WarnNotif}"
+	else if {_type} = "kick":
+		return "{@KickNotif}"
+	else if {_type} = "unban":
+		return "{@UnbanNotif}"
+	else if {_type} = "unmute":
+		return "{@UnmuteNotif}"
+	else if {_type} = "unwarn":
+		return "{@UnwarnNotif}"
+	return "{@ApiError}=getNotif()"
+
+function broadcastNotif(subject: text, type: text, reason: text, operator: text, expiry: number, date: number):
+	set {_notif} to getNotif({_subject}, {_type}, {_reason}, {_operator}, {_expiry}, {_date})
+	loop all players:
+		if loop-player has permission "{@NotifyPerm}":
+			sendJson("%UUID of loop-player%", {_notif})
+	sendJson("{@ConsoleSender}", {_notif})
+
+function enactPunishment(subject: text, type: text, reason: text, operator: text, expiry: number, date: number):
+	if {_type} = "kick":
+		loop all players:
+			if UUID of loop-player = {_subject}:
+				set {_message} to getMessage({_type}, {_reason}, {_operator}, {_expiry}, {_date})
+				kick loop-player due to {_message}
+	else if {_type} = "ban":
+		if parseIp({_subject}) = true:
+			loop all players:
+				set {_ips::*} to getIps(UUID of loop-player)
+				loop {_ips::*}:
+					if loop-value-2 = {_subject}:
+						kick loop-player due to getMessage({_type}, {_reason}, {_operator}, {_expiry}, {_date})
+		else:
+			loop all players:
+				if UUID of loop-player = {_subject}:
+					kick loop-player due to getMessage({_type}, {_reason}, {_operator}, {_expiry}, {_date})
+	broadcastNotif({_subject}, {_type}, {_reason}, {_operator}, {_expiry}, {_date})
+
+function addPunishment(subject: text, type: text, reason: text, operator: text, expiry: number):
+	set {_date} to convert date now to unix
+	add "%{_subject}%|%{_type}%|%{_date}%|%{_expiry}%|%{_reason}%|%{_operator}%" to {save_arimban::p::*}
+	add "%{_subject}%|%{_type}%|%{_date}%|%{_expiry}%|%{_reason}%|%{_operator}%" to {save_arimban::h::*}
+	enactPunishment({_subject}, {_type}, {_reason}, {_operator}, {_expiry}, {_date})
+
+function tryPunish(subject: text, type: text, reason: text, operator: text, expiry: number) :: boolean:
+	if {_type} = "ban" or "mute":
+		loop {save_arimban::p::*}:
+			set {_txt} to "%loop-value%"
+			set {_data::*} to {_txt} split by "|"
+			if {_data::1} = {_subject}:
+				if {_data::2} = {_type}:
+					return false
+	addPunishment({_subject}, {_type}, {_reason}, {_operator}, {_expiry})
+	return true
+
+function tryUnpunish(subject: text, type: text, number: number) :: boolean:
+	if {_type} = "unban" or "unmute":	
+		loop {save_arimban::p::*}:
+			set {_txt} to "%loop-value%"
+			set {_data::*} to {_txt} split by "|"
+			if {_data::1} = {_subject}:
+				set {_expired} to false
+				set {_expiry} to "%{_data::4}%" parsed as number
+				if {_expiry} > 0:
+					if {_unix} > {_expiry}:
+						set {_expired} to true
+				if {_expired} = true:
+					delete {save_arimban::p::%loop-index%}
+				else if {_data::2} = subtext of {_type} from characters 3 to (length of {_type}):
+					delete {save_arimban::p::%loop-index%}
+					return true
+	else if {_type} = "unwarn":
+		set {_n} to 0
+		loop {save_arimban::p::*}:
+			set {_txt} to "%loop-value%"
+			set {_data::*} to {_txt} split by "|"
+			if {_data::1} = {_subject}:
+				set {_expired} to false
+				set {_expiry} to "%{_data::4}%" parsed as number
+				if {_expiry} > 0:
+					if {_unix} > {_expiry}:
+						set {_expired} to true
+				if {_expired} = true:
+					delete {save_arimban::p::%loop-index%}
+				else if {_data::2} = subtext of {_type} from characters 3 to (length of {_type}):
+					increase {_n} by 1
+					if {_n} = {_number}:
+						delete {save_arimban::p::%loop-index%}
+						return true
+	return false
+
+function getHistory(subject: text) :: texts:
+	loop {save_arimban::h::*}:
+		set {_txt} to "%loop-value%"
+		set {_data::*} to {_txt} split by "|"
+		if {_data::1} = {_subject}:
+			add {_txt} to {_p::*}
+	return {_p::*}
+
+function getAllPunishments(type: text) :: texts:
+	set {_unix} to convert date now to unix
+	loop {save_arimban::p::*}:
+		set {_txt} to "%loop-value%"
+		set {_data::*} to {_txt} split by "|"
+		set {_expired} to false
+		set {_expiry} to "%{_data::4}%" parsed as number
+		if {_expiry} > 0:
+			if {_unix} > {_expiry}:
+				set {_expired} to true
+		if {_expired} = true:
+			delete {save_arimban::p::%loop-index%}
+		else if {_type} = "all":
+			add {_txt} to {_p::*}
+		else if {_type} = {_data::2}:
+			add {_txt} to {_p::*}
+	return {_p::*}
+
+function getPunishments(subject: text, type: text = "all") :: texts:
+	set {_unix} to convert date now to unix
+	loop {save_arimban::p::*}:
+		set {_txt} to "%loop-value%"
+		set {_data::*} to {_txt} split by "|"
+		if {_data::1} = {_subject}:
+			set {_expired} to false
+			set {_expiry} to "%{_data::4}%" parsed as number
+			if {_expiry} > 0:
+				if {_unix} > {_expiry}:
+					set {_expired} to true
+			if {_expired} = true:
+				delete {save_arimban::p::%loop-index%}
+			else if {_type} = "all":
+				add {_txt} to {_p::*}
+			else if {_type} = {_data::2}:
+				add {_txt} to {_p::*}
+	return {_p::*}
+
+function autoMessage(subject: text, type: text) :: text:
+	set {_p::*} to getPunishments({_subject}, {_type})
+	loop {_p::*}:
+		set {_txt} to "%loop-value%"
+		set {_data::*} to {_txt} split by "|"
+		if {_data::2} = {_type}:
+			set {_expiry} to "%{_data::4}%" parsed as number
+			set {_date} to "%{_data::3}%" parsed as number
+			return getMessage({_type}, {_data::5}, {_data::6}, {_expiry}, {_date})
+	return "{@ApiError}=autoMessage()"
+
+function hasPunishment(subject: text, type: text) :: boolean:
+	set {_p::*} to getPunishments({_subject}, {_type})
+	if size of {_p::*} > 0:
+		return true
+	return false
+
+function isBanned(subject: text) :: boolean:
+	return hasPunishment({_subject}, "ban")
+function isMuted(subject: text) :: boolean:
+	return hasPunishment({_subject}, "mute")
+
+function parseFuture(input: text) :: number:
+	if {_input} = "{@PermanentArgument}":
+		return -1
+	else if {_input} contains "mo":
+		set {_mult} to 2592000
+		replace all "mo" in {_input} with ""
+	else if {_input} contains "d":
+		set {_mult} to 86400
+		replace all "d" in {_input} with ""
+	else if {_input} contains "h":
+		set {_mult} to 3600
+		replace all "h" in {_input} with ""
+	else if {_input} contains "hr":
+		set {_mult} to 3600
+		replace all "hr" in {_input} with ""
+	else if {_input} contains "m":
+		set {_mult} to 60
+		replace all "m" in {_input} with ""
+	else:
+		return 0
+	set {_num} to "%{_input}%" parsed as number
+	if {_num} > 0:
+		return ({_num}*{_mult} + convert date now to unix)
+	else:
+		return 0
+
+function getId(input: text) :: text:
+	if length of {_input} = 36:
+		return {_input}
+	else if length of {_input} = 32:
+#
+# UUID converter
+# ed5f12cd600745d9a4b9940524ddaecf  -->  ed5f12cd-6007-45d9-a4b9-940524ddaecf
+#
+		return "%subtext of {_input} from characters 1 to 8%-%subtext of {_input} from characters 9 to 12%-%subtext of {_input} from characters 13 to 16%-%subtext of {_input} from characters 17 to 20%-%subtext of {_input} from characters 21 to length of {_input}%"
+	else if parseIp({_input}) = true:
+		return {_input}
+	else:
+		set {_uuid} to UUIDPlayer({_input})
+		if {_uuid} != "Never-Been-Online":
+			return {_uuid}
+	return "{@NullId}"
+
+function getUsage(cmd: text) :: text:
+	if {_cmd} = "ban":
+		return "{@BanUsage}"
+	else if {_cmd} = "unban":
+		return "{@UnbanUsage}"
+	else if {_cmd} = "ipban":
+		return "{@IpBanUsage}"
+	else if {_cmd} = "ipunban":
+		return "{@IpUnbanUsage}"
+	else if {_cmd} = "mute":
+		return "{@MuteUsage}"
+	else if {_cmd} = "unmute":
+		return "{@UnmuteUsage}"
+	else if {_cmd} = "warn":
+		return "{@WarnUsage}"
+	else if {_cmd} = "unwarn":
+		return "{@UnwarnUsage}"
+	else if {_cmd} = "kick":
+		return "{@KickUsage}"
+	else if {_cmd} = "banlist":
+		return "{@BanListUsage}"
+	else if {_cmd} = "mutelist":
+		return "{@MuteListUsage}"
+	else if {_cmd} = "history":
+		return "{@HistoryUsage}"
+	else if {_cmd} = "warns":
+		return "{@WarnsUsage}"
+	else if {_cmd} = "check":
+		return "{@CheckUsage}"
+	return "{@ApiError}=getUsage()"
+
+function toType(input: text) :: text:
+	if {_input} = "ipban":
+		return "ban"
+	else if {_input} = "ipunban":
+		return "unban"
+	return {_input}
+
+function usage(operator: text, cmd: text):
+	set {_m} to getUsage({_cmd})
+	sendJson({_operator}, {_m})
+
+function getInfo(subject: text, type: text) :: texts:
+	set {_count} to 0
+	loop {save_arimban::p::*}:
+		set {_txt} to "%loop-value%"
+		set {_data::*} to {_txt} split by "|"
+		if {_data::1} = {_subject}:
+			if {_data::2} = {_type}:
+				if {_type} = "ban" or "mute":
+					add {_data::4} to {_r::*}
+					add {_data::5} to {_r::*}
+					return {_r::*}
+				else if {_type} = "warn":
+					increase {_count} by 1
+	add "%{_count}%" to {_r::*}
+	return {_r::*}
+
+function sendList(operator: text, header: text, body: texts, footer: text, after: number, before: number):
+	sendJson({_operator}, {_header})
+	set {_n} to 0
+	loop {_body::*}:
+		increase {_n} by 1
+		if {_n} > {_after}:
+			if {_n} < {_before}:
+				set {_txt} to "%loop-value%"
+				set {_data::*} to {_txt} split by "|"
+				set {_expiry} to "%{_data::4}%" parsed as number
+				set {_date} to "%{_data::3}%" parsed as number
+				set {_m} to getEntry({_data::1}, {_data::2}, {_data::5}, {_data::6}, {_expiry}, {_date}, {_n})
+				sendJson({_operator}, {_m})
+	sendJson({_operator}, {_footer})
+
+function sendDisplay(subject: text, operator: text, node: text, page: number = 1):
+	if {_node} = "banlist" or "mutelist":
+		if {_node} = "banlist":
+			set {_type} to "ban"
+			set {_perpage} to {@BanListPerPage}
+			set {_empty} to "{@BanListEmpty}"
+			set {_abovemax} to "{@BanListAboveMax}"
+			set {_header} to "{@BanListHeader}"
+			set {_footer} to "{@BanListFooter}"
+		else if {_node} = "mutelist":
+			set {_type} to "mute"
+			set {_perpage} to {@MuteListPerPage}
+			set {_empty} to "{@MuteListEmpty}"
+			set {_abovemax} to "{@MuteListAboveMax}"
+			set {_header} to "{@MuteListHeader}"
+			set {_footer} to "{@MuteListFooter}"
+		set {_p::*} to getAllPunishments({_type})
+		set {_totalpages} to 0
+		set {_totalpages} to ceiling((size of {_p::*})/{_perpage})
+		if {_totalpages} = 0:
+			sendJson({_operator}, {_empty})
+			stop
+		else if {_page} > {_totalpages}:
+			sendJson({_operator}, {_abovemax})
+			stop
+		else if {_node} = "banlist":
+			set {_footer} to "{@BanListFooter}"
+		else if {_node} = "mutelist":
+			set {_footer} to "{@MuteListFooter}"
+		set {_after} to ({_page} - 1)*{_perpage}
+		set {_before} to ({_page}*{_perpage} + 1)
+		sendList({_operator}, {_header}, {_p::*}, {_footer}, {_after}, {_before})
+	else if {_node} = "history" or "warns":
+		if {_node} = "history":
+			set {_type} to "all"
+			set {_p::*} to getHistory({_subject})
+			set {_perpage} to {@HistoryPerPage}
+			set {_empty} to "{@HistoryEmpty}"
+			set {_abovemax} to "{@HistoryAboveMax}"
+			set {_header} to "{@HistoryHeader}"
+		else if {_node} = "warns":
+			set {_type} to "warn"
+			set {_p::*} to getPunishments({_subject}, {_type})
+			set {_perpage} to {@WarnsPerPage}
+			set {_empty} to "{@WarnsEmpty}"
+			set {_abovemax} to "{@WarnsAboveMax}"
+			set {_header} to "{@WarnsHeader}"
+		set {_totalpages} to 0
+		set {_totalpages} to ceiling((size of {_p::*})/{_perpage})
+		if {_totalpages} = 0:
+			sendJson({_operator}, {_empty})
+			stop
+		else if {_page} > {_totalpages}:
+			sendJson({_operator}, {_abovemax})
+			stop
+		else if {_node} = "history":
+			set {_footer} to "{@HistoryFooter}"
+		else if {_node} = "warns":
+			set {_footer} to "{@WarnsFooter}"
+		set {_after} to ({_page} - 1)*{_perpage}
+		set {_before} to ({_page}*{_perpage} + 1)
+		sendList({_operator}, {_header}, {_p::*}, {_footer}, {_after}, {_before})
+	else if {_node} = "check":
+		set {_banned} to isBanned({_subject})
+		set {_muted} to isMuted({_muted})
+		if parseIp({_subject}) = true:
+			sendJson({_operator}, "{@CheckIP}")
+		else:
+			set {_ips::*} to getIps({_subject})
+			loop {_ips::*}:
+				set {_ip} to loop-value
+				add "{@CheckIpsEntry}" to {_ipmsg::*}
+			set {_ipdisplay} to concat({_ipmsg::*}, ", ", true)
+			sendJson({_operator}, "{@CheckUUID}")
+			sendJson({_operator}, "{@CheckIps}")
+		if {_banned} = true:
+			set {_info::*} to getInfo({_subject}, "ban")
+			set {_reason} to {_info::2}
+			set {_expiry} to "%{_info::1}%" parsed as number
+			set {_relative} to relativeTime({_expiry})
+			set {_absolute} to absoluteTime({_expiry})
+			sendJson({_operator}, "{@CheckBannedTrue}")
+			sendJson({_operator}, "{@CheckBannedReason}")
+		else:
+			sendJson({_operator}, "{@CheckBannedFalse}")
+		if {_muted} = true:
+			set {_info::*} to getInfo({_subject}, "mute")
+			set {_reason} to {_info::2}
+			set {_expiry} to "%{_info::1}%" parsed as number
+			set {_relative} to relativeTime({_expiry})
+			set {_absolute} to absoluteTime({_expiry})
+			sendJson({_operator}, "{@CheckMutedTrue}")
+			sendJson({_operator}, "{@CheckMutedReason}")
+		else:
+			sendJson({_operator}, "{@CheckMutedFalse}")
+		set {_info::*} to getInfo({_subject}, "warn")
+		set {_count} to "%{_info::1}%" parsed as number
+		sendJson({_operator}, "{@CheckWarns}")
+	else:
+		sendJson({_operator}, "{@ApiError}=sendDisplay()")
+
+function infoCommand(operator: text, cmd: text, args: text):
+	if {_cmd} = "banlist" or "mutelist":
+		set {_number} to {_args}
+		set {_n} to "%{_number}%" parsed as number
+		if {_n} > 0:
+			sendDisplay({_operator}, {_operator}, {_cmd}, {_n})
+		else:
+			sendJson({_operator}, "{@InvalidNumber}")
+	else if {_cmd} = "history" or "warns":
+		set {_a::*} to {_args} split by " "
+		set {_number} to {_a::2}
+		set {_n} to "%{_number}%" parsed as number
+		set {_subject} to getId({_a::1})
+		if {_subject} = "{@NullId}":
+			sendJson({_operator}, "{@InvalidTarget}")
+		else if {_n} > 0:
+			sendDisplay({_subject}, {_operator}, {_cmd}, {_n})
+		else:
+			sendJson({_operator}, "{@InvalidNumber}")
+	else if {_cmd} = "check":
+		set {_subject} to getId({_args})
+		if {_subject} = "{@NullId}":
+			sendJson({_operator}, "{@InvalidTarget}")
+		else:
+			sendDisplay({_subject}, {_operator}, "check")
+
+function unpunishCommand(operator: text, cmd: text, args: text):
+	set {_a::*} to {_args} split by " "
+	set {_target} to {_a::1}
+	set {_number} to {_a::2}
+	if {_cmd} != "ipunban":
+		set {_subject} to getId({_target})
+		if {_subject} = "{@NullId}":
+			sendJson({_operator}, "{@InvalidTarget}")
+			stop
+	else:
+		set {_preips::*} to targetIp({_target})
+		loop {_preips::*}:
+			if isBanned(loop-value):
+				add loop-value to {_ips::*}
+		if size of {_ips::*} > 0:
+			if size of {_ips::*} > 1:
+				set {_ipselector} to "None"
+				set {_n} to 0
+				loop {_ips::*}:
+					increase {_n} by 1
+					set {_ip} to loop-value
+					if {_ipselector} = "None":
+						set {_ipselector} to "{@IpSelector2}"
+					else if {@IpSelectorUseAnd} = true:
+						if {_n} = size of {_ips::*}:
+							set {_ipselector} to "%{_ipselector}%, and {@IpSelector2}"
+						else:
+							set {_ipselector} to "%{_ipselector}%, {@IpSelector2}"
+					else:
+						set {_ipselector} to "%{_ipselector}%, {@IpSelector2}"
+				sendJson({_operator}, "{@MultipleBannedIpFound}")
+				stop
+			else:
+				set {_subject} to {_ips::1}
+		else:
+			sendJson({_operator}, "{@NoIpBannedFound}")
+			stop
+	set {_type} to toType({_cmd})
+	set {_n} to "%{_number}%" parsed as number
+	if {_n} > 0:
+		if tryUnpunish({_subject}, {_type}, {_n}) = true:
+			set {_m} to getSuccessfulMessage({_subject}, {_type}, {_number}, {_operator}, -1)
+			sendJson({_operator}, {_m})
+		else:
+			sendJson({_operator}, "{@ApiError}=unpunishCommand()")
+	else if {_type} = "unban" or "unmute":
+		if tryUnpunish({_subject}, {_type}, 1) = true:
+			set {_m} to getSuccessfulMessage({_subject}, {_type}, "Unpunished.", {_operator}, -1)
+			sendJson({_operator}, {_m})
+		else if {_type} = "unban":
+			set {_ips::*} to getIps({_subject})
+			loop {_ips::*}:
+				if isBanned(loop-value):
+					add loop-value to {_banned::*}
+			if size of {_banned::*} > 1:
+				set {_ipselector} to "None"
+				set {_n} to 0
+				loop {_banned::*}:
+					increase {_n} by 1
+					set {_ip} to loop-value
+					if {_ipselector} = "None":
+						set {_ipselector} to "{@IpSelector3}"
+					else if {@IpSelectorUseAnd} = true:
+						if {_n} = size of {_ips::*}:
+							set {_ipselector} to "%{_ipselector}%, and {@IpSelector3}"
+						else:
+							set {_ipselector} to "%{_ipselector}%, {@IpSelector3}"
+					else:
+						set {_ipselector} to "%{_ipselector}%, {@IpSelector3}"
+				sendJson({_operator}, "{@NotBannedButIpBanned}")
+			else:
+				sendJson({_operator}, "{@NotBanned}")
+		else if {_type} = "unmute":
+			sendJson({_operator}, "{@NotMuted}")
+	else:
+		sendJson({_operator}, "{@InvalidNumber}")
+
+function punishCommand(operator: text, cmd: text, args: text):
+	set {_a::*} to {_args} split by " "
+	set {_target} to {_a::1}
+	set {_time} to {_a::2}
+	delete {_a::1}
+	delete {_a::2}
+	set {_reason} to concat({_a::*})
+	if {_reason} is not set:
+		usage({_operator}, {_cmd})
+		stop
+	if {_cmd} != "ipban":
+		set {_subject} to getId({_target})
+		if {_subject} = "{@NullId}":
+			sendJson({_operator}, "{@InvalidTarget}")
+			stop
+	else:
+		set {_ips::*} to targetIp({_target})
+		if size of {_ips::*} > 0:
+			if size of {_ips::*} > 1:
+				set {_ipselector} to "None"
+				set {_n} to 0
+				loop {_ips::*}:
+					increase {_n} by 1
+					set {_ip} to loop-value
+					if {_ipselector} = "None":
+						set {_ipselector} to "{@IpSelector1}"
+					else if {@IpSelectorUseAnd} = true:
+						if {_n} = size of {_ips::*}:
+							set {_ipselector} to "%{_ipselector}%, and {@IpSelector1}"
+						else:
+							set {_ipselector} to "%{_ipselector}%, {@IpSelector1}"
+					else:
+						set {_ipselector} to "%{_ipselector}%, {@IpSelector1}"
+				sendJson({_operator}, "{@MultipleIpFound}")
+				stop
+			else:
+				set {_subject} to {_ips::1}
+		else:
+			sendJson({_operator}, "{@NoIpFound}")
+			stop
+	set {_type} to toType({_cmd})
+	set {_expiry} to parseFuture({_time})
+	if {_expiry} = 0:
+		sendJson({_operator}, "{@InvalidTime}")
+		stop
+	else if tryPunish({_subject}, {_type}, {_reason}, {_operator}, {_expiry}) = true:
+		set {_m} to getSuccessfulMessage({_subject}, {_type}, {_reason}, {_operator}, {_expiry})
+		sendJson({_operator}, {_m})
+	else if {_type} = "ban":
+		sendJson({_operator}, "{@AlreadyBanned}")
+	else if {_type} = "mute":
+		sendJson({_operator}, "{@AlreadyMuted}")
+	else:
+		sendJson({_operator}, "{@ApiError}=punishCommand()")
+
+function cacheGui(p: player, pg: number = 1):
+	set {_n} to 0
+	set {_after} to ({_pg} - 1)*54
+	set {_before} to ({_pg}*54 + 1)
+	wait 3 tick
+	open chest with 6 rows named "{@AdminCacheGuiTitle}" to {_p}
+	loop {save_arimban::uuids::raw::*}:
+		increase {_n} by 1
+		if {_n} < {_before}:
+			if {_n} > {_after}:
+				set {_uuid} to {save_arimban::uuids::list::%loop-index%::uuid}
+				set {_name} to {save_arimban::uuids::list::%loop-index%::name}
+				format slot ({_n} - 1 - {_after}) of {_p} with 1 {@AdminCacheGuiItem} named "{@AdminCacheGuiItemName}" with lore "{@AdminCacheGuiItemLore}" to be unstealable
+		else:
+			stop loop
+	if {_pg} > 1:
+		format slot 45 of {_p} with 1 {@AdminCacheGuiLastPageItem} named "{@AdminCacheGuiLastPageItemName}" to close then run [cacheGui({_p}, ({_pg} - 1))]
+	if {_pg} < ceiling((size of {save_arimban::uuids::*})/54):
+		format slot 53 of {_p} with 1 {@AdminCacheGuiNextPageItem} named "{@AdminCacheGuiNextPageItemName}" to close then run [cacheGui({_p}, ({_pg} + 1))]
+
+function adminCommand(operator: text, args: text):
+	set {_a::*} to {_args} split by " "
+	if {_a::1} = "help":
+		sendJson({_operator}, "{@AdminUsage}")
+	else if {_a::1} = "cache":
+		delete {_a::1}
+		if {_operator} = "{@ConsoleSender}":
+			adminCommand({_operator}, "confirmcache %concat({_a::*})%")
+			stop
+		else:
+			if {_a::2} is set:
+				delete {_a::2}
+			sendJson({_operator}, "{@AdminConfirmCache}")
+	else if {_a::1} = "confirmcache":
+		if {_a::2} = "gui":
+			if {_operator} = "{@ConsoleSender}":
+				adminCommand({_operator}, "confirmcache text")
+			else:
+				set {_p} to PlayerUUID({_operator})
+				cacheGui("%{_p}%" parsed as player)
+		else:
+			loop {save_arimban::uuids::raw::*}:
+				set {_uuid} to {save_arimban::uuids::list::%loop-index%::uuid}
+				set {_name} to {save_arimban::uuids::list::%loop-index%::name}
+				add "{@AdminCacheTextItem}" to {_u::*}
+			set {_display} to concat({_u::*}, {@AdminCacheTextSplitter}, true)
+			sendJson({_operator}, "{@AdminCacheTextFinal}")
+	else if {_args} = "commands":
+		sendJson({_operator}, "{@AdminCommandsDisplay}")
+
+function command(operator: text, cmd: text, args: text):
+	if {_cmd} = "ban" or "ipban" or "mute" or "warn" or "kick":
+		punishCommand({_operator}, {_cmd}, {_args})
+	else if {_cmd} = "unban" or "ipunban" or "unmute" or "unwarn":
+		unpunishCommand({_operator}, {_cmd}, {_args})
+	else if {_cmd} = "banlist" or "mutelist" or "history" or "warns" or "check":
+		infoCommand({_operator}, {_cmd}, {_args})
+	else if {_cmd} = "admin":
+		adminCommand({_operator}, {_args})
+	else:
+		sendJson({_operator}, "{@ApiError}=command()")
+
+on command:
+	if command is {@BanCommands} or {@UnbanCommands} or {@IpBanCommands} or {@IpUnbanCommands} or {@MuteCommands} or {@UnmuteCommands} or {@WarnCommands} or {@UnwarnCommands} or {@KickCommands} or {@BanListCommands} or {@MuteListCommands} or {@HistoryCommands} or {@WarnsCommands} or {@CheckCommands} or {@AdminCommands}:
+		cancel event
+		if command sender is player:
+			set {_operator} to UUID of player
+		else if command sender is console:
+			set {_operator} to "{@ConsoleSender}"
+		else:
+			send "{@InvalidSender}"
+			stop
+		if arguments contains "|":
+			sendJson({_operator}, "{@NoCharacter}")
+			stop
+		if command is {@BanCommands}:
+			set {_cmd} to "ban"
+			set {_args::*} to arguments split by " "
+			if {_args::2} is not set:
+				usage({_operator}, {_cmd})
+				stop
+			else if parseFuture({_args::2}) = 0:
+				set {_time} to "{@PermanentArgument}"
+				set {_target} to {_args::1}
+				delete {_args::1}
+				set {_arg} to "%{_target}% %{_time}% %concat({_args::*})%"
+			else:
+				set {_arg} to concat({_args::*})
+		else if command is {@UnbanCommands}:
+			set {_cmd} to "unban"
+			if arguments is not set:
+				usage({_operator}, {_cmd})
+				stop
+			set {_arg} to arguments
+		else if command is {@IpBanCommands}:
+			set {_cmd} to "ipban"
+			set {_args::*} to arguments split by " "
+			if {_args::2} is not set:
+				usage({_operator}, {_cmd})
+				stop
+			else if parseFuture({_args::2}) = 0:
+				set {_time} to "{@PermanentArgument}"
+				set {_target} to {_args::1}
+				delete {_args::1}
+				set {_arg} to "%{_target}% %{_time}% %concat({_args::*})%"
+			else:
+				set {_arg} to concat({_args::*})
+		else if command is {@IpUnbanCommands}:
+			set {_cmd} to "ipunban"
+			if arguments is not set:
+				usage({_operator}, {_cmd})
+				stop
+			set {_arg} to arguments
+		else if command is {@MuteCommands}:
+			set {_cmd} to "mute"
+			set {_args::*} to arguments split by " "
+			if {_args::2} is not set:
+				usage({_operator}, {_cmd})
+				stop
+			else if parseFuture({_args::2}) = 0:
+				set {_time} to "{@PermanentArgument}"
+				set {_target} to {_args::1}
+				delete {_args::1}
+				set {_arg} to "%{_target}% %{_time}% %concat({_args::*})%"
+			else:
+				set {_arg} to concat({_args::*})
+		else if command is {@UnmuteCommands}:
+			set {_cmd} to "unmute"
+			if arguments is not set:
+				usage({_operator}, {_cmd})
+				stop
+			set {_arg} to arguments
+		else if command is {@WarnCommands}:
+			set {_cmd} to "warn"
+			set {_args::*} to arguments split by " "
+			if {_args::2} is not set:
+				usage({_operator}, {_cmd})
+				stop
+			else if parseFuture({_args::2}) = 0:
+				set {_time} to "{@PermanentArgument}"
+				set {_target} to {_args::1}
+				delete {_args::1}
+				set {_arg} to "%{_target}% %{_time}% %concat({_args::*})%"
+			else:
+				set {_arg} to concat({_args::*})
+		else if command is {@UnwarnCommands}:
+			set {_cmd} to "unwarn"
+			set {_args::*} to arguments split by " "
+			if {_args::1} is not set:
+				usage({_operator}, {_cmd})
+				stop
+			else if {_args::2} is not set:
+				set {_args::2} to "1"
+			set {_arg} to concat({_args::*})
+		else if command is {@KickCommands}:
+			set {_cmd} to "kick"
+			set {_args::*} to arguments split by " "
+			if {_args::2} is not set:
+				usage({_operator}, {_cmd})
+				stop
+			else if parseFuture({_args::2}) = 0:
+				set {_time} to "{@PermanentArgument}"
+				set {_target} to {_args::1}
+				delete {_args::1}
+				set {_arg} to "%{_target}% %{_time}% %concat({_args::*})%"
+			else:
+				set {_arg} to concat({_args::*})
+		else if command is {@BanListCommands}:
+			set {_cmd} to "banlist"
+			if arguments is set:
+				set {_arg} to arguments
+			else:
+				set {_arg} to "1"
+		else if command is {@MuteListCommands}:
+			set {_cmd} to "mutelist"
+			if arguments is set:
+				set {_arg} to arguments
+			else:
+				set {_arg} to "1"
+		else if command is {@HistoryCommands}:
+			set {_cmd} to "history"
+			set {_args::*} to arguments split by " "
+			if {_args::1} is not set:
+				usage({_operator}, {_cmd})
+				stop
+			else if {_args::2} is not set:
+				set {_args::2} to "1"
+			set {_arg} to concat({_args::*})
+		else if command is {@WarnsCommands}:
+			set {_cmd} to "warns"
+			set {_args::*} to arguments split by " "
+			if {_args::1} is not set:
+				usage({_operator}, {_cmd})
+				stop
+			else if {_args::2} is not set:
+				set {_args::2} to "1"
+			set {_arg} to concat({_args::*})
+		else if command is {@CheckCommands}:
+			set {_cmd} to "check"
+			if arguments is not set:
+				usage({_operator}, {_cmd})
+				stop
+			set {_arg} to arguments
+		else if command is {@AdminCommands}:
+			set {_cmd} to "admin"
+			if arguments is set:
+				set {_arg} to arguments
+			else:
+				set {_arg} to "help"
+		set {_type} to toType({_cmd})
+		if command sender has permission "{@UsePerm}":
+			command({_operator}, {_cmd}, {_arg})
+		else:
+			send "{@NoPermission}"
+
+on chat:
+	if isMuted(UUID of player):
+		if {@CancelChat} = true:
+			cancel event
+			set {_m} to autoMessage("%UUID of player%", "mute")
+			sendJson("%UUID of player%", {_m})
+
+on connect:
+	if isBanned(UUID of player):
+		kick player due to autoMessage("%UUID of player%", "ban")
+	else:
+		set {_ips::*} to getIps(UUID of player)
+		add arimsk connect ip to {_ips::*}
+		loop {_ips::*}:
+			if isBanned(loop-value):
+				kick player due to autoMessage(loop-value, "ban")
+
+on join:
+	updateUUID(UUID of player, name of player)
+	addIp(UUID of player, IP of player)
+#	set skutil yml value "UUID" of file "plugins/Skript/UUID-DB/%name of player%.yml" to UUID of player
+#	set skutil yml value "Name" of file "plugins/Skript/PlayerData/%UUID of player%/Info.yml" to name of player
+#	set skutil yml value "Name" of file "plugins/Skript/Players/%UUID of player%/CitiesInfo.yml" to name of player
