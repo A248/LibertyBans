@@ -56,23 +56,15 @@ public class Subjects implements SubjectsMaster {
 	}
 	
 	public Subject parseSubject(UUID input) {
-		try {
-			center.environment().resolver().nameFromUUID(input);
-		} catch (PlayerNotFoundException ex) {
-			throw new InvalidUUIDException(input, ex);
+		if (checkUUID(input)) {
+			return Subject.fromUUID(input);
 		}
-		return Subject.fromUUID(input);
+		throw new InvalidUUIDException(input);
 	}
 	
 	@Override
 	public boolean checkUUID(UUID uuid) {
-		try {
-			center.environment().resolver().nameFromUUID(uuid);
-			return true;
-		} catch (PlayerNotFoundException ex) {
-			
-		}
-		return false;
+		return center.cache().uuidExists(uuid);
 	}
 	
 	/**

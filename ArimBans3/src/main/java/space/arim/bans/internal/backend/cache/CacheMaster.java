@@ -9,17 +9,17 @@ import space.arim.bans.internal.Replaceable;
 
 public interface CacheMaster extends Replaceable {
 	
-	public ArrayList<String> getIps(UUID playeruuid);
+	ArrayList<String> getIps(UUID playeruuid);
 	
-	public String getName(UUID playeruuid) throws MissingCacheException;
+	String getName(UUID playeruuid) throws MissingCacheException;
 	
-	public UUID getUUID(String name) throws MissingCacheException;
+	UUID getUUID(String name) throws MissingCacheException;
 	
-	public void update(UUID playeruuid, String name, String ip);
+	void update(UUID playeruuid, String name, String ip);
 	
-	public boolean hasIp(UUID playeruuid, String ip);
+	boolean uuidExists(UUID uuid);
 	
-	public void loadAll(ResultSet data);
+	boolean hasIp(UUID playeruuid, String ip);
 	
-	public void saveAll();
+	void loadAll(ResultSet data);
 }

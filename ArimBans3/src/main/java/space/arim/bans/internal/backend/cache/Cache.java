@@ -99,7 +99,7 @@ public class Cache implements CacheMaster {
 						if (ip != null) {
 							list.add(ip);
 						}
-						ips.replace(playeruuid, list);
+						ips.put(playeruuid, list);
 						center.sql().executeQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID.eval(center.sql().mode()), externaliseIps(list), System.currentTimeMillis(), playeruuid.toString());
 					}
 				});
@@ -126,10 +126,10 @@ public class Cache implements CacheMaster {
 		}
 		return false;
 	}
-
+	
 	@Override
-	public void saveAll() {
-		
+	public boolean uuidExists(UUID uuid) {
+		return uuids.containsKey(uuid);
 	}
 	
 	@Override

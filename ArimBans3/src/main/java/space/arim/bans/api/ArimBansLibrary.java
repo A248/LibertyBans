@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.ConflictingPunishmentException;
+import space.arim.bans.api.exception.PlayerNotFoundException;
 
 public class ArimBansLibrary {
 	
@@ -60,6 +61,13 @@ public class ArimBansLibrary {
 		throw new IllegalArgumentException("Could not make " + address + " into a subject because it is not a valid IP address! To avoid this error, surround your API call in a try/catch statement.");
 	}
 	
+	/**
+	 * Returns the console
+	 * 
+	 * <br><b>Careful!</b> The console has unbounded permissions.
+	 * 
+	 * @return Subject
+	 */
 	public Subject getConsole() {
 		return Subject.console();
 	}
@@ -68,8 +76,33 @@ public class ArimBansLibrary {
 		center.commands().execute(subject, command, args);
 	}
 	
+	/**
+	 * Checks that a UUID corresponds to a cached player
+	 * 
+	 * @param uuid - the uuid to be checked
+	 * @return true if player's UUID is cached
+	 */
 	public boolean checkUUID(UUID uuid) {
 		return center.subjects().checkUUID(uuid);
+	}
+	
+	/**
+	 * Check whether a UUID corresponds to any player
+	 * Differs from {@link #checkUUID(UUID)} in that this method will query the Ashcon/Mojang APIs.
+	 * 
+	 * <br><br><b>This is a blocking operation</b>
+	 * 
+	 * @param uuid - the uuid to be checked
+	 * @return
+	 */
+	public boolean lookupUUID(UUID uuid) {
+		try {
+			center.environment().resolver().nameFromUUID(uuid);
+			return true;
+		} catch (PlayerNotFoundException ex) {
+			
+		}
+		return false;
 	}
 	
 	public boolean checkAddress(String address) {
