@@ -29,6 +29,7 @@ import space.arim.bans.internal.sql.SqlMaster;
 import space.arim.bans.internal.sql.Sql;
 
 public class ArimBans implements AutoCloseable {
+	
 	private File folder;
 	private PrintStream logger;
 	private SimpleDateFormat dateFormatter;
@@ -50,7 +51,7 @@ public class ArimBans implements AutoCloseable {
 		} else {
 			environment().logger().warning("The logger could not be loaded! Reason: Directory creation failed.");
 		}
-		for (Object obj : preloaded) {
+		for (Replaceable obj : preloaded) {
 			if (obj instanceof ConfigMaster) {
 				this.config = (ConfigMaster) obj;
 			} else if (obj instanceof PunishmentsMaster) {
@@ -100,7 +101,7 @@ public class ArimBans implements AutoCloseable {
 		loadData();
 	}
 
-	private boolean checkFile(File file) throws IOException {
+	private static boolean checkFile(File file) throws IOException {
 		if (file.exists() && file.canRead() && file.canWrite()) {
 			return true;
 		} else if (file.exists()) {
@@ -115,7 +116,7 @@ public class ArimBans implements AutoCloseable {
 		return true;
 	}
 	
-	private void loadWriter(String source) {
+	protected void loadWriter(String source) {
 		try {
 			File file = new File(source);
 			if (checkFile(file)) {
