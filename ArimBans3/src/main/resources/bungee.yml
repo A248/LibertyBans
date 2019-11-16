@@ -1,3 +1,4 @@
 name: ${name}
-version: ${version}
 main: ${groupId}.${artifactId}.ArimBansBungee
+version: ${version}
+author: Aerodactyl_
