@@ -9,6 +9,10 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentType;
+import space.arim.bans.api.events.bukkit.PostPunishEvent;
+import space.arim.bans.api.events.bukkit.PostUnpunishEvent;
+import space.arim.bans.api.events.bukkit.PunishEvent;
+import space.arim.bans.api.events.bukkit.UnpunishEvent;
 import space.arim.bans.api.exception.MissingCenterException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.env.Enforcer;
@@ -42,10 +46,10 @@ public class BukkitEnforcer implements Enforcer {
 		}
 		if (!evt.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
 			return;
-		} else if (environment.center().manager().isBanned(environment.center().subjects().parseSubject(evt.getUniqueId()))) {
+		} else if (environment.center().punishments().isBanned(environment.center().subjects().parseSubject(evt.getUniqueId()))) {
 			try {
 				evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, environment.center().formatter()
-						.format(environment.center().manager().getPunishment(environment.center().subjects().parseSubject(evt.getUniqueId()), PunishmentType.BAN)));
+						.format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(evt.getUniqueId()), PunishmentType.BAN)));
 			} catch (MissingPunishmentException ex) {
 				environment.center().logError(ex);
 			}
@@ -53,10 +57,10 @@ public class BukkitEnforcer implements Enforcer {
 			ArrayList<String> ips = environment.center().cache().getIps(evt.getUniqueId());
 			ips.add(evt.getAddress().getHostAddress());
 			for (String addr : ips) {
-				if (environment.center().manager().isBanned(environment.center().subjects().parseSubject(addr))) {
+				if (environment.center().punishments().isBanned(environment.center().subjects().parseSubject(addr))) {
 					try {
 						evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED,
-								environment.center().formatter().format(environment.center().manager().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.BAN)));
+								environment.center().formatter().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.BAN)));
 					} catch (MissingPunishmentException ex) {
 						environment.center().logError(ex);
 					}
@@ -72,19 +76,19 @@ public class BukkitEnforcer implements Enforcer {
 		}
 		if (evt.isCancelled()) {
 			return;
-		} else if (environment.center().manager().isMuted(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()))) {
+		} else if (environment.center().punishments().isMuted(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()))) {
 			evt.setCancelled(true);
 			try {
-				environment.json(evt.getPlayer(), environment.center().formatter().format(environment.center().manager().getPunishment(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()), PunishmentType.MUTE)));
+				environment.json(evt.getPlayer(), environment.center().formatter().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()), PunishmentType.MUTE)));
 			} catch (MissingPunishmentException ex) {
 				environment.center().logError(ex);
 			}
 		} else {
 			for (String addr : environment.center().cache().getIps(evt.getPlayer().getUniqueId())) {
-				if (environment.center().manager().isBanned(environment.center().subjects().parseSubject(addr))) {
+				if (environment.center().punishments().isBanned(environment.center().subjects().parseSubject(addr))) {
 					evt.setCancelled(true);
 					try {
-						environment.json(evt.getPlayer(), environment.center().formatter().format(environment.center().manager().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.MUTE)));
+						environment.json(evt.getPlayer(), environment.center().formatter().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.MUTE)));
 					} catch (MissingPunishmentException ex) {
 						environment.center().logError(ex);
 					}
@@ -119,19 +123,31 @@ public class BukkitEnforcer implements Enforcer {
 			environment.sendMessage(punishment.subject(), message);
 		}
 	}
-
-	// TODO Populate event methods
+	
 	@Override
-	public boolean callPunishEvent(Punishment punishment) {
-		return false;
+	public boolean callPunishEvent(Punishment punishment, boolean retro) {
+		PunishEvent  evt = new PunishEvent(punishment, retro);
+		environment.plugin().getServer().getPluginManager().callEvent(evt);
+		return !evt.isCancelled();
 	}
 	
 	@Override
 	public boolean callUnpunishEvent(Punishment punishment, boolean automatic) {
-		if (automatic) {
-			return true;
-		}
-		return false;
+		UnpunishEvent evt = new UnpunishEvent(punishment, automatic);
+		environment.plugin().getServer().getPluginManager().callEvent(evt);
+		// Must return true if event is automatic
+		// Otherwise data gets corrupted
+		return automatic || !evt.isCancelled();
+	}
+
+	@Override
+	public void callPostPunishEvent(Punishment punishment, boolean retro) {
+		environment.plugin().getServer().getPluginManager().callEvent(new PostPunishEvent(punishment, retro));
+	}
+
+	@Override
+	public void callPostUnpunishEvent(Punishment punishment, boolean automatic) {
+		environment.plugin().getServer().getPluginManager().callEvent(new PostUnpunishEvent(punishment, automatic));
 	}
 	
 	@Override
