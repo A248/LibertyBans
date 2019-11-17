@@ -1,24 +1,40 @@
 package space.arim.bans.internal.config;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.io.ByteStreams;
+
 import space.arim.bans.ArimBans;
+import space.arim.bans.api.Tools;
 import space.arim.bans.api.exception.ConfigSectionException;
+import space.arim.bans.api.exception.InternalStateException;
 
 public class Config implements ConfigMaster {
 	private ArimBans center;
-	private static final Map<String, Object> defaults = Collections.unmodifiableMap(defaults());
+	private final Map<String, Object> defaults = Collections.unmodifiableMap(defaults());
 	private ConcurrentHashMap<String, Object> config = new ConcurrentHashMap<String, Object>();
+	private final File configYml;
+	private final File messagesYml;
+	
+	private static final String CONFIG_VERSION_KEY = "no-touch.no-touch.config-version";
+	private static final int CONFIG_VERSION_VALUE = 1;
 
 	public Config(ArimBans center) {
 		this.center = center;
+		this.configYml = new File(center.dataFolder(), "config.yml");
+		this.messagesYml = new File(center.dataFolder(), "messages.yml");
 		refreshConfig();
 	}
 
-	private static ConcurrentHashMap<String, Object> defaults() {
+	private ConcurrentHashMap<String, Object> defaults() {
 		ConcurrentHashMap<String, Object> defaults = new ConcurrentHashMap<String, Object>();
 		defaults.put("storage.mode", "mysql");
 		defaults.put("storage.min-connections", "2");
@@ -40,11 +56,47 @@ public class Config implements ConfigMaster {
 		defaults.put("fetchers.internal", "true");
 		defaults.put("fetchers.ashcon", "true");
 		defaults.put("fetchers.mojang", "true");
+		defaults.put(CONFIG_VERSION_KEY, Integer.toString(CONFIG_VERSION_VALUE));
 		return defaults;
+	}
+	
+    private static void checkSaveFile(String source, File target) throws IOException {
+    	if (!target.exists()) {
+    		if (!Tools.generateFile(target)) {
+        		throw new InternalStateException("File " + target.getPath() + " is invalid!");
+    		}
+			try (InputStream input = Config.class.getResourceAsStream(source); OutputStream output = new FileOutputStream(target)) {
+				ByteStreams.copy(input, output);
+			}
+    	}
+    }
+    
+	private static void resaveFile(String source, File target) throws IOException {
+		if (target.exists()) {
+			target.delete();
+		}
+		checkSaveFile(source, target);
 	}
 	
 	@Override
 	public void refreshConfig() {
+		try {
+			checkSaveFile("/src/main/resources/config.yml", configYml);
+			checkSaveFile("/src/main/resources/messages.yml", messagesYml);
+		} catch (IOException ex) {
+			center.logError(ex);
+		}
+		// TODO Load configuration from file
+		
+		// continue
+		if (defaults.get(CONFIG_VERSION_KEY) != config.get(CONFIG_VERSION_KEY)) {
+			try {
+				resaveFile("/src/main/resources/config.yml", configYml);
+				resaveFile("/src/main/resources/messages.yml", messagesYml);
+			} catch (IOException ex) {
+				center.logError(ex);
+			}
+		}
 		for (HashMap.Entry<String, Object> entry : defaults.entrySet()) {
 			config.put(entry.getKey(), entry.getValue());
 		}

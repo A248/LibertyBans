@@ -1,12 +1,12 @@
 package space.arim.bans;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import space.arim.bans.api.Tools;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.env.Environment;
 import space.arim.bans.internal.Replaceable;
@@ -100,26 +100,11 @@ public class ArimBans implements AutoCloseable {
 		}
 		loadData();
 	}
-
-	private static boolean checkFile(File file) throws IOException {
-		if (file.exists() && file.canRead() && file.canWrite()) {
-			return true;
-		} else if (file.exists()) {
-			file.delete();
-		}
-		if (!file.getParentFile().mkdirs()) {
-			return false;
-		}
-		if (!file.createNewFile()) {
-			return false;
-		}
-		return true;
-	}
 	
 	protected void loadWriter(String source) {
 		try {
 			File file = new File(source);
-			if (checkFile(file)) {
+			if (Tools.generateFile(file)) {
 				dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 				logger = new PrintStream(file);
 			}

@@ -1,8 +1,10 @@
 package space.arim.bans.api;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -27,6 +29,8 @@ public class Tools {
 	private static final String MOJANG_API_FROM_NAME = "https://api.mojang.com/users/profiles/minecraft/";
 	private static final String MOJANG_API_FROM_UUID = "https://api.mojang.com/user/profiles/";
 	
+    private static final String SPIGOT_UPDATE_API = "https://api.spigotmc.org/legacy/update.php?resource=";
+	
 	private Tools() {}
 	
 	private static JSONObject getDataFromUrl(String url) throws ProtocolException, IOException, ParseException, FetcherException {
@@ -41,11 +45,11 @@ public class Tools {
 		return json;
 	}
 	
-	public static UUID mojangApi(final String name) throws ProtocolException, IOException, ParseException, FetcherException {
+	public static UUID mojangApi(final String name) throws ProtocolException, MalformedURLException, IOException, ParseException, FetcherException {
 		return UUID.fromString(expandUUID(getDataFromUrl(MOJANG_API_FROM_NAME + name).get("id").toString()));
 	}
 	
-	public static String mojangApi(final UUID playeruuid) throws ProtocolException, ParseException, IOException, FetcherException {
+	public static String mojangApi(final UUID playeruuid) throws ProtocolException, MalformedURLException, IOException, ParseException, FetcherException {
 		HttpURLConnection connection = (HttpURLConnection) (new URL(MOJANG_API_FROM_UUID + playeruuid.toString().replaceAll("-", "") + "/names")).openConnection();
 		connection.setRequestMethod("GET");
 		connection.connect();
@@ -55,18 +59,36 @@ public class Tools {
 		try (Scanner scanner = new Scanner(connection.getInputStream())) {
 			String s = scanner.useDelimiter("\\A").next();
 			connection.disconnect();
+			scanner.close();
 			return ((JSONObject) JSONValue.parseWithException(s.substring(s.lastIndexOf('{'), s.lastIndexOf('}') + 1))).get("name").toString();
 		} catch (Exception ex) {
 			throw ex;
 		}
 	}
 	
-	public static UUID ashconApi(final String name) throws ProtocolException, IOException, ParseException, FetcherException {
+	public static UUID ashconApi(final String name) throws ProtocolException, MalformedURLException, IOException, ParseException, FetcherException {
 		return UUID.fromString(getDataFromUrl(ASHCON_API + name).get("uuid").toString());
 	}
 	
-	public static String ashconApi(final UUID playeruuid) throws ProtocolException, IOException, ParseException, FetcherException {
+	public static String ashconApi(final UUID playeruuid) throws ProtocolException, MalformedURLException, IOException, ParseException, FetcherException {
 		return getDataFromUrl("https://api.ashcon.app/mojang/v2/user/" + playeruuid).get("username").toString();
+	}
+	
+	public static String getLatestVersion(int resourceId) throws ProtocolException, MalformedURLException, IOException, FetcherException {
+		HttpURLConnection connection = (HttpURLConnection) (new URL(SPIGOT_UPDATE_API + resourceId)).openConnection();
+		connection.setRequestMethod("GET");
+		connection.connect();
+		try (Scanner scanner = new Scanner(connection.getInputStream())) {
+			if (scanner.hasNext()) {
+				String version = scanner.next();
+				connection.disconnect();
+				scanner.close();
+				return version;
+			}
+			throw new FetcherException("Scanner has no response!");
+		} catch (Exception ex) {
+			throw ex;
+		}
 	}
 	
 	public static String expandUUID(String uuid) {
@@ -161,5 +183,21 @@ public class Tools {
 	
 	public static BaseComponent[] parseJson(String json) {
 		return parseJson(json, true);
+	}
+	
+	public static boolean generateFile(File file) {
+		if (file.exists() && file.canRead() && file.canWrite()) {
+			return true;
+		} else if (file.exists()) {
+			file.delete();
+		}
+		if (!file.getParentFile().mkdirs()) {
+			return false;
+		}
+		try {
+			return file.createNewFile();
+		} catch (IOException ex) {
+			return false;
+		}
 	}
 }
