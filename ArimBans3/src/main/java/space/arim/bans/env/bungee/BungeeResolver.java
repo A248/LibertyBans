@@ -103,7 +103,7 @@ public class BungeeResolver implements Resolver {
 
 	@Override
 	public void refreshConfig() {
-		ashconFetcher = environment.center().config().parseBoolean("fetchers.ashcon");
-		mojangFetcher = environment.center().config().parseBoolean("fetchers.mojang");
+		ashconFetcher = environment.center().config().getBoolean("fetchers.ashcon");
+		mojangFetcher = environment.center().config().getBoolean("fetchers.mojang");
 	}
 }

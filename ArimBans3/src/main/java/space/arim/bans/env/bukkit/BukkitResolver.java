@@ -120,8 +120,8 @@ public class BukkitResolver implements Resolver {
 
 	@Override
 	public void refreshConfig() {
-		internalFetcher = environment.center().config().parseBoolean("fetchers.internal");
-		ashconFetcher = environment.center().config().parseBoolean("fetchers.ashcon");
-		mojangFetcher = environment.center().config().parseBoolean("fetchers.mojang");
+		internalFetcher = environment.center().config().getBoolean("fetchers.internal");
+		ashconFetcher = environment.center().config().getBoolean("fetchers.ashcon");
+		mojangFetcher = environment.center().config().getBoolean("fetchers.mojang");
 	}
 }

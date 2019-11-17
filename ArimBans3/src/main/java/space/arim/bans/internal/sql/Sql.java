@@ -45,7 +45,7 @@ public class Sql implements SqlMaster {
 		config.setMinimumIdle(min_connections);
 		config.setMaximumPoolSize(max_connections);
 		if (mode.equals(StorageMode.MYSQL)) {
-			config.setJdbcUrl(center.config().getString("storage.mysql.url").replaceAll("<host>", center.config().getString("storage.mysql.host")).replaceAll("<port>", Integer.toString(center.config().parseInt("storage.mysql.port"))).replaceAll("<database>", center.config().getString("storage.mysql.database")));
+			config.setJdbcUrl(center.config().getString("storage.mysql.url").replaceAll("<host>", center.config().getString("storage.mysql.host")).replaceAll("<port>", Integer.toString(center.config().getInt("storage.mysql.port"))).replaceAll("<database>", center.config().getString("storage.mysql.database")));
 			config.setUsername(center.config().getString("storage.mysql.user"));
 			config.setPassword(center.config().getString("storage.mysql.password"));
 		} else if (mode.equals(StorageMode.HSQLDB)) {
@@ -171,8 +171,8 @@ public class Sql implements SqlMaster {
 	@Override
 	public void refreshConfig() {
 		mode = parseMode("storage.mode");
-		min_connections = center.config().parseInt("storage.min-connections");
-		max_connections = center.config().parseInt("storage.max-connections");
+		min_connections = center.config().getInt("storage.min-connections");
+		max_connections = center.config().getInt("storage.max-connections");
 	}
 
 }
