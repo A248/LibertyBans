@@ -2,7 +2,7 @@ name: ${project.name}
 main: ${project.groupId}.${project.artifactId}.ArimBansBukkit
 version: ${project.version}
 author: Aerodactyl_
-description: Fully re-coded java-based version of ArimBans2.sk
+description: ArimBans is the ultimate punitive solution for single servers and networks, seeking to maximise efficiency through near-total asynchronous operation.
 
 commands:
   arimbans:
