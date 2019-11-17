@@ -19,11 +19,11 @@ public class ArimBansLibrary {
 	}
 	
 	public boolean isBanned(Subject subject) {
-		return center.manager().isBanned(subject);
+		return center.punishments().isBanned(subject);
 	}
 	
 	public boolean isMuted(Subject subject) {
-		return center.manager().isMuted(subject);
+		return center.punishments().isMuted(subject);
 	}
 	
 	public int countWarns(Subject subject) {
@@ -31,11 +31,15 @@ public class ArimBansLibrary {
 	}
 	
 	public Set<Punishment> getWarns(Subject subject) {
-		return center.manager().getWarns(subject);
+		return center.punishments().getWarns(subject);
+	}
+	
+	public Set<Punishment> getKicks(Subject subject) {
+		return center.punishments().getKicks(subject);
 	}
 	
 	public void addPunishments(Punishment...punishments) throws ConflictingPunishmentException {
-		center.manager().addPunishments(punishments);
+		center.punishments().addPunishments(punishments);
 	}
 	
 	public Subject fromUUID(UUID subject) {

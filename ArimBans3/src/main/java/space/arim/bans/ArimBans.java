@@ -40,8 +40,8 @@ public class ArimBans implements AutoCloseable {
 	private SubjectsMaster subjects;
 	private CacheMaster cache;
 	private CommandsMaster commands;
-	private FormatsMaster formatter;
-	private AsyncMaster threads;
+	private FormatsMaster formats;
+	private AsyncMaster async;
 	
 	public ArimBans(File dataFolder, Environment environment, Replaceable...preloaded) {
 		this.folder = dataFolder;
@@ -61,9 +61,9 @@ public class ArimBans implements AutoCloseable {
 			} else if (obj instanceof SubjectsMaster) {
 				this.subjects = (SubjectsMaster) obj;
 			} else if (obj instanceof FormatsMaster) {
-				this.formatter = new Formats(this);
+				this.formats = new Formats(this);
 			} else if (obj instanceof AsyncMaster) {
-				this.threads = new Async();
+				this.async = new Async();
 			} else if (obj instanceof CommandsMaster) {
 				this.commands = (CommandsMaster) obj;
 			} else if (obj instanceof CacheMaster) {
@@ -83,11 +83,11 @@ public class ArimBans implements AutoCloseable {
 			if (this.subjects == null) {
 				this.subjects = new Subjects(this);
 			}
-			if (this.formatter == null) {
-				this.formatter = new Formats(this);
+			if (this.formats == null) {
+				this.formats = new Formats(this);
 			}
-			if (this.threads == null) {
-				this.threads = new Async();
+			if (this.async == null) {
+				this.async = new Async();
 			}
 			if (this.commands == null) {
 				this.commands = new Commands(this);
@@ -119,12 +119,12 @@ public class ArimBans implements AutoCloseable {
 			sql().executeQuery(new SqlQuery(SqlQuery.Query.CREATE_TABLE_CACHE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.CREATE_TABLE_ACTIVE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.CREATE_TABLE_HISTORY.eval(sql().mode())));
 			ResultSet[] data = sql().selectQuery(new SqlQuery(SqlQuery.Query.SELECT_ALL_CACHED.eval(sql().mode())), new SqlQuery(SqlQuery.Query.SELECT_ALL_ACTIVE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.SELECT_ALL_HISTORY.eval(sql().mode())));
 			cache().loadAll(data[0]);
-			manager().loadActive(data[1]);
-			manager().loadHistory(data[2]);
+			punishments().loadActive(data[1]);
+			punishments().loadHistory(data[2]);
 		});
 	}
 
-	public PunishmentsMaster manager() {
+	public PunishmentsMaster punishments() {
 		return manager;
 	}
 
@@ -148,12 +148,12 @@ public class ArimBans implements AutoCloseable {
 		return commands;
 	}
 
-	public FormatsMaster formatter() {
-		return formatter;
+	public FormatsMaster formats() {
+		return formats;
 	}
 
 	public AsyncMaster async() {
-		return threads;
+		return async;
 	}
 
 	public File dataFolder() {
@@ -184,23 +184,28 @@ public class ArimBans implements AutoCloseable {
 	
 	public void refreshConfig() {
 		config.refreshConfig();
-		threads.refreshConfig();
+		async.refreshConfig();
 		sql.refreshConfig();
 		manager.refreshConfig();
+		manager.refreshActive();
+		commands.refreshConfig();
+		cache.refreshConfig();
+		formats.refreshConfig();
+		async.refreshConfig();
 	}
 	
 	@Override
 	public void close() {
 		try {
 			config.close();
-			threads.shutdown();
+			async.shutdown();
 			sql.close();
 			manager.close();
 			subjects.close();
 			commands.close();
 			cache.close();
-			formatter.close();
-			threads.close();
+			formats.close();
+			async.close();
 			logger.close();
 		} catch (Exception ex) {
 			logError(ex);

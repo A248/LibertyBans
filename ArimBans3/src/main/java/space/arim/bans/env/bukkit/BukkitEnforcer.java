@@ -48,7 +48,7 @@ public class BukkitEnforcer implements Enforcer {
 			return;
 		} else if (environment.center().punishments().isBanned(environment.center().subjects().parseSubject(evt.getUniqueId()))) {
 			try {
-				evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, environment.center().formatter()
+				evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, environment.center().formats()
 						.format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(evt.getUniqueId()), PunishmentType.BAN)));
 			} catch (MissingPunishmentException ex) {
 				environment.center().logError(ex);
@@ -60,7 +60,7 @@ public class BukkitEnforcer implements Enforcer {
 				if (environment.center().punishments().isBanned(environment.center().subjects().parseSubject(addr))) {
 					try {
 						evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED,
-								environment.center().formatter().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.BAN)));
+								environment.center().formats().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.BAN)));
 					} catch (MissingPunishmentException ex) {
 						environment.center().logError(ex);
 					}
@@ -79,7 +79,7 @@ public class BukkitEnforcer implements Enforcer {
 		} else if (environment.center().punishments().isMuted(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()))) {
 			evt.setCancelled(true);
 			try {
-				environment.json(evt.getPlayer(), environment.center().formatter().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()), PunishmentType.MUTE)));
+				environment.json(evt.getPlayer(), environment.center().formats().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()), PunishmentType.MUTE)));
 			} catch (MissingPunishmentException ex) {
 				environment.center().logError(ex);
 			}
@@ -88,7 +88,7 @@ public class BukkitEnforcer implements Enforcer {
 				if (environment.center().punishments().isBanned(environment.center().subjects().parseSubject(addr))) {
 					evt.setCancelled(true);
 					try {
-						environment.json(evt.getPlayer(), environment.center().formatter().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.MUTE)));
+						environment.json(evt.getPlayer(), environment.center().formats().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.MUTE)));
 					} catch (MissingPunishmentException ex) {
 						environment.center().logError(ex);
 					}
@@ -111,7 +111,7 @@ public class BukkitEnforcer implements Enforcer {
 	@Override
 	public void enforce(Punishment punishment) {
 		Set<? extends Player> targets = environment.applicable(punishment.subject());
-		String message = environment.center().formatter().format(punishment);
+		String message = environment.center().formats().format(punishment);
 		if (punishment.type().equals(PunishmentType.BAN)) {
 			for (Player target : targets) {
 				target.kickPlayer(message);
