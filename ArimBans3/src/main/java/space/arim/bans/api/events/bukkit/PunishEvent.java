@@ -1,10 +1,25 @@
 package space.arim.bans.api.events.bukkit;
 
-import space.arim.bans.api.Punishment;
+import org.bukkit.event.Cancellable;
 
-public class PunishEvent extends AbstractPunishEvent {
+import space.arim.bans.api.Punishment;
+import space.arim.bans.api.events.UniversalPunishEvent;
+
+public class PunishEvent extends AbstractBukkitEvent implements UniversalPunishEvent, Cancellable {
 
 	private final boolean retro;
+	
+	private boolean cancel = false;
+	
+	@Override
+	public void setCancelled(boolean cancel) {
+		this.cancel = cancel;
+	}
+	
+	@Override
+	public boolean isCancelled() {
+		return this.cancel;
+	}
 	
 	public PunishEvent(final Punishment punishment) {
 		this(punishment, false);
@@ -15,15 +30,7 @@ public class PunishEvent extends AbstractPunishEvent {
 		this.retro = retro;
 	}
 	
-	/**
-	 * Using {@link space.arim.bans.internal.backend.punishment.PunishmentsMaster#addPunishments(Punishment...)},
-	 * it is possible for API calls to add punishments whose date is in the past
-	 * 
-	 * <br><br>Such retrogade punishments are added to punishment history but not to active punishments.
-	 * Hence, they aren't enforced, since they're already expired.
-	 * 
-	 * @return boolean - whether this PunishEvent concerns a retro punishment
-	 */
+	@Override
 	public boolean isRetrogade() {
 		return retro;
 	}
