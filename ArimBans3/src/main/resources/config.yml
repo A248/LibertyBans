@@ -1,20 +1,38 @@
 #
 #
-# ${name} Configuration
+# ${name}
 # v${version}
 #
-
-
-# Types of Punishments
-#
-#ban
-#mute
-#warn
-#kick
-
-# Types of Commands
-#
 # 
-
-#DO NOT TOUCH
+## CONFIGURATION ##
+#
+# For information on the configuration, please see:
+# https://github.com/A248/ArimBans/wiki/Configuration
+#
+#
+storage:
+  mode: 'file'
+  min-connections: 2
+  max-connections: 5
+  hsqldb:
+    url: 'jdbc:hsqldb:file:<file>'
+  mysql:
+    host: 'localhost'
+    port: 3306
+    user: 'ArimBans'
+    database: 'punishment'
+    password: 'defaultpassword'
+    url: 'jdbc:mysql://<ip>:<port>/<database>?autoReconnect=true&useUnicode=true&characterEncoding=utf8'
+formatting:
+  use-json: true
+  permanent-display: 'Permanently'
+  console-display: 'Console'
+  date: 'dd/MM/yyyy HH:mm:ss'
+priorities:
+  bans: 'HIGHEST'
+  mutes: 'HIGHEST'
+fetchers:
+  internal: true
+  ashcon: true
+  mojang: true
 version: '${version}'

@@ -1,0 +1,13 @@
+#
+#
+# ${name}
+# v${version}
+#
+# 
+## Messages ##
+#
+# For information on the configuration, please see:
+# https://github.com/A248/ArimBans/wiki/Configuration
+#
+#
+version: '${version}'
