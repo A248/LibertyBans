@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -55,12 +54,10 @@ public class BukkitEnv implements Environment {
 	public void sendMessage(Subject subj, String jsonable) {
 		if (json) {
 			if (subj.getType().equals(SubjectType.PLAYER)) {
-				OfflinePlayer target = plugin.getServer().getOfflinePlayer(subj.getUUID());
+				Player target = plugin.getServer().getPlayer(subj.getUUID());
 				if (target != null) {
-					if (target.isOnline()) {
-						json(target.getPlayer(), jsonable);
-						return;
-					}
+					json(target.getPlayer(), jsonable);
+					return;
 				}
 				throw new InvalidSubjectException("Subject " + center.subjects().display(subj) + " is not online or does not have a valid UUID.");
 			} else if (subj.getType().equals(SubjectType.CONSOLE)) {
@@ -75,12 +72,10 @@ public class BukkitEnv implements Environment {
 			return;
 		} else if (!json) {
 			if (subj.getType().equals(SubjectType.PLAYER)) {
-				OfflinePlayer target = plugin.getServer().getOfflinePlayer(subj.getUUID());
+				Player target = plugin.getServer().getPlayer(subj.getUUID());
 				if (target != null) {
-					if (target.isOnline()) {
-						target.getPlayer().sendMessage(Tools.encode(jsonable));
-						return;
-					}
+					target.getPlayer().sendMessage(Tools.encode(jsonable));
+					return;
 				}
 				throw new InvalidSubjectException("Subject " + center.subjects().display(subj) + " is not online or does not have a valid UUID.");
 			} else if (subj.getType().equals(SubjectType.CONSOLE)) {
@@ -102,16 +97,14 @@ public class BukkitEnv implements Environment {
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
 			return true;
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {
-			OfflinePlayer target = plugin.getServer().getOfflinePlayer(subject.getUUID());
+			Player target = plugin.getServer().getPlayer(subject.getUUID());
 			if (target != null) {
-				if (target.isOnline()) {
-					for (String perm : permissions) {
-						if (!target.getPlayer().hasPermission(perm)) {
-							return false;
-						}
+				for (String perm : permissions) {
+					if (!target.getPlayer().hasPermission(perm)) {
+						return false;
 					}
-					return true;
 				}
+				return true;
 			}
 			throw new InvalidSubjectException("Subject " + center.subjects().display(subject) + " is not online or does not have a valid UUID.");
 		} else if (subject.getType().equals(SubjectType.IP)) {
