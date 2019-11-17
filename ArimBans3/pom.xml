@@ -7,6 +7,7 @@
   <description>ArimBans is the ultimate punitive solution for single servers and networks, seeking to maximise efficiency through near-total asynchronous operation.</description>
   <build>
     <sourceDirectory>src</sourceDirectory>
+    <finalName>${project.name}_v${project.version}</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -29,12 +30,8 @@
             <configuration>
               <artifactSet>
                 <includes>
-                  <include>com.zaxxer</include>
-                  <include>HikariCP</include>
-                </includes>
-                <includes>
-                  <include>org.slf4j</include>
-                  <include>slf4j-simple</include>
+                  <include>com.zaxxer:HikariCP</include>
+                  <include>org.slf4j:slf4j-simple</include>
                 </includes>
               </artifactSet>
             </configuration>
