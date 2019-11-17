@@ -1,7 +1,7 @@
 #
 #
-# ${name}
-# v${version}
+# ${project.name}
+# v${project.version}
 #
 # 
 ## CONFIGURATION ##
@@ -12,17 +12,17 @@
 #
 storage:
   mode: 'file'
-  min-connections: 2
-  max-connections: 5
-  hsqldb:
+  file:
     url: 'jdbc:hsqldb:file:<file>'
   mysql:
     host: 'localhost'
     port: 3306
-    user: 'ArimBans'
     database: 'punishment'
+    user: 'ArimBans'
     password: 'defaultpassword'
     url: 'jdbc:mysql://<ip>:<port>/<database>?autoReconnect=true&useUnicode=true&characterEncoding=utf8'
+  min-connections: 2
+  max-connections: 5
 formatting:
   use-json: true
   permanent-display: 'Permanently'
@@ -35,4 +35,5 @@ fetchers:
   internal: true
   ashcon: true
   mojang: true
-version: '${version}'
+other:
+  version: '${project.version}'

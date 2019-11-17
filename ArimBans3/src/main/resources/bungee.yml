@@ -1,4 +1,4 @@
-name: ${name}
-main: ${groupId}.${artifactId}.ArimBansBungee
+name: ${project.name}
+main: ${project.groupId}.${project.artifactId}.ArimBansBungee
 version: ${version}
 author: Aerodactyl_

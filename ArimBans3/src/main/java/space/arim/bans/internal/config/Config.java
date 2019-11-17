@@ -1,3 +1,21 @@
+/*
+ * ArimBans, a punishment plugin for minecraft servers
+ * Copyright © 2019 Anand Beh <https://www.arim.space>
+ * 
+ * ArimBans is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * ArimBans is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with ArimBans. If not, see <https://www.gnu.org/licenses/>
+ * and navigate to version 3 of the GNU General Public License.
+ */
 package space.arim.bans.internal.config;
 
 import java.io.File;
@@ -5,7 +23,6 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,8 +33,6 @@ import com.google.common.io.ByteStreams;
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.Tools;
 import space.arim.bans.api.exception.ConfigLoadException;
-import space.arim.bans.api.exception.ConfigSectionException;
-import space.arim.bans.api.exception.InternalStateException;
 
 public class Config implements ConfigMaster {
 	private ArimBans center;
@@ -57,14 +72,14 @@ public class Config implements ConfigMaster {
 	private void saveIfNotExist(File target, String source) {
 		if (!target.exists()) {
 			if (!Tools.generateFile(target)) {
-				InternalStateException exception = new ConfigLoadException(target);
+				ConfigLoadException exception = new ConfigLoadException(target);
 				center.logError(exception);
 				throw exception;
 			}
-			try (InputStream input = getClass().getResourceAsStream(source); OutputStream output = new FileOutputStream(target)) {
+			try (InputStream input = getClass().getResourceAsStream(source); FileOutputStream output = new FileOutputStream(target)) {
 				ByteStreams.copy(input, output);
 			} catch (IOException ex) {
-				InternalStateException exception = new ConfigLoadException("Could not save " + target.getPath() + " from " + source, ex);
+				ConfigLoadException exception = new ConfigLoadException("Could not save " + target.getPath() + " from " + source, ex);
 				center.logError(exception);
 				throw exception;
 			}
@@ -76,7 +91,7 @@ public class Config implements ConfigMaster {
 		try (InputStream input = getClass().getResourceAsStream(source)) {
 			return (Map<String, Object>) yaml.load(input);
 		} catch (IOException ex) {
-			InternalStateException exception = new ConfigLoadException("Could not load internal resource " + source, ex);
+			ConfigLoadException exception = new ConfigLoadException("Could not load internal resource " + source, ex);
 			center.logError(exception);
 			throw exception;
 		}
@@ -87,18 +102,18 @@ public class Config implements ConfigMaster {
 		try (FileReader reader = new FileReader(source)) {
 			return (Map<String, Object>) yaml.load(reader);
 		} catch (IOException ex) {
-			InternalStateException exception = new ConfigLoadException(source, ex);
+			ConfigLoadException exception = new ConfigLoadException(source, ex);
 			center.logError(exception);
 			throw exception;
 		}
 	}
 	
 	private void checkVersion() {
-		if (configValues.get("version") != configDefaults.get("version")) {
+		if (configValues.get("other.version") != configDefaults.get("other.version")) {
 			configYml.delete();
 			saveIfNotExist(configYml, "/src/main/resources/config.yml");
 		}
-		if (messageValues.get("version") != messageDefaults.get("version")) {
+		if (messageValues.get("other.version") != messageDefaults.get("other.version")) {
 			messagesYml.delete();
 			saveIfNotExist(messagesYml, "/src/main/resources/messages.yml");
 		}
@@ -127,14 +142,7 @@ public class Config implements ConfigMaster {
 	
 	@Override
 	public String getString(String key) {
-		if (config().containsKey(key)) {
-			Object obj = config().get(key);
-			if (obj instanceof String) {
-				return (String) obj;
-			}
-			configWarning(key, String.class);
-		}
-		return (String) configDefaults.get(key);
+		return get(key, String.class);
 	}
 
 	@Override
@@ -151,32 +159,35 @@ public class Config implements ConfigMaster {
 	
 	@Override
 	public boolean getBoolean(String key) {
-		switch (getString(key).toLowerCase()) {
-		case "true":
-			return true;
-		case "yes":
-			return true;
-		case "false":
-			return false;
-		case "no":
-			return false;
-		default:
-			throw new ConfigSectionException(key);
-		}
+		return get(key, Boolean.class);
 	}
 
 	@Override
 	public int getInt(String key) {
-		try {
-			return Integer.parseInt(getString(key));
-		} catch (NumberFormatException ex) {
-			throw new ConfigSectionException(key, ex);
+		return get(key, Integer.class);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private <T> T get(String key, Class<T> type) {
+		if (configValues.containsKey(key)) {
+			Object obj = configValues.get(key);
+			if (type.isInstance(obj)) {
+				return (T) obj;
+			}
+			configWarning(key, type);
 		}
+		return (T) configDefaults.get(key);
 	}
 	
 	@Override
 	public String getMessage(String key) {
-		return null;
+		if (messageValues.containsKey(key)) {
+			Object obj = messageValues.get(key);
+			if (obj instanceof String) {
+				return (String) obj;
+			}
+		}
+		return (String) messageDefaults.get(key);
 	}
 	
 	@Override

@@ -1,6 +1,6 @@
-name: ${name}
-main: ${groupId}.${artifactId}.ArimBansBukkit
-version: ${version}
+name: ${project.name}
+main: ${project.groupId}.${project.artifactId}.ArimBansBukkit
+version: ${project.version}
 author: Aerodactyl_
 description: Fully re-coded java-based version of ArimBans2.sk
 

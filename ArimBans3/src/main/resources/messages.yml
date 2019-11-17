@@ -1,7 +1,7 @@
 #
 #
-# ${name}
-# v${version}
+# ${project.name}
+# v${project.version}
 #
 # 
 ## Messages ##
@@ -10,4 +10,5 @@
 # https://github.com/A248/ArimBans/wiki/Configuration
 #
 #
-version: '${version}'
+other:
+  version: '${project.version}'
