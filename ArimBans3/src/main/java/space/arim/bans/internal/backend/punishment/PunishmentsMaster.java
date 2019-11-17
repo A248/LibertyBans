@@ -22,9 +22,13 @@ public interface PunishmentsMaster extends Replaceable {
 
 	public boolean isMuted(Subject subject);
 
-	public Set<Punishment> getWarns(Subject subject);
+	Set<Punishment> getWarns(Subject subject);
 	
-	public void loadActive(ResultSet data);
+	Set<Punishment> getKicks(Subject subject);
 	
-	public void loadHistory(ResultSet data);
+	void loadActive(ResultSet data);
+	
+	void loadHistory(ResultSet data);
+	
+	void refreshActive();
 }
