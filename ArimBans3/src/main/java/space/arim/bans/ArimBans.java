@@ -96,7 +96,7 @@ public class ArimBans implements AutoCloseable {
 				this.cache = new Cache(this);
 			}
 		} catch (Exception ex) {
-			throw new InternalStateException("Encountered an error while loading!", ex);
+			throw new InternalStateException("WARNING: Error encountered during loading!", ex);
 		}
 		loadData();
 	}
