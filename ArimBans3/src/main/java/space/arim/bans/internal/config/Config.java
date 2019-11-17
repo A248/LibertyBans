@@ -2,104 +2,114 @@ package space.arim.bans.internal.config;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.io.ByteStreams;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.Tools;
+import space.arim.bans.api.exception.ConfigLoadException;
 import space.arim.bans.api.exception.ConfigSectionException;
 import space.arim.bans.api.exception.InternalStateException;
 
 public class Config implements ConfigMaster {
 	private ArimBans center;
-	private final Map<String, Object> defaults = Collections.unmodifiableMap(defaults());
-	private ConcurrentHashMap<String, Object> config = new ConcurrentHashMap<String, Object>();
+	
 	private final File configYml;
 	private final File messagesYml;
-	
-	private static final String CONFIG_VERSION_KEY = "no-touch.no-touch.config-version";
-	private static final int CONFIG_VERSION_VALUE = 1;
+	private final Map<String, Object> configDefaults;
+	private final Map<String, Object> messageDefaults;
+	private ConcurrentHashMap<String, Object> configValues = new ConcurrentHashMap<String, Object>();
+	private ConcurrentHashMap<String, Object> messageValues = new ConcurrentHashMap<String, Object>();
 
 	public Config(ArimBans center) {
 		this.center = center;
 		this.configYml = new File(center.dataFolder(), "config.yml");
 		this.messagesYml = new File(center.dataFolder(), "messages.yml");
-		refreshConfig();
-	}
-
-	private ConcurrentHashMap<String, Object> defaults() {
-		ConcurrentHashMap<String, Object> defaults = new ConcurrentHashMap<String, Object>();
-		defaults.put("storage.mode", "mysql");
-		defaults.put("storage.min-connections", "2");
-		defaults.put("storage.max-connections", "5");
-		defaults.put("storage.mysql.host", "localhost");
-		defaults.put("storage.mysql.port", "3306");
-		defaults.put("storage.mysql.user", "ArimBans");
-		defaults.put("storage.mysql.database", "arimbans");
-		defaults.put("storage.mysql.password", "defaultpassword");
-		defaults.put("storage.mysql.url",
-				"jdbc:mysql://<ip>:<port>/<database>?autoReconnect=true&useUnicode=true&characterEncoding=utf8");
-		defaults.put("storage.hsqldb.url", "jdbc:hsqldb:file:<file>");
-		defaults.put("formatting.use-json", "true");
-		defaults.put("formatting.permanent-display", "Permanently");
-		defaults.put("formatting.console-display", "Console");
-		defaults.put("formatting.date", "dd/MM/yyyy HH:mm:ss");
-		defaults.put("bans.event-priority", "HIGHEST");
-		defaults.put("mutes.event-priority", "HIGHEST");
-		defaults.put("fetchers.internal", "true");
-		defaults.put("fetchers.ashcon", "true");
-		defaults.put("fetchers.mojang", "true");
-		defaults.put(CONFIG_VERSION_KEY, Integer.toString(CONFIG_VERSION_VALUE));
-		return defaults;
+		
+		Yaml yaml = new Yaml();
+		
+		// Save files if nonexistent
+		saveIfNotExist(configYml, "/src/main/resources/config.yml");
+		saveIfNotExist(messagesYml, "/src/main/resources/messages.yml");
+		
+		// Load config defaults
+		configDefaults = loadDefaults("/src/main/resources/config.yml", yaml);
+		messageDefaults = loadDefaults("/src/main/resources/messages.yml", yaml);
+		configValues.putAll(configDefaults);
+		messageValues.putAll(messageDefaults);
+		
+		// Load config values
+		configValues.putAll(loadFile(configYml, yaml));
+		messageValues.putAll(loadFile(messagesYml, yaml));
+		
+		// Check config versions
+		checkVersion();
 	}
 	
-    private static void checkSaveFile(String source, File target) throws IOException {
-    	if (!target.exists()) {
-    		if (!Tools.generateFile(target)) {
-        		throw new InternalStateException("File " + target.getPath() + " is invalid!");
-    		}
-			try (InputStream input = Config.class.getResourceAsStream(source); OutputStream output = new FileOutputStream(target)) {
-				ByteStreams.copy(input, output);
+	private void saveIfNotExist(File target, String source) {
+		if (!target.exists()) {
+			if (!Tools.generateFile(target)) {
+				InternalStateException exception = new ConfigLoadException(target);
+				center.logError(exception);
+				throw exception;
 			}
-    	}
-    }
-    
-	private static void resaveFile(String source, File target) throws IOException {
-		if (target.exists()) {
-			target.delete();
+			try (InputStream input = getClass().getResourceAsStream(source); OutputStream output = new FileOutputStream(target)) {
+				ByteStreams.copy(input, output);
+			} catch (IOException ex) {
+				InternalStateException exception = new ConfigLoadException("Could not save " + target.getPath() + " from " + source, ex);
+				center.logError(exception);
+				throw exception;
+			}
 		}
-		checkSaveFile(source, target);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> loadDefaults(String source, Yaml yaml) {
+		try (InputStream input = getClass().getResourceAsStream(source)) {
+			return (Map<String, Object>) yaml.load(input);
+		} catch (IOException ex) {
+			InternalStateException exception = new ConfigLoadException("Could not load internal resource " + source, ex);
+			center.logError(exception);
+			throw exception;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> loadFile(File source, Yaml yaml) {
+		try (FileReader reader = new FileReader(source)) {
+			return (Map<String, Object>) yaml.load(reader);
+		} catch (IOException ex) {
+			InternalStateException exception = new ConfigLoadException(source, ex);
+			center.logError(exception);
+			throw exception;
+		}
+	}
+	
+	private void checkVersion() {
+		if (configValues.get("version") != configDefaults.get("version")) {
+			configYml.delete();
+			saveIfNotExist(configYml, "/src/main/resources/config.yml");
+		}
+		if (messageValues.get("version") != messageDefaults.get("version")) {
+			messagesYml.delete();
+			saveIfNotExist(messagesYml, "/src/main/resources/messages.yml");
+		}
 	}
 	
 	@Override
 	public void refreshConfig() {
-		try {
-			checkSaveFile("/src/main/resources/config.yml", configYml);
-			checkSaveFile("/src/main/resources/messages.yml", messagesYml);
-		} catch (IOException ex) {
-			center.logError(ex);
-		}
-		// TODO Load configuration from file
-		
-		// continue
-		if (defaults.get(CONFIG_VERSION_KEY) != config.get(CONFIG_VERSION_KEY)) {
-			try {
-				resaveFile("/src/main/resources/config.yml", configYml);
-				resaveFile("/src/main/resources/messages.yml", messagesYml);
-			} catch (IOException ex) {
-				center.logError(ex);
-			}
-		}
-		for (HashMap.Entry<String, Object> entry : defaults.entrySet()) {
-			config.put(entry.getKey(), entry.getValue());
-		}
+		Yaml yaml = new Yaml();
+		configValues.putAll(loadFile(configYml, yaml));
+		messageValues.putAll(loadFile(messagesYml, yaml));
+		checkVersion();
 	}
 
 	private void warning(String message) {
@@ -111,37 +121,36 @@ public class Config implements ConfigMaster {
 		warning("Configuration " + key + " does not map to a " + type.getSimpleName() + "!");
 	}
 	
+	private ConcurrentHashMap<String, Object> config() {
+		return configValues;
+	}
+	
 	@Override
 	public String getString(String key) {
-		if (config.containsKey(key)) {
-			Object obj = config.get(key);
+		if (config().containsKey(key)) {
+			Object obj = config().get(key);
 			if (obj instanceof String) {
 				return (String) obj;
 			}
 			configWarning(key, String.class);
 		}
-		return (String) defaults.get(key);
+		return (String) configDefaults.get(key);
 	}
 
 	@Override
 	public String[] getStrings(String key) {
-		if (config.containsKey(key)) {
-			Object obj = config.get(key);
+		if (configValues.containsKey(key)) {
+			Object obj = configValues.get(key);
 			if (obj instanceof String[]) {
 				return (String[]) obj;
 			}
 			configWarning(key, String[].class);
 		}
-		return (String[]) defaults.get(key);
+		return (String[]) configDefaults.get(key);
 	}
 	
 	@Override
-	public void close() {
-		config.clear();
-	}
-
-	@Override
-	public boolean parseBoolean(String key) {
+	public boolean getBoolean(String key) {
 		switch (getString(key).toLowerCase()) {
 		case "true":
 			return true;
@@ -157,11 +166,26 @@ public class Config implements ConfigMaster {
 	}
 
 	@Override
-	public int parseInt(String key) {
+	public int getInt(String key) {
 		try {
 			return Integer.parseInt(getString(key));
 		} catch (NumberFormatException ex) {
 			throw new ConfigSectionException(key, ex);
 		}
+	}
+	
+	@Override
+	public String getMessage(String key) {
+		return null;
+	}
+	
+	@Override
+	public String[] getMessages(String key) {
+		return null;
+	}
+	
+	@Override
+	public void close() {
+
 	}
 }
