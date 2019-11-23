@@ -19,6 +19,7 @@
 package space.arim.bans;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
@@ -62,7 +63,7 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	
 	private final File folder;
 	private PrintStream logger;
-	private SimpleDateFormat dateFormatter;
+	private final SimpleDateFormat dateFormatter;
 	private final Environment environment;
 	private final ConfigMaster config;
 	private final SqlMaster sql;
@@ -86,10 +87,18 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	public ArimBans(File dataFolder, Environment environment, Component...preloaded) {
 		this.folder = dataFolder;
 		this.environment = environment;
+		this.dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		if (dataFolder.mkdirs()) {
-			loadWriter(dataFolder.getPath() + File.separator + "info.log");
+			File writerFile = new File(dataFolder, "info.log");
+			if (Tools.generateFile(writerFile)) {
+				try {
+					logger = new PrintStream(writerFile);
+				} catch (FileNotFoundException ex) {
+					ex.printStackTrace();
+				}
+			}
 		} else {
-			environment().logger().warning("The logger could not be loaded! Reason: Directory creation failed.");
+			environment().logger().warning("ArimBans: **Severe Error**\nDirectory creation of " + dataFolder.getPath() + " failed!");
 		}
 		config = load(ConfigMaster.class, preloaded, new Getter<ConfigMaster>() {
 			@Override
@@ -141,19 +150,6 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 		});
 		UniversalRegistry.register(PunishmentPlugin.class, this);
 		loadData();
-	}
-	
-	protected void loadWriter(String source) {
-		try {
-			File file = new File(source);
-			if (Tools.generateFile(file)) {
-				dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-				logger = new PrintStream(file);
-			}
-		} catch (Exception ex) {
-			environment().logger().warning("The logger could not be loaded! Reason: " + ex.getLocalizedMessage());
-			ex.printStackTrace();
-		}
 	}
 
 	protected void loadData() {
