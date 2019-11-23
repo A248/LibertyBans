@@ -212,7 +212,10 @@ public class Punishments implements PunishmentsMaster {
 	public Set<Punishment> getPunishments(Subject subject, PunishmentType type) {
 		Set<Punishment> active = active();
 		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
-			
+			Punishment punishment = it.next();
+			if (!punishment.subject().compare(subject) || !punishment.type().equals(type)) {
+				it.remove();
+			}
 		}
 		return active;
 	}

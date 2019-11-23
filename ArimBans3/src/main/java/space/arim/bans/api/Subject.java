@@ -43,19 +43,19 @@ public class Subject {
 	
 	private static final Subject CONSOLE = new Subject(SubjectType.CONSOLE);
 	
-	private Subject(UUID uuid) {
+	protected Subject(UUID uuid) {
 		this.type = SubjectType.PLAYER;
 		this.uuid = uuid;
 		this.ip = null;
 	}
 	
-	private Subject(String ip) {
+	protected Subject(String ip) {
 		this.type = SubjectType.IP;
 		this.uuid = null;
 		this.ip = ip;
 	}
 	
-	private Subject(SubjectType type) {
+	protected Subject(SubjectType type) {
 		this.type = type;
 		this.uuid = null;
 		this.ip = null;
