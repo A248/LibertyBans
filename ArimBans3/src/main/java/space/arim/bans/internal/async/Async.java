@@ -22,10 +22,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import space.arim.bans.ArimBans;
+
 public class Async implements AsyncMaster {
+	
+	private final ArimBans center;
+	
 	private final ExecutorService threads;
-	public Async() {
-		refreshConfig();
+	
+	public Async(ArimBans center) {
+		this.center = center;
 		threads = Executors.newCachedThreadPool();
 	}
 	
@@ -41,19 +47,18 @@ public class Async implements AsyncMaster {
 	
 	private void shutdown() throws InterruptedException {
 		threads.shutdown();
-		threads.awaitTermination(20L, TimeUnit.SECONDS);
+		threads.awaitTermination(45L, TimeUnit.SECONDS);
 	}
 	
 	@Override
-	public void close() throws InterruptedException {
-		if (!isClosed()) {
-			shutdown();
+	public void close() {
+		while (!isClosed()) {
+			try {
+				shutdown();
+			} catch (InterruptedException ex) {
+				center.logError(ex);
+			}
 		}
-	}
-
-	@Override
-	public void refreshConfig() {
-		
 	}
 	
 }
