@@ -20,9 +20,13 @@ package space.arim.bans.internal.frontend.commands;
 
 import space.arim.bans.api.CommandType;
 import space.arim.bans.api.Subject;
-import space.arim.bans.internal.Replaceable;
+import space.arim.bans.internal.Component;
 
-public interface CommandsMaster extends Replaceable {
+public interface CommandsMaster extends Component {
+	@Override
+	default Class<?> getType() {
+		return CommandsMaster.class;
+	}
 	
 	void execute(Subject subject, String[] rawArgs);
 	

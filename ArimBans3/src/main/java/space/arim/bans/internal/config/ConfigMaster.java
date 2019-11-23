@@ -18,9 +18,13 @@
  */
 package space.arim.bans.internal.config;
 
-import space.arim.bans.internal.Replaceable;
+import space.arim.bans.internal.Component;
 
-public interface ConfigMaster extends Replaceable {
+public interface ConfigMaster extends Component {
+	@Override
+	default Class<?> getType() {
+		return ConfigMaster.class;
+	}
 	
 	String getMessage(String key);
 	

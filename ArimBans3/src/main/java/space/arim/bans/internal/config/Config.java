@@ -31,11 +31,12 @@ import org.yaml.snakeyaml.Yaml;
 import com.google.common.io.ByteStreams;
 
 import space.arim.bans.ArimBans;
-import space.arim.bans.api.Tools;
 import space.arim.bans.api.exception.ConfigLoadException;
+import space.arim.bans.api.util.Tools;
 
 public class Config implements ConfigMaster {
-	private ArimBans center;
+	
+	private final ArimBans center;
 	
 	private final File configYml;
 	private final File messagesYml;

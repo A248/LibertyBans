@@ -31,7 +31,9 @@ import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.internal.sql.SqlQuery;
 
 public class Cache implements CacheMaster {
-	private ArimBans center;
+	
+	private final ArimBans center;
+	
 	private ConcurrentHashMap<UUID, ArrayList<String>> ips = new ConcurrentHashMap<UUID, ArrayList<String>>();
 	private ConcurrentHashMap<UUID, String> uuids = new ConcurrentHashMap<UUID, String>();
 
@@ -107,7 +109,7 @@ public class Cache implements CacheMaster {
 	public void update(UUID playeruuid, String name, String ip) {
 		if (uuids.containsKey(playeruuid)) {
 			if (!uuids.get(playeruuid).equalsIgnoreCase(name) || !ips.get(playeruuid).contains(ip)) {
-				center.async().execute(() -> {
+				center.async(() -> {
 					if (!uuids.get(playeruuid).equalsIgnoreCase(name)) {
 						uuids.replace(playeruuid, name);
 						center.sql().executeQuery(SqlQuery.Query.UPDATE_NAME_FOR_UUID.eval(center.sql().mode()), name, System.currentTimeMillis(), playeruuid.toString());
@@ -123,7 +125,7 @@ public class Cache implements CacheMaster {
 				});
 			}
 		} else {
-			center.async().execute(() -> {
+			center.async(() -> {
 				ArrayList<String> list = new ArrayList<String>();
 				if (ip != null) {
 					list.add(ip);

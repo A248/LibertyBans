@@ -28,7 +28,9 @@ import space.arim.bans.api.Subject;
 
 //TODO Make this class work
 public class Formats implements FormatsMaster {
-	private ArimBans center;
+	
+	private final ArimBans center;
+	
 	private SimpleDateFormat dateformatter;
 
 	public Formats(ArimBans center) {

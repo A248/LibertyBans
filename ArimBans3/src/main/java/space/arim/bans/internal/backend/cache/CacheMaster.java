@@ -23,9 +23,13 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import space.arim.bans.api.exception.MissingCacheException;
-import space.arim.bans.internal.Replaceable;
+import space.arim.bans.internal.Component;
 
-public interface CacheMaster extends Replaceable {
+public interface CacheMaster extends Component {
+	@Override
+	default Class<?> getType() {
+		return CacheMaster.class;
+	}
 	
 	ArrayList<String> getIps(UUID playeruuid);
 	

@@ -21,23 +21,27 @@ package space.arim.bans.internal.sql;
 import java.sql.ResultSet;
 
 import space.arim.bans.api.exception.TypeParseException;
-import space.arim.bans.internal.Replaceable;
+import space.arim.bans.internal.Component;
 
-public interface SqlMaster extends Replaceable {
+public interface SqlMaster extends Component {
+	@Override
+	default Class<?> getType() {
+		return SqlMaster.class;
+	}
 	
-	public StorageMode mode();
+	StorageMode mode();
 	
-	public boolean enabled();
+	boolean enabled();
 	
-	public void executeQuery(SqlQuery...queries);
+	void executeQuery(SqlQuery...queries);
 	
-	public void executeQuery(String sql, Object...params);
+	void executeQuery(String sql, Object...params);
 	
-	public ResultSet[] selectQuery(SqlQuery...queries);
+	ResultSet[] selectQuery(SqlQuery...queries);
 	
-	public ResultSet selectQuery(String sql, Object...params);
+	ResultSet selectQuery(String sql, Object...params);
 	
-	public enum StorageMode {
+	enum StorageMode {
 		HSQLDB, MYSQL;
 		public static StorageMode fromString(String mode) {
 			switch (mode.toLowerCase()) {

@@ -24,7 +24,9 @@ import space.arim.bans.api.Subject;
 
 // TODO Make this class work
 public class Commands implements CommandsMaster {
-	private ArimBans center;
+	
+	private final ArimBans center;
+	
 	private String perm_display;
 
 	public Commands(ArimBans center) {

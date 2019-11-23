@@ -35,7 +35,7 @@ import space.arim.bans.api.exception.InternalStateException;
 
 public class Sql implements SqlMaster {
 
-	private ArimBans center;
+	private final ArimBans center;
 
 	private HikariDataSource data;
 
@@ -46,7 +46,7 @@ public class Sql implements SqlMaster {
 	
 	private RowSetFactory factory;
 
-	public Sql(ArimBans center) throws Exception {
+	public Sql(ArimBans center) {
 		this.center = center;
 		refreshConfig();
 		try {

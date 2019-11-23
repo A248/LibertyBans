@@ -20,9 +20,13 @@ package space.arim.bans.internal.frontend.format;
 
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
-import space.arim.bans.internal.Replaceable;
+import space.arim.bans.internal.Component;
 
-public interface FormatsMaster extends Replaceable {
+public interface FormatsMaster extends Component {
+	@Override
+	default Class<?> getType() {
+		return FormatsMaster.class;
+	}
 	
 	String format(Punishment punishment);
 	
