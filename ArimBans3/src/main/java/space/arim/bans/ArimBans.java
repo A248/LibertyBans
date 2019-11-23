@@ -74,7 +74,7 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	private final AsyncMaster async;
 	
 	@SuppressWarnings("unchecked")
-	protected <T extends Component> T load(Class<T> type, Component[] pool, Getter<T> getter) {
+	private <T extends Component> T load(Class<T> type, Component[] pool, Getter<T> getter) {
 		for (Component component : pool) {
 			if (type.isInstance(component)) {
 				return (T) component;
@@ -165,17 +165,25 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 			punishments().loadHistory(data[2]);
 		});
 	}
-	
-	public PunishmentsMaster punishments() {
-		return punishments;
-	}
 
+	public File dataFolder() {
+		return this.folder;
+	}
+	
+	public Environment environment() {
+		return this.environment;
+	}
+	
+	public ConfigMaster config() {
+		return config;
+	}
+	
 	public SqlMaster sql() {
 		return sql;
 	}
-
-	public ConfigMaster config() {
-		return config;
+	
+	public PunishmentsMaster punishments() {
+		return punishments;
 	}
 
 	public SubjectsMaster subjects() {
@@ -192,14 +200,6 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 
 	public FormatsMaster formats() {
 		return formats;
-	}
-
-	public File dataFolder() {
-		return this.folder;
-	}
-	
-	public Environment environment() {
-		return this.environment;
 	}
 	
 	public void log(String message) {
