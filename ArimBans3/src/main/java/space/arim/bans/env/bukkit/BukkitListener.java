@@ -25,8 +25,9 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 
 import space.arim.bans.api.exception.ConfigSectionException;
+import space.arim.bans.internal.Configurable;
 
-public class BukkitListener implements AutoCloseable, Listener {
+public class BukkitListener implements Configurable, Listener {
 	
 	private final BukkitEnv environment;
 	
@@ -113,7 +114,7 @@ public class BukkitListener implements AutoCloseable, Listener {
 	}
 
 	private EventPriority parsePriority(String key) {
-		switch (environment.center().config().getString(key).toLowerCase()) {
+		switch (environment.center().config().getConfigString(key).toLowerCase()) {
 		case "highest":
 			return EventPriority.HIGHEST;
 		case "high":
@@ -131,13 +132,10 @@ public class BukkitListener implements AutoCloseable, Listener {
 		}
 	}
 	
+	@Override
 	public void refreshConfig() {
 		ban_priority = parsePriority("bans.event-priority");
 		mute_priority = parsePriority("mutes.event-priority");
 	}
 	
-	@Override
-	public void close() {
-		
-	}
 }

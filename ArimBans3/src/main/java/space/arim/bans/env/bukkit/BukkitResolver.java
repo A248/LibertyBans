@@ -107,17 +107,10 @@ public class BukkitResolver implements Resolver {
 		throw new PlayerNotFoundException(playeruuid);
 	}
 
-
-	
-	@Override
-	public void close() {
-		
-	}
-
 	@Override
 	public void refreshConfig() {
-		internalFetcher = environment.center().config().getBoolean("fetchers.uuids.internal");
-		ashconFetcher = environment.center().config().getBoolean("fetchers.uuids.ashcon");
-		mojangFetcher = environment.center().config().getBoolean("fetchers.uuids.mojang");
+		internalFetcher = environment.center().config().getConfigBoolean("fetchers.uuids.internal");
+		ashconFetcher = environment.center().config().getConfigBoolean("fetchers.uuids.ashcon");
+		mojangFetcher = environment.center().config().getConfigBoolean("fetchers.uuids.mojang");
 	}
 }

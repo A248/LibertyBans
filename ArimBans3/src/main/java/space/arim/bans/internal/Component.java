@@ -18,7 +18,7 @@
  */
 package space.arim.bans.internal;
 
-public interface Component extends AutoCloseable, Configurable {
+public interface Component extends Configurable {
 	
 	Class<?> getType();
 	

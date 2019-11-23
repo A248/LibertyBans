@@ -86,15 +86,10 @@ public class BungeeResolver implements Resolver {
 		}
 		throw new PlayerNotFoundException(playeruuid);
 	}
-	
-	@Override
-	public void close() {
-		
-	}
 
 	@Override
 	public void refreshConfig() {
-		ashconFetcher = environment.center().config().getBoolean("fetchers.uuids.ashcon");
-		mojangFetcher = environment.center().config().getBoolean("fetchers.uuids.mojang");
+		ashconFetcher = environment.center().config().getConfigBoolean("fetchers.uuids.ashcon");
+		mojangFetcher = environment.center().config().getConfigBoolean("fetchers.uuids.mojang");
 	}
 }

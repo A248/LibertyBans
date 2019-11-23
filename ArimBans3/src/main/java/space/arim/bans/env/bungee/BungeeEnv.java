@@ -190,7 +190,7 @@ public class BungeeEnv implements Environment {
 	
 	@Override
 	public void refreshConfig() {
-		json = center.config().getBoolean("formatting.use-json");
+		json = center.config().getConfigBoolean("formatting.use-json");
 	}
 	
 	@Override

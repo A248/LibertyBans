@@ -23,8 +23,9 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.command.ConsoleCommandSender;
 import space.arim.bans.api.Subject;
+import space.arim.bans.internal.Configurable;
 
-public class BungeeCommands extends Command implements AutoCloseable {
+public class BungeeCommands extends Command implements Configurable {
 
 	private final BungeeEnv environment;
 	
@@ -51,15 +52,6 @@ public class BungeeCommands extends Command implements AutoCloseable {
 				environment.center().commands().usage(subject);
 			}
 		});
-	}
-	
-	@Override
-	public void close() {
-		
-	}
-	
-	public void refreshConfig() {
-		
 	}
 
 }

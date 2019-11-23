@@ -18,7 +18,7 @@
  */
 package space.arim.bans.env.bungee;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -34,7 +34,6 @@ import space.arim.bans.api.exception.MissingCenterException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.env.Enforcer;
 
-// TODO Populate this class
 public class BungeeEnforcer implements Enforcer {
 
 	private final BungeeEnv environment;
@@ -71,7 +70,7 @@ public class BungeeEnforcer implements Enforcer {
 				environment.center().logError(ex);
 			}
 		} else {
-			ArrayList<String> ips = environment.center().cache().getIps(evt.getConnection().getUniqueId());
+			List<String> ips = environment.center().cache().getIps(evt.getConnection().getUniqueId());
 			ips.add(evt.getConnection().getAddress().getAddress().getHostAddress());
 			for (String addr : ips) {
 				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
@@ -167,16 +166,6 @@ public class BungeeEnforcer implements Enforcer {
 	@Override
 	public void callPostUnpunishEvent(Punishment punishment, boolean automatic) {
 		environment.plugin().getProxy().getPluginManager().callEvent(new PostUnpunishEvent(punishment, automatic));
-	}
-
-	@Override
-	public void refreshConfig() {
-		
-	}
-	
-	@Override
-	public void close() {
-		
 	}
 	
 }

@@ -24,8 +24,9 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 import space.arim.bans.api.exception.ConfigSectionException;
+import space.arim.bans.internal.Configurable;
 
-public class BungeeListener implements AutoCloseable, Listener {
+public class BungeeListener implements Configurable, Listener {
 	
 	private final BungeeEnv environment;
 	
@@ -112,7 +113,7 @@ public class BungeeListener implements AutoCloseable, Listener {
 	}
 	
 	private byte parsePriority(String key) {
-		switch (environment.center().config().getString(key).toLowerCase()) {
+		switch (environment.center().config().getConfigString(key).toLowerCase()) {
 		case "highest":
 			return EventPriority.HIGHEST;
 		case "high":
@@ -130,13 +131,10 @@ public class BungeeListener implements AutoCloseable, Listener {
 		}
 	}
 	
+	@Override
 	public void refreshConfig() {
 		ban_priority = parsePriority("bans.event-priority");
 		mute_priority = parsePriority("mutes.event-priority");
 	}
 	
-	@Override
-	public void close() {
-		
-	}
 }
