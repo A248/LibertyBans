@@ -9,10 +9,20 @@ ArimBans is the ultimate punitive solution for single servers and networks, seek
 This program is still in development. It is not yet production-ready.
 
 
+**For Server Owners**
+
+Download the [latest release](https://github.com/A248/ArimBans/releases) and drop into your */plugins* folder.
+
+
+**For Developers**
+
+See [the wiki](https://github.com/A248/ArimBans/wiki) for API documentation and examples.
+
+
 **Credits**
 
 Huge thanks to DevLeoko for inspiration to make ArimBans in the first place.
-Also thanks the countless members on the Spigot community forums whose answers were the constant subject of my google searches.
+Also, a big thanks to the countless members on the Spigot forums and StackOverflow whose answers were the constant subject of my google searches.
 
 **License**
 
