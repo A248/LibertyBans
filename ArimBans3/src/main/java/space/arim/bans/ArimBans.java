@@ -19,13 +19,13 @@
 package space.arim.bans;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintStream;
+import java.io.IOException;
 import java.sql.ResultSet;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.CommandType;
@@ -36,7 +36,6 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.bans.api.util.Tools;
 import space.arim.bans.env.Environment;
 import space.arim.bans.internal.Configurable;
 import space.arim.bans.internal.Component;
@@ -62,8 +61,7 @@ import space.arim.bans.internal.sql.Sql;
 public class ArimBans implements Configurable, ArimBansLibrary {
 	
 	private final File folder;
-	private PrintStream logger;
-	private final SimpleDateFormat dateFormatter;
+	private Logger logger;
 	private final Environment environment;
 	private final ConfigMaster config;
 	private final SqlMaster sql;
@@ -87,15 +85,14 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	public ArimBans(File dataFolder, Environment environment, Component...preloaded) {
 		this.folder = dataFolder;
 		this.environment = environment;
-		this.dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		if (dataFolder.mkdirs()) {
-			File writerFile = new File(dataFolder, "info.log");
-			if (Tools.generateFile(writerFile)) {
-				try {
-					logger = new PrintStream(writerFile);
-				} catch (FileNotFoundException ex) {
-					ex.printStackTrace();
-				}
+			logger = Logger.getLogger(getName());
+			logger.setParent(environment.logger());
+			logger.setUseParentHandlers(false);
+			try {
+				logger.addHandler(new FileHandler(dataFolder + File.separator + "information.log"));
+			} catch (IOException ex) {
+				environment.logger().warning("ArimBans: **Severe Error**\nLogger initialisation in " + dataFolder.getPath() + File.separator + "information.log failed!");
 			}
 		} else {
 			environment().logger().warning("ArimBans: **Severe Error**\nDirectory creation of " + dataFolder.getPath() + " failed!");
@@ -199,8 +196,8 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	}
 	
 	public void log(String message) {
-		if (logger != null && dateFormatter != null) {
-			logger.append("[" + dateFormatter.format(new Date()) + "] " + message + "\n");
+		if (logger != null) {
+			logger.info(message);
 		} else {
 			environment().logger().info(message);
 		}
@@ -209,7 +206,7 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	public void logError(Exception ex) {
 		if (logger != null) {
 			environment().logger().warning("Encountered and caught an error: " + ex.getLocalizedMessage() + " \nPlease check the plugin's log for more information. Please create a Github issue to address this.");
-			ex.printStackTrace(logger);
+			logger.log(Level.WARNING, "Encountered an error:", ex);
 		} else {
 			environment().logger().warning("Encountered and caught an error. \nNote that this plugin's log is inoperative, so the error will be printed to console. Please create a Github issue to address this.");
 			ex.printStackTrace();
@@ -241,7 +238,7 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 			cache.close();
 			formats.close();
 			async.close();
-			logger.close();
+			//logger.close();
 		} catch (Exception ex) {
 			logError(ex);
 		}
@@ -249,7 +246,12 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	
 	@Override
 	public String getName() {
-		return "ArimBans3";
+		return environment.getName();
+	}
+	
+	@Override
+	public String getAuthor() {
+		return environment.getAuthor();
 	}
 	
 	@Override
@@ -348,6 +350,11 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	@Override
 	public void async(Runnable command) {
 		async.execute(command);
+	}
+	
+	@Override
+	public Logger getLogger() {
+		return logger;
 	}
 	
 	@Override

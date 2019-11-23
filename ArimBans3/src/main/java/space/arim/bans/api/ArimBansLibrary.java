@@ -19,6 +19,7 @@
 package space.arim.bans.api;
 
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.util.Tools;
@@ -107,6 +108,23 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 */
 	void async(Runnable task);
 	
+	/**
+	 * Gets the internal ArimBans logger.
+	 * 
+	 * <br><br>This log does not write to server console but instead outputs to the plugin's data folder.
+	 * 
+	 * @return Logger the logger
+	 */
+	Logger getLogger();
+	
+	/**
+	 * Checks to ensure an address is valid.
+	 * 
+	 * <br><br>Relies on {@link com.google.common.net.InetAddresses#isInetAddress(String) InetAddress.isInetAddress}
+	 * 
+	 * @param address - the address to check
+	 * @return true if the address is valid, false otherwise
+	 */
 	default boolean checkAddress(String address) {
 		return Tools.validAddress(address);
 	}

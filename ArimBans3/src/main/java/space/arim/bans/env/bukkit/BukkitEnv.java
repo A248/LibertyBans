@@ -147,11 +147,6 @@ public class BukkitEnv implements Environment {
 		return applicable;
 	}
 	
-	@Override
-	public BukkitResolver resolver() {
-		return resolver;
-	}
-	
 	public JavaPlugin plugin() {
 		return plugin;
 	}
@@ -159,21 +154,37 @@ public class BukkitEnv implements Environment {
 	public ArimBans center() {
 		return center;
 	}
+
+	@Override
+	public BukkitEnforcer enforcer() {
+		return enforcer;
+	}
 	
+	@Override
+	public BukkitResolver resolver() {
+		return resolver;
+	}
+
 	@Override
 	public Logger logger() {
 		return plugin.getLogger();
 	}
-
+	
 	@Override
-	public void close() throws Exception {
-		HandlerList.unregisterAll(listener);
-		commands.close();
-		listener.close();
-		resolver().close();
-		enforcer().close();
+	public String getName() {
+		return plugin.getName();
 	}
-
+	
+	@Override
+	public String getAuthor() {
+		return plugin.getDescription().getAuthors().get(0);
+	}
+	
+	@Override
+	public String getVersion() {
+		return plugin.getDescription().getVersion();
+	}
+	
 	@Override
 	public boolean isLibrarySupported(EnvLibrary type) {
 		return libraries.contains(type);
@@ -183,15 +194,14 @@ public class BukkitEnv implements Environment {
 	public void refreshConfig() {
 		json = center.config().getBoolean("formatting.use-json");
 	}
-
+	
 	@Override
-	public BukkitEnforcer enforcer() {
-		return enforcer;
-	}
-
-	@Override
-	public String getVersion() {
-		return plugin.getDescription().getVersion();
+	public void close() {
+		HandlerList.unregisterAll(listener);
+		commands.close();
+		listener.close();
+		resolver.close();
+		enforcer.close();
 	}
 
 }

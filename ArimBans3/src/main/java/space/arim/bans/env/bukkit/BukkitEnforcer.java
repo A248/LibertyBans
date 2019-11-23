@@ -169,7 +169,7 @@ public class BukkitEnforcer implements Enforcer {
 	}
 	
 	@Override
-	public void close() throws Exception {
+	public void close() {
 		
 	}
 

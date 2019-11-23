@@ -136,7 +136,7 @@ public class BukkitListener implements AutoCloseable, Listener {
 	}
 	
 	@Override
-	public void close() throws Exception {
+	public void close() {
 		
 	}
 }

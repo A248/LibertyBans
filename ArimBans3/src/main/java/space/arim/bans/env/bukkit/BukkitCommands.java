@@ -57,7 +57,7 @@ public class BukkitCommands implements AutoCloseable, CommandExecutor {
 	}
 	
 	@Override
-	public void close() throws Exception {
+	public void close() {
 		
 	}
 }

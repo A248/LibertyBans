@@ -18,6 +18,8 @@
  */
 package space.arim.bans.api.exception;
 
+import space.arim.bans.api.util.HttpStatus;
+
 public class FetcherException extends InternalAPIException {
 
 	private static final long serialVersionUID = -1621619586735818392L;
@@ -28,6 +30,10 @@ public class FetcherException extends InternalAPIException {
 	
 	public FetcherException(String message) {
 		super("Fetcher error: " + message);
+	}
+	
+	public FetcherException(HttpStatus status) {
+		super("Error " + status.getCode() + ": " + status.getName());
 	}
 
 }

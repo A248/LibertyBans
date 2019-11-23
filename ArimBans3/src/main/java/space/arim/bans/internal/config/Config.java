@@ -137,10 +137,6 @@ public class Config implements ConfigMaster {
 		warning("Configuration " + key + " does not map to a " + type.getSimpleName() + "!");
 	}
 	
-	private ConcurrentHashMap<String, Object> config() {
-		return configValues;
-	}
-	
 	@Override
 	public String getString(String key) {
 		return get(key, String.class);

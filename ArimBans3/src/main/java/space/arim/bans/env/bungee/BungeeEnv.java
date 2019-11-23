@@ -33,7 +33,6 @@ import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.util.Tools;
 import space.arim.bans.env.Environment;
-import space.arim.bans.env.Resolver;
 
 public class BungeeEnv implements Environment {
 
@@ -147,11 +146,6 @@ public class BungeeEnv implements Environment {
 		return applicable;
 	}
 	
-	@Override
-	public Resolver resolver() {
-		return resolver;
-	}
-	
 	public Plugin plugin() {
 		return plugin;
 	}
@@ -161,32 +155,51 @@ public class BungeeEnv implements Environment {
 	}
 	
 	@Override
+	public BungeeEnforcer enforcer() {
+		return enforcer;
+	}
+	
+	@Override
+	public BungeeResolver resolver() {
+		return resolver;
+	}
+	
+	@Override
 	public Logger logger() {
 		return plugin.getLogger();
 	}
 
 	@Override
-	public void close() throws Exception {
+	public String getName() {
+		return plugin.getDescription().getName();
+	}
+	
+	@Override
+	public String getAuthor() {
+		return plugin.getDescription().getAuthor();
+	}
+	
+	@Override
+	public String getVersion() {
+		return plugin.getDescription().getVersion();
 	}
 	
 	@Override
 	public boolean isLibrarySupported(EnvLibrary type) {
 		return libraries.contains(type);
 	}
-
+	
 	@Override
 	public void refreshConfig() {
 		json = center.config().getBoolean("formatting.use-json");
 	}
-
+	
 	@Override
-	public BungeeEnforcer enforcer() {
-		return enforcer;
-	}
-
-	@Override
-	public String getVersion() {
-		return plugin.getDescription().getVersion();
+	public void close() {
+		commands.close();
+		listener.close();
+		resolver.close();
+		enforcer.close();
 	}
 	
 	BaseComponent[] convert(String input) {

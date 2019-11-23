@@ -31,13 +31,17 @@ public interface Environment extends AutoCloseable, Configurable {
 	
 	boolean hasPermission(Subject subject, String...permissions);
 	
-	String getVersion();
-	
-	Logger logger();
-	
 	Enforcer enforcer();
 	
 	Resolver resolver();
+	
+	Logger logger();
+	
+	String getName();
+	
+	String getAuthor();
+	
+	String getVersion();
 	
 	boolean isLibrarySupported(EnvLibrary library);
 	

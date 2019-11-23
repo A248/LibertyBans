@@ -52,7 +52,7 @@ public class BungeeCommands extends Command implements AutoCloseable {
 	}
 	
 	@Override
-	public void close() throws Exception {
+	public void close() {
 		
 	}
 	

@@ -175,7 +175,7 @@ public class BungeeEnforcer implements Enforcer {
 	}
 	
 	@Override
-	public void close() throws Exception {
+	public void close() {
 		
 	}
 	

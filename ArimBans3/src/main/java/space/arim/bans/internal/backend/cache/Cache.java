@@ -26,8 +26,12 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import space.arim.bans.ArimBans;
+import space.arim.bans.api.exception.FetcherException;
 import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.exception.MissingCacheException;
+import space.arim.bans.api.exception.NoGeoIpException;
+import space.arim.bans.api.util.Fetcher;
+import space.arim.bans.api.util.GeoIpInfo;
 import space.arim.bans.internal.sql.SqlQuery;
 
 public class Cache implements CacheMaster {
@@ -37,6 +41,10 @@ public class Cache implements CacheMaster {
 	private ConcurrentHashMap<UUID, ArrayList<String>> ips = new ConcurrentHashMap<UUID, ArrayList<String>>();
 	private ConcurrentHashMap<UUID, String> uuids = new ConcurrentHashMap<UUID, String>();
 
+	private boolean ipStack;
+	private String ipStackKey;
+	private boolean freeGeoIp;
+	
 	public Cache(ArimBans center) {
 		this.center = center;
 		refreshConfig();
@@ -136,6 +144,11 @@ public class Cache implements CacheMaster {
 			});
 		}
 	}
+	
+	@Override
+	public boolean uuidExists(UUID uuid) {
+		return uuids.containsKey(uuid);
+	}
 
 	@Override
 	public boolean hasIp(UUID playeruuid, String ip) {
@@ -148,8 +161,22 @@ public class Cache implements CacheMaster {
 	}
 	
 	@Override
-	public boolean uuidExists(UUID uuid) {
-		return uuids.containsKey(uuid);
+	public GeoIpInfo lookupIp(final String address) throws IllegalArgumentException, NoGeoIpException {
+		if (ipStack) {
+			try {
+				return Fetcher.ipStack(address, ipStackKey);
+			} catch (FetcherException ex) {
+				center.logError(ex);
+			}
+		}
+		if (freeGeoIp) {
+			try {
+				return Fetcher.freeGeoIp(address);
+			} catch (FetcherException ex) {
+				center.logError(ex);
+			}
+		}
+		throw new NoGeoIpException(address);
 	}
 	
 	@Override
@@ -162,7 +189,9 @@ public class Cache implements CacheMaster {
 
 	@Override
 	public void refreshConfig() {
-		
+		ipStack = center.config().getBoolean("fetchers.ips.ipstack.enabled");
+		ipStackKey = center.config().getString("fetchers.ips.ipstack.key");
+		freeGeoIp = center.config().getBoolean("fetchers.ips.freegeoip.enabled");
 	}
 
 }

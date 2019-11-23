@@ -25,7 +25,7 @@ import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 import space.arim.bans.api.exception.ConfigSectionException;
 
-public class BungeeListener implements Listener {
+public class BungeeListener implements AutoCloseable, Listener {
 	
 	private BungeeEnv environment;
 	
@@ -133,5 +133,10 @@ public class BungeeListener implements Listener {
 	public void refreshConfig() {
 		ban_priority = parsePriority("bans.event-priority");
 		mute_priority = parsePriority("mutes.event-priority");
+	}
+	
+	@Override
+	public void close() {
+		
 	}
 }
