@@ -69,8 +69,6 @@ public class Fetcher {
 			json = getDataFromUrl(url);
 		} catch (IOException | ParseException ex) {
 			throw new FetcherException("Could not connect to " + url, ex);
-		} catch (FetcherException ex) {
-			throw ex;
 		}
 		return UUID.fromString(Tools.expandUUID(json.get("id").toString()));
 	}
@@ -109,8 +107,6 @@ public class Fetcher {
 			json = getDataFromUrl(url);
 		} catch (IOException | ParseException ex) {
 			throw new FetcherException("Could not connect to " + url, ex);
-		} catch (FetcherException ex) {
-			throw ex;
 		}
 		return UUID.fromString(json.get("uuid").toString());
 	}
@@ -122,8 +118,6 @@ public class Fetcher {
 			return getDataFromUrl(url).get("username").toString();
 		} catch (IOException | ParseException ex) {
 			throw new FetcherException("Could not connect to " + url, ex);
-		} catch (FetcherException ex) {
-			throw ex;
 		}
 	}
 	
@@ -152,8 +146,6 @@ public class Fetcher {
 			throw new FetcherException("Scanner has no response!");
 		} catch (IOException ex) {
 			throw new FetcherException("Could not connect to " + url, ex);
-		} catch (FetcherException ex) {
-			throw ex;
 		}
 	}
 	
@@ -166,8 +158,6 @@ public class Fetcher {
 			json = getDataFromUrl(url);
 		} catch (IOException | ParseException ex) {
 			throw new FetcherException("Could not connect to " + url);
-		} catch (FetcherException ex) {
-			throw ex;
 		}
 		Object timezoneField = json.get("timezone");
 		if (timezoneField instanceof Map<?, ?>) {
@@ -190,8 +180,6 @@ public class Fetcher {
 			json = getDataFromUrl(url);
 		} catch (IOException | ParseException ex) {
 			throw new FetcherException("Could not connect to " + url);
-		} catch (FetcherException ex) {
-			throw ex;
 		}
 		try {
 			return new GeoIpInfo(address, json.get("country_code").toString(), json.get("country_name").toString(), json.get("region_code").toString(), json.get("region_name").toString(), json.get("city").toString(), json.get("zip_code").toString(), json.get("timezone").toString(), Double.parseDouble(json.get("latitude").toString()), Double.parseDouble(json.get("longitude").toString()));

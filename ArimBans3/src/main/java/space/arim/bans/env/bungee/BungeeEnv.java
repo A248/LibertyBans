@@ -133,14 +133,8 @@ public class BungeeEnv implements Environment {
 	public Set<ProxiedPlayer> applicable(Subject subject) {
 		Set<ProxiedPlayer> applicable = new HashSet<ProxiedPlayer>();
 		for (ProxiedPlayer check : plugin.getProxy().getPlayers()) {
-			if (subject.getType().equals(SubjectType.PLAYER)) {
-				if (subject.getUUID().equals(check.getUniqueId())) {
-					applicable.add(check);
-				}
-			} else if (subject.getType().equals(SubjectType.IP)) {
-				if (center.cache().hasIp(check.getUniqueId(), subject.getIP())) {
-					applicable.add(check);
-				}
+			if (subject.compare(Subject.fromUUID(check.getUniqueId())) || subject.getType().equals(SubjectType.IP) && center.cache().hasIp(check.getUniqueId(), subject.getIP())) {
+				applicable.add(check);
 			}
 		}
 		return applicable;

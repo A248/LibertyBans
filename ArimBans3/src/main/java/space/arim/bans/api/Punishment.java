@@ -75,11 +75,6 @@ public class Punishment {
 	 * @return true if and only if punishments are equal in all their attributes
 	 */
 	public boolean compare(Punishment punishment) {
-		if (this.date == punishment.date()) {
-			if (this.type.equals(punishment.type()) && this.subject.compare(punishment.subject()) && this.operator.compare(punishment.operator()) && this.expiration == punishment.expiration()) {
-				return true;
-			}
-		}
-		return false;
+		return (type().equals(punishment.type()) && subject().compare(punishment.subject()) && operator().compare(punishment.operator()) && expiration() == punishment.expiration() && date() == punishment.date());
 	}
 }

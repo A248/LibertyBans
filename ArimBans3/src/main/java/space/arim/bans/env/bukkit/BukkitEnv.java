@@ -134,14 +134,8 @@ public class BukkitEnv implements Environment {
 	public Set<? extends Player> applicable(Subject subject) {
 		Set<Player> applicable = new HashSet<Player>();
 		for (Player check : plugin.getServer().getOnlinePlayers()) {
-			if (subject.getType().equals(SubjectType.PLAYER)) {
-				if (subject.getUUID().equals(check.getUniqueId())) {
-					applicable.add(check);
-				}
-			} else if (subject.getType().equals(SubjectType.IP)) {
-				if (center.cache().hasIp(check.getUniqueId(), subject.getIP())) {
-					applicable.add(check);
-				}
+			if (subject.compare(Subject.fromUUID(check.getUniqueId())) || subject.getType().equals(SubjectType.IP) && center.cache().hasIp(check.getUniqueId(), subject.getIP())) {
+				applicable.add(check);
 			}
 		}
 		return applicable;
