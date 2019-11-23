@@ -111,18 +111,13 @@ public class BukkitEnv implements Environment {
 	}
 	
 	@Override
-	public boolean hasPermission(Subject subject, String...permissions) {
+	public boolean hasPermission(Subject subject, String permission) {
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
 			return true;
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {
 			Player target = plugin.getServer().getPlayer(subject.getUUID());
 			if (target != null) {
-				for (String perm : permissions) {
-					if (!target.getPlayer().hasPermission(perm)) {
-						return false;
-					}
-				}
-				return true;
+				return !target.getPlayer().hasPermission(permission);
 			}
 			throw new InvalidSubjectException("Subject " + center.subjects().display(subject) + " is not online or does not have a valid UUID.");
 		} else if (subject.getType().equals(SubjectType.IP)) {

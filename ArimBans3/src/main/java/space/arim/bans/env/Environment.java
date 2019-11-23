@@ -29,7 +29,7 @@ public interface Environment extends Configurable {
 	
 	void sendMessage(Subject target, String jsonable);
 	
-	boolean hasPermission(Subject subject, String...permissions);
+	boolean hasPermission(Subject subject, String permission);
 	
 	void runAsync(Runnable command);
 	

@@ -110,18 +110,13 @@ public class BungeeEnv implements Environment {
 	}
 
 	@Override
-	public boolean hasPermission(Subject subject, String... permissions) {
+	public boolean hasPermission(Subject subject, String permission) {
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
 			return true;
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {
 			ProxiedPlayer target = plugin.getProxy().getPlayer(subject.getUUID());
 			if (target != null) {
-				for (String perm : permissions) {
-					if (!target.hasPermission(perm)) {
-						return false;
-					}
-				}
-				return true;
+				return !target.hasPermission(permission);
 			}
 			throw new InvalidSubjectException("Subject " + center.subjects().display(subject) + " is not online.");
 		} else if (subject.getType().equals(SubjectType.IP)) {
