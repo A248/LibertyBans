@@ -19,7 +19,7 @@
 package space.arim.bans.internal.backend.cache;
 
 import java.sql.ResultSet;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import space.arim.bans.api.exception.MissingCacheException;
@@ -33,7 +33,7 @@ public interface CacheMaster extends Component {
 		return CacheMaster.class;
 	}
 	
-	ArrayList<String> getIps(UUID playeruuid);
+	List<String> getIps(UUID playeruuid);
 	
 	String getName(UUID playeruuid) throws MissingCacheException;
 	

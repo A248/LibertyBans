@@ -22,6 +22,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -38,7 +39,7 @@ public class Cache implements CacheMaster {
 	
 	private final ArimBans center;
 	
-	private ConcurrentHashMap<UUID, ArrayList<String>> ips = new ConcurrentHashMap<UUID, ArrayList<String>>();
+	private ConcurrentHashMap<UUID, List<String>> ips = new ConcurrentHashMap<UUID, List<String>>();
 	private ConcurrentHashMap<UUID, String> uuids = new ConcurrentHashMap<UUID, String>();
 
 	private boolean ipStack;
@@ -47,7 +48,6 @@ public class Cache implements CacheMaster {
 	
 	public Cache(ArimBans center) {
 		this.center = center;
-		refreshConfig();
 	}
 
 	@Override
@@ -68,7 +68,7 @@ public class Cache implements CacheMaster {
 		}
 	}
 	
-	private String externaliseIps(ArrayList<String> iplist) {
+	private String externaliseIps(List<String> iplist) {
 		if (iplist.isEmpty()) {
 			return "<empty>";
 		}
@@ -83,12 +83,12 @@ public class Cache implements CacheMaster {
 		return list;
 	}
 
-	private ArrayList<String> internaliseIps(String input) {
-		return (input.equalsIgnoreCase("<empty>")) ? new ArrayList<String>() : new ArrayList<String>(Arrays.asList(input.split(",")));
+	private List<String> internaliseIps(String input) {
+		return input.equalsIgnoreCase("<empty>") ? new ArrayList<String>() : new ArrayList<String>(Arrays.asList(input.split(",")));
 	}
 
 	@Override
-	public ArrayList<String> getIps(UUID playeruuid) {
+	public List<String> getIps(UUID playeruuid) {
 		if (ips.containsKey(playeruuid)) {
 			return ips.get(playeruuid);
 		}
@@ -122,11 +122,9 @@ public class Cache implements CacheMaster {
 						uuids.replace(playeruuid, name);
 						center.sql().executeQuery(SqlQuery.Query.UPDATE_NAME_FOR_UUID.eval(center.sql().mode()), name, System.currentTimeMillis(), playeruuid.toString());
 					}
-					if (!ips.get(playeruuid).contains(ip)) {
-						ArrayList<String> list = ips.get(playeruuid);
-						if (ip != null) {
-							list.add(ip);
-						}
+					if (!ips.get(playeruuid).contains(ip) && ip != null) {
+						List<String> list = ips.get(playeruuid);
+						list.add(ip);
 						ips.put(playeruuid, list);
 						center.sql().executeQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID.eval(center.sql().mode()), externaliseIps(list), System.currentTimeMillis(), playeruuid.toString());
 					}
@@ -178,20 +176,12 @@ public class Cache implements CacheMaster {
 		}
 		throw new NoGeoIpException(address);
 	}
-	
-	@Override
-	public void close() {
-		ips.clear();
-		uuids.clear();
-		ips = null;
-		uuids = null;
-	}
 
 	@Override
 	public void refreshConfig() {
-		ipStack = center.config().getBoolean("fetchers.ips.ipstack.enabled");
-		ipStackKey = center.config().getString("fetchers.ips.ipstack.key");
-		freeGeoIp = center.config().getBoolean("fetchers.ips.freegeoip.enabled");
+		ipStack = center.config().getConfigBoolean("fetchers.ips.ipstack.enabled");
+		ipStackKey = center.config().getConfigString("fetchers.ips.ipstack.key");
+		freeGeoIp = center.config().getConfigBoolean("fetchers.ips.freegeoip.enabled");
 	}
 
 }
