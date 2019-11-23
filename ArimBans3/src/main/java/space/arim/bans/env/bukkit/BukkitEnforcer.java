@@ -64,7 +64,7 @@ public class BukkitEnforcer implements Enforcer {
 		}
 		if (!evt.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
 			return;
-		} else if (environment.center().punishments().isBanned(environment.center().subjects().parseSubject(evt.getUniqueId()))) {
+		} else if (environment.center().isBanned(environment.center().subjects().parseSubject(evt.getUniqueId()))) {
 			try {
 				evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, environment.center().formats()
 						.format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(evt.getUniqueId()), PunishmentType.BAN)));
@@ -75,7 +75,7 @@ public class BukkitEnforcer implements Enforcer {
 			ArrayList<String> ips = environment.center().cache().getIps(evt.getUniqueId());
 			ips.add(evt.getAddress().getHostAddress());
 			for (String addr : ips) {
-				if (environment.center().punishments().isBanned(environment.center().subjects().parseSubject(addr))) {
+				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
 					try {
 						evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED,
 								environment.center().formats().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.BAN)));
@@ -94,7 +94,7 @@ public class BukkitEnforcer implements Enforcer {
 		}
 		if (evt.isCancelled()) {
 			return;
-		} else if (environment.center().punishments().isMuted(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()))) {
+		} else if (environment.center().isMuted(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()))) {
 			evt.setCancelled(true);
 			try {
 				environment.json(evt.getPlayer(), environment.center().formats().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()), PunishmentType.MUTE)));
@@ -103,7 +103,7 @@ public class BukkitEnforcer implements Enforcer {
 			}
 		} else {
 			for (String addr : environment.center().cache().getIps(evt.getPlayer().getUniqueId())) {
-				if (environment.center().punishments().isBanned(environment.center().subjects().parseSubject(addr))) {
+				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
 					evt.setCancelled(true);
 					try {
 						environment.json(evt.getPlayer(), environment.center().formats().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.MUTE)));
@@ -123,18 +123,13 @@ public class BukkitEnforcer implements Enforcer {
 	}
 
 	@Override
-	public void close() throws Exception {
-	}
-
-	@Override
 	public void enforce(Punishment punishment) {
 		Set<? extends Player> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().format(punishment);
-		if (punishment.type().equals(PunishmentType.BAN)) {
+		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
 			for (Player target : targets) {
 				target.kickPlayer(message);
 			}
-			//environment.sendMessage(punishment.subject());
 		} else if (punishment.type().equals(PunishmentType.MUTE)) {
 			environment.sendMessage(punishment.subject(), message);
 		} else if (punishment.type().equals(PunishmentType.WARN)) {
@@ -170,6 +165,11 @@ public class BukkitEnforcer implements Enforcer {
 	
 	@Override
 	public void refreshConfig() {
+		
+	}
+	
+	@Override
+	public void close() throws Exception {
 		
 	}
 

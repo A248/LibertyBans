@@ -29,9 +29,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
-import space.arim.bans.api.Tools;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.InvalidSubjectException;
+import space.arim.bans.api.util.Tools;
 import space.arim.bans.env.Environment;
 
 public class BukkitEnv implements Environment {

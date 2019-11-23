@@ -19,8 +19,8 @@
 package space.arim.bans.env.bungee;
 
 import java.util.ArrayList;
+import java.util.Set;
 
-import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
 import net.md_5.bungee.api.event.LoginEvent;
@@ -55,21 +55,6 @@ public class BungeeEnforcer implements Enforcer {
 	private void enforceFailed(String subject, PunishmentType type) {
 		missingCenter(subject + " was not checked for " + type.toString());
 	}
-
-	@Override
-	public void refreshConfig() {
-		
-	}
-
-	@Override
-	public void close() throws Exception {
-		
-	}
-
-	@Override
-	public void enforce(Punishment punishment) {
-		
-	}
 	
 	void enforceBans(LoginEvent evt) {
 		if (environment.center() == null) {
@@ -78,10 +63,10 @@ public class BungeeEnforcer implements Enforcer {
 		}
 		if (evt.isCancelled()) {
 			return;
-		} else if (environment.center().punishments().isBanned(environment.center().subjects().parseSubject(evt.getConnection().getUniqueId()))) {
+		} else if (environment.center().isBanned(environment.center().subjects().parseSubject(evt.getConnection().getUniqueId()))) {
 			try {
 				evt.setCancelled(true);
-				evt.setCancelReason(TextComponent.fromLegacyText(environment.center().formats().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(evt.getConnection().getUniqueId()), PunishmentType.BAN))));
+				evt.setCancelReason(environment.convert(environment.center().formats().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(evt.getConnection().getUniqueId()), PunishmentType.BAN))));
 			} catch (MissingPunishmentException ex) {
 				environment.center().logError(ex);
 			}
@@ -89,10 +74,10 @@ public class BungeeEnforcer implements Enforcer {
 			ArrayList<String> ips = environment.center().cache().getIps(evt.getConnection().getUniqueId());
 			ips.add(evt.getConnection().getAddress().getAddress().getHostAddress());
 			for (String addr : ips) {
-				if (environment.center().punishments().isBanned(environment.center().subjects().parseSubject(addr))) {
+				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
 					try {
 						evt.setCancelled(true);
-						evt.setCancelReason(TextComponent.fromLegacyText(environment.center().formats().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.BAN))));
+						evt.setCancelReason(environment.convert(environment.center().formats().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.BAN))));
 					} catch (MissingPunishmentException ex) {
 						environment.center().logError(ex);
 					}
@@ -114,7 +99,7 @@ public class BungeeEnforcer implements Enforcer {
 		}
 		if (evt.isCancelled()) {
 			return;
-		} else if (environment.center().punishments().isMuted(environment.center().subjects().parseSubject(player.getUniqueId()))) {
+		} else if (environment.center().isMuted(environment.center().subjects().parseSubject(player.getUniqueId()))) {
 			evt.setCancelled(true);
 			try {
 				environment.json(player, environment.center().formats().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(player.getUniqueId()), PunishmentType.MUTE)));
@@ -124,7 +109,7 @@ public class BungeeEnforcer implements Enforcer {
 			}
 		} else {
 			for (String addr : environment.center().cache().getIps(player.getUniqueId())) {
-				if (environment.center().punishments().isBanned(environment.center().subjects().parseSubject(addr))) {
+				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
 					evt.setCancelled(true);
 					try {
 						environment.sendMessage(environment.center().subjects().parseSubject(addr), environment.center().formats().format(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.MUTE)));
@@ -143,6 +128,21 @@ public class BungeeEnforcer implements Enforcer {
 		environment.center().cache().update(evt.getConnection().getUniqueId(), evt.getConnection().getName(), evt.getConnection().getAddress().getAddress().getHostAddress());
 	}
 
+	@Override
+	public void enforce(Punishment punishment) {
+		Set<ProxiedPlayer> targets = environment.applicable(punishment.subject());
+		String message = environment.center().formats().format(punishment);
+		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
+			for (ProxiedPlayer target : targets) {
+				target.disconnect(environment.convert(message));
+			}
+		} else if (punishment.type().equals(PunishmentType.MUTE)) {
+			environment.sendMessage(punishment.subject(), message);
+		} else if (punishment.type().equals(PunishmentType.WARN)) {
+			environment.sendMessage(punishment.subject(), message);
+		}
+	}
+	
 	@Override
 	public boolean callPunishEvent(Punishment punishment, boolean retro) {
 		PunishEvent  evt = new PunishEvent(punishment, retro);
@@ -169,4 +169,14 @@ public class BungeeEnforcer implements Enforcer {
 		environment.plugin().getProxy().getPluginManager().callEvent(new PostUnpunishEvent(punishment, automatic));
 	}
 
+	@Override
+	public void refreshConfig() {
+		
+	}
+	
+	@Override
+	public void close() throws Exception {
+		
+	}
+	
 }
