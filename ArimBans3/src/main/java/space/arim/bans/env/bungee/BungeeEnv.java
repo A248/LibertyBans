@@ -146,6 +146,11 @@ public class BungeeEnv implements Environment {
 		return applicable;
 	}
 	
+	@Override
+	public void runAsync(Runnable command) {
+		plugin.getProxy().getScheduler().runAsync(plugin, command);
+	}
+	
 	public Plugin plugin() {
 		return plugin;
 	}

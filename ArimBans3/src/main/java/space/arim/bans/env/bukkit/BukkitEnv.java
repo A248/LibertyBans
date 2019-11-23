@@ -147,6 +147,11 @@ public class BukkitEnv implements Environment {
 		return applicable;
 	}
 	
+	@Override
+	public void runAsync(Runnable command) {
+		plugin.getServer().getScheduler().runTaskAsynchronously(plugin, command);
+	}
+	
 	public JavaPlugin plugin() {
 		return plugin;
 	}

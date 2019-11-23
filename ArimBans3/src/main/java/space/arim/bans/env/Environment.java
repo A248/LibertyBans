@@ -31,6 +31,8 @@ public interface Environment extends AutoCloseable, Configurable {
 	
 	boolean hasPermission(Subject subject, String...permissions);
 	
+	void runAsync(Runnable command);
+	
 	Enforcer enforcer();
 	
 	Resolver resolver();
