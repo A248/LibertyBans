@@ -47,7 +47,8 @@ public final class Tools {
 		TTP,
 		URL,
 		CMD,
-		SGT
+		SGT,
+		INS
 	}
 	
 	private static TagType jsonTag(String node) {
@@ -63,6 +64,8 @@ public final class Tools {
 			return TagType.CMD;
 		case "sgt:":
 			return TagType.SGT;
+		case "ins:":
+			return TagType.INS;
 		default:
 			return TagType.NONE;
 		}
@@ -112,11 +115,16 @@ public final class Tools {
 				if (tag.equals(TagType.TTP)) {
 					current.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(value)));
 				} else if (tag.equals(TagType.URL)) {
+					if (!value.startsWith("https://") && (!value.startsWith("http://"))) {
+						value = "http://" + value;
+					}
 					current.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, value));
 				} else if (tag.equals(TagType.CMD)) {
 					current.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, value));
 				} else if (tag.equals(TagType.SGT)) {
 					current.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, value));
+				} else if (tag.equals(TagType.INS)) {
+					current.setInsertion(value);
 				}
 			}
 		}
