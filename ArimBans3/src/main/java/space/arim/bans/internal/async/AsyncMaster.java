@@ -18,16 +18,15 @@
  */
 package space.arim.bans.internal.async;
 
-import java.util.List;
+import space.arim.bans.internal.Component;
 
-import space.arim.bans.internal.Replaceable;
-
-public interface AsyncMaster extends Replaceable {
-	public void execute(Runnable command);
+public interface AsyncMaster extends Component {
+	@Override
+	default Class<?> getType() {
+		return AsyncMaster.class;
+	}
 	
-	public boolean isShutdown();
+	void execute(Runnable command);
 	
-	public void shutdown() throws Exception;
-	
-	public List<Runnable> shutdownNow();
+	boolean isClosed();
 }

@@ -23,11 +23,22 @@ import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Set;
+import java.util.UUID;
 
-import space.arim.bans.api.Tools;
-import space.arim.bans.api.exception.InternalStateException;
+import space.arim.bans.api.ArimBansLibrary;
+import space.arim.bans.api.CommandType;
+import space.arim.bans.api.Punishment;
+import space.arim.bans.api.PunishmentPlugin;
+import space.arim.bans.api.PunishmentType;
+import space.arim.bans.api.Subject;
+import space.arim.bans.api.exception.ConflictingPunishmentException;
+import space.arim.bans.api.exception.MissingCacheException;
+import space.arim.bans.api.exception.PlayerNotFoundException;
+import space.arim.bans.api.util.Tools;
 import space.arim.bans.env.Environment;
-import space.arim.bans.internal.Replaceable;
+import space.arim.bans.internal.Configurable;
+import space.arim.bans.internal.Component;
 import space.arim.bans.internal.async.AsyncMaster;
 import space.arim.bans.internal.async.Async;
 import space.arim.bans.internal.backend.cache.Cache;
@@ -43,25 +54,36 @@ import space.arim.bans.internal.frontend.commands.CommandsMaster;
 import space.arim.bans.internal.frontend.format.Formats;
 import space.arim.bans.internal.frontend.format.FormatsMaster;
 import space.arim.bans.internal.sql.SqlQuery;
+import space.arim.registry.UniversalRegistry;
 import space.arim.bans.internal.sql.SqlMaster;
 import space.arim.bans.internal.sql.Sql;
 
-public class ArimBans implements AutoCloseable {
+public class ArimBans implements Configurable, ArimBansLibrary {
 	
-	private File folder;
+	private final File folder;
 	private PrintStream logger;
 	private SimpleDateFormat dateFormatter;
-	private Environment environment;
-	private ConfigMaster config;
-	private PunishmentsMaster manager;
-	private SqlMaster sql;
-	private SubjectsMaster subjects;
-	private CacheMaster cache;
-	private CommandsMaster commands;
-	private FormatsMaster formats;
-	private AsyncMaster async;
+	private final Environment environment;
+	private final ConfigMaster config;
+	private final SqlMaster sql;
+	private final PunishmentsMaster punishments;
+	private final SubjectsMaster subjects;
+	private final CacheMaster cache;
+	private final CommandsMaster commands;
+	private final FormatsMaster formats;
+	private final AsyncMaster async;
 	
-	public ArimBans(File dataFolder, Environment environment, Replaceable...preloaded) {
+	@SuppressWarnings("unchecked")
+	protected <T extends Component> T load(Class<T> type, Component[] pool, Getter<T> getter) {
+		for (Component component : pool) {
+			if (type.isInstance(component)) {
+				return (T) component;
+			}
+		}
+		return getter.get();
+	}
+	
+	public ArimBans(File dataFolder, Environment environment, Component...preloaded) {
 		this.folder = dataFolder;
 		this.environment = environment;
 		if (dataFolder.mkdirs()) {
@@ -69,53 +91,55 @@ public class ArimBans implements AutoCloseable {
 		} else {
 			environment().logger().warning("The logger could not be loaded! Reason: Directory creation failed.");
 		}
-		for (Replaceable obj : preloaded) {
-			if (obj instanceof ConfigMaster) {
-				this.config = (ConfigMaster) obj;
-			} else if (obj instanceof PunishmentsMaster) {
-				this.manager = (PunishmentsMaster) obj;
-			} else if (obj instanceof SqlMaster) {
-				this.sql = (SqlMaster) obj;
-			} else if (obj instanceof SubjectsMaster) {
-				this.subjects = (SubjectsMaster) obj;
-			} else if (obj instanceof FormatsMaster) {
-				this.formats = new Formats(this);
-			} else if (obj instanceof AsyncMaster) {
-				this.async = new Async();
-			} else if (obj instanceof CommandsMaster) {
-				this.commands = (CommandsMaster) obj;
-			} else if (obj instanceof CacheMaster) {
-				this.cache = (CacheMaster) obj;
+		config = load(ConfigMaster.class, preloaded, new Getter<ConfigMaster>() {
+			@Override
+			ConfigMaster get() {
+				return new Config(ArimBans.this);
 			}
-		}
-		try {
-			if (this.config == null) {
-				this.config = new Config(this);
+		});
+		sql = load(SqlMaster.class, preloaded, new Getter<SqlMaster>() {
+			@Override
+			SqlMaster get() {
+				return new Sql(ArimBans.this);
 			}
-			if (this.manager == null) {
-				this.manager = new Punishments(this);
+		});
+		punishments = load(PunishmentsMaster.class, preloaded, new Getter<PunishmentsMaster>() {
+			@Override
+			PunishmentsMaster get() {
+				return new Punishments(ArimBans.this);
 			}
-			if (this.sql == null) {
-				this.sql = new Sql(this);
+		});
+		subjects = load(SubjectsMaster.class, preloaded, new Getter<SubjectsMaster>() {
+			@Override
+			SubjectsMaster get() {
+				return new Subjects(ArimBans.this);
 			}
-			if (this.subjects == null) {
-				this.subjects = new Subjects(this);
+		});
+		cache = load(CacheMaster.class, preloaded, new Getter<CacheMaster>() {
+			@Override
+			CacheMaster get() {
+				return new Cache(ArimBans.this);
 			}
-			if (this.formats == null) {
-				this.formats = new Formats(this);
+		});
+		commands = load(CommandsMaster.class, preloaded, new Getter<CommandsMaster>() {
+			@Override
+			CommandsMaster get() {
+				return new Commands(ArimBans.this);
 			}
-			if (this.async == null) {
-				this.async = new Async();
+		});
+		formats = load(FormatsMaster.class, preloaded, new Getter<FormatsMaster>() {
+			@Override
+			FormatsMaster get() {
+				return new Formats(ArimBans.this);
 			}
-			if (this.commands == null) {
-				this.commands = new Commands(this);
+		});
+		async = load(AsyncMaster.class, preloaded, new Getter<AsyncMaster>() {
+			@Override
+			AsyncMaster get() {
+				return new Async();
 			}
-			if (this.cache == null) {
-				this.cache = new Cache(this);
-			}
-		} catch (Exception ex) {
-			throw new InternalStateException("WARNING: Error encountered during loading!", ex);
-		}
+		});
+		UniversalRegistry.register(PunishmentPlugin.class, this);
 		loadData();
 	}
 	
@@ -133,7 +157,7 @@ public class ArimBans implements AutoCloseable {
 	}
 
 	protected void loadData() {
-		async().execute(() -> {
+		async(() -> {
 			sql().executeQuery(new SqlQuery(SqlQuery.Query.CREATE_TABLE_CACHE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.CREATE_TABLE_ACTIVE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.CREATE_TABLE_HISTORY.eval(sql().mode())));
 			ResultSet[] data = sql().selectQuery(new SqlQuery(SqlQuery.Query.SELECT_ALL_CACHED.eval(sql().mode())), new SqlQuery(SqlQuery.Query.SELECT_ALL_ACTIVE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.SELECT_ALL_HISTORY.eval(sql().mode())));
 			cache().loadAll(data[0]);
@@ -141,9 +165,9 @@ public class ArimBans implements AutoCloseable {
 			punishments().loadHistory(data[2]);
 		});
 	}
-
+	
 	public PunishmentsMaster punishments() {
-		return manager;
+		return punishments;
 	}
 
 	public SqlMaster sql() {
@@ -168,10 +192,6 @@ public class ArimBans implements AutoCloseable {
 
 	public FormatsMaster formats() {
 		return formats;
-	}
-
-	public AsyncMaster async() {
-		return async;
 	}
 
 	public File dataFolder() {
@@ -200,12 +220,13 @@ public class ArimBans implements AutoCloseable {
 		}
 	}
 	
+	@Override
 	public void refreshConfig() {
 		config.refreshConfig();
 		async.refreshConfig();
 		sql.refreshConfig();
-		manager.refreshConfig();
-		manager.refreshActive();
+		punishments.refreshConfig();
+		punishments.refreshActive();
 		commands.refreshConfig();
 		cache.refreshConfig();
 		formats.refreshConfig();
@@ -216,9 +237,9 @@ public class ArimBans implements AutoCloseable {
 	public void close() {
 		try {
 			config.close();
-			async.shutdown();
+			async.close();
 			sql.close();
-			manager.close();
+			punishments.close();
 			subjects.close();
 			commands.close();
 			cache.close();
@@ -229,5 +250,117 @@ public class ArimBans implements AutoCloseable {
 			logError(ex);
 		}
 	}
+	
+	@Override
+	public String getName() {
+		return "ArimBans3";
+	}
+	
+	@Override
+	public String getVersion() {
+		return environment.getVersion();
+	}
+	
+	@Override
+	public byte getPriority() {
+		return (byte) -32;
+	}
+	
+	@Override
+	public boolean isBanned(Subject subject) {
+		return punishments().hasPunishment(subject, PunishmentType.BAN);
+	}
+	
+	@Override
+	public boolean isMuted(Subject subject) {
+		return punishments().hasPunishment(subject, PunishmentType.MUTE);
+	}
+	
+	@Override
+	public Set<Punishment> getBanList() {
+		return punishments().getAllPunishments(PunishmentType.BAN);
+	}
+	
+	@Override
+	public Set<Punishment> getMuteList() {
+		return punishments().getAllPunishments(PunishmentType.MUTE);
+	}
+	
+	@Override
+	public Set<Punishment> getWarns(Subject subject) {
+		return punishments().getPunishments(subject, PunishmentType.WARN);
+	}
+	
+	@Override
+	public Set<Punishment> getKicks(Subject subject) {
+		return punishments().getPunishments(subject, PunishmentType.KICK);
+	}
+	
+	@Override
+	public Set<Punishment> getHistory(Subject subject) {
+		return punishments().getHistory(subject);
+	}
+	
+	@Override
+	public void addPunishments(Punishment...punishments) throws ConflictingPunishmentException {
+		punishments().addPunishments(punishments);
+	}
+	
+	@Override
+	public Subject fromUUID(UUID subject) {
+		return subjects().parseSubject(subject);
+	}
+	
+	@Override
+	public Subject fromIpAddress(String address) throws IllegalArgumentException {
+		return Subject.fromIP(address);
+	}
+	
+	@Override
+	public UUID uuidFromName(String name) throws PlayerNotFoundException {
+		try {
+			return cache().getUUID(name);
+		} catch (MissingCacheException ex) {
+			throw new PlayerNotFoundException(name, ex);
+		}
+	}
+	
+	@Override
+	public UUID resolveName(String name) throws PlayerNotFoundException {
+		return environment().resolver().uuidFromName(name);
+	}
 
+	@Override
+	public String nameFromUUID(UUID uuid) throws PlayerNotFoundException {
+		try {
+			return cache().getName(uuid);
+		} catch (MissingCacheException ex) {
+			throw new PlayerNotFoundException(uuid, ex);
+		}
+	}
+	
+	@Override
+	public String resolveUUID(UUID uuid) throws PlayerNotFoundException {
+		return environment().resolver().nameFromUUID(uuid);
+	}
+	
+	@Override
+	public void simulateCommand(Subject subject, CommandType command, String[] args) {
+		commands().execute(subject, command, args);
+	}
+	
+	@Override
+	public void async(Runnable command) {
+		async.execute(command);
+	}
+	
+	@Override
+	public void sendMessage(Subject subject, String message) {
+		environment.sendMessage(subject, message);
+	}
+
+}
+
+abstract class Getter<T> {
+	abstract T get();
 }

@@ -16,25 +16,10 @@
  * along with ArimBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.internal.backend.subjects;
+package space.arim.bans.internal;
 
-import java.util.UUID;
-
-import space.arim.bans.api.Subject;
-import space.arim.bans.internal.Component;
-
-public interface SubjectsMaster extends Component {
-	@Override
-	default Class<?> getType() {
-		return SubjectsMaster.class;
-	}
+public interface Component extends AutoCloseable, Configurable {
 	
-	String display(Subject subject);
+	Class<?> getType();
 	
-	Subject parseSubject(String input);
-	
-	Subject parseSubject(UUID input);
-	
-	boolean checkUUID(UUID uuid);
-
 }

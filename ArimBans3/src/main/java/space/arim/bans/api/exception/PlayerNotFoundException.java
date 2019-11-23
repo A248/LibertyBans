@@ -31,5 +31,12 @@ public class PlayerNotFoundException extends InternalAPIException {
 	public PlayerNotFoundException(String name) {
 		super("Player by name " + name + " could not be found through the cache, internal Bukkit API, nor external Mojang API.");
 	}
+	
+	public PlayerNotFoundException(UUID uuid, Exception cause) {
+		super("Player by uuid " + uuid.toString() + " could not be found.", cause);
+	}
+	public PlayerNotFoundException(String name, Exception cause) {
+		super("Player by name " + name + " could not be found.", cause);
+	}
 
 }

@@ -23,6 +23,7 @@ import java.util.UUID;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.exception.TypeParseException;
+import space.arim.bans.api.util.Tools;
 
 /**
  * 
@@ -72,7 +73,7 @@ public class Subject {
 	public static Subject fromUUID(UUID playeruuid) {
 		return new Subject(playeruuid);
 	}
-
+	
 	/**
 	 * Creates a Subject from an IP address
 	 * 
@@ -80,12 +81,16 @@ public class Subject {
 	 * See {@link ArimBansLibrary#checkAddress(String)}
 	 * 
 	 * @param address - the IP address to create a Subject from
-	 * @return Subject
+	 * @return Subject representing the ip specified
+	 * @throws IllegalArgumentException if the parameter is not a valid ipv4 or ipv6 address
 	 */
-	public static Subject fromIP(String address) {
+	public static Subject fromIP(String address) throws IllegalArgumentException {
+		if (!Tools.validAddress(address)) {
+			throw new IllegalArgumentException("Could not make " + address + " into a subject because it is not a valid IP address!");
+		}
 		return new Subject(address);
 	}
-
+	
 	/**
 	 * Gets the console
 	 * 

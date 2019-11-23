@@ -32,8 +32,16 @@ priorities:
   bans: 'HIGHEST'
   mutes: 'HIGHEST'
 fetchers:
-  internal: true
-  ashcon: true
-  mojang: true
+  uuids:
+    internal: true
+    ashcon: true
+    mojang: true
+  ips:
+    ipstack:
+      enabled: false
+      key: 'nokey'
+    freegeoip:
+      enabled: true
 other:
-  version: '${project.version}'
+  config-version: 1
+  plugin-version: '${project.version}'

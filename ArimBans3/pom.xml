@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>space.arim</groupId>
   <artifactId>bans</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.2.0-SNAPSHOT</version>
   <name>ArimBans3</name>
   <description>ArimBans is the ultimate punitive solution for single servers and networks, seeking to maximise efficiency through near-total asynchronous operation.</description>
   <build>
@@ -30,10 +30,13 @@
             <configuration>
               <artifactSet>
                 <includes>
+                  <include>space.arim:registry</include>
                   <include>com.zaxxer:HikariCP</include>
                   <include>org.slf4j:slf4j-simple</include>
                 </includes>
               </artifactSet>
+              <minimizeJar>true</minimizeJar>
+              <createDependencyReducedPom>true</createDependencyReducedPom>
             </configuration>
           </execution>
         </executions>
@@ -69,6 +72,11 @@
   		<artifactId>bungeecord-api</artifactId>
   		<version>1.8-SNAPSHOT</version>
   		<scope>provided</scope>
+  	</dependency>
+  	<dependency>
+  	  <groupId>space.arim</groupId>
+  	  <artifactId>registry</artifactId>
+  	  <version>0.1.0-SNAPSHOT</version>
   	</dependency>
   </dependencies>
   <repositories>

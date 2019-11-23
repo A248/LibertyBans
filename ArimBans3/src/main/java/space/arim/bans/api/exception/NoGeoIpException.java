@@ -1,4 +1,4 @@
-/*
+/* 
  * ArimBans, a punishment plugin for minecraft servers
  * Copyright © 2019 Anand Beh <https://www.arim.space>
  * 
@@ -16,8 +16,14 @@
  * along with ArimBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.internal;
+package space.arim.bans.api.exception;
 
-public interface Replaceable extends AutoCloseable, Configurable {
-	
+public class NoGeoIpException extends InternalAPIException {
+
+	private static final long serialVersionUID = -1123491786025181762L;
+
+	public NoGeoIpException(String address) {
+		super("No GeoIP information found for " + address);
+	}
+
 }

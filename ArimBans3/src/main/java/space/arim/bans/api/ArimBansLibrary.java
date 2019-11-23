@@ -1,4 +1,4 @@
-/*
+/* 
  * ArimBans, a punishment plugin for minecraft servers
  * Copyright © 2019 Anand Beh <https://www.arim.space>
  * 
@@ -18,117 +18,97 @@
  */
 package space.arim.bans.api;
 
-import java.util.Set;
 import java.util.UUID;
 
-import org.bukkit.entity.Player;
-
-import space.arim.bans.ArimBans;
-import space.arim.bans.api.Subject.SubjectType;
-import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
+import space.arim.bans.api.util.Tools;
 
-public class ArimBansLibrary {
-	
-	private ArimBans center;
-	
-	public ArimBansLibrary(ArimBans center) {
-		this.center = center;
-	}
-	
-	public boolean isBanned(Subject subject) {
-		return center.punishments().isBanned(subject);
-	}
-	
-	public boolean isMuted(Subject subject) {
-		return center.punishments().isMuted(subject);
-	}
-	
-	public int countWarns(Subject subject) {
-		return getWarns(subject).size();
-	}
-	
-	public Set<Punishment> getWarns(Subject subject) {
-		return center.punishments().getWarns(subject);
-	}
-	
-	public Set<Punishment> getKicks(Subject subject) {
-		return center.punishments().getKicks(subject);
-	}
-	
-	public void addPunishments(Punishment...punishments) throws ConflictingPunishmentException {
-		center.punishments().addPunishments(punishments);
-	}
-	
-	public Subject fromUUID(UUID subject) {
-		return center.subjects().parseSubject(subject);
-	}
-	
-	public Subject fromPlayer(Player subject) {
-		return center.subjects().parseSubject(subject.getUniqueId());
-	}
+public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
+
+	/**
+	 * Gets a Subject from a UUID
+	 * 
+	 * @param uuid - the uuid to turn into a subject
+	 * @return Subject representing the player UUID
+	 */
+	Subject fromUUID(UUID uuid);
 	
 	/**
 	 * Gets a Subject from an IP Address
+	 * <br><br>Use {@link #checkAddress(String)} to validate the address first.
 	 * 
 	 * @param address - the address to use
 	 * @return a Subject representing the address
-	 * @throws IllegalArgumentException if address is invalid according to ApacheCommons InetAddressValidator
+	 * @throws IllegalArgumentException if address is invalid
 	 */
-	public Subject fromIpAddress(String address) throws IllegalArgumentException {
-		Subject subject = center.subjects().parseSubject(address);
-		if (subject.getType().equals(SubjectType.IP)) {
-			return subject;
-		}
-		throw new IllegalArgumentException("Could not make " + address + " into a subject because it is not a valid IP address! To avoid this error, surround your API call in a try/catch statement.");
-	}
+	Subject fromIpAddress(String address) throws IllegalArgumentException;
 	
 	/**
-	 * Returns the console
+	 * Simulates execution of a command
 	 * 
-	 * <br><b>Careful!</b> The console has unbounded permissions.
-	 * 
-	 * @return Subject
+	 * @param subject - the player (or console) executing the command
+	 * @param command - the command to be executed
+	 * @param args - additional arguments
 	 */
-	public Subject getConsole() {
-		return Subject.console();
-	}
-	
-	public void simulateCommand(Subject subject, CommandType command, String[] args) {
-		center.commands().execute(subject, command, args);
-	}
+	void simulateCommand(Subject subject, CommandType command, String[] args);
 	
 	/**
-	 * Checks that a UUID corresponds to a cached player
+	 * Use this to get a UUID from a playername
+	 * <br><br>If you have the option to execute asynchronously,
+	 * use {@link #resolveName(String)} instead.
 	 * 
-	 * @param uuid - the uuid to be checked
-	 * @return true if player's UUID is cached
+	 * @param name - the name to be looked up
+	 * @return the uuid of the corresponding player
+	 * @throws PlayerNotFoundException if no player by that name is cached
 	 */
-	public boolean checkUUID(UUID uuid) {
-		return center.subjects().checkUUID(uuid);
-	}
+	UUID uuidFromName(String name) throws PlayerNotFoundException;
 	
 	/**
-	 * Check whether a UUID corresponds to any player
-	 * Differs from {@link #checkUUID(UUID)} in that this method will query the Ashcon/Mojang APIs.
+	 * Use this to get a playername from a UUID
+	 * <br><br>If you have the option to execute asynchronously,
+	 * use {@link #resolveUUID(UUID)} instead.
 	 * 
-	 * <br><br><b>This is a blocking operation</b>
-	 * 
-	 * @param uuid - the uuid to be checked
-	 * @return
+	 * @param uuid - the uuid to be looked up
+	 * @return the name of the corresponding player
+	 * @throws PlayerNotFoundException if no player by that uuid is cached
 	 */
-	public boolean lookupUUID(UUID uuid) {
-		try {
-			center.environment().resolver().nameFromUUID(uuid);
-			return true;
-		} catch (PlayerNotFoundException ex) {
-			
-		}
-		return false;
-	}
+	String nameFromUUID(UUID uuid) throws PlayerNotFoundException;
 	
-	public boolean checkAddress(String address) {
+	/**
+	 * Use this to get a UUID from a playername in an async thread
+	 * Differs from {@link #uuidFromName(UUID)} in that this method will query the Ashcon/Mojang APIs.
+	 * 
+	 * <br><br><b>This is a blocking operation.</b>
+	 * 
+	 * @param name - the name to be resolved
+	 * @return the uuid of the corresponding player
+	 * @throws PlayerNotFoundException if the name could not be resolved to a uuid
+	 */
+	UUID resolveName(String name) throws PlayerNotFoundException;
+	
+	/**
+	 * Use this to get a playername from a UUID in an async thread
+	 * Differs from {@link #nameFromUUID(UUID)} in that this method will query the Ashcon/Mojang APIs.
+	 * 
+	 * <br><br><b>This is a blocking operation.</b>
+	 * 
+	 * @param uuid - the uuid to be resolved
+	 * @return the name of the corresponding player
+	 * @throws PlayerNotFoundException if the uuid could not be resolved to a name
+	 */
+	String resolveUUID(UUID uuid) throws PlayerNotFoundException;
+	
+	/**
+	 * Executes a block of code asynchronously.
+	 * 
+	 * <br><br>Bukkit users may call {@link org.bukkit.scheduler.BukkitScheduler#runTask(Plugin, Runnable) Bukkit.getScheduler().runTask(Plugin, Runnable)} to resynchronize.
+	 * 
+	 * @param task - the lambda/runnable to run async
+	 */
+	void async(Runnable task);
+	
+	default boolean checkAddress(String address) {
 		return Tools.validAddress(address);
 	}
-
+	
 }

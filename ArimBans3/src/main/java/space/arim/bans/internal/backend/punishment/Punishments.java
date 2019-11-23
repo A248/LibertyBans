@@ -35,7 +35,8 @@ import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.internal.sql.SqlQuery;
 
 public class Punishments implements PunishmentsMaster {
-	private ArimBans center;
+	
+	private final ArimBans center;
 	
 	private Set<Punishment> active = ConcurrentHashMap.newKeySet();
 	private Set<Punishment> history = ConcurrentHashMap.newKeySet();
@@ -44,38 +45,13 @@ public class Punishments implements PunishmentsMaster {
 		this.center = center;
 	}
 	
-	private Set<Punishment> punishmentTally(Subject subject, PunishmentType type) {
-		Set<Punishment> applicable = active();
-		for (Iterator<Punishment> it = applicable.iterator(); it.hasNext();) {
-			Punishment punishment = it.next();
-			if (!punishment.type().equals(type) || !punishment.subject().compare(subject)) {
-				it.remove();
-			}
-		}
-		return applicable;
-	}
-	
-	private int punishmentCount(Subject subject, PunishmentType type) {
-		int c = 0;
-		Set<Punishment> active = active();
-		for (Punishment punishment : active) {
-			if (punishment.subject().compare(subject) && punishment.type().equals(type)) {
-				
-				// you have to do it
-				c++;
-				
-			}
-		}
-		return c;
-	}
-
 	private void addPunishment(Punishment punishment) throws ConflictingPunishmentException {
 		// Throw error if the call would produce duplicate bans/mutes
-		if ((punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && punishmentCount(punishment.subject(), punishment.type()) > 0) {
+		if ((punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
 			throw new ConflictingPunishmentException(punishment.subject(), punishment.type());
 		}
 		// Do all SQL and Events stuff in a separate thread
-		center.async().execute(() -> {
+		center.async(() -> {
 			
 			// Check whether punishment is retrogade
 			boolean retro = (punishment.expiration() > 0 && punishment.expiration() <= System.currentTimeMillis());
@@ -100,6 +76,7 @@ public class Punishments implements PunishmentsMaster {
 		});
 	}
 	
+	
 	@Override
 	public void addPunishments(Punishment... punishments) throws ConflictingPunishmentException {
 		if (punishments.length == 1) {
@@ -110,12 +87,12 @@ public class Punishments implements PunishmentsMaster {
 		// would produce duplicate bans or mutes
 		// If it would, throw an error terminating everything
 		for (Punishment punishment : punishments) {
-			if ((punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && punishmentCount(punishment.subject(), punishment.type()) > 0) {
+			if ((punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
 				throw new ConflictingPunishmentException(punishment.subject(), punishment.type());
 			}
 		}
 		// We're just doing the same things we did for #addPunishment but inside a loop instead
-		center.async().execute(() -> {
+		center.async(() -> {
 			
 			// A set of queries we'll execute all together for increased efficiency
 			Set<SqlQuery> exec = new HashSet<SqlQuery>();
@@ -167,6 +144,7 @@ public class Punishments implements PunishmentsMaster {
 		throw new MissingPunishmentException(subject, type);
 	}
 	
+	
 	@Override
 	public void removePunishments(Punishment...punishments) throws MissingPunishmentException {
 		for (Punishment punishment : punishments) {
@@ -175,7 +153,7 @@ public class Punishments implements PunishmentsMaster {
 			}
 		}
 		// Do all SQL and Events stuff in a separate thread
-		center.async().execute(() -> {
+		center.async(() -> {
 			
 			// A set of queries we'll execute all together for increased efficiency
 			Set<SqlQuery> exec = new HashSet<SqlQuery>();
@@ -207,24 +185,63 @@ public class Punishments implements PunishmentsMaster {
 		});
 	}
 	
+	
 	@Override
-	public boolean isBanned(Subject subject) {
-		return punishmentCount(subject, PunishmentType.BAN) > 0;
-	}
-
-	@Override
-	public boolean isMuted(Subject subject) {
-		return punishmentCount(subject, PunishmentType.MUTE) > 0;
-	}
-
-	@Override
-	public Set<Punishment> getWarns(Subject subject) {
-		return punishmentTally(subject, PunishmentType.WARN);
+	public boolean hasPunishment(Subject subject, PunishmentType type) {
+		Set<Punishment> active = active();
+		for (Punishment punishment : active) {
+			if (punishment.subject().compare(subject) && punishment.type().equals(type)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	@Override
-	public Set<Punishment> getKicks(Subject subject) {
-		return punishmentTally(subject, PunishmentType.KICK);
+	public Set<Punishment> getPunishments(Subject subject) {
+		Set<Punishment> active = active();
+		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
+			if (!it.next().subject().compare(subject)) {
+				it.remove();
+			}
+		}
+		return active;
+	}
+	
+	@Override
+	public Set<Punishment> getPunishments(Subject subject, PunishmentType type) {
+		Set<Punishment> active = active();
+		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
+			
+		}
+		return active;
+	}
+	
+	@Override
+	public Set<Punishment> getAllPunishments() {
+		return active();
+	}
+	
+	@Override
+	public Set<Punishment> getAllPunishments(PunishmentType type) {
+		Set<Punishment> active = active();
+		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
+			if (!it.next().type().equals(type)) {
+				it.remove();
+			}
+		}
+		return active;
+	}
+	
+	@Override
+	public Set<Punishment> getHistory(Subject subject) {
+		Set<Punishment> history = new HashSet<Punishment>();
+		for (Punishment punishment : this.history) {
+			if (punishment.subject().compare(subject)) {
+				history.add(punishment);
+			}
+		}
+		return history;
 	}
 	
 	@Override
@@ -248,6 +265,7 @@ public class Punishments implements PunishmentsMaster {
 			center.logError(ex);
 		}
 	}
+	
 	
 	/**
 	 * Returns a copy of the Set of active punishments,
@@ -278,7 +296,7 @@ public class Punishments implements PunishmentsMaster {
 			}
 		}
 		// Call PostUnpunishEvents in a separate thread
-		center.async().execute(() -> {
+		center.async(() -> {
 			invalidated.forEach((punishment) -> {
 				center.environment().enforcer().callPostUnpunishEvent(punishment, true);
 			});
@@ -286,6 +304,7 @@ public class Punishments implements PunishmentsMaster {
 		return validated;
 	}
 	
+	@Override
 	public void refreshActive() {
 		center.sql().executeQuery(SqlQuery.Query.REFRESH_ACTIVE.eval(center.sql().mode()));
 	}

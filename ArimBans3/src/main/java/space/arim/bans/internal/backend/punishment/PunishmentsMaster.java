@@ -26,23 +26,31 @@ import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.exception.MissingPunishmentException;
-import space.arim.bans.internal.Replaceable;
+import space.arim.bans.internal.Component;
 
-public interface PunishmentsMaster extends Replaceable {
+public interface PunishmentsMaster extends Component {
+	@Override
+	default Class<?> getType() {
+		return PunishmentsMaster.class;
+	}
 	
-	public void addPunishments(Punishment...punishments) throws ConflictingPunishmentException;
-
-	public Punishment getPunishment(Subject subject, PunishmentType type) throws MissingPunishmentException;
+	void addPunishments(Punishment...punishments) throws ConflictingPunishmentException;
 	
-	public void removePunishments(Punishment...punishments) throws MissingPunishmentException; 
+	Punishment getPunishment(Subject subject, PunishmentType type) throws MissingPunishmentException;
 	
-	public boolean isBanned(Subject subject);
-
-	public boolean isMuted(Subject subject);
-
-	Set<Punishment> getWarns(Subject subject);
+	void removePunishments(Punishment...punishments) throws MissingPunishmentException; 
 	
-	Set<Punishment> getKicks(Subject subject);
+	boolean hasPunishment(Subject subject, PunishmentType type);
+	
+	Set<Punishment> getPunishments(Subject subject);
+	
+	Set<Punishment> getPunishments(Subject subject, PunishmentType type);
+	
+	Set<Punishment> getAllPunishments();
+	
+	Set<Punishment> getAllPunishments(PunishmentType type);
+	
+	Set<Punishment> getHistory(Subject subject);
 	
 	void loadActive(ResultSet data);
 	

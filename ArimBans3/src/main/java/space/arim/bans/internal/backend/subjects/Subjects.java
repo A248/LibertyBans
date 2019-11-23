@@ -23,14 +23,15 @@ import java.util.UUID;
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
-import space.arim.bans.api.Tools;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.exception.TypeParseException;
+import space.arim.bans.api.util.Tools;
 
 public class Subjects implements SubjectsMaster {
-	private ArimBans center;
+	
+	private final ArimBans center;
 	
 	private String console_display;
 
@@ -38,7 +39,7 @@ public class Subjects implements SubjectsMaster {
 		this.center = center;
 		refreshConfig();
 	}
-
+	
 	@Override
 	public String display(Subject subject) {
 		if (subject.getType().equals(SubjectType.PLAYER)) {
@@ -54,10 +55,10 @@ public class Subjects implements SubjectsMaster {
 		}
 		throw new InvalidSubjectException("Subject type is completely missing!");
 	}
-
+	
 	@Override
 	public Subject parseSubject(String input) {
-		if (Tools.validAddress(input)) {
+		if (center.checkAddress(input)) {
 			return Subject.fromIP(input);
 		} else if (input.length() == 36) {
 			try {
@@ -73,6 +74,7 @@ public class Subjects implements SubjectsMaster {
 		throw new TypeParseException(input, Subject.class);
 	}
 	
+	@Override
 	public Subject parseSubject(UUID input) {
 		if (checkUUID(input)) {
 			return Subject.fromUUID(input);
