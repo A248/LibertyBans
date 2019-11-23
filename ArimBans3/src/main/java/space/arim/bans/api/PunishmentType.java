@@ -35,4 +35,5 @@ public enum PunishmentType {
 		}
 		throw new TypeParseException(input, PunishmentType.class);
 	}
+
 }
