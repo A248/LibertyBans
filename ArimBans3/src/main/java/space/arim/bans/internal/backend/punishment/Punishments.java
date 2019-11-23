@@ -318,9 +318,4 @@ public class Punishments implements PunishmentsMaster {
 		history.clear();
 	}
 
-	@Override
-	public void refreshConfig() {
-		
-	}
-
 }

@@ -63,11 +63,11 @@ public class Sql implements SqlMaster {
 		config.setMinimumIdle(min_connections);
 		config.setMaximumPoolSize(max_connections);
 		if (mode.equals(StorageMode.MYSQL)) {
-			config.setJdbcUrl(center.config().getString("storage.mysql.url").replaceAll("<host>", center.config().getString("storage.mysql.host")).replaceAll("<port>", Integer.toString(center.config().getInt("storage.mysql.port"))).replaceAll("<database>", center.config().getString("storage.mysql.database")));
-			config.setUsername(center.config().getString("storage.mysql.user"));
-			config.setPassword(center.config().getString("storage.mysql.password"));
+			config.setJdbcUrl(center.config().getConfigString("storage.mysql.url").replaceAll("<host>", center.config().getConfigString("storage.mysql.host")).replaceAll("<port>", Integer.toString(center.config().getConfigInt("storage.mysql.port"))).replaceAll("<database>", center.config().getConfigString("storage.mysql.database")));
+			config.setUsername(center.config().getConfigString("storage.mysql.user"));
+			config.setPassword(center.config().getConfigString("storage.mysql.password"));
 		} else if (mode.equals(StorageMode.HSQLDB)) {
-			config.setJdbcUrl(center.config().getString("storage.hsqldb.url").replaceAll("<file>", center.dataFolder().getPath() + "/data;hsqldb.lock_file=false"));
+			config.setJdbcUrl(center.config().getConfigString("storage.hsqldb.url").replaceAll("<file>", center.dataFolder().getPath() + "/data;hsqldb.lock_file=false"));
 			config.setUsername("SA");
 			config.setPassword("");
 		} else {
@@ -168,7 +168,7 @@ public class Sql implements SqlMaster {
 	}
 
 	private StorageMode parseMode(String key) {
-		switch (center.config().getString(key).toLowerCase()) {
+		switch (center.config().getConfigString(key).toLowerCase()) {
 		case "hsqldb":
 			return StorageMode.HSQLDB;
 		case "local":
@@ -189,8 +189,8 @@ public class Sql implements SqlMaster {
 	@Override
 	public void refreshConfig() {
 		mode = parseMode("storage.mode");
-		min_connections = center.config().getInt("storage.min-connections");
-		max_connections = center.config().getInt("storage.max-connections");
+		min_connections = center.config().getConfigInt("storage.min-connections");
+		max_connections = center.config().getConfigInt("storage.max-connections");
 	}
 
 }

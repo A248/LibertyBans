@@ -18,7 +18,7 @@
  */
 package space.arim.bans.env.bukkit;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.bukkit.entity.Player;
@@ -72,7 +72,7 @@ public class BukkitEnforcer implements Enforcer {
 				environment.center().logError(ex);
 			}
 		} else {
-			ArrayList<String> ips = environment.center().cache().getIps(evt.getUniqueId());
+			List<String> ips = environment.center().cache().getIps(evt.getUniqueId());
 			ips.add(evt.getAddress().getHostAddress());
 			for (String addr : ips) {
 				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
@@ -161,16 +161,6 @@ public class BukkitEnforcer implements Enforcer {
 	@Override
 	public void callPostUnpunishEvent(Punishment punishment, boolean automatic) {
 		environment.plugin().getServer().getPluginManager().callEvent(new PostUnpunishEvent(punishment, automatic));
-	}
-	
-	@Override
-	public void refreshConfig() {
-		
-	}
-	
-	@Override
-	public void close() {
-		
 	}
 
 }

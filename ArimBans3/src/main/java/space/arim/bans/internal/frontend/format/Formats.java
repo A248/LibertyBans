@@ -41,7 +41,7 @@ public class Formats implements FormatsMaster {
 	@Override
 	public String format(Punishment punishment) {
 		
-		return center.config().getString("messages");
+		return center.config().getConfigString("messages");
 	}
 	
 	@Override
