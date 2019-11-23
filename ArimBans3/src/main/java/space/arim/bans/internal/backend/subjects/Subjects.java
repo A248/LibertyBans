@@ -34,6 +34,9 @@ public class Subjects implements SubjectsMaster {
 	private final ArimBans center;
 	
 	private String console_display;
+	
+	private static final int LENGTH_OF_FULL_UUID = 36;
+	private static final int LENGTH_OF_SHORT_UUID = 32;
 
 	public Subjects(ArimBans center) {
 		this.center = center;
@@ -60,13 +63,13 @@ public class Subjects implements SubjectsMaster {
 	public Subject parseSubject(String input) {
 		if (center.checkAddress(input)) {
 			return Subject.fromIP(input);
-		} else if (input.length() == 36) {
+		} else if (input.length() == LENGTH_OF_FULL_UUID) {
 			try {
 				return parseSubject(UUID.fromString(input));
 			} catch (IllegalArgumentException ex) {
 				throw new InvalidUUIDException("UUID " + input + " does not conform.");
 			}
-		} else if (input.length() == 32) {
+		} else if (input.length() == LENGTH_OF_SHORT_UUID) {
 			return parseSubject(Tools.expandUUID(input));
 		} else if (input.equalsIgnoreCase(console_display)) {
 			return console();
