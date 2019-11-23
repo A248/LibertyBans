@@ -35,7 +35,7 @@ import org.json.simple.parser.ParseException;
 
 import space.arim.bans.api.exception.FetcherException;
 
-public class Fetcher {
+public final class Fetcher {
 	
 	private static final String ASHCON_API = "https://api.ashcon.app/mojang/v2/user/";
 	private static final String MOJANG_API_FROM_NAME = "https://api.mojang.com/users/profiles/minecraft/";

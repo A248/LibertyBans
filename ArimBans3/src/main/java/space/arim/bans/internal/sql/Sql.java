@@ -71,7 +71,7 @@ public class Sql implements SqlMaster {
 			config.setUsername("SA");
 			config.setPassword("");
 		} else {
-			throw new RuntimeException("Missing storage mode!");
+			throw new InternalStateException("Storage mode is completely missing!");
 		}
 		data = new HikariDataSource(config);
 		data.setConnectionTimeout(25000L);

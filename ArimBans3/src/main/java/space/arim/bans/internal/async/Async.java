@@ -40,12 +40,8 @@ public class Async implements AsyncMaster {
 	}
 	
 	private void shutdown() throws InterruptedException {
-		try {
-			threads.shutdown();
-			threads.awaitTermination(20L, TimeUnit.SECONDS);
-		} catch (InterruptedException ex) {
-			throw ex;
-		}
+		threads.shutdown();
+		threads.awaitTermination(20L, TimeUnit.SECONDS);
 	}
 	
 	@Override
