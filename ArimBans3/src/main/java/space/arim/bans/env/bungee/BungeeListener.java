@@ -27,7 +27,7 @@ import space.arim.bans.api.exception.ConfigSectionException;
 
 public class BungeeListener implements AutoCloseable, Listener {
 	
-	private BungeeEnv environment;
+	private final BungeeEnv environment;
 	
 	private byte ban_priority;
 	private byte mute_priority;

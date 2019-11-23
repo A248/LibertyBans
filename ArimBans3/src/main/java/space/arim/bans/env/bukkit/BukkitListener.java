@@ -27,6 +27,7 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import space.arim.bans.api.exception.ConfigSectionException;
 
 public class BukkitListener implements AutoCloseable, Listener {
+	
 	private final BukkitEnv environment;
 	
 	private EventPriority ban_priority;

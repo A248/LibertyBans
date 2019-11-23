@@ -37,7 +37,7 @@ import space.arim.bans.env.Enforcer;
 // TODO Populate this class
 public class BungeeEnforcer implements Enforcer {
 
-	private BungeeEnv environment;
+	private final BungeeEnv environment;
 	
 	public BungeeEnforcer(BungeeEnv environment) {
 		this.environment = environment;

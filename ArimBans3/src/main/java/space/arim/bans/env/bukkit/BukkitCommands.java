@@ -27,6 +27,7 @@ import org.bukkit.entity.Player;
 import space.arim.bans.api.Subject;
 
 public class BukkitCommands implements AutoCloseable, CommandExecutor {
+	
 	private final BukkitEnv environment;
 
 	public BukkitCommands(final BukkitEnv environment) {
@@ -44,11 +45,13 @@ public class BukkitCommands implements AutoCloseable, CommandExecutor {
 		} else {
 			return true;
 		}
-		if (args.length > 0) {
-			this.environment.center().commands().execute(subject, args);
-		} else {
-			this.environment.center().commands().usage(subject);
-		}
+		environment.center().async(() -> {
+			if (args.length > 0) {
+				environment.center().commands().execute(subject, args);
+			} else {
+				environment.center().commands().usage(subject);
+			}
+		});
 		return true;
 	}
 

@@ -26,9 +26,9 @@ import space.arim.bans.api.Subject;
 
 public class BungeeCommands extends Command implements AutoCloseable {
 
-	private BungeeEnv environment;
+	private final BungeeEnv environment;
 	
-	public BungeeCommands(BungeeEnv environment) {
+	public BungeeCommands(final BungeeEnv environment) {
 		super("arimbans");
 		this.environment = environment;
 		refreshConfig();
@@ -44,11 +44,13 @@ public class BungeeCommands extends Command implements AutoCloseable {
 		} else {
 			return;
 		}
-		if (args.length > 0) {
-			environment.center().commands().execute(subject, args);
-		} else {
-			environment.center().commands().usage(subject);
-		}
+		environment.center().async(() -> {
+			if (args.length > 0) {
+				environment.center().commands().execute(subject, args);
+			} else {
+				environment.center().commands().usage(subject);
+			}
+		});
 	}
 	
 	@Override
