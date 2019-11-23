@@ -25,8 +25,9 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 import space.arim.bans.api.Subject;
+import space.arim.bans.internal.Configurable;
 
-public class BukkitCommands implements AutoCloseable, CommandExecutor {
+public class BukkitCommands implements Configurable, CommandExecutor {
 	
 	private final BukkitEnv environment;
 
@@ -55,12 +56,4 @@ public class BukkitCommands implements AutoCloseable, CommandExecutor {
 		return true;
 	}
 
-	public void refreshConfig() {
-		
-	}
-	
-	@Override
-	public void close() {
-		
-	}
 }

@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 import space.arim.bans.api.Subject;
 import space.arim.bans.internal.Configurable;
 
-public interface Environment extends AutoCloseable, Configurable {
+public interface Environment extends Configurable {
 	
 	void sendMessage(Subject target, String jsonable);
 	

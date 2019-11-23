@@ -21,7 +21,7 @@ package space.arim.bans.env;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.internal.Configurable;
 
-public interface Enforcer extends Configurable, AutoCloseable {
+public interface Enforcer extends Configurable {
 	void enforce(Punishment punishment);
 	
 	boolean callPunishEvent(Punishment punishment, boolean retro);
