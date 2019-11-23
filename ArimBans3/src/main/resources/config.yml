@@ -1,14 +1,16 @@
 #
 #
-# ${project.name}
-# v${project.version}
+# # ${project.name}
+# # v${project.version}
 #
 # 
-## CONFIGURATION ##
+# ## CONFIGURATION ##
 #
 # For information on the configuration, please see:
 # https://github.com/A248/ArimBans/wiki/Configuration
 #
+#
+# ### Config.yml ###
 #
 storage:
   mode: 'file'
@@ -28,6 +30,12 @@ formatting:
   permanent-display: 'Permanently'
   console-display: 'Console'
   date: 'dd/MM/yyyy HH:mm:ss'
+commands:
+  op-permissions: true
+  detection:
+    strict-mode: false
+    ip-conversion: true
+    time-detection: true
 priorities:
   bans: 'HIGHEST'
   mutes: 'HIGHEST'

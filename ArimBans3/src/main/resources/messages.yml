@@ -1,14 +1,84 @@
 #
 #
-# ${project.name}
-# v${project.version}
+# # ${project.name}
+# # v${project.version}
 #
 # 
-## Messages ##
+# ## CONFIGURATION ##
 #
 # For information on the configuration, please see:
 # https://github.com/A248/ArimBans/wiki/Configuration
 #
 #
+# ### Messages.yml ###
+#
+bans:
+  permission:
+    command: '&cYou may not ban other players.'
+    exempt: '&cYou may not ban %TARGET%.'
+    time: '&cYou may only ban players for a maximum of %TIME%'
+    dur-perms:
+      - 1440
+      - 43200
+  successful:
+    message: '&7Banned %TARGET% for %TIME% because of %REASON%'
+    notification: '&7%OPERATOR% banned %TARGET% for %TIME% because of %REASON%'
+  layout:
+    - 'Banned'
+    - 'Duration: %TIME%'
+    - 'Reason: %REASON%'
+    - ''
+    - 'Please read the rules'
+    - 'Forums: www.site.com'
+mutes:
+  permission:
+    command: '&cYou may not mute other players.'
+    exempt: '&cYou may not mute %TARGET%.'
+    time: '&cYou may only mute players for a maximum of %TIME%'
+    dur-perms:
+      - 1440
+      - 43200
+  successful:
+    message: '&7Muted %TARGET% for %TIME% because of %REASON%'
+    notification: '&7%OPERATOR% muted %TARGET% for %TIME% because of %REASON%'
+  layout:
+    - 'Muted'
+    - 'Duration: %TIME%'
+    - 'Reason: %REASON%'
+    - ''
+    - 'Please read the rules'
+    - 'Forums: www.site.com'
+warns:
+  permission:
+    command: '&cYou may not mute other players.'
+    exempt: '&cYou may not warn %TARGET%.'
+    time: '&cYou may only warn players for a maximum of %TIME%'
+    dur-perms:
+      - 1440
+      - 43200
+  successful:
+    message: '&7Warned %TARGET% for %TIME% because of %REASON%'
+    notification: '&7%OPERATOR% warned %TARGET% for %TIME% because of %REASON%'
+  layout:
+    - 'Warned'
+    - 'Duration: %TIME%'
+    - 'Reason: %REASON%'
+    - ''
+    - 'Please read the rules'
+    - 'Forums: www.site.com'
+kicks:
+  permission:
+    command: '&cYou may not kick other players.'
+    exempt: '&cYou may not kick %TARGET%.'
+  successful:
+    message: '&7Successfully kicked %TARGET% for %TIME% because of %REASON%'
+    notification: '&7%OPERATOR% kicked %TARGET% for %TIME% because of %REASON%'
+  layout:
+    - 'Kicked'
+    - 'Reason: %REASON%'
+    - ''
+    - 'Please read the rules'
+    - 'Forums: www.site.com'
 other:
-  version: '${project.version}'
+  messages-version: 1
+  plugin-version: '${project.version}'

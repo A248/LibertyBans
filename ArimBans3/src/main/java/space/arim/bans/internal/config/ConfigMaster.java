@@ -18,6 +18,8 @@
  */
 package space.arim.bans.internal.config;
 
+import java.util.List;
+
 import space.arim.bans.internal.Component;
 
 public interface ConfigMaster extends Component {
@@ -26,15 +28,17 @@ public interface ConfigMaster extends Component {
 		return ConfigMaster.class;
 	}
 	
-	String getMessage(String key);
+	String getConfigString(String key);
+
+	List<String> getConfigStrings(String key);
+
+	boolean getConfigBoolean(String key);
+
+	int getConfigInt(String key);
 	
-	String[] getMessages(String key);
+	String getMessagesString(String key);
 	
-	public String getString(String key);
-
-	public String[] getStrings(String key);
-
-	public boolean getBoolean(String key);
-
-	public int getInt(String key);
+	List<String> getMessagesStrings(String key);
+	
+	List<Integer> getMessagesInts(String key);
 }

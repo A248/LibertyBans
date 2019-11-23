@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -138,29 +139,30 @@ public class Config implements ConfigMaster {
 	}
 	
 	@Override
-	public String getString(String key) {
+	public String getConfigString(String key) {
 		return get(key, String.class);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public String[] getStrings(String key) {
+	public List<String> getConfigStrings(String key) {
 		if (configValues.containsKey(key)) {
 			Object obj = configValues.get(key);
-			if (obj instanceof String[]) {
-				return (String[]) obj;
+			if (obj instanceof List<?>) {
+				return (List<String>) obj;
 			}
 			configWarning(key, String[].class);
 		}
-		return (String[]) configDefaults.get(key);
+		return (List<String>) configDefaults.get(key);
 	}
 	
 	@Override
-	public boolean getBoolean(String key) {
+	public boolean getConfigBoolean(String key) {
 		return get(key, Boolean.class);
 	}
 
 	@Override
-	public int getInt(String key) {
+	public int getConfigInt(String key) {
 		return get(key, Integer.class);
 	}
 	
@@ -177,7 +179,7 @@ public class Config implements ConfigMaster {
 	}
 	
 	@Override
-	public String getMessage(String key) {
+	public String getMessagesString(String key) {
 		if (messageValues.containsKey(key)) {
 			Object obj = messageValues.get(key);
 			if (obj instanceof String) {
@@ -188,12 +190,13 @@ public class Config implements ConfigMaster {
 	}
 	
 	@Override
-	public String[] getMessages(String key) {
+	public List<String> getMessagesStrings(String key) {
 		return null;
 	}
 	
 	@Override
-	public void close() {
-
+	public List<Integer> getMessagesInts(String key) {
+		return null;
 	}
+	
 }
