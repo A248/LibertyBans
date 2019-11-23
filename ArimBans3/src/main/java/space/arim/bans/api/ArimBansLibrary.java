@@ -45,6 +45,16 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	Subject fromIpAddress(String address) throws IllegalArgumentException;
 	
 	/**
+	 * Gets a Subject from arbitrary user input
+	 * 
+	 * <br><br>Will automatically detect if IP address or UUID. Short UUIDs will be automatically expanded.
+	 * 
+	 * @param input - the String to convert to a Subject
+	 * @return Subject representing the input specified
+	 */
+	Subject parseSubject(String input);
+	
+	/**
 	 * Simulates execution of a command
 	 * 
 	 * @param subject - the player (or console) executing the command
@@ -116,6 +126,21 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 * @return Logger the logger
 	 */
 	Logger getLogger();
+	
+	/**
+	 * Reloads whole plugin configuration, including config.yml and messages.yml
+	 */
+	void reload();
+	
+	/**
+	 * Reloads functional configuration (config.yml)
+	 */
+	void reloadConfig();
+	
+	/**
+	 * Reloads message configuration (messages.yml)
+	 */
+	void reloadMessages();
 	
 	/**
 	 * Checks to ensure an address is valid.

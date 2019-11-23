@@ -54,6 +54,7 @@ import space.arim.bans.internal.frontend.commands.CommandsMaster;
 import space.arim.bans.internal.frontend.format.Formats;
 import space.arim.bans.internal.frontend.format.FormatsMaster;
 import space.arim.bans.internal.sql.SqlQuery;
+import space.arim.registry.RegistryPriority;
 import space.arim.registry.UniversalRegistry;
 import space.arim.bans.internal.sql.SqlMaster;
 import space.arim.bans.internal.sql.Sql;
@@ -142,11 +143,19 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 		async = load(AsyncMaster.class, preloaded, new Getter<AsyncMaster>() {
 			@Override
 			AsyncMaster get() {
-				return new Async();
+				return new Async(ArimBans.this);
 			}
 		});
-		UniversalRegistry.register(PunishmentPlugin.class, this);
+		config.refresh();
+		sql.refresh();
+		punishments.refresh();
+		subjects.refresh();
+		cache.refresh();
+		commands.refresh();
+		formats.refresh();
+		async.refresh();
 		loadData();
+		UniversalRegistry.register(PunishmentPlugin.class, this);
 	}
 
 	protected void loadData() {
@@ -216,32 +225,39 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	@Override
 	public void refreshConfig() {
 		config.refreshConfig();
-		async.refreshConfig();
 		sql.refreshConfig();
 		punishments.refreshConfig();
 		punishments.refreshActive();
-		commands.refreshConfig();
+		subjects.refreshConfig();
 		cache.refreshConfig();
+		commands.refreshConfig();
 		formats.refreshConfig();
 		async.refreshConfig();
 	}
 	
 	@Override
+	public void refreshMessages() {
+		config.refreshMessages();
+		sql.refreshMessages();
+		punishments.refreshMessages();
+		subjects.refreshMessages();
+		cache.refreshMessages();
+		commands.refreshMessages();
+		formats.refreshMessages();
+		async.refreshMessages();
+	}
+	
+	@Override
 	public void close() {
-		try {
-			config.close();
-			async.close();
-			sql.close();
-			punishments.close();
-			subjects.close();
-			commands.close();
-			cache.close();
-			formats.close();
-			async.close();
-			//logger.close();
-		} catch (Exception ex) {
-			logError(ex);
-		}
+		config.close();
+		async.close();
+		sql.close();
+		punishments.close();
+		subjects.close();
+		commands.close();
+		cache.close();
+		formats.close();
+		async.close();
 	}
 	
 	@Override
@@ -261,7 +277,7 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	
 	@Override
 	public byte getPriority() {
-		return (byte) -32;
+		return RegistryPriority.LOWER;
 	}
 	
 	@Override
@@ -306,12 +322,17 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	
 	@Override
 	public Subject fromUUID(UUID subject) {
-		return subjects().parseSubject(subject);
+		return Subject.fromUUID(subject);
 	}
 	
 	@Override
 	public Subject fromIpAddress(String address) throws IllegalArgumentException {
 		return Subject.fromIP(address);
+	}
+	
+	@Override
+	public Subject parseSubject(String input) {
+		return subjects().parseSubject(input);
 	}
 	
 	@Override
@@ -355,6 +376,21 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	@Override
 	public Logger getLogger() {
 		return logger;
+	}
+	
+	@Override
+	public void reload() {
+		refresh();
+	}
+	
+	@Override
+	public void reloadConfig() {
+		refreshConfig();
+	}
+	
+	@Override
+	public void reloadMessages() {
+		reloadMessages();
 	}
 	
 	@Override
