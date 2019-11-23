@@ -21,18 +21,23 @@ package space.arim.bans.internal.sql;
 import space.arim.bans.internal.sql.SqlMaster.StorageMode;
 
 public class SqlQuery {
-	private String statement;
-	private Object[] parameters;
+	
+	private final String statement;
+	private final Object[] parameters;
+	
 	public SqlQuery(String statement, Object...params) {
 		this.statement = statement;
 		this.parameters = params;
 	}
+	
 	public String statement() {
 		return this.statement;
 	}
+	
 	public Object[] parameters() {
 		return this.parameters;
 	}
+	
 	public enum Query {
 		CREATE_TABLE_ACTIVE(
 				"CREATE TABLE IF NOT EXISTS `Active` (" + "`id` int NOT NULL AUTO_INCREMENT,"
@@ -90,19 +95,11 @@ public class SqlQuery {
 				+ "(uuid, name, iplist, update_name, update_iplist) " 
 				+ "VALUES (?, ?, ?, ?, ?)"),
 
-		SELECT_ACTIVE_FROM_DATE("SELECT * FROM `Active` WHERE `date` = ?", "SELECT * FROM Active WHERE date = ?"),
 		DELETE_ACTIVE_FROM_DATE(
 				"DELETE FROM `Active` WHERE `date` = ?", 
 				"DELETE FROM Active WHERE date = ?"),
 		REFRESH_ACTIVE("DELETE FROM `Active` WHERE `expiration` <= ? AND `expiration` != -1",
 				"DELETE FROM Active WHERE expiration <= ? AND expiration != -1"),
-		SELECT_ACTIVE_BANS("SELECT * FROM `Active` WHERE `type` = 'BAN'", "SELECT * FROM Active WHERE type = 'BAN'"),
-		SELECT_ACTIVE_MUTES("SELECT * FROM `Active` WHERE `type` = 'MUTE'", "SELECT * FROM Active WHERE type = 'MUTE'"),
-		SELECT_ACTIVE_FOR_SUBJECT("SELECT * FROM `Active` WHERE `subject` = ?", "SELECT * FROM Active WHERE subject = ?"),
-		SELECT_WARNS_FOR_SUBJECT("SELECT * FROM `Active` WHERE `subject` = ? AND `type` = 'WARN'",
-				"SELECT * FROM Active WHERE subject = ? AND type = 'WARN'"),
-		SELECT_HISTORY_FOR_SUBJECT("SELECT * FROM `History` WHERE `subject` = ?",
-				"SELECT * FROM History WHERE subject = ?"),
 		UPDATE_ACTIVE_REASON_FROM_DATE("UPDATE `Active` SET `reason` = ? WHERE `date` = ?",
 				"UPDATE Active SET reason = ? WHERE date = ?"),
 		UPDATE_HISTORY_REASON_FROM_DATE("UPDATE `History` SET `reason` = ? WHERE `date` = ?",

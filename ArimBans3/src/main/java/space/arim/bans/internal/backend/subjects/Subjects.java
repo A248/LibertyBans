@@ -72,7 +72,7 @@ public class Subjects implements SubjectsMaster {
 		} else if (input.length() == LENGTH_OF_SHORT_UUID) {
 			return parseSubject(Tools.expandUUID(input));
 		} else if (input.equalsIgnoreCase(console_display)) {
-			return console();
+			return Subject.console();
 		}
 		throw new TypeParseException(input, Subject.class);
 	}
@@ -89,21 +89,9 @@ public class Subjects implements SubjectsMaster {
 	public boolean checkUUID(UUID uuid) {
 		return center.cache().uuidExists(uuid);
 	}
-	
-	/**
-	 * Identical to {@link Subject#console()}
-	 */
-	public Subject console() {
-		return Subject.console();
-	}
-	
-	@Override
-	public void close() {
-		
-	}
 
 	@Override
 	public void refreshConfig() {
-		console_display = center.config().getString("formatting.console-display");
+		console_display = center.config().getConfigString("formatting.console-display");
 	}
 }
