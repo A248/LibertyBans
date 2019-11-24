@@ -33,12 +33,23 @@ public interface CommandsMaster extends Component {
 	void execute(Subject subject, CommandType command, String[] extraArgs);
 
 	default CommandType parseCommand(String input) {
-		for (CommandType type : CommandType.values()) {
-			if (type.toString().equalsIgnoreCase(input)) {
-				return type;
+		switch (input.toLowerCase()) {
+		case "banlist":
+			return CommandType.ALLBANLIST;
+		case "mutelist":
+			return CommandType.ALLMUTELIST;
+		case "playerbanlist":
+			return CommandType.BANLIST;
+		case "playermutelist":
+			return CommandType.MUTELIST;
+		default:
+			for (CommandType type : CommandType.values()) {
+				if (type.toString().equalsIgnoreCase(input)) {
+					return type;
+				}
 			}
+			throw new IllegalArgumentException("Input '" + input + "' could not be parsed as a CommandType!");
 		}
-		throw new IllegalArgumentException("Input '" + input + "' could not be parsed as a CommandType!");
 	}
 
 	void usage(Subject subject);

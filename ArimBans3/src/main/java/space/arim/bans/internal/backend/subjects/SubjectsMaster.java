@@ -32,7 +32,11 @@ public interface SubjectsMaster extends Component {
 	
 	boolean isOnline(Subject subject);
 	
-	Subject parseSubject(String input) throws IllegalArgumentException;
+	Subject parseSubject(String input, boolean consolable) throws IllegalArgumentException;
+	
+	default Subject parseSubject(String input) {
+		return parseSubject(input, true);
+	}
 	
 	Subject parseSubject(UUID input);
 	

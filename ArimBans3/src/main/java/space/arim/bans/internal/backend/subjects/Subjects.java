@@ -43,7 +43,7 @@ public class Subjects implements SubjectsMaster {
 	}
 	
 	@Override
-	public Subject parseSubject(String input) throws IllegalArgumentException {
+	public Subject parseSubject(String input, boolean consolable) throws IllegalArgumentException {
 		if (center.checkAddress(input)) {
 			return Subject.fromIP(input);
 		} else if (input.length() == LENGTH_OF_FULL_UUID) {
@@ -54,7 +54,7 @@ public class Subjects implements SubjectsMaster {
 			}
 		} else if (input.length() == LENGTH_OF_SHORT_UUID) {
 			return parseSubject(Tools.expandUUID(input));
-		} else if (input.equalsIgnoreCase(center.formats().getConsoleDisplay())) {
+		} else if (consolable && input.equalsIgnoreCase(center.formats().getConsoleDisplay())) {
 			return Subject.console();
 		}
 		throw new IllegalArgumentException("Could not make " + input + " into a subject");

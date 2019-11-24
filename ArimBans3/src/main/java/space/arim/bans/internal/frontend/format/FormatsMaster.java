@@ -32,7 +32,11 @@ public interface FormatsMaster extends Component {
 	
 	String formatSubject(Subject subj);
 	
-	String formatTime(long millis);
+	default String formatTime(long millis) {
+		return formatTime(millis, true);
+	}
+	
+	String formatTime(long millis, boolean absolute);
 	
 	long toMillis(String timespan);
 	
