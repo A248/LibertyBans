@@ -15,6 +15,7 @@
 bans:
   permission:
     command: '&cYou may not ban other players.'
+    no-ip: '&cYou may not ipban other players.'
     exempt: '&cYou may not ban %TARGET%.'
     time: '&cYou may only ban players for a maximum of %TIME%'
     dur-perms:
@@ -33,6 +34,7 @@ bans:
 mutes:
   permission:
     command: '&cYou may not mute other players.'
+    no-ip: '&cYou may not ipmute other players.'
     exempt: '&cYou may not mute %TARGET%.'
     time: '&cYou may only mute players for a maximum of %TIME%'
     dur-perms:
@@ -50,7 +52,8 @@ mutes:
     - 'Forums: www.site.com'
 warns:
   permission:
-    command: '&cYou may not mute other players.'
+    command: '&cYou may not warn other players.'
+    no-ip: '&cYou may not ipwarn other players.'
     exempt: '&cYou may not warn %TARGET%.'
     time: '&cYou may only warn players for a maximum of %TIME%'
     dur-perms:
@@ -69,6 +72,7 @@ warns:
 kicks:
   permission:
     command: '&cYou may not kick other players.'
+    no-ip: '&cYou may not ipkick other players.'
     exempt: '&cYou may not kick %TARGET%.'
   successful:
     message: '&7Successfully kicked %TARGET% for %TIME% because of %REASON%'
