@@ -32,7 +32,7 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.InvalidSubjectException;
-import space.arim.bans.api.util.Tools;
+import space.arim.bans.api.util.MiscUtil;
 import space.arim.bans.env.Environment;
 
 public class BukkitEnv implements Environment {
@@ -67,7 +67,7 @@ public class BukkitEnv implements Environment {
 	}
 	
 	void json(Player target, String json) {
-		target.spigot().sendMessage(Tools.parseJson(json));
+		target.spigot().sendMessage(MiscUtil.parseJson(json));
 	}
 
 	@Override
@@ -102,7 +102,7 @@ public class BukkitEnv implements Environment {
 				}
 				throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subj) + " is not online or does not have a valid UUID.");
 			} else if (subj.getType().equals(SubjectType.CONSOLE)) {
-				plugin.getServer().getConsoleSender().sendMessage(Tools.encode(Tools.stripJson(jsonable)));
+				plugin.getServer().getConsoleSender().sendMessage(MiscUtil.encode(MiscUtil.stripJson(jsonable)));
 			} else if (subj.getType().equals(SubjectType.IP)) {
 				for (Player target : applicable(subj)) {
 					json(target, jsonable);
@@ -115,12 +115,12 @@ public class BukkitEnv implements Environment {
 			if (subj.getType().equals(SubjectType.PLAYER)) {
 				Player target = plugin.getServer().getPlayer(subj.getUUID());
 				if (target != null) {
-					target.getPlayer().sendMessage(Tools.encode(jsonable));
+					target.getPlayer().sendMessage(MiscUtil.encode(jsonable));
 					return;
 				}
 				throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subj) + " is not online or does not have a valid UUID.");
 			} else if (subj.getType().equals(SubjectType.CONSOLE)) {
-				plugin.getServer().getConsoleSender().sendMessage(Tools.encode(jsonable));
+				plugin.getServer().getConsoleSender().sendMessage(MiscUtil.encode(jsonable));
 			} else if (subj.getType().equals(SubjectType.IP)) {
 				for (Player target : applicable(subj)) {
 					target.sendMessage(jsonable);

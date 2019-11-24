@@ -29,9 +29,9 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 
-public final class Tools {
+public final class MiscUtil {
 	
-	private Tools() {}
+	private MiscUtil() {}
 	
 	public static String expandUUID(String uuid) {
 		return uuid.substring(0, 8) + "-" + uuid.substring(8, 12) + "-" + uuid.substring(12, 16)

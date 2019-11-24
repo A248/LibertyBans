@@ -23,7 +23,7 @@ import java.util.UUID;
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.exception.InvalidUUIDException;
-import space.arim.bans.api.util.Tools;
+import space.arim.bans.api.util.MiscUtil;
 
 public class Subjects implements SubjectsMaster {
 	
@@ -53,7 +53,7 @@ public class Subjects implements SubjectsMaster {
 				throw new InvalidUUIDException("UUID " + input + " does not conform.");
 			}
 		} else if (input.length() == LENGTH_OF_SHORT_UUID) {
-			return parseSubject(Tools.expandUUID(input));
+			return parseSubject(MiscUtil.expandUUID(input));
 		} else if (consolable && input.equalsIgnoreCase(center.formats().getConsoleDisplay())) {
 			return Subject.console();
 		}

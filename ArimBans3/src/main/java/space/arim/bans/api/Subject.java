@@ -23,7 +23,7 @@ import java.util.UUID;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.exception.TypeParseException;
-import space.arim.bans.api.util.Tools;
+import space.arim.bans.api.util.MiscUtil;
 
 /**
  * 
@@ -85,7 +85,7 @@ public class Subject {
 	 * @throws IllegalArgumentException if the parameter is not a valid ipv4 or ipv6 address
 	 */
 	public static Subject fromIP(String address) {
-		if (!Tools.validAddress(address)) {
+		if (!MiscUtil.validAddress(address)) {
 			throw new IllegalArgumentException("Could not make " + address + " into a subject because it is not a valid IP address!");
 		}
 		return new Subject(address);
@@ -162,7 +162,7 @@ public class Subject {
 	public static Subject serialise(String input) throws InvalidUUIDException, TypeParseException {
 		if (input.startsWith("[subject:uuid]")) {
 			try {
-				return new Subject(UUID.fromString(Tools.expandUUID(input.substring(14))));
+				return new Subject(UUID.fromString(MiscUtil.expandUUID(input.substring(14))));
 			} catch (IllegalArgumentException ex) {
 				throw new InvalidUUIDException("UUID " + input + " does not conform.");
 			}

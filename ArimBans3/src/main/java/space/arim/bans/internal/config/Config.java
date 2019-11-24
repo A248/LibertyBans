@@ -33,7 +33,7 @@ import com.google.common.io.ByteStreams;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.exception.ConfigLoadException;
-import space.arim.bans.api.util.Tools;
+import space.arim.bans.api.util.MiscUtil;
 
 public class Config implements ConfigMaster {
 	
@@ -73,7 +73,7 @@ public class Config implements ConfigMaster {
 	
 	private void saveIfNotExist(File target, String source) {
 		if (!target.exists()) {
-			if (!Tools.generateFile(target)) {
+			if (!MiscUtil.generateFile(target)) {
 				ConfigLoadException exception = new ConfigLoadException(target);
 				center.logError(exception);
 				throw exception;

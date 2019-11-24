@@ -33,7 +33,7 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.InvalidSubjectException;
-import space.arim.bans.api.util.Tools;
+import space.arim.bans.api.util.MiscUtil;
 import space.arim.bans.env.Environment;
 
 public class BungeeEnv implements Environment {
@@ -66,7 +66,7 @@ public class BungeeEnv implements Environment {
 	}
 	
 	void json(ProxiedPlayer target, String json) {
-		target.sendMessage(Tools.parseJson(json));
+		target.sendMessage(MiscUtil.parseJson(json));
 	}
 	
 	@Override
@@ -101,7 +101,7 @@ public class BungeeEnv implements Environment {
 				}
 				throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subj) + " is not online.");
 			} else if (subj.getType().equals(SubjectType.CONSOLE)) {
-				plugin.getProxy().getConsole().sendMessage(convert(Tools.encode(Tools.stripJson(jsonable))));
+				plugin.getProxy().getConsole().sendMessage(convert(MiscUtil.encode(MiscUtil.stripJson(jsonable))));
 			} else if (subj.getType().equals(SubjectType.IP)) {
 				for (ProxiedPlayer target : applicable(subj)) {
 					json(target, jsonable);
@@ -114,15 +114,15 @@ public class BungeeEnv implements Environment {
 			if (subj.getType().equals(SubjectType.PLAYER)) {
 				ProxiedPlayer target = plugin.getProxy().getPlayer(subj.getUUID());
 				if (target != null) {
-					target.sendMessage(convert(Tools.encode(jsonable)));
+					target.sendMessage(convert(MiscUtil.encode(jsonable)));
 					return;
 				}
 				throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subj) + " is not online or does not have a valid UUID.");
 			} else if (subj.getType().equals(SubjectType.CONSOLE)) {
-				plugin.getProxy().getConsole().sendMessage(convert(Tools.encode(jsonable)));
+				plugin.getProxy().getConsole().sendMessage(convert(MiscUtil.encode(jsonable)));
 			} else if (subj.getType().equals(SubjectType.IP)) {
 				for (ProxiedPlayer target : applicable(subj)) {
-					target.sendMessage(convert(Tools.encode(jsonable)));
+					target.sendMessage(convert(MiscUtil.encode(jsonable)));
 				}
 			} else {
 				throw new InvalidSubjectException("Subject type is completely missing!");
