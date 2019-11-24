@@ -99,7 +99,7 @@ public class BungeeEnv implements Environment {
 					json(target, jsonable);
 					return;
 				}
-				throw new InvalidSubjectException("Subject " + center.subjects().display(subj) + " is not online.");
+				throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subj) + " is not online.");
 			} else if (subj.getType().equals(SubjectType.CONSOLE)) {
 				plugin.getProxy().getConsole().sendMessage(convert(Tools.encode(Tools.stripJson(jsonable))));
 			} else if (subj.getType().equals(SubjectType.IP)) {
@@ -117,7 +117,7 @@ public class BungeeEnv implements Environment {
 					target.sendMessage(convert(Tools.encode(jsonable)));
 					return;
 				}
-				throw new InvalidSubjectException("Subject " + center.subjects().display(subj) + " is not online or does not have a valid UUID.");
+				throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subj) + " is not online or does not have a valid UUID.");
 			} else if (subj.getType().equals(SubjectType.CONSOLE)) {
 				plugin.getProxy().getConsole().sendMessage(convert(Tools.encode(jsonable)));
 			} else if (subj.getType().equals(SubjectType.IP)) {
@@ -142,7 +142,7 @@ public class BungeeEnv implements Environment {
 			if (target != null) {
 				return !target.hasPermission(permission);
 			}
-			throw new InvalidSubjectException("Subject " + center.subjects().display(subject) + " is not online.");
+			throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subject) + " is not online.");
 		} else if (subject.getType().equals(SubjectType.IP)) {
 			throw new InvalidSubjectException("Cannot invoke Environment#hasPermission(Subject, Permission[]) for IP-based subjects");
 		}

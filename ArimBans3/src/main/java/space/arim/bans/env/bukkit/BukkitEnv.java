@@ -100,7 +100,7 @@ public class BukkitEnv implements Environment {
 					json(target.getPlayer(), jsonable);
 					return;
 				}
-				throw new InvalidSubjectException("Subject " + center.subjects().display(subj) + " is not online or does not have a valid UUID.");
+				throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subj) + " is not online or does not have a valid UUID.");
 			} else if (subj.getType().equals(SubjectType.CONSOLE)) {
 				plugin.getServer().getConsoleSender().sendMessage(Tools.encode(Tools.stripJson(jsonable)));
 			} else if (subj.getType().equals(SubjectType.IP)) {
@@ -118,7 +118,7 @@ public class BukkitEnv implements Environment {
 					target.getPlayer().sendMessage(Tools.encode(jsonable));
 					return;
 				}
-				throw new InvalidSubjectException("Subject " + center.subjects().display(subj) + " is not online or does not have a valid UUID.");
+				throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subj) + " is not online or does not have a valid UUID.");
 			} else if (subj.getType().equals(SubjectType.CONSOLE)) {
 				plugin.getServer().getConsoleSender().sendMessage(Tools.encode(jsonable));
 			} else if (subj.getType().equals(SubjectType.IP)) {
@@ -143,7 +143,7 @@ public class BukkitEnv implements Environment {
 			if (target != null) {
 				return target.isOp() ? op_permissions : target.getPlayer().hasPermission(permission);
 			}
-			throw new InvalidSubjectException("Subject " + center.subjects().display(subject) + " is not online or does not have a valid UUID.");
+			throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subject) + " is not online or does not have a valid UUID.");
 		} else if (subject.getType().equals(SubjectType.IP)) {
 			throw new InvalidSubjectException("Cannot invoke Environment#hasPermission(Subject, Permission[]) for IP-based subjects");
 		}

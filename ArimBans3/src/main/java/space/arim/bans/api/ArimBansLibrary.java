@@ -76,8 +76,9 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 * 
 	 * @param input - the String to convert to a Subject
 	 * @return Subject representing the input specified
+	 * @throws IllegalArgumentException if input does not match to any type of Subject
 	 */
-	Subject parseSubject(String input);
+	Subject parseSubject(String input) throws IllegalArgumentException;
 	
 	/**
 	 * Simulates execution of a command
