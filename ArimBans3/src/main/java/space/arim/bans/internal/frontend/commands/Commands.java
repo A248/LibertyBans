@@ -18,6 +18,8 @@
  */
 package space.arim.bans.internal.frontend.commands;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import space.arim.bans.ArimBans;
@@ -25,28 +27,26 @@ import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.CommandType;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
+import space.arim.bans.api.exception.InvalidCommandTypeException;
 
 // TODO Make this class work
 public class Commands implements CommandsMaster {
 	
 	private final ArimBans center;
 	
-	private String perm_display;
+	private String invalid_target;
+	private String no_target_console;
+	
+	private final ConcurrentHashMap<PunishmentType, String> usagePun = new ConcurrentHashMap<PunishmentType, String>();
 	private final ConcurrentHashMap<PunishmentType, String> permCmd = new ConcurrentHashMap<PunishmentType, String>();
 	private final ConcurrentHashMap<PunishmentType, String> permIp = new ConcurrentHashMap<PunishmentType, String>();
 	private final ConcurrentHashMap<PunishmentType, String> exempt = new ConcurrentHashMap<PunishmentType, String>();
 	private final ConcurrentHashMap<PunishmentType, String> permTime = new ConcurrentHashMap<PunishmentType, String>();
+	private final ConcurrentHashMap<PunishmentType, List<Integer>> durPerms = new ConcurrentHashMap<PunishmentType, List<Integer>>();
 
 	public Commands(ArimBans center) {
 		this.center = center;
 		refreshConfig();
-	}
-
-	public String formatTime(long unix) {
-		if (unix < 0) {
-			return perm_display;
-		}
-		return center.formats().fromUnix(unix);
 	}
 
 	private String[] chopOffOne(String[] input) {
@@ -73,13 +73,46 @@ public class Commands implements CommandsMaster {
 	
 	@Override
 	public void execute(Subject subject, CommandType command, String[] args) {
-		if (args.length > 0) {
-			exec(subject, command, args);
-		}
-		usage(subject, command);
+		exec(subject, command, args);
 	}
 	
-	private void exec(Subject subject, CommandType command, String[] args) {
+	private void exec(Subject operator, CommandType command, String[] args) {
+		if (command.isGeneralListing()) {
+			listGeneralCmd(operator, command, args);
+		} else if (command.isListing() || command.isAddition() || command.isRemoval()) {
+			if (args.length > 0) {
+				Subject target;
+				try {
+					target = center.subjects().parseSubject(args[0]);
+				} catch (IllegalArgumentException ex) {
+					center.environment().sendMessage(operator, invalid_target.replaceAll("%TARGET%", args[0]));
+					return;
+				}
+				if (!center.environment().isOnline(target)) {
+					center.environment().sendMessage(operator, invalid_target.replaceAll("%TARGET%", center.formats().formatSubject(target)));
+					return;
+				}
+			} else {
+				usage(operator, command);
+			}
+		}
+		throw new InvalidCommandTypeException(command);
+	}
+	
+	private void punCmd(Subject operator, Subject target, CommandType command, String[] args) {
+		
+		
+	}
+	
+	private void unpunCmd(Subject operator, Subject target, CommandType command, String[] args) {
+		
+	}
+	
+	private void listGeneralCmd(Subject operator, CommandType command, String[] args) {
+		
+	}
+	
+	private void listCmd(Subject operator, Subject target, CommandType command, String[] args) {
 		
 	}
 
@@ -92,16 +125,22 @@ public class Commands implements CommandsMaster {
 	public void usage(Subject subject) {
 
 	}
-	
-	@Override
-	public void close() {
-		
-	}
 
 	@Override
 	public void refreshConfig() {
 		
-		perm_display = center.config().getConfigString("formatting.permanent-display");
+	}
+	
+	@Override
+	public void refreshMessages() {
+		
+		invalid_target = center.config().getMessagesString("all.invalid-target");
+		no_target_console = center.config().getMessagesString("all.no-target-console");
+		
+		String usageBan = center.config().getMessagesString("bans.usage");
+		String usageMute = center.config().getMessagesString("mutes.usage");
+		String usageWarn = center.config().getMessagesString("warns.usage");
+		String usageKick = center.config().getMessagesString("kicks.usage");
 		
 		String noPermBan = center.config().getMessagesString("bans.permission.command");
 		String noPermMute = center.config().getMessagesString("mutes.permission.command");
@@ -122,6 +161,18 @@ public class Commands implements CommandsMaster {
 		String noPermTimeMute = center.config().getMessagesString("mutes.permission.time");
 		String noPermTimeWarn = center.config().getMessagesString("kicks.permission.time");
 		
+		List<Integer> durPermsBan = center.config().getMessagesInts(".permission.dur-perms");
+		List<Integer> durPermsMute = center.config().getMessagesInts(".permission.dur-perms");
+		List<Integer> durPermsWarn = center.config().getMessagesInts(".permission.dur-perms");
+		durPermsBan.add(-1);
+		durPermsMute.add(-1);
+		durPermsWarn.add(-1);
+		
+		usagePun.put(PunishmentType.BAN, usageBan);
+		usagePun.put(PunishmentType.MUTE, usageMute);
+		usagePun.put(PunishmentType.WARN, usageWarn);
+		usagePun.put(PunishmentType.KICK, usageKick);
+		
 		permCmd.put(PunishmentType.BAN, noPermBan);
 		permCmd.put(PunishmentType.MUTE, noPermMute);
 		permCmd.put(PunishmentType.WARN, noPermWarn);
@@ -141,6 +192,11 @@ public class Commands implements CommandsMaster {
 		permTime.put(PunishmentType.MUTE, noPermTimeMute);
 		permTime.put(PunishmentType.WARN, noPermTimeWarn);
 		permTime.put(PunishmentType.KICK, ArimBansLibrary.INVALID_STRING_CODE);
+		
+		durPerms.put(PunishmentType.BAN, durPermsBan);
+		durPerms.put(PunishmentType.MUTE, durPermsMute);
+		durPerms.put(PunishmentType.WARN, durPermsWarn);
+		durPerms.put(PunishmentType.KICK, Arrays.asList(-1));
 		
 	}
 

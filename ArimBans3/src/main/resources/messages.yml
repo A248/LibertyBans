@@ -12,7 +12,11 @@
 #
 # ### Messages.yml ###
 #
+usage:
+  invalid-target: '&c%TARGET% is not online or is not an IP address.'
+  no-target-console: '&cYou cannot punish the console.'
 bans:
+  usage: '/ban <player> [time] <reason>'
   permission:
     command: '&cYou may not ban other players.'
     no-ip: '&cYou may not ipban other players.'
@@ -32,6 +36,7 @@ bans:
     - 'Please read the rules'
     - 'Forums: www.site.com'
 mutes:
+  usage: '/mute <player> [time] <reason>'
   permission:
     command: '&cYou may not mute other players.'
     no-ip: '&cYou may not ipmute other players.'
@@ -51,6 +56,7 @@ mutes:
     - 'Please read the rules'
     - 'Forums: www.site.com'
 warns:
+  usage: '/warn <player> [time] <reason>'
   permission:
     command: '&cYou may not warn other players.'
     no-ip: '&cYou may not ipwarn other players.'
@@ -70,6 +76,7 @@ warns:
     - 'Please read the rules'
     - 'Forums: www.site.com'
 kicks:
+  usage: '/kick <player> <reason>'
   permission:
     command: '&cYou may not kick other players.'
     no-ip: '&cYou may not ipkick other players.'

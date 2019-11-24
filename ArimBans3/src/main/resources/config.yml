@@ -27,6 +27,10 @@ storage:
   max-connections: 5
 formatting:
   use-json: true
+  permanent-arguments:
+    - 'perm'
+    - 'permanent'
+    - 'permanently'
   permanent-display: 'Permanently'
   console-display: 'Console'
   date: 'dd/MM/yyyy HH:mm:ss'
