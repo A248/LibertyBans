@@ -20,25 +20,25 @@ package space.arim.bans.api;
 
 public enum CommandType {
 	
-	BAN(PunishmentType.BAN, "ban.type.uuid", "ban.use.time.perm"),
-	TEMPBAN(PunishmentType.BAN, "ban.type.uuid", "ban.use.time.temp"),
+	BAN(PunishmentType.BAN, "ban.type.uuid"),
+	TEMPBAN(PunishmentType.BAN, "ban.type.uuid"),
 	UNBAN(PunishmentType.BAN, CommandCategory.REMOVE, "ban.undo.type.uuid"),
-	IPBAN(PunishmentType.BAN, true, "ban.type.ip", "ban.use.time.perm"),
-	IPTEMPBAN(PunishmentType.BAN, true, "ban.type.ip", "ban.use.time.temp"),
+	IPBAN(PunishmentType.BAN, true, "ban.type.ip"),
+	IPTEMPBAN(PunishmentType.BAN, true, "ban.type.ip"),
 	IPUNBAN(PunishmentType.BAN, CommandCategory.REMOVE, true, "ban.undo.type.ip"),
 	
-	MUTE(PunishmentType.MUTE, "mute.type.uuid", "mute.use.time.perm"),
-	TEMPMUTE(PunishmentType.MUTE, "mute.type.uuid", "mute.use.time.temp"),
+	MUTE(PunishmentType.MUTE, "mute.type.uuid"),
+	TEMPMUTE(PunishmentType.MUTE, "mute.type.uuid"),
 	UNMUTE(PunishmentType.MUTE, CommandCategory.REMOVE, "mute.undo.type.uuid"),
-	IPMUTE(PunishmentType.MUTE, true, "mute.type.ip", "mute.use.time.perm"),
-	IPTEMPMUTE(PunishmentType.MUTE, true, "mute.type.ip", "mute.use.time.temp"),
+	IPMUTE(PunishmentType.MUTE, true, "mute.type.ip"),
+	IPTEMPMUTE(PunishmentType.MUTE, true, "mute.type.ip"),
 	IPUNMUTE(PunishmentType.MUTE, CommandCategory.REMOVE, true, "mute.undo.type.ip"),
 	
-	WARN(PunishmentType.WARN, "warn.type.uuid", "warn.use.time.perm"),
-	TEMPWARN(PunishmentType.WARN, "warn.type.uuid", "warn.use.time.temp"),
+	WARN(PunishmentType.WARN, "warn.type.uuid"),
+	TEMPWARN(PunishmentType.WARN, "warn.type.uuid"),
 	UNWARN(PunishmentType.WARN, CommandCategory.REMOVE, "warn.undo.type.uuid"),
-	IPWARN(PunishmentType.WARN, true, "warn.type.ip", "warn.use.time.perm"),
-	IPTEMPWARN(PunishmentType.WARN, true, "warn.type.ip", "warn.use.time.temp"),
+	IPWARN(PunishmentType.WARN, true, "warn.type.ip"),
+	IPTEMPWARN(PunishmentType.WARN, true, "warn.type.ip"),
 	IPUNWARN(PunishmentType.WARN, CommandCategory.REMOVE, true, "warn.undo.type.ip"),
 	
 	KICK(PunishmentType.KICK, "kick.type.uuid"),
@@ -68,41 +68,41 @@ public enum CommandType {
 	private final PunishmentType[] types;
 	private final CommandCategory category;
 	private final boolean preferIp;
-	private final String[] permissions;
+	private final String permission;
 	
-	private CommandType(final PunishmentType[] types, final CommandCategory category, final boolean preferIp, final String[] permissions) {
+	private CommandType(final PunishmentType[] types, final CommandCategory category, final boolean preferIp, final String permission) {
 		this.types = types;
 		this.category = category;
 		this.preferIp = preferIp;
-		this.permissions = permissions;
+		this.permission = permission;
 	}
 	
-	private CommandType(final PunishmentType type, final CommandCategory category, final boolean preferIp, final String...permissions) {
-		this(new PunishmentType[] {type}, category, preferIp, permissions);
+	private CommandType(final PunishmentType type, final CommandCategory category, final boolean preferIp, final String permission) {
+		this(new PunishmentType[] {type}, category, preferIp, permission);
 	}
 	
-	private CommandType(final PunishmentType type, final boolean preferIp, final String...permissions) {
-		this(type, CommandCategory.ADD, preferIp, permissions);
+	private CommandType(final PunishmentType type, final boolean preferIp, final String permission) {
+		this(type, CommandCategory.ADD, preferIp, permission);
 	}
 	
-	private CommandType(final PunishmentType type, final CommandCategory category, final String...permissions) {
-		this(type, category, false, permissions);
+	private CommandType(final PunishmentType type, final CommandCategory category, final String permission) {
+		this(type, category, false, permission);
 	}
 	
-	private CommandType(final PunishmentType type, final String...permissions) {
-		this(type, CommandCategory.ADD, false, permissions);
+	private CommandType(final PunishmentType type, final String permission) {
+		this(type, CommandCategory.ADD, false, permission);
 	}
 	
-	private CommandType(final boolean preferIp, final String...permissions) {
-		this(PunishmentType.values(), CommandCategory.LIST, preferIp, permissions);
+	private CommandType(final boolean preferIp, final String permission) {
+		this(PunishmentType.values(), CommandCategory.LIST, preferIp, permission);
 	}
 	
-	private CommandType(final String...permissions) {
-		this(false, permissions);
+	private CommandType(final String permission) {
+		this(false, permission);
 	}
 	
-	public String[] permission() {
-		return permissions;
+	public String permission() {
+		return permission;
 	}
 	
 	public boolean preferIp() {
@@ -127,6 +127,10 @@ public enum CommandType {
 	
 	public boolean isModif() {
 		return isAddition() || isRemoval();
+	}
+	
+	public boolean isGeneralListing() {
+		return isListing() && this.name().contains("LIST");
 	}
 
 }
