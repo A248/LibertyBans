@@ -18,6 +18,8 @@
  */
 package space.arim.bans.api.exception;
 
+import space.arim.bans.api.Subject;
+
 public class InvalidSubjectException extends InternalStateException {
 
 	private static final long serialVersionUID = 5864870266394935646L;
@@ -41,5 +43,15 @@ public class InvalidSubjectException extends InternalStateException {
      */
 	public InvalidSubjectException(String s, Exception cause) {
 		super(s, cause);
+	}
+
+	/**
+	 * Constructs an <code>InvalidSubjectException</code> for the
+	 * given subject. Assumes subject type is missing.
+	 * 
+	 * @param subj - the subject whose type is missing.
+	 */
+	public InvalidSubjectException(Subject subj) {
+		super("Subject type is completely missing for " + subj.toString());
 	}
 }
