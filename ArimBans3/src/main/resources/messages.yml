@@ -12,9 +12,9 @@
 #
 # ### Messages.yml ###
 #
-usage:
+all:
+  base-permission-message: '&cYou may not use this.'
   invalid-target: '&c%TARGET% is not online or is not an IP address.'
-  no-target-console: '&cYou cannot punish the console.'
 bans:
   usage: '/ban <player> [time] <reason>'
   permission:
@@ -90,6 +90,33 @@ kicks:
     - ''
     - 'Please read the rules'
     - 'Forums: www.site.com'
+banlist:
+  usage: '/banlist [page]'
+  permission:
+    normal: '&cYou may not view the banlist.'
+    ip-only: '&cYou may not view the player banlist.'
+    player-only: '&cYou may not view the ip banlist.'
+  layout:
+    header:
+      - '[Number] Subject'
+      - 'Reason / Time Remaining'
+    content:
+      - '[%NUMBER%] %SUBJECT%'
+      - '%REASON% / %TIME%'
+    footer:
+      - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
+history:
+  usage: '/history <player> [page]'
+  permission: '&cYou may not view history.'
+  layout:
+    header:
+      - '[Number] Subject / Punishment Type'
+      - 'Reason / Time Remaining'
+    content:
+      - '[%NUMBER%] %SUBJECT% / %PUNISHMENT%'
+      - '%REASON% / %TIME%'
+    footer:
+      - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
 other:
   messages-version: 1
   plugin-version: '${project.version}'

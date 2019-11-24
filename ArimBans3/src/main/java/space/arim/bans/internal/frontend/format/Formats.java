@@ -71,11 +71,14 @@ public class Formats implements FormatsMaster {
 	}
 
 	@Override
-	public String formatTime(long millis) {
+	public String formatTime(long millis, boolean absolute) {
 		if (millis < 0) {
 			return permanent_display;
 		}
-		return dateformatter.format(new Date(millis));
+		if (absolute) {
+			return dateformatter.format(new Date(millis));
+		}
+		return null;
 	}
 	
 	@Override
