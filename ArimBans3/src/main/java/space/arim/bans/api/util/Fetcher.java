@@ -180,7 +180,7 @@ public final class Fetcher {
 		} catch (IOException | ParseException ex) {
 			throw new FetcherException("Could not connect to " + url);
 		} catch (FetcherException ex) {
-			if (ex.code == 403) {
+			if (ex.code == HttpStatus.FORBIDDEN) {
 				throw new RateLimitException("FreeGeoIp");
 			}
 			throw ex;

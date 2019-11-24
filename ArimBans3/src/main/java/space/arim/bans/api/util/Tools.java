@@ -48,11 +48,14 @@ public final class Tools {
 		URL,
 		CMD,
 		SGT,
-		INS
+		INS;
+		
+		static final int TAG_LENGTH = 3;
+		
 	}
 	
 	private static TagType jsonTag(String node) {
-		if (node.length() < 5) {
+		if (node.length() < TagType.TAG_LENGTH + 2) {
 			return TagType.NONE;
 		}
 		switch (node.substring(0, 4)) {

@@ -24,21 +24,21 @@ public class FetcherException extends InternalAPIException {
 
 	private static final long serialVersionUID = -1621619586735818392L;
 	
-	public final int code;
+	public final HttpStatus code;
 	
 	public FetcherException(String message, Exception cause) {
 		super("Fetcher error: " + message + " (code 200)", cause);
-		code = 200;
+		code = HttpStatus.OK;
 	}
 	
 	public FetcherException(String message) {
 		super("Fetcher error: " + message + " (code 200)");
-		code = 200;
+		code = HttpStatus.OK;
 	}
 	
 	public FetcherException(HttpStatus status) {
 		super("Error " + status.getCode() + ": " + status.getName());
-		code = status.getCode();
+		code = status;
 	}
 
 }
