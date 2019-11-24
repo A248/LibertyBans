@@ -18,27 +18,12 @@
  */
 package space.arim.bans.api.exception;
 
-import space.arim.bans.api.util.HttpStatus;
+public class RateLimitException extends InternalAPIException {
 
-public class FetcherException extends InternalAPIException {
+	private static final long serialVersionUID = 3081467999598825482L;
 
-	private static final long serialVersionUID = -1621619586735818392L;
-	
-	public final int code;
-	
-	public FetcherException(String message, Exception cause) {
-		super("Fetcher error: " + message + " (code 200)", cause);
-		code = 200;
-	}
-	
-	public FetcherException(String message) {
-		super("Fetcher error: " + message + " (code 200)");
-		code = 200;
-	}
-	
-	public FetcherException(HttpStatus status) {
-		super("Error " + status.getCode() + ": " + status.getName());
-		code = status.getCode();
+	public RateLimitException(String service) {
+		super("Rate limit reached for " + service);
 	}
 
 }

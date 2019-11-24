@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
+import space.arim.bans.api.exception.RateLimitException;
 import space.arim.bans.api.util.GeoIpInfo;
 import space.arim.bans.internal.Component;
 
@@ -45,7 +46,7 @@ public interface CacheMaster extends Component {
 	
 	boolean hasIp(UUID playeruuid, String ip);
 	
-	GeoIpInfo lookupIp(final String address) throws IllegalArgumentException, NoGeoIpException;
+	GeoIpInfo lookupIp(final String address) throws NoGeoIpException, RateLimitException;
 	
 	void loadAll(ResultSet data);
 }

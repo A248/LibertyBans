@@ -24,7 +24,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.UUID;
@@ -34,6 +33,7 @@ import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
 
 import space.arim.bans.api.exception.FetcherException;
+import space.arim.bans.api.exception.RateLimitException;
 
 public final class Fetcher {
 	
@@ -149,30 +149,29 @@ public final class Fetcher {
 		}
 	}
 	
-	public static GeoIpInfo ipStack(final String address, final String key) throws FetcherException {
+	public static GeoIpInfo ipStack(final String address, final String key) throws FetcherException, RateLimitException {
 		Objects.requireNonNull(address, "Address must not be null!");
 		Objects.requireNonNull(key, "Key must not be null!");
-		final String url = IPSTACK_API + address + "?access_key=" + key;
+		final String url = IPSTACK_API + address + "?access_key=" + key + "&fields=country_code,country_name,region_code,region_name,city,zip,latitude,longitude";
 		JSONObject json;
 		try {
 			json = getDataFromUrl(url);
 		} catch (IOException | ParseException ex) {
 			throw new FetcherException("Could not connect to " + url);
 		}
-		Object timezoneField = json.get("timezone");
-		if (timezoneField instanceof Map<?, ?>) {
-			@SuppressWarnings("unchecked")
-			Map<String, Object> timezone = (Map<String, Object>) timezoneField;
-			try {
-				return new GeoIpInfo(address, json.get("country_code").toString(), json.get("country_name").toString(), json.get("region_code").toString(), json.get("region_name").toString(), json.get("city").toString(), json.get("zip").toString(), timezone.get("id").toString(), Double.parseDouble(json.get("latitude").toString()), Double.parseDouble(json.get("longitude").toString()));
-			} catch (NumberFormatException ex) {
-				throw new FetcherException("Could not parse JSON from " + url, ex);
+		if (json.containsKey("success")) {
+			if (!(Boolean) json.get("success")) {
+				throw new RateLimitException("IpStack");
 			}
 		}
-		throw new FetcherException("Timezone information not found from " + url);
+		try {
+			return new GeoIpInfo(address, json.get("country_code").toString(), json.get("country_name").toString(), json.get("region_code").toString(), json.get("region_name").toString(), json.get("city").toString(), json.get("zip").toString(), Double.parseDouble(json.get("latitude").toString()), Double.parseDouble(json.get("longitude").toString()));
+		} catch (NumberFormatException ex) {
+			throw new FetcherException("Could not parse JSON from " + url, ex);
+		}
 	}
 	
-	public static GeoIpInfo freeGeoIp(final String address) throws FetcherException {
+	public static GeoIpInfo freeGeoIp(final String address) throws FetcherException, RateLimitException {
 		Objects.requireNonNull(address, "Address must not be null!");
 		final String url = FREE_GEOIP_API + address;
 		JSONObject json;
@@ -180,9 +179,14 @@ public final class Fetcher {
 			json = getDataFromUrl(url);
 		} catch (IOException | ParseException ex) {
 			throw new FetcherException("Could not connect to " + url);
+		} catch (FetcherException ex) {
+			if (ex.code == 403) {
+				throw new RateLimitException("FreeGeoIp");
+			}
+			throw ex;
 		}
 		try {
-			return new GeoIpInfo(address, json.get("country_code").toString(), json.get("country_name").toString(), json.get("region_code").toString(), json.get("region_name").toString(), json.get("city").toString(), json.get("zip_code").toString(), json.get("timezone").toString(), Double.parseDouble(json.get("latitude").toString()), Double.parseDouble(json.get("longitude").toString()));
+			return new GeoIpInfo(address, json.get("country_code").toString(), json.get("country_name").toString(), json.get("region_code").toString(), json.get("region_name").toString(), json.get("city").toString(), json.get("zip_code").toString(), Double.parseDouble(json.get("latitude").toString()), Double.parseDouble(json.get("longitude").toString()));
 		} catch (NumberFormatException ex) {
 			throw new FetcherException("Could not parse JSON from " + url, ex);
 		}

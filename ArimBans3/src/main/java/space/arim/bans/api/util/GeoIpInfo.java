@@ -27,11 +27,10 @@ public class GeoIpInfo {
 	public final String region_name;
 	public final String city;
 	public final String zip;
-	public final String timezone;
 	public final double latitude;
 	public final double longitude;
 	
-	GeoIpInfo(String address, String country_code, String country_name, String region_code, String region_name, String city, String zip, String timezone, double latitude, double longitude) {
+	GeoIpInfo(String address, String country_code, String country_name, String region_code, String region_name, String city, String zip, double latitude, double longitude) {
 		this.address = address;
 		this.country_code = country_code;
 		this.country_name = country_name;
@@ -39,8 +38,8 @@ public class GeoIpInfo {
 		this.region_name = region_name;
 		this.city = city;
 		this.zip = zip;
-		this.timezone = timezone;
 		this.latitude = latitude;
 		this.longitude = longitude;
 	}
+	
 }
