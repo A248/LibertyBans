@@ -26,6 +26,7 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
+
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
@@ -65,6 +66,26 @@ public class BungeeEnv implements Environment {
 	
 	void json(ProxiedPlayer target, String json) {
 		target.sendMessage(Tools.parseJson(json));
+	}
+	
+	@Override
+	public boolean isOnline(Subject subj) {
+		if (subj.getType().equals(SubjectType.PLAYER)) {
+			for (ProxiedPlayer check : plugin.getProxy().getPlayers()) {
+				if (subj.getUUID().equals(check.getUniqueId())) {
+					return true;
+				}
+			}
+			return false;
+		} else if (subj.getType().equals(SubjectType.IP)) {
+			for (ProxiedPlayer check : plugin.getProxy().getPlayers()) {
+				if (center.cache().hasIp(check.getUniqueId(), subj.getIP())) {
+					return true;
+				}
+			}
+			return false;
+		}
+		return subj.getType().equals(SubjectType.CONSOLE);
 	}
 	
 	@Override
@@ -127,9 +148,17 @@ public class BungeeEnv implements Environment {
 	
 	public Set<ProxiedPlayer> applicable(Subject subject) {
 		Set<ProxiedPlayer> applicable = new HashSet<ProxiedPlayer>();
-		for (ProxiedPlayer check : plugin.getProxy().getPlayers()) {
-			if (subject.compare(Subject.fromUUID(check.getUniqueId())) || subject.getType().equals(SubjectType.IP) && center.cache().hasIp(check.getUniqueId(), subject.getIP())) {
-				applicable.add(check);
+		if (subject.getType().equals(SubjectType.PLAYER)) {
+			for (ProxiedPlayer check : plugin.getProxy().getPlayers()) {
+				if (subject.getUUID().equals(check.getUniqueId())) {
+					applicable.add(check);
+				}
+			}
+		} else if (subject.getType().equals(SubjectType.IP)) {
+			for (ProxiedPlayer check : plugin.getProxy().getPlayers()) {
+				if (center.cache().hasIp(check.getUniqueId(), subject.getIP())) {
+					applicable.add(check);
+				}
 			}
 		}
 		return applicable;

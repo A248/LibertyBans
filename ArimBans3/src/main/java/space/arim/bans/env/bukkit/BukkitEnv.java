@@ -45,7 +45,8 @@ public class BukkitEnv implements Environment {
 	private final BukkitCommands commands;
 	
 	private boolean registered = false;
-	private boolean json;
+	private boolean json = true;
+	private boolean op_permissions = true;
 
 	public BukkitEnv(JavaPlugin plugin) {
 		this.plugin = plugin;
@@ -68,6 +69,26 @@ public class BukkitEnv implements Environment {
 		target.spigot().sendMessage(Tools.parseJson(json));
 	}
 
+	@Override
+	public boolean isOnline(Subject subj) {
+		if (subj.getType().equals(SubjectType.PLAYER)) {
+			for (Player check : plugin.getServer().getOnlinePlayers()) {
+				if (subj.getUUID().equals(check.getUniqueId())) {
+					return true;
+				}
+			}
+			return false;
+		} else if (subj.getType().equals(SubjectType.IP)) {
+			for (Player check : plugin.getServer().getOnlinePlayers()) {
+				if (center.cache().hasIp(check.getUniqueId(), subj.getIP())) {
+					return true;
+				}
+			}
+			return false;
+		}
+		return subj.getType().equals(SubjectType.CONSOLE);
+	}
+	
 	@Override
 	public void sendMessage(Subject subj, String jsonable) {
 		if (json) {
@@ -117,7 +138,7 @@ public class BukkitEnv implements Environment {
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {
 			Player target = plugin.getServer().getPlayer(subject.getUUID());
 			if (target != null) {
-				return !target.getPlayer().hasPermission(permission);
+				return target.isOp() ? op_permissions : target.getPlayer().hasPermission(permission);
 			}
 			throw new InvalidSubjectException("Subject " + center.subjects().display(subject) + " is not online or does not have a valid UUID.");
 		} else if (subject.getType().equals(SubjectType.IP)) {
@@ -128,9 +149,17 @@ public class BukkitEnv implements Environment {
 	
 	public Set<? extends Player> applicable(Subject subject) {
 		Set<Player> applicable = new HashSet<Player>();
-		for (Player check : plugin.getServer().getOnlinePlayers()) {
-			if (subject.compare(Subject.fromUUID(check.getUniqueId())) || subject.getType().equals(SubjectType.IP) && center.cache().hasIp(check.getUniqueId(), subject.getIP())) {
-				applicable.add(check);
+		if (subject.getType().equals(SubjectType.PLAYER)) {
+			for (Player check : plugin.getServer().getOnlinePlayers()) {
+				if (subject.getUUID().equals(check.getUniqueId())) {
+					applicable.add(check);
+				}
+			}
+		} else if (subject.getType().equals(SubjectType.IP)) {
+			for (Player check : plugin.getServer().getOnlinePlayers()) {
+				if (center.cache().hasIp(check.getUniqueId(), subject.getIP())) {
+					applicable.add(check);
+				}
 			}
 		}
 		return applicable;
@@ -187,6 +216,7 @@ public class BukkitEnv implements Environment {
 	@Override
 	public void refreshConfig() {
 		json = center.config().getConfigBoolean("formatting.use-json");
+		op_permissions = center.config().getConfigBoolean("commands.op-permissions");
 	}
 	
 	@Override

@@ -27,6 +27,8 @@ import space.arim.bans.internal.Configurable;
 
 public interface Environment extends Configurable {
 	
+	boolean isOnline(Subject subject);
+	
 	void sendMessage(Subject target, String jsonable);
 	
 	boolean hasPermission(Subject subject, String permission);
