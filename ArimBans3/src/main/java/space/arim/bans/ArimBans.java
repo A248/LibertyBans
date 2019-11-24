@@ -146,26 +146,19 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 				return new Async(ArimBans.this);
 			}
 		});
-		config.refresh();
-		sql.refresh();
-		punishments.refresh();
-		subjects.refresh();
-		cache.refresh();
-		commands.refresh();
-		formats.refresh();
-		async.refresh();
-		loadData();
+		async(() -> {
+			refresh();
+			loadData();
+		});
 		UniversalRegistry.register(PunishmentPlugin.class, this);
 	}
-
-	protected void loadData() {
-		async(() -> {
-			sql().executeQuery(new SqlQuery(SqlQuery.Query.CREATE_TABLE_CACHE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.CREATE_TABLE_ACTIVE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.CREATE_TABLE_HISTORY.eval(sql().mode())));
-			ResultSet[] data = sql().selectQuery(new SqlQuery(SqlQuery.Query.SELECT_ALL_CACHED.eval(sql().mode())), new SqlQuery(SqlQuery.Query.SELECT_ALL_ACTIVE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.SELECT_ALL_HISTORY.eval(sql().mode())));
-			cache().loadAll(data[0]);
-			punishments().loadActive(data[1]);
-			punishments().loadHistory(data[2]);
-		});
+	
+	private void loadData() {
+		sql().executeQuery(new SqlQuery(SqlQuery.Query.CREATE_TABLE_CACHE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.CREATE_TABLE_ACTIVE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.CREATE_TABLE_HISTORY.eval(sql().mode())));
+		ResultSet[] data = sql().selectQuery(new SqlQuery(SqlQuery.Query.SELECT_ALL_CACHED.eval(sql().mode())), new SqlQuery(SqlQuery.Query.SELECT_ALL_ACTIVE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.SELECT_ALL_HISTORY.eval(sql().mode())));
+		cache().loadAll(data[0]);
+		punishments().loadActive(data[1]);
+		punishments().loadHistory(data[2]);
 	}
 
 	public File dataFolder() {
@@ -331,7 +324,7 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	}
 	
 	@Override
-	public Subject parseSubject(String input) {
+	public Subject parseSubject(String input) throws IllegalArgumentException {
 		return subjects().parseSubject(input);
 	}
 	
@@ -400,6 +393,6 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 
 }
 
-abstract class Getter<T> {
+abstract class Getter<T extends Component> {
 	abstract T get();
 }
