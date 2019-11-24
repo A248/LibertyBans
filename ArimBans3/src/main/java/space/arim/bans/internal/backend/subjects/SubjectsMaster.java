@@ -24,14 +24,15 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.internal.Component;
 
 public interface SubjectsMaster extends Component {
+	
 	@Override
 	default Class<?> getType() {
 		return SubjectsMaster.class;
 	}
 	
-	String display(Subject subject);
+	boolean isOnline(Subject subject);
 	
-	Subject parseSubject(String input);
+	Subject parseSubject(String input) throws IllegalArgumentException;
 	
 	Subject parseSubject(UUID input);
 	

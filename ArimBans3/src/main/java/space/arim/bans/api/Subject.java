@@ -67,10 +67,10 @@ public class Subject {
 	 * <br><br><b>You need to check the UUID first.</b>
 	 * See {@link ArimBansLibrary#checkUUID(UUID)}
 	 * 
-	 * @param playeruuid
-	 * @return
+	 * @param uuid - the uuid to use
+	 * @return Subject representing the uuid
 	 */
-	public static Subject fromUUID(UUID playeruuid) {
+	public static Subject fromUUID(UUID playeruuid) throws IllegalArgumentException {
 		return new Subject(playeruuid);
 	}
 	
@@ -84,7 +84,7 @@ public class Subject {
 	 * @return Subject representing the ip specified
 	 * @throws IllegalArgumentException if the parameter is not a valid ipv4 or ipv6 address
 	 */
-	public static Subject fromIP(String address) throws IllegalArgumentException {
+	public static Subject fromIP(String address) {
 		if (!Tools.validAddress(address)) {
 			throw new IllegalArgumentException("Could not make " + address + " into a subject because it is not a valid IP address!");
 		}
@@ -189,7 +189,7 @@ public class Subject {
 		case CONSOLE:
 			return "[subject:cons]";
 		default:
-			throw new InvalidSubjectException("Subject type is completely missing!");
+			throw new InvalidSubjectException(this);
 		}		
 	}
 
@@ -208,7 +208,7 @@ public class Subject {
 			case CONSOLE:
 				return true;
 			default:
-				throw new InvalidSubjectException("Subject type is completely missing!");
+				throw new InvalidSubjectException(this);
 			}
 		}
 		return false;

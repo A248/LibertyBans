@@ -28,12 +28,14 @@ public interface FormatsMaster extends Component {
 		return FormatsMaster.class;
 	}
 	
-	String format(Punishment punishment);
+	String formatPunishment(Punishment punishment);
 	
-	String format(Subject subj);
+	String formatSubject(Subject subj);
 	
-	String fromUnix(long unix);
+	String formatTime(long millis);
 	
-	long toUnix(String timespan);
+	long toMillis(String timespan);
+	
+	String getConsoleDisplay();
 	
 }

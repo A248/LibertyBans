@@ -20,11 +20,14 @@ package space.arim.bans.internal.frontend.format;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
+import space.arim.bans.api.exception.InvalidSubjectException;
+import space.arim.bans.api.exception.PlayerNotFoundException;
 
 //TODO Make this class work
 public class Formats implements FormatsMaster {
@@ -32,6 +35,11 @@ public class Formats implements FormatsMaster {
 	private final ArimBans center;
 	
 	private SimpleDateFormat dateformatter;
+	
+	private List<String> permanent_arguments;
+	
+	private String permanent_display;
+	private String console_display;
 
 	public Formats(ArimBans center) {
 		this.center = center;
@@ -39,35 +47,74 @@ public class Formats implements FormatsMaster {
 	}
 
 	@Override
-	public String format(Punishment punishment) {
+	public String formatPunishment(Punishment punishment) {
 		
 		return center.config().getConfigString("messages");
 	}
 	
 	@Override
-	public String format(Subject subj) {
-		return null;
+	public String formatSubject(Subject subj) {
+		switch (subj.getType()) {
+		case PLAYER:
+			try {
+				return center.environment().resolver().nameFromUUID(subj.getUUID());
+			} catch (PlayerNotFoundException ex) {
+				throw new InvalidSubjectException("Subject's UUID could not be resolved to a name!", ex);
+			}
+		case IP:
+			return subj.getIP();
+		case CONSOLE:
+			return console_display;
+		default:
+			throw new InvalidSubjectException(subj);
+		}
 	}
 
 	@Override
-	public String fromUnix(long unix) {
-		return dateformatter.format(new Date(unix));
+	public String formatTime(long millis) {
+		if (millis < 0) {
+			return permanent_display;
+		}
+		return dateformatter.format(new Date(millis));
 	}
 	
 	@Override
-	public long toUnix(String timespan) {
-		return -1L;
+	public long toMillis(String timespan) {
+		long mult = 1_000_000;
+		if (permanent_arguments.contains(timespan.toLowerCase())) {
+			return -1L;
+		} else if (timespan.contains("mo")) {
+			mult = 2592000_000_000L;
+		} else if (timespan.contains("d")) {
+			mult = 86400_000_000L;
+		} else if (timespan.contains("h") || timespan.contains("hr")) {
+			mult = 3600_000_000L;
+		} else if (timespan.contains("m")) {
+			mult = 60_000_000L;
+		}
+		try {
+			return Math.addExact(System.currentTimeMillis(), Math.multiplyExact(mult, Long.parseLong(timespan)));
+		} catch (NumberFormatException | ArithmeticException ex) {
+			return 0;
+		}
 	}
 	
 	@Override
-	public void close() {
-		
+	public String getConsoleDisplay() {
+		return console_display;
 	}
 	
 	@Override
 	public void refreshConfig() {
+		
 		dateformatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		dateformatter.setTimeZone(TimeZone.getDefault());
+		
+		permanent_arguments = center.config().getConfigStrings("formatting.permanent-arguments");
+		
+		permanent_display = center.config().getConfigString("formatting.permanent-display");
+		console_display = center.config().getConfigString("formatting.console-display");
+		
 	}
 
 }

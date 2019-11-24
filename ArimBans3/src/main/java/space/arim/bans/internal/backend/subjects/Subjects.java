@@ -22,18 +22,12 @@ import java.util.UUID;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.Subject;
-import space.arim.bans.api.Subject.SubjectType;
-import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.InvalidUUIDException;
-import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.bans.api.exception.TypeParseException;
 import space.arim.bans.api.util.Tools;
 
 public class Subjects implements SubjectsMaster {
 	
 	private final ArimBans center;
-	
-	private String console_display;
 	
 	private static final int LENGTH_OF_FULL_UUID = 36;
 	private static final int LENGTH_OF_SHORT_UUID = 32;
@@ -44,23 +38,12 @@ public class Subjects implements SubjectsMaster {
 	}
 	
 	@Override
-	public String display(Subject subject) {
-		if (subject.getType().equals(SubjectType.PLAYER)) {
-			try {
-				return center.environment().resolver().nameFromUUID(subject.getUUID());
-			} catch (PlayerNotFoundException ex) {
-				throw new InvalidSubjectException("No corresponding name found for player subject!", ex);
-			}
-		} else if (subject.getType().equals(SubjectType.IP)) {
-			return subject.getIP();
-		} else if (subject.getType().equals(SubjectType.CONSOLE)) {
-			return console_display;
-		}
-		throw new InvalidSubjectException("Subject type is completely missing!");
+	public boolean isOnline(Subject subject) {
+		return center.environment().isOnline(subject);
 	}
 	
 	@Override
-	public Subject parseSubject(String input) {
+	public Subject parseSubject(String input) throws IllegalArgumentException {
 		if (center.checkAddress(input)) {
 			return Subject.fromIP(input);
 		} else if (input.length() == LENGTH_OF_FULL_UUID) {
@@ -71,10 +54,10 @@ public class Subjects implements SubjectsMaster {
 			}
 		} else if (input.length() == LENGTH_OF_SHORT_UUID) {
 			return parseSubject(Tools.expandUUID(input));
-		} else if (input.equalsIgnoreCase(console_display)) {
+		} else if (input.equalsIgnoreCase(center.formats().getConsoleDisplay())) {
 			return Subject.console();
 		}
-		throw new TypeParseException(input, Subject.class);
+		throw new IllegalArgumentException("Could not make " + input + " into a subject");
 	}
 	
 	@Override
@@ -88,10 +71,5 @@ public class Subjects implements SubjectsMaster {
 	@Override
 	public boolean checkUUID(UUID uuid) {
 		return center.cache().uuidExists(uuid);
-	}
-
-	@Override
-	public void refreshConfig() {
-		console_display = center.config().getConfigString("formatting.console-display");
 	}
 }
