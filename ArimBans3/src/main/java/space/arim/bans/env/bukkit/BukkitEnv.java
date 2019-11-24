@@ -27,6 +27,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import space.arim.bans.ArimBans;
+import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InternalStateException;
@@ -91,6 +92,7 @@ public class BukkitEnv implements Environment {
 	
 	@Override
 	public void sendMessage(Subject subj, String jsonable) {
+		ArimBansLibrary.checkString(jsonable);
 		if (json) {
 			if (subj.getType().equals(SubjectType.PLAYER)) {
 				Player target = plugin.getServer().getPlayer(subj.getUUID());
@@ -133,6 +135,7 @@ public class BukkitEnv implements Environment {
 	
 	@Override
 	public boolean hasPermission(Subject subject, String permission) {
+		ArimBansLibrary.checkString(permission);
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
 			return true;
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {

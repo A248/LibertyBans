@@ -21,6 +21,7 @@ package space.arim.bans.api;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.util.Tools;
 
@@ -152,6 +153,30 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 */
 	default boolean checkAddress(String address) {
 		return Tools.validAddress(address);
+	}
+	
+	/**
+	 * Used internally for invalid messages. If you send a message whose sole content
+	 * is this, you will receive an unchecked exception.
+	 */
+	static String INVALID_STRING_CODE = "warning-invalid-string";
+	
+	/**
+	 * Checks a message for validity.
+	 * <br><br>All this does is:
+	 * <br>1. Check against {@link #INVALID_MESSAGE_CODE} for equality
+	 * <br>2. Check for null values
+	 * 
+	 * <br><Br>Throws an unchecked exception if either requirements are met.
+	 * 
+	 * @param message - the string to check
+	 */
+	static void checkString(String message) {
+		if (message == null) {
+			throw new InternalStateException("checkString: String is null!");
+		} else if (INVALID_STRING_CODE.equals(message)) {
+			throw new InternalStateException("checkString: String is INVALID_STRING_CODE!");
+		}
 	}
 	
 }

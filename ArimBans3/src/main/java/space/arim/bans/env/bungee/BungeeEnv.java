@@ -28,6 +28,7 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 
 import space.arim.bans.ArimBans;
+import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InternalStateException;
@@ -90,6 +91,7 @@ public class BungeeEnv implements Environment {
 	
 	@Override
 	public void sendMessage(Subject subj, String jsonable) {
+		ArimBansLibrary.checkString(jsonable);
 		if (json) {
 			if (subj.getType().equals(SubjectType.PLAYER)) {
 				ProxiedPlayer target = plugin.getProxy().getPlayer(subj.getUUID());
@@ -132,6 +134,7 @@ public class BungeeEnv implements Environment {
 
 	@Override
 	public boolean hasPermission(Subject subject, String permission) {
+		ArimBansLibrary.checkString(permission);
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
 			return true;
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {
