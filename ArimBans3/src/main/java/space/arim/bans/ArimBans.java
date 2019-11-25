@@ -388,7 +388,7 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	
 	@Override
 	public void sendMessage(Subject subject, String message) {
-		environment.sendMessage(subject, message);
+		subjects.sendMessage(subject, message);
 	}
 
 }
