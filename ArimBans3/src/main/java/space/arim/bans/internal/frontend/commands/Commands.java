@@ -29,10 +29,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.CommandType;
+import space.arim.bans.api.CommandType.Category;
+import space.arim.bans.api.CommandType.IpSpec;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
-import space.arim.bans.api.exception.InvalidCommandTypeException;
 
 public class Commands implements CommandsMaster {
 	
@@ -40,12 +41,14 @@ public class Commands implements CommandsMaster {
 	
 	private String base_perm_msg;
 	private String invalid_target;
+	private String base_usage;
 	private static final String basePerm = "arimbans.commands";
 	
 	private final ConcurrentHashMap<CommandType, String> usage = new ConcurrentHashMap<CommandType, String>();
-	private final ConcurrentHashMap<CommandType, String> permCmd = new ConcurrentHashMap<CommandType, String>();
+	private final ConcurrentHashMap<CommandType, String> perm = new ConcurrentHashMap<CommandType, String>();
 	private final ConcurrentHashMap<CommandType, String> permIp = new ConcurrentHashMap<CommandType, String>();
 	
+	// Maps related to punishment additions.
 	private final ConcurrentHashMap<PunishmentType, String> exempt = new ConcurrentHashMap<PunishmentType, String>();
 	private final ConcurrentHashMap<PunishmentType, String> permTime = new ConcurrentHashMap<PunishmentType, String>();
 	private final ConcurrentHashMap<PunishmentType, List<String>> durPerms = new ConcurrentHashMap<PunishmentType, List<String>>();
@@ -67,7 +70,7 @@ public class Commands implements CommandsMaster {
 		}
 		for (CommandType cmd : CommandType.values()) {
 			usage.put(cmd, invalid_string);
-			permCmd.put(cmd, invalid_string);
+			perm.put(cmd, invalid_string);
 			permIp.put(cmd, invalid_string);
 			perPage.put(cmd, 0);
 			maxPage.put(cmd, invalid_string);
@@ -108,7 +111,7 @@ public class Commands implements CommandsMaster {
 		if (!checkPermBase(subject)) {
 			return false;
 		}
-		if (!center.subjects().hasPermission(subject, command.permission())) {
+		if (!center.subjects().hasPermission(subject, command.getPermission())) {
 			noPermission(subject, command);
 			return false;
 		}
@@ -126,11 +129,7 @@ public class Commands implements CommandsMaster {
 			if (!checkPermission(subject, command)) {
 				return;
 			}
-			if (rawArgs.length > 1) {
-				execute(subject, command, chopOffOne(rawArgs));
-			} else {
-				usage(subject, command);
-			}
+			execute(subject, command, (rawArgs.length > 1) ? chopOffOne(rawArgs) : new String[] {});
 		} catch (IllegalArgumentException ex) {
 			usage(subject);
 		}
@@ -146,9 +145,9 @@ public class Commands implements CommandsMaster {
 		if (!checkPermission(operator, command)) {
 			return;
 		}
-		if (command.isGeneralListing()) {
-			listGeneralCmd(operator, command, args[0]);
-		} else if (command.isListing() || command.isAddition() || command.isRemoval()) {
+		if (command.canHaveNoTarget()) {
+			noTargetCmd(operator, command, args);
+		} else {
 			if (args.length <= 0) {
 				usage(operator, command);
 				return;
@@ -164,15 +163,15 @@ public class Commands implements CommandsMaster {
 				center.subjects().sendMessage(operator, invalid_target.replaceAll("%TARGET%", center.formats().formatSubject(target)));
 				return;
 			}
-			if (command.isAddition()) {
+			if (command.category().equals(Category.ADD)) {
 				punCmd(operator, target, command, chopOffOne(args));
-			} else if (command.isRemoval()) {
+			} else if (command.category().equals(Category.REMOVE)) {
 				unpunCmd(operator, target, command);
-			} else if (command.isListing()) {
+			} else if (command.category().equals(Category.LIST)) {
 				listCmd(operator, target, command, args[1]);
+			} else if (command.category().equals(Category.OTHER)) {
+				otherCmd(operator, target, command, chopOffOne(args));
 			}
-		} else {
-			throw new InvalidCommandTypeException(command);
 		}
 	}
 	
@@ -183,10 +182,6 @@ public class Commands implements CommandsMaster {
 	
 	private void unpunCmd(Subject operator, Subject target, CommandType command) {
 		
-	}
-	
-	private void listGeneralCmd(Subject operator, CommandType command, String pageInput) {
-		int page = parsePage(pageInput);
 	}
 	
 	private void listCmd(Subject operator, Subject target, CommandType command, String pageInput) {
@@ -213,6 +208,14 @@ public class Commands implements CommandsMaster {
 				return null;
 			}
 		});
+	}
+	
+	private void noTargetCmd(Subject operator, CommandType command, String[] args) {
+		
+	}
+	
+	private void otherCmd(Subject operator, Subject target, CommandType command, String[] args) {
+		
 	}
 	
 	private void list(Subject operator, Lister<Punishment> lister) {
@@ -255,6 +258,7 @@ public class Commands implements CommandsMaster {
 		if (!checkPermBase(subject)) {
 			return;
 		}
+		center.subjects().sendMessage(subject, base_usage);
 	}
 	
 	@Override
@@ -262,27 +266,32 @@ public class Commands implements CommandsMaster {
 		if (!checkPermission(subject, command)) {
 			return;
 		}
-	}
-
-	@Override
-	public void refreshConfig() {
-		
+		center.subjects().sendMessage(subject, usage.get(command));
 	}
 	
+	@SuppressWarnings("incomplete-switch")
 	@Override
 	public void refreshMessages() {
 		
 		base_perm_msg = center.config().getMessagesString("all.base-permission-message");
 		invalid_target = center.config().getMessagesString("all.invalid-target");
+		base_usage = center.config().getMessagesString("all.usage");
 		
-		String usageBan = center.config().getMessagesString("bans.usage.do");
-		String usageMute = center.config().getMessagesString("mutes.usage.do");
-		String usageWarn = center.config().getMessagesString("warns.usage.do");
-		String usageKick = center.config().getMessagesString("kicks.usage.do");
+		String additions_bans_usage = center.config().getMessagesString("additions.bans.usage");
+		String additions_mutes_usage = center.config().getMessagesString("additions.mutes.usage");
+		String additions_warns_usage = center.config().getMessagesString("additions.warns.usage");
+		String additions_kicks_usage = center.config().getMessagesString("additions.kicks.usage");
 		
-		String usageUnban = center.config().getMessagesString("bans.usage.undo");
-		String usageUnmute = center.config().getMessagesString("mutes.usage.undo");
-		String usageUnwarn = center.config().getMessagesString("warns.usage.undo");
+		String removals_unbans_usage = center.config().getMessagesString("removals.unbans.usage");
+		String removals_unmutes_usage = center.config().getMessagesString("removals.unmutes.usage");
+		String removals_unwarns_usage = center.config().getMessagesString("removals.unwarns.usage");
+		
+		String banlist_usage = center.config().getMessagesString("banlist.usage");
+		String mutelist_usage = center.config().getMessagesString("banlist.usage");
+		String history_usage = center.config().getMessagesString("history.usage");
+		String warns_usage = center.config().getMessagesString("warns.usage");
+		
+		String check_usage = center.config().getMessagesString("check.usage");
 		
 		String noPermBan = center.config().getMessagesString("bans.permission.command");
 		String noPermMute = center.config().getMessagesString("mutes.permission.command");
@@ -309,47 +318,24 @@ public class Commands implements CommandsMaster {
 		
 		List<String> permArgs = center.formats().getPermanentArguments();
 		
-		CommandType.allFor(PunishmentType.BAN).forEach((cmd) -> {
-			if (cmd.isAddition()) {
-				usage.put(cmd, usageBan);
-				if (cmd.preferIp()) {
-					permCmd.put(cmd, noPermIpBan);
+		for (CommandType cmd : CommandType.values()) {
+			switch (cmd.subCategory()) {
+			case BAN:
+				usage.put(cmd, additions_bans_usage);
+				if (cmd.ipSpec().equals(IpSpec.IP)) {
+					
 				} else {
-					permCmd.put(cmd, noPermBan);
+					
 				}
-			} else if (cmd.isRemoval()) {
-				usage.put(cmd, usageUnban);
+				break;
+			case MUTE:
+				usage.put(cmd, additions_mutes_usage);
+			case WARN:
+				usage.put(cmd, additions_warns_usage);
+			case KICK:
+				usage.put(cmd, additions_kicks_usage);
 			}
-		});
-		CommandType.allFor(PunishmentType.MUTE).forEach((cmd) -> {
-			if (cmd.isAddition()) {
-				usage.put(cmd, usageMute);
-				if (cmd.preferIp()) {
-					permCmd.put(cmd, noPermIpMute);
-				} else {
-					permCmd.put(cmd, noPermMute);
-				}
-			} else if (cmd.isRemoval()) {
-				usage.put(cmd, usageUnmute);
-			}
-		});
-		CommandType.allFor(PunishmentType.WARN).forEach((cmd) -> {
-			if (cmd.isAddition()) {
-				usage.put(cmd, usageWarn);
-				if (cmd.preferIp()) {
-					permCmd.put(cmd, noPermIpWarn);
-				} else {
-					permCmd.put(cmd, noPermWarn);
-				}
-			} else if (cmd.isRemoval()) {
-				usage.put(cmd, usageUnwarn);
-			}
-		});
-		CommandType.allFor(PunishmentType.KICK).forEach((cmd) -> {
-			if (cmd.isAddition()) {
-				usage.put(cmd, usageKick);
-			}
-		});
+		}
 		
 		/*
 		usagePun.put(PunishmentType.BAN, usageBan);
@@ -393,9 +379,7 @@ public class Commands implements CommandsMaster {
 
 	@Override
 	public void noPermission(Subject subject, CommandType command) {
-		if (command.isAddition() || command.isRemoval()) {
-			
-		}
+		center.subjects().sendMessage(subject, perm.get(command));
 	}
 	
 }

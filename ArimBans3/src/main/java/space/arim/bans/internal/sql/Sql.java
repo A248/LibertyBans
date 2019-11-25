@@ -96,10 +96,7 @@ public class Sql implements SqlMaster {
 	
 	@Override
 	public boolean enabled() {
-		if (data != null) {
-			return !data.isClosed();
-		}
-		return false;
+		return (data != null) ? !data.isClosed() : false;
 	}
 
 	@Override
@@ -107,8 +104,6 @@ public class Sql implements SqlMaster {
 		try (Connection connection = data.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 			replaceParams(statement, params);
 			statement.execute();
-			statement.close();
-			connection.close();
 		} catch (SQLException ex) {
 			center.logError(ex);
 		}
@@ -124,7 +119,6 @@ public class Sql implements SqlMaster {
 				statements[n].execute();
 				statements[n].close();
 			}
-			connection.close();
 		} catch (SQLException ex) {
 			center.logError(ex);
 		}
@@ -142,7 +136,6 @@ public class Sql implements SqlMaster {
 				results[n].populate(statements[n].executeQuery());
 				statements[n].close();
 			}
-			connection.close();
 			return results;
 		} catch (SQLException ex) {
 			throw new InternalStateException("Query retrieval failed!", ex);
@@ -151,11 +144,10 @@ public class Sql implements SqlMaster {
 	
 	@Override
 	public ResultSet selectQuery(String sql, Object...params) {
-		try (Connection connection = data.getConnection(); PreparedStatement statement = connection.prepareStatement(sql); CachedRowSet results = factory.createCachedRowSet()) {
+		try (Connection connection = data.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 			replaceParams(statement, params);
+			CachedRowSet results = factory.createCachedRowSet();
 			results.populate(statement.executeQuery());
-			statement.close();
-			connection.close();
 			return results;
 		} catch (SQLException ex) {
 			throw new InternalStateException("Query retrieval failed!", ex);
