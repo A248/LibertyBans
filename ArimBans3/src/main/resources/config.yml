@@ -54,6 +54,4 @@ fetchers:
       key: 'nokey'
     freegeoip:
       enabled: true
-other:
-  config-version: 1
-  plugin-version: '${project.version}'
+config-version: 1

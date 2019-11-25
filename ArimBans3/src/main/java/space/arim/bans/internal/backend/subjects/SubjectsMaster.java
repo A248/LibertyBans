@@ -40,6 +40,10 @@ public interface SubjectsMaster extends Component {
 	
 	Subject parseSubject(UUID input);
 	
+	void sendMessage(Subject subject, String jsonable);
+	
+	boolean hasPermission(Subject subject, String permission);
+	
 	boolean checkUUID(UUID uuid);
 
 }

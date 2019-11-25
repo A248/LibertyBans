@@ -46,8 +46,6 @@ public class BukkitEnv implements Environment {
 	private final BukkitCommands commands;
 	
 	private boolean registered = false;
-	private boolean json = true;
-	private boolean op_permissions = true;
 
 	public BukkitEnv(JavaPlugin plugin) {
 		this.plugin = plugin;
@@ -63,6 +61,7 @@ public class BukkitEnv implements Environment {
 		if (!registered) {
 			plugin.getServer().getPluginManager().registerEvents(listener, plugin);
 			plugin.getServer().getPluginCommand("arimban").setExecutor(commands);
+			registered = true;
 		}
 	}
 	
@@ -91,9 +90,9 @@ public class BukkitEnv implements Environment {
 	}
 	
 	@Override
-	public void sendMessage(Subject subj, String jsonable) {
+	public void sendMessage(Subject subj, String jsonable, boolean useJson) {
 		ArimBansLibrary.checkString(jsonable);
-		if (json) {
+		if (useJson) {
 			if (subj.getType().equals(SubjectType.PLAYER)) {
 				Player target = plugin.getServer().getPlayer(subj.getUUID());
 				if (target != null) {
@@ -111,7 +110,7 @@ public class BukkitEnv implements Environment {
 				throw new InvalidSubjectException("Subject type is completely missing!");
 			}
 			return;
-		} else if (!json) {
+		} else if (!useJson) {
 			if (subj.getType().equals(SubjectType.PLAYER)) {
 				Player target = plugin.getServer().getPlayer(subj.getUUID());
 				if (target != null) {
@@ -134,14 +133,14 @@ public class BukkitEnv implements Environment {
 	}
 	
 	@Override
-	public boolean hasPermission(Subject subject, String permission) {
+	public boolean hasPermission(Subject subject, String permission, boolean opPerms) {
 		ArimBansLibrary.checkString(permission);
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
 			return true;
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {
 			Player target = plugin.getServer().getPlayer(subject.getUUID());
 			if (target != null) {
-				return target.isOp() ? op_permissions : target.getPlayer().hasPermission(permission);
+				return target.isOp() ? opPerms : target.getPlayer().hasPermission(permission);
 			}
 			throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subject) + " is not online or does not have a valid UUID.");
 		} else if (subject.getType().equals(SubjectType.IP)) {
@@ -215,16 +214,12 @@ public class BukkitEnv implements Environment {
 	public boolean isLibrarySupported(EnvLibrary type) {
 		return libraries.contains(type);
 	}
-
-	@Override
-	public void refreshConfig() {
-		json = center.config().getConfigBoolean("formatting.use-json");
-		op_permissions = center.config().getConfigBoolean("commands.op-permissions");
-	}
 	
 	@Override
 	public void close() {
-		HandlerList.unregisterAll(listener);
+		if (registered) {
+			HandlerList.unregisterAll(listener);
+		}
 		commands.close();
 		listener.close();
 		resolver.close();

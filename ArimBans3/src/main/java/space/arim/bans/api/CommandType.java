@@ -18,6 +18,11 @@
  */
 package space.arim.bans.api;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public enum CommandType {
 	
 	BAN(PunishmentType.BAN, "ban.type.uuid"),
@@ -62,16 +67,16 @@ public enum CommandType {
 	private enum CommandCategory {
 		ADD,
 		REMOVE,
-		LIST
+		LIST;
 	}
 	
-	private final PunishmentType[] types;
+	private final List<PunishmentType> types;
 	private final CommandCategory category;
 	private final boolean preferIp;
 	private final String permission;
 	
 	private CommandType(final PunishmentType[] types, final CommandCategory category, final boolean preferIp, final String permission) {
-		this.types = types;
+		this.types = Arrays.asList(types);
 		this.category = category;
 		this.preferIp = preferIp;
 		this.permission = permission;
@@ -109,7 +114,7 @@ public enum CommandType {
 		return preferIp;
 	}
 	
-	public PunishmentType[] applicableTypes() {
+	public List<PunishmentType> applicableTypes() {
 		return types;
 	}
 	
@@ -130,7 +135,17 @@ public enum CommandType {
 	}
 	
 	public boolean isGeneralListing() {
-		return isListing() && this.name().contains("LIST");
+		return isListing() && name().contains("LIST");
+	}
+	
+	public static Set<CommandType> allFor(PunishmentType type) {
+		Set<CommandType> applicable = new HashSet<CommandType>();
+		for (CommandType cmd : CommandType.values()) {
+			if (cmd.applicableTypes().contains(type)) {
+				applicable.add(cmd);
+			}
+		}
+		return applicable;
 	}
 
 }

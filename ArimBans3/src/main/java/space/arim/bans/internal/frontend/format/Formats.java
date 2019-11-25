@@ -19,6 +19,7 @@
 package space.arim.bans.internal.frontend.format;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -34,9 +35,9 @@ public class Formats implements FormatsMaster {
 	
 	private final ArimBans center;
 	
-	private SimpleDateFormat dateformatter;
+	private SimpleDateFormat dateFormatter;
 	
-	private List<String> permanent_arguments;
+	private List<String> permanent_arguments = Arrays.asList("perm");
 	
 	private String permanent_display;
 	private String console_display;
@@ -76,7 +77,7 @@ public class Formats implements FormatsMaster {
 			return permanent_display;
 		}
 		if (absolute) {
-			return dateformatter.format(new Date(millis));
+			return dateFormatter.format(new Date(millis));
 		}
 		return null;
 	}
@@ -108,10 +109,19 @@ public class Formats implements FormatsMaster {
 	}
 	
 	@Override
+	public List<String> getPermanentArguments() {
+		return permanent_arguments;
+	}
+	
+	@Override
 	public void refreshConfig() {
 		
-		dateformatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-		dateformatter.setTimeZone(TimeZone.getDefault());
+		try {
+			dateFormatter = new SimpleDateFormat(center.config().getConfigString("formatting.date"));
+		} catch (IllegalArgumentException ex) {
+			dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		}
+		dateFormatter.setTimeZone(TimeZone.getDefault());
 		
 		permanent_arguments = center.config().getConfigStrings("formatting.permanent-arguments");
 		

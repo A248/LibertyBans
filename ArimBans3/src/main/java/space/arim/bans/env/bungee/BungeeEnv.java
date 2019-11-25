@@ -90,9 +90,9 @@ public class BungeeEnv implements Environment {
 	}
 	
 	@Override
-	public void sendMessage(Subject subj, String jsonable) {
+	public void sendMessage(Subject subj, String jsonable, boolean useJson) {
 		ArimBansLibrary.checkString(jsonable);
-		if (json) {
+		if (useJson) {
 			if (subj.getType().equals(SubjectType.PLAYER)) {
 				ProxiedPlayer target = plugin.getProxy().getPlayer(subj.getUUID());
 				if (target != null) {
@@ -110,7 +110,7 @@ public class BungeeEnv implements Environment {
 				throw new InvalidSubjectException("Subject type is completely missing!");
 			}
 			return;
-		} else if (!json) {
+		} else if (!useJson) {
 			if (subj.getType().equals(SubjectType.PLAYER)) {
 				ProxiedPlayer target = plugin.getProxy().getPlayer(subj.getUUID());
 				if (target != null) {
@@ -133,7 +133,7 @@ public class BungeeEnv implements Environment {
 	}
 
 	@Override
-	public boolean hasPermission(Subject subject, String permission) {
+	public boolean hasPermission(Subject subject, String permission, boolean opPerms) {
 		ArimBansLibrary.checkString(permission);
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
 			return true;
@@ -213,11 +213,6 @@ public class BungeeEnv implements Environment {
 	@Override
 	public boolean isLibrarySupported(EnvLibrary type) {
 		return libraries.contains(type);
-	}
-	
-	@Override
-	public void refreshConfig() {
-		json = center.config().getConfigBoolean("formatting.use-json");
 	}
 	
 	@Override

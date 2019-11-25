@@ -42,33 +42,39 @@ public class Commands implements CommandsMaster {
 	private String invalid_target;
 	private static final String basePerm = "arimbans.commands";
 	
-	private final ConcurrentHashMap<PunishmentType, String> usagePun = new ConcurrentHashMap<PunishmentType, String>();
-	private final ConcurrentHashMap<PunishmentType, String> permCmd = new ConcurrentHashMap<PunishmentType, String>();
-	private final ConcurrentHashMap<PunishmentType, String> permIp = new ConcurrentHashMap<PunishmentType, String>();
+	private final ConcurrentHashMap<CommandType, String> usage = new ConcurrentHashMap<CommandType, String>();
+	private final ConcurrentHashMap<CommandType, String> permCmd = new ConcurrentHashMap<CommandType, String>();
+	private final ConcurrentHashMap<CommandType, String> permIp = new ConcurrentHashMap<CommandType, String>();
+	
 	private final ConcurrentHashMap<PunishmentType, String> exempt = new ConcurrentHashMap<PunishmentType, String>();
 	private final ConcurrentHashMap<PunishmentType, String> permTime = new ConcurrentHashMap<PunishmentType, String>();
-	private final ConcurrentHashMap<PunishmentType, List<Integer>> durPerms = new ConcurrentHashMap<PunishmentType, List<Integer>>();
+	private final ConcurrentHashMap<PunishmentType, List<String>> durPerms = new ConcurrentHashMap<PunishmentType, List<String>>();
 	
 	// TODO Load these maps from messages.yml in #refreshMessages()
-	private final ConcurrentHashMap<CommandType, String> listPermCmd = new ConcurrentHashMap<CommandType, String>();
 	private final ConcurrentHashMap<CommandType, Integer> perPage = new ConcurrentHashMap<CommandType, Integer>();
 	private final ConcurrentHashMap<CommandType, String> maxPage = new ConcurrentHashMap<CommandType, String>();
 	private final ConcurrentHashMap<CommandType, String> noPage = new ConcurrentHashMap<CommandType, String>();
+	private final ConcurrentHashMap<CommandType, List<String>> header = new ConcurrentHashMap<CommandType, List<String>>();
+	private final ConcurrentHashMap<CommandType, List<String>> body = new ConcurrentHashMap<CommandType, List<String>>();
+	private final ConcurrentHashMap<CommandType, List<String>> footer = new ConcurrentHashMap<CommandType, List<String>>();
 	
 	public Commands(ArimBans center) {
 		this.center = center;
+		String invalid_string = ArimBansLibrary.INVALID_STRING_CODE;
 		for (PunishmentType pun : PunishmentType.values()) {
-			usagePun.put(pun, ArimBansLibrary.INVALID_STRING_CODE);
-			permCmd.put(pun, ArimBansLibrary.INVALID_STRING_CODE);
-			permIp.put(pun, ArimBansLibrary.INVALID_STRING_CODE);
-			exempt.put(pun, ArimBansLibrary.INVALID_STRING_CODE);
-			permTime.put(pun, ArimBansLibrary.INVALID_STRING_CODE);
+			exempt.put(pun, invalid_string);
+			permTime.put(pun, invalid_string);
 		}
 		for (CommandType cmd : CommandType.values()) {
-			listPermCmd.put(cmd, ArimBansLibrary.INVALID_STRING_CODE);
+			usage.put(cmd, invalid_string);
+			permCmd.put(cmd, invalid_string);
+			permIp.put(cmd, invalid_string);
 			perPage.put(cmd, 0);
-			maxPage.put(cmd, ArimBansLibrary.INVALID_STRING_CODE);
-			noPage.put(cmd, ArimBansLibrary.INVALID_STRING_CODE);
+			maxPage.put(cmd, invalid_string);
+			noPage.put(cmd, invalid_string);
+			header.put(cmd, Arrays.asList(invalid_string));
+			body.put(cmd, Arrays.asList(invalid_string));
+			footer.put(cmd, Arrays.asList(invalid_string));
 		}
 	}
 
@@ -91,7 +97,7 @@ public class Commands implements CommandsMaster {
 	}
 	
 	private boolean checkPermBase(Subject subject) {
-		if (!center.environment().hasPermission(subject, basePerm)) {
+		if (!center.subjects().hasPermission(subject, basePerm)) {
 			noPermission(subject);
 			return false;
 		}
@@ -102,7 +108,7 @@ public class Commands implements CommandsMaster {
 		if (!checkPermBase(subject)) {
 			return false;
 		}
-		if (!center.environment().hasPermission(subject, command.permission())) {
+		if (!center.subjects().hasPermission(subject, command.permission())) {
 			noPermission(subject, command);
 			return false;
 		}
@@ -151,11 +157,11 @@ public class Commands implements CommandsMaster {
 			try {
 				target = center.subjects().parseSubject(args[0], false);
 			} catch (IllegalArgumentException ex) {
-				center.environment().sendMessage(operator, invalid_target.replaceAll("%TARGET%", args[0]));
+				center.subjects().sendMessage(operator, invalid_target.replaceAll("%TARGET%", args[0]));
 				return;
 			}
 			if (!center.environment().isOnline(target)) {
-				center.environment().sendMessage(operator, invalid_target.replaceAll("%TARGET%", center.formats().formatSubject(target)));
+				center.subjects().sendMessage(operator, invalid_target.replaceAll("%TARGET%", center.formats().formatSubject(target)));
 				return;
 			}
 			if (command.isAddition()) {
@@ -188,11 +194,11 @@ public class Commands implements CommandsMaster {
 		list(operator, new Lister<Punishment>(page, perPage.get(command), maxPage.get(command), noPage.get(command)) {
 			@Override
 			Set<Punishment> getAll() {
-				return null;
+				return center.getHistory(target);
 			}
 			@Override
 			boolean check(Punishment object) {
-				return false;
+				return true;
 			}
 			@Override
 			List<String> getHeader() {
@@ -217,16 +223,16 @@ public class Commands implements CommandsMaster {
 			}
 		}
 		if (punishments.isEmpty()) {
-			center.environment().sendMessage(operator, lister.noPagesMsg);
+			center.subjects().sendMessage(operator, lister.noPagesMsg);
 			return;
 		}
 		int maxPage = (punishments.size() - 1)/lister.perPage + 1;
 		if (lister.page > maxPage) {
-			center.environment().sendMessage(operator, lister.maxPagesMsg);
+			center.subjects().sendMessage(operator, lister.maxPagesMsg);
 			return;
 		}
 		for (String h : lister.getHeader()) {
-			center.environment().sendMessage(operator, h.replaceAll("%PAGE%", Integer.toString(lister.page)).replaceAll("%MAXPAGE%", Integer.toString(maxPage)));
+			center.subjects().sendMessage(operator, h.replaceAll("%PAGE%", Integer.toString(lister.page)).replaceAll("%MAXPAGE%", Integer.toString(maxPage)));
 		}
 		punishments.sort(new Comparator<Punishment>() {
 			@Override
@@ -236,11 +242,11 @@ public class Commands implements CommandsMaster {
 		});
 		for (Punishment p : punishments) {
 			for (String s : lister.getFormat()) {
-				center.environment().sendMessage(operator, encodeVars(s, p));
+				center.subjects().sendMessage(operator, encodeVars(s, p));
 			}
 		}
 		for (String f : lister.getFooter()) {
-			center.environment().sendMessage(operator, f.replaceAll("%PAGE%", Integer.toString(lister.page)).replaceAll("%MAXPAGE%", Integer.toString(maxPage)));
+			center.subjects().sendMessage(operator, f.replaceAll("%PAGE%", Integer.toString(lister.page)).replaceAll("%MAXPAGE%", Integer.toString(maxPage)));
 		}
 	}
 
@@ -269,10 +275,14 @@ public class Commands implements CommandsMaster {
 		base_perm_msg = center.config().getMessagesString("all.base-permission-message");
 		invalid_target = center.config().getMessagesString("all.invalid-target");
 		
-		String usageBan = center.config().getMessagesString("bans.usage");
-		String usageMute = center.config().getMessagesString("mutes.usage");
-		String usageWarn = center.config().getMessagesString("warns.usage");
-		String usageKick = center.config().getMessagesString("kicks.usage");
+		String usageBan = center.config().getMessagesString("bans.usage.do");
+		String usageMute = center.config().getMessagesString("mutes.usage.do");
+		String usageWarn = center.config().getMessagesString("warns.usage.do");
+		String usageKick = center.config().getMessagesString("kicks.usage.do");
+		
+		String usageUnban = center.config().getMessagesString("bans.usage.undo");
+		String usageUnmute = center.config().getMessagesString("mutes.usage.undo");
+		String usageUnwarn = center.config().getMessagesString("warns.usage.undo");
 		
 		String noPermBan = center.config().getMessagesString("bans.permission.command");
 		String noPermMute = center.config().getMessagesString("mutes.permission.command");
@@ -293,13 +303,55 @@ public class Commands implements CommandsMaster {
 		String noPermTimeMute = center.config().getMessagesString("mutes.permission.time");
 		String noPermTimeWarn = center.config().getMessagesString("kicks.permission.time");
 		
-		List<Integer> durPermsBan = center.config().getMessagesInts(".permission.dur-perms");
-		List<Integer> durPermsMute = center.config().getMessagesInts(".permission.dur-perms");
-		List<Integer> durPermsWarn = center.config().getMessagesInts(".permission.dur-perms");
-		durPermsBan.add(-1);
-		durPermsMute.add(-1);
-		durPermsWarn.add(-1);
+		List<String> durPermsBan = center.config().getMessagesStrings(".permission.dur-perms");
+		List<String> durPermsMute = center.config().getMessagesStrings(".permission.dur-perms");
+		List<String> durPermsWarn = center.config().getMessagesStrings(".permission.dur-perms");
 		
+		List<String> permArgs = center.formats().getPermanentArguments();
+		
+		CommandType.allFor(PunishmentType.BAN).forEach((cmd) -> {
+			if (cmd.isAddition()) {
+				usage.put(cmd, usageBan);
+				if (cmd.preferIp()) {
+					permCmd.put(cmd, noPermIpBan);
+				} else {
+					permCmd.put(cmd, noPermBan);
+				}
+			} else if (cmd.isRemoval()) {
+				usage.put(cmd, usageUnban);
+			}
+		});
+		CommandType.allFor(PunishmentType.MUTE).forEach((cmd) -> {
+			if (cmd.isAddition()) {
+				usage.put(cmd, usageMute);
+				if (cmd.preferIp()) {
+					permCmd.put(cmd, noPermIpMute);
+				} else {
+					permCmd.put(cmd, noPermMute);
+				}
+			} else if (cmd.isRemoval()) {
+				usage.put(cmd, usageUnmute);
+			}
+		});
+		CommandType.allFor(PunishmentType.WARN).forEach((cmd) -> {
+			if (cmd.isAddition()) {
+				usage.put(cmd, usageWarn);
+				if (cmd.preferIp()) {
+					permCmd.put(cmd, noPermIpWarn);
+				} else {
+					permCmd.put(cmd, noPermWarn);
+				}
+			} else if (cmd.isRemoval()) {
+				usage.put(cmd, usageUnwarn);
+			}
+		});
+		CommandType.allFor(PunishmentType.KICK).forEach((cmd) -> {
+			if (cmd.isAddition()) {
+				usage.put(cmd, usageKick);
+			}
+		});
+		
+		/*
 		usagePun.put(PunishmentType.BAN, usageBan);
 		usagePun.put(PunishmentType.MUTE, usageMute);
 		usagePun.put(PunishmentType.WARN, usageWarn);
@@ -314,6 +366,7 @@ public class Commands implements CommandsMaster {
 		permIp.put(PunishmentType.MUTE, noPermIpMute);
 		permIp.put(PunishmentType.WARN, noPermIpWarn);
 		permIp.put(PunishmentType.KICK, noPermIpKick);
+		/**/
 		
 		exempt.put(PunishmentType.BAN,  exemptBan);
 		exempt.put(PunishmentType.MUTE, exemptMute);
@@ -324,16 +377,18 @@ public class Commands implements CommandsMaster {
 		permTime.put(PunishmentType.MUTE, noPermTimeMute);
 		permTime.put(PunishmentType.WARN, noPermTimeWarn);
 		
+		durPermsBan.addAll(permArgs);
+		durPermsMute.addAll(permArgs);
+		durPermsWarn.addAll(permArgs);
 		durPerms.put(PunishmentType.BAN, durPermsBan);
 		durPerms.put(PunishmentType.MUTE, durPermsMute);
 		durPerms.put(PunishmentType.WARN, durPermsWarn);
-		durPerms.put(PunishmentType.KICK, Arrays.asList(-1));
 		
 	}
 
 	@Override
 	public void noPermission(Subject subject) {
-		center.environment().sendMessage(subject, base_perm_msg);
+		center.subjects().sendMessage(subject, base_perm_msg);
 	}
 
 	@Override
