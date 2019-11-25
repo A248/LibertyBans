@@ -45,6 +45,12 @@ public class Config implements ConfigMaster {
 	private final Map<String, Object> messageDefaults;
 	private ConcurrentHashMap<String, Object> configValues = new ConcurrentHashMap<String, Object>();
 	private ConcurrentHashMap<String, Object> messageValues = new ConcurrentHashMap<String, Object>();
+	
+	private static final String CONFIG_PATH = "/src/main/resources/config.yml";
+	private static final String MESSAGES_PATH = "/src/main/resources/messages.yml";
+	
+	private static final int CONFIG_VERSION = 1;
+	private static final int MESSAGES_VERSION = 1;
 
 	public Config(ArimBans center) {
 		this.center = center;
@@ -54,12 +60,12 @@ public class Config implements ConfigMaster {
 		Yaml yaml = new Yaml();
 		
 		// Save files if nonexistent
-		saveIfNotExist(configYml, "/src/main/resources/config.yml");
-		saveIfNotExist(messagesYml, "/src/main/resources/messages.yml");
+		saveIfNotExist(configYml, CONFIG_PATH);
+		saveIfNotExist(messagesYml, MESSAGES_PATH);
 		
 		// Load config defaults
-		configDefaults = loadDefaults("/src/main/resources/config.yml", yaml);
-		messageDefaults = loadDefaults("/src/main/resources/messages.yml", yaml);
+		configDefaults = loadDefaults(CONFIG_PATH, yaml);
+		messageDefaults = loadDefaults(MESSAGES_PATH, yaml);
 		configValues.putAll(configDefaults);
 		messageValues.putAll(messageDefaults);
 		
@@ -68,7 +74,8 @@ public class Config implements ConfigMaster {
 		messageValues.putAll(loadFile(messagesYml, yaml));
 		
 		// Check config versions
-		checkVersion();
+		configVersion();
+		messagesVersion();
 	}
 	
 	private void saveIfNotExist(File target, String source) {
@@ -110,15 +117,24 @@ public class Config implements ConfigMaster {
 		}
 	}
 	
-	private void checkVersion() {
-		if (configValues.get("other.version") != configDefaults.get("other.version")) {
-			configYml.delete();
-			saveIfNotExist(configYml, "/src/main/resources/config.yml");
+	private void configVersion() {
+		Object ver = configValues.get("config-version");
+		if (ver instanceof Integer) {
+			if ((Integer) ver == CONFIG_VERSION) {
+				return;
+			}
 		}
-		if (messageValues.get("other.version") != messageDefaults.get("other.version")) {
-			messagesYml.delete();
-			saveIfNotExist(messagesYml, "/src/main/resources/messages.yml");
+		saveIfNotExist(configYml, CONFIG_PATH);
+	}
+	
+	private void messagesVersion() {
+		Object ver = messageValues.get("messages-version");
+		if (ver instanceof Integer) {
+			if ((Integer) ver == MESSAGES_VERSION) {
+				return;
+			}
 		}
+		saveIfNotExist(messagesYml, MESSAGES_PATH);
 	}
 	
 	@Override
@@ -126,7 +142,8 @@ public class Config implements ConfigMaster {
 		Yaml yaml = new Yaml();
 		configValues.putAll(loadFile(configYml, yaml));
 		messageValues.putAll(loadFile(messagesYml, yaml));
-		checkVersion();
+		configVersion();
+		messagesVersion();
 	}
 
 	private void warning(String message) {
@@ -134,13 +151,17 @@ public class Config implements ConfigMaster {
 		center.environment().logger().warning(message);
 	}
 	
+	private void configWarning(String key, Class<?> type, File file) {
+		warning("Configuration " + key + " does not map to a " + type.getSimpleName() + " in " + file.getPath());
+	}
+	
 	private void configWarning(String key, Class<?> type) {
-		warning("Configuration " + key + " does not map to a " + type.getSimpleName() + "!");
+		configWarning(key, type, configYml);
 	}
 	
 	@Override
 	public String getConfigString(String key) {
-		return get(key, String.class);
+		return cfgGet(key, String.class);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -151,23 +172,23 @@ public class Config implements ConfigMaster {
 			if (obj instanceof List<?>) {
 				return (List<String>) obj;
 			}
-			configWarning(key, String[].class);
+			configWarning(key, List.class);
 		}
 		return (List<String>) configDefaults.get(key);
 	}
 	
 	@Override
 	public boolean getConfigBoolean(String key) {
-		return get(key, Boolean.class);
+		return cfgGet(key, Boolean.class);
 	}
 
 	@Override
 	public int getConfigInt(String key) {
-		return get(key, Integer.class);
+		return cfgGet(key, Integer.class);
 	}
 	
 	@SuppressWarnings("unchecked")
-	private <T> T get(String key, Class<T> type) {
+	private <T> T cfgGet(String key, Class<T> type) {
 		if (configValues.containsKey(key)) {
 			Object obj = configValues.get(key);
 			if (type.isInstance(obj)) {
@@ -178,25 +199,39 @@ public class Config implements ConfigMaster {
 		return (T) configDefaults.get(key);
 	}
 	
-	@Override
-	public String getMessagesString(String key) {
+	@SuppressWarnings("unchecked")
+	private <T> T msgGet(String key, Class<T> type) {
 		if (messageValues.containsKey(key)) {
 			Object obj = messageValues.get(key);
-			if (obj instanceof String) {
-				return (String) obj;
+			if (type.isInstance(obj)) {
+				return (T) obj;
 			}
+			configWarning(key, type, messagesYml);
 		}
-		return (String) messageDefaults.get(key);
+		return (T) messageDefaults.get(key);
 	}
 	
+	@Override
+	public String getMessagesString(String key) {
+		return msgGet(key, String.class);
+	}
+	
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<String> getMessagesStrings(String key) {
-		return null;
+		if (messageValues.containsKey(key)) {
+			Object obj = messageValues.get(key);
+			if (obj instanceof List<?>) {
+				return (List<String>) obj;
+			}
+			configWarning(key, List.class, messagesYml);
+		}
+		return (List<String>) messageDefaults.get(key);
 	}
 	
 	@Override
-	public List<Integer> getMessagesInts(String key) {
-		return null;
+	public boolean getMessagesBoolean(String key) {
+		return msgGet(key, Boolean.class);
 	}
 	
 }

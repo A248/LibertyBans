@@ -29,9 +29,9 @@ public interface Environment extends Configurable {
 	
 	boolean isOnline(Subject subject);
 	
-	void sendMessage(Subject target, String jsonable);
+	void sendMessage(Subject target, String jsonable, boolean useJson);
 	
-	boolean hasPermission(Subject subject, String permission);
+	boolean hasPermission(Subject subject, String permission, boolean opPerms);
 	
 	void runAsync(Runnable command);
 	

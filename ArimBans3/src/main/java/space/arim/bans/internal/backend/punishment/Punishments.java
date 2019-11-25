@@ -76,7 +76,6 @@ public class Punishments implements PunishmentsMaster {
 		});
 	}
 	
-	
 	@Override
 	public void addPunishments(Punishment... punishments) throws ConflictingPunishmentException {
 		if (punishments.length == 1) {
@@ -135,7 +134,7 @@ public class Punishments implements PunishmentsMaster {
 	
 	@Override
 	public Punishment getPunishment(Subject subject, PunishmentType type) throws MissingPunishmentException {
-		Set<Punishment> active = active();
+		Set<Punishment> active = getAllPunishments();
 		for (Punishment punishment : active) {
 			if (punishment.subject().compare(subject) && punishment.type().equals(type)) {
 				return punishment;
@@ -185,10 +184,13 @@ public class Punishments implements PunishmentsMaster {
 		});
 	}
 	
-	
 	@Override
 	public boolean hasPunishment(Subject subject, PunishmentType type) {
-		Set<Punishment> active = active();
+		
+		// I am not sure if synchronisation is required here
+		// If it is, uncomment the next line
+		//Set<Punishment> active = getAllPunishments();
+		
 		for (Punishment punishment : active) {
 			if (punishment.subject().compare(subject) && punishment.type().equals(type)) {
 				return true;
@@ -199,7 +201,7 @@ public class Punishments implements PunishmentsMaster {
 	
 	@Override
 	public Set<Punishment> getPunishments(Subject subject) {
-		Set<Punishment> active = active();
+		Set<Punishment> active = getAllPunishments();
 		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
 			if (!it.next().subject().compare(subject)) {
 				it.remove();
@@ -210,7 +212,7 @@ public class Punishments implements PunishmentsMaster {
 	
 	@Override
 	public Set<Punishment> getPunishments(Subject subject, PunishmentType type) {
-		Set<Punishment> active = active();
+		Set<Punishment> active = getAllPunishments();
 		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
 			Punishment punishment = it.next();
 			if (!punishment.subject().compare(subject) || !punishment.type().equals(type)) {
@@ -227,7 +229,7 @@ public class Punishments implements PunishmentsMaster {
 	
 	@Override
 	public Set<Punishment> getAllPunishments(PunishmentType type) {
-		Set<Punishment> active = active();
+		Set<Punishment> active = getAllPunishments();
 		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
 			if (!it.next().type().equals(type)) {
 				it.remove();
@@ -238,13 +240,18 @@ public class Punishments implements PunishmentsMaster {
 	
 	@Override
 	public Set<Punishment> getHistory(Subject subject) {
-		Set<Punishment> history = new HashSet<Punishment>();
-		for (Punishment punishment : this.history) {
-			if (punishment.subject().compare(subject)) {
-				history.add(punishment);
+		Set<Punishment> history = getAllHistory();
+		for (Iterator<Punishment> it = history.iterator(); it.hasNext();) {
+			if (!it.next().subject().compare(subject)) {
+				it.remove();
 			}
 		}
 		return history;
+	}
+	
+	@Override
+	public Set<Punishment> getAllHistory() {
+		return new HashSet<Punishment>(this.history);
 	}
 	
 	@Override

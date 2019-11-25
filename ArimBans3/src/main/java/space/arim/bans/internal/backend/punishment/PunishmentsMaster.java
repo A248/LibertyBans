@@ -52,6 +52,8 @@ public interface PunishmentsMaster extends Component {
 	
 	Set<Punishment> getHistory(Subject subject);
 	
+	Set<Punishment> getAllHistory();
+	
 	void loadActive(ResultSet data);
 	
 	void loadHistory(ResultSet data);

@@ -40,5 +40,6 @@ public interface ConfigMaster extends Component {
 	
 	List<String> getMessagesStrings(String key);
 	
-	List<Integer> getMessagesInts(String key);
+	boolean getMessagesBoolean(String key);
+	
 }

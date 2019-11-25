@@ -97,7 +97,7 @@ public class BukkitEnforcer implements Enforcer {
 		} else if (environment.center().isMuted(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()))) {
 			evt.setCancelled(true);
 			try {
-				environment.json(evt.getPlayer(), environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()), PunishmentType.MUTE)));
+				environment.center().subjects().sendMessage(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()), environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()), PunishmentType.MUTE)));
 			} catch (MissingPunishmentException ex) {
 				environment.center().logError(ex);
 			}
@@ -106,7 +106,7 @@ public class BukkitEnforcer implements Enforcer {
 				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
 					evt.setCancelled(true);
 					try {
-						environment.json(evt.getPlayer(), environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.MUTE)));
+						environment.center().subjects().sendMessage(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()), environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.MUTE)));
 					} catch (MissingPunishmentException ex) {
 						environment.center().logError(ex);
 					}
@@ -131,9 +131,9 @@ public class BukkitEnforcer implements Enforcer {
 				target.kickPlayer(message);
 			}
 		} else if (punishment.type().equals(PunishmentType.MUTE)) {
-			environment.sendMessage(punishment.subject(), message);
+			environment.center().subjects().sendMessage(punishment.subject(), message);
 		} else if (punishment.type().equals(PunishmentType.WARN)) {
-			environment.sendMessage(punishment.subject(), message);
+			environment.center().subjects().sendMessage(punishment.subject(), message);
 		}
 	}
 	
