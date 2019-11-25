@@ -34,14 +34,12 @@ public interface CommandsMaster extends Component {
 
 	default CommandType parseCommand(String input) {
 		switch (input.toLowerCase()) {
-		case "banlist":
-			return CommandType.ALLBANLIST;
-		case "mutelist":
-			return CommandType.ALLMUTELIST;
+		// Special cases go here
 		case "playerbanlist":
-			return CommandType.BANLIST;
+			return CommandType.UUIDBANLIST;
 		case "playermutelist":
-			return CommandType.MUTELIST;
+			return CommandType.UUIDMUTELIST;
+		// Otherwise parse normally
 		default:
 			for (CommandType type : CommandType.values()) {
 				if (type.toString().equalsIgnoreCase(input)) {
