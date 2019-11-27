@@ -20,113 +20,134 @@ package space.arim.bans.api;
 
 public enum CommandType {
 	
-	BAN(PunishmentType.BAN, "ban.type.uuid", "ban.use.time.perm"),
-	TEMPBAN(PunishmentType.BAN, "ban.type.uuid", "ban.use.time.temp"),
-	UNBAN(PunishmentType.BAN, CommandCategory.REMOVE, "ban.undo.type.uuid"),
-	IPBAN(PunishmentType.BAN, true, "ban.type.ip", "ban.use.time.perm"),
-	IPTEMPBAN(PunishmentType.BAN, true, "ban.type.ip", "ban.use.time.temp"),
-	IPUNBAN(PunishmentType.BAN, CommandCategory.REMOVE, true, "ban.undo.type.ip"),
+	BAN(SubCategory.BAN),
+	UNBAN(SubCategory.UNBAN),
+	IPBAN(SubCategory.BAN, IpSpec.IP),
+	IPUNBAN(SubCategory.UNBAN, IpSpec.IP),
 	
-	MUTE(PunishmentType.MUTE, "mute.type.uuid", "mute.use.time.perm"),
-	TEMPMUTE(PunishmentType.MUTE, "mute.type.uuid", "mute.use.time.temp"),
-	UNMUTE(PunishmentType.MUTE, CommandCategory.REMOVE, "mute.undo.type.uuid"),
-	IPMUTE(PunishmentType.MUTE, true, "mute.type.ip", "mute.use.time.perm"),
-	IPTEMPMUTE(PunishmentType.MUTE, true, "mute.type.ip", "mute.use.time.temp"),
-	IPUNMUTE(PunishmentType.MUTE, CommandCategory.REMOVE, true, "mute.undo.type.ip"),
+	MUTE(SubCategory.MUTE),
+	UNMUTE(SubCategory.UNMUTE),
+	IPMUTE(SubCategory.MUTE, IpSpec.IP),
+	IPUNMUTE(SubCategory.UNMUTE, IpSpec.IP),
 	
-	WARN(PunishmentType.WARN, "warn.type.uuid", "warn.use.time.perm"),
-	TEMPWARN(PunishmentType.WARN, "warn.type.uuid", "warn.use.time.temp"),
-	UNWARN(PunishmentType.WARN, CommandCategory.REMOVE, "warn.undo.type.uuid"),
-	IPWARN(PunishmentType.WARN, true, "warn.type.ip", "warn.use.time.perm"),
-	IPTEMPWARN(PunishmentType.WARN, true, "warn.type.ip", "warn.use.time.temp"),
-	IPUNWARN(PunishmentType.WARN, CommandCategory.REMOVE, true, "warn.undo.type.ip"),
+	WARN(SubCategory.WARN),
+	UNWARN(SubCategory.UNWARN),
+	IPWARN(SubCategory.WARN, IpSpec.IP),
+	IPUNWARN(SubCategory.UNWARN, IpSpec.IP),
 	
-	KICK(PunishmentType.KICK, "kick.type.uuid"),
-	IPKICK(PunishmentType.KICK, true, "kick.type.ip"),
+	KICK(SubCategory.KICK),
+	IPKICK(SubCategory.KICK, IpSpec.IP),
 	
-	ALLBANLIST(PunishmentType.BAN, CommandCategory.LIST, "banlist.type.all"),
-	BANLIST(PunishmentType.BAN, CommandCategory.LIST, "banlist.type.uuid"),
-	IPBANLIST(PunishmentType.BAN, CommandCategory.LIST, true, "banlist.type.ip"),
-	ALLMUTELIST(PunishmentType.MUTE, CommandCategory.LIST, "mutelist.type.all"),
-	MUTELIST(PunishmentType.MUTE, CommandCategory.LIST, "mutelist.type.uuid"),
-	IPMUTELIST(PunishmentType.MUTE, CommandCategory.LIST, true, "mutelist.type.ip"),
+	BANLIST(SubCategory.BANLIST, IpSpec.UUID),
+	IPBANLIST(SubCategory.BANLIST, IpSpec.IP),
+	UUIDBANLIST(SubCategory.BANLIST),
+	MUTELIST(SubCategory.MUTELIST, IpSpec.UUID),
+	IPMUTELIST(SubCategory.MUTELIST, IpSpec.IP),
+	UUIDMUTELIST(SubCategory.MUTELIST),
 	
-	HISTORY("history.type.uuid"),
-	IPHISTORY(true, "history.type.ip"),
-	WARNS("warns.type.uuid"),
-	IPWARNS(true, "warns.type.ip"),
+	HISTORY(SubCategory.HISTORY),
+	IPHISTORY(SubCategory.HISTORY, IpSpec.IP),
+	WARNS(SubCategory.WARNS),
+	IPWARNS(SubCategory.WARNS, IpSpec.IP),
 	
-	CHECK("check.type.uuid"),
-	IPCHECK(true, "check.type.ip");
+	CHECK(SubCategory.CHECK),
+	IPCHECK(SubCategory.CHECK, IpSpec.IP);
 	
-	private enum CommandCategory {
+	public enum SubCategory {
+		BAN(Category.ADD, "ban.do"),
+		UNBAN(Category.REMOVE, "ban.undo"),
+		MUTE(Category.ADD, "mute.do"),
+		UNMUTE(Category.REMOVE, "mute.undo"),
+		WARN(Category.ADD, "warn.do"),
+		UNWARN(Category.REMOVE, "warn.undo"),
+		KICK(Category.ADD, "kick.do"),
+		BANLIST(Category.LIST, "banlist", true),
+		MUTELIST(Category.LIST, "mutelist", true),
+		HISTORY(Category.LIST, "history"),
+		WARNS(Category.LIST, "warns"),
+		CHECK(Category.OTHER, "check");
+		
+		private final Category category;
+		private final String permissionBase;
+		private final boolean noArg;
+		
+		private SubCategory(Category category, String permissionBase, final boolean noArg) {
+			this.category = category;
+			this.permissionBase = "arimbans." + permissionBase;
+			this.noArg = noArg;
+		}
+		
+		private SubCategory(Category category, String permissionBase) {
+			this(category, permissionBase, false);
+		}
+		
+		Category category() {
+			return category;
+		}
+		
+		String permissionBase() {
+			return permissionBase;
+		}
+		
+		boolean noTarget() {
+			return noArg;
+		}
+		
+	}
+	
+	public enum Category {
 		ADD,
 		REMOVE,
-		LIST
+		LIST,
+		OTHER
 	}
 	
-	private final PunishmentType[] types;
-	private final CommandCategory category;
-	private final boolean preferIp;
-	private final String[] permissions;
-	
-	private CommandType(final PunishmentType[] types, final CommandCategory category, final boolean preferIp, final String[] permissions) {
-		this.types = types;
-		this.category = category;
-		this.preferIp = preferIp;
-		this.permissions = permissions;
+	public enum IpSpec {
+		BOTH,
+		UUID,
+		IP
 	}
 	
-	private CommandType(final PunishmentType type, final CommandCategory category, final boolean preferIp, final String...permissions) {
-		this(new PunishmentType[] {type}, category, preferIp, permissions);
+	private SubCategory subCategory;
+	private IpSpec ipSpec;
+	
+	private CommandType(SubCategory subCategory, IpSpec ipSpec) {
+		this.subCategory = subCategory;
+		this.ipSpec = ipSpec;
 	}
 	
-	private CommandType(final PunishmentType type, final boolean preferIp, final String...permissions) {
-		this(type, CommandCategory.ADD, preferIp, permissions);
+	private CommandType(SubCategory subCategory) {
+		this(subCategory, IpSpec.BOTH);
 	}
 	
-	private CommandType(final PunishmentType type, final CommandCategory category, final String...permissions) {
-		this(type, category, false, permissions);
+	public Category category() {
+		return subCategory().category();
 	}
 	
-	private CommandType(final PunishmentType type, final String...permissions) {
-		this(type, CommandCategory.ADD, false, permissions);
+	public SubCategory subCategory() {
+		return subCategory;
 	}
 	
-	private CommandType(final boolean preferIp, final String...permissions) {
-		this(PunishmentType.values(), CommandCategory.LIST, preferIp, permissions);
+	public IpSpec ipSpec() {
+		return ipSpec;
 	}
 	
-	private CommandType(final String...permissions) {
-		this(false, permissions);
+	public boolean canHaveNoTarget() {
+		return subCategory().noTarget();
 	}
 	
-	public String[] permission() {
-		return permissions;
-	}
-	
-	public boolean preferIp() {
-		return preferIp;
-	}
-	
-	public PunishmentType[] applicableTypes() {
-		return types;
-	}
-	
-	public boolean isAddition() {
-		return category.equals(CommandCategory.ADD);
-	}
-	
-	public boolean isRemoval() {
-		return category.equals(CommandCategory.REMOVE);
-	}
-	
-	public boolean isListing() {
-		return category.equals(CommandCategory.LIST);
-	}
-	
-	public boolean isModif() {
-		return isAddition() || isRemoval();
+	public String getPermission() {
+		String base = subCategory().permissionBase();
+		switch (ipSpec()) {
+		case BOTH:
+			return base + ".use";
+		case UUID:
+			return base + ".player";
+		case IP:
+			return base + ".ip";
+		default:
+			throw new IllegalStateException("IpSpec is invalid!");
+		}
 	}
 
 }

@@ -1,4 +1,4 @@
-/*
+/* 
  * ArimBans, a punishment plugin for minecraft servers
  * Copyright © 2019 Anand Beh <https://www.arim.space>
  * 
@@ -18,16 +18,14 @@
  */
 package space.arim.bans.api.exception;
 
-public class RateLimitException extends InternalAPIException {
+import space.arim.bans.api.CommandType;
 
-	private static final long serialVersionUID = 3081467999598825482L;
+public class InvalidCommandTypeException extends InternalStateException {
 
-	public RateLimitException(String service) {
-		super("Rate limit reached for " + service);
-	}
+	private static final long serialVersionUID = 4471587621673970498L;
 
-	public RateLimitException(String service, FetcherException cause) {
-		super("Rate limit reached for " + service, cause);
+	public InvalidCommandTypeException(CommandType command) {
+		super("Command " + command.toString() + " is invalid!");
 	}
 
 }

@@ -27,15 +27,17 @@ storage:
   max-connections: 5
 formatting:
   use-json: true
+  permanent-arguments:
+    - 'perm'
+    - 'permanent'
+    - 'permanently'
   permanent-display: 'Permanently'
   console-display: 'Console'
   date: 'dd/MM/yyyy HH:mm:ss'
 commands:
   op-permissions: true
-  detection:
-    strict-mode: false
-    ip-conversion: true
-    time-detection: true
+  block-for-muted:
+    - 'me'
 priorities:
   bans: 'HIGHEST'
   mutes: 'HIGHEST'
@@ -50,6 +52,4 @@ fetchers:
       key: 'nokey'
     freegeoip:
       enabled: true
-other:
-  config-version: 1
-  plugin-version: '${project.version}'
+config-version: 1

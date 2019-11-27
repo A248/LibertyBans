@@ -101,8 +101,7 @@ public class BungeeEnforcer implements Enforcer {
 		} else if (environment.center().isMuted(environment.center().subjects().parseSubject(player.getUniqueId()))) {
 			evt.setCancelled(true);
 			try {
-				environment.json(player, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(player.getUniqueId()), PunishmentType.MUTE)));
-				environment.sendMessage(environment.center().subjects().parseSubject(player.getUniqueId()), environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(player.getUniqueId()), PunishmentType.MUTE)));
+				environment.center().subjects().sendMessage(environment.center().subjects().parseSubject(player.getUniqueId()), environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(player.getUniqueId()), PunishmentType.MUTE)));
 			} catch (MissingPunishmentException ex) {
 				environment.center().logError(ex);
 			}
@@ -111,7 +110,7 @@ public class BungeeEnforcer implements Enforcer {
 				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
 					evt.setCancelled(true);
 					try {
-						environment.sendMessage(environment.center().subjects().parseSubject(addr), environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.MUTE)));
+						environment.center().subjects().sendMessage(environment.center().subjects().parseSubject(addr), environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.MUTE)));
 					} catch (MissingPunishmentException ex) {
 						environment.center().logError(ex);
 					}
@@ -136,9 +135,9 @@ public class BungeeEnforcer implements Enforcer {
 				target.disconnect(environment.convert(message));
 			}
 		} else if (punishment.type().equals(PunishmentType.MUTE)) {
-			environment.sendMessage(punishment.subject(), message);
+			environment.center().subjects().sendMessage(punishment.subject(), message);
 		} else if (punishment.type().equals(PunishmentType.WARN)) {
-			environment.sendMessage(punishment.subject(), message);
+			environment.center().subjects().sendMessage(punishment.subject(), message);
 		}
 	}
 	

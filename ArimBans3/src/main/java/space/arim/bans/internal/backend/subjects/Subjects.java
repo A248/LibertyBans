@@ -31,6 +31,11 @@ public class Subjects implements SubjectsMaster {
 	
 	private static final int LENGTH_OF_FULL_UUID = 36;
 	private static final int LENGTH_OF_SHORT_UUID = 32;
+	
+	private boolean json = true;
+	private boolean op_permissions = true;
+	private boolean usePrefix = true;
+	private String prefix = "Prefix>> ";
 
 	public Subjects(ArimBans center) {
 		this.center = center;
@@ -43,7 +48,7 @@ public class Subjects implements SubjectsMaster {
 	}
 	
 	@Override
-	public Subject parseSubject(String input) throws IllegalArgumentException {
+	public Subject parseSubject(String input, boolean consolable) throws IllegalArgumentException {
 		if (center.checkAddress(input)) {
 			return Subject.fromIP(input);
 		} else if (input.length() == LENGTH_OF_FULL_UUID) {
@@ -54,7 +59,7 @@ public class Subjects implements SubjectsMaster {
 			}
 		} else if (input.length() == LENGTH_OF_SHORT_UUID) {
 			return parseSubject(Tools.expandUUID(input));
-		} else if (input.equalsIgnoreCase(center.formats().getConsoleDisplay())) {
+		} else if (consolable && input.equalsIgnoreCase(center.formats().getConsoleDisplay())) {
 			return Subject.console();
 		}
 		throw new IllegalArgumentException("Could not make " + input + " into a subject");
@@ -69,7 +74,28 @@ public class Subjects implements SubjectsMaster {
 	}
 	
 	@Override
+	public void sendMessage(Subject subject, boolean prefixed, String...jsonables) {
+		for (int n = 0; n < jsonables.length; n++) {
+			center.environment().sendMessage(subject, (n == 0 && usePrefix && !prefixed) ? prefix + jsonables[n] : jsonables[n], json);
+		}
+	}
+	
+	@Override
+	public boolean hasPermission(Subject subject, String permission) {
+		return center.environment().hasPermission(subject, permission, op_permissions);
+	}
+	
+	@Override
 	public boolean checkUUID(UUID uuid) {
 		return center.cache().uuidExists(uuid);
 	}
+	
+	@Override
+	public void refreshConfig() {
+		json = center.config().getConfigBoolean("formatting.use-json");
+		op_permissions = center.config().getConfigBoolean("commands.op-permissions");
+		usePrefix = center.config().getMessagesBoolean("all.prefix.use");
+		prefix = center.config().getMessagesString("all.prefix.value");
+	}
+	
 }

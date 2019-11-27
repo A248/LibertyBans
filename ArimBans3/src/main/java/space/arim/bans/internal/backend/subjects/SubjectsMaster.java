@@ -32,9 +32,21 @@ public interface SubjectsMaster extends Component {
 	
 	boolean isOnline(Subject subject);
 	
-	Subject parseSubject(String input) throws IllegalArgumentException;
+	Subject parseSubject(String input, boolean consolable) throws IllegalArgumentException;
+	
+	default Subject parseSubject(String input) {
+		return parseSubject(input, true);
+	}
 	
 	Subject parseSubject(UUID input);
+	
+	default void sendMessage(Subject subject, String...jsonables) {
+		sendMessage(subject, false, jsonables);
+	}
+	
+	void sendMessage(Subject subject, boolean prefixed, String...jsonables);
+	
+	boolean hasPermission(Subject subject, String permission);
 	
 	boolean checkUUID(UUID uuid);
 
