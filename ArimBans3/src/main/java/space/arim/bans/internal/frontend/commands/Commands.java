@@ -34,6 +34,7 @@ import space.arim.bans.api.CommandType.IpSpec;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
+import space.arim.bans.api.exception.InternalStateException;
 
 public class Commands implements CommandsMaster {
 	
@@ -359,6 +360,8 @@ public class Commands implements CommandsMaster {
 				usage.put(cmd, additions_kicks_usage);
 				perm.put(cmd, (cmd.ipSpec().equals(IpSpec.IP)) ? additions_kicks_permission_noip : additions_kicks_permission_command);
 				break;
+			default:
+				throw new InternalStateException("WIP!");
 			}
 		}
 		

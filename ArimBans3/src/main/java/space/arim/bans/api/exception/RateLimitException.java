@@ -26,4 +26,8 @@ public class RateLimitException extends InternalAPIException {
 		super("Rate limit reached for " + service);
 	}
 
+	public RateLimitException(String service, FetcherException cause) {
+		super("Rate limit reached for " + service, cause);
+	}
+
 }
