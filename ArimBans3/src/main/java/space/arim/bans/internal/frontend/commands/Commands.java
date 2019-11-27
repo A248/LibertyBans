@@ -278,7 +278,6 @@ public class Commands implements CommandsMaster {
 		center.subjects().sendMessage(subject, usage.get(command));
 	}
 	
-	@SuppressWarnings("incomplete-switch")
 	@Override
 	public void refreshMessages() {
 		
