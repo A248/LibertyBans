@@ -97,7 +97,7 @@ public class Formats implements FormatsMaster {
 			mult = 60_000_000L;
 		}
 		try {
-			return Math.addExact(System.currentTimeMillis(), Math.multiplyExact(mult, Long.parseLong(timespan)));
+			return Math.multiplyExact(mult, Long.parseLong(timespan));
 		} catch (NumberFormatException | ArithmeticException ex) {
 			return 0;
 		}
@@ -106,11 +106,6 @@ public class Formats implements FormatsMaster {
 	@Override
 	public String getConsoleDisplay() {
 		return console_display;
-	}
-	
-	@Override
-	public List<String> getPermanentArguments() {
-		return permanent_arguments;
 	}
 	
 	@Override

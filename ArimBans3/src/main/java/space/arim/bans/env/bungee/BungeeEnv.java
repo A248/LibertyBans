@@ -47,7 +47,6 @@ public class BungeeEnv implements Environment {
 	private final BungeeCommands commands;
 	
 	private boolean registered = false;
-	private boolean json;
 	
 	public BungeeEnv(Plugin plugin) {
 		this.plugin = plugin;

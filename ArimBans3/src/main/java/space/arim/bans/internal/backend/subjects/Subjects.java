@@ -74,8 +74,10 @@ public class Subjects implements SubjectsMaster {
 	}
 	
 	@Override
-	public void sendMessage(Subject subject, String jsonable) {
-		center.environment().sendMessage(subject, (usePrefix) ? prefix + jsonable : jsonable, json);
+	public void sendMessage(Subject subject, boolean prefixed, String...jsonables) {
+		for (int n = 0; n < jsonables.length; n++) {
+			center.environment().sendMessage(subject, (n == 0 && usePrefix && !prefixed) ? prefix + jsonables[n] : jsonables[n], json);
+		}
 	}
 	
 	@Override
