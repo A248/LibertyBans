@@ -18,8 +18,6 @@
  */
 package space.arim.bans.internal.frontend.format;
 
-import java.util.List;
-
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.internal.Component;
@@ -43,7 +41,5 @@ public interface FormatsMaster extends Component {
 	long toMillis(String timespan);
 	
 	String getConsoleDisplay();
-	
-	List<String> getPermanentArguments();
 	
 }

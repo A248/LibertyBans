@@ -46,12 +46,13 @@ public class Commands implements CommandsMaster {
 	
 	private final ConcurrentHashMap<CommandType, String> usage = new ConcurrentHashMap<CommandType, String>();
 	private final ConcurrentHashMap<CommandType, String> perm = new ConcurrentHashMap<CommandType, String>();
-	private final ConcurrentHashMap<CommandType, String> permIp = new ConcurrentHashMap<CommandType, String>();
 	
 	// Maps related to punishment additions.
-	private final ConcurrentHashMap<PunishmentType, String> exempt = new ConcurrentHashMap<PunishmentType, String>();
 	private final ConcurrentHashMap<PunishmentType, String> permTime = new ConcurrentHashMap<PunishmentType, String>();
 	private final ConcurrentHashMap<PunishmentType, List<String>> durPerms = new ConcurrentHashMap<PunishmentType, List<String>>();
+	private final ConcurrentHashMap<PunishmentType, String> exempt = new ConcurrentHashMap<PunishmentType, String>();
+	String additions_bans_error_conflicting = "&c&o%TARGET%&r&7is already banned!";
+	String additions_mutes_error_conflicting = "&c&o%TARGET%&r&7is already muted!";
 	
 	// TODO Load these maps from messages.yml in #refreshMessages()
 	private final ConcurrentHashMap<CommandType, Integer> perPage = new ConcurrentHashMap<CommandType, Integer>();
@@ -65,13 +66,13 @@ public class Commands implements CommandsMaster {
 		this.center = center;
 		String invalid_string = ArimBansLibrary.INVALID_STRING_CODE;
 		for (PunishmentType pun : PunishmentType.values()) {
-			exempt.put(pun, invalid_string);
 			permTime.put(pun, invalid_string);
+			durPerms.put(pun, Arrays.asList(invalid_string));
+			exempt.put(pun, invalid_string);
 		}
 		for (CommandType cmd : CommandType.values()) {
 			usage.put(cmd, invalid_string);
 			perm.put(cmd, invalid_string);
-			permIp.put(cmd, invalid_string);
 			perPage.put(cmd, 0);
 			maxPage.put(cmd, invalid_string);
 			noPage.put(cmd, invalid_string);
@@ -234,8 +235,14 @@ public class Commands implements CommandsMaster {
 			center.subjects().sendMessage(operator, lister.maxPagesMsg);
 			return;
 		}
-		for (String h : lister.getHeader()) {
-			center.subjects().sendMessage(operator, h.replaceAll("%PAGE%", Integer.toString(lister.page)).replaceAll("%MAXPAGE%", Integer.toString(maxPage)));
+		List<String> header = lister.getHeader();
+		List<String> body = lister.getFormat();
+		List<String> footer = lister.getFooter();
+		for (int n = 0; n < header.size(); n++) {
+			header.set(n, header.get(n).replaceAll("%PAGE%", Integer.toString(lister.page)).replaceAll("%MAXPAGE%", Integer.toString(maxPage)));
+		}
+		for (int n = 0; n < footer.size(); n++) {
+			footer.set(n, footer.get(n).replaceAll("%PAGE%", Integer.toString(lister.page)).replaceAll("%MAXPAGE%", Integer.toString(maxPage)));
 		}
 		punishments.sort(new Comparator<Punishment>() {
 			@Override
@@ -243,14 +250,15 @@ public class Commands implements CommandsMaster {
 				return (int) (p1.date() - p2.date());
 			}
 		});
+		center.subjects().sendMessage(operator, header.toArray(new String[0]));
 		for (Punishment p : punishments) {
-			for (String s : lister.getFormat()) {
-				center.subjects().sendMessage(operator, encodeVars(s, p));
+			String[] msgs = body.toArray(new String[0]);
+			for (int n = 0; n < msgs.length; n++) {
+				msgs[n] = encodeVars(msgs[n], p);
 			}
+			center.subjects().sendMessage(operator, true, msgs);
 		}
-		for (String f : lister.getFooter()) {
-			center.subjects().sendMessage(operator, f.replaceAll("%PAGE%", Integer.toString(lister.page)).replaceAll("%MAXPAGE%", Integer.toString(maxPage)));
-		}
+		center.subjects().sendMessage(operator, true, footer.toArray(new String[0]));
 	}
 
 	@Override
@@ -282,6 +290,33 @@ public class Commands implements CommandsMaster {
 		String additions_warns_usage = center.config().getMessagesString("additions.warns.usage");
 		String additions_kicks_usage = center.config().getMessagesString("additions.kicks.usage");
 		
+		String additions_bans_permission_command = center.config().getMessagesString("additions.bans.permission.command");
+		String additions_mutes_permission_command = center.config().getMessagesString("additions.mutes.permission.command");
+		String additions_warns_permission_command = center.config().getMessagesString("additions.warns.permission.command");
+		String additions_kicks_permission_command = center.config().getMessagesString("additions.kicks.permission.command");
+		
+		String additions_bans_permission_noip = center.config().getMessagesString("additions.bans.permission.no-ip");
+		String additions_mutes_permission_noip = center.config().getMessagesString("additions.mutes.permission.no-ip");
+		String additions_warns_permission_noip = center.config().getMessagesString("additions.warns.permission.no-ip");
+		String additions_kicks_permission_noip = center.config().getMessagesString("additions.kicks.permission.no-ip");
+		
+		String additions_bans_permission_time = center.config().getMessagesString("additions.bans.permission.time");
+		String additions_mutes_permission_time = center.config().getMessagesString("additions.mutes.permission.time");
+		String additions_warns_permission_time = center.config().getMessagesString("additions.warns.permission.time");
+		
+		List<String> additions_bans_permission_durPerms = center.config().getMessagesStrings("additions.bans.permission.dur-perms");
+		List<String> additions_mutes_permission_durPerms = center.config().getMessagesStrings("additions.bans.permission.dur-perms");
+		List<String> additions_warns_permission_durPerms = center.config().getMessagesStrings("additions.mutes.permission.dur-perms");
+		
+		additions_bans_error_conflicting = center.config().getMessagesString("additions.bans.error.conflicting");
+		additions_mutes_error_conflicting = center.config().getMessagesString("additions.mutes.error.conflicting");
+		
+		String additions_bans_error_exempt = center.config().getMessagesString("additions.bans.error.exempt");
+		String additions_mutes_error_exempt = center.config().getMessagesString("additions.mutes.error.exempt");
+		String additions_warns_error_exempt = center.config().getMessagesString("additions.warns.error.exempt");
+		String additions_kicks_error_exempt = center.config().getMessagesString("additions.kicks.error.exempt");
+		
+		/*
 		String removals_unbans_usage = center.config().getMessagesString("removals.unbans.usage");
 		String removals_unmutes_usage = center.config().getMessagesString("removals.unmutes.usage");
 		String removals_unwarns_usage = center.config().getMessagesString("removals.unwarns.usage");
@@ -303,72 +338,42 @@ public class Commands implements CommandsMaster {
 		String noPermIpWarn = center.config().getMessagesString("warns.permission.no-ip");
 		String noPermIpKick = center.config().getMessagesString("kicks.permission.no-ip");
 		
-		String exemptBan = center.config().getMessagesString("bans.permission.exempt");
-		String exemptMute = center.config().getMessagesString("mutes.permission.exempt");
-		String exemptWarn = center.config().getMessagesString("warns.permission.exempt");
-		String exemptKick = center.config().getMessagesString("kicks.permission.exempt");
-		
-		String noPermTimeBan = center.config().getMessagesString("bans.permission.time");
-		String noPermTimeMute = center.config().getMessagesString("mutes.permission.time");
-		String noPermTimeWarn = center.config().getMessagesString("kicks.permission.time");
-		
-		List<String> durPermsBan = center.config().getMessagesStrings(".permission.dur-perms");
-		List<String> durPermsMute = center.config().getMessagesStrings(".permission.dur-perms");
-		List<String> durPermsWarn = center.config().getMessagesStrings(".permission.dur-perms");
-		
-		List<String> permArgs = center.formats().getPermanentArguments();
+
+		*/
 		
 		for (CommandType cmd : CommandType.values()) {
 			switch (cmd.subCategory()) {
 			case BAN:
 				usage.put(cmd, additions_bans_usage);
-				if (cmd.ipSpec().equals(IpSpec.IP)) {
-					
-				} else {
-					
-				}
+				perm.put(cmd, (cmd.ipSpec().equals(IpSpec.IP)) ? additions_bans_permission_noip : additions_bans_permission_command);
 				break;
 			case MUTE:
 				usage.put(cmd, additions_mutes_usage);
+				perm.put(cmd, (cmd.ipSpec().equals(IpSpec.IP)) ? additions_mutes_permission_noip : additions_mutes_permission_command);
+				break;
 			case WARN:
 				usage.put(cmd, additions_warns_usage);
+				perm.put(cmd, (cmd.ipSpec().equals(IpSpec.IP)) ? additions_warns_permission_noip : additions_warns_permission_command);
+				break;
 			case KICK:
 				usage.put(cmd, additions_kicks_usage);
+				perm.put(cmd, (cmd.ipSpec().equals(IpSpec.IP)) ? additions_kicks_permission_noip : additions_kicks_permission_command);
+				break;
 			}
 		}
 		
-		/*
-		usagePun.put(PunishmentType.BAN, usageBan);
-		usagePun.put(PunishmentType.MUTE, usageMute);
-		usagePun.put(PunishmentType.WARN, usageWarn);
-		usagePun.put(PunishmentType.KICK, usageKick);
+		permTime.put(PunishmentType.BAN, additions_bans_permission_time);
+		permTime.put(PunishmentType.MUTE, additions_mutes_permission_time);
+		permTime.put(PunishmentType.WARN, additions_warns_permission_time);
 		
-		permCmd.put(PunishmentType.BAN, noPermBan);
-		permCmd.put(PunishmentType.MUTE, noPermMute);
-		permCmd.put(PunishmentType.WARN, noPermWarn);
-		permCmd.put(PunishmentType.KICK, noPermKick);
+		durPerms.put(PunishmentType.BAN, additions_bans_permission_durPerms);
+		durPerms.put(PunishmentType.MUTE, additions_mutes_permission_durPerms);
+		durPerms.put(PunishmentType.WARN, additions_warns_permission_durPerms);
 		
-		permIp.put(PunishmentType.BAN, noPermIpBan);
-		permIp.put(PunishmentType.MUTE, noPermIpMute);
-		permIp.put(PunishmentType.WARN, noPermIpWarn);
-		permIp.put(PunishmentType.KICK, noPermIpKick);
-		/**/
-		
-		exempt.put(PunishmentType.BAN,  exemptBan);
-		exempt.put(PunishmentType.MUTE, exemptMute);
-		exempt.put(PunishmentType.WARN, exemptWarn);
-		exempt.put(PunishmentType.KICK, exemptKick);
-		
-		permTime.put(PunishmentType.BAN, noPermTimeBan);
-		permTime.put(PunishmentType.MUTE, noPermTimeMute);
-		permTime.put(PunishmentType.WARN, noPermTimeWarn);
-		
-		durPermsBan.addAll(permArgs);
-		durPermsMute.addAll(permArgs);
-		durPermsWarn.addAll(permArgs);
-		durPerms.put(PunishmentType.BAN, durPermsBan);
-		durPerms.put(PunishmentType.MUTE, durPermsMute);
-		durPerms.put(PunishmentType.WARN, durPermsWarn);
+		exempt.put(PunishmentType.BAN,  additions_bans_error_exempt);
+		exempt.put(PunishmentType.MUTE, additions_mutes_error_exempt);
+		exempt.put(PunishmentType.WARN, additions_warns_error_exempt);
+		exempt.put(PunishmentType.KICK, additions_kicks_error_exempt);
 		
 	}
 
