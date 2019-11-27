@@ -50,6 +50,7 @@ fetchers:
     ipstack:
       enabled: false
       key: 'nokey'
-    freegeoip:
-      enabled: true
+    freegeoip: true
+    ip-api: true
+    ipapi: true
 config-version: 1

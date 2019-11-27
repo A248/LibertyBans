@@ -22,6 +22,7 @@ import java.sql.ResultSet;
 import java.util.List;
 import java.util.UUID;
 
+import space.arim.bans.api.exception.HttpStatusException;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.api.exception.RateLimitException;
@@ -46,7 +47,7 @@ public interface CacheMaster extends Component {
 	
 	boolean hasIp(UUID playeruuid, String ip);
 	
-	GeoIpInfo lookupIp(final String address) throws NoGeoIpException, RateLimitException;
+	GeoIpInfo lookupIp(final String address) throws NoGeoIpException, RateLimitException, HttpStatusException;
 	
 	void loadAll(ResultSet data);
 }

@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.exception.FetcherException;
+import space.arim.bans.api.exception.HttpStatusException;
 import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
@@ -160,7 +161,7 @@ public class Cache implements CacheMaster {
 	}
 	
 	@Override
-	public GeoIpInfo lookupIp(final String address) throws NoGeoIpException, RateLimitException {
+	public GeoIpInfo lookupIp(final String address) throws NoGeoIpException, RateLimitException, HttpStatusException {
 		if (ipStack) {
 			try {
 				return FetcherUtil.ipStack(address, ipStackKey);

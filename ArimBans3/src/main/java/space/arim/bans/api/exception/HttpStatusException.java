@@ -18,16 +18,17 @@
  */
 package space.arim.bans.api.exception;
 
-public class RateLimitException extends InternalAPIException {
+import space.arim.bans.api.util.HttpStatus;
 
-	private static final long serialVersionUID = 3081467999598825482L;
+public class HttpStatusException extends InternalAPIException {
 
-	public RateLimitException(String service) {
-		super("Rate limit reached for " + service);
-	}
+	private static final long serialVersionUID = -744115099274403312L;
+	
+	public final HttpStatus status;
 
-	public RateLimitException(String service, Exception cause) {
-		super("Rate limit reached for " + service, cause);
+	public HttpStatusException(HttpStatus status) {
+		super("Encountered HttpStatus " + status.getCode() + ": " + status.getName());
+		this.status = status;
 	}
 
 }
