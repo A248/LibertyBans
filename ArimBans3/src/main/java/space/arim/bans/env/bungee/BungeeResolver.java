@@ -24,7 +24,7 @@ import java.util.UUID;
 import space.arim.bans.api.exception.FetcherException;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.bans.api.util.Fetcher;
+import space.arim.bans.api.util.FetcherUtil;
 import space.arim.bans.env.Resolver;
 
 public class BungeeResolver implements Resolver {
@@ -48,14 +48,14 @@ public class BungeeResolver implements Resolver {
 		} catch (MissingCacheException ex) {}
 		if (ashconFetcher) {
 			try {
-				UUID uuid3 = Fetcher.ashconApi(name);
+				UUID uuid3 = FetcherUtil.ashconApi(name);
 				environment.center().cache().update(uuid3, name, null);
 				return uuid3;
 			} catch (FetcherException ex) {}
 		}
 		if (mojangFetcher) {
 			try {
-				UUID uuid4 = Fetcher.mojangApi(name);
+				UUID uuid4 = FetcherUtil.mojangApi(name);
 				environment.center().cache().update(uuid4, name, null);
 				return uuid4;
 			} catch (FetcherException ex) {}
@@ -72,14 +72,14 @@ public class BungeeResolver implements Resolver {
 		} catch (MissingCacheException ex) {}
 		if (ashconFetcher) {
 			try {
-				String name3 = Fetcher.ashconApi(playeruuid);
+				String name3 = FetcherUtil.ashconApi(playeruuid);
 				environment.center().cache().update(playeruuid, name3, null);
 				return name3;
 			} catch (FetcherException ex) {}
 		}
 		if (mojangFetcher) {
 			try {
-				String name4 = Fetcher.mojangApi(playeruuid);
+				String name4 = FetcherUtil.mojangApi(playeruuid);
 				environment.center().cache().update(playeruuid, name4, null);
 				return name4;
 			} catch (FetcherException ex) {}

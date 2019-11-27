@@ -32,7 +32,7 @@ import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.api.exception.RateLimitException;
-import space.arim.bans.api.util.Fetcher;
+import space.arim.bans.api.util.FetcherUtil;
 import space.arim.bans.api.util.GeoIpInfo;
 import space.arim.bans.internal.sql.SqlQuery;
 
@@ -163,14 +163,14 @@ public class Cache implements CacheMaster {
 	public GeoIpInfo lookupIp(final String address) throws NoGeoIpException, RateLimitException {
 		if (ipStack) {
 			try {
-				return Fetcher.ipStack(address, ipStackKey);
+				return FetcherUtil.ipStack(address, ipStackKey);
 			} catch (FetcherException ex) {
 				center.logError(ex);
 			}
 		}
 		if (freeGeoIp) {
 			try {
-				return Fetcher.freeGeoIp(address);
+				return FetcherUtil.freeGeoIp(address);
 			} catch (FetcherException ex) {
 				center.logError(ex);
 			}
