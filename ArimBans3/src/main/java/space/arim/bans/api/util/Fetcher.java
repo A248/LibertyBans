@@ -35,7 +35,7 @@ import org.json.simple.parser.ParseException;
 import space.arim.bans.api.exception.FetcherException;
 import space.arim.bans.api.exception.RateLimitException;
 
-public final class FetcherUtil {
+public final class Fetcher {
 	
 	private static final String ASHCON_API = "https://api.ashcon.app/mojang/v2/user/";
 	private static final String MOJANG_API_FROM_NAME = "https://api.mojang.com/users/profiles/minecraft/";
@@ -46,7 +46,7 @@ public final class FetcherUtil {
     private static final String IPSTACK_API = "http://api.ipstack.com/";
     private static final String FREE_GEOIP_API = "https://freegeoip.app/json/";
     
-	private FetcherUtil() {}
+	private Fetcher() {}
 	
 	private static JSONObject getDataFromUrl(String url) throws ProtocolException, MalformedURLException, IOException, ParseException, FetcherException {
 		HttpURLConnection connection = (HttpURLConnection) (new URL(url)).openConnection();
@@ -70,7 +70,7 @@ public final class FetcherUtil {
 		} catch (IOException | ParseException ex) {
 			throw new FetcherException("Could not connect to " + url, ex);
 		}
-		return UUID.fromString(MiscUtil.expandUUID(json.get("id").toString()));
+		return UUID.fromString(Tools.expandUUID(json.get("id").toString()));
 	}
 	
 	public static String mojangApi(final UUID playeruuid) throws FetcherException {
@@ -180,7 +180,7 @@ public final class FetcherUtil {
 		} catch (IOException | ParseException ex) {
 			throw new FetcherException("Could not connect to " + url);
 		} catch (FetcherException ex) {
-			if (ex.code == 403) {
+			if (ex.code == HttpStatus.FORBIDDEN) {
 				throw new RateLimitException("FreeGeoIp");
 			}
 			throw ex;

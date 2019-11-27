@@ -29,9 +29,9 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 
-public final class MiscUtil {
+public final class Tools {
 	
-	private MiscUtil() {}
+	private Tools() {}
 	
 	public static String expandUUID(String uuid) {
 		return uuid.substring(0, 8) + "-" + uuid.substring(8, 12) + "-" + uuid.substring(12, 16)
@@ -48,11 +48,14 @@ public final class MiscUtil {
 		URL,
 		CMD,
 		SGT,
-		INS
+		INS;
+		
+		static final int TAG_LENGTH = 3;
+		
 	}
 	
 	private static TagType jsonTag(String node) {
-		if (node.length() < 5) {
+		if (node.length() < TagType.TAG_LENGTH + 2) {
 			return TagType.NONE;
 		}
 		switch (node.substring(0, 4)) {

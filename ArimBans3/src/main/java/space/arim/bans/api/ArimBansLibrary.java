@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.bans.api.util.MiscUtil;
+import space.arim.bans.api.util.Tools;
 
 public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 
@@ -177,7 +177,7 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 * @return true if the address is valid, false otherwise
 	 */
 	default boolean checkAddress(String address) {
-		return MiscUtil.validAddress(address);
+		return Tools.validAddress(address);
 	}
 	
 }
