@@ -59,7 +59,8 @@ public enum HttpStatus {
 	REQUEST_RANGE_NOT_SATISFIABLE(416, "Request Range Not Satisfiable", "The range of the resource does not overlap with the values specified in the requests Range header field and not alternative If-Range field was supplied."),
 	EXPECTATION_FAILED(417, "Expectation Failed", "The expectation supplied in the Expectation header field could not be met by the server."),
 	I_AM_A_TEAPOT(418, "I'm a teapot", "I'm a teapot"),
-
+	TOO_MANY_REQUESTS(429, "Too Many Requests", "The user has sent too many requests in a given amount of time (\"rate limiting\")"),
+	
 	INTERNAL_SERVER_ERROR(500, "Internal Server Error", "The request was unsuccessful because the server encountered an unexpected error."),
 	NOT_IMPLEMENTED(501, "Not Implemented", "The server does not support the request."),
 	BAD_GATEWAY(502, "Bad Gateway", "The server, whilst acting as a proxy, received an invalid response from the server that was fulfilling the request."),
