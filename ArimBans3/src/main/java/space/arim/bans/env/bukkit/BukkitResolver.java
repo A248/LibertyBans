@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.bukkit.OfflinePlayer;
 import space.arim.bans.api.exception.FetcherException;
+import space.arim.bans.api.exception.HttpStatusException;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.util.FetcherUtil;
@@ -62,14 +63,14 @@ public class BukkitResolver implements Resolver {
 				UUID uuid3 = FetcherUtil.ashconApi(name);
 				environment.center().cache().update(uuid3, name, null);
 				return uuid3;
-			} catch (FetcherException ex) {}
+			} catch (FetcherException | HttpStatusException ex) {}
 		}
 		if (mojangFetcher) {
 			try {
 				UUID uuid4 = FetcherUtil.mojangApi(name);
 				environment.center().cache().update(uuid4, name, null);
 				return uuid4;
-			} catch (FetcherException ex) {}
+			} catch (FetcherException | HttpStatusException ex) {}
 		}
 		throw new PlayerNotFoundException(name);
 	}
@@ -95,14 +96,14 @@ public class BukkitResolver implements Resolver {
 				String name3 = FetcherUtil.ashconApi(playeruuid);
 				environment.center().cache().update(playeruuid, name3, null);
 				return name3;
-			} catch (FetcherException ex) {}
+			} catch (FetcherException | HttpStatusException ex) {}
 		}
 		if (mojangFetcher) {
 			try {
 				String name4 = FetcherUtil.mojangApi(playeruuid);
 				environment.center().cache().update(playeruuid, name4, null);
 				return name4;
-			} catch (FetcherException ex) {}
+			} catch (FetcherException | HttpStatusException ex) {}
 		}
 		throw new PlayerNotFoundException(playeruuid);
 	}
