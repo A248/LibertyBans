@@ -46,11 +46,10 @@ fetchers:
     internal: true
     ashcon: true
     mojang: true
-  ips:
+  geoip:
     ipstack:
       enabled: false
       key: 'nokey'
     freegeoip: true
-    ip-api: true
     ipapi: true
 config-version: 1
