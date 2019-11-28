@@ -38,7 +38,7 @@ commands:
   op-permissions: true
   reasons:
     permit-blank: false
-    default-reason: 'None.'
+    default-reason: 'No reason stated.'
   block-for-muted:
     - 'me'
 priorities:
