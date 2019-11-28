@@ -44,7 +44,6 @@ public class Formats implements FormatsMaster {
 
 	public Formats(ArimBans center) {
 		this.center = center;
-		refreshConfig();
 	}
 
 	@Override
@@ -58,7 +57,7 @@ public class Formats implements FormatsMaster {
 		switch (subj.getType()) {
 		case PLAYER:
 			try {
-				return center.environment().resolver().nameFromUUID(subj.getUUID());
+				return center.resolver().resolveUUID(subj.getUUID());
 			} catch (PlayerNotFoundException ex) {
 				throw new InvalidSubjectException("Subject's UUID could not be resolved to a name!", ex);
 			}
@@ -120,7 +119,8 @@ public class Formats implements FormatsMaster {
 		} catch (IllegalArgumentException ex) {
 			dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		}
-		dateFormatter.setTimeZone(TimeZone.getDefault());
+		
+		dateFormatter.getCalendar().setTimeZone(TimeZone.getDefault());
 		
 		permanent_arguments = center.config().getConfigStrings("formatting.permanent-arguments");
 		
