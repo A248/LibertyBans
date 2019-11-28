@@ -20,6 +20,7 @@ package space.arim.bans.env.bungee;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -33,6 +34,7 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.InvalidSubjectException;
+import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.util.ToolsUtil;
 import space.arim.bans.env.Environment;
 
@@ -42,16 +44,15 @@ public class BungeeEnv implements Environment {
 	private final Set<EnvLibrary> libraries = loadLibraries();
 	private ArimBans center;
 	private final BungeeEnforcer enforcer;
-	private final BungeeResolver resolver;
 	private final BungeeListener listener;
 	private final BungeeCommands commands;
 	
+	private boolean internalFetcher = true;
 	private boolean registered = false;
 	
 	public BungeeEnv(Plugin plugin) {
 		this.plugin = plugin;
 		this.enforcer = new BungeeEnforcer(this);
-		this.resolver = new BungeeResolver(this);
 		this.listener = new BungeeListener(this);
 		this.commands = new BungeeCommands(this);
 	}
@@ -79,7 +80,7 @@ public class BungeeEnv implements Environment {
 			return false;
 		} else if (subj.getType().equals(SubjectType.IP)) {
 			for (ProxiedPlayer check : plugin.getProxy().getPlayers()) {
-				if (center.cache().hasIp(check.getUniqueId(), subj.getIP())) {
+				if (center.resolver().hasIp(check.getUniqueId(), subj.getIP())) {
 					return true;
 				}
 			}
@@ -158,7 +159,7 @@ public class BungeeEnv implements Environment {
 			}
 		} else if (subject.getType().equals(SubjectType.IP)) {
 			for (ProxiedPlayer check : plugin.getProxy().getPlayers()) {
-				if (center.cache().hasIp(check.getUniqueId(), subject.getIP())) {
+				if (center.resolver().hasIp(check.getUniqueId(), subject.getIP())) {
 					applicable.add(check);
 				}
 			}
@@ -167,8 +168,27 @@ public class BungeeEnv implements Environment {
 	}
 	
 	@Override
-	public void runAsync(Runnable command) {
-		plugin.getProxy().getScheduler().runAsync(plugin, command);
+	public UUID uuidFromName(String name) throws PlayerNotFoundException {
+		if (internalFetcher) {
+			for (final ProxiedPlayer player : plugin.getProxy().getPlayers()) {
+				if (player.getName().equals(name)) {
+					return player.getUniqueId();
+				}
+			}
+		}
+		throw new PlayerNotFoundException(name);
+	}
+	
+	@Override
+	public String nameFromUUID(UUID uuid) throws PlayerNotFoundException {
+		if (internalFetcher) {
+			for (final ProxiedPlayer player : plugin.getProxy().getPlayers()) {
+				if (player.getUniqueId().equals(uuid)) {
+					return player.getName();
+				}
+			}
+		}
+		throw new PlayerNotFoundException(uuid);
 	}
 	
 	public Plugin plugin() {
@@ -182,11 +202,6 @@ public class BungeeEnv implements Environment {
 	@Override
 	public BungeeEnforcer enforcer() {
 		return enforcer;
-	}
-	
-	@Override
-	public BungeeResolver resolver() {
-		return resolver;
 	}
 	
 	@Override
@@ -215,10 +230,14 @@ public class BungeeEnv implements Environment {
 	}
 	
 	@Override
+	public void refreshConfig() {
+		internalFetcher = center.config().getConfigBoolean("fetchers.uuids.internal");
+	}
+	
+	@Override
 	public void close() {
 		commands.close();
 		listener.close();
-		resolver.close();
 		enforcer.close();
 	}
 	

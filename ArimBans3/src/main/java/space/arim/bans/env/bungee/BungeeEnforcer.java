@@ -70,7 +70,7 @@ public class BungeeEnforcer implements Enforcer {
 				environment.center().logError(ex);
 			}
 		} else {
-			List<String> ips = environment.center().cache().getIps(evt.getConnection().getUniqueId());
+			List<String> ips = environment.center().resolver().getIps(evt.getConnection().getUniqueId());
 			ips.add(evt.getConnection().getAddress().getAddress().getHostAddress());
 			for (String addr : ips) {
 				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
@@ -106,7 +106,7 @@ public class BungeeEnforcer implements Enforcer {
 				environment.center().logError(ex);
 			}
 		} else {
-			for (String addr : environment.center().cache().getIps(player.getUniqueId())) {
+			for (String addr : environment.center().resolver().getIps(player.getUniqueId())) {
 				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
 					evt.setCancelled(true);
 					try {
@@ -123,7 +123,7 @@ public class BungeeEnforcer implements Enforcer {
 		if (environment.center() == null) {
 			 cacheFailed(evt.getConnection().getName());
 		}
-		environment.center().cache().update(evt.getConnection().getUniqueId(), evt.getConnection().getName(), evt.getConnection().getAddress().getAddress().getHostAddress());
+		environment.center().resolver().update(evt.getConnection().getUniqueId(), evt.getConnection().getName(), evt.getConnection().getAddress().getAddress().getHostAddress());
 	}
 
 	@Override

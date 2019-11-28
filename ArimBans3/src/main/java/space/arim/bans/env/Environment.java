@@ -20,9 +20,11 @@ package space.arim.bans.env;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import space.arim.bans.api.Subject;
+import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.internal.Configurable;
 
 public interface Environment extends Configurable {
@@ -33,11 +35,11 @@ public interface Environment extends Configurable {
 	
 	boolean hasPermission(Subject subject, String permission, boolean opPerms);
 	
-	void runAsync(Runnable command);
-	
 	Enforcer enforcer();
 	
-	Resolver resolver();
+	UUID uuidFromName(String name) throws PlayerNotFoundException;
+	
+	String nameFromUUID(UUID uuid) throws PlayerNotFoundException;
 	
 	Logger logger();
 	

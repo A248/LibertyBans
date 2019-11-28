@@ -20,8 +20,10 @@ package space.arim.bans.env.bukkit;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Logger;
 
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -32,6 +34,7 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.InvalidSubjectException;
+import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.util.ToolsUtil;
 import space.arim.bans.env.Environment;
 
@@ -41,17 +44,15 @@ public class BukkitEnv implements Environment {
 	private final Set<EnvLibrary> libraries = loadLibraries();
 	private ArimBans center;
 	private final BukkitEnforcer enforcer;
-	private final BukkitResolver resolver;
 	private final BukkitListener listener;
 	private final BukkitCommands commands;
 	
+	private boolean internalFetcher = true;
 	private boolean registered = false;
 
 	public BukkitEnv(JavaPlugin plugin) {
 		this.plugin = plugin;
-		refreshConfig();
 		this.enforcer = new BukkitEnforcer(this);
-		this.resolver = new BukkitResolver(this);
 		this.listener = new BukkitListener(this);
 		this.commands = new BukkitCommands(this);
 	}
@@ -80,7 +81,7 @@ public class BukkitEnv implements Environment {
 			return false;
 		} else if (subj.getType().equals(SubjectType.IP)) {
 			for (Player check : plugin.getServer().getOnlinePlayers()) {
-				if (center.cache().hasIp(check.getUniqueId(), subj.getIP())) {
+				if (center.resolver().hasIp(check.getUniqueId(), subj.getIP())) {
 					return true;
 				}
 			}
@@ -159,7 +160,7 @@ public class BukkitEnv implements Environment {
 			}
 		} else if (subject.getType().equals(SubjectType.IP)) {
 			for (Player check : plugin.getServer().getOnlinePlayers()) {
-				if (center.cache().hasIp(check.getUniqueId(), subject.getIP())) {
+				if (center.resolver().hasIp(check.getUniqueId(), subject.getIP())) {
 					applicable.add(check);
 				}
 			}
@@ -168,8 +169,27 @@ public class BukkitEnv implements Environment {
 	}
 	
 	@Override
-	public void runAsync(Runnable command) {
-		plugin.getServer().getScheduler().runTaskAsynchronously(plugin, command);
+	public UUID uuidFromName(String name) throws PlayerNotFoundException {
+		if (internalFetcher) {
+			for (final OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
+				if (player.getName().equalsIgnoreCase(name)) {
+					return player.getUniqueId();
+				}
+			}
+		}
+		throw new PlayerNotFoundException(name);
+	}
+	
+	@Override
+	public String nameFromUUID(UUID uuid) throws PlayerNotFoundException {
+		if (internalFetcher) {
+			for (final OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
+				if (player.getUniqueId().equals(uuid)) {
+					return player.getName();
+				}
+			}
+		}
+		throw new PlayerNotFoundException(uuid);
 	}
 	
 	public JavaPlugin plugin() {
@@ -183,11 +203,6 @@ public class BukkitEnv implements Environment {
 	@Override
 	public BukkitEnforcer enforcer() {
 		return enforcer;
-	}
-	
-	@Override
-	public BukkitResolver resolver() {
-		return resolver;
 	}
 
 	@Override
@@ -216,13 +231,17 @@ public class BukkitEnv implements Environment {
 	}
 	
 	@Override
+	public void refreshConfig() {
+		internalFetcher = center.config().getConfigBoolean("fetchers.uuids.internal");
+	}
+	
+	@Override
 	public void close() {
 		if (registered) {
 			HandlerList.unregisterAll(listener);
 		}
 		commands.close();
 		listener.close();
-		resolver.close();
 		enforcer.close();
 	}
 

@@ -32,23 +32,28 @@ import space.arim.bans.api.exception.HttpStatusException;
 import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
+import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.exception.RateLimitException;
 import space.arim.bans.api.util.FetcherUtil;
 import space.arim.bans.api.util.GeoIpInfo;
 import space.arim.bans.internal.sql.SqlQuery;
+import space.arim.registry.RegistryPriority;
 
-public class Cache implements CacheMaster {
+public class Resolver implements ResolverMaster {
 	
 	private final ArimBans center;
 	
 	private ConcurrentHashMap<UUID, List<String>> ips = new ConcurrentHashMap<UUID, List<String>>();
 	private ConcurrentHashMap<UUID, String> uuids = new ConcurrentHashMap<UUID, String>();
 
-	private boolean ipStack;
-	private String ipStackKey;
-	private boolean freeGeoIp;
+	private boolean ashconFetcher = true;
+	private boolean mojangFetcher = true;
+	private boolean ipStack = false;
+	private String ipStackKey = "nokey";
+	private boolean freeGeoIp = true;
+	private boolean ipApi = true;
 	
-	public Cache(ArimBans center) {
+	public Resolver(ArimBans center) {
 		this.center = center;
 	}
 
@@ -176,14 +181,98 @@ public class Cache implements CacheMaster {
 				center.logError(ex);
 			}
 		}
+		if (ipApi) {
+			try {
+				return FetcherUtil.ipApi(address);
+			} catch (FetcherException ex) {
+				center.logError(ex);
+			}
+		}
 		throw new NoGeoIpException(address);
+	}
+	
+	@Override
+	public UUID resolveName(String name, boolean query) throws PlayerNotFoundException {
+		try {
+			return getUUID(name);
+		} catch (MissingCacheException ex) {}
+		try {
+			UUID uuid2 = center.environment().uuidFromName(name);
+			update(uuid2, name, null);
+			return uuid2;
+		} catch (PlayerNotFoundException ex) {}
+		if (query && ashconFetcher) {
+			try {
+				UUID uuid3 = FetcherUtil.ashconApi(name);
+				update(uuid3, name, null);
+				return uuid3;
+			} catch (FetcherException | HttpStatusException ex) {}
+		}
+		if (query && mojangFetcher) {
+			try {
+				UUID uuid4 = FetcherUtil.mojangApi(name);
+				update(uuid4, name, null);
+				return uuid4;
+			} catch (FetcherException | HttpStatusException ex) {}
+		}
+		throw new PlayerNotFoundException(name);
+	}
+	
+	@Override
+	public String resolveUUID(UUID uuid, boolean query) throws PlayerNotFoundException {
+		try {
+			return getName(uuid);
+		} catch (MissingCacheException ex) {}
+		try {
+			String name2 = center.environment().nameFromUUID(uuid);
+			update(uuid, name2, null);
+			return name2;
+		} catch (PlayerNotFoundException ex) {}
+		if (query && ashconFetcher) {
+			try {
+				String name3 = FetcherUtil.ashconApi(uuid);
+				update(uuid, name3, null);
+				return name3;
+			} catch (FetcherException | HttpStatusException ex) {}
+		}
+		if (query && mojangFetcher) {
+			try {
+				String name4 = FetcherUtil.mojangApi(uuid);
+				update(uuid, name4, null);
+				return name4;
+			} catch (FetcherException | HttpStatusException ex) {}
+		}
+		throw new PlayerNotFoundException(uuid);
 	}
 
 	@Override
+	public String getName() {
+		return center.getName();
+	}
+	
+	@Override
+	public String getAuthor() {
+		return center.getAuthor();
+	}
+
+	@Override
+	public String getVersion() {
+		return center.getVersion();
+	}
+
+	@Override
+	public byte getPriority() {
+		return RegistryPriority.HIGHER;
+	}
+	
+	@Override
 	public void refreshConfig() {
+		ashconFetcher = center.config().getConfigBoolean("fetchers.uuids.ashcon");
+		mojangFetcher = center.config().getConfigBoolean("fetchers.uuids.mojang");
 		ipStack = center.config().getConfigBoolean("fetchers.ips.ipstack.enabled");
 		ipStackKey = center.config().getConfigString("fetchers.ips.ipstack.key");
-		freeGeoIp = center.config().getConfigBoolean("fetchers.ips.freegeoip.enabled");
+		freeGeoIp = center.config().getConfigBoolean("fetchers.ips.freegeoip");
+		ipApi = center.config().getConfigBoolean("fetchers.ips.ipapi");
 	}
 
 }

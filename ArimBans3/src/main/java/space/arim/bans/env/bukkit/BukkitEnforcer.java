@@ -72,7 +72,7 @@ public class BukkitEnforcer implements Enforcer {
 				environment.center().logError(ex);
 			}
 		} else {
-			List<String> ips = environment.center().cache().getIps(evt.getUniqueId());
+			List<String> ips = environment.center().resolver().getIps(evt.getUniqueId());
 			ips.add(evt.getAddress().getHostAddress());
 			for (String addr : ips) {
 				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
@@ -102,7 +102,7 @@ public class BukkitEnforcer implements Enforcer {
 				environment.center().logError(ex);
 			}
 		} else {
-			for (String addr : environment.center().cache().getIps(evt.getPlayer().getUniqueId())) {
+			for (String addr : environment.center().resolver().getIps(evt.getPlayer().getUniqueId())) {
 				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
 					evt.setCancelled(true);
 					try {
@@ -119,7 +119,7 @@ public class BukkitEnforcer implements Enforcer {
 		if (environment.center() == null) {
 			 cacheFailed(evt.getName());
 		}
-		environment.center().cache().update(evt.getUniqueId(), evt.getName(), evt.getAddress().getHostAddress());
+		environment.center().resolver().update(evt.getUniqueId(), evt.getName(), evt.getAddress().getHostAddress());
 	}
 
 	@Override
