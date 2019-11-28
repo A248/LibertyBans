@@ -63,11 +63,11 @@ public class Sql implements SqlMaster {
 		config.setMinimumIdle(min_connections);
 		config.setMaximumPoolSize(max_connections);
 		if (mode.equals(StorageMode.MYSQL)) {
-			config.setJdbcUrl(center.config().getConfigString("storage.mysql.url").replaceAll("<host>", center.config().getConfigString("storage.mysql.host")).replaceAll("<port>", Integer.toString(center.config().getConfigInt("storage.mysql.port"))).replaceAll("<database>", center.config().getConfigString("storage.mysql.database")));
+			config.setJdbcUrl(center.config().getConfigString("storage.mysql.url").replace("<host>", center.config().getConfigString("storage.mysql.host")).replace("<port>", Integer.toString(center.config().getConfigInt("storage.mysql.port"))).replace("<database>", center.config().getConfigString("storage.mysql.database")));
 			config.setUsername(center.config().getConfigString("storage.mysql.user"));
 			config.setPassword(center.config().getConfigString("storage.mysql.password"));
 		} else if (mode.equals(StorageMode.HSQLDB)) {
-			config.setJdbcUrl(center.config().getConfigString("storage.hsqldb.url").replaceAll("<file>", center.dataFolder().getPath() + "/data;hsqldb.lock_file=false"));
+			config.setJdbcUrl(center.config().getConfigString("storage.hsqldb.url").replace("<file>", center.dataFolder().getPath() + "/data;hsqldb.lock_file=false"));
 			config.setUsername("SA");
 			config.setPassword("");
 		} else {

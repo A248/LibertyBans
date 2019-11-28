@@ -89,6 +89,7 @@ public class Formats implements FormatsMaster {
 			return -1L;
 		} else if (timespan.contains("mo")) {
 			mult = 2592000_000_000L;
+			timespan = timespan.replace("mo", "");
 		} else if (timespan.contains("d")) {
 			mult = 86400_000_000L;
 		} else if (timespan.contains("h") || timespan.contains("hr")) {

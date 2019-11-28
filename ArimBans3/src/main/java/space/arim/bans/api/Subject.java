@@ -183,7 +183,7 @@ public class Subject {
 	public String deserialise() throws InvalidSubjectException {
 		switch (this.type) {
 		case PLAYER:
-			return "[subject:uuid]" + this.uuid.toString().replaceAll("-", "");
+			return "[subject:uuid]" + this.uuid.toString().replace("-", "");
 		case IP:
 			return "[subject:addr]" + this.ip;
 		case CONSOLE:
