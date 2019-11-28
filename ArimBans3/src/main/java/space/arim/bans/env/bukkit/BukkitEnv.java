@@ -139,11 +139,11 @@ public class BukkitEnv implements Environment {
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
 			return true;
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {
-			Player target = plugin.getServer().getPlayer(subject.getUUID());
+			OfflinePlayer target = plugin.getServer().getOfflinePlayer(subject.getUUID());
 			if (target != null) {
 				return target.isOp() ? opPerms : target.getPlayer().hasPermission(permission);
 			}
-			throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subject) + " is not online or does not have a valid UUID.");
+			throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subject) + " does not have a valid UUID.");
 		} else if (subject.getType().equals(SubjectType.IP)) {
 			throw new InvalidSubjectException("Cannot invoke Environment#hasPermission(Subject, Permission[]) for IP-based subjects");
 		}
@@ -166,6 +166,15 @@ public class BukkitEnv implements Environment {
 			}
 		}
 		return applicable;
+	}
+	
+	@Override
+	public void sendForPermission(String permission, boolean useJson, String[] jsonables) {
+		for (Player player : plugin.getServer().getOnlinePlayers()) {
+			if (player.hasPermission(permission)) {
+				
+			}
+		}
 	}
 	
 	@Override

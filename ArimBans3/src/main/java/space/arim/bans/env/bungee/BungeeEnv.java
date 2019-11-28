@@ -140,7 +140,7 @@ public class BungeeEnv implements Environment {
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {
 			ProxiedPlayer target = plugin.getProxy().getPlayer(subject.getUUID());
 			if (target != null) {
-				return !target.hasPermission(permission);
+				return target.hasPermission(permission);
 			}
 			throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subject) + " is not online.");
 		} else if (subject.getType().equals(SubjectType.IP)) {
@@ -165,6 +165,11 @@ public class BungeeEnv implements Environment {
 			}
 		}
 		return applicable;
+	}
+	
+	@Override
+	public void sendForPermission(String permission, boolean useJson, String[] jsonables) {
+		
 	}
 	
 	@Override
