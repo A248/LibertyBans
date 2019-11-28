@@ -93,14 +93,14 @@ public final class FetcherUtil {
 	public static GeoIpInfo ipStack(final String address, final String key) throws FetcherException, RateLimitException, HttpStatusException {
 		Objects.requireNonNull(key, "Key must not be null!");
 		final String url = IPSTACK.getUrl(address).replace("$KEY", key);
-		JSONObject json = getJsonFromUrl(url);
-		if (json.containsKey("success")) {
-			if (!(Boolean) json.get("success")) {
+		try {
+			JSONObject json = getJsonFromUrl(url);
+			return new GeoIpInfo(address, json.get("country_code").toString(), json.get("country_name").toString(), json.get("region_code").toString(), json.get("region_name").toString(), json.get("city").toString(), json.get("zip").toString(), Double.parseDouble(json.get("latitude").toString()), Double.parseDouble(json.get("longitude").toString()));
+		} catch (HttpStatusException ex) {
+			if (ex.status == HttpStatus.UNASSIGNED_104) {
 				IPSTACK.expire();
 			}
-		}
-		try {
-			return new GeoIpInfo(address, json.get("country_code").toString(), json.get("country_name").toString(), json.get("region_code").toString(), json.get("region_name").toString(), json.get("city").toString(), json.get("zip").toString(), Double.parseDouble(json.get("latitude").toString()), Double.parseDouble(json.get("longitude").toString()));
+			throw ex;
 		} catch (NumberFormatException ex) {
 			throw new FetcherException("Could not parse JSON from " + url, ex);
 		}
