@@ -17,7 +17,13 @@ all:
     use: true
     value: '&6&lArim &r&8» '
   base-permission-message: '&cYou may not use this.'
-  invalid-target: '&c&o%TARGET%&r&7 is not a valid player or IP.'
+  invalid:
+    uuid: '&c&o%TARGET%&r&7 is not a valid player.'
+    ip: '&c&o%TARGET%&r&7 is not a valid IP.'
+    both: '&c&o%TARGET%&r&7 is not a valid player or IP.'
+  ip-selector:
+    message: '&c&o%TARGET%&r&7 has multiple IPs. Click to select an IP to use: ||%LIST%&r&7.'
+    element: '&e%IP%||ttp:&7Click to select &a%IP%&7.||cmd:/%CMD%'
   usage: '/arimbans ban, mute, etc.'
 additions:
   bans:
@@ -137,8 +143,8 @@ list:
   banlist:
     usage: '/banlist [page]'
     per-page: 10
-    none: '&cThere are no active bans.'
-    max-pages: '%PAGE% does not exist.'
+    no-pages: '&cThere are no active bans.'
+    max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
     permission:
       command: '&cYou may not view the banlist.'
       no-ip: '&cYou may not view the ip banlist.'
@@ -150,12 +156,12 @@ list:
         - '[%NUMBER%] %SUBJECT%'
         - '%REASON% / %TIME%'
       footer:
-        - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
+        - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
   mutelist:
     usage: '/mutelist [page]'
     per-page: 10
-    none: '&cThere are no active mutes.'
-    max-pages: '%PAGE% does not exist.'
+    no-pages: '&cThere are no active mutes.'
+    max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
     permission:
       command: '&cYou may not view the mutelist.'
       no-ip: '&cYou may not view the ip mutelist.'
@@ -167,12 +173,12 @@ list:
         - '[%NUMBER%] %SUBJECT%'
         - '%REASON% / %TIME%'
       footer:
-        - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
+        - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
   history:
     usage: '/history <player> [page]'
     per-page: 10
-    none: '&c&oTARGET&r&7 has no history.'
-    max-pages: '%PAGE% does not exist.'
+    no-pages: '&c&oTARGET&r&7 has no history.'
+    max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
     permission:
       command: '&cYou may not view history.'
       no-ip: '&cYou may not view history for an ip address.'
@@ -184,12 +190,12 @@ list:
         - '[%NUMBER%] %SUBJECT% / %PUNISHMENT%'
         - '%REASON% / %TIME%'
       footer:
-        - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
+        - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
   warns:
     usage: '/warns <player> [page]'
     per-page: 10
-    none: '&c&oTARGET&r&7 has no warns.'
-    max-pages: '%PAGE% does not exist.'
+    no-pages: '&c&oTARGET&r&7 has no warns.'
+    max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
     permission:
       command: '&cYou may not view warns.'
       no-ip: '&cYou may not view warns for an ip address.'
@@ -201,7 +207,7 @@ list:
         - '[%NUMBER%] %SUBJECT% / %PUNISHMENT%'
         - '%REASON% / %TIME%'
       footer:
-        - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
+        - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
 other:
   check:
     error:
