@@ -234,4 +234,9 @@ public class Config implements ConfigMaster {
 		return msgGet(key, Boolean.class);
 	}
 	
+	@Override
+	public int getMessagesInt(String key) {
+		return msgGet(key, Integer.class);
+	}
+	
 }

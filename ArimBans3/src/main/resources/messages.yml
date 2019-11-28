@@ -133,68 +133,80 @@ removals:
     successful:
       message: '&7Successfully unwarned &c&o%TARGET%&r&7.'
       notification: '%OPERATOR% unwarned %TARGET% No.&e%NUMBER%&7.'
-banlist:
-  usage: '/banlist [page]'
-  none: '&cThere are no active bans.'
-  max-pages: '%PAGE% does not exist.'
-  permission:
-    command: '&cYou may not view the banlist.'
-    no-ip: '&cYou may not view the ip banlist.'
-  layout:
-    header:
-      - '[Number] Subject'
-      - 'Reason / Time Remaining'
-    content:
-      - '[%NUMBER%] %SUBJECT%'
-      - '%REASON% / %TIME%'
-    footer:
-      - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
-mutelist:
-  usage: '/mutelist [page]'
-  none: '&cThere are no active mutes.'
-  max-pages: '%PAGE% does not exist.'
-  permission:
-    command: '&cYou may not view the mutelist.'
-    no-ip: '&cYou may not view the ip mutelist.'
-  layout:
-    header:
-      - '[Number] Subject'
-      - 'Reason / Time Remaining'
-    content:
-      - '[%NUMBER%] %SUBJECT%'
-      - '%REASON% / %TIME%'
-    footer:
-      - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
-history:
-  usage: '/history <player> [page]'
-  none: '&c&oTARGET&r&7 has no history.'
-  max-pages: '%PAGE% does not exist.'
-  permission:
-    command: '&cYou may not view history.'
-    no-ip: '&cYou may not view history for an ip address.'
-  layout:
-    header:
-      - '[Number] Subject / Punishment Type'
-      - 'Reason / Time Remaining'
-    content:
-      - '[%NUMBER%] %SUBJECT% / %PUNISHMENT%'
-      - '%REASON% / %TIME%'
-    footer:
-      - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
-warns:
-  usage: '/warns <player> [page]'
-  none: '&c&oTARGET&r&7 has no warns.'
-  max-pages: '%PAGE% does not exist.'
-  permission:
-    command: '&cYou may not view warns.'
-    no-ip: '&cYou may not view warns for an ip address.'
-  layout:
-    header:
-      - '[Number] Subject / Punishment Type'
-      - 'Reason / Time Remaining'
-    content:
-      - '[%NUMBER%] %SUBJECT% / %PUNISHMENT%'
-      - '%REASON% / %TIME%'
-    footer:
-      - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
+list:
+  banlist:
+    usage: '/banlist [page]'
+    per-page: 10
+    none: '&cThere are no active bans.'
+    max-pages: '%PAGE% does not exist.'
+    permission:
+      command: '&cYou may not view the banlist.'
+      no-ip: '&cYou may not view the ip banlist.'
+    layout:
+      header:
+        - '[Number] Subject'
+        - 'Reason / Time Remaining'
+      body:
+        - '[%NUMBER%] %SUBJECT%'
+        - '%REASON% / %TIME%'
+      footer:
+        - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
+  mutelist:
+    usage: '/mutelist [page]'
+    per-page: 10
+    none: '&cThere are no active mutes.'
+    max-pages: '%PAGE% does not exist.'
+    permission:
+      command: '&cYou may not view the mutelist.'
+      no-ip: '&cYou may not view the ip mutelist.'
+    layout:
+      header:
+        - '[Number] Subject'
+        - 'Reason / Time Remaining'
+      content:
+        - '[%NUMBER%] %SUBJECT%'
+        - '%REASON% / %TIME%'
+      footer:
+        - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
+  history:
+    usage: '/history <player> [page]'
+    per-page: 10
+    none: '&c&oTARGET&r&7 has no history.'
+    max-pages: '%PAGE% does not exist.'
+    permission:
+      command: '&cYou may not view history.'
+      no-ip: '&cYou may not view history for an ip address.'
+    layout:
+      header:
+        - '[Number] Subject / Punishment Type'
+        - 'Reason / Time Remaining'
+      content:
+        - '[%NUMBER%] %SUBJECT% / %PUNISHMENT%'
+        - '%REASON% / %TIME%'
+      footer:
+        - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
+  warns:
+    usage: '/warns <player> [page]'
+    per-page: 10
+    none: '&c&oTARGET&r&7 has no warns.'
+    max-pages: '%PAGE% does not exist.'
+    permission:
+      command: '&cYou may not view warns.'
+      no-ip: '&cYou may not view warns for an ip address.'
+    layout:
+      header:
+        - '[Number] Subject / Punishment Type'
+        - 'Reason / Time Remaining'
+      content:
+        - '[%NUMBER%] %SUBJECT% / %PUNISHMENT%'
+        - '%REASON% / %TIME%'
+      footer:
+        - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
+other:
+  check:
+    error:
+      notfound: '&cNo information found for &r&7&o%TARGET%&r&c.'
+    layout:
+      - 'Target> '
+      - 'Info> '
 messages-version: 1

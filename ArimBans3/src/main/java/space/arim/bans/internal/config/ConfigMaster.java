@@ -42,4 +42,6 @@ public interface ConfigMaster extends Component {
 	
 	boolean getMessagesBoolean(String key);
 	
+	int getMessagesInt(String key);
+	
 }
