@@ -18,17 +18,24 @@
  */
 package space.arim.bans.internal.async;
 
-import space.arim.bans.internal.Component;
+import space.arim.bans.api.AsyncExecutor;
 
-public interface AsyncMaster extends Component {
+public class AsyncWrapper implements AsyncMaster {
+
+	private final AsyncExecutor executor;
 	
-	@Override
-	default Class<?> getType() {
-		return AsyncMaster.class;
+	public AsyncWrapper(AsyncExecutor executor) {
+		this.executor = executor;
 	}
 	
-	void execute(Runnable command);
-	
-	boolean isClosed();
+	@Override
+	public void execute(Runnable command) {
+		executor.execute(command);
+	}
+
+	@Override
+	public boolean isClosed() {
+		return false;
+	}
 	
 }

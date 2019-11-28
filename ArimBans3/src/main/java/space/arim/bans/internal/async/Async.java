@@ -23,8 +23,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import space.arim.bans.ArimBans;
+import space.arim.bans.api.AsyncExecutor;
 
-public class Async implements AsyncMaster {
+public class Async implements AsyncExecutor, AsyncMaster {
 	
 	private final ArimBans center;
 	
@@ -59,6 +60,26 @@ public class Async implements AsyncMaster {
 				center.logError(ex);
 			}
 		}
+	}
+
+	@Override
+	public String getName() {
+		return center.getName();
+	}
+
+	@Override
+	public String getAuthor() {
+		return center.getAuthor();
+	}
+
+	@Override
+	public String getVersion() {
+		return center.getVersion();
+	}
+
+	@Override
+	public byte getPriority() {
+		return center.getPriority();
 	}
 	
 }

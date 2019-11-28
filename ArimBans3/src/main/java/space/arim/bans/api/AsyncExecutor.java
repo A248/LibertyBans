@@ -16,19 +16,12 @@
  * along with ArimBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.internal.async;
+package space.arim.bans.api;
 
-import space.arim.bans.internal.Component;
+import space.arim.registry.Registrable;
 
-public interface AsyncMaster extends Component {
-	
-	@Override
-	default Class<?> getType() {
-		return AsyncMaster.class;
-	}
-	
+public interface AsyncExecutor extends Registrable {
+
 	void execute(Runnable command);
-	
-	boolean isClosed();
 	
 }
