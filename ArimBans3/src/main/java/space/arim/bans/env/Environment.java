@@ -37,11 +37,11 @@ public interface Environment extends Configurable {
 	
 	Enforcer enforcer();
 	
+	Logger logger();
+	
 	UUID uuidFromName(String name) throws PlayerNotFoundException;
 	
 	String nameFromUUID(UUID uuid) throws PlayerNotFoundException;
-	
-	Logger logger();
 	
 	String getName();
 	
@@ -71,7 +71,7 @@ public interface Environment extends Configurable {
 	}
 	
 	default Set<EnvLibrary> loadLibraries() {
-		HashSet<EnvLibrary> libraries = new HashSet<EnvLibrary>();
+		Set<EnvLibrary> libraries = new HashSet<EnvLibrary>();
 		for (EnvLibrary lib : EnvLibrary.values()) {
 			try {
 				Class.forName(lib.uniqueClassName());
