@@ -21,6 +21,7 @@ package space.arim.bans.internal.backend.subjects;
 import java.util.UUID;
 
 import space.arim.bans.ArimBans;
+import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.util.ToolsUtil;
@@ -39,7 +40,6 @@ public class Subjects implements SubjectsMaster {
 
 	public Subjects(ArimBans center) {
 		this.center = center;
-		refreshConfig();
 	}
 	
 	@Override
@@ -48,7 +48,7 @@ public class Subjects implements SubjectsMaster {
 	}
 	
 	@Override
-	public Subject parseSubject(String input, boolean consolable) throws IllegalArgumentException {
+	public Subject parseSubject(String input, boolean console) throws IllegalArgumentException {
 		if (center.checkAddress(input)) {
 			return Subject.fromIP(input);
 		} else if (input.length() == LENGTH_OF_FULL_UUID) {
@@ -59,7 +59,7 @@ public class Subjects implements SubjectsMaster {
 			}
 		} else if (input.length() == LENGTH_OF_SHORT_UUID) {
 			return parseSubject(ToolsUtil.expandUUID(input));
-		} else if (consolable && input.equalsIgnoreCase(center.formats().getConsoleDisplay())) {
+		} else if (console && input.equalsIgnoreCase(center.formats().getConsoleDisplay())) {
 			return Subject.console();
 		}
 		throw new IllegalArgumentException("Could not make " + input + " into a subject");
@@ -76,6 +76,7 @@ public class Subjects implements SubjectsMaster {
 	@Override
 	public void sendMessage(Subject subject, boolean prefixed, String...jsonables) {
 		for (int n = 0; n < jsonables.length; n++) {
+			ArimBansLibrary.checkString(jsonables[n]);
 			center.environment().sendMessage(subject, (n == 0 && usePrefix && !prefixed) ? prefix + jsonables[n] : jsonables[n], json);
 		}
 	}
@@ -87,7 +88,7 @@ public class Subjects implements SubjectsMaster {
 	
 	@Override
 	public boolean checkUUID(UUID uuid) {
-		return center.cache().uuidExists(uuid);
+		return center.resolver().uuidExists(uuid);
 	}
 	
 	@Override
