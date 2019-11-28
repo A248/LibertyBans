@@ -40,10 +40,10 @@ public enum CommandType {
 	
 	BANLIST(SubCategory.BANLIST, IpSpec.UUID),
 	IPBANLIST(SubCategory.BANLIST, IpSpec.IP),
-	UUIDBANLIST(SubCategory.BANLIST),
+	PLAYERBANLIST(SubCategory.BANLIST),
 	MUTELIST(SubCategory.MUTELIST, IpSpec.UUID),
 	IPMUTELIST(SubCategory.MUTELIST, IpSpec.IP),
-	UUIDMUTELIST(SubCategory.MUTELIST),
+	PLAYERMUTELIST(SubCategory.MUTELIST),
 	
 	HISTORY(SubCategory.HISTORY),
 	IPHISTORY(SubCategory.HISTORY, IpSpec.IP),
@@ -81,7 +81,7 @@ public enum CommandType {
 			this(category, permissionBase, false);
 		}
 		
-		Category category() {
+		public Category category() {
 			return category;
 		}
 		
