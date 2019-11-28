@@ -85,21 +85,24 @@ public class Formats implements FormatsMaster {
 	@Override
 	public long toMillis(String timespan) {
 		long mult = 1_000_000;
-		if (permanent_arguments.contains(timespan.toLowerCase())) {
+		if (permanent_arguments.contains(timespan.toLowerCase()) || timespan.toLowerCase().equals("internal_perm")) {
 			return -1L;
 		} else if (timespan.contains("mo")) {
 			mult = 2592000_000_000L;
 			timespan = timespan.replace("mo", "");
 		} else if (timespan.contains("d")) {
 			mult = 86400_000_000L;
+			timespan = timespan.replace("d", "");
 		} else if (timespan.contains("h") || timespan.contains("hr")) {
 			mult = 3600_000_000L;
+			timespan = timespan.replace("hr", "").replace("h", "");
 		} else if (timespan.contains("m")) {
 			mult = 60_000_000L;
+			timespan = timespan.replace("m", "");
 		}
 		try {
-			return Math.multiplyExact(mult, Long.parseLong(timespan));
-		} catch (NumberFormatException | ArithmeticException ex) {
+			return mult*Long.parseLong(timespan);
+		} catch (NumberFormatException ex) {
 			return 0;
 		}
 	}
