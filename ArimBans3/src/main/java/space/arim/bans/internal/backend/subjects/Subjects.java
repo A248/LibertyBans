@@ -22,6 +22,8 @@ import java.util.UUID;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.ArimBansLibrary;
+import space.arim.bans.api.Punishment;
+import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.util.ToolsUtil;
@@ -77,7 +79,7 @@ public class Subjects implements SubjectsMaster {
 	public void sendMessage(Subject subject, boolean prefixed, String...jsonables) {
 		for (int n = 0; n < jsonables.length; n++) {
 			ArimBansLibrary.checkString(jsonables[n]);
-			center.environment().sendMessage(subject, (n == 0 && usePrefix && !prefixed) ? prefix + jsonables[n] : jsonables[n], json);
+			center.environment().sendMessage(subject, addQuotes((n == 0 && usePrefix && !prefixed) ? prefix + jsonables[n] : jsonables[n]), json);
 		}
 	}
 	
@@ -86,10 +88,20 @@ public class Subjects implements SubjectsMaster {
 		return center.environment().hasPermission(subject, permission, op_permissions);
 	}
 	
+	private String notifyPerm(PunishmentType type) {
+		return "arimbans." + type.name() + ".notify";
+	}
+	
 	@Override
-	public void sendForPermission(String permission, String...jsonables) {
-		jsonables[0] = (usePrefix) ? prefix + jsonables[0] : jsonables[0];
-		center.environment().sendForPermission(permission, json, jsonables);
+	public void sendNotif(Punishment punishment, boolean add, Subject operator) {
+		String m = center.formats().formatNotification(punishment, add, operator);
+		String msg = addQuotes((usePrefix) ? prefix + m : m);
+		ArimBansLibrary.checkString(msg);
+		center.environment().sendMessage(notifyPerm(punishment.type()), msg, json);
+	}
+	
+	private String addQuotes(String message) {
+		return message.replace("%APOS%", "'").replace("%QUOTE%", "\"");
 	}
 	
 	@Override

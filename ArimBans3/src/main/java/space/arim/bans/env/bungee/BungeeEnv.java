@@ -167,21 +167,17 @@ public class BungeeEnv implements Environment {
 	}
 	
 	@Override
-	public void sendForPermission(String permission, boolean useJson, String[] jsonables) {
+	public void sendMessage(String permission, String jsonable, boolean useJson) {
 		if (useJson) {
 			for (ProxiedPlayer player : plugin.getProxy().getPlayers()) {
 				if (player.hasPermission(permission)) {
-					for (String json : jsonables) {
-						json(player, json);
-					}
+					json(player, jsonable);
 				}
 			}
 		} else {
 			for (ProxiedPlayer player : plugin.getProxy().getPlayers()) {
 				if (player.hasPermission(permission)) {
-					for (BaseComponent[] msgs : convert(jsonables)) {
-						player.sendMessage(msgs);
-					}
+					player.sendMessage(convert(jsonable));
 				}
 			}
 		}
@@ -255,14 +251,6 @@ public class BungeeEnv implements Environment {
 	
 	BaseComponent[] convert(String input) {
 		return TextComponent.fromLegacyText(input);
-	}
-	
-	Set<BaseComponent[]> convert(String[] inputs) {
-		Set<BaseComponent[]> components = new HashSet<BaseComponent[]>();
-		for (String input : inputs) {
-			components.add(TextComponent.fromLegacyText(input));
-		}
-		return components;
 	}
 
 }

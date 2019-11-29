@@ -50,8 +50,12 @@ public enum CommandType {
 	WARNS(SubCategory.WARNS),
 	IPWARNS(SubCategory.WARNS, IpSpec.IP),
 	
-	CHECK(SubCategory.STATUS),
-	IPCHECK(SubCategory.STATUS, IpSpec.IP);
+	STATUS(SubCategory.STATUS),
+	IPSTATUS(SubCategory.STATUS, IpSpec.IP),
+	
+	IPS(SubCategory.IPS, IpSpec.UUID),
+	GEOIP(SubCategory.GEOIP, IpSpec.IP),
+	ALTS(SubCategory.ALTS, IpSpec.IP);
 	
 	public enum SubCategory {
 		BAN(Category.ADD, "ban.do"),
@@ -65,7 +69,10 @@ public enum CommandType {
 		MUTELIST(Category.LIST, "mutelist", true),
 		HISTORY(Category.LIST, "history"),
 		WARNS(Category.LIST, "warns"),
-		STATUS(Category.OTHER, "status");
+		STATUS(Category.OTHER, "status"),
+		IPS(Category.OTHER, "iplookup"),
+		GEOIP(Category.OTHER, "geoip"),
+		ALTS(Category.OTHER, "alts");
 		
 		private final Category category;
 		private final String permissionBase;

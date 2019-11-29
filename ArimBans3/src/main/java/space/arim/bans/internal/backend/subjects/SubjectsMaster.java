@@ -20,6 +20,7 @@ package space.arim.bans.internal.backend.subjects;
 
 import java.util.UUID;
 
+import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.internal.Component;
 
@@ -48,7 +49,7 @@ public interface SubjectsMaster extends Component {
 	
 	boolean hasPermission(Subject subject, String permission);
 	
-	void sendForPermission(String permission, String...jsonables);
+	void sendNotif(Punishment punishment, boolean add, Subject operator);
 	
 	boolean checkUUID(UUID uuid);
 

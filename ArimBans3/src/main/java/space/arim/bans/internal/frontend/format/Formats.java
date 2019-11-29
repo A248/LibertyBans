@@ -31,6 +31,8 @@ import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.CommandType.Category;
+import space.arim.bans.api.CommandType.SubCategory;
+import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
 
@@ -42,6 +44,7 @@ public class Formats implements FormatsMaster {
 	
 	private List<String> permanent_arguments;
 	private final ConcurrentHashMap<PunishmentType, List<String>> layout = new ConcurrentHashMap<PunishmentType, List<String>>();
+	private final ConcurrentHashMap<SubCategory, String> notification = new ConcurrentHashMap<SubCategory, String>();
 	
 	private String permanent_display;
 	private String console_display;
@@ -53,6 +56,10 @@ public class Formats implements FormatsMaster {
 		permanent_arguments = invalid_strings;
 		for (PunishmentType type : PunishmentType.values()) {
 			layout.put(type, invalid_strings);
+			notification.put(fromPunishmentType(type, true), invalid_string);
+			if (type != PunishmentType.KICK) { 
+				notification.put(fromPunishmentType(type, false), invalid_string);
+			}
 		}
 	}
 
@@ -87,6 +94,11 @@ public class Formats implements FormatsMaster {
 		default:
 			throw new InvalidSubjectException(subj);
 		}
+	}
+	
+	@Override
+	public String formatNotification(Punishment punishment, boolean add, Subject operator) {
+		return formatMessageWithPunishment(notification.get(fromPunishmentType(punishment.type(), add)), punishment).replace("%UNOPERATOR%", formatSubject(operator));
 	}
 
 	@Override
@@ -149,10 +161,34 @@ public class Formats implements FormatsMaster {
 		
 	}
 	
+	// Exact same method as in CommandsMaster implementation
+	private SubCategory fromPunishmentType(PunishmentType type, boolean add) {
+		switch (type) {
+		case BAN:
+			return (add) ? SubCategory.BAN : SubCategory.UNBAN;
+		case MUTE:
+			return (add) ? SubCategory.MUTE : SubCategory.UNMUTE;
+		case WARN:
+			return (add) ? SubCategory.WARN : SubCategory.UNWARN;
+		case KICK:
+			return SubCategory.KICK;
+		default:
+			throw new InternalStateException("What other punishment type is there?!?");
+		}
+	}
+	
 	@Override
 	public void refreshMessages(boolean fromFile) {
 		for (PunishmentType type : PunishmentType.values()) {
-			layout.put(type, center.config().getMessagesStrings(center.config().keyString(type, Category.ADD) + "layout"));
+			String leadKeyAdd = center.config().keyString(type, Category.ADD);
+			String leadKeyRemove = center.config().keyString(type, Category.REMOVE);
+			SubCategory categoryAdd = fromPunishmentType(type, true);
+			SubCategory categoryRemove = fromPunishmentType(type, false);
+			layout.put(type, center.config().getMessagesStrings(leadKeyAdd + "layout"));
+			notification.put(categoryAdd, center.config().getMessagesString(leadKeyAdd + "successful.notification"));
+			if (type != PunishmentType.KICK) { 
+				notification.put(categoryRemove, center.config().getMessagesString(leadKeyRemove + "successful.notification"));
+			}
 		}
 	}
 

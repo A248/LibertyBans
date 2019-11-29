@@ -168,19 +168,17 @@ public class BukkitEnv implements Environment {
 	}
 	
 	@Override
-	public void sendForPermission(String permission, boolean useJson, String[] jsonables) {
+	public void sendMessage(String permission, String jsonable, boolean useJson) {
 		if (useJson) {
 			for (Player player : plugin.getServer().getOnlinePlayers()) {
 				if (player.hasPermission(permission)) {
-					for (String json : jsonables) {
-						json(player, json);
-					}
+					json(player, jsonable);
 				}
 			}
 		} else {
 			for (Player player : plugin.getServer().getOnlinePlayers()) {
 				if (player.hasPermission(permission)) {
-					player.sendMessage(jsonables);
+					player.sendMessage(jsonable);
 				}
 			}
 		}

@@ -34,6 +34,8 @@ public interface FormatsMaster extends Component {
 	
 	String formatSubject(Subject subj);
 	
+	String formatNotification(Punishment punishment, boolean add, Subject operator);
+	
 	default String formatTime(long millis) {
 		return formatTime(millis, true);
 	}
