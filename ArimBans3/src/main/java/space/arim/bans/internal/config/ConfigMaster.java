@@ -20,6 +20,8 @@ package space.arim.bans.internal.config;
 
 import java.util.List;
 
+import space.arim.bans.api.CommandType;
+import space.arim.bans.api.PunishmentType;
 import space.arim.bans.internal.Component;
 
 public interface ConfigMaster extends Component {
@@ -43,5 +45,7 @@ public interface ConfigMaster extends Component {
 	boolean getMessagesBoolean(String key);
 	
 	int getMessagesInt(String key);
+	
+	String keyString(PunishmentType type, CommandType.Category category);
 	
 }

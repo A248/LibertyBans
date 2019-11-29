@@ -32,7 +32,10 @@ import org.yaml.snakeyaml.Yaml;
 import com.google.common.io.ByteStreams;
 
 import space.arim.bans.ArimBans;
+import space.arim.bans.api.CommandType;
+import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.exception.ConfigLoadException;
+import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.util.ToolsUtil;
 
 public class Config implements ConfigMaster {
@@ -255,6 +258,39 @@ public class Config implements ConfigMaster {
 	@Override
 	public int getMessagesInt(String key) {
 		return msgGet(key, Integer.class);
+	}
+	
+	private String leadKey(CommandType.Category category) {
+		switch (category) {
+		case ADD:
+			return "additions.";
+		case REMOVE:
+			return "removals.";
+		case LIST:
+			return "list.";
+		case OTHER:
+			return "other.";
+		default:
+			assert false;
+			throw new InternalStateException("What other command category is there?!?");
+		}
+	}
+	
+	@Override
+	public String keyString(PunishmentType type, CommandType.Category category) {
+		switch (type) {
+		case BAN:
+			return leadKey(category) + "bans.";
+		case MUTE:
+			return leadKey(category) + "mutes.";
+		case WARN:
+			return leadKey(category) + "warns.";
+		case KICK:
+			return leadKey(category) + "kicks.";
+		default:
+			assert false;
+			throw new InternalStateException("What other punishment type is there?!?");
+		}
 	}
 	
 }

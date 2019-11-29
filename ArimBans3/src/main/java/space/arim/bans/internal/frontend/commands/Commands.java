@@ -162,21 +162,6 @@ public class Commands implements CommandsMaster {
 		return checkPermission(subject, command, true);
 	}
 	
-	private String keyString(PunishmentType type) {
-		switch (type) {
-		case BAN:
-			return "bans.";
-		case MUTE:
-			return "mutes.";
-		case WARN:
-			return "warns.";
-		case KICK:
-			return "kicks.";
-		default:
-			throw new InternalStateException("What other punishment type is there?!?");
-		}
-	}
-	
 	private String keyString(Category category) {
 		switch (category) {
 		case ADD:
@@ -620,9 +605,8 @@ public class Commands implements CommandsMaster {
 		}
 		
 		for (PunishmentType type : PunishmentType.values()) {
-			String keyString = keyString(type);
-			String leadKey1 = "additions." + keyString;
-			String leadKey2 = "removals." + keyString;
+			String leadKey1 = center.config().keyString(type, Category.ADD);
+			String leadKey2 = center.config().keyString(type, Category.REMOVE);
 			SubCategory categoryAdd = fromPunishmentType(type, true);
 			SubCategory categoryRemove = fromPunishmentType(type, false);
 			switch (type) {
