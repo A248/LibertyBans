@@ -72,7 +72,7 @@ public class Formats implements FormatsMaster {
 	public String formatPunishment(Punishment punishment) {
 		StringBuilder builder = new StringBuilder();
 		for (String line : layout.get(punishment.type())) {
-			builder.append("\n");
+			builder.append('\n');
 			builder.append(formatMessageWithPunishment(line, punishment));
 		}
 		return formatMessageWithPunishment(builder.toString(), punishment);
