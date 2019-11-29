@@ -7,7 +7,7 @@
   <version>0.3.0-SNAPSHOT</version>
   <description>ArimBans is the ultimate punitive solution for single servers and networks, seeking to maximise efficiency through near-total asynchronous operation.</description>
   <build>
-    <sourceDirectory>src</sourceDirectory>
+    <sourceDirectory>src/main/java</sourceDirectory>
     <resources>
       <resource>
         <filtering>true</filtering>
