@@ -30,10 +30,10 @@ import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
+import space.arim.bans.api.CommandType.Category;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
 
-//TODO Make this class work
 public class Formats implements FormatsMaster {
 	
 	private final ArimBans center;
@@ -63,8 +63,12 @@ public class Formats implements FormatsMaster {
 	
 	@Override
 	public String formatPunishment(Punishment punishment) {
-		
-		return center.config().getConfigString("messages");
+		StringBuilder builder = new StringBuilder();
+		for (String line : layout.get(punishment.type())) {
+			builder.append("\n");
+			builder.append(formatMessageWithPunishment(line, punishment));
+		}
+		return formatMessageWithPunishment(builder.toString(), punishment);
 	}
 	
 	@Override
@@ -93,6 +97,7 @@ public class Formats implements FormatsMaster {
 		if (absolute) {
 			return dateFormatter.format(new Date(millis));
 		}
+		// TODO Properly implement this method
 		return null;
 	}
 	
@@ -142,6 +147,13 @@ public class Formats implements FormatsMaster {
 		permanent_display = center.config().getConfigString("formatting.permanent-display");
 		console_display = center.config().getConfigString("formatting.console-display");
 		
+	}
+	
+	@Override
+	public void refreshMessages(boolean fromFile) {
+		for (PunishmentType type : PunishmentType.values()) {
+			layout.put(type, center.config().getMessagesStrings(center.config().keyString(type, Category.ADD) + "layout"));
+		}
 	}
 
 }
