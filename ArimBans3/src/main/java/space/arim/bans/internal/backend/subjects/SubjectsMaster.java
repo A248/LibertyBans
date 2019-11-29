@@ -48,6 +48,8 @@ public interface SubjectsMaster extends Component {
 	
 	boolean hasPermission(Subject subject, String permission);
 	
+	void sendForPermission(String permission, String...jsonables);
+	
 	boolean checkUUID(UUID uuid);
 
 }

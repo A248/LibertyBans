@@ -87,6 +87,12 @@ public class Subjects implements SubjectsMaster {
 	}
 	
 	@Override
+	public void sendForPermission(String permission, String...jsonables) {
+		jsonables[0] = (usePrefix) ? prefix + jsonables[0] : jsonables[0];
+		center.environment().sendForPermission(permission, json, jsonables);
+	}
+	
+	@Override
 	public boolean checkUUID(UUID uuid) {
 		return center.resolver().uuidExists(uuid);
 	}
