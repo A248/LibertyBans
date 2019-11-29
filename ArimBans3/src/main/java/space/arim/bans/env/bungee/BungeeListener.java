@@ -23,15 +23,13 @@ import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
-import space.arim.bans.api.exception.ConfigSectionException;
+
 import space.arim.bans.internal.Configurable;
 
 public class BungeeListener implements Configurable, Listener {
 	
 	private final BungeeEnv environment;
 	
-	private byte ban_priority;
-	private byte mute_priority;
 	public BungeeListener(BungeeEnv environment) {
 		this.environment = environment;
 	}
@@ -43,97 +41,52 @@ public class BungeeListener implements Configurable, Listener {
 	
 	@EventHandler(priority=EventPriority.HIGHEST)
 	private void enforceBansHighest(LoginEvent evt) {
-		if (EventPriority.HIGHEST == ban_priority) {
-			environment.enforcer().enforceBans(evt);
-		}
+		environment.enforcer().enforceBans(evt, EventPriority.HIGHEST);
 	}
 	
 	@EventHandler(priority=EventPriority.HIGH)
 	private void enforceBansHigh(LoginEvent evt) {
-		if (EventPriority.HIGH == ban_priority) {
-			environment.enforcer().enforceBans(evt);
-		}
+		environment.enforcer().enforceBans(evt, EventPriority.HIGH);
 	}
 	
 	@EventHandler(priority=EventPriority.NORMAL)
 	private void enforceBansNormal(LoginEvent evt) {
-		if (EventPriority.NORMAL == ban_priority) {
-			environment.enforcer().enforceBans(evt);
-		}
+		environment.enforcer().enforceBans(evt, EventPriority.NORMAL);
 	}
 	
 	@EventHandler(priority=EventPriority.LOW)
 	private void enforceBansLow(LoginEvent evt) {
-		if (EventPriority.LOW == ban_priority) {
-			environment.enforcer().enforceBans(evt);
-		}
+		environment.enforcer().enforceBans(evt, EventPriority.LOW);
 	}
 	
 	@EventHandler(priority=EventPriority.LOWEST)
 	private void enforceBansLowest(LoginEvent evt) {
-		if (EventPriority.LOWEST == ban_priority) {
-			environment.enforcer().enforceBans(evt);
-		}
+		environment.enforcer().enforceBans(evt, EventPriority.LOWEST);
 	}
 	
 	@EventHandler(priority=EventPriority.HIGHEST)
 	private void enforceMutesHighest(ChatEvent evt) {
-		if (EventPriority.HIGHEST == mute_priority) {
-			environment.enforcer().enforceMutes(evt);
-		}
+		environment.enforcer().enforceMutes(evt, EventPriority.HIGHEST);
 	}
 	
 	@EventHandler(priority=EventPriority.HIGH)
 	private void enforceMutesHigh(ChatEvent evt) {
-		if (EventPriority.HIGH == mute_priority) {
-			environment.enforcer().enforceMutes(evt);
-		}
+		environment.enforcer().enforceMutes(evt, EventPriority.HIGH);
 	}
 	
 	@EventHandler(priority=EventPriority.NORMAL)
 	private void enforceMutesNormal(ChatEvent evt) {
-		if (EventPriority.NORMAL == mute_priority) {
-			environment.enforcer().enforceMutes(evt);
-		}
+		environment.enforcer().enforceMutes(evt, EventPriority.NORMAL);
 	}
 	
 	@EventHandler(priority=EventPriority.LOW)
 	private void enforceMutesLow(ChatEvent evt) {
-		if (EventPriority.LOW == mute_priority) {
-			environment.enforcer().enforceMutes(evt);
-		}
+		environment.enforcer().enforceMutes(evt, EventPriority.LOW);
 	}
 	
 	@EventHandler(priority=EventPriority.LOWEST)
 	private void enforceMutesLowest(ChatEvent evt) {
-		if (EventPriority.LOWEST == mute_priority) {
-			environment.enforcer().enforceMutes(evt);
-		}
-	}
-	
-	private byte parsePriority(String key) {
-		switch (environment.center().config().getConfigString(key).toLowerCase()) {
-		case "highest":
-			return EventPriority.HIGHEST;
-		case "high":
-			return EventPriority.HIGH;
-		case "normal":
-			return EventPriority.NORMAL;
-		case "low":
-			return EventPriority.LOW;
-		case "lowest":
-			return EventPriority.LOWEST;
-		case "none":
-			return (byte) -2;
-		default:
-			throw new ConfigSectionException(key);
-		}
-	}
-	
-	@Override
-	public void refreshConfig(boolean fromFile) {
-		ban_priority = parsePriority("misc.priorities.event-priority");
-		mute_priority = parsePriority("misc.priorities.event-priority");
+		environment.enforcer().enforceMutes(evt, EventPriority.LOWEST);
 	}
 	
 }

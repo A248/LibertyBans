@@ -22,15 +22,20 @@ import java.util.List;
 import java.util.Set;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentType;
+import space.arim.bans.api.Subject;
 import space.arim.bans.api.events.bukkit.PostPunishEvent;
 import space.arim.bans.api.events.bukkit.PostUnpunishEvent;
 import space.arim.bans.api.events.bukkit.PunishEvent;
 import space.arim.bans.api.events.bukkit.UnpunishEvent;
+import space.arim.bans.api.exception.ConfigSectionException;
 import space.arim.bans.api.exception.MissingCenterException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.env.Enforcer;
@@ -38,6 +43,9 @@ import space.arim.bans.env.Enforcer;
 public class BukkitEnforcer implements Enforcer {
 
 	private final BukkitEnv environment;
+	
+	private EventPriority ban_priority;
+	private EventPriority mute_priority;
 	
 	public BukkitEnforcer(final BukkitEnv environment) {
 		this.environment = environment;
@@ -56,12 +64,12 @@ public class BukkitEnforcer implements Enforcer {
 		missingCenter(subject + " was not checked for " + type.toString());
 	}
 	
-	void enforceBans(AsyncPlayerPreLoginEvent evt) {
+	void enforceBans(AsyncPlayerPreLoginEvent evt, EventPriority priority) {
 		if (environment.center() == null) {
 			enforceFailed(evt.getName(), PunishmentType.BAN);
 			return;
 		}
-		if (!evt.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED)) {
+		if (!evt.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED) || !priority.equals(ban_priority)) {
 			return;
 		} else if (environment.center().isBanned(environment.center().subjects().parseSubject(evt.getUniqueId()))) {
 			try {
@@ -85,32 +93,44 @@ public class BukkitEnforcer implements Enforcer {
 			}
 		}
 	}
-
-	void enforceMutes(AsyncPlayerChatEvent evt) {
+	
+	private void enforceMutes(Cancellable evt, EventPriority priority, Subject subject) {
 		if (environment.center() == null) {
-			enforceFailed(evt.getPlayer().getName(), PunishmentType.MUTE);
+			enforceFailed(subject.getUUID().toString(), PunishmentType.MUTE);
 			return;
 		}
-		if (evt.isCancelled()) {
+		if (evt.isCancelled() || !priority.equals(mute_priority)) {
 			return;
-		} else if (environment.center().isMuted(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()))) {
+		} else if (environment.center().isMuted(subject)) {
 			evt.setCancelled(true);
 			try {
-				environment.center().subjects().sendMessage(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()), environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()), PunishmentType.MUTE)));
+				environment.center().subjects().sendMessage(subject, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(subject, PunishmentType.MUTE)));
 			} catch (MissingPunishmentException ex) {
 				environment.center().logError(ex);
 			}
 		} else {
-			for (String addr : environment.center().resolver().getIps(evt.getPlayer().getUniqueId())) {
-				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
+			for (String addr : environment.center().resolver().getIps(subject.getUUID())) {
+				Subject addrSubj = environment.center().subjects().parseSubject(addr);
+				if (environment.center().isBanned(addrSubj)) {
 					evt.setCancelled(true);
 					try {
-						environment.center().subjects().sendMessage(environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()), environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.MUTE)));
+						environment.center().subjects().sendMessage(subject, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.MUTE)));
 					} catch (MissingPunishmentException ex) {
 						environment.center().logError(ex);
 					}
+					return;
 				}
 			}
+		}
+	}
+
+	void enforceMutes(AsyncPlayerChatEvent evt, EventPriority priority) {
+		enforceMutes(evt, priority, environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()));
+	}
+	
+	void enforceMutes(PlayerCommandPreprocessEvent evt, EventPriority priority) {
+		if (environment.center().formats().isCmdMuteBlocked(evt.getMessage())) {
+			enforceMutes(evt, priority, environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()));
 		}
 	}
 	
@@ -168,4 +188,29 @@ public class BukkitEnforcer implements Enforcer {
 		environment.plugin().getServer().getPluginManager().callEvent(new PostUnpunishEvent(punishment, automatic));
 	}
 
+	private EventPriority parsePriority(String key) {
+		switch (environment.center().config().getConfigString(key).toLowerCase()) {
+		case "highest":
+			return EventPriority.HIGHEST;
+		case "high":
+			return EventPriority.HIGH;
+		case "normal":
+			return EventPriority.NORMAL;
+		case "low":
+			return EventPriority.LOW;
+		case "lowest":
+			return EventPriority.LOWEST;
+		case "none":
+			return null;
+		default:
+			throw new ConfigSectionException(key);
+		}
+	}
+	
+	@Override
+	public void refreshConfig(boolean fromFile) {
+		ban_priority = parsePriority("misc.priorities.event-priority");
+		mute_priority = parsePriority("misc.priorities.event-priority");
+	}
+	
 }
