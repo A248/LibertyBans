@@ -298,7 +298,7 @@ public class Commands implements CommandsMaster {
 			return;
 		}
 		if (command.canHaveNoTarget()) {
-			noTargetCmd(operator, command, args);
+			listCmd(operator, null, command, args[0]);
 		} else {
 			if (args.length <= 0) {
 				usage(operator, command);
@@ -352,7 +352,6 @@ public class Commands implements CommandsMaster {
 		return "arimbans." + type.name() + ".notify";
 	}
 	
-	// TODO check dur perms, detect time argument, concatenate reason argument
 	private void punCmd(Subject operator, Subject target, CommandType command, String[] args) {
 		if (args.length == 0) {
 			usage(operator, command);
@@ -495,10 +494,6 @@ public class Commands implements CommandsMaster {
 				return getCmdBaseString(command) + " " + nextPage;
 			}
 		});
-	}
-	
-	private void noTargetCmd(Subject operator, CommandType command, String[] args) {
-		
 	}
 	
 	private void otherCmd(Subject operator, Subject target, CommandType command, String[] args) {
