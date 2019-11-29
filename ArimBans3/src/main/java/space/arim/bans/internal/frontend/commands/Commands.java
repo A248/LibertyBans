@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import space.arim.bans.ArimBans;
@@ -39,7 +40,9 @@ import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.MissingPunishmentException;
+import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
+import space.arim.bans.api.util.GeoIpInfo;
 
 public class Commands implements CommandsMaster {
 	
@@ -68,13 +71,12 @@ public class Commands implements CommandsMaster {
 	private final ConcurrentHashMap<PunishmentType, String> permTime = new ConcurrentHashMap<PunishmentType, String>();
 	private final ConcurrentHashMap<PunishmentType, List<String>> durations = new ConcurrentHashMap<PunishmentType, List<String>>();
 	private final ConcurrentHashMap<PunishmentType, String> exempt = new ConcurrentHashMap<PunishmentType, String>();
-	String additions_bans_error_conflicting;
-	String additions_mutes_error_conflicting;
+	private String additions_bans_error_conflicting;
+	private String additions_mutes_error_conflicting;
 	private final ConcurrentHashMap<SubCategory, String> successful = new ConcurrentHashMap<SubCategory, String>();
-	private final ConcurrentHashMap<SubCategory, String> notification = new ConcurrentHashMap<SubCategory, String>();
 	
 	private final ConcurrentHashMap<PunishmentType, String> notfound = new ConcurrentHashMap<PunishmentType, String>();
-	String removals_warns_error_confirm;
+	private String removals_warns_error_confirm;
 	
 	private final ConcurrentHashMap<SubCategory, Integer> perPage = new ConcurrentHashMap<SubCategory, Integer>();
 	private final ConcurrentHashMap<SubCategory, String> maxPage = new ConcurrentHashMap<SubCategory, String>();
@@ -82,6 +84,18 @@ public class Commands implements CommandsMaster {
 	private final ConcurrentHashMap<SubCategory, List<String>> header = new ConcurrentHashMap<SubCategory, List<String>>();
 	private final ConcurrentHashMap<SubCategory, List<String>> body = new ConcurrentHashMap<SubCategory, List<String>>();
 	private final ConcurrentHashMap<SubCategory, List<String>> footer = new ConcurrentHashMap<SubCategory, List<String>>();
+	
+	private final ConcurrentHashMap<String, String> other_status_layout = new ConcurrentHashMap<String, String>();
+	private List<String> other_status_layout_body;
+	
+	private List<String> other_ips_layout_body;
+	private String other_ips_layout_element;
+	private String other_ips_error_notfound;
+	private List<String> other_geoip_layout;
+	private String other_geoip_error_notfound;
+	private List<String> other_alts_layout_body;
+	private String other_alts_layout_element;
+	private String other_alts_error_notfound;
 	
 	public Commands(ArimBans center) {
 		this.center = center;
@@ -95,6 +109,12 @@ public class Commands implements CommandsMaster {
 		additions_bans_error_conflicting = invalid_string;
 		additions_mutes_error_conflicting = invalid_string;
 		removals_warns_error_confirm = invalid_string;
+		other_status_layout_body = invalid_strings;
+		other_ips_layout_body = invalid_strings;
+		other_ips_layout_element = invalid_string;
+		other_geoip_layout = invalid_strings;
+		other_alts_layout_body = invalid_strings;
+		other_alts_layout_element = invalid_string;
 		for (PunishmentType pun : PunishmentType.values()) {
 			notfound.put(pun, invalid_string);
 			permTime.put(pun, invalid_string);
@@ -103,7 +123,6 @@ public class Commands implements CommandsMaster {
 		}
 		for (SubCategory cat : SubCategory.values()) {
 			successful.put(cat, invalid_string);
-			notification.put(cat, invalid_string);
 		}
 		for (CommandType cmd : CommandType.values()) {
 			usage.put(cmd, invalid_string);
@@ -196,6 +215,8 @@ public class Commands implements CommandsMaster {
 			return "history.";
 		case WARNS:
 			return "warns.";
+		case STATUS:
+			return "status.";
 		default:
 			return category.name();
 		}
@@ -343,13 +364,9 @@ public class Commands implements CommandsMaster {
 			} else if (command.category().equals(Category.LIST)) {
 				listCmd(operator, target, command, args[1]);
 			} else if (command.category().equals(Category.OTHER)) {
-				otherCmd(operator, target, command, chopOffOne(args));
+				otherCmd(operator, target, command);
 			}
 		}
-	}
-	
-	private String notifyPerm(PunishmentType type) {
-		return "arimbans." + type.name() + ".notify";
 	}
 	
 	private void punCmd(Subject operator, Subject target, CommandType command, String[] args) {
@@ -398,7 +415,8 @@ public class Commands implements CommandsMaster {
 		try {
 			center.punishments().addPunishments(punishment);
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-			center.subjects().sendForPermission(notifyPerm(type), center.formats().formatMessageWithPunishment(notification.get(command.subCategory()), punishment));
+			center.subjects().sendNotif(punishment, true, operator);
+			center.environment().enforcer().enforce(punishment, center.formats().useJson());
 		} catch (ConflictingPunishmentException ex) {
 			String conflict = (punishment.type().equals(PunishmentType.BAN)) ? additions_bans_error_conflicting : additions_mutes_error_conflicting;
 			center.subjects().sendMessage(operator, conflict.replace("%TARGET%", center.formats().formatSubject(punishment.subject())));
@@ -417,7 +435,7 @@ public class Commands implements CommandsMaster {
 							if (punishment.date() == date) {
 								center.punishments().removePunishments(punishment);
 								center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-								center.subjects().sendForPermission(notifyPerm(PunishmentType.WARN), center.formats().formatMessageWithPunishment(notification.get(command.subCategory()), punishment));
+								center.subjects().sendNotif(punishment, false, operator);
 								return;
 							}
 						}
@@ -445,7 +463,7 @@ public class Commands implements CommandsMaster {
 			Punishment punishment = center.punishments().getPunishment(target, type);
 			center.punishments().removePunishments(punishment);
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-			center.subjects().sendForPermission(notifyPerm(type), center.formats().formatMessageWithPunishment(notification.get(command.subCategory()), punishment));
+			center.subjects().sendNotif(punishment, false, operator);
 		} catch (MissingPunishmentException ex) {
 			center.subjects().sendMessage(operator, notfound.get(type).replace("%TARGET%", center.formats().formatSubject(target)));
 		}
@@ -496,8 +514,104 @@ public class Commands implements CommandsMaster {
 		});
 	}
 	
-	private void otherCmd(Subject operator, Subject target, CommandType command, String[] args) {
-		
+	private void otherCmd(Subject operator, Subject target, CommandType command) {
+		switch (command.subCategory()) {
+		case STATUS:
+			statusCmd(operator, target);
+			break;
+		case IPS:
+			ipsCmd(operator, target);
+			break;
+		case GEOIP:
+			geoipCmd(operator, target);
+			break;
+		case ALTS:
+			altsCmd(operator, target);
+			break;
+		default:
+			assert false;
+			throw new InternalStateException("Wrong command execution method!");
+		}
+	}
+	
+	private void statusCmd(Subject operator, Subject target) {
+		boolean banned = center.punishments().hasPunishment(target, PunishmentType.BAN);
+		boolean muted = center.punishments().hasPunishment(target, PunishmentType.MUTE);
+		int warns = center.punishments().getPunishments(target, PunishmentType.WARN).size();
+		String header;
+		String info;
+		if (target.getType().equals(SubjectType.PLAYER)) {
+			header = other_status_layout.get("player.header");
+			info = other_status_layout.get("player.info").replace("%IPS_CMD%", "arimbans ips " + target.getUUID());
+		} else if (target.getType().equals(SubjectType.IP)) {
+			header = other_status_layout.get("ip.header");
+			info = other_status_layout.get("ip.info").replace("%GEOIP_CMD%", "arimbans geoip " + target.getIP()).replace("%ALTS_CMD%", "arimbans alts " + target.getIP());
+		} else {
+			assert false;
+			throw new InternalStateException("Target cannot be the console!");
+		}
+		String banStatusKey = (banned) ? "ban-status.banned" : "ban-status.not-banned";
+		String muteStatusKey = (muted) ? "mute-status.muted" : "mute-status.not-muted";
+		String warnStatusKey = (warns == 0) ? "warn-status.no-warns" : "warn-status.warn-count";
+		String banStatus = other_status_layout.get(banStatusKey);
+		String muteStatus = other_status_layout.get(muteStatusKey);
+		String warnStatus = other_status_layout.get(warnStatusKey);
+		String[] msgs = other_status_layout_body.toArray(new String[0]);
+		for (int n = 0; n < msgs.length; n++) {
+			msgs[n] = msgs[n].replace("%HEADER%", header).replace("%INFO%", info).replace("%BAN_STATUS%", banStatus).replace("%MUTE_STATUS%", muteStatus).replace("%WARN_STATUS%", warnStatus);
+		}
+		center.subjects().sendMessage(operator, msgs);
+	}
+	
+	private void ipsCmd(Subject operator, Subject target) {
+		String[] msgs = other_ips_layout_body.toArray(new String[0]);
+		String targetDisplay = center.formats().formatSubject(target);
+		StringBuilder builder = new StringBuilder();
+		// TODO Check for empty lists
+		for (String ip : center.resolver().getIps(target.getUUID())) {
+			builder.append(other_ips_layout_element.replace("%IP%", ip).replace("%GEOIP_CMD%", "arimbans geoip " + ip));
+		}
+		for (int n = 0; n < msgs.length; n++) {
+			msgs[n] = msgs[n].replace("%TARGET%", targetDisplay).replace("%LIST%", builder.toString());
+		}
+		center.subjects().sendMessage(operator, msgs);
+	}
+	
+	private void geoipCmd(Subject operator, Subject target) {
+		String[] msgs = other_geoip_layout.toArray(new String[0]);
+		GeoIpInfo geoip;
+		String targetDisplay = center.formats().formatSubject(target);
+		try {
+			geoip = center.resolver().lookupIp(target.getIP());
+		} catch (NoGeoIpException ex) {
+			center.subjects().sendMessage(operator, other_geoip_error_notfound.replace("%TARGET%", targetDisplay));
+			return;
+		}
+		for (int n = 0; n < msgs.length; n++) {
+			msgs[n] = msgs[n].replace("%TARGET%", targetDisplay).replace("%COUNTRY_CODE%", geoip.country_code).replace("%COUNTRY_NAME%", geoip.country_name).replace("%REGION_CODE%", geoip.region_code).replace("%REGION_NAME%", geoip.region_name).replace("%CITY%", geoip.city).replace("%ZIP%", geoip.zip).replace("%LONGITUDE%", Double.toString(geoip.longitude)).replace("%LATITUDE%", Double.toString(geoip.latitude));
+		}
+		center.subjects().sendMessage(operator, msgs);
+	}
+	
+	private void altsCmd(Subject operator, Subject target) {
+		String[] msgs = other_alts_layout_body.toArray(new String[0]);
+		String targetDisplay = center.formats().formatSubject(target);
+		StringBuilder builder = new StringBuilder();
+		// TODO check for empty lists
+		for (UUID uuid : center.resolver().getPlayers(target.getIP())) {
+			String name;
+			try {
+				name = center.resolver().resolveUUID(uuid);
+			} catch (PlayerNotFoundException ex) {
+				center.logError(ex);
+				name = uuid.toString();
+			}
+			builder.append(other_alts_layout_element.replace("%PLAYER%", name).replace("%STATUS_CMD%", "arimbans status " + uuid));
+		}
+		for (int n = 0; n < msgs.length; n++) {
+			msgs[n] = msgs[n].replace("%TARGET%", targetDisplay).replace("%LIST%", builder.toString());
+		}
+		center.subjects().sendMessage(operator, msgs);
 	}
 	
 	private void list(Subject operator, Lister<Punishment> lister) {
@@ -609,7 +723,6 @@ public class Commands implements CommandsMaster {
 				// removals do not apply to kicks
 				notfound.put(type, center.config().getMessagesString(leadKey2 + "error.not-found"));
 				successful.put(categoryRemove, center.config().getMessagesString(leadKey2 + "successful.message"));
-				notification.put(categoryRemove, center.config().getMessagesString(leadKey2 + "successful.notification"));
 				// durations do not apply to kicks
 				permTime.put(type, center.config().getMessagesString(leadKey1 + "permission.time"));
 				durations.put(type, center.config().getMessagesStrings(leadKey1 + "permission.dur-perms"));
@@ -617,15 +730,29 @@ public class Commands implements CommandsMaster {
 			case KICK:
 				exempt.put(type, center.config().getMessagesString(leadKey1 + "error.exempt"));
 				successful.put(categoryAdd, center.config().getMessagesString(leadKey1 + "successful.message"));
-				notification.put(categoryAdd, center.config().getMessagesString(leadKey1 + "successful.notification"));
 				break;
 			default:
 				throw new InternalStateException("What other punishment type is there?!?");
 			}
 		}
 		
+		String[] other_status_layout_keys = {"player.header", "player.info", "ip.header", "ip.info", "ban-status.banned", "ban-status.not-banned", "mute-status.muted", "mute-status.not-muted", "warn-status.warn-count", "warn-status.no-warns"};
+		for (String key : other_status_layout_keys) {
+			other_status_layout.put(key, center.config().getMessagesString("other.status.layout." + key));
+		}
+		other_status_layout_body = center.config().getMessagesStrings("other.status.layout.body");
+		
+		other_ips_layout_body = center.config().getMessagesStrings("other.ips.layout.body");
+		other_ips_layout_element = center.config().getMessagesString("other.ips.layout.element");
+		other_ips_error_notfound = center.config().getMessagesString("other.ips.error.not-found");
+		other_geoip_layout = center.config().getMessagesStrings("other.geoip.layout");
+		other_geoip_error_notfound = center.config().getMessagesString("other.geoip.error.not-found");
+		other_alts_layout_body = center.config().getMessagesStrings("other.alts.layout.body");
+		other_alts_layout_element = center.config().getMessagesString("other.alts.layout.element");
+		other_alts_error_notfound = center.config().getMessagesString("other.alts.error-not-found");
 	}
 	
+	// Exact same method as in FormatsMaster implementation
 	private SubCategory fromPunishmentType(PunishmentType type, boolean add) {
 		switch (type) {
 		case BAN:

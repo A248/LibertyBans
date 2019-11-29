@@ -221,14 +221,14 @@ other:
       body:
         - '&cPlayer &8» &7%TARGET%'
         - '&cIPs &8» %LIST%'
-      list-element: '||&7%IP%, ||ttp:&7Click to inspect location details.||cmd:/%GEOIP_CMD%'
+      element: '||&7%IP%, ||ttp:&7Click to inspect location details.||cmd:/%GEOIP_CMD%'
   geo-ip:
     usage: '&cUsage: /geoip &e<IP>&c.'
     permission:
       command: '&cYou may not lookup Geo IP information.'
       no-ip: '&cYou may not lookup Geo IP information.'
     error:
-      not-found: '&cNo information found for &r&7&o%TARGET%&r&c.'
+      not-found: '&cNo information found for &r&7&o%TARGET%&r&c. Perhaps you have incurred rate-limiting.'
     layout:
       body:
         - '&cIP &8» &7%TARGET%'
@@ -247,32 +247,19 @@ other:
       body:
         - '&cIP &8» &7%TARGET%'
         - '&cPlayers: %LIST%'
-      list-element: '||&7%PLAYER%, ||ttp:&7Click to check status.||cmd:/%STATUS_CMD%'
+      element: '||&7%PLAYER%, ||ttp:&7Click to check status.||cmd:/%STATUS_CMD%'
   status:
     usage: '&cUsage: /check &e<player/IP>&c.'
     permission:
       command: '&cYou may not view statuses.'
       no-ip: '&cYou may not view statuses for an IP address.'
-    error:
-      not-found: '&cNo information found for &r&7&o%TARGET%&r&c.'
     layout:
       player:
         header: '&cPlayer &8» &7%TARGET%'
-        info:
-          format: '%IP_LOOKUP%'
-          ips:
-            enable: true
-            message: '[IP Lookup]||ttp:&7Find IPs this player has connected with.||cmd:/%IPS_CMD%'
+        info: '[IP Lookup]||ttp:&7Find IPs this player has connected with.||cmd:/%IPS_CMD%'
       ip:
         header: '&cIP &8» &7%TARGET%'
-        info:
-          format: '%GEO_IP%|| %ALT_LOOKUP%'
-          geoip:
-            enable: true
-            message: '[GeoIP]||ttp:&7Click to inspect location details.||cmd:/%GEOIP_CMD%'
-          alts:
-            enable: true
-            message: '[Alt Lookup]||ttp:&7Find players who have connected with this IP.||cmd:/%ALTS_CMD%'
+        info: '[GeoIP]||ttp:&7Click to inspect location details.||cmd:/%GEOIP_CMD%|| [Alt Lookup]||ttp:&7Find players who have connected with this IP.||cmd:/%ALTS_CMD%'
       body:
         - '%HEADER%'
         - '%INFO%'
