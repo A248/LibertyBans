@@ -39,8 +39,8 @@ additions:
       conflicting: '&c&o%TARGET%&r&7is already banned!'
       exempt: '&cYou may not ban %TARGET%.'
     successful:
-      message: '&7Banned &c&o%SUBJECT%&r&7 for &a&o%EXP_REL%&r&7 because of &o%REASON%'
-      notification: '&7%OPERATOR% banned &c&o%SUBJECT%&r&7 for &a&o%EXP_REL%&r&7 because of &o%REASON%'
+      message: '&7Banned &c&o%TARGET%&r&7 for &a&o%EXP_REL%&r&7 because of &o%REASON%'
+      notification: '&7%OPERATOR% banned &c&o%TARGET%&r&7 for &a&o%EXP_REL%&r&7 because of &o%REASON%'
     layout:
       - 'Banned'
       - 'Duration: %TIME%'
@@ -61,8 +61,8 @@ additions:
       conflicting: '&c&o%TARGET%&r&7is already muted!'
       exempt: '&cYou may not mute %TARGET%.'
     successful:
-      message: '&7Muted %SUBJECT% for %EXP_REL% because of %REASON%'
-      notification: '&7%OPERATOR% muted %SUBJECT% for %EXP_REL% because of %REASON%'
+      message: '&7Muted %TARGET% for %EXP_REL% because of %REASON%'
+      notification: '&7%OPERATOR% muted %TARGET% for %EXP_REL% because of %REASON%'
     layout:
       - 'Muted'
       - 'Duration: %TIME%'
@@ -109,7 +109,7 @@ additions:
     - 'Please read the rules'
     - 'Forums: www.site.com'
 removals:
-  unbans:
+  bans:
     usage: '/unban <player>'
     permission:
       command: '&cYou may not unban other players.'
@@ -118,8 +118,8 @@ removals:
       not-found: '&c&o%TARGET%&r&7is not banned.'
     successful:
       message: '&7Successfully unbanned &c&o%TARGET%&r&7.'
-      notification: '%OPERATOR% unbanned %TARGET%.'
-  unmutes:
+      notification: '%UNOPERATOR% unbanned %TARGET%.'
+  mutes:
     usage: '/unmute <player>'
     permission:
       command: '&cYou may not unmute other players.'
@@ -128,17 +128,18 @@ removals:
       not-found: '&c&o%TARGET%&r&7is not muted.'
     successful:
       message: '&7Successfully unmuted &c&o%TARGET%&r&7.'
-      notification: '%OPERATOR% unmuted %TARGET%.'
-  unwarns:
+      notification: '%UNOPERATOR% unmuted %TARGET%.'
+  warns:
     usage: '/unwarn <player>'
     permission:
       command: '&cYou may not unwarn other players.'
       no-ip: '&cYou may not unwarn IPs.'
     error:
       not-found: '&7Could not find warn No.&e%NUMBER%&7 for &c&o%TARGET%&r&7.'
+      confirm: '&7Are you sure you want to unwarn &c&o%TARGET%&r&7 for %REASON%?||ttp:&7Warned by %OPERATOR%, %DATE_ABS%||&7 Click to confirm.||ttp:&7Click here!||cmd:/%CMD%'
     successful:
       message: '&7Successfully unwarned &c&o%TARGET%&r&7.'
-      notification: '%OPERATOR% unwarned %TARGET% No.&e%NUMBER%&7.'
+      notification: '%UNOPERATOR% unwarned %TARGET% No.&e%NUMBER%&7.'
 list:
   banlist:
     usage: '/banlist [page]'
@@ -153,7 +154,7 @@ list:
         - '[Number] Subject'
         - 'Reason / Time Remaining'
       body:
-        - '[%NUMBER%] %SUBJECT%'
+        - '[%NUMBER%] %TARGET%'
         - '%REASON% / %TIME%'
       footer:
         - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
@@ -170,7 +171,7 @@ list:
         - '[Number] Subject'
         - 'Reason / Time Remaining'
       content:
-        - '[%NUMBER%] %SUBJECT%'
+        - '[%NUMBER%] %TARGET%'
         - '%REASON% / %TIME%'
       footer:
         - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
@@ -187,7 +188,7 @@ list:
         - '[Number] Subject / Punishment Type'
         - 'Reason / Time Remaining'
       content:
-        - '[%NUMBER%] %SUBJECT% / %PUNISHMENT%'
+        - '[%NUMBER%] %TARGET% / %PUNISHMENT%'
         - '%REASON% / %TIME%'
       footer:
         - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
@@ -204,12 +205,12 @@ list:
         - '[Number] Subject / Punishment Type'
         - 'Reason / Time Remaining'
       content:
-        - '[%NUMBER%] %SUBJECT% / %PUNISHMENT%'
+        - '[%NUMBER%] %TARGET% / %PUNISHMENT%'
         - '%REASON% / %TIME%'
       footer:
         - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
 other:
-  check:
+  status:
     error:
       notfound: '&cNo information found for &r&7&o%TARGET%&r&c.'
     layout:

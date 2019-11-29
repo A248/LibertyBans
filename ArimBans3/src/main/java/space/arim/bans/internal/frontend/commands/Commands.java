@@ -36,12 +36,21 @@ import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
+import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.exception.InternalStateException;
+import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
 
 public class Commands implements CommandsMaster {
 	
 	private final ArimBans center;
+	
+	private static final Comparator<Punishment> DATE_COMPARATOR = new Comparator<Punishment>() {
+		@Override
+		public int compare(Punishment p1, Punishment p2) {
+			return (int) (p1.date() - p2.date());
+		}
+	};
 	
 	private String base_perm_msg;
 	private final ConcurrentHashMap<IpSpec, String> invalid = new ConcurrentHashMap<IpSpec, String>();
@@ -49,19 +58,24 @@ public class Commands implements CommandsMaster {
 	private static final String basePerm = "arimbans.commands";
 	private String ip_selector_message;
 	private String ip_selector_element;
+	private boolean permit_blank_reason = false;
+	private String default_reason;
 	
 	private final ConcurrentHashMap<CommandType, String> usage = new ConcurrentHashMap<CommandType, String>();
 	private final ConcurrentHashMap<CommandType, String> perm = new ConcurrentHashMap<CommandType, String>();
 	
 	// Maps related to punishment additions.
 	private final ConcurrentHashMap<PunishmentType, String> permTime = new ConcurrentHashMap<PunishmentType, String>();
-	private final ConcurrentHashMap<PunishmentType, List<String>> durPerms = new ConcurrentHashMap<PunishmentType, List<String>>();
+	private final ConcurrentHashMap<PunishmentType, List<String>> durations = new ConcurrentHashMap<PunishmentType, List<String>>();
 	private final ConcurrentHashMap<PunishmentType, String> exempt = new ConcurrentHashMap<PunishmentType, String>();
-	String additions_bans_error_conflicting = "&c&o%TARGET%&r&7is already banned!";
-	String additions_mutes_error_conflicting = "&c&o%TARGET%&r&7is already muted!";
+	String additions_bans_error_conflicting;
+	String additions_mutes_error_conflicting;
 	private final ConcurrentHashMap<SubCategory, String> successful = new ConcurrentHashMap<SubCategory, String>();
 	private final ConcurrentHashMap<SubCategory, String> notification = new ConcurrentHashMap<SubCategory, String>();
 	private final ConcurrentHashMap<PunishmentType, List<String>> layout = new ConcurrentHashMap<PunishmentType, List<String>>();
+	
+	private final ConcurrentHashMap<PunishmentType, String> notfound = new ConcurrentHashMap<PunishmentType, String>();
+	String removals_warns_error_confirm;
 	
 	private final ConcurrentHashMap<SubCategory, Integer> perPage = new ConcurrentHashMap<SubCategory, Integer>();
 	private final ConcurrentHashMap<SubCategory, String> maxPage = new ConcurrentHashMap<SubCategory, String>();
@@ -74,9 +88,18 @@ public class Commands implements CommandsMaster {
 		this.center = center;
 		String invalid_string = ArimBansLibrary.INVALID_STRING_CODE;
 		List<String> invalid_strings = Arrays.asList(invalid_string);
+		base_perm_msg = invalid_string;
+		base_usage = invalid_string;
+		ip_selector_message = invalid_string;
+		ip_selector_element = invalid_string;
+		default_reason = invalid_string;
+		additions_bans_error_conflicting = invalid_string;
+		additions_mutes_error_conflicting = invalid_string;
+		removals_warns_error_confirm = invalid_string;
 		for (PunishmentType pun : PunishmentType.values()) {
+			notfound.put(pun, invalid_string);
 			permTime.put(pun, invalid_string);
-			durPerms.put(pun, invalid_strings);
+			durations.put(pun, invalid_strings);
 			exempt.put(pun, invalid_string);
 			layout.put(pun, invalid_strings);
 		}
@@ -139,8 +162,9 @@ public class Commands implements CommandsMaster {
 		return checkPermission(subject, command, true);
 	}
 	
-	private String encodeVars(String message, Punishment p) {
-		return message.replace("%SUBJECT%", center.formats().formatSubject(p.subject())).replace("%OPERATOR%", center.formats().formatSubject(p.operator())).replace("%REASON%", p.reason()).replace("%EXP_REL%", center.formats().formatTime(p.expiration(), false)).replace("%EXP_ABS%", center.formats().formatTime(p.expiration(), true)).replace("%DATE_REL%", center.formats().formatTime(p.date(), false)).replace("%DATE_ABS%", center.formats().formatTime(p.date(), true));
+	@Override
+	public String encodePunishmentVars(String message, Punishment punishment) {
+		return message.replace("%TARGET%", center.formats().formatSubject(punishment.subject())).replace("%OPERATOR%", center.formats().formatSubject(punishment.operator())).replace("%REASON%", punishment.reason()).replace("%EXP_REL%", center.formats().formatTime(punishment.expiration(), false)).replace("%EXP_ABS%", center.formats().formatTime(punishment.expiration(), true)).replace("%DATE_REL%", center.formats().formatTime(punishment.date(), false)).replace("%DATE_ABS%", center.formats().formatTime(punishment.date(), true));
 	}
 	
 	private String keyString(PunishmentType type) {
@@ -255,7 +279,8 @@ public class Commands implements CommandsMaster {
 		for (String ip : ips) {
 			builder.append(ip_selector_element.replace("%IP%", ip).replace("%CMD%", base + ip + extra));
 		}
-		center.subjects().sendMessage(operator, builder.toString());
+		String list = builder.toString();
+		center.subjects().sendMessage(operator, ip_selector_message.replace("%TARGET%", center.formats().formatSubject(target)).replace("%LIST%", list));
 	}
 	
 	private CommandType alternateIpSpec(CommandType command) {
@@ -265,6 +290,29 @@ public class Commands implements CommandsMaster {
 			}
 		}
 		throw new InternalStateException("Could not find command with IpSpec.IP for subcategory " + command.subCategory());
+	}
+	
+	private PunishmentType applicableType(CommandType command) {
+		switch (command.subCategory()) {
+		case BAN:
+		case UNBAN:
+			return PunishmentType.BAN;
+		case MUTE:
+		case UNMUTE:
+			return PunishmentType.MUTE;
+		case WARN:
+		case UNWARN:
+			return PunishmentType.WARN;
+		case KICK:
+			return PunishmentType.KICK;
+		case BANLIST:
+		case MUTELIST:
+		case HISTORY:
+		case WARNS:
+		case STATUS:
+		default:
+			throw new InternalStateException("You called a bad method :/");
+		}
 	}
 	
 	private void exec(Subject operator, CommandType command, String[] args) {
@@ -313,7 +361,7 @@ public class Commands implements CommandsMaster {
 			if (command.category().equals(Category.ADD)) {
 				punCmd(operator, target, command, chopOffOne(args));
 			} else if (command.category().equals(Category.REMOVE)) {
-				unpunCmd(operator, target, command);
+				unpunCmd(operator, target, command, chopOffOne(args));
 			} else if (command.category().equals(Category.LIST)) {
 				listCmd(operator, target, command, args[1]);
 			} else if (command.category().equals(Category.OTHER)) {
@@ -322,13 +370,109 @@ public class Commands implements CommandsMaster {
 		}
 	}
 	
-	// TODO check dur perms, detect time argument, concatenate reason argument
-	private void punCmd(Subject operator, Subject target, CommandType command, String[] args) {
-		
+	private String notifyPerm(PunishmentType type) {
+		return "arimbans." + type.name() + ".notify";
 	}
 	
-	private void unpunCmd(Subject operator, Subject target, CommandType command) {
-		
+	// TODO check dur perms, detect time argument, concatenate reason argument
+	private void punCmd(Subject operator, Subject target, CommandType command, String[] args) {
+		if (args.length == 0) {
+			usage(operator, command);
+			return;
+		}
+		PunishmentType type = applicableType(command);
+		long span;
+		if (!type.equals(PunishmentType.KICK)) {
+			long max = 0;
+			List<String> durPerms = durations.get(type);
+			for (String perm : durPerms) {
+				long permTime = center.formats().toMillis(perm);
+				if (permTime > max) {
+					if (center.subjects().hasPermission(operator, perm)) {
+						max = permTime;
+					}
+				}
+			}
+			span = center.formats().toMillis(args[0]);
+			if (span == 0) {
+				span = -1L;
+			} else {
+				args = chopOffOne(args);
+			}
+			if (span == -1L && max != -1L || span > max) {
+				center.subjects().sendMessage(operator, permTime.get(type));
+				return;
+			}
+		} else {
+			span = -1L;
+		}
+		String reason;
+		if (args.length == 0) {
+			if (permit_blank_reason) {
+				reason = default_reason;
+			} else {
+				usage(operator, command);
+				return;
+			}
+		} else {
+			reason = concat(args);
+		}
+		Punishment punishment = new Punishment(type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis());
+		try {
+			center.punishments().addPunishments(punishment);
+			center.subjects().sendMessage(operator, encodePunishmentVars(successful.get(command.subCategory()), punishment));
+			center.subjects().sendForPermission(notifyPerm(type), encodePunishmentVars(notification.get(command.subCategory()), punishment));
+		} catch (ConflictingPunishmentException ex) {
+			String conflict = (punishment.type().equals(PunishmentType.BAN)) ? additions_bans_error_conflicting : additions_mutes_error_conflicting;
+			center.subjects().sendMessage(operator, conflict.replace("%TARGET%", center.formats().formatSubject(punishment.subject())));
+		}
+	}
+	
+	private void unpunCmd(Subject operator, Subject target, CommandType command, String[] args) {
+		PunishmentType type = applicableType(command);
+		if (command.subCategory().equals(SubCategory.UNWARN)) {
+			if (args.length > 0) {
+				if (args[0].equals("internal_bydate")) {
+					try {
+						long date = Long.parseLong(args[1]);
+						Set<Punishment> active = center.punishments().getAllPunishments();
+						for (Punishment punishment : active) {
+							if (punishment.date() == date) {
+								center.punishments().removePunishments(punishment);
+								center.subjects().sendMessage(operator, encodePunishmentVars(successful.get(command.subCategory()), punishment));
+								center.subjects().sendForPermission(notifyPerm(PunishmentType.WARN), encodePunishmentVars(notification.get(command.subCategory()), punishment));
+								return;
+							}
+						}
+					} catch (NumberFormatException ex) {}
+				} else {
+					try {
+						int id = (Integer.parseInt(args[0]) - 1);
+						ArrayList<Punishment> applicable = new ArrayList<Punishment>(center.punishments().getPunishments(target));
+						applicable.sort(DATE_COMPARATOR);
+						if (id < 0 || id >= applicable.size()) {
+							center.subjects().sendMessage(operator, notfound.get(type).replace("%NUMBER%", args[0]).replace("%TARGET%", center.formats().formatSubject(target)));
+							return;
+						}
+						Punishment punishment = applicable.get(id);
+						String cmd = getCmdBaseString(command) + " internal_bydate " + punishment.date();
+						center.subjects().sendMessage(operator, encodePunishmentVars(removals_warns_error_confirm, punishment).replace("%CMD%", cmd));
+						return;
+					} catch (NumberFormatException ex) {}
+				}
+			}
+			usage(operator, command);
+			return;
+		}
+		try {
+			Punishment punishment = center.punishments().getPunishment(target, type);
+			center.punishments().removePunishments(punishment);
+			center.subjects().sendMessage(operator, encodePunishmentVars(successful.get(command.subCategory()), punishment));
+			center.subjects().sendForPermission(notifyPerm(type), encodePunishmentVars(notification.get(command.subCategory()), punishment));
+		} catch (MissingPunishmentException ex) {
+			center.subjects().sendMessage(operator, notfound.get(type).replace("%TARGET%", center.formats().formatSubject(target)));
+		}
+
 	}
 	
 	private Set<Punishment> getAllForListParams(Subject target, CommandType command) {
@@ -408,17 +552,12 @@ public class Commands implements CommandsMaster {
 		for (int n = 0; n < footer.size(); n++) {
 			footer.set(n, footer.get(n).replace("%PAGE%", Integer.toString(lister.page)).replace("%MAXPAGE%", Integer.toString(maxPage)).replace("%CMD%", lister.getNextPageCmd()));
 		}
-		punishments.sort(new Comparator<Punishment>() {
-			@Override
-			public int compare(Punishment p1, Punishment p2) {
-				return (int) (p1.date() - p2.date());
-			}
-		});
+		punishments.sort(DATE_COMPARATOR);
 		center.subjects().sendMessage(operator, header.toArray(new String[0]));
 		for (Punishment p : punishments) {
 			String[] msgs = body.toArray(new String[0]);
 			for (int n = 0; n < msgs.length; n++) {
-				msgs[n] = encodeVars(msgs[n], p);
+				msgs[n] = encodePunishmentVars(msgs[n], p);
 			}
 			center.subjects().sendMessage(operator, true, msgs);
 		}
@@ -439,6 +578,12 @@ public class Commands implements CommandsMaster {
 			return;
 		}
 		center.subjects().sendMessage(subject, usage.get(command));
+	}
+	
+	@Override
+	public void refreshConfig() {
+		permit_blank_reason = center.config().getConfigBoolean("commands.reasons.permit-blank");
+		default_reason = center.config().getConfigString("commands.reasons.default-reason");
 	}
 	
 	@Override
@@ -480,36 +625,28 @@ public class Commands implements CommandsMaster {
 		}
 		
 		for (PunishmentType type : PunishmentType.values()) {
-			String leadKey = "additions." + keyString(type);
-			SubCategory category = fromPunishmentType(type, true);
+			String keyString = keyString(type);
+			String leadKey1 = "additions." + keyString;
+			String leadKey2 = "removals." + keyString;
+			SubCategory categoryAdd = fromPunishmentType(type, true);
+			SubCategory categoryRemove = fromPunishmentType(type, false);
 			switch (type) {
 			case BAN: // falls through to warn case
 			case MUTE: // falls through to warn case
 			case WARN:
-				permTime.put(type, center.config().getMessagesString(leadKey + "permission.time"));
-				durPerms.put(type, center.config().getMessagesStrings(leadKey + "permission.dur-perms"));
+				// removals do not apply to kicks
+				notfound.put(type, center.config().getMessagesString(leadKey2 + "error.not-found"));
+				successful.put(categoryRemove, center.config().getMessagesString(leadKey2 + "successful.message"));
+				notification.put(categoryRemove, center.config().getMessagesString(leadKey2 + "successful.notification"));
+				// durations do not apply to kicks
+				permTime.put(type, center.config().getMessagesString(leadKey1 + "permission.time"));
+				durations.put(type, center.config().getMessagesStrings(leadKey1 + "permission.dur-perms"));
 				// then falls through to kick case
 			case KICK:
-				exempt.put(type, center.config().getMessagesString(leadKey + "error.exempt"));
-				successful.put(category, center.config().getMessagesString(leadKey + "successful.message"));
-				notification.put(category, center.config().getMessagesString(leadKey + "successful.notification"));
-				layout.put(type, center.config().getMessagesStrings(leadKey + "layout"));
-				break;
-			default:
-				throw new InternalStateException("What other punishment type is there?!?");
-			}
-		}
-		
-		for (PunishmentType type : PunishmentType.values()) {
-			String leadKey = "removals." + keyString(type);
-			SubCategory category = fromPunishmentType(type, false);
-			switch (type) {
-			case BAN:
-			case MUTE:
-			case WARN:
-			case KICK:
-				successful.put(category, center.config().getMessagesString(leadKey + "successful.message"));
-				notification.put(category, center.config().getMessagesString(leadKey + "successful.notification"));
+				exempt.put(type, center.config().getMessagesString(leadKey1 + "error.exempt"));
+				successful.put(categoryAdd, center.config().getMessagesString(leadKey1 + "successful.message"));
+				notification.put(categoryAdd, center.config().getMessagesString(leadKey1 + "successful.notification"));
+				layout.put(type, center.config().getMessagesStrings(leadKey1 + "layout"));
 				break;
 			default:
 				throw new InternalStateException("What other punishment type is there?!?");

@@ -50,8 +50,8 @@ public enum CommandType {
 	WARNS(SubCategory.WARNS),
 	IPWARNS(SubCategory.WARNS, IpSpec.IP),
 	
-	CHECK(SubCategory.CHECK),
-	IPCHECK(SubCategory.CHECK, IpSpec.IP);
+	CHECK(SubCategory.STATUS),
+	IPCHECK(SubCategory.STATUS, IpSpec.IP);
 	
 	public enum SubCategory {
 		BAN(Category.ADD, "ban.do"),
@@ -65,7 +65,7 @@ public enum CommandType {
 		MUTELIST(Category.LIST, "mutelist", true),
 		HISTORY(Category.LIST, "history"),
 		WARNS(Category.LIST, "warns"),
-		CHECK(Category.OTHER, "check");
+		STATUS(Category.OTHER, "status");
 		
 		private final Category category;
 		private final String permissionBase;
@@ -146,6 +146,7 @@ public enum CommandType {
 		case IP:
 			return base + ".ip";
 		default:
+			assert false;
 			throw new IllegalStateException("IpSpec is invalid!");
 		}
 	}

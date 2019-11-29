@@ -19,6 +19,7 @@
 package space.arim.bans.internal.frontend.commands;
 
 import space.arim.bans.api.CommandType;
+import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.internal.Component;
 
@@ -27,6 +28,8 @@ public interface CommandsMaster extends Component {
 	default Class<?> getType() {
 		return CommandsMaster.class;
 	}
+	
+	String encodePunishmentVars(String message, Punishment punishment);
 	
 	void execute(Subject subject, String[] rawArgs);
 	
