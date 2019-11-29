@@ -48,4 +48,6 @@ public interface FormatsMaster extends Component {
 	
 	String getConsoleDisplay();
 	
+	boolean isCmdMuteBlocked(String cmd);
+	
 }

@@ -20,6 +20,7 @@ package space.arim.bans.internal.frontend.format;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -45,6 +46,7 @@ public class Formats implements FormatsMaster {
 	private List<String> permanent_arguments;
 	private final ConcurrentHashMap<PunishmentType, List<String>> layout = new ConcurrentHashMap<PunishmentType, List<String>>();
 	private final ConcurrentHashMap<SubCategory, String> notification = new ConcurrentHashMap<SubCategory, String>();
+	private Collection<String> blockForMuted;
 	
 	private boolean json = true;
 	private String permanent_display;
@@ -150,6 +152,15 @@ public class Formats implements FormatsMaster {
 	}
 	
 	@Override
+	public boolean isCmdMuteBlocked(String command) {
+		String cmd = command.split(" ")[0];
+		if (cmd.contains(":")) {
+			cmd = cmd.split(":")[1];
+		}
+		return blockForMuted.contains(command.replace("/", ""));
+	}
+	
+	@Override
 	public void refreshConfig(boolean fromFile) {
 		
 		try {
@@ -165,6 +176,7 @@ public class Formats implements FormatsMaster {
 		json = center.config().getConfigBoolean("formatting.use-json");
 		permanent_display = center.config().getConfigString("formatting.permanent-display");
 		console_display = center.config().getConfigString("formatting.console-display");
+		blockForMuted = center.config().getConfigStrings("commands.block-for-muted");
 		
 	}
 	
