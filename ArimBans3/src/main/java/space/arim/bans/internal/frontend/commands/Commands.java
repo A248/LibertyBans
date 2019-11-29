@@ -707,7 +707,7 @@ public class Commands implements CommandsMaster {
 			case BANLIST:
 			case MUTELIST:
 			case HISTORY:
-			case WARNS:
+			case WARNS: // all 4 cases fall-through to here
 				perPage.put(category, center.config().getMessagesInt(leadKey + "per-page"));
 				noPage.put(category, center.config().getMessagesString(leadKey + "no-pages"));
 				maxPage.put(category, center.config().getMessagesString(leadKey + "max-pages"));
