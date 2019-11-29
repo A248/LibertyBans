@@ -46,6 +46,7 @@ public class Formats implements FormatsMaster {
 	private final ConcurrentHashMap<PunishmentType, List<String>> layout = new ConcurrentHashMap<PunishmentType, List<String>>();
 	private final ConcurrentHashMap<SubCategory, String> notification = new ConcurrentHashMap<SubCategory, String>();
 	
+	private boolean json = true;
 	private String permanent_display;
 	private String console_display;
 
@@ -63,6 +64,11 @@ public class Formats implements FormatsMaster {
 		}
 	}
 
+	@Override
+	public boolean useJson() {
+		return json;
+	}
+	
 	@Override
 	public String formatMessageWithPunishment(String message, Punishment punishment) {
 		return message.replace("%TARGET%", center.formats().formatSubject(punishment.subject())).replace("%OPERATOR%", center.formats().formatSubject(punishment.operator())).replace("%REASON%", punishment.reason()).replace("%EXP_REL%", center.formats().formatTime(punishment.expiration(), false)).replace("%EXP_ABS%", center.formats().formatTime(punishment.expiration(), true)).replace("%DATE_REL%", center.formats().formatTime(punishment.date(), false)).replace("%DATE_ABS%", center.formats().formatTime(punishment.date(), true));
@@ -156,6 +162,7 @@ public class Formats implements FormatsMaster {
 		
 		permanent_arguments = center.config().getConfigStrings("formatting.permanent-arguments");
 		
+		json = center.config().getConfigBoolean("formatting.use-json");
 		permanent_display = center.config().getConfigString("formatting.permanent-display");
 		console_display = center.config().getConfigString("formatting.console-display");
 		

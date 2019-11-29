@@ -34,8 +34,7 @@ public class Subjects implements SubjectsMaster {
 	
 	private static final int LENGTH_OF_FULL_UUID = 36;
 	private static final int LENGTH_OF_SHORT_UUID = 32;
-	
-	private boolean json = true;
+
 	private boolean op_permissions = true;
 	private boolean usePrefix = true;
 	private String prefix = "Prefix>> ";
@@ -77,6 +76,7 @@ public class Subjects implements SubjectsMaster {
 	
 	@Override
 	public void sendMessage(Subject subject, boolean prefixed, String...jsonables) {
+		boolean json = center.formats().useJson();
 		for (int n = 0; n < jsonables.length; n++) {
 			ArimBansLibrary.checkString(jsonables[n]);
 			center.environment().sendMessage(subject, addQuotes((n == 0 && usePrefix && !prefixed) ? prefix + jsonables[n] : jsonables[n]), json);
@@ -97,7 +97,7 @@ public class Subjects implements SubjectsMaster {
 		String m = center.formats().formatNotification(punishment, add, operator);
 		String msg = addQuotes((usePrefix) ? prefix + m : m);
 		ArimBansLibrary.checkString(msg);
-		center.environment().sendMessage(notifyPerm(punishment.type()), msg, json);
+		center.environment().sendMessage(notifyPerm(punishment.type()), msg, center.formats().useJson());
 	}
 	
 	private String addQuotes(String message) {
@@ -111,7 +111,6 @@ public class Subjects implements SubjectsMaster {
 	
 	@Override
 	public void refreshConfig(boolean fromFile) {
-		json = center.config().getConfigBoolean("formatting.use-json");
 		op_permissions = center.config().getConfigBoolean("commands.op-permissions");
 		usePrefix = center.config().getMessagesBoolean("all.prefix.use");
 		prefix = center.config().getMessagesString("all.prefix.value");

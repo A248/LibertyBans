@@ -122,17 +122,23 @@ public class BukkitEnforcer implements Enforcer {
 	}
 
 	@Override
-	public void enforce(Punishment punishment) {
+	public void enforce(Punishment punishment, boolean useJson) {
 		Set<? extends Player> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
+			environment.plugin().getServer().getScheduler().runTask(environment.plugin(), () -> {
+				for (Player target : targets) {
+					target.kickPlayer(message);
+				}
+			});
+		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
 			for (Player target : targets) {
-				target.kickPlayer(message);
+				if (useJson) {
+					environment.json(target, message);
+				} else {
+					target.sendMessage(message);
+				}
 			}
-		} else if (punishment.type().equals(PunishmentType.MUTE)) {
-			environment.center().subjects().sendMessage(punishment.subject(), message);
-		} else if (punishment.type().equals(PunishmentType.WARN)) {
-			environment.center().subjects().sendMessage(punishment.subject(), message);
 		}
 	}
 	

@@ -127,17 +127,21 @@ public class BungeeEnforcer implements Enforcer {
 	}
 
 	@Override
-	public void enforce(Punishment punishment) {
+	public void enforce(Punishment punishment, boolean useJson) {
 		Set<ProxiedPlayer> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
 			for (ProxiedPlayer target : targets) {
 				target.disconnect(environment.convert(message));
 			}
-		} else if (punishment.type().equals(PunishmentType.MUTE)) {
-			environment.center().subjects().sendMessage(punishment.subject(), message);
-		} else if (punishment.type().equals(PunishmentType.WARN)) {
-			environment.center().subjects().sendMessage(punishment.subject(), message);
+		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
+			for (ProxiedPlayer target : targets) {
+				if (useJson) {
+					environment.json(target, message);
+				} else {
+					target.sendMessage(environment.convert(message));
+				}
+			}
 		}
 	}
 	
