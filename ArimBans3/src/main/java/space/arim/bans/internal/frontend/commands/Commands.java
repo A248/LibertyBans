@@ -576,13 +576,13 @@ public class Commands implements CommandsMaster {
 	}
 	
 	@Override
-	public void refreshConfig() {
+	public void refreshConfig(boolean fromFile) {
 		permit_blank_reason = center.config().getConfigBoolean("commands.reasons.permit-blank");
 		default_reason = center.config().getConfigString("commands.reasons.default-reason");
 	}
 	
 	@Override
-	public void refreshMessages() {
+	public void refreshMessages(boolean fromFile) {
 		
 		base_perm_msg = center.config().getMessagesString("all.base-permission-message");
 		for (IpSpec spec : IpSpec.values()) {
