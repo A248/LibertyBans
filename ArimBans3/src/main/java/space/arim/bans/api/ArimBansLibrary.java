@@ -21,7 +21,6 @@ package space.arim.bans.api;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.util.ToolsUtil;
 
 public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
@@ -43,11 +42,8 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 * @param message - the string to check
 	 */
 	static void checkString(String message) {
-		if (message == null) {
-			throw new InternalStateException("checkString: String is null!");
-		} else if (INVALID_STRING_CODE.equals(message)) {
-			throw new InternalStateException("checkString: String is INVALID_STRING_CODE!");
-		}
+		assert message != null;
+		assert (!message.equals(INVALID_STRING_CODE));
 	}
 	
 	/**
