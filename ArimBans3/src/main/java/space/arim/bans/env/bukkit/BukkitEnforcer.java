@@ -41,7 +41,6 @@ public class BukkitEnforcer implements Enforcer {
 	
 	public BukkitEnforcer(final BukkitEnv environment) {
 		this.environment = environment;
-		refreshConfig();
 	}
 	
 	private void missingCenter(String message) {

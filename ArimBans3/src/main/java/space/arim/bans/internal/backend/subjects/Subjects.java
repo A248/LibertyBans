@@ -98,7 +98,7 @@ public class Subjects implements SubjectsMaster {
 	}
 	
 	@Override
-	public void refreshConfig() {
+	public void refreshConfig(boolean fromFile) {
 		json = center.config().getConfigBoolean("formatting.use-json");
 		op_permissions = center.config().getConfigBoolean("commands.op-permissions");
 		usePrefix = center.config().getMessagesBoolean("all.prefix.use");

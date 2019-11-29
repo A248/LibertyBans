@@ -153,10 +153,16 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 				}
 			});
 		}
-		async(() -> {
-			refresh();
+		if (config().getConfigBoolean("misc.async-loading")) {
+			async(() -> {
+				refresh(false);
+				loadData();
+			});
+		} else {
+			refresh(false);
 			loadData();
-		});
+		}
+
 		UniversalRegistry.register(PunishmentPlugin.class, this);
 		UniversalRegistry.register(UUIDResolver.class, resolver);
 	}
@@ -224,28 +230,28 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	}
 	
 	@Override
-	public void refreshConfig() {
-		config.refreshConfig();
-		sql.refreshConfig();
-		punishments.refreshConfig();
+	public void refreshConfig(boolean fromFile) {
+		config.refreshConfig(fromFile);
+		sql.refreshConfig(fromFile);
+		punishments.refreshConfig(fromFile);
 		punishments.refreshActive();
-		subjects.refreshConfig();
-		resolver.refreshConfig();
-		commands.refreshConfig();
-		formats.refreshConfig();
-		async.refreshConfig();
+		subjects.refreshConfig(fromFile);
+		resolver.refreshConfig(fromFile);
+		commands.refreshConfig(fromFile);
+		formats.refreshConfig(fromFile);
+		async.refreshConfig(fromFile);
 	}
 	
 	@Override
-	public void refreshMessages() {
-		config.refreshMessages();
-		sql.refreshMessages();
-		punishments.refreshMessages();
-		subjects.refreshMessages();
-		resolver.refreshMessages();
-		commands.refreshMessages();
-		formats.refreshMessages();
-		async.refreshMessages();
+	public void refreshMessages(boolean fromFile) {
+		config.refreshMessages(fromFile);
+		sql.refreshMessages(fromFile);
+		punishments.refreshMessages(fromFile);
+		subjects.refreshMessages(fromFile);
+		resolver.refreshMessages(fromFile);
+		commands.refreshMessages(fromFile);
+		formats.refreshMessages(fromFile);
+		async.refreshMessages(fromFile);
 	}
 	
 	@Override
@@ -353,17 +359,17 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	
 	@Override
 	public void reload() {
-		refresh();
+		refresh(true);
 	}
 	
 	@Override
 	public void reloadConfig() {
-		refreshConfig();
+		refreshConfig(true);
 	}
 	
 	@Override
 	public void reloadMessages() {
-		reloadMessages();
+		refreshMessages(true);
 	}
 	
 	@Override

@@ -46,6 +46,7 @@ public class Resolver implements ResolverMaster {
 	private ConcurrentHashMap<UUID, List<String>> ips = new ConcurrentHashMap<UUID, List<String>>();
 	private ConcurrentHashMap<UUID, String> uuids = new ConcurrentHashMap<UUID, String>();
 
+	private boolean internalFetcher = true;
 	private boolean ashconFetcher = true;
 	private boolean mojangFetcher = true;
 	private boolean ipStack = false;
@@ -196,11 +197,13 @@ public class Resolver implements ResolverMaster {
 		try {
 			return getUUID(name);
 		} catch (MissingCacheException ex) {}
-		try {
-			UUID uuid2 = center.environment().uuidFromName(name);
-			update(uuid2, name, null);
-			return uuid2;
-		} catch (PlayerNotFoundException ex) {}
+		if (internalFetcher) {
+			try {
+				UUID uuid2 = center.environment().uuidFromName(name);
+				update(uuid2, name, null);
+				return uuid2;
+			} catch (PlayerNotFoundException ex) {}
+		}
 		if (query && ashconFetcher) {
 			try {
 				UUID uuid3 = FetcherUtil.ashconApi(name);
@@ -223,11 +226,13 @@ public class Resolver implements ResolverMaster {
 		try {
 			return getName(uuid);
 		} catch (MissingCacheException ex) {}
-		try {
-			String name2 = center.environment().nameFromUUID(uuid);
-			update(uuid, name2, null);
-			return name2;
-		} catch (PlayerNotFoundException ex) {}
+		if (internalFetcher) {
+			try {
+				String name2 = center.environment().nameFromUUID(uuid);
+				update(uuid, name2, null);
+				return name2;
+			} catch (PlayerNotFoundException ex) {}
+		}
 		if (query && ashconFetcher) {
 			try {
 				String name3 = FetcherUtil.ashconApi(uuid);
@@ -266,7 +271,8 @@ public class Resolver implements ResolverMaster {
 	}
 	
 	@Override
-	public void refreshConfig() {
+	public void refreshConfig(boolean fromFile) {
+		internalFetcher = center.config().getConfigBoolean("fetchers.uuids.internal");
 		ashconFetcher = center.config().getConfigBoolean("fetchers.uuids.ashcon");
 		mojangFetcher = center.config().getConfigBoolean("fetchers.uuids.mojang");
 		ipStack = center.config().getConfigBoolean("fetchers.ips.ipstack.enabled");

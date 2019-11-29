@@ -48,16 +48,17 @@ public class Sql implements SqlMaster {
 
 	public Sql(ArimBans center) {
 		this.center = center;
-		refreshConfig();
 		try {
 			factory = RowSetProvider.newFactory();
 		} catch (SQLException ex) {
 			throw new InternalStateException("RowSetProvider could not load its factory!", ex);
 		}
-		setup();
 	}
 
 	private void setup() {
+		if (data != null) {
+			data.close();
+		}
 		HikariConfig config = new HikariConfig();
 		config.setDriverClassName("com.mysql.jdbc.Driver");
 		config.setMinimumIdle(min_connections);
@@ -71,6 +72,7 @@ public class Sql implements SqlMaster {
 			config.setUsername("SA");
 			config.setPassword("");
 		} else {
+			assert false;
 			throw new InternalStateException("Storage mode is completely missing!");
 		}
 		data = new HikariDataSource(config);
@@ -179,10 +181,13 @@ public class Sql implements SqlMaster {
 	}
 	
 	@Override
-	public void refreshConfig() {
+	public void refreshConfig(boolean fromFile) {
 		mode = parseMode("storage.mode");
 		min_connections = center.config().getConfigInt("storage.min-connections");
 		max_connections = center.config().getConfigInt("storage.max-connections");
+		if (fromFile) {
+			setup();
+		}
 	}
 
 }

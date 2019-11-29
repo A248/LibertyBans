@@ -47,7 +47,6 @@ public class BungeeEnv implements Environment {
 	private final BungeeListener listener;
 	private final BungeeCommands commands;
 	
-	private boolean internalFetcher = true;
 	private boolean registered = false;
 	
 	public BungeeEnv(Plugin plugin) {
@@ -191,11 +190,9 @@ public class BungeeEnv implements Environment {
 	
 	@Override
 	public UUID uuidFromName(String name) throws PlayerNotFoundException {
-		if (internalFetcher) {
-			for (final ProxiedPlayer player : plugin.getProxy().getPlayers()) {
-				if (player.getName().equals(name)) {
-					return player.getUniqueId();
-				}
+		for (final ProxiedPlayer player : plugin.getProxy().getPlayers()) {
+			if (player.getName().equals(name)) {
+				return player.getUniqueId();
 			}
 		}
 		throw new PlayerNotFoundException(name);
@@ -203,11 +200,9 @@ public class BungeeEnv implements Environment {
 	
 	@Override
 	public String nameFromUUID(UUID uuid) throws PlayerNotFoundException {
-		if (internalFetcher) {
-			for (final ProxiedPlayer player : plugin.getProxy().getPlayers()) {
-				if (player.getUniqueId().equals(uuid)) {
+		for (final ProxiedPlayer player : plugin.getProxy().getPlayers()) {
+			if (player.getUniqueId().equals(uuid)) {
 					return player.getName();
-				}
 			}
 		}
 		throw new PlayerNotFoundException(uuid);
@@ -249,11 +244,6 @@ public class BungeeEnv implements Environment {
 	@Override
 	public boolean isLibrarySupported(EnvLibrary type) {
 		return libraries.contains(type);
-	}
-	
-	@Override
-	public void refreshConfig() {
-		internalFetcher = center.config().getConfigBoolean("fetchers.uuids.internal");
 	}
 	
 	@Override

@@ -23,9 +23,12 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.ConcurrentHashMap;
 
 import space.arim.bans.ArimBans;
+import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.Punishment;
+import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
@@ -37,13 +40,20 @@ public class Formats implements FormatsMaster {
 	
 	private SimpleDateFormat dateFormatter;
 	
-	private List<String> permanent_arguments = Arrays.asList("perm");
+	private List<String> permanent_arguments;
+	private final ConcurrentHashMap<PunishmentType, List<String>> layout = new ConcurrentHashMap<PunishmentType, List<String>>();
 	
 	private String permanent_display;
 	private String console_display;
 
 	public Formats(ArimBans center) {
 		this.center = center;
+		String invalid_string = ArimBansLibrary.INVALID_STRING_CODE;
+		List<String> invalid_strings = Arrays.asList(invalid_string);
+		permanent_arguments = invalid_strings;
+		for (PunishmentType type : PunishmentType.values()) {
+			layout.put(type, invalid_strings);
+		}
 	}
 
 	@Override
@@ -117,7 +127,7 @@ public class Formats implements FormatsMaster {
 	}
 	
 	@Override
-	public void refreshConfig() {
+	public void refreshConfig(boolean fromFile) {
 		
 		try {
 			dateFormatter = new SimpleDateFormat(center.config().getConfigString("formatting.date"));

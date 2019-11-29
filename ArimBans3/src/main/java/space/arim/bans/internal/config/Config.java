@@ -138,12 +138,30 @@ public class Config implements ConfigMaster {
 	}
 	
 	@Override
-	public void refreshConfig() {
-		Yaml yaml = new Yaml();
-		configValues.putAll(loadFile(configYml, yaml));
-		messageValues.putAll(loadFile(messagesYml, yaml));
-		configVersion();
-		messagesVersion();
+	public void refresh(boolean fromFile) {
+		if (fromFile) {
+			Yaml yaml = new Yaml();
+			configValues.putAll(loadFile(configYml, yaml));
+			messageValues.putAll(loadFile(messagesYml, yaml));
+			configVersion();
+			messagesVersion();
+		}
+	}
+	
+	@Override
+	public void refreshConfig(boolean fromFile) {
+		if (fromFile) {
+			configValues.putAll(loadFile(configYml, new Yaml()));
+			configVersion();
+		}
+	}
+	
+	@Override
+	public void refreshMessages(boolean fromFile) {
+		if (fromFile) {
+			messageValues.putAll(loadFile(messagesYml, new Yaml()));
+			messagesVersion();
+		}
 	}
 
 	private void warning(String message) {

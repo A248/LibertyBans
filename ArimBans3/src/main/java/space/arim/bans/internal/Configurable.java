@@ -20,16 +20,16 @@ package space.arim.bans.internal;
 
 public interface Configurable extends AutoCloseable {
 	
-	default void refresh() {
-		refreshConfig();
-		refreshMessages();
+	default void refresh(boolean fromFile) {
+		refreshConfig(fromFile);
+		refreshMessages(fromFile);
 	}
 	
-	default void refreshConfig() {
+	default void refreshConfig(boolean fromFile) {
 		
 	}
 	
-	default void refreshMessages() {
+	default void refreshMessages(boolean fromFile) {
 		
 	}
 	

@@ -47,7 +47,6 @@ public class BukkitEnv implements Environment {
 	private final BukkitListener listener;
 	private final BukkitCommands commands;
 	
-	private boolean internalFetcher = true;
 	private boolean registered = false;
 
 	public BukkitEnv(JavaPlugin plugin) {
@@ -189,11 +188,9 @@ public class BukkitEnv implements Environment {
 	
 	@Override
 	public UUID uuidFromName(String name) throws PlayerNotFoundException {
-		if (internalFetcher) {
-			for (final OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
-				if (player.getName().equalsIgnoreCase(name)) {
-					return player.getUniqueId();
-				}
+		for (final OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
+			if (player.getName().equalsIgnoreCase(name)) {
+				return player.getUniqueId();
 			}
 		}
 		throw new PlayerNotFoundException(name);
@@ -201,11 +198,9 @@ public class BukkitEnv implements Environment {
 	
 	@Override
 	public String nameFromUUID(UUID uuid) throws PlayerNotFoundException {
-		if (internalFetcher) {
-			for (final OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
-				if (player.getUniqueId().equals(uuid)) {
-					return player.getName();
-				}
+		for (final OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
+			if (player.getUniqueId().equals(uuid)) {
+				return player.getName();
 			}
 		}
 		throw new PlayerNotFoundException(uuid);
@@ -247,11 +242,6 @@ public class BukkitEnv implements Environment {
 	@Override
 	public boolean isLibrarySupported(EnvLibrary type) {
 		return libraries.contains(type);
-	}
-	
-	@Override
-	public void refreshConfig() {
-		internalFetcher = center.config().getConfigBoolean("fetchers.uuids.internal");
 	}
 	
 	@Override
