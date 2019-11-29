@@ -28,6 +28,8 @@ public interface FormatsMaster extends Component {
 		return FormatsMaster.class;
 	}
 	
+	String formatMessageWithPunishment(String message, Punishment punishment);
+	
 	String formatPunishment(Punishment punishment);
 	
 	String formatSubject(Subject subj);

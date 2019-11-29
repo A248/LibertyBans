@@ -162,11 +162,6 @@ public class Commands implements CommandsMaster {
 		return checkPermission(subject, command, true);
 	}
 	
-	@Override
-	public String encodePunishmentVars(String message, Punishment punishment) {
-		return message.replace("%TARGET%", center.formats().formatSubject(punishment.subject())).replace("%OPERATOR%", center.formats().formatSubject(punishment.operator())).replace("%REASON%", punishment.reason()).replace("%EXP_REL%", center.formats().formatTime(punishment.expiration(), false)).replace("%EXP_ABS%", center.formats().formatTime(punishment.expiration(), true)).replace("%DATE_REL%", center.formats().formatTime(punishment.date(), false)).replace("%DATE_ABS%", center.formats().formatTime(punishment.date(), true));
-	}
-	
 	private String keyString(PunishmentType type) {
 		switch (type) {
 		case BAN:
@@ -420,8 +415,8 @@ public class Commands implements CommandsMaster {
 		Punishment punishment = new Punishment(type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis());
 		try {
 			center.punishments().addPunishments(punishment);
-			center.subjects().sendMessage(operator, encodePunishmentVars(successful.get(command.subCategory()), punishment));
-			center.subjects().sendForPermission(notifyPerm(type), encodePunishmentVars(notification.get(command.subCategory()), punishment));
+			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
+			center.subjects().sendForPermission(notifyPerm(type), center.formats().formatMessageWithPunishment(notification.get(command.subCategory()), punishment));
 		} catch (ConflictingPunishmentException ex) {
 			String conflict = (punishment.type().equals(PunishmentType.BAN)) ? additions_bans_error_conflicting : additions_mutes_error_conflicting;
 			center.subjects().sendMessage(operator, conflict.replace("%TARGET%", center.formats().formatSubject(punishment.subject())));
@@ -439,8 +434,8 @@ public class Commands implements CommandsMaster {
 						for (Punishment punishment : active) {
 							if (punishment.date() == date) {
 								center.punishments().removePunishments(punishment);
-								center.subjects().sendMessage(operator, encodePunishmentVars(successful.get(command.subCategory()), punishment));
-								center.subjects().sendForPermission(notifyPerm(PunishmentType.WARN), encodePunishmentVars(notification.get(command.subCategory()), punishment));
+								center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
+								center.subjects().sendForPermission(notifyPerm(PunishmentType.WARN), center.formats().formatMessageWithPunishment(notification.get(command.subCategory()), punishment));
 								return;
 							}
 						}
@@ -456,7 +451,7 @@ public class Commands implements CommandsMaster {
 						}
 						Punishment punishment = applicable.get(id);
 						String cmd = getCmdBaseString(command) + " internal_bydate " + punishment.date();
-						center.subjects().sendMessage(operator, encodePunishmentVars(removals_warns_error_confirm, punishment).replace("%CMD%", cmd));
+						center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(removals_warns_error_confirm, punishment).replace("%CMD%", cmd));
 						return;
 					} catch (NumberFormatException ex) {}
 				}
@@ -467,8 +462,8 @@ public class Commands implements CommandsMaster {
 		try {
 			Punishment punishment = center.punishments().getPunishment(target, type);
 			center.punishments().removePunishments(punishment);
-			center.subjects().sendMessage(operator, encodePunishmentVars(successful.get(command.subCategory()), punishment));
-			center.subjects().sendForPermission(notifyPerm(type), encodePunishmentVars(notification.get(command.subCategory()), punishment));
+			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
+			center.subjects().sendForPermission(notifyPerm(type), center.formats().formatMessageWithPunishment(notification.get(command.subCategory()), punishment));
 		} catch (MissingPunishmentException ex) {
 			center.subjects().sendMessage(operator, notfound.get(type).replace("%TARGET%", center.formats().formatSubject(target)));
 		}
@@ -557,7 +552,7 @@ public class Commands implements CommandsMaster {
 		for (Punishment p : punishments) {
 			String[] msgs = body.toArray(new String[0]);
 			for (int n = 0; n < msgs.length; n++) {
-				msgs[n] = encodePunishmentVars(msgs[n], p);
+				msgs[n] = center.formats().formatMessageWithPunishment(msgs[n], p);
 			}
 			center.subjects().sendMessage(operator, true, msgs);
 		}

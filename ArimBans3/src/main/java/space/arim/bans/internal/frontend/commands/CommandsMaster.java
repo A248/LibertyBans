@@ -29,8 +29,6 @@ public interface CommandsMaster extends Component {
 		return CommandsMaster.class;
 	}
 	
-	String encodePunishmentVars(String message, Punishment punishment);
-	
 	void execute(Subject subject, String[] rawArgs);
 	
 	void execute(Subject subject, CommandType command, String[] extraArgs);
