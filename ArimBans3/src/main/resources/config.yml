@@ -41,9 +41,11 @@ commands:
     default-reason: 'No reason stated.'
   block-for-muted:
     - 'me'
-priorities:
-  bans: 'HIGHEST'
-  mutes: 'HIGHEST'
+misc:
+  async-loading: false
+  priorities:
+    bans: 'HIGHEST'
+    mutes: 'HIGHEST'
 fetchers:
   uuids:
     internal: true
