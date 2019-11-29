@@ -167,25 +167,25 @@ public class Resolver implements ResolverMaster {
 	}
 	
 	@Override
-	public GeoIpInfo lookupIp(final String address) throws NoGeoIpException, RateLimitException, HttpStatusException {
+	public GeoIpInfo lookupIp(final String address) throws NoGeoIpException, HttpStatusException {
 		if (ipStack) {
 			try {
 				return FetcherUtil.ipStack(address, ipStackKey);
-			} catch (FetcherException ex) {
+			} catch (FetcherException | RateLimitException ex) {
 				center.logError(ex);
 			}
 		}
 		if (freeGeoIp) {
 			try {
 				return FetcherUtil.freeGeoIp(address);
-			} catch (FetcherException ex) {
+			} catch (FetcherException| RateLimitException ex) {
 				center.logError(ex);
 			}
 		}
 		if (ipApi) {
 			try {
 				return FetcherUtil.ipApi(address);
-			} catch (FetcherException ex) {
+			} catch (FetcherException| RateLimitException ex) {
 				center.logError(ex);
 			}
 		}

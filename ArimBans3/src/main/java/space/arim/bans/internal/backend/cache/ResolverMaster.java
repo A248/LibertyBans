@@ -49,7 +49,7 @@ public interface ResolverMaster extends Component, UUIDResolver {
 	
 	boolean hasIp(UUID playeruuid, String ip);
 	
-	GeoIpInfo lookupIp(final String address) throws NoGeoIpException, RateLimitException, HttpStatusException;
+	GeoIpInfo lookupIp(final String address) throws NoGeoIpException, HttpStatusException;
 	
 	default String resolveUUID(UUID uuid) throws PlayerNotFoundException {
 		return resolveUUID(uuid, true);
