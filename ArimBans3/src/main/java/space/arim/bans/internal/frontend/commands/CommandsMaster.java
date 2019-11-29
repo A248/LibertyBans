@@ -19,7 +19,6 @@
 package space.arim.bans.internal.frontend.commands;
 
 import space.arim.bans.api.CommandType;
-import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.internal.Component;
 
