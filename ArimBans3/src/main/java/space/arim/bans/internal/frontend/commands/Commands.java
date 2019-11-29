@@ -566,10 +566,14 @@ public class Commands implements CommandsMaster {
 	private void ipsCmd(Subject operator, Subject target) {
 		String[] msgs = other_ips_layout_body.toArray(new String[0]);
 		String targetDisplay = center.formats().formatSubject(target);
+		List<String> ips = center.resolver().getIps(target.getUUID());
+		if (ips.isEmpty()) {
+			center.subjects().sendMessage(operator, other_ips_error_notfound.replace("%TARGET%", targetDisplay));
+			return;
+		}
 		StringBuilder builder = new StringBuilder();
-		// TODO Check for empty lists
-		for (String ip : center.resolver().getIps(target.getUUID())) {
-			builder.append(other_ips_layout_element.replace("%IP%", ip).replace("%GEOIP_CMD%", "arimbans geoip " + ip));
+		for (String ip : ips) {
+			builder.append(other_ips_layout_element.replace("%IP%", ip).replace("%GEOIP_CMD%", "arimbans geoip " + ip).replace("%STATUS_CMD%", "arimbans status " + ip));
 		}
 		for (int n = 0; n < msgs.length; n++) {
 			msgs[n] = msgs[n].replace("%TARGET%", targetDisplay).replace("%LIST%", builder.toString());
@@ -596,9 +600,13 @@ public class Commands implements CommandsMaster {
 	private void altsCmd(Subject operator, Subject target) {
 		String[] msgs = other_alts_layout_body.toArray(new String[0]);
 		String targetDisplay = center.formats().formatSubject(target);
+		List<UUID> players = center.resolver().getPlayers(target.getIP());
+		if (players.isEmpty()) {
+			center.subjects().sendMessage(operator, other_alts_error_notfound.replace("%TARGET%", center.formats().formatSubject(target)));
+			return;
+		}
 		StringBuilder builder = new StringBuilder();
-		// TODO check for empty lists
-		for (UUID uuid : center.resolver().getPlayers(target.getIP())) {
+		for (UUID uuid : players) {
 			String name;
 			try {
 				name = center.resolver().resolveUUID(uuid);
