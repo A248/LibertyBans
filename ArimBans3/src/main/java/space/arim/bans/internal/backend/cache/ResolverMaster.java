@@ -23,11 +23,9 @@ import java.util.List;
 import java.util.UUID;
 
 import space.arim.bans.api.UUIDResolver;
-import space.arim.bans.api.exception.HttpStatusException;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.bans.api.exception.RateLimitException;
 import space.arim.bans.api.util.GeoIpInfo;
 import space.arim.bans.internal.Component;
 
@@ -39,6 +37,8 @@ public interface ResolverMaster extends Component, UUIDResolver {
 	
 	List<String> getIps(UUID playeruuid);
 	
+	List<UUID> getPlayers(String address);
+	
 	String getName(UUID playeruuid) throws MissingCacheException;
 	
 	UUID getUUID(String name) throws MissingCacheException;
@@ -49,7 +49,7 @@ public interface ResolverMaster extends Component, UUIDResolver {
 	
 	boolean hasIp(UUID playeruuid, String ip);
 	
-	GeoIpInfo lookupIp(final String address) throws NoGeoIpException, HttpStatusException;
+	GeoIpInfo lookupIp(final String address) throws NoGeoIpException;
 	
 	default String resolveUUID(UUID uuid) throws PlayerNotFoundException {
 		return resolveUUID(uuid, true);

@@ -23,13 +23,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.exception.FetcherException;
 import space.arim.bans.api.exception.HttpStatusException;
-import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
@@ -97,10 +97,23 @@ public class Resolver implements ResolverMaster {
 
 	@Override
 	public List<String> getIps(UUID playeruuid) {
+		Objects.requireNonNull(playeruuid, "UUID must not be null!");
 		if (ips.containsKey(playeruuid)) {
 			return ips.get(playeruuid);
 		}
-		throw new InvalidUUIDException(playeruuid);
+		return new ArrayList<String>();
+	}
+	
+	@Override
+	public List<UUID> getPlayers(String address) {
+		Objects.requireNonNull(address, "Address must not be null!");
+		List<UUID> applicable = new ArrayList<UUID>();
+		ips.forEach((uuid, ips) -> {
+			if (ips.contains(address)) {
+				applicable.add(uuid);
+			}
+		});
+		return applicable;
 	}
 	
 	@Override
@@ -167,25 +180,25 @@ public class Resolver implements ResolverMaster {
 	}
 	
 	@Override
-	public GeoIpInfo lookupIp(final String address) throws NoGeoIpException, HttpStatusException {
+	public GeoIpInfo lookupIp(final String address) throws NoGeoIpException {
 		if (ipStack) {
 			try {
 				return FetcherUtil.ipStack(address, ipStackKey);
-			} catch (FetcherException | RateLimitException ex) {
+			} catch (FetcherException | RateLimitException | HttpStatusException ex) {
 				center.logError(ex);
 			}
 		}
 		if (freeGeoIp) {
 			try {
 				return FetcherUtil.freeGeoIp(address);
-			} catch (FetcherException| RateLimitException ex) {
+			} catch (FetcherException| RateLimitException | HttpStatusException ex) {
 				center.logError(ex);
 			}
 		}
 		if (ipApi) {
 			try {
 				return FetcherUtil.ipApi(address);
-			} catch (FetcherException| RateLimitException ex) {
+			} catch (FetcherException| RateLimitException | HttpStatusException ex) {
 				center.logError(ex);
 			}
 		}
