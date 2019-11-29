@@ -72,7 +72,6 @@ public class Commands implements CommandsMaster {
 	String additions_mutes_error_conflicting;
 	private final ConcurrentHashMap<SubCategory, String> successful = new ConcurrentHashMap<SubCategory, String>();
 	private final ConcurrentHashMap<SubCategory, String> notification = new ConcurrentHashMap<SubCategory, String>();
-	private final ConcurrentHashMap<PunishmentType, List<String>> layout = new ConcurrentHashMap<PunishmentType, List<String>>();
 	
 	private final ConcurrentHashMap<PunishmentType, String> notfound = new ConcurrentHashMap<PunishmentType, String>();
 	String removals_warns_error_confirm;
@@ -101,7 +100,6 @@ public class Commands implements CommandsMaster {
 			permTime.put(pun, invalid_string);
 			durations.put(pun, invalid_strings);
 			exempt.put(pun, invalid_string);
-			layout.put(pun, invalid_strings);
 		}
 		for (SubCategory cat : SubCategory.values()) {
 			successful.put(cat, invalid_string);
@@ -625,7 +623,6 @@ public class Commands implements CommandsMaster {
 				exempt.put(type, center.config().getMessagesString(leadKey1 + "error.exempt"));
 				successful.put(categoryAdd, center.config().getMessagesString(leadKey1 + "successful.message"));
 				notification.put(categoryAdd, center.config().getMessagesString(leadKey1 + "successful.notification"));
-				layout.put(type, center.config().getMessagesStrings(leadKey1 + "layout"));
 				break;
 			default:
 				throw new InternalStateException("What other punishment type is there?!?");
