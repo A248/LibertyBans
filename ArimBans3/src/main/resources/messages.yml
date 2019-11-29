@@ -260,17 +260,17 @@ other:
         header: '&cPlayer &8» &7%TARGET%'
         info:
           format: '%IP_LOOKUP%'
-          ip-lookup:
+          ips:
             enable: true
             message: '[IP Lookup]||ttp:&7Find IPs this player has connected with.||cmd:/%IPS_CMD%'
       ip:
         header: '&cIP &8» &7%TARGET%'
         info:
           format: '%GEO_IP%|| %ALT_LOOKUP%'
-          geo-ip:
+          geoip:
             enable: true
             message: '[GeoIP]||ttp:&7Click to inspect location details.||cmd:/%GEOIP_CMD%'
-          alt-lookup:
+          alts:
             enable: true
             message: '[Alt Lookup]||ttp:&7Find players who have connected with this IP.||cmd:/%ALTS_CMD%'
       body:
