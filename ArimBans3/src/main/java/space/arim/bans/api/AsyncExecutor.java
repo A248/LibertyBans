@@ -16,15 +16,12 @@
  * along with ArimBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.env;
+package space.arim.bans.api;
 
-import java.util.UUID;
+import space.arim.registry.Registrable;
 
-import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.bans.internal.Configurable;
+public interface AsyncExecutor extends Registrable {
 
-public interface Resolver extends Configurable {
-	UUID uuidFromName(final String name) throws PlayerNotFoundException;
+	void execute(Runnable command);
 	
-	String nameFromUUID(final UUID playeruuid) throws PlayerNotFoundException;
 }

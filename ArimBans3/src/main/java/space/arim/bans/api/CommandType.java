@@ -40,18 +40,22 @@ public enum CommandType {
 	
 	BANLIST(SubCategory.BANLIST, IpSpec.UUID),
 	IPBANLIST(SubCategory.BANLIST, IpSpec.IP),
-	UUIDBANLIST(SubCategory.BANLIST),
+	PLAYERBANLIST(SubCategory.BANLIST),
 	MUTELIST(SubCategory.MUTELIST, IpSpec.UUID),
 	IPMUTELIST(SubCategory.MUTELIST, IpSpec.IP),
-	UUIDMUTELIST(SubCategory.MUTELIST),
+	PLAYERMUTELIST(SubCategory.MUTELIST),
 	
 	HISTORY(SubCategory.HISTORY),
 	IPHISTORY(SubCategory.HISTORY, IpSpec.IP),
 	WARNS(SubCategory.WARNS),
 	IPWARNS(SubCategory.WARNS, IpSpec.IP),
 	
-	CHECK(SubCategory.CHECK),
-	IPCHECK(SubCategory.CHECK, IpSpec.IP);
+	STATUS(SubCategory.STATUS),
+	IPSTATUS(SubCategory.STATUS, IpSpec.IP),
+	
+	IPS(SubCategory.IPS, IpSpec.UUID),
+	GEOIP(SubCategory.GEOIP, IpSpec.IP),
+	ALTS(SubCategory.ALTS, IpSpec.IP);
 	
 	public enum SubCategory {
 		BAN(Category.ADD, "ban.do"),
@@ -65,7 +69,10 @@ public enum CommandType {
 		MUTELIST(Category.LIST, "mutelist", true),
 		HISTORY(Category.LIST, "history"),
 		WARNS(Category.LIST, "warns"),
-		CHECK(Category.OTHER, "check");
+		STATUS(Category.OTHER, "status"),
+		IPS(Category.OTHER, "iplookup"),
+		GEOIP(Category.OTHER, "geoip"),
+		ALTS(Category.OTHER, "alts");
 		
 		private final Category category;
 		private final String permissionBase;
@@ -81,7 +88,7 @@ public enum CommandType {
 			this(category, permissionBase, false);
 		}
 		
-		Category category() {
+		public Category category() {
 			return category;
 		}
 		
@@ -146,6 +153,7 @@ public enum CommandType {
 		case IP:
 			return base + ".ip";
 		default:
+			assert false;
 			throw new IllegalStateException("IpSpec is invalid!");
 		}
 	}

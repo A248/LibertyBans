@@ -36,21 +36,25 @@ formatting:
   date: 'dd/MM/yyyy HH:mm:ss'
 commands:
   op-permissions: true
+  reasons:
+    permit-blank: false
+    default-reason: 'No reason stated.'
   block-for-muted:
     - 'me'
-priorities:
-  bans: 'HIGHEST'
-  mutes: 'HIGHEST'
+misc:
+  async-loading: false
+  priorities:
+    bans: 'HIGHEST'
+    mutes: 'HIGHEST'
 fetchers:
   uuids:
     internal: true
     ashcon: true
     mojang: true
-  ips:
+  geoip:
     ipstack:
       enabled: false
       key: 'nokey'
     freegeoip: true
-    ip-api: true
     ipapi: true
 config-version: 1

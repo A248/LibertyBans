@@ -33,7 +33,6 @@ public class BukkitCommands implements Configurable, CommandExecutor {
 
 	public BukkitCommands(final BukkitEnv environment) {
 		this.environment = environment;
-		refreshConfig();
 	}
 	
 	@Override

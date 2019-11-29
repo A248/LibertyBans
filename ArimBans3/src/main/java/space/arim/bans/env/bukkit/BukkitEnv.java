@@ -20,8 +20,10 @@ package space.arim.bans.env.bukkit;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Logger;
 
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -32,6 +34,7 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.InvalidSubjectException;
+import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.util.ToolsUtil;
 import space.arim.bans.env.Environment;
 
@@ -41,7 +44,6 @@ public class BukkitEnv implements Environment {
 	private final Set<EnvLibrary> libraries = loadLibraries();
 	private ArimBans center;
 	private final BukkitEnforcer enforcer;
-	private final BukkitResolver resolver;
 	private final BukkitListener listener;
 	private final BukkitCommands commands;
 	
@@ -49,9 +51,7 @@ public class BukkitEnv implements Environment {
 
 	public BukkitEnv(JavaPlugin plugin) {
 		this.plugin = plugin;
-		refreshConfig();
 		this.enforcer = new BukkitEnforcer(this);
-		this.resolver = new BukkitResolver(this);
 		this.listener = new BukkitListener(this);
 		this.commands = new BukkitCommands(this);
 	}
@@ -80,7 +80,7 @@ public class BukkitEnv implements Environment {
 			return false;
 		} else if (subj.getType().equals(SubjectType.IP)) {
 			for (Player check : plugin.getServer().getOnlinePlayers()) {
-				if (center.cache().hasIp(check.getUniqueId(), subj.getIP())) {
+				if (center.resolver().hasIp(check.getUniqueId(), subj.getIP())) {
 					return true;
 				}
 			}
@@ -138,11 +138,11 @@ public class BukkitEnv implements Environment {
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
 			return true;
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {
-			Player target = plugin.getServer().getPlayer(subject.getUUID());
+			OfflinePlayer target = plugin.getServer().getOfflinePlayer(subject.getUUID());
 			if (target != null) {
 				return target.isOp() ? opPerms : target.getPlayer().hasPermission(permission);
 			}
-			throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subject) + " is not online or does not have a valid UUID.");
+			throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subject) + " does not have a valid UUID.");
 		} else if (subject.getType().equals(SubjectType.IP)) {
 			throw new InvalidSubjectException("Cannot invoke Environment#hasPermission(Subject, Permission[]) for IP-based subjects");
 		}
@@ -159,7 +159,7 @@ public class BukkitEnv implements Environment {
 			}
 		} else if (subject.getType().equals(SubjectType.IP)) {
 			for (Player check : plugin.getServer().getOnlinePlayers()) {
-				if (center.cache().hasIp(check.getUniqueId(), subject.getIP())) {
+				if (center.resolver().hasIp(check.getUniqueId(), subject.getIP())) {
 					applicable.add(check);
 				}
 			}
@@ -168,8 +168,40 @@ public class BukkitEnv implements Environment {
 	}
 	
 	@Override
-	public void runAsync(Runnable command) {
-		plugin.getServer().getScheduler().runTaskAsynchronously(plugin, command);
+	public void sendMessage(String permission, String jsonable, boolean useJson) {
+		if (useJson) {
+			for (Player player : plugin.getServer().getOnlinePlayers()) {
+				if (player.hasPermission(permission)) {
+					json(player, jsonable);
+				}
+			}
+		} else {
+			for (Player player : plugin.getServer().getOnlinePlayers()) {
+				if (player.hasPermission(permission)) {
+					player.sendMessage(jsonable);
+				}
+			}
+		}
+	}
+	
+	@Override
+	public UUID uuidFromName(String name) throws PlayerNotFoundException {
+		for (final OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
+			if (player.getName().equalsIgnoreCase(name)) {
+				return player.getUniqueId();
+			}
+		}
+		throw new PlayerNotFoundException(name);
+	}
+	
+	@Override
+	public String nameFromUUID(UUID uuid) throws PlayerNotFoundException {
+		for (final OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
+			if (player.getUniqueId().equals(uuid)) {
+				return player.getName();
+			}
+		}
+		throw new PlayerNotFoundException(uuid);
 	}
 	
 	public JavaPlugin plugin() {
@@ -183,11 +215,6 @@ public class BukkitEnv implements Environment {
 	@Override
 	public BukkitEnforcer enforcer() {
 		return enforcer;
-	}
-	
-	@Override
-	public BukkitResolver resolver() {
-		return resolver;
 	}
 
 	@Override
@@ -222,7 +249,6 @@ public class BukkitEnv implements Environment {
 		}
 		commands.close();
 		listener.close();
-		resolver.close();
 		enforcer.close();
 	}
 

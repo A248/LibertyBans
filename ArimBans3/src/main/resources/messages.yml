@@ -17,7 +17,13 @@ all:
     use: true
     value: '&6&lArim &r&8» '
   base-permission-message: '&cYou may not use this.'
-  invalid-target: '&c&o%TARGET%&r&7 is not a valid player or IP.'
+  invalid:
+    uuid: '&c&o%TARGET%&r&7 is not a valid player.'
+    ip: '&c&o%TARGET%&r&7 is not a valid IP.'
+    both: '&c&o%TARGET%&r&7 is not a valid player or IP.'
+  ip-selector:
+    message: '&c&o%TARGET%&r&7 has multiple IPs. Click to select an IP to use: %LIST%&r&7.'
+    element: '||&e%IP%, ||ttp:&7Click to select &a%IP%&7.||cmd:/%CMD%'
   usage: '/arimbans ban, mute, etc.'
 additions:
   bans:
@@ -33,8 +39,8 @@ additions:
       conflicting: '&c&o%TARGET%&r&7is already banned!'
       exempt: '&cYou may not ban %TARGET%.'
     successful:
-      message: '&7Banned &c&o%SUBJECT%&r&7 for &a&o%EXP_REL%&r&7 because of &o%REASON%'
-      notification: '&7%OPERATOR% banned &c&o%SUBJECT%&r&7 for &a&o%EXP_REL%&r&7 because of &o%REASON%'
+      message: '&7Banned &c&o%TARGET%&r&7 for &a&o%EXP_REL%&r&7 because of &o%REASON%'
+      notification: '&7%OPERATOR% banned &c&o%TARGET%&r&7 for &a&o%EXP_REL%&r&7 because of &o%REASON%'
     layout:
       - 'Banned'
       - 'Duration: %TIME%'
@@ -55,8 +61,8 @@ additions:
       conflicting: '&c&o%TARGET%&r&7is already muted!'
       exempt: '&cYou may not mute %TARGET%.'
     successful:
-      message: '&7Muted %SUBJECT% for %EXP_REL% because of %REASON%'
-      notification: '&7%OPERATOR% muted %SUBJECT% for %EXP_REL% because of %REASON%'
+      message: '&7Muted %TARGET% for %EXP_REL% because of %REASON%'
+      notification: '&7%OPERATOR% muted %TARGET% for %EXP_REL% because of %REASON%'
     layout:
       - 'Muted'
       - 'Duration: %TIME%'
@@ -103,7 +109,7 @@ additions:
     - 'Please read the rules'
     - 'Forums: www.site.com'
 removals:
-  unbans:
+  bans:
     usage: '/unban <player>'
     permission:
       command: '&cYou may not unban other players.'
@@ -112,8 +118,8 @@ removals:
       not-found: '&c&o%TARGET%&r&7is not banned.'
     successful:
       message: '&7Successfully unbanned &c&o%TARGET%&r&7.'
-      notification: '%OPERATOR% unbanned %TARGET%.'
-  unmutes:
+      notification: '%UNOPERATOR% unbanned %TARGET%.'
+  mutes:
     usage: '/unmute <player>'
     permission:
       command: '&cYou may not unmute other players.'
@@ -122,79 +128,151 @@ removals:
       not-found: '&c&o%TARGET%&r&7is not muted.'
     successful:
       message: '&7Successfully unmuted &c&o%TARGET%&r&7.'
-      notification: '%OPERATOR% unmuted %TARGET%.'
-  unwarns:
+      notification: '%UNOPERATOR% unmuted %TARGET%.'
+  warns:
     usage: '/unwarn <player>'
     permission:
       command: '&cYou may not unwarn other players.'
       no-ip: '&cYou may not unwarn IPs.'
     error:
       not-found: '&7Could not find warn No.&e%NUMBER%&7 for &c&o%TARGET%&r&7.'
+      confirm: '&7Are you sure you want to unwarn &c&o%TARGET%&r&7 for %REASON%?||ttp:&7Warned by %OPERATOR%, %DATE_ABS%||&7 Click to confirm.||ttp:&7Click here!||cmd:/%CMD%'
     successful:
       message: '&7Successfully unwarned &c&o%TARGET%&r&7.'
-      notification: '%OPERATOR% unwarned %TARGET% No.&e%NUMBER%&7.'
-banlist:
-  usage: '/banlist [page]'
-  none: '&cThere are no active bans.'
-  max-pages: '%PAGE% does not exist.'
-  permission:
-    command: '&cYou may not view the banlist.'
-    no-ip: '&cYou may not view the ip banlist.'
-  layout:
-    header:
-      - '[Number] Subject'
-      - 'Reason / Time Remaining'
-    content:
-      - '[%NUMBER%] %SUBJECT%'
-      - '%REASON% / %TIME%'
-    footer:
-      - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
-mutelist:
-  usage: '/mutelist [page]'
-  none: '&cThere are no active mutes.'
-  max-pages: '%PAGE% does not exist.'
-  permission:
-    command: '&cYou may not view the mutelist.'
-    no-ip: '&cYou may not view the ip mutelist.'
-  layout:
-    header:
-      - '[Number] Subject'
-      - 'Reason / Time Remaining'
-    content:
-      - '[%NUMBER%] %SUBJECT%'
-      - '%REASON% / %TIME%'
-    footer:
-      - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
-history:
-  usage: '/history <player> [page]'
-  none: '&c&oTARGET&r&7 has no history.'
-  max-pages: '%PAGE% does not exist.'
-  permission:
-    command: '&cYou may not view history.'
-    no-ip: '&cYou may not view history for an ip address.'
-  layout:
-    header:
-      - '[Number] Subject / Punishment Type'
-      - 'Reason / Time Remaining'
-    content:
-      - '[%NUMBER%] %SUBJECT% / %PUNISHMENT%'
-      - '%REASON% / %TIME%'
-    footer:
-      - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
-warns:
-  usage: '/warns <player> [page]'
-  none: '&c&oTARGET&r&7 has no warns.'
-  max-pages: '%PAGE% does not exist.'
-  permission:
-    command: '&cYou may not view warns.'
-    no-ip: '&cYou may not view warns for an ip address.'
-  layout:
-    header:
-      - '[Number] Subject / Punishment Type'
-      - 'Reason / Time Remaining'
-    content:
-      - '[%NUMBER%] %SUBJECT% / %PUNISHMENT%'
-      - '%REASON% / %TIME%'
-    footer:
-      - 'Page %PAGE%/%TOTALPAGE%.||ttp:Click for next page||cmd:/%NEXTPAGECMD%'
+      notification: '%UNOPERATOR% unwarned %TARGET% No.&e%NUMBER%&7.'
+list:
+  banlist:
+    usage: '/banlist [page]'
+    per-page: 10
+    no-pages: '&cThere are no active bans.'
+    max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
+    permission:
+      command: '&cYou may not view the banlist.'
+      no-ip: '&cYou may not view the ip banlist.'
+    layout:
+      header:
+        - '[Number] Subject'
+        - 'Operator / Reason / Time Remaining'
+      body:
+        - '[%NUMBER%] %TARGET%'
+        - '%OPERATOR% / %REASON% / %TIME%'
+      footer:
+        - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
+  mutelist:
+    usage: '/mutelist [page]'
+    per-page: 10
+    no-pages: '&cThere are no active mutes.'
+    max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
+    permission:
+      command: '&cYou may not view the mutelist.'
+      no-ip: '&cYou may not view the ip mutelist.'
+    layout:
+      header:
+        - '[Number] Subject'
+        - 'Operator / Reason / Time Remaining'
+      body:
+        - '[%NUMBER%] %TARGET%'
+        - '%OPERATOR% / %REASON% / %TIME%'
+      footer:
+        - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
+  history:
+    usage: '/history <player> [page]'
+    per-page: 10
+    no-pages: '&c&oTARGET&r&7 has no history.'
+    max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
+    permission:
+      command: '&cYou may not view history.'
+      no-ip: '&cYou may not view history for an ip address.'
+    layout:
+      header:
+        - '[Number] Subject / Punishment Type'
+        - 'Operator / Reason / Time Remaining'
+      body:
+        - '[%NUMBER%] %TARGET% / %PUNISHMENT%'
+        - '%OPERATOR% / %REASON% / %TIME%'
+      footer:
+        - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
+  warns:
+    usage: '/warns <player> [page]'
+    per-page: 10
+    no-pages: '&c&oTARGET&r&7 has no warns.'
+    max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
+    permission:
+      command: '&cYou may not view warns.'
+      no-ip: '&cYou may not view warns for an ip address.'
+    layout:
+      header:
+        - '[Number] Subject / Punishment Type'
+        - 'Operator / Reason / Time Remaining'
+      body:
+        - '[%NUMBER%] %TARGET% / %PUNISHMENT%'
+        - '%OPERATOR% / %REASON% / %TIME%'
+      footer:
+        - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
+other:
+  ips:
+    usage: '&cUsage: /ips &e<player>&c.'
+    permission:
+      command: '&cYou may not lookup IPs.'
+      no-ip: '&cYou may not lookup IPs.'
+    error:
+      not-found: '&cNo information found for &r&7&o%TARGET%&r&c.'
+    layout:
+      body:
+        - '&cPlayer &8» &7%TARGET%'
+        - '&cIPs &8» %LIST%'
+      element: '||&7%IP%, ||ttp:&7Click to inspect location details.||cmd:/%GEOIP_CMD%'
+  geo-ip:
+    usage: '&cUsage: /geoip &e<IP>&c.'
+    permission:
+      command: '&cYou may not lookup Geo IP information.'
+      no-ip: '&cYou may not lookup Geo IP information.'
+    error:
+      not-found: '&cNo information found for &r&7&o%TARGET%&r&c. Perhaps you have incurred rate-limiting.'
+    layout:
+      body:
+        - '&cIP &8» &7%TARGET%'
+        - '&cCountry: &7%COUNTRY_CODE% / %COUNTRY_NAME%'
+        - '&cRegion: &7%REGION_CODE% / %REGION_NAME%'
+        - '&cLocation: &7%CITY%, %REGION_NAME% %ZIP%'
+        - '&cLongitude / Latitude: &7%LONGITUDE% / %LATITUDE%'
+  alts:
+    usage: '&cUsage: /alts &e<IP>&c.'
+    permission:
+      command: '&cYou may not check for alts.'
+      no-ip: '&cYou may not check for alts.'
+    error:
+      not-found: '&cNo information found for &r&7&o%TARGET%&r&c.'
+    layout:
+      body:
+        - '&cIP &8» &7%TARGET%'
+        - '&cPlayers: %LIST%'
+      element: '||&7%PLAYER%, ||ttp:&7Click to check status.||cmd:/%STATUS_CMD%'
+  status:
+    usage: '&cUsage: /check &e<player/IP>&c.'
+    permission:
+      command: '&cYou may not view statuses.'
+      no-ip: '&cYou may not view statuses for an IP address.'
+    layout:
+      player:
+        header: '&cPlayer &8» &7%TARGET%'
+        info: '[IP Lookup]||ttp:&7Find IPs this player has connected with.||cmd:/%IPS_CMD%'
+      ip:
+        header: '&cIP &8» &7%TARGET%'
+        info: '[GeoIP]||ttp:&7Click to inspect location details.||cmd:/%GEOIP_CMD%|| [Alt Lookup]||ttp:&7Find players who have connected with this IP.||cmd:/%ALTS_CMD%'
+      body:
+        - '%HEADER%'
+        - '%INFO%'
+        - '%BAN_STATUS%'
+        - '%MUTE_STATUS%'
+        - '%WARN_STATUS%'
+      ban-status:
+        banned: '&cBanned &8» &7%EXP_REL%||ttp:&7%OPERATOR%, %DATE_ABS%, %REASON%'
+        not-banned: '&cBanned &8» &7False'
+      mute-status:
+        muted: '&cMuted &8» &7%EXP_REL%||ttp:&7%OPERATOR%, %DATE_ABS%, %REASON%'
+        not-muted: '&cMuted &8» &7False'
+      warn-status:
+        warn-count: '&cWarns &8» &7%WARN_COUNT%||ttp:&7Click to see warns for &e&o%TARGET%&7.||cmd:/%CMD_WARNS%'
+        no-warns: '&cWarns &8» &7None'
 messages-version: 1

@@ -32,7 +32,6 @@ public class BungeeCommands extends Command implements Configurable {
 	public BungeeCommands(final BungeeEnv environment) {
 		super("arimbans");
 		this.environment = environment;
-		refreshConfig();
 	}
 
 	@Override

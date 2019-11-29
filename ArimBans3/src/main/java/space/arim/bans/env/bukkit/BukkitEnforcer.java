@@ -41,7 +41,6 @@ public class BukkitEnforcer implements Enforcer {
 	
 	public BukkitEnforcer(final BukkitEnv environment) {
 		this.environment = environment;
-		refreshConfig();
 	}
 	
 	private void missingCenter(String message) {
@@ -72,7 +71,7 @@ public class BukkitEnforcer implements Enforcer {
 				environment.center().logError(ex);
 			}
 		} else {
-			List<String> ips = environment.center().cache().getIps(evt.getUniqueId());
+			List<String> ips = environment.center().resolver().getIps(evt.getUniqueId());
 			ips.add(evt.getAddress().getHostAddress());
 			for (String addr : ips) {
 				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
@@ -102,7 +101,7 @@ public class BukkitEnforcer implements Enforcer {
 				environment.center().logError(ex);
 			}
 		} else {
-			for (String addr : environment.center().cache().getIps(evt.getPlayer().getUniqueId())) {
+			for (String addr : environment.center().resolver().getIps(evt.getPlayer().getUniqueId())) {
 				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
 					evt.setCancelled(true);
 					try {
@@ -119,21 +118,27 @@ public class BukkitEnforcer implements Enforcer {
 		if (environment.center() == null) {
 			 cacheFailed(evt.getName());
 		}
-		environment.center().cache().update(evt.getUniqueId(), evt.getName(), evt.getAddress().getHostAddress());
+		environment.center().resolver().update(evt.getUniqueId(), evt.getName(), evt.getAddress().getHostAddress());
 	}
 
 	@Override
-	public void enforce(Punishment punishment) {
+	public void enforce(Punishment punishment, boolean useJson) {
 		Set<? extends Player> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
+			environment.plugin().getServer().getScheduler().runTask(environment.plugin(), () -> {
+				for (Player target : targets) {
+					target.kickPlayer(message);
+				}
+			});
+		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
 			for (Player target : targets) {
-				target.kickPlayer(message);
+				if (useJson) {
+					environment.json(target, message);
+				} else {
+					target.sendMessage(message);
+				}
 			}
-		} else if (punishment.type().equals(PunishmentType.MUTE)) {
-			environment.center().subjects().sendMessage(punishment.subject(), message);
-		} else if (punishment.type().equals(PunishmentType.WARN)) {
-			environment.center().subjects().sendMessage(punishment.subject(), message);
 		}
 	}
 	

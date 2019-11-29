@@ -35,7 +35,6 @@ public class BukkitListener implements Configurable, Listener {
 	private EventPriority mute_priority;
 	public BukkitListener(final BukkitEnv environment) {
 		this.environment = environment;
-		refreshConfig();
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -133,9 +132,9 @@ public class BukkitListener implements Configurable, Listener {
 	}
 	
 	@Override
-	public void refreshConfig() {
-		ban_priority = parsePriority("bans.event-priority");
-		mute_priority = parsePriority("mutes.event-priority");
+	public void refreshConfig(boolean fromFile) {
+		ban_priority = parsePriority("misc.priorities.event-priority");
+		mute_priority = parsePriority("misc.priorities.event-priority");
 	}
 	
 }

@@ -20,6 +20,7 @@ package space.arim.bans.internal.backend.subjects;
 
 import java.util.UUID;
 
+import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.internal.Component;
 
@@ -32,9 +33,9 @@ public interface SubjectsMaster extends Component {
 	
 	boolean isOnline(Subject subject);
 	
-	Subject parseSubject(String input, boolean consolable) throws IllegalArgumentException;
+	Subject parseSubject(String input, boolean console) throws IllegalArgumentException;
 	
-	default Subject parseSubject(String input) {
+	default Subject parseSubject(String input) throws IllegalArgumentException {
 		return parseSubject(input, true);
 	}
 	
@@ -47,6 +48,8 @@ public interface SubjectsMaster extends Component {
 	void sendMessage(Subject subject, boolean prefixed, String...jsonables);
 	
 	boolean hasPermission(Subject subject, String permission);
+	
+	void sendNotif(Punishment punishment, boolean add, Subject operator);
 	
 	boolean checkUUID(UUID uuid);
 

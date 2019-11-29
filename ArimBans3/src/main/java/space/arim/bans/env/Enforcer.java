@@ -22,7 +22,7 @@ import space.arim.bans.api.Punishment;
 import space.arim.bans.internal.Configurable;
 
 public interface Enforcer extends Configurable {
-	void enforce(Punishment punishment);
+	void enforce(Punishment punishment, boolean useJson);
 	
 	boolean callPunishEvent(Punishment punishment, boolean retro);
 	

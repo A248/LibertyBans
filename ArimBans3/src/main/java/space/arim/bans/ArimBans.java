@@ -28,21 +28,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import space.arim.bans.api.ArimBansLibrary;
+import space.arim.bans.api.AsyncExecutor;
 import space.arim.bans.api.CommandType;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
+import space.arim.bans.api.UUIDResolver;
 import space.arim.bans.api.exception.ConflictingPunishmentException;
-import space.arim.bans.api.exception.MissingCacheException;
-import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.env.Environment;
 import space.arim.bans.internal.Configurable;
 import space.arim.bans.internal.Component;
 import space.arim.bans.internal.async.AsyncMaster;
+import space.arim.bans.internal.async.AsyncWrapper;
 import space.arim.bans.internal.async.Async;
-import space.arim.bans.internal.backend.cache.Cache;
-import space.arim.bans.internal.backend.cache.CacheMaster;
+import space.arim.bans.internal.backend.cache.Resolver;
+import space.arim.bans.internal.backend.cache.ResolverMaster;
 import space.arim.bans.internal.backend.punishment.Punishments;
 import space.arim.bans.internal.backend.punishment.PunishmentsMaster;
 import space.arim.bans.internal.backend.subjects.SubjectsMaster;
@@ -68,7 +69,7 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	private final SqlMaster sql;
 	private final PunishmentsMaster punishments;
 	private final SubjectsMaster subjects;
-	private final CacheMaster cache;
+	private final ResolverMaster resolver;
 	private final CommandsMaster commands;
 	private final FormatsMaster formats;
 	private final AsyncMaster async;
@@ -122,10 +123,10 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 				return new Subjects(ArimBans.this);
 			}
 		});
-		cache = load(CacheMaster.class, preloaded, new Getter<CacheMaster>() {
+		resolver = load(ResolverMaster.class, preloaded, new Getter<ResolverMaster>() {
 			@Override
-			CacheMaster get() {
-				return new Cache(ArimBans.this);
+			ResolverMaster get() {
+				return new Resolver(ArimBans.this);
 			}
 		});
 		commands = load(CommandsMaster.class, preloaded, new Getter<CommandsMaster>() {
@@ -140,23 +141,36 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 				return new Formats(ArimBans.this);
 			}
 		});
-		async = load(AsyncMaster.class, preloaded, new Getter<AsyncMaster>() {
-			@Override
-			AsyncMaster get() {
-				return new Async(ArimBans.this);
-			}
-		});
-		async(() -> {
-			refresh();
+		if (UniversalRegistry.isProvidedFor(AsyncExecutor.class)) {
+			async = new AsyncWrapper(UniversalRegistry.getRegistration(AsyncExecutor.class));
+		} else {
+			async = load(AsyncMaster.class, preloaded, new Getter<AsyncMaster>() {
+				@Override
+				AsyncMaster get() {
+					Async async = new Async(ArimBans.this);
+					UniversalRegistry.register(AsyncExecutor.class, async);
+					return async;
+				}
+			});
+		}
+		if (config().getConfigBoolean("misc.async-loading")) {
+			async(() -> {
+				refresh(false);
+				loadData();
+			});
+		} else {
+			refresh(false);
 			loadData();
-		});
+		}
+
 		UniversalRegistry.register(PunishmentPlugin.class, this);
+		UniversalRegistry.register(UUIDResolver.class, resolver);
 	}
 	
 	private void loadData() {
 		sql().executeQuery(new SqlQuery(SqlQuery.Query.CREATE_TABLE_CACHE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.CREATE_TABLE_ACTIVE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.CREATE_TABLE_HISTORY.eval(sql().mode())));
 		ResultSet[] data = sql().selectQuery(new SqlQuery(SqlQuery.Query.SELECT_ALL_CACHED.eval(sql().mode())), new SqlQuery(SqlQuery.Query.SELECT_ALL_ACTIVE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.SELECT_ALL_HISTORY.eval(sql().mode())));
-		cache().loadAll(data[0]);
+		resolver().loadAll(data[0]);
 		punishments().loadActive(data[1]);
 		punishments().loadHistory(data[2]);
 	}
@@ -185,8 +199,8 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 		return subjects;
 	}
 
-	public CacheMaster cache() {
-		return cache;
+	public ResolverMaster resolver() {
+		return resolver;
 	}
 
 	public CommandsMaster commands() {
@@ -216,28 +230,28 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	}
 	
 	@Override
-	public void refreshConfig() {
-		config.refreshConfig();
-		sql.refreshConfig();
-		punishments.refreshConfig();
+	public void refreshConfig(boolean fromFile) {
+		config.refreshConfig(fromFile);
+		sql.refreshConfig(fromFile);
+		punishments.refreshConfig(fromFile);
 		punishments.refreshActive();
-		subjects.refreshConfig();
-		cache.refreshConfig();
-		commands.refreshConfig();
-		formats.refreshConfig();
-		async.refreshConfig();
+		subjects.refreshConfig(fromFile);
+		resolver.refreshConfig(fromFile);
+		commands.refreshConfig(fromFile);
+		formats.refreshConfig(fromFile);
+		async.refreshConfig(fromFile);
 	}
 	
 	@Override
-	public void refreshMessages() {
-		config.refreshMessages();
-		sql.refreshMessages();
-		punishments.refreshMessages();
-		subjects.refreshMessages();
-		cache.refreshMessages();
-		commands.refreshMessages();
-		formats.refreshMessages();
-		async.refreshMessages();
+	public void refreshMessages(boolean fromFile) {
+		config.refreshMessages(fromFile);
+		sql.refreshMessages(fromFile);
+		punishments.refreshMessages(fromFile);
+		subjects.refreshMessages(fromFile);
+		resolver.refreshMessages(fromFile);
+		commands.refreshMessages(fromFile);
+		formats.refreshMessages(fromFile);
+		async.refreshMessages(fromFile);
 	}
 	
 	@Override
@@ -248,7 +262,7 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 		punishments.close();
 		subjects.close();
 		commands.close();
-		cache.close();
+		resolver.close();
 		formats.close();
 		async.close();
 	}
@@ -329,34 +343,6 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	}
 	
 	@Override
-	public UUID uuidFromName(String name) throws PlayerNotFoundException {
-		try {
-			return cache().getUUID(name);
-		} catch (MissingCacheException ex) {
-			throw new PlayerNotFoundException(name, ex);
-		}
-	}
-	
-	@Override
-	public UUID resolveName(String name) throws PlayerNotFoundException {
-		return environment().resolver().uuidFromName(name);
-	}
-
-	@Override
-	public String nameFromUUID(UUID uuid) throws PlayerNotFoundException {
-		try {
-			return cache().getName(uuid);
-		} catch (MissingCacheException ex) {
-			throw new PlayerNotFoundException(uuid, ex);
-		}
-	}
-	
-	@Override
-	public String resolveUUID(UUID uuid) throws PlayerNotFoundException {
-		return environment().resolver().nameFromUUID(uuid);
-	}
-	
-	@Override
 	public void simulateCommand(Subject subject, CommandType command, String[] args) {
 		commands().execute(subject, command, args);
 	}
@@ -373,17 +359,17 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	
 	@Override
 	public void reload() {
-		refresh();
+		refresh(true);
 	}
 	
 	@Override
 	public void reloadConfig() {
-		refreshConfig();
+		refreshConfig(true);
 	}
 	
 	@Override
 	public void reloadMessages() {
-		reloadMessages();
+		refreshMessages(true);
 	}
 	
 	@Override

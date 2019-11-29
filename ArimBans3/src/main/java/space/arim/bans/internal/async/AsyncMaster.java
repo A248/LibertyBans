@@ -21,6 +21,7 @@ package space.arim.bans.internal.async;
 import space.arim.bans.internal.Component;
 
 public interface AsyncMaster extends Component {
+	
 	@Override
 	default Class<?> getType() {
 		return AsyncMaster.class;
@@ -29,4 +30,5 @@ public interface AsyncMaster extends Component {
 	void execute(Runnable command);
 	
 	boolean isClosed();
+	
 }

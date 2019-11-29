@@ -21,8 +21,6 @@ package space.arim.bans.api;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-import space.arim.bans.api.exception.InternalStateException;
-import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.util.ToolsUtil;
 
 public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
@@ -31,7 +29,7 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 * Used internally for invalid messages. If you send a message whose sole content
 	 * is this, you will receive an unchecked exception.
 	 */
-	static String INVALID_STRING_CODE = "warning-invalid-string";
+	static String INVALID_STRING_CODE = "(internal_invalid_string_code)";
 	
 	/**
 	 * Checks a message for validity.
@@ -39,16 +37,13 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 * <br>1. Check against {@link #INVALID_MESSAGE_CODE} for equality
 	 * <br>2. Check for null values
 	 * 
-	 * <br><Br>Throws an unchecked exception if either requirements are met.
+	 * <br><br>Throws an unchecked exception if either requirements are met.
 	 * 
 	 * @param message - the string to check
 	 */
 	static void checkString(String message) {
-		if (message == null) {
-			throw new InternalStateException("checkString: String is null!");
-		} else if (INVALID_STRING_CODE.equals(message)) {
-			throw new InternalStateException("checkString: String is INVALID_STRING_CODE!");
-		}
+		assert message != null;
+		assert (!message.equals(INVALID_STRING_CODE));
 	}
 	
 	/**
@@ -88,52 +83,6 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 * @param args - additional arguments
 	 */
 	void simulateCommand(Subject subject, CommandType command, String[] args);
-	
-	/**
-	 * Use this to get a UUID from a playername
-	 * <br><br>If you have the option to execute asynchronously,
-	 * use {@link #resolveName(String)} instead.
-	 * 
-	 * @param name - the name to be looked up
-	 * @return the uuid of the corresponding player
-	 * @throws PlayerNotFoundException if no player by that name is cached
-	 */
-	UUID uuidFromName(String name) throws PlayerNotFoundException;
-	
-	/**
-	 * Use this to get a playername from a UUID
-	 * <br><br>If you have the option to execute asynchronously,
-	 * use {@link #resolveUUID(UUID)} instead.
-	 * 
-	 * @param uuid - the uuid to be looked up
-	 * @return the name of the corresponding player
-	 * @throws PlayerNotFoundException if no player by that uuid is cached
-	 */
-	String nameFromUUID(UUID uuid) throws PlayerNotFoundException;
-	
-	/**
-	 * Use this to get a UUID from a playername in an async thread
-	 * Differs from {@link #uuidFromName(UUID)} in that this method will query the Ashcon/Mojang APIs.
-	 * 
-	 * <br><br><b>This is a blocking operation.</b>
-	 * 
-	 * @param name - the name to be resolved
-	 * @return the uuid of the corresponding player
-	 * @throws PlayerNotFoundException if the name could not be resolved to a uuid
-	 */
-	UUID resolveName(String name) throws PlayerNotFoundException;
-	
-	/**
-	 * Use this to get a playername from a UUID in an async thread
-	 * Differs from {@link #nameFromUUID(UUID)} in that this method will query the Ashcon/Mojang APIs.
-	 * 
-	 * <br><br><b>This is a blocking operation.</b>
-	 * 
-	 * @param uuid - the uuid to be resolved
-	 * @return the name of the corresponding player
-	 * @throws PlayerNotFoundException if the uuid could not be resolved to a name
-	 */
-	String resolveUUID(UUID uuid) throws PlayerNotFoundException;
 	
 	/**
 	 * Executes a block of code asynchronously.

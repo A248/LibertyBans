@@ -21,6 +21,9 @@ package space.arim.bans.internal.backend.subjects;
 import java.util.UUID;
 
 import space.arim.bans.ArimBans;
+import space.arim.bans.api.ArimBansLibrary;
+import space.arim.bans.api.Punishment;
+import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.util.ToolsUtil;
@@ -31,15 +34,13 @@ public class Subjects implements SubjectsMaster {
 	
 	private static final int LENGTH_OF_FULL_UUID = 36;
 	private static final int LENGTH_OF_SHORT_UUID = 32;
-	
-	private boolean json = true;
+
 	private boolean op_permissions = true;
 	private boolean usePrefix = true;
 	private String prefix = "Prefix>> ";
 
 	public Subjects(ArimBans center) {
 		this.center = center;
-		refreshConfig();
 	}
 	
 	@Override
@@ -48,7 +49,7 @@ public class Subjects implements SubjectsMaster {
 	}
 	
 	@Override
-	public Subject parseSubject(String input, boolean consolable) throws IllegalArgumentException {
+	public Subject parseSubject(String input, boolean console) throws IllegalArgumentException {
 		if (center.checkAddress(input)) {
 			return Subject.fromIP(input);
 		} else if (input.length() == LENGTH_OF_FULL_UUID) {
@@ -59,7 +60,7 @@ public class Subjects implements SubjectsMaster {
 			}
 		} else if (input.length() == LENGTH_OF_SHORT_UUID) {
 			return parseSubject(ToolsUtil.expandUUID(input));
-		} else if (consolable && input.equalsIgnoreCase(center.formats().getConsoleDisplay())) {
+		} else if (console && input.equalsIgnoreCase(center.formats().getConsoleDisplay())) {
 			return Subject.console();
 		}
 		throw new IllegalArgumentException("Could not make " + input + " into a subject");
@@ -75,8 +76,10 @@ public class Subjects implements SubjectsMaster {
 	
 	@Override
 	public void sendMessage(Subject subject, boolean prefixed, String...jsonables) {
+		boolean json = center.formats().useJson();
 		for (int n = 0; n < jsonables.length; n++) {
-			center.environment().sendMessage(subject, (n == 0 && usePrefix && !prefixed) ? prefix + jsonables[n] : jsonables[n], json);
+			ArimBansLibrary.checkString(jsonables[n]);
+			center.environment().sendMessage(subject, addQuotes((n == 0 && usePrefix && !prefixed) ? prefix + jsonables[n] : jsonables[n]), json);
 		}
 	}
 	
@@ -85,14 +88,29 @@ public class Subjects implements SubjectsMaster {
 		return center.environment().hasPermission(subject, permission, op_permissions);
 	}
 	
-	@Override
-	public boolean checkUUID(UUID uuid) {
-		return center.cache().uuidExists(uuid);
+	private String notifyPerm(PunishmentType type) {
+		return "arimbans." + type.name() + ".notify";
 	}
 	
 	@Override
-	public void refreshConfig() {
-		json = center.config().getConfigBoolean("formatting.use-json");
+	public void sendNotif(Punishment punishment, boolean add, Subject operator) {
+		String m = center.formats().formatNotification(punishment, add, operator);
+		String msg = addQuotes((usePrefix) ? prefix + m : m);
+		ArimBansLibrary.checkString(msg);
+		center.environment().sendMessage(notifyPerm(punishment.type()), msg, center.formats().useJson());
+	}
+	
+	private String addQuotes(String message) {
+		return message.replace("%APOS%", "'").replace("%QUOTE%", "\"");
+	}
+	
+	@Override
+	public boolean checkUUID(UUID uuid) {
+		return center.resolver().uuidExists(uuid);
+	}
+	
+	@Override
+	public void refreshConfig(boolean fromFile) {
 		op_permissions = center.config().getConfigBoolean("commands.op-permissions");
 		usePrefix = center.config().getMessagesBoolean("all.prefix.use");
 		prefix = center.config().getMessagesString("all.prefix.value");

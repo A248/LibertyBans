@@ -22,20 +22,22 @@ import java.sql.ResultSet;
 import java.util.List;
 import java.util.UUID;
 
-import space.arim.bans.api.exception.HttpStatusException;
+import space.arim.bans.api.UUIDResolver;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
-import space.arim.bans.api.exception.RateLimitException;
+import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.util.GeoIpInfo;
 import space.arim.bans.internal.Component;
 
-public interface CacheMaster extends Component {
+public interface ResolverMaster extends Component, UUIDResolver {
 	@Override
 	default Class<?> getType() {
-		return CacheMaster.class;
+		return ResolverMaster.class;
 	}
 	
 	List<String> getIps(UUID playeruuid);
+	
+	List<UUID> getPlayers(String address);
 	
 	String getName(UUID playeruuid) throws MissingCacheException;
 	
@@ -47,7 +49,16 @@ public interface CacheMaster extends Component {
 	
 	boolean hasIp(UUID playeruuid, String ip);
 	
-	GeoIpInfo lookupIp(final String address) throws NoGeoIpException, RateLimitException, HttpStatusException;
+	GeoIpInfo lookupIp(final String address) throws NoGeoIpException;
+	
+	default String resolveUUID(UUID uuid) throws PlayerNotFoundException {
+		return resolveUUID(uuid, true);
+	}
+	
+	default UUID resolveName(String name) throws PlayerNotFoundException {
+		return resolveName(name, true);
+	}
 	
 	void loadAll(ResultSet data);
+	
 }

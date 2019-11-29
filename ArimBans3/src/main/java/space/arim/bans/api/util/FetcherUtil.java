@@ -59,7 +59,7 @@ public final class FetcherUtil {
 	
 	public static String mojangApi(final UUID playeruuid) throws FetcherException, HttpStatusException {
 		Objects.requireNonNull(playeruuid, "UUID must not be null!");
-		final String url = MOJANG_API_FROM_UUID + playeruuid.toString().replaceAll("-", "") + "/names";
+		final String url = MOJANG_API_FROM_UUID + playeruuid.toString().replace("-", "") + "/names";
 		try (FetcherConnection conn = new FetcherConnection(url); Scanner scanner = new Scanner(conn.connect().inputStream())) {
 			String s = scanner.useDelimiter("\\A").next();
 			return ((JSONObject) JSONValue.parseWithException(s.substring(s.lastIndexOf('{'), s.lastIndexOf('}') + 1))).get("name").toString();
@@ -93,14 +93,14 @@ public final class FetcherUtil {
 	public static GeoIpInfo ipStack(final String address, final String key) throws FetcherException, RateLimitException, HttpStatusException {
 		Objects.requireNonNull(key, "Key must not be null!");
 		final String url = IPSTACK.getUrl(address).replace("$KEY", key);
-		JSONObject json = getJsonFromUrl(url);
-		if (json.containsKey("success")) {
-			if (!(Boolean) json.get("success")) {
+		try {
+			JSONObject json = getJsonFromUrl(url);
+			return new GeoIpInfo(address, json.get("country_code").toString(), json.get("country_name").toString(), json.get("region_code").toString(), json.get("region_name").toString(), json.get("city").toString(), json.get("zip").toString(), Double.parseDouble(json.get("latitude").toString()), Double.parseDouble(json.get("longitude").toString()));
+		} catch (HttpStatusException ex) {
+			if (ex.status == HttpStatus.UNASSIGNED_104) {
 				IPSTACK.expire();
 			}
-		}
-		try {
-			return new GeoIpInfo(address, json.get("country_code").toString(), json.get("country_name").toString(), json.get("region_code").toString(), json.get("region_name").toString(), json.get("city").toString(), json.get("zip").toString(), Double.parseDouble(json.get("latitude").toString()), Double.parseDouble(json.get("longitude").toString()));
+			throw ex;
 		} catch (NumberFormatException ex) {
 			throw new FetcherException("Could not parse JSON from " + url, ex);
 		}

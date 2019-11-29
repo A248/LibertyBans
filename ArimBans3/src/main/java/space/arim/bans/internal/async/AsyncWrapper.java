@@ -16,36 +16,26 @@
  * along with ArimBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.internal.frontend.format;
+package space.arim.bans.internal.async;
 
-import space.arim.bans.api.Punishment;
-import space.arim.bans.api.Subject;
-import space.arim.bans.internal.Component;
+import space.arim.bans.api.AsyncExecutor;
 
-public interface FormatsMaster extends Component {
+public class AsyncWrapper implements AsyncMaster {
+
+	private final AsyncExecutor executor;
+	
+	public AsyncWrapper(AsyncExecutor executor) {
+		this.executor = executor;
+	}
+	
 	@Override
-	default Class<?> getType() {
-		return FormatsMaster.class;
+	public void execute(Runnable command) {
+		executor.execute(command);
 	}
-	
-	boolean useJson();
-	
-	String formatMessageWithPunishment(String message, Punishment punishment);
-	
-	String formatPunishment(Punishment punishment);
-	
-	String formatSubject(Subject subj);
-	
-	String formatNotification(Punishment punishment, boolean add, Subject operator);
-	
-	default String formatTime(long millis) {
-		return formatTime(millis, true);
+
+	@Override
+	public boolean isClosed() {
+		return false;
 	}
-	
-	String formatTime(long millis, boolean absolute);
-	
-	long toMillis(String timespan);
-	
-	String getConsoleDisplay();
 	
 }
