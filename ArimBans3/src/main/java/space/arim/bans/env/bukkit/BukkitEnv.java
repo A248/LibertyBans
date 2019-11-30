@@ -21,7 +21,6 @@ package space.arim.bans.env.bukkit;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
 import org.bstats.bukkit.Metrics;
@@ -72,18 +71,8 @@ public class BukkitEnv implements Environment {
 	
 	private void setupMetrics() {
 		metrics = new Metrics(plugin);
-		metrics.addCustomChart(new Metrics.SimplePie("storage_mode", new Callable<String>() {
-			@Override
-			public String call() {
-				return center.sql().mode().toString();
-			}
-		}));
-		metrics.addCustomChart(new Metrics.SimplePie("json_messages", new Callable<String>() {
-			@Override
-			public String call() {
-				return Boolean.toString(center.formats().useJson());
-			}
-		}));
+		metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().mode().toString()));
+		metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
 	}
 	
 	void json(Player target, String json) {
