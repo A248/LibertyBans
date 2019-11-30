@@ -21,7 +21,10 @@ package space.arim.bans.env.bukkit;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.logging.Logger;
+
+import org.bstats.bukkit.Metrics;
 
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -46,6 +49,7 @@ public class BukkitEnv implements Environment {
 	private final BukkitEnforcer enforcer;
 	private final BukkitListener listener;
 	private final BukkitCommands commands;
+	private Metrics metrics;
 	
 	private boolean registered = false;
 
@@ -61,8 +65,25 @@ public class BukkitEnv implements Environment {
 		if (!registered) {
 			plugin.getServer().getPluginManager().registerEvents(listener, plugin);
 			plugin.getServer().getPluginCommand("arimban").setExecutor(commands);
+			setupMetrics();
 			registered = true;
 		}
+	}
+	
+	private void setupMetrics() {
+		metrics = new Metrics(plugin);
+		metrics.addCustomChart(new Metrics.SimplePie("storage_mode", new Callable<String>() {
+			@Override
+			public String call() {
+				return center.sql().mode().toString();
+			}
+		}));
+		metrics.addCustomChart(new Metrics.SimplePie("json_messages", new Callable<String>() {
+			@Override
+			public String call() {
+				return Boolean.toString(center.formats().useJson());
+			}
+		}));
 	}
 	
 	void json(Player target, String json) {

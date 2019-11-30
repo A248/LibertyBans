@@ -21,7 +21,10 @@ package space.arim.bans.env.bungee;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.logging.Logger;
+
+import org.bstats.bungeecord.Metrics;
 
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -46,6 +49,7 @@ public class BungeeEnv implements Environment {
 	private final BungeeEnforcer enforcer;
 	private final BungeeListener listener;
 	private final BungeeCommands commands;
+	private Metrics metrics;
 	
 	private boolean registered = false;
 	
@@ -61,7 +65,25 @@ public class BungeeEnv implements Environment {
 		if (!registered) {
 			plugin.getProxy().getPluginManager().registerListener(plugin, listener);
 			plugin.getProxy().getPluginManager().registerCommand(plugin, commands);
+			setupMetrics();
+			registered = true;
 		}
+	}
+	
+	private void setupMetrics() {
+		metrics = new Metrics(plugin);
+		metrics.addCustomChart(new Metrics.SimplePie("storage_mode", new Callable<String>() {
+			@Override
+			public String call() {
+				return center.sql().mode().toString();
+			}
+		}));
+		metrics.addCustomChart(new Metrics.SimplePie("json_messages", new Callable<String>() {
+			@Override
+			public String call() {
+				return Boolean.toString(center.formats().useJson());
+			}
+		}));
 	}
 	
 	void json(ProxiedPlayer target, String json) {
