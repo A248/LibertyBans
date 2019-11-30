@@ -65,24 +65,14 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	private final File folder;
 	private Logger logger;
 	private final Environment environment;
-	private final ConfigMaster config;
-	private final SqlMaster sql;
-	private final PunishmentsMaster punishments;
-	private final SubjectsMaster subjects;
-	private final ResolverMaster resolver;
-	private final CommandsMaster commands;
-	private final FormatsMaster formats;
-	private final AsyncMaster async;
-	
-	@SuppressWarnings("unchecked")
-	private <T extends Component> T load(Class<T> type, Component[] pool, Getter<T> getter) {
-		for (Component component : pool) {
-			if (type.isInstance(component)) {
-				return (T) component;
-			}
-		}
-		return getter.get();
-	}
+	private ConfigMaster config = null;
+	private SqlMaster sql = null;
+	private PunishmentsMaster punishments = null;
+	private SubjectsMaster subjects = null;
+	private ResolverMaster resolver = null;
+	private CommandsMaster commands = null;
+	private FormatsMaster formats = null;
+	private AsyncMaster async = null;
 	
 	public ArimBans(File dataFolder, Environment environment, Component...preloaded) {
 		this.folder = dataFolder;
@@ -99,59 +89,60 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 		} else {
 			environment().logger().warning("ArimBans: **Severe Error**\nDirectory creation of " + dataFolder.getPath() + " failed!");
 		}
-		config = load(ConfigMaster.class, preloaded, new Getter<ConfigMaster>() {
-			@Override
-			ConfigMaster get() {
-				return new Config(ArimBans.this);
+		for (Component comp : preloaded) {
+			if (comp instanceof ConfigMaster) {
+				config = (ConfigMaster) comp;
 			}
-		});
-		sql = load(SqlMaster.class, preloaded, new Getter<SqlMaster>() {
-			@Override
-			SqlMaster get() {
-				return new Sql(ArimBans.this);
+			if (comp instanceof SqlMaster) {
+				sql = (SqlMaster) comp;
 			}
-		});
-		punishments = load(PunishmentsMaster.class, preloaded, new Getter<PunishmentsMaster>() {
-			@Override
-			PunishmentsMaster get() {
-				return new Punishments(ArimBans.this);
+			if (comp instanceof PunishmentsMaster) {
+				punishments = (PunishmentsMaster) comp;
 			}
-		});
-		subjects = load(SubjectsMaster.class, preloaded, new Getter<SubjectsMaster>() {
-			@Override
-			SubjectsMaster get() {
-				return new Subjects(ArimBans.this);
+			if (comp instanceof SubjectsMaster) {
+				subjects = (SubjectsMaster) comp;
 			}
-		});
-		resolver = load(ResolverMaster.class, preloaded, new Getter<ResolverMaster>() {
-			@Override
-			ResolverMaster get() {
-				return new Resolver(ArimBans.this);
+			if (comp instanceof ResolverMaster) {
+				resolver = (ResolverMaster) comp;
 			}
-		});
-		commands = load(CommandsMaster.class, preloaded, new Getter<CommandsMaster>() {
-			@Override
-			CommandsMaster get() {
-				return new Commands(ArimBans.this);
+			if (comp instanceof CommandsMaster) {
+				commands = (CommandsMaster) comp;
 			}
-		});
-		formats = load(FormatsMaster.class, preloaded, new Getter<FormatsMaster>() {
-			@Override
-			FormatsMaster get() {
-				return new Formats(ArimBans.this);
+			if (comp instanceof FormatsMaster) {
+				formats = (FormatsMaster) comp;
 			}
-		});
-		if (UniversalRegistry.isProvidedFor(AsyncExecutor.class)) {
-			async = new AsyncWrapper(UniversalRegistry.getRegistration(AsyncExecutor.class));
-		} else {
-			async = load(AsyncMaster.class, preloaded, new Getter<AsyncMaster>() {
-				@Override
-				AsyncMaster get() {
-					Async async = new Async(ArimBans.this);
-					UniversalRegistry.register(AsyncExecutor.class, async);
-					return async;
-				}
-			});
+			if (comp instanceof AsyncMaster) {
+				async = (AsyncMaster) comp;
+			}
+		}
+		if (config == null) {
+			config = new Config(this);
+		}
+		if (sql == null) {
+			sql = new Sql(this);
+		}
+		if (punishments == null) {
+			punishments = new Punishments(this);
+		}
+		if (subjects == null) {
+			subjects = new Subjects(this);
+		}
+		if (resolver == null) {
+			resolver = new Resolver(this);
+		}
+		if (commands == null) {
+			commands = new Commands(this);
+		}
+		if (formats == null) {
+			formats = new Formats(this);
+		}
+		if (async == null) {
+			if (UniversalRegistry.isProvidedFor(AsyncExecutor.class)) {
+				async = new AsyncWrapper(UniversalRegistry.getRegistration(AsyncExecutor.class));
+			} else {
+				async = new Async(this);
+				UniversalRegistry.register(AsyncExecutor.class, (AsyncExecutor) async); 
+			}
 		}
 		if (config().getConfigBoolean("misc.async-loading")) {
 			async(() -> {
@@ -162,7 +153,6 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 			refresh(false);
 			loadData();
 		}
-
 		UniversalRegistry.register(PunishmentPlugin.class, this);
 		UniversalRegistry.register(UUIDResolver.class, resolver);
 	}
@@ -377,8 +367,4 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 		subjects.sendMessage(subject, message);
 	}
 
-}
-
-abstract class Getter<T extends Component> {
-	abstract T get();
 }
