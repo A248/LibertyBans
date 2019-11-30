@@ -401,15 +401,13 @@ public class Commands implements CommandsMaster {
 			span = -1L;
 		}
 		String reason;
-		if (args.length == 0) {
-			if (permit_blank_reason) {
-				reason = default_reason;
-			} else {
-				usage(operator, command);
-				return;
-			}
-		} else {
+		if (args.length > 0) {
 			reason = concat(args);
+		} else if (permit_blank_reason) {
+			reason = default_reason;
+		} else {
+			usage(operator, command);
+			return;
 		}
 		Punishment punishment = new Punishment(type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis());
 		try {

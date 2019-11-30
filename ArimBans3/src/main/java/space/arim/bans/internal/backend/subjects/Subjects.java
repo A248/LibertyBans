@@ -94,10 +94,9 @@ public class Subjects implements SubjectsMaster {
 	
 	@Override
 	public void sendNotif(Punishment punishment, boolean add, Subject operator) {
-		String m = center.formats().formatNotification(punishment, add, operator);
-		String msg = addQuotes((usePrefix) ? prefix + m : m);
+		String msg = center.formats().formatNotification(punishment, add, operator);
 		ArimBansLibrary.checkString(msg);
-		center.environment().sendMessage(notifyPerm(punishment.type()), msg, center.formats().useJson());
+		center.environment().sendMessage(notifyPerm(punishment.type()), addQuotes((usePrefix) ? prefix + msg : msg), center.formats().useJson());
 	}
 	
 	private String addQuotes(String message) {
