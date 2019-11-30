@@ -71,10 +71,12 @@ public class BukkitEnforcer implements Enforcer {
 		}
 		if (!evt.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED) || !priority.equals(ban_priority)) {
 			return;
-		} else if (environment.center().isBanned(environment.center().subjects().parseSubject(evt.getUniqueId()))) {
+		}
+		Subject subject = environment.center().subjects().parseSubject(evt.getUniqueId());
+		if (environment.center().isBanned(subject)) {
 			try {
 				evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, environment.center().formats()
-						.formatPunishment(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(evt.getUniqueId()), PunishmentType.BAN)));
+						.formatPunishment(environment.center().punishments().getPunishment(subject, PunishmentType.BAN)));
 			} catch (MissingPunishmentException ex) {
 				environment.center().logError(ex);
 			}
@@ -82,10 +84,11 @@ public class BukkitEnforcer implements Enforcer {
 			List<String> ips = environment.center().resolver().getIps(evt.getUniqueId());
 			ips.add(evt.getAddress().getHostAddress());
 			for (String addr : ips) {
-				if (environment.center().isBanned(environment.center().subjects().parseSubject(addr))) {
+				Subject addrSubj = environment.center().subjects().parseSubject(addr);
+				if (environment.center().isBanned(addrSubj)) {
 					try {
 						evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED,
-								environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(environment.center().subjects().parseSubject(addr), PunishmentType.BAN)));
+								environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.BAN)));
 					} catch (MissingPunishmentException ex) {
 						environment.center().logError(ex);
 					}
@@ -95,10 +98,6 @@ public class BukkitEnforcer implements Enforcer {
 	}
 	
 	private void enforceMutes(Cancellable evt, EventPriority priority, Subject subject) {
-		if (environment.center() == null) {
-			enforceFailed(subject.getUUID().toString(), PunishmentType.MUTE);
-			return;
-		}
 		if (evt.isCancelled() || !priority.equals(mute_priority)) {
 			return;
 		} else if (environment.center().isMuted(subject)) {
@@ -111,7 +110,7 @@ public class BukkitEnforcer implements Enforcer {
 		} else {
 			for (String addr : environment.center().resolver().getIps(subject.getUUID())) {
 				Subject addrSubj = environment.center().subjects().parseSubject(addr);
-				if (environment.center().isBanned(addrSubj)) {
+				if (environment.center().isMuted(addrSubj)) {
 					evt.setCancelled(true);
 					try {
 						environment.center().subjects().sendMessage(subject, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.MUTE)));
@@ -125,10 +124,18 @@ public class BukkitEnforcer implements Enforcer {
 	}
 
 	void enforceMutes(AsyncPlayerChatEvent evt, EventPriority priority) {
+		if (environment.center() == null) {
+			enforceFailed(evt.getPlayer().getName(), PunishmentType.MUTE);
+			return;
+		}
 		enforceMutes(evt, priority, environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()));
 	}
 	
 	void enforceMutes(PlayerCommandPreprocessEvent evt, EventPriority priority) {
+		if (environment.center() == null) {
+			enforceFailed(evt.getPlayer().getName(), PunishmentType.MUTE);
+			return;
+		}
 		if (environment.center().formats().isCmdMuteBlocked(evt.getMessage())) {
 			enforceMutes(evt, priority, environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()));
 		}
@@ -137,6 +144,7 @@ public class BukkitEnforcer implements Enforcer {
 	void updateCache(AsyncPlayerPreLoginEvent evt) {
 		if (environment.center() == null) {
 			 cacheFailed(evt.getName());
+			 return;
 		}
 		environment.center().resolver().update(evt.getUniqueId(), evt.getName(), evt.getAddress().getHostAddress());
 	}
