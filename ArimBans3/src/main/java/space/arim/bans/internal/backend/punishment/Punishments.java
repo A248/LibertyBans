@@ -61,13 +61,13 @@ public class Punishments implements PunishmentsMaster {
 				
 				// If it's retro we only need to add it to history
 				// Otherwise we also need to add it to active
-				SqlQuery queryHistory = new SqlQuery(SqlQuery.Query.INSERT_HISTORY.eval(center.sql().mode()), punishment.type().toString(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date());
+				SqlQuery queryHistory = new SqlQuery(SqlQuery.Query.INSERT_HISTORY.eval(center.sql().mode()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date());
 				history.add(punishment);
 				if (retro) {
 					center.sql().executeQuery(queryHistory);
 				} else if (!retro) {
 					active.add(punishment);
-					center.sql().executeQuery(queryHistory, new SqlQuery(SqlQuery.Query.INSERT_ACTIVE.eval(center.sql().mode()), punishment.type().toString(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
+					center.sql().executeQuery(queryHistory, new SqlQuery(SqlQuery.Query.INSERT_ACTIVE.eval(center.sql().mode()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
 				}
 				
 				// Call PostPunishEvent once finished
@@ -115,7 +115,7 @@ public class Punishments implements PunishmentsMaster {
 					
 					if (!retro) {
 						active.add(punishment);
-						exec.add(new SqlQuery(SqlQuery.Query.INSERT_ACTIVE.eval(center.sql().mode()), punishment.type().toString(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
+						exec.add(new SqlQuery(SqlQuery.Query.INSERT_ACTIVE.eval(center.sql().mode()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
 					}
 					
 					// Add punishment to passedEvents so we can remember to call PostPunishEvents
