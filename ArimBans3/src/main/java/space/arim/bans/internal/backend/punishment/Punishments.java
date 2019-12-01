@@ -276,7 +276,6 @@ public class Punishments implements PunishmentsMaster {
 		}
 	}
 	
-	
 	/**
 	 * Returns a copy of the Set of active punishments,
 	 * purging expired members.
@@ -321,6 +320,7 @@ public class Punishments implements PunishmentsMaster {
 	
 	@Override
 	public void close() {
+		refreshActive();
 		active.clear();
 		history.clear();
 	}
