@@ -226,6 +226,16 @@ list:
       footer:
         - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
 other:
+  rollback:
+    usage: '&cUsage: /rollback &e<player> [number]&c.'
+    permission:
+      command: '&cYou may not use this.'
+    error:
+      not-found: '&cNo punishments made by &7&o%TARGET%&r&c.'
+      invalid-number: '&cInvalid number specified: %NUMBER%.'
+    successful:
+      detail: '&7Rolling back punishment: %TYPE% / %SUBJECT% / %REASON% / %DATE%'
+      message: '&7Rolled back &e%NUMBER%&7 punishments by &7&o%TARGET%&r&7.'
   reload:
     usage: '&cUsage: /reload.'
     permission:
@@ -237,7 +247,7 @@ other:
       command: '&cYou may not lookup IPs.'
       no-ip: '&cYou may not lookup IPs.'
     error:
-      not-found: '&cNo information found for &r&7&o%TARGET%&r&c.'
+      not-found: '&cNo information found for &7&o%TARGET%&r&c.'
     layout:
       body:
         - '&cPlayer &8» &7%TARGET%'

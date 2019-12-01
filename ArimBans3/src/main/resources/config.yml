@@ -48,9 +48,7 @@ commands:
     unbans: false
     unmutes: false
     unwarns: false
-  rollback:
-    detailed: true
-    confirm: false
+  rollback-detail: true
 enforcement:
   strict-ip-checking: true
   priorities:

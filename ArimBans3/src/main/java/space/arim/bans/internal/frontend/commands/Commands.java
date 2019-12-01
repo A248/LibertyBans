@@ -100,6 +100,12 @@ public class Commands implements CommandsMaster {
 	
 	private String other_reload_successful;
 	
+	private boolean rollback_detail;
+	private String other_rollback_error_notfound;
+	private String other_rollback_error_invalidnumber;
+	private String other_rollback_successful_detail;
+	private String other_rollback_successful_message;
+	
 	public Commands(ArimBans center) {
 		this.center = center;
 		String invalid_string = ArimBansLibrary.INVALID_STRING_CODE;
@@ -148,13 +154,13 @@ public class Commands implements CommandsMaster {
 		return output;
 	}
 	
-	private int parsePage(String input) {
+	private int parseNumber(String input, int defaultNumber) {
 		try {
-			int page = 0;
+			int page = defaultNumber;
 			page = Integer.parseInt(input);
-			return (page <= 0) ? 1 : page;
+			return (page <= 0) ? defaultNumber : page;
 		} catch (NumberFormatException ex) {
-			return 1;
+			return defaultNumber;
 		}
 	}
 	
@@ -329,7 +335,7 @@ public class Commands implements CommandsMaster {
 				reloadCmd(operator);
 				return;
 			}
-			listCmd(operator, null, command, args[0]);
+			listCmd(operator, null, command, (args.length == 0) ? 1 : parseNumber(args[0], 1));
 		} else {
 			if (args.length <= 0) {
 				usage(operator, command);
@@ -367,14 +373,15 @@ public class Commands implements CommandsMaster {
 			default:
 				break;
 			}
+			args = chopOffOne(args);
 			if (command.category().equals(Category.ADD)) {
-				punCmd(operator, target, command, chopOffOne(args));
+				punCmd(operator, target, command, args);
 			} else if (command.category().equals(Category.REMOVE)) {
-				unpunCmd(operator, target, command, chopOffOne(args));
+				unpunCmd(operator, target, command, args);
 			} else if (command.category().equals(Category.LIST)) {
-				listCmd(operator, target, command, args[1]);
+				listCmd(operator, target, command, (args.length == 0) ? 1 : parseNumber(args[0], 1));
 			} else if (command.category().equals(Category.OTHER)) {
-				otherCmd(operator, target, command);
+				otherCmd(operator, target, command, args);
 			}
 		}
 	}
@@ -516,9 +523,9 @@ public class Commands implements CommandsMaster {
 		center.subjects().sendMessage(operator, other_reload_successful);
 	}
 	
-	private void listCmd(Subject operator, Subject target, CommandType command, String pageInput) {
+	private void listCmd(Subject operator, Subject target, CommandType command, int page) {
 		Set<Punishment> applicable = getAllForListParams(target, command);
-		list(operator, new Lister<Punishment>(parsePage(pageInput), perPage.get(command.subCategory()), maxPage.get(command.subCategory()), noPage.get(command.subCategory()), applicable, header.get(command.subCategory()), body.get(command.subCategory()), footer.get(command.subCategory())) {
+		list(operator, new Lister<Punishment>(page, perPage.get(command.subCategory()), maxPage.get(command.subCategory()), noPage.get(command.subCategory()), applicable, header.get(command.subCategory()), body.get(command.subCategory()), footer.get(command.subCategory())) {
 			@Override
 			boolean check(Punishment punishment) {
 				switch (command.subCategory()) {
@@ -543,7 +550,7 @@ public class Commands implements CommandsMaster {
 		});
 	}
 	
-	private void otherCmd(Subject operator, Subject target, CommandType command) {
+	private void otherCmd(Subject operator, Subject target, CommandType command, String[] extraArgs) {
 		switch (command.subCategory()) {
 		case STATUS:
 			statusCmd(operator, target);
@@ -556,6 +563,9 @@ public class Commands implements CommandsMaster {
 			break;
 		case ALTS:
 			altsCmd(operator, target);
+			break;
+		case ROLLBACK:
+			rollbackCmd(operator, target, (extraArgs.length > 0) ? extraArgs[0] : "all");
 			break;
 		default:
 			throw new InternalStateException("Wrong command execution method!");
@@ -649,6 +659,42 @@ public class Commands implements CommandsMaster {
 		center.subjects().sendMessage(operator, msgs);
 	}
 	
+	private void rollbackCmd(Subject operator, Subject target, String numberArg) {
+		int max;
+		if (!numberArg.equals("all")) {
+			max = parseNumber(numberArg, 0);
+			if (max == 0) {
+				center.subjects().sendMessage(operator, other_rollback_error_invalidnumber.replace("%NUMBER%", numberArg));
+				return;
+			}
+		} else {
+			max = Integer.MAX_VALUE;
+		}
+		ArrayList<Punishment> applicable = new ArrayList<Punishment>(center.punishments().getAllPunishments());
+		applicable.sort(DATE_COMPARATOR);
+		int n = 0;
+		for (Iterator<Punishment> it = applicable.iterator(); it.hasNext();) {
+			Punishment punishment = it.next();
+			if (punishment.operator().compare(operator)) {
+				if (n >= max) {
+					it.remove();
+				} else {
+					if (rollback_detail) {
+						center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(other_rollback_successful_detail, punishment));
+					}
+					n++;
+				}
+			} else {
+				it.remove();
+			}
+		}
+		if (applicable.isEmpty()) {
+			center.subjects().sendMessage(operator, other_rollback_error_notfound.replace("%TARGET%", center.formats().formatSubject(target)));
+			return;
+		}
+		center.subjects().sendMessage(operator, other_rollback_successful_message.replace("%NUMBER%", numberArg).replace("%TARGET%", center.formats().formatSubject(target)));
+	}
+	
 	private void list(Subject operator, Lister<Punishment> lister) {
 		ArrayList<Punishment> punishments = new ArrayList<Punishment>(lister.applicable);
 		for (Iterator<Punishment> it = punishments.iterator(); it.hasNext();) {
@@ -723,6 +769,8 @@ public class Commands implements CommandsMaster {
 				break;
 			}
 		}
+		
+		rollback_detail = center.config().getConfigBoolean("commands.rollback-detail");
 		
 	}
 	
@@ -807,6 +855,11 @@ public class Commands implements CommandsMaster {
 		other_alts_error_notfound = center.config().getMessagesString("other.alts.error-not-found");
 		
 		other_reload_successful = center.config().getMessagesString("other.reload.successful");
+		
+		other_rollback_error_notfound = center.config().getMessagesString("other.rollback.error.not-found");
+		other_rollback_error_invalidnumber = center.config().getMessagesString("other.rollback.error.invalid-number");
+		other_rollback_successful_detail = center.config().getMessagesString("other.rollback.successful.detail");
+		other_rollback_successful_message = center.config().getMessagesString("other.rollback.successful.message");
 		
 	}
 	
