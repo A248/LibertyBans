@@ -71,7 +71,7 @@ public class BungeeEnv implements Environment {
 	
 	private void setupMetrics() {
 		metrics = new Metrics(plugin);
-		metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().mode().toString()));
+		metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().settings().mode.toString()));
 		metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
 	}
 	
