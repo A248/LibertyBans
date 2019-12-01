@@ -223,6 +223,8 @@ list:
       body:
         - '[%NUMBER%] %SUBJECT%'
         - '%REASON% / %TIME%'
+      footer:
+        - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
 other:
   reload:
     usage: '&cUsage: /reload.'
