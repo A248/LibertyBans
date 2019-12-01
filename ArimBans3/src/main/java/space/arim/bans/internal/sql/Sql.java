@@ -52,13 +52,6 @@ public class Sql implements SqlMaster {
 			throw new InternalStateException("RowSetProvider could not load its factory!", ex);
 		}
 	}
-
-	private void setup() {
-		if (data != null) {
-			data.close();
-		}
-		data = settings.loadDataSource();
-	}
 	
 	private void stopConnection() {
 		if (!data.isClosed()) {
@@ -143,11 +136,7 @@ public class Sql implements SqlMaster {
 	}
 	
 	@Override
-	public void refreshConfig(boolean fromFile) {
-		
-		if (!fromFile) {
-			setup();
-		}
+	public void refreshConfig(boolean first) {
 		
 		StorageMode mode;
 		try {
@@ -156,10 +145,18 @@ public class Sql implements SqlMaster {
 			mode = StorageMode.HSQLDB;
 			center.environment().logger().warning(DEFAULTING_TO_STORAGE_MODE);
 		}
+		
 		if (StorageMode.MYSQL.equals(mode)) {
 			settings = new LocalSettings(center.config());
 		} else if (StorageMode.HSQLDB.equals(mode)) {
 			settings = new RemoteSettings(center.config());
+		}
+		
+		if (first || center.config().getConfigBoolean("storage.restart-on-reload")) {
+			if (data != null) {
+				data.close();
+			}
+			data = settings.loadDataSource();
 		}
 		
 	}

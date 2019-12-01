@@ -102,7 +102,7 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 			async = new Async(this);
 			UniversalRegistry.register(AsyncExecutor.class, (AsyncExecutor) async); 
 		}
-		refresh(false);
+		refresh(true);
 		loadData();
 		UniversalRegistry.register(PunishmentPlugin.class, this);
 		UniversalRegistry.register(UUIDResolver.class, resolver);

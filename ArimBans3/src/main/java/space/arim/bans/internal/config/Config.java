@@ -142,7 +142,7 @@ public class Config implements ConfigMaster {
 	
 	@Override
 	public void refresh(boolean first) {
-		if (first) {
+		if (!first) {
 			Yaml yaml = new Yaml();
 			configValues.putAll(loadFile(configYml, yaml));
 			messageValues.putAll(loadFile(messagesYml, yaml));
@@ -153,7 +153,7 @@ public class Config implements ConfigMaster {
 	
 	@Override
 	public void refreshConfig(boolean first) {
-		if (first) {
+		if (!first) {
 			configValues.putAll(loadFile(configYml, new Yaml()));
 			configVersion();
 		}
@@ -161,7 +161,7 @@ public class Config implements ConfigMaster {
 	
 	@Override
 	public void refreshMessages(boolean first) {
-		if (first) {
+		if (!first) {
 			messageValues.putAll(loadFile(messagesYml, new Yaml()));
 			messagesVersion();
 		}
@@ -271,7 +271,6 @@ public class Config implements ConfigMaster {
 		case OTHER:
 			return "other.";
 		default:
-			assert false;
 			throw new InternalStateException("What other command category is there?!?");
 		}
 	}
@@ -288,7 +287,6 @@ public class Config implements ConfigMaster {
 		case KICK:
 			return leadKey(category) + "kicks.";
 		default:
-			assert false;
 			throw new InternalStateException("What other punishment type is there?!?");
 		}
 	}

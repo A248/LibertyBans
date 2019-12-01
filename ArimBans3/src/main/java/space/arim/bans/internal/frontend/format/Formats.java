@@ -154,14 +154,12 @@ public class Formats implements FormatsMaster {
 	@Override
 	public boolean isCmdMuteBlocked(String command) {
 		String cmd = command.split(" ")[0];
-		if (cmd.contains(":")) {
-			cmd = cmd.split(":")[1];
-		}
-		return blockForMuted.contains(command.replace("/", ""));
+		cmd = (cmd.contains(":")) ? cmd.split(":")[1] : cmd.substring(0);
+		return blockForMuted.contains(cmd);
 	}
 	
 	@Override
-	public void refreshConfig(boolean fromFile) {
+	public void refreshConfig(boolean first) {
 		
 		try {
 			dateFormatter = new SimpleDateFormat(center.config().getConfigString("formatting.date"));
@@ -197,7 +195,7 @@ public class Formats implements FormatsMaster {
 	}
 	
 	@Override
-	public void refreshMessages(boolean fromFile) {
+	public void refreshMessages(boolean first) {
 		for (PunishmentType type : PunishmentType.values()) {
 			String leadKeyAdd = center.config().keyString(type, Category.ADD);
 			String leadKeyRemove = center.config().keyString(type, Category.REMOVE);
