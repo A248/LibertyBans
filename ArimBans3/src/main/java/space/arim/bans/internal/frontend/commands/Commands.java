@@ -76,7 +76,8 @@ public class Commands implements CommandsMaster {
 	private final ConcurrentHashMap<SubCategory, String> successful = new ConcurrentHashMap<SubCategory, String>();
 	
 	private final ConcurrentHashMap<PunishmentType, String> notfound = new ConcurrentHashMap<PunishmentType, String>();
-	private String removals_warns_error_confirm;
+	private final ConcurrentHashMap<PunishmentType, Boolean> confirmUnpunish = new ConcurrentHashMap<PunishmentType, Boolean>();
+	private final ConcurrentHashMap<PunishmentType, String> confirmUnpunishMsg = new ConcurrentHashMap<PunishmentType, String>();
 	
 	private final ConcurrentHashMap<SubCategory, Integer> perPage = new ConcurrentHashMap<SubCategory, Integer>();
 	private final ConcurrentHashMap<SubCategory, String> maxPage = new ConcurrentHashMap<SubCategory, String>();
@@ -97,6 +98,8 @@ public class Commands implements CommandsMaster {
 	private String other_alts_layout_element;
 	private String other_alts_error_notfound;
 	
+	private String other_reload_successful;
+	
 	public Commands(ArimBans center) {
 		this.center = center;
 		String invalid_string = ArimBansLibrary.INVALID_STRING_CODE;
@@ -108,7 +111,6 @@ public class Commands implements CommandsMaster {
 		default_reason = invalid_string;
 		additions_bans_error_conflicting = invalid_string;
 		additions_mutes_error_conflicting = invalid_string;
-		removals_warns_error_confirm = invalid_string;
 		other_status_layout_body = invalid_strings;
 		other_ips_layout_body = invalid_strings;
 		other_ips_layout_element = invalid_string;
@@ -120,6 +122,8 @@ public class Commands implements CommandsMaster {
 			permTime.put(pun, invalid_string);
 			durations.put(pun, invalid_strings);
 			exempt.put(pun, invalid_string);
+			confirmUnpunish.put(pun, true);
+			confirmUnpunishMsg.put(pun, invalid_string);
 		}
 		for (SubCategory cat : SubCategory.values()) {
 			successful.put(cat, invalid_string);
@@ -215,6 +219,8 @@ public class Commands implements CommandsMaster {
 			return "history.";
 		case WARNS:
 			return "warns.";
+		case BLAME:
+			return "blame.";
 		case STATUS:
 			return "status.";
 		default:
@@ -319,6 +325,10 @@ public class Commands implements CommandsMaster {
 			return;
 		}
 		if (command.canHaveNoTarget()) {
+			if (command.subCategory().equals(SubCategory.RELOAD)) {
+				reloadCmd(operator);
+				return;
+			}
 			listCmd(operator, null, command, args[0]);
 		} else {
 			if (args.length <= 0) {
@@ -425,7 +435,7 @@ public class Commands implements CommandsMaster {
 		PunishmentType type = applicableType(command);
 		if (command.subCategory().equals(SubCategory.UNWARN)) {
 			if (args.length > 0) {
-				if (args[0].equals("internal_bydate")) {
+				if (args[0].equals("internal_confirm")) {
 					try {
 						long date = Long.parseLong(args[1]);
 						Set<Punishment> active = center.punishments().getAllPunishments();
@@ -448,8 +458,14 @@ public class Commands implements CommandsMaster {
 							return;
 						}
 						Punishment punishment = applicable.get(id);
-						String cmd = getCmdBaseString(command) + " internal_bydate " + punishment.date();
-						center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(removals_warns_error_confirm, punishment).replace("%CMD%", cmd));
+						if (confirmUnpunish.get(type)) {
+							String cmd = getCmdBaseString(command) + " internal_confirm " + punishment.date();
+							center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
+							return;
+						}
+						center.punishments().removePunishments(punishment);
+						center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
+						center.subjects().sendNotif(punishment, false, operator);
 						return;
 					} catch (NumberFormatException ex) {}
 				}
@@ -457,15 +473,21 @@ public class Commands implements CommandsMaster {
 			usage(operator, command);
 			return;
 		}
+		Punishment punishment;
 		try {
-			Punishment punishment = center.punishments().getPunishment(target, type);
+			punishment = center.punishments().getPunishment(target, type);
+		} catch (MissingPunishmentException ex) {
+			center.subjects().sendMessage(operator, notfound.get(type).replace("%TARGET%", center.formats().formatSubject(target)));
+			return;
+		}
+		if (confirmUnpunish.get(type) && !args[0].equals("internal_confirm")) {
+			String cmd = getCmdBaseString(command) + " internal_confirm";
+			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
+		} else {
 			center.punishments().removePunishments(punishment);
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
 			center.subjects().sendNotif(punishment, false, operator);
-		} catch (MissingPunishmentException ex) {
-			center.subjects().sendMessage(operator, notfound.get(type).replace("%TARGET%", center.formats().formatSubject(target)));
 		}
-
 	}
 	
 	private Set<Punishment> getAllForListParams(Subject target, CommandType command) {
@@ -478,6 +500,8 @@ public class Commands implements CommandsMaster {
 			return center.punishments().getHistory(target);
 		case WARNS:
 			return center.punishments().getPunishments(target, PunishmentType.WARN);
+		case BLAME:
+			return center.punishments().getAllPunishments();
 		default:
 			return center.punishments().getPunishments(target);
 		}
@@ -485,6 +509,11 @@ public class Commands implements CommandsMaster {
 	
 	private String getCmdBaseString(CommandType command) {
 		return "arimbans " + command.name();
+	}
+	
+	private void reloadCmd(Subject operator) {
+		center.refresh(false);
+		center.subjects().sendMessage(operator, other_reload_successful);
 	}
 	
 	private void listCmd(Subject operator, Subject target, CommandType command, String pageInput) {
@@ -500,6 +529,8 @@ public class Commands implements CommandsMaster {
 					} else if (command.ipSpec().equals(IpSpec.IP)) {
 						return punishment.subject().getType().equals(Subject.SubjectType.IP);
 					}
+				case BLAME:
+					return punishment.subject().compare(target);
 				default:
 					return true;
 				}
@@ -527,7 +558,6 @@ public class Commands implements CommandsMaster {
 			altsCmd(operator, target);
 			break;
 		default:
-			assert false;
 			throw new InternalStateException("Wrong command execution method!");
 		}
 	}
@@ -545,7 +575,6 @@ public class Commands implements CommandsMaster {
 			header = other_status_layout.get("ip.header");
 			info = other_status_layout.get("ip.info").replace("%GEOIP_CMD%", "arimbans geoip " + target.getIP()).replace("%ALTS_CMD%", "arimbans alts " + target.getIP());
 		} else {
-			assert false;
 			throw new InternalStateException("Target cannot be the console!");
 		}
 		String banStatusKey = (banned) ? "ban-status.banned" : "ban-status.not-banned";
@@ -650,7 +679,7 @@ public class Commands implements CommandsMaster {
 		for (Punishment p : punishments) {
 			String[] msgs = body.toArray(new String[0]);
 			for (int n = 0; n < msgs.length; n++) {
-				msgs[n] = center.formats().formatMessageWithPunishment(msgs[n], p);
+				msgs[n] = center.formats().formatMessageWithPunishment(msgs[n], p).replace("%PAGE%", Integer.toString(lister.page)).replace("%MAXPAGE%", Integer.toString(maxPage)).replace("%CMD%", lister.getNextPageCmd());
 			}
 			center.subjects().sendMessage(operator, true, msgs);
 		}
@@ -674,13 +703,31 @@ public class Commands implements CommandsMaster {
 	}
 	
 	@Override
-	public void refreshConfig(boolean fromFile) {
+	public void refreshConfig(boolean first) {
 		permit_blank_reason = center.config().getConfigBoolean("commands.reasons.permit-blank");
 		default_reason = center.config().getConfigString("commands.reasons.default-reason");
+		
+		String base1 = "commands.confirm-unpunish";
+		for (PunishmentType type : PunishmentType.values()) {
+			switch (type) {
+			case BAN:
+				confirmUnpunish.put(type, center.config().getConfigBoolean(base1 + "unbans"));
+				break;
+			case MUTE:
+				confirmUnpunish.put(type, center.config().getConfigBoolean(base1 + "unmutes"));
+				break;
+			case WARN:
+				confirmUnpunish.put(type, center.config().getConfigBoolean(base1 + "unwarns"));
+			case KICK:
+			default:
+				break;
+			}
+		}
+		
 	}
 	
 	@Override
-	public void refreshMessages(boolean fromFile) {
+	public void refreshMessages(boolean first) {
 		
 		base_perm_msg = center.config().getMessagesString("all.base-permission-message");
 		for (IpSpec spec : IpSpec.values()) {
@@ -705,7 +752,8 @@ public class Commands implements CommandsMaster {
 			case BANLIST:
 			case MUTELIST:
 			case HISTORY:
-			case WARNS: // all 4 cases fall-through to here
+			case WARNS:
+			case BLAME: // all 5 cases fall-through to here
 				perPage.put(category, center.config().getMessagesInt(leadKey + "per-page"));
 				noPage.put(category, center.config().getMessagesString(leadKey + "no-pages"));
 				maxPage.put(category, center.config().getMessagesString(leadKey + "max-pages"));
@@ -729,6 +777,7 @@ public class Commands implements CommandsMaster {
 				// removals do not apply to kicks
 				notfound.put(type, center.config().getMessagesString(leadKey2 + "error.not-found"));
 				successful.put(categoryRemove, center.config().getMessagesString(leadKey2 + "successful.message"));
+				confirmUnpunishMsg.put(type, center.config().getMessagesString(leadKey2 + "error.confirm"));
 				// durations do not apply to kicks
 				permTime.put(type, center.config().getMessagesString(leadKey1 + "permission.time"));
 				durations.put(type, center.config().getMessagesStrings(leadKey1 + "permission.dur-perms"));
@@ -756,6 +805,9 @@ public class Commands implements CommandsMaster {
 		other_alts_layout_body = center.config().getMessagesStrings("other.alts.layout.body");
 		other_alts_layout_element = center.config().getMessagesString("other.alts.layout.element");
 		other_alts_error_notfound = center.config().getMessagesString("other.alts.error-not-found");
+		
+		other_reload_successful = center.config().getMessagesString("other.reload.successful");
+		
 	}
 	
 	// Exact same method as in FormatsMaster implementation
