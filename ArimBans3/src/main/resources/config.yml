@@ -41,8 +41,8 @@ commands:
     default-reason: 'No reason stated.'
   block-for-muted:
     - 'me'
-misc:
-  async-loading: false
+enforcement:
+  strict-ip-checking: true
   priorities:
     bans: 'HIGHEST'
     mutes: 'HIGHEST'
@@ -57,4 +57,5 @@ fetchers:
       key: 'nokey'
     freegeoip: true
     ipapi: true
+async-loading: false
 config-version: 1
