@@ -39,8 +39,8 @@ additions:
       conflicting: '&c&o%TARGET%&r&7is already banned!'
       exempt: '&cYou may not ban %TARGET%.'
     successful:
-      message: '&7Banned &c&o%TARGET%&r&7 for &a&o%EXP_REL%&r&7 because of &o%REASON%'
-      notification: '&7%OPERATOR% banned &c&o%TARGET%&r&7 for &a&o%EXP_REL%&r&7 because of &o%REASON%'
+      message: '&7Banned &c&o%TARGET%&r&7 for &a&o%TIME%&r&7 because of &o%REASON%'
+      notification: '&7%OPERATOR% banned &c&o%TARGET%&r&7 for &a&o%TIME%&r&7 because of &o%REASON%'
     layout:
       - 'Banned'
       - 'Duration: %TIME%'
@@ -61,8 +61,8 @@ additions:
       conflicting: '&c&o%TARGET%&r&7is already muted!'
       exempt: '&cYou may not mute %TARGET%.'
     successful:
-      message: '&7Muted %TARGET% for %EXP_REL% because of %REASON%'
-      notification: '&7%OPERATOR% muted %TARGET% for %EXP_REL% because of %REASON%'
+      message: '&7Muted %TARGET% for %TIME% because of %REASON%'
+      notification: '&7%OPERATOR% muted %TARGET% for %TIME% because of %REASON%'
     layout:
       - 'Muted'
       - 'Duration: %TIME%'
@@ -116,6 +116,7 @@ removals:
       no-ip: '&cYou may not unban IPs.'
     error:
       not-found: '&c&o%TARGET%&r&7is not banned.'
+      confirm: '&7Are you sure you want to unban &c&o%TARGET%&r&7 for %REASON%?||ttp:&7Ban enacted by %OPERATOR%, %DATE%||&7 Click to confirm.||ttp:&7Click here!||cmd:/%CMD%'
     successful:
       message: '&7Successfully unbanned &c&o%TARGET%&r&7.'
       notification: '%UNOPERATOR% unbanned %TARGET%.'
@@ -126,6 +127,7 @@ removals:
       no-ip: '&cYou may not unmute IPs.'
     error:
       not-found: '&c&o%TARGET%&r&7is not muted.'
+      confirm: '&7Are you sure you want to unmute &c&o%TARGET%&r&7 for %REASON%?||ttp:&7Mute enacted by %OPERATOR%, %DATE%||&7 Click to confirm.||ttp:&7Click here!||cmd:/%CMD%'
     successful:
       message: '&7Successfully unmuted &c&o%TARGET%&r&7.'
       notification: '%UNOPERATOR% unmuted %TARGET%.'
@@ -136,7 +138,7 @@ removals:
       no-ip: '&cYou may not unwarn IPs.'
     error:
       not-found: '&7Could not find warn No.&e%NUMBER%&7 for &c&o%TARGET%&r&7.'
-      confirm: '&7Are you sure you want to unwarn &c&o%TARGET%&r&7 for %REASON%?||ttp:&7Warned by %OPERATOR%, %DATE_ABS%||&7 Click to confirm.||ttp:&7Click here!||cmd:/%CMD%'
+      confirm: '&7Are you sure you want to unwarn &c&o%TARGET%&r&7 for %REASON%?||ttp:&7Warn enacted by %OPERATOR%, %DATE%||&7 Click to confirm.||ttp:&7Click here!||cmd:/%CMD%'
     successful:
       message: '&7Successfully unwarned &c&o%TARGET%&r&7.'
       notification: '%UNOPERATOR% unwarned %TARGET% No.&e%NUMBER%&7.'
@@ -178,7 +180,7 @@ list:
   history:
     usage: '/history <player> [page]'
     per-page: 10
-    no-pages: '&c&oTARGET&r&7 has no history.'
+    no-pages: '&c&o%TARGET%&r&7 has no history.'
     max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
     permission:
       command: '&cYou may not view history.'
@@ -195,21 +197,38 @@ list:
   warns:
     usage: '/warns <player> [page]'
     per-page: 10
-    no-pages: '&c&oTARGET&r&7 has no warns.'
+    no-pages: '&c&o%TARGET%&r&7 has no warns.'
     max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
     permission:
       command: '&cYou may not view warns.'
       no-ip: '&cYou may not view warns for an ip address.'
     layout:
       header:
-        - '[Number] Subject / Punishment Type'
-        - 'Operator / Reason / Time Remaining'
+        - '[Number] Operator / Reason / Time Remaining'
       body:
-        - '[%NUMBER%] %TARGET% / %PUNISHMENT%'
-        - '%OPERATOR% / %REASON% / %TIME%'
+        - '[%NUMBER%] %OPERATOR% / %REASON% / %TIME%'
       footer:
         - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
+  blame:
+    usage: '/blame <player> [page]'
+    per-page: 10
+    no-pages: '&c&o%TARGET%&r&7 has no warns.'
+    max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
+    permission:
+      command: '&cYou may not use blame.'
+    layout:
+      header:
+        - '[Number] Subject / Punishment Type'
+        - 'Reason / Time Remaining'
+      body:
+        - '[%NUMBER%] %SUBJECT%'
+        - '%REASON% / %TIME%'
 other:
+  reload:
+    usage: '&cUsage: /reload.'
+    permission:
+      command: '&cYou may not use this.'
+    successful: '&aReloaded ArimBans configuration!'
   ips:
     usage: '&cUsage: /ips &e<player>&c.'
     permission:
@@ -267,10 +286,10 @@ other:
         - '%MUTE_STATUS%'
         - '%WARN_STATUS%'
       ban-status:
-        banned: '&cBanned &8» &7%EXP_REL%||ttp:&7%OPERATOR%, %DATE_ABS%, %REASON%'
+        banned: '&cBanned &8» &7%TIME%||ttp:&7%OPERATOR%, %DATE%, %REASON%'
         not-banned: '&cBanned &8» &7False'
       mute-status:
-        muted: '&cMuted &8» &7%EXP_REL%||ttp:&7%OPERATOR%, %DATE_ABS%, %REASON%'
+        muted: '&cMuted &8» &7%TIME%||ttp:&7%OPERATOR%, %DATE%, %REASON%'
         not-muted: '&cMuted &8» &7False'
       warn-status:
         warn-count: '&cWarns &8» &7%WARN_COUNT%||ttp:&7Click to see warns for &e&o%TARGET%&7.||cmd:/%CMD_WARNS%'
