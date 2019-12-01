@@ -35,11 +35,11 @@ public interface SqlMaster extends Component {
 	
 	void executeQuery(SqlQuery...queries);
 	
-	void executeQuery(String sql, Object...params);
+	void executeQuery(String statement, Object...params);
 	
 	ResultSet[] selectQuery(SqlQuery...queries);
 	
-	ResultSet selectQuery(String sql, Object...params);
+	ResultSet selectQuery(String statement, Object...params);
 	
 	enum StorageMode {
 		HSQLDB, MYSQL;
