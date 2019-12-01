@@ -287,7 +287,7 @@ public class Resolver implements ResolverMaster {
 	}
 	
 	@Override
-	public void refreshConfig(boolean fromFile) {
+	public void refreshConfig(boolean first) {
 		internalFetcher = center.config().getConfigBoolean("fetchers.uuids.internal");
 		ashconFetcher = center.config().getConfigBoolean("fetchers.uuids.ashcon");
 		mojangFetcher = center.config().getConfigBoolean("fetchers.uuids.mojang");

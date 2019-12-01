@@ -141,8 +141,8 @@ public class Config implements ConfigMaster {
 	}
 	
 	@Override
-	public void refresh(boolean fromFile) {
-		if (fromFile) {
+	public void refresh(boolean first) {
+		if (first) {
 			Yaml yaml = new Yaml();
 			configValues.putAll(loadFile(configYml, yaml));
 			messageValues.putAll(loadFile(messagesYml, yaml));
@@ -152,16 +152,16 @@ public class Config implements ConfigMaster {
 	}
 	
 	@Override
-	public void refreshConfig(boolean fromFile) {
-		if (fromFile) {
+	public void refreshConfig(boolean first) {
+		if (first) {
 			configValues.putAll(loadFile(configYml, new Yaml()));
 			configVersion();
 		}
 	}
 	
 	@Override
-	public void refreshMessages(boolean fromFile) {
-		if (fromFile) {
+	public void refreshMessages(boolean first) {
+		if (first) {
 			messageValues.putAll(loadFile(messagesYml, new Yaml()));
 			messagesVersion();
 		}
