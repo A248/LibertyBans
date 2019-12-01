@@ -46,6 +46,7 @@ public class BukkitEnforcer implements Enforcer {
 	
 	private EventPriority ban_priority;
 	private EventPriority mute_priority;
+	private boolean strict_ip_checking;
 	
 	public BukkitEnforcer(final BukkitEnv environment) {
 		this.environment = environment;
@@ -80,44 +81,63 @@ public class BukkitEnforcer implements Enforcer {
 			} catch (MissingPunishmentException ex) {
 				environment.center().logError(ex);
 			}
-		} else {
+		} else if (strict_ip_checking) {
 			List<String> ips = environment.center().resolver().getIps(evt.getUniqueId());
 			ips.add(evt.getAddress().getHostAddress());
 			for (String addr : ips) {
 				Subject addrSubj = environment.center().subjects().parseSubject(addr);
 				if (environment.center().isBanned(addrSubj)) {
 					try {
-						evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED,
-								environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.BAN)));
+						evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.BAN)));
 					} catch (MissingPunishmentException ex) {
 						environment.center().logError(ex);
 					}
 				}
 			}
+		} else {
+			Subject addrSubj = environment.center().subjects().parseSubject(evt.getAddress().getHostAddress());
+			if (environment.center().isBanned(addrSubj)) {
+				try {
+					evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.BAN)));
+				} catch (MissingPunishmentException ex) {
+					environment.center().logError(ex);
+				}
+			}
 		}
 	}
 	
-	private void enforceMutes(Cancellable evt, EventPriority priority, Subject subject) {
+	private void enforceMutes(Cancellable evt, EventPriority priority, Player player) {
 		if (evt.isCancelled() || !priority.equals(mute_priority)) {
 			return;
-		} else if (environment.center().isMuted(subject)) {
-			evt.setCancelled(true);
+		}
+		Subject subject = environment.center().subjects().parseSubject(player.getUniqueId());
+		if (environment.center().isMuted(subject)) {
 			try {
 				environment.center().subjects().sendMessage(subject, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(subject, PunishmentType.MUTE)));
+				evt.setCancelled(true);
 			} catch (MissingPunishmentException ex) {
 				environment.center().logError(ex);
 			}
-		} else {
+		} else if (strict_ip_checking) {
 			for (String addr : environment.center().resolver().getIps(subject.getUUID())) {
 				Subject addrSubj = environment.center().subjects().parseSubject(addr);
 				if (environment.center().isMuted(addrSubj)) {
-					evt.setCancelled(true);
 					try {
 						environment.center().subjects().sendMessage(subject, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.MUTE)));
+						evt.setCancelled(true);
 					} catch (MissingPunishmentException ex) {
 						environment.center().logError(ex);
 					}
-					return;
+				}
+			}
+		} else {
+			Subject addrSubj = environment.center().subjects().parseSubject(player.getAddress().getAddress().getHostAddress());
+			if (environment.center().isMuted(addrSubj)) {
+				try {
+					environment.center().subjects().sendMessage(subject, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.MUTE)));
+					evt.setCancelled(true);
+				} catch (MissingPunishmentException ex) {
+					environment.center().logError(ex);
 				}
 			}
 		}
@@ -128,7 +148,7 @@ public class BukkitEnforcer implements Enforcer {
 			enforceFailed(evt.getPlayer().getName(), PunishmentType.MUTE);
 			return;
 		}
-		enforceMutes(evt, priority, environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()));
+		enforceMutes(evt, priority, evt.getPlayer());
 	}
 	
 	void enforceMutes(PlayerCommandPreprocessEvent evt, EventPriority priority) {
@@ -137,7 +157,7 @@ public class BukkitEnforcer implements Enforcer {
 			return;
 		}
 		if (environment.center().formats().isCmdMuteBlocked(evt.getMessage())) {
-			enforceMutes(evt, priority, environment.center().subjects().parseSubject(evt.getPlayer().getUniqueId()));
+			enforceMutes(evt, priority, evt.getPlayer());
 		}
 	}
 	
@@ -217,8 +237,9 @@ public class BukkitEnforcer implements Enforcer {
 	
 	@Override
 	public void refreshConfig(boolean fromFile) {
-		ban_priority = parsePriority("misc.priorities.event-priority");
-		mute_priority = parsePriority("misc.priorities.event-priority");
+		ban_priority = parsePriority("enforcement.priorities.event-priority");
+		mute_priority = parsePriority("enforcement.priorities.event-priority");
+		strict_ip_checking = environment.center().config().getConfigBoolean("enforcement.strict-ip-checking");
 	}
 	
 }
