@@ -55,7 +55,11 @@ public enum CommandType {
 	
 	IPS(SubCategory.IPS, IpSpec.UUID),
 	GEOIP(SubCategory.GEOIP, IpSpec.IP),
-	ALTS(SubCategory.ALTS, IpSpec.IP);
+	ALTS(SubCategory.ALTS, IpSpec.IP),
+	
+	BLAME(SubCategory.BLAME, IpSpec.UUID),
+	ROLLBACK(SubCategory.ROLLBACK, IpSpec.UUID),
+	RELOAD(SubCategory.RELOAD, IpSpec.BOTH);
 	
 	public enum SubCategory {
 		BAN(Category.ADD, "ban.do"),
@@ -72,7 +76,10 @@ public enum CommandType {
 		STATUS(Category.OTHER, "status"),
 		IPS(Category.OTHER, "iplookup"),
 		GEOIP(Category.OTHER, "geoip"),
-		ALTS(Category.OTHER, "alts");
+		ALTS(Category.OTHER, "alts"),
+		BLAME(Category.LIST, "blame"),
+		ROLLBACK(Category.OTHER, "rollback"),
+		RELOAD(Category.OTHER, "reload", true);
 		
 		private final Category category;
 		private final String permissionBase;
