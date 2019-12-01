@@ -171,28 +171,27 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	}
 	
 	@Override
-	public void refreshConfig(boolean fromFile) {
-		config.refreshConfig(fromFile);
-		sql.refreshConfig(fromFile);
-		punishments.refreshConfig(fromFile);
-		punishments.refreshActive();
-		subjects.refreshConfig(fromFile);
-		resolver.refreshConfig(fromFile);
-		commands.refreshConfig(fromFile);
-		formats.refreshConfig(fromFile);
-		async.refreshConfig(fromFile);
+	public void refreshConfig(boolean first) {
+		config.refreshConfig(first);
+		sql.refreshConfig(first);
+		punishments.refreshConfig(first);
+		subjects.refreshConfig(first);
+		resolver.refreshConfig(first);
+		commands.refreshConfig(first);
+		formats.refreshConfig(first);
+		async.refreshConfig(first);
 	}
 	
 	@Override
-	public void refreshMessages(boolean fromFile) {
-		config.refreshMessages(fromFile);
-		sql.refreshMessages(fromFile);
-		punishments.refreshMessages(fromFile);
-		subjects.refreshMessages(fromFile);
-		resolver.refreshMessages(fromFile);
-		commands.refreshMessages(fromFile);
-		formats.refreshMessages(fromFile);
-		async.refreshMessages(fromFile);
+	public void refreshMessages(boolean first) {
+		config.refreshMessages(first);
+		sql.refreshMessages(first);
+		punishments.refreshMessages(first);
+		subjects.refreshMessages(first);
+		resolver.refreshMessages(first);
+		commands.refreshMessages(first);
+		formats.refreshMessages(first);
+		async.refreshMessages(first);
 	}
 	
 	@Override
