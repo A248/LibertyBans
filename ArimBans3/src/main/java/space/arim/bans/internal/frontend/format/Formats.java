@@ -36,6 +36,7 @@ import space.arim.bans.api.CommandType.SubCategory;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
+import space.arim.bans.api.util.ToolsUtil;
 
 public class Formats implements FormatsMaster {
 	
@@ -73,7 +74,7 @@ public class Formats implements FormatsMaster {
 	
 	@Override
 	public String formatMessageWithPunishment(String message, Punishment punishment) {
-		return message.replace("%TARGET%", center.formats().formatSubject(punishment.subject())).replace("%OPERATOR%", center.formats().formatSubject(punishment.operator())).replace("%REASON%", punishment.reason()).replace("%EXP_REL%", center.formats().formatTime(punishment.expiration(), false)).replace("%EXP_ABS%", center.formats().formatTime(punishment.expiration(), true)).replace("%DATE_REL%", center.formats().formatTime(punishment.date(), false)).replace("%DATE_ABS%", center.formats().formatTime(punishment.date(), true));
+		return message.replace("%TYPE%", ToolsUtil.capitaliseProperly(punishment.type().toString())).replace("%TARGET%", center.formats().formatSubject(punishment.subject())).replace("%OPERATOR%", center.formats().formatSubject(punishment.operator())).replace("%REASON%", punishment.reason()).replace("%EXP_REL%", center.formats().formatTime(punishment.expiration(), false)).replace("%EXP_ABS%", center.formats().formatTime(punishment.expiration(), true)).replace("%DATE_REL%", center.formats().formatTime(punishment.date(), false)).replace("%DATE_ABS%", center.formats().formatTime(punishment.date(), true));
 	}
 	
 	@Override
