@@ -27,6 +27,7 @@ storage:
     url: 'jdbc:mysql://%HOST%:%PORT%/%DATABASE%?autoReconnect=true&useUnicode=true&characterEncoding=utf8'
   min-connections: 2
   max-connections: 5
+  restart-on-reload: false
 formatting:
   use-json: true
   permanent-arguments:
@@ -43,6 +44,13 @@ commands:
     default-reason: 'No reason stated.'
   block-for-muted:
     - 'me'
+  confirm-unpunish:
+    unbans: false
+    unmutes: false
+    unwarns: false
+  rollback:
+    detailed: true
+    confirm: false
 enforcement:
   strict-ip-checking: true
   priorities:
