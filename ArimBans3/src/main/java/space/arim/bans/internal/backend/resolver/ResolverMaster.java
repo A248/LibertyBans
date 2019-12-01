@@ -16,7 +16,7 @@
  * along with ArimBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.internal.backend.cache;
+package space.arim.bans.internal.backend.resolver;
 
 import java.sql.ResultSet;
 import java.util.List;

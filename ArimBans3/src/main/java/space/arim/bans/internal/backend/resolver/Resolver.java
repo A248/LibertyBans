@@ -16,12 +16,13 @@
  * along with ArimBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.internal.backend.cache;
+package space.arim.bans.internal.backend.resolver;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -42,6 +43,8 @@ import space.arim.registry.RegistryPriority;
 public class Resolver implements ResolverMaster {
 	
 	private final ArimBans center;
+	
+	private static final String EMPTY_IPLIST_STRING = "<empty>";
 	
 	private ConcurrentHashMap<UUID, List<String>> ips = new ConcurrentHashMap<UUID, List<String>>();
 	private ConcurrentHashMap<UUID, String> uuids = new ConcurrentHashMap<UUID, String>();
@@ -66,7 +69,10 @@ public class Resolver implements ResolverMaster {
 				try {
 					uuid = UUID.fromString(data.getString("uuid"));
 					uuids.put(uuid, data.getString("name"));
-					ips.put(uuid, internaliseIps(data.getString("iplist")));
+					String iplist = data.getString("iplist");
+					if (iplist != EMPTY_IPLIST_STRING) {
+						ips.put(uuid, new ArrayList<String>(Arrays.asList(iplist.split(","))));
+					}
 				} catch (IllegalArgumentException ex) {
 					center.logError(ex);
 				}
@@ -76,32 +82,21 @@ public class Resolver implements ResolverMaster {
 		}
 	}
 	
-	private String externaliseIps(List<String> iplist) {
-		if (iplist.isEmpty()) {
-			return "<empty>";
-		}
-		String list = null;
-		for (String s : iplist) {
-			if (list != null) {
-				list = list.concat(",").concat(s);
-			} else {
-				list = s;
+	private String externaliseIpList(List<String> iplist) {
+		StringBuilder builder = new StringBuilder();
+		for (int n = 0; n < iplist.size(); n++) {
+			if (n != 0) {
+				builder.append(',');
 			}
+			builder.append(iplist.get(n));
 		}
-		return list;
-	}
-
-	private List<String> internaliseIps(String input) {
-		return input.equalsIgnoreCase("<empty>") ? new ArrayList<String>() : new ArrayList<String>(Arrays.asList(input.split(",")));
+		return builder.toString();
 	}
 
 	@Override
 	public List<String> getIps(UUID playeruuid) {
 		Objects.requireNonNull(playeruuid, "UUID must not be null!");
-		if (ips.containsKey(playeruuid)) {
-			return ips.get(playeruuid);
-		}
-		return new ArrayList<String>();
+		return ips.containsKey(playeruuid) ? ips.get(playeruuid) : Collections.emptyList();
 	}
 	
 	@Override
@@ -131,35 +126,48 @@ public class Resolver implements ResolverMaster {
 				return id;
 			}
 		}
-		throw new MissingCacheException("Player " + name + " does not exist!");
+		throw new MissingCacheException(name);
 	}
 	
 	@Override
 	public void update(UUID playeruuid, String name, String ip) {
 		if (uuids.containsKey(playeruuid)) {
-			if (!uuids.get(playeruuid).equalsIgnoreCase(name) || !ips.get(playeruuid).contains(ip)) {
+			boolean updateUUID = !uuids.get(playeruuid).equalsIgnoreCase(name);
+			boolean updateIp = (ip != null) && (!ips.containsKey(playeruuid) || !ips.get(playeruuid).contains(ip));
+			if (updateUUID || updateIp) {
 				center.async(() -> {
-					if (!uuids.get(playeruuid).equalsIgnoreCase(name)) {
-						uuids.replace(playeruuid, name);
-						center.sql().executeQuery(SqlQuery.Query.UPDATE_NAME_FOR_UUID.eval(center.sql().mode()), name, System.currentTimeMillis(), playeruuid.toString());
-					}
-					if (!ips.get(playeruuid).contains(ip) && ip != null) {
-						List<String> list = ips.get(playeruuid);
-						list.add(ip);
-						ips.put(playeruuid, list);
-						center.sql().executeQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID.eval(center.sql().mode()), externaliseIps(list), System.currentTimeMillis(), playeruuid.toString());
+					synchronized (uuids) {
+						if (updateUUID && updateIp) {
+							if (ips.containsKey(playeruuid)) {
+								ips.get(playeruuid).add(ip);
+							} else {
+								ips.put(playeruuid, new ArrayList<String>(Arrays.asList(ip)));
+							}
+							uuids.put(playeruuid, name);
+							center.sql().executeQuery(new SqlQuery(SqlQuery.Query.UPDATE_NAME_FOR_UUID.eval(center.sql().mode()), name, System.currentTimeMillis(), playeruuid.toString()), new SqlQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID.eval(center.sql().mode()), externaliseIpList(ips.get(playeruuid)), System.currentTimeMillis(), playeruuid.toString()));
+						} else if (updateUUID) {
+							uuids.put(playeruuid, name);
+							center.sql().executeQuery(SqlQuery.Query.UPDATE_NAME_FOR_UUID.eval(center.sql().mode()), name, System.currentTimeMillis(), playeruuid.toString());
+						} else if (updateIp) {
+							if (ips.containsKey(playeruuid)) {
+								ips.get(playeruuid).add(ip);
+							} else {
+								ips.put(playeruuid, new ArrayList<String>(Arrays.asList(ip)));
+							}
+							center.sql().executeQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID.eval(center.sql().mode()), externaliseIpList(ips.get(playeruuid)), System.currentTimeMillis(), playeruuid.toString());
+						}
 					}
 				});
 			}
 		} else {
 			center.async(() -> {
-				ArrayList<String> list = new ArrayList<String>();
-				if (ip != null) {
-					list.add(ip);
+				synchronized (uuids) {
+					uuids.put(playeruuid, name);
+					if (ip != null) {
+						ips.put(playeruuid, new ArrayList<String>(Arrays.asList(ip)));
+					}
+					center.sql().executeQuery(SqlQuery.Query.INSERT_CACHE.eval(center.sql().mode()), playeruuid.toString(), name, (ip == null) ? EMPTY_IPLIST_STRING : ip, System.currentTimeMillis(), System.currentTimeMillis());
 				}
-				uuids.put(playeruuid, name);
-				ips.put(playeruuid, list);
-				center.sql().executeQuery(SqlQuery.Query.INSERT_CACHE.eval(center.sql().mode()), playeruuid.toString(), name, externaliseIps(list), System.currentTimeMillis(), System.currentTimeMillis());
 			});
 		}
 	}
@@ -171,12 +179,7 @@ public class Resolver implements ResolverMaster {
 
 	@Override
 	public boolean hasIp(UUID playeruuid, String ip) {
-		if (ips.containsKey(playeruuid)) {
-			if (ips.get(playeruuid).contains(ip)) {
-				return true;
-			}
-		}
-		return false;
+		return ips.containsKey(playeruuid) && ips.get(playeruuid).contains(ip);
 	}
 	
 	@Override

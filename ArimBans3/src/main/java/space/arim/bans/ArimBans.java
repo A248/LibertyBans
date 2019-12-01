@@ -38,14 +38,13 @@ import space.arim.bans.api.UUIDResolver;
 import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.env.Environment;
 import space.arim.bans.internal.Configurable;
-import space.arim.bans.internal.Component;
 import space.arim.bans.internal.async.AsyncMaster;
 import space.arim.bans.internal.async.AsyncWrapper;
 import space.arim.bans.internal.async.Async;
-import space.arim.bans.internal.backend.cache.Resolver;
-import space.arim.bans.internal.backend.cache.ResolverMaster;
 import space.arim.bans.internal.backend.punishment.Punishments;
 import space.arim.bans.internal.backend.punishment.PunishmentsMaster;
+import space.arim.bans.internal.backend.resolver.Resolver;
+import space.arim.bans.internal.backend.resolver.ResolverMaster;
 import space.arim.bans.internal.backend.subjects.SubjectsMaster;
 import space.arim.bans.internal.backend.subjects.Subjects;
 import space.arim.bans.internal.config.Config;
@@ -55,26 +54,27 @@ import space.arim.bans.internal.frontend.commands.CommandsMaster;
 import space.arim.bans.internal.frontend.format.Formats;
 import space.arim.bans.internal.frontend.format.FormatsMaster;
 import space.arim.bans.internal.sql.SqlQuery;
-import space.arim.registry.RegistryPriority;
-import space.arim.registry.UniversalRegistry;
 import space.arim.bans.internal.sql.SqlMaster;
 import space.arim.bans.internal.sql.Sql;
+
+import space.arim.registry.RegistryPriority;
+import space.arim.registry.UniversalRegistry;
 
 public class ArimBans implements Configurable, ArimBansLibrary {
 	
 	private final File folder;
 	private Logger logger;
 	private final Environment environment;
-	private ConfigMaster config = null;
-	private SqlMaster sql = null;
-	private PunishmentsMaster punishments = null;
-	private SubjectsMaster subjects = null;
-	private ResolverMaster resolver = null;
-	private CommandsMaster commands = null;
-	private FormatsMaster formats = null;
-	private AsyncMaster async = null;
+	private final ConfigMaster config;
+	private final SqlMaster sql;
+	private final PunishmentsMaster punishments;
+	private final SubjectsMaster subjects;
+	private final ResolverMaster resolver;
+	private final CommandsMaster commands;
+	private final FormatsMaster formats;
+	private final AsyncMaster async;
 	
-	public ArimBans(File dataFolder, Environment environment, Component...preloaded) {
+	public ArimBans(File dataFolder, Environment environment) {
 		this.folder = dataFolder;
 		this.environment = environment;
 		if (dataFolder.mkdirs()) {
@@ -89,62 +89,20 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 		} else {
 			environment().logger().warning("ArimBans: **Severe Error**\nDirectory creation of " + dataFolder.getPath() + " failed!");
 		}
-		for (Component comp : preloaded) {
-			if (comp instanceof ConfigMaster) {
-				config = (ConfigMaster) comp;
-			}
-			if (comp instanceof SqlMaster) {
-				sql = (SqlMaster) comp;
-			}
-			if (comp instanceof PunishmentsMaster) {
-				punishments = (PunishmentsMaster) comp;
-			}
-			if (comp instanceof SubjectsMaster) {
-				subjects = (SubjectsMaster) comp;
-			}
-			if (comp instanceof ResolverMaster) {
-				resolver = (ResolverMaster) comp;
-			}
-			if (comp instanceof CommandsMaster) {
-				commands = (CommandsMaster) comp;
-			}
-			if (comp instanceof FormatsMaster) {
-				formats = (FormatsMaster) comp;
-			}
-			if (comp instanceof AsyncMaster) {
-				async = (AsyncMaster) comp;
-			}
+		config = new Config(this);
+		sql = new Sql(this);
+		punishments = new Punishments(this);
+		subjects = new Subjects(this);
+		resolver = new Resolver(this);
+		commands = new Commands(this);
+		formats = new Formats(this);
+		if (UniversalRegistry.isProvidedFor(AsyncExecutor.class)) {
+			async = new AsyncWrapper(UniversalRegistry.getRegistration(AsyncExecutor.class));
+		} else {
+			async = new Async(this);
+			UniversalRegistry.register(AsyncExecutor.class, (AsyncExecutor) async); 
 		}
-		if (config == null) {
-			config = new Config(this);
-		}
-		if (sql == null) {
-			sql = new Sql(this);
-		}
-		if (punishments == null) {
-			punishments = new Punishments(this);
-		}
-		if (subjects == null) {
-			subjects = new Subjects(this);
-		}
-		if (resolver == null) {
-			resolver = new Resolver(this);
-		}
-		if (commands == null) {
-			commands = new Commands(this);
-		}
-		if (formats == null) {
-			formats = new Formats(this);
-		}
-		if (async == null) {
-			if (UniversalRegistry.isProvidedFor(AsyncExecutor.class)) {
-				async = new AsyncWrapper(UniversalRegistry.getRegistration(AsyncExecutor.class));
-			} else {
-				async = new Async(this);
-				UniversalRegistry.register(AsyncExecutor.class, (AsyncExecutor) async); 
-			}
-		}
-		if (config().getConfigBoolean("misc.async-loading")) {
+		if (config().getConfigBoolean("async-loading")) {
 			async(() -> {
 				refresh(false);
 				loadData();
