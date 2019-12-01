@@ -21,6 +21,7 @@ package space.arim.bans.api.util;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import com.google.common.net.InetAddresses;
 
@@ -152,5 +153,13 @@ public final class ToolsUtil {
 		} catch (IOException ex) {
 			return false;
 		}
+	}
+	
+	public static String capitaliseProperly(String input) {
+		Objects.requireNonNull(input, "Input must not be null!");
+		if (input.length() == 1) {
+			return input.toUpperCase();
+		}
+		return Character.toUpperCase(input.charAt(0)) + input.substring(1);
 	}
 }
