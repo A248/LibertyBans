@@ -18,26 +18,24 @@
  */
 package space.arim.bans.internal.sql;
 
-import java.sql.ResultSet;
+import space.arim.bans.api.exception.TypeParseException;
 
-import space.arim.bans.internal.Component;
-
-public interface SqlMaster extends Component {
-	@Override
-	default Class<?> getType() {
-		return SqlMaster.class;
+public enum StorageMode {
+	HSQLDB,
+	MYSQL;
+	
+	public static StorageMode fromString(String mode) {
+		switch (mode.toLowerCase()) {
+		case "hsqldb":
+		case "local":
+		case "file":
+		case "sqlite":
+			return StorageMode.HSQLDB;
+		case "mysql":
+		case "sql":
+			return StorageMode.MYSQL;
+		default:
+			throw new TypeParseException(mode, StorageMode.class);
+		}
 	}
-	
-	SqlSettings settings();
-	
-	boolean enabled();
-	
-	void executeQuery(SqlQuery...queries);
-	
-	void executeQuery(String statement, Object...params);
-	
-	ResultSet[] selectQuery(SqlQuery...queries);
-	
-	ResultSet selectQuery(String statement, Object...params);
-
 }

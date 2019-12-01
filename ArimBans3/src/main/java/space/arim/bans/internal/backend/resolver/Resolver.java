@@ -144,17 +144,17 @@ public class Resolver implements ResolverMaster {
 								ips.put(playeruuid, new ArrayList<String>(Arrays.asList(ip)));
 							}
 							uuids.put(playeruuid, name);
-							center.sql().executeQuery(new SqlQuery(SqlQuery.Query.UPDATE_NAME_FOR_UUID.eval(center.sql().mode()), name, System.currentTimeMillis(), playeruuid.toString()), new SqlQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID.eval(center.sql().mode()), externaliseIpList(ips.get(playeruuid)), System.currentTimeMillis(), playeruuid.toString()));
+							center.sql().executeQuery(new SqlQuery(SqlQuery.Query.UPDATE_NAME_FOR_UUID.eval(center.sql().settings()), name, System.currentTimeMillis(), playeruuid.toString()), new SqlQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID.eval(center.sql().settings()), externaliseIpList(ips.get(playeruuid)), System.currentTimeMillis(), playeruuid.toString()));
 						} else if (updateUUID) {
 							uuids.put(playeruuid, name);
-							center.sql().executeQuery(SqlQuery.Query.UPDATE_NAME_FOR_UUID.eval(center.sql().mode()), name, System.currentTimeMillis(), playeruuid.toString());
+							center.sql().executeQuery(SqlQuery.Query.UPDATE_NAME_FOR_UUID.eval(center.sql().settings()), name, System.currentTimeMillis(), playeruuid.toString());
 						} else if (updateIp) {
 							if (ips.containsKey(playeruuid)) {
 								ips.get(playeruuid).add(ip);
 							} else {
 								ips.put(playeruuid, new ArrayList<String>(Arrays.asList(ip)));
 							}
-							center.sql().executeQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID.eval(center.sql().mode()), externaliseIpList(ips.get(playeruuid)), System.currentTimeMillis(), playeruuid.toString());
+							center.sql().executeQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID.eval(center.sql().settings()), externaliseIpList(ips.get(playeruuid)), System.currentTimeMillis(), playeruuid.toString());
 						}
 					}
 				});
@@ -166,7 +166,7 @@ public class Resolver implements ResolverMaster {
 					if (ip != null) {
 						ips.put(playeruuid, new ArrayList<String>(Arrays.asList(ip)));
 					}
-					center.sql().executeQuery(SqlQuery.Query.INSERT_CACHE.eval(center.sql().mode()), playeruuid.toString(), name, (ip == null) ? EMPTY_IPLIST_STRING : ip, System.currentTimeMillis(), System.currentTimeMillis());
+					center.sql().executeQuery(SqlQuery.Query.INSERT_CACHE.eval(center.sql().settings()), playeruuid.toString(), name, (ip == null) ? EMPTY_IPLIST_STRING : ip, System.currentTimeMillis(), System.currentTimeMillis());
 				}
 			});
 		}

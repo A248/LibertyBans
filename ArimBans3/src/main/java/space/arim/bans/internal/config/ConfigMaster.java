@@ -18,6 +18,7 @@
  */
 package space.arim.bans.internal.config;
 
+import java.io.File;
 import java.util.List;
 
 import space.arim.bans.api.CommandType;
@@ -47,5 +48,7 @@ public interface ConfigMaster extends Component {
 	int getMessagesInt(String key);
 	
 	String keyString(PunishmentType type, CommandType.Category category);
+	
+	File getDataFolder();
 	
 }

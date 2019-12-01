@@ -18,26 +18,29 @@
  */
 package space.arim.bans.internal.sql;
 
-import java.sql.ResultSet;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
-import space.arim.bans.internal.Component;
+import space.arim.bans.internal.config.ConfigMaster;
 
-public interface SqlMaster extends Component {
-	@Override
-	default Class<?> getType() {
-		return SqlMaster.class;
+public class LocalSettings extends SqlSettings {
+	
+	private final String url;
+	
+	public LocalSettings(ConfigMaster config) {
+		super(config, StorageMode.HSQLDB);
+		url = config.getConfigString("storage.file.url").replace("%FILE%", config.getDataFolder().getPath() + "/" + config.getConfigString("storage.file.filename"));
 	}
-	
-	SqlSettings settings();
-	
-	boolean enabled();
-	
-	void executeQuery(SqlQuery...queries);
-	
-	void executeQuery(String statement, Object...params);
-	
-	ResultSet[] selectQuery(SqlQuery...queries);
-	
-	ResultSet selectQuery(String statement, Object...params);
+
+	@Override
+	HikariDataSource loadDataSource() {
+		HikariConfig config = getInitialConfig();
+		config.setJdbcUrl(url);
+		config.setUsername("SA");
+		config.setPassword("");
+		HikariDataSource data = new HikariDataSource(config);
+		data.setConnectionTimeout(25000L);
+		return data;
+	}
 
 }

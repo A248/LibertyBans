@@ -61,13 +61,13 @@ public class Punishments implements PunishmentsMaster {
 				
 				// If it's retro we only need to add it to history
 				// Otherwise we also need to add it to active
-				SqlQuery queryHistory = new SqlQuery(SqlQuery.Query.INSERT_HISTORY.eval(center.sql().mode()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date());
+				SqlQuery queryHistory = new SqlQuery(SqlQuery.Query.INSERT_HISTORY.eval(center.sql().settings()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date());
 				history.add(punishment);
 				if (retro) {
 					center.sql().executeQuery(queryHistory);
 				} else if (!retro) {
 					active.add(punishment);
-					center.sql().executeQuery(queryHistory, new SqlQuery(SqlQuery.Query.INSERT_ACTIVE.eval(center.sql().mode()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
+					center.sql().executeQuery(queryHistory, new SqlQuery(SqlQuery.Query.INSERT_ACTIVE.eval(center.sql().settings()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
 				}
 				
 				// Call PostPunishEvent once finished
@@ -110,12 +110,12 @@ public class Punishments implements PunishmentsMaster {
 					
 					// If it's retro we only need to add it to history
 					// Otherwise we also need to add it to active
-					exec.add(new SqlQuery(SqlQuery.Query.INSERT_HISTORY.eval(center.sql().mode()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
+					exec.add(new SqlQuery(SqlQuery.Query.INSERT_HISTORY.eval(center.sql().settings()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
 					history.add(punishment);
 					
 					if (!retro) {
 						active.add(punishment);
-						exec.add(new SqlQuery(SqlQuery.Query.INSERT_ACTIVE.eval(center.sql().mode()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
+						exec.add(new SqlQuery(SqlQuery.Query.INSERT_ACTIVE.eval(center.sql().settings()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
 					}
 					
 					// Add punishment to passedEvents so we can remember to call PostPunishEvents
@@ -166,7 +166,7 @@ public class Punishments implements PunishmentsMaster {
 				if (center.environment().enforcer().callUnpunishEvent(punishment, false)) {
 					
 					passedEvents.add(punishment);
-					exec.add(new SqlQuery(SqlQuery.Query.DELETE_ACTIVE_FROM_DATE.eval(center.sql().mode()), punishment.date()));
+					exec.add(new SqlQuery(SqlQuery.Query.DELETE_ACTIVE_FROM_DATE.eval(center.sql().settings()), punishment.date()));
 				}
 			}
 			// Execute queries
@@ -316,7 +316,7 @@ public class Punishments implements PunishmentsMaster {
 	
 	@Override
 	public void refreshActive() {
-		center.sql().executeQuery(SqlQuery.Query.REFRESH_ACTIVE.eval(center.sql().mode()));
+		center.sql().executeQuery(SqlQuery.Query.REFRESH_ACTIVE.eval(center.sql().settings()));
 	}
 	
 	@Override

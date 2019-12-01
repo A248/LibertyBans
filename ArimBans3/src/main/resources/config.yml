@@ -14,15 +14,17 @@
 #
 storage:
   mode: 'file'
+  table-prefix: 'arimbans_'
   file:
-    url: 'jdbc:hsqldb:file:<file>'
+    url: 'jdbc:hsqldb:file:%FILE%;hsqldb.lock_file=false'
+    filename: 'data'
   mysql:
     host: 'localhost'
     port: 3306
     database: 'punishment'
-    user: 'ArimBans'
+    username: 'ArimBans'
     password: 'defaultpassword'
-    url: 'jdbc:mysql://<ip>:<port>/<database>?autoReconnect=true&useUnicode=true&characterEncoding=utf8'
+    url: 'jdbc:mysql://%HOST%:%PORT%/%DATABASE%?autoReconnect=true&useUnicode=true&characterEncoding=utf8'
   min-connections: 2
   max-connections: 5
 formatting:
@@ -57,5 +59,4 @@ fetchers:
       key: 'nokey'
     freegeoip: true
     ipapi: true
-async-loading: false
 config-version: 1

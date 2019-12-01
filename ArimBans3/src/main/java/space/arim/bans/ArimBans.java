@@ -109,8 +109,8 @@ public class ArimBans implements Configurable, ArimBansLibrary {
 	}
 	
 	private void loadData() {
-		sql().executeQuery(new SqlQuery(SqlQuery.Query.CREATE_TABLE_CACHE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.CREATE_TABLE_ACTIVE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.CREATE_TABLE_HISTORY.eval(sql().mode())));
-		ResultSet[] data = sql().selectQuery(new SqlQuery(SqlQuery.Query.SELECT_ALL_CACHED.eval(sql().mode())), new SqlQuery(SqlQuery.Query.SELECT_ALL_ACTIVE.eval(sql().mode())), new SqlQuery(SqlQuery.Query.SELECT_ALL_HISTORY.eval(sql().mode())));
+		sql().executeQuery(new SqlQuery(SqlQuery.Query.CREATE_TABLE_CACHE.eval(sql().settings())), new SqlQuery(SqlQuery.Query.CREATE_TABLE_ACTIVE.eval(sql().settings())), new SqlQuery(SqlQuery.Query.CREATE_TABLE_HISTORY.eval(sql().settings())));
+		ResultSet[] data = sql().selectQuery(new SqlQuery(SqlQuery.Query.SELECT_ALL_CACHED.eval(sql().settings())), new SqlQuery(SqlQuery.Query.SELECT_ALL_ACTIVE.eval(sql().settings())), new SqlQuery(SqlQuery.Query.SELECT_ALL_HISTORY.eval(sql().settings())));
 		resolver().loadAll(data[0]);
 		punishments().loadActive(data[1]);
 		punishments().loadHistory(data[2]);

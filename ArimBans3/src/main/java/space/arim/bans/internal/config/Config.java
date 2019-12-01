@@ -293,4 +293,9 @@ public class Config implements ConfigMaster {
 		}
 	}
 	
+	@Override
+	public File getDataFolder() {
+		return center.dataFolder();
+	}
+	
 }

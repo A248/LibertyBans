@@ -26,23 +26,21 @@ import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetFactory;
 import javax.sql.rowset.RowSetProvider;
 
-import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 import space.arim.bans.ArimBans;
-import space.arim.bans.api.exception.ConfigSectionException;
 import space.arim.bans.api.exception.InternalStateException;
+import space.arim.bans.api.exception.TypeParseException;
 
 public class Sql implements SqlMaster {
 
 	private final ArimBans center;
 
+	private static final String DEFAULTING_TO_STORAGE_MODE = "Invalid storage mode specified! Defaulting to FILE...";
+	
 	private HikariDataSource data;
 
-	private StorageMode mode;
-	
-	private int min_connections;
-	private int max_connections;
+	private SqlSettings settings;
 	
 	private RowSetFactory factory;
 
@@ -59,24 +57,7 @@ public class Sql implements SqlMaster {
 		if (data != null) {
 			data.close();
 		}
-		HikariConfig config = new HikariConfig();
-		config.setDriverClassName("com.mysql.jdbc.Driver");
-		config.setMinimumIdle(min_connections);
-		config.setMaximumPoolSize(max_connections);
-		if (mode.equals(StorageMode.MYSQL)) {
-			config.setJdbcUrl(center.config().getConfigString("storage.mysql.url").replace("<host>", center.config().getConfigString("storage.mysql.host")).replace("<port>", Integer.toString(center.config().getConfigInt("storage.mysql.port"))).replace("<database>", center.config().getConfigString("storage.mysql.database")));
-			config.setUsername(center.config().getConfigString("storage.mysql.user"));
-			config.setPassword(center.config().getConfigString("storage.mysql.password"));
-		} else if (mode.equals(StorageMode.HSQLDB)) {
-			config.setJdbcUrl(center.config().getConfigString("storage.hsqldb.url").replace("<file>", center.dataFolder().getPath() + "/data;hsqldb.lock_file=false"));
-			config.setUsername("SA");
-			config.setPassword("");
-		} else {
-			assert false;
-			throw new InternalStateException("Storage mode is completely missing!");
-		}
-		data = new HikariDataSource(config);
-		data.setConnectionTimeout(25000L);
+		data = settings.loadDataSource();
 	}
 	
 	private void stopConnection() {
@@ -92,8 +73,8 @@ public class Sql implements SqlMaster {
 	}
 	
 	@Override
-	public StorageMode mode() {
-		return this.mode;
+	public SqlSettings settings() {
+		return settings;
 	}
 	
 	@Override
@@ -160,34 +141,27 @@ public class Sql implements SqlMaster {
 	public void close() {
 		stopConnection();
 	}
-
-	private StorageMode parseMode(String key) {
-		switch (center.config().getConfigString(key).toLowerCase()) {
-		case "hsqldb":
-			return StorageMode.HSQLDB;
-		case "local":
-			return StorageMode.HSQLDB;
-		case "file":
-			return StorageMode.HSQLDB;
-		case "sqlite":
-			return StorageMode.HSQLDB;
-		case "mysql":
-			return StorageMode.MYSQL;
-		case "sql":
-			return StorageMode.MYSQL;
-		default:
-			throw new ConfigSectionException(key);
-		}
-	}
 	
 	@Override
 	public void refreshConfig(boolean fromFile) {
-		mode = parseMode("storage.mode");
-		min_connections = center.config().getConfigInt("storage.min-connections");
-		max_connections = center.config().getConfigInt("storage.max-connections");
-		if (fromFile) {
+		
+		if (!fromFile) {
 			setup();
 		}
+		
+		StorageMode mode;
+		try {
+			mode = StorageMode.fromString(center.config().getConfigString("storage.mode"));
+		} catch (TypeParseException ex) {
+			mode = StorageMode.HSQLDB;
+			center.environment().logger().warning(DEFAULTING_TO_STORAGE_MODE);
+		}
+		if (StorageMode.MYSQL.equals(mode)) {
+			settings = new LocalSettings(center.config());
+		} else if (StorageMode.HSQLDB.equals(mode)) {
+			settings = new RemoteSettings(center.config());
+		}
+		
 	}
 
 }
