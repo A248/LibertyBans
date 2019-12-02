@@ -45,43 +45,49 @@ public class Punishments implements PunishmentsMaster {
 		this.center = center;
 	}
 	
-	private void addPunishment(Punishment punishment) throws ConflictingPunishmentException {
-		// Throw error if the call would produce duplicate bans/mutes
-		if ((punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
-			throw new ConflictingPunishmentException(punishment.subject(), punishment.type());
-		}
-		// Do all SQL and Events stuff in a separate thread
-		center.async(() -> {
-			
-			// Check whether punishment is retrogade
-			boolean retro = (punishment.expiration() > 0 && punishment.expiration() <= System.currentTimeMillis());
-			
-			// Call event before proceeding
-			if (center.environment().enforcer().callPunishEvent(punishment, retro)) {
-				
-				// If it's retro we only need to add it to history
-				// Otherwise we also need to add it to active
-				SqlQuery queryHistory = new SqlQuery(SqlQuery.Query.INSERT_HISTORY.eval(center.sql().settings()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date());
-				history.add(punishment);
-				if (retro) {
-					center.sql().executeQuery(queryHistory);
-				} else if (!retro) {
-					active.add(punishment);
-					center.sql().executeQuery(queryHistory, new SqlQuery(SqlQuery.Query.INSERT_ACTIVE.eval(center.sql().settings()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
+	private void directAddPunishments(Punishment[] punishments) {
+		// A set of queries we'll execute all together for increased efficiency
+		Set<SqlQuery> exec = new HashSet<SqlQuery>();
+		// A map of punishments for which PunishEvents were successfully called
+		// Key = the punishment, Value = whether it's retro
+		// At the end we'll call PostPunishEvent for each punishment in the map
+		HashMap<Punishment, Boolean> passedEvents = new HashMap<Punishment, Boolean>();
+
+		synchronized (active) {
+			for (Punishment punishment : punishments) {
+
+				// Check whether punishment is retrogade
+				boolean retro = (punishment.expiration() > 0 && punishment.expiration() <= System.currentTimeMillis());
+
+				// Call event before proceeding
+				if (center.environment().enforcer().callPunishEvent(punishment, retro)) {
+
+					// If it's retro we only need to add it to history
+					// Otherwise we also need to add it to active
+					exec.add(new SqlQuery(SqlQuery.Query.INSERT_HISTORY.eval(center.sql().settings()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
+					history.add(punishment);
+
+					if (!retro) {
+						active.add(punishment);
+						exec.add(new SqlQuery(SqlQuery.Query.INSERT_ACTIVE.eval(center.sql().settings()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
+					}
+
+					// Add punishment to passedEvents so we can remember to call PostPunishEvents
+					passedEvents.put(punishment, retro);
 				}
-				
-				// Call PostPunishEvent once finished
-				center.environment().enforcer().callPostPunishEvent(punishment, retro);
 			}
+			// Execute queries
+			center.sql().executeQuery((SqlQuery[]) exec.toArray());
+		}
+
+		// Call PostPunishEvents once done
+		passedEvents.forEach((punishment, retro) -> {
+			center.environment().enforcer().callPostPunishEvent(punishment, retro);
 		});
 	}
 	
 	@Override
-	public void addPunishments(Punishment... punishments) throws ConflictingPunishmentException {
-		if (punishments.length == 1) {
-			addPunishment(punishments[0]);
-			return;
-		}
+	public void addPunishments(boolean async, Punishment... punishments) throws ConflictingPunishmentException {
 		// Before proceeding, determine whether adding the specified punishments
 		// would produce duplicate bans or mutes
 		// If it would, throw an error terminating everything
@@ -90,46 +96,12 @@ public class Punishments implements PunishmentsMaster {
 				throw new ConflictingPunishmentException(punishment.subject(), punishment.type());
 			}
 		}
-		// We're just doing the same things we did for #addPunishment but inside a loop instead
-		center.async(() -> {
-			
-			// A set of queries we'll execute all together for increased efficiency
-			Set<SqlQuery> exec = new HashSet<SqlQuery>();
-			// A map of punishments for which PunishEvents were successfully called
-			// Key = the punishment, Value = whether it's retro
-			// At the end we'll call PostPunishEvent for each punishment in the map
-			HashMap<Punishment, Boolean> passedEvents = new HashMap<Punishment, Boolean>();
-			
-			for (Punishment punishment : punishments) {
-				
-				// Check whether punishment is retrogade
-				boolean retro = (punishment.expiration() > 0 && punishment.expiration() <= System.currentTimeMillis());
-				
-				// Call event before proceeding
-				if (center.environment().enforcer().callPunishEvent(punishment, retro)) {
-					
-					// If it's retro we only need to add it to history
-					// Otherwise we also need to add it to active
-					exec.add(new SqlQuery(SqlQuery.Query.INSERT_HISTORY.eval(center.sql().settings()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
-					history.add(punishment);
-					
-					if (!retro) {
-						active.add(punishment);
-						exec.add(new SqlQuery(SqlQuery.Query.INSERT_ACTIVE.eval(center.sql().settings()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
-					}
-					
-					// Add punishment to passedEvents so we can remember to call PostPunishEvents
-					passedEvents.put(punishment, retro);
-				}
-			}
-			// Execute queries
-			center.sql().executeQuery((SqlQuery[]) exec.toArray());
-			
-			// Call PostPunishEvents once done
-			passedEvents.forEach((punishment, retro) -> {
-				center.environment().enforcer().callPostPunishEvent(punishment, retro);
-			});
-		});
+		// Check whether async execution was requested. If so, run queries inside async.
+		if (async) {
+			center.async(() -> directAddPunishments(punishments));
+		} else {
+			directAddPunishments(punishments);
+		}
 	}
 	
 	@Override
@@ -143,45 +115,50 @@ public class Punishments implements PunishmentsMaster {
 		throw new MissingPunishmentException(subject, type);
 	}
 	
+	private void directRemovePunishments(Punishment[] punishments) {
+		// A set of queries we'll execute all together for increased efficiency
+		Set<SqlQuery> exec = new HashSet<SqlQuery>();
+		// A set of punishments for which UnpunishEvents were successfully called
+		// At the end we'll call PostUnpunishEvent for each punishment in the set
+		Set<Punishment> passedEvents = new HashSet<Punishment>();
+
+		synchronized (active) {
+			for (Punishment punishment : punishments) {
+
+				// Call event before proceeding
+				if (center.environment().enforcer().callUnpunishEvent(punishment, false)) {
+
+					passedEvents.add(punishment);
+					exec.add(new SqlQuery(SqlQuery.Query.DELETE_ACTIVE_FROM_DATE.eval(center.sql().settings()), punishment.date()));
+				
+				}
+			}
+			// Execute queries
+			center.sql().executeQuery((SqlQuery[]) exec.toArray());
+
+			// Remove the punishments
+			active.removeAll(passedEvents);
+		}
+
+		// Call PostUnpunishEvents once done
+		passedEvents.forEach((punishment) -> {
+			center.environment().enforcer().callPostUnpunishEvent(punishment, false);
+		});
+	}
 	
 	@Override
-	public void removePunishments(Punishment...punishments) throws MissingPunishmentException {
+	public void removePunishments(boolean async, Punishment...punishments) throws MissingPunishmentException {
 		for (Punishment punishment : punishments) {
 			if (!active.contains(punishment)) {
 				throw new MissingPunishmentException(punishment);
 			}
 		}
-		// Do all SQL and Events stuff in a separate thread
-		center.async(() -> {
-			
-			// A set of queries we'll execute all together for increased efficiency
-			Set<SqlQuery> exec = new HashSet<SqlQuery>();
-			// A set of punishments for which UnpunishEvents were successfully called
-			// At the end we'll call PostUnpunishEvent for each punishment in the set
-			Set<Punishment> passedEvents = new HashSet<Punishment>();
-			
-			for (Punishment punishment : punishments) {
-				
-				// Call event before proceeding
-				if (center.environment().enforcer().callUnpunishEvent(punishment, false)) {
-					
-					passedEvents.add(punishment);
-					exec.add(new SqlQuery(SqlQuery.Query.DELETE_ACTIVE_FROM_DATE.eval(center.sql().settings()), punishment.date()));
-				}
-			}
-			// Execute queries
-			center.sql().executeQuery((SqlQuery[]) exec.toArray());
-			
-			// Remove the punishments
-			synchronized (active) {
-				active.removeAll(passedEvents);
-			}
-			
-			// Call PostUnpunishEvents once done
-			passedEvents.forEach((punishment) -> {
-				center.environment().enforcer().callPostUnpunishEvent(punishment, false);
-			});
-		});
+		// Check whether async execution was requested. If so, run queries inside async.
+		if (async) {
+			center.async(() -> directRemovePunishments(punishments));
+		} else {
+			directRemovePunishments(punishments);
+		}
 	}
 	
 	@Override

@@ -34,11 +34,19 @@ public interface PunishmentsMaster extends Component {
 		return PunishmentsMaster.class;
 	}
 	
-	void addPunishments(Punishment...punishments) throws ConflictingPunishmentException;
+	void addPunishments(boolean async, Punishment...punishments) throws ConflictingPunishmentException;
+	
+	default void addPunishments(Punishment...punishments) throws ConflictingPunishmentException {
+		addPunishments(true, punishments);
+	}
 	
 	Punishment getPunishment(Subject subject, PunishmentType type) throws MissingPunishmentException;
 	
-	void removePunishments(Punishment...punishments) throws MissingPunishmentException; 
+	void removePunishments(boolean async, Punishment...punishments) throws MissingPunishmentException; 
+	
+	default void removePunishments(Punishment...punishments) throws MissingPunishmentException {
+		removePunishments(true, punishments);
+	}
 	
 	boolean hasPunishment(Subject subject, PunishmentType type);
 	
