@@ -428,7 +428,7 @@ public class Commands implements CommandsMaster {
 		}
 		Punishment punishment = new Punishment(type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis());
 		try {
-			center.punishments().addPunishments(punishment);
+			center.punishments().addPunishments(false, punishment);
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
 			center.subjects().sendNotif(punishment, true, operator);
 			center.environment().enforcer().enforce(punishment, center.formats().useJson());
@@ -448,7 +448,7 @@ public class Commands implements CommandsMaster {
 						Set<Punishment> active = center.punishments().getAllPunishments();
 						for (Punishment punishment : active) {
 							if (punishment.date() == date) {
-								center.punishments().removePunishments(punishment);
+								center.punishments().removePunishments(false, punishment);
 								center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
 								center.subjects().sendNotif(punishment, false, operator);
 								return;
@@ -470,7 +470,7 @@ public class Commands implements CommandsMaster {
 							center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
 							return;
 						}
-						center.punishments().removePunishments(punishment);
+						center.punishments().removePunishments(false, punishment);
 						center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
 						center.subjects().sendNotif(punishment, false, operator);
 						return;
@@ -491,7 +491,7 @@ public class Commands implements CommandsMaster {
 			String cmd = getCmdBaseString(command) + " internal_confirm";
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
 		} else {
-			center.punishments().removePunishments(punishment);
+			center.punishments().removePunishments(false, punishment);
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
 			center.subjects().sendNotif(punishment, false, operator);
 		}
