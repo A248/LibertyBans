@@ -30,7 +30,6 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.exception.InternalStateException;
-import space.arim.bans.api.exception.TypeParseException;
 
 public class Sql implements SqlMaster {
 
@@ -135,22 +134,26 @@ public class Sql implements SqlMaster {
 		stopConnection();
 	}
 	
+	private SqlSettings parseBackend(String input) {
+		switch (input.toLowerCase()) {
+		case "hsqldb":
+		case "local":
+		case "file":
+		case "sqlite":
+			return new LocalSettings(center.config());
+		case "mysql":
+		case "sql":
+			return new RemoteSettings(center.config());
+		default:
+			center.environment().logger().warning(DEFAULTING_TO_STORAGE_MODE);
+			return new LocalSettings(center.config());
+		}
+	}
+	
 	@Override
 	public void refreshConfig(boolean first) {
 		
-		StorageMode mode;
-		try {
-			mode = StorageMode.fromString(center.config().getConfigString("storage.mode"));
-		} catch (TypeParseException ex) {
-			mode = StorageMode.HSQLDB;
-			center.environment().logger().warning(DEFAULTING_TO_STORAGE_MODE);
-		}
-		
-		if (StorageMode.MYSQL.equals(mode)) {
-			settings = new LocalSettings(center.config());
-		} else if (StorageMode.HSQLDB.equals(mode)) {
-			settings = new RemoteSettings(center.config());
-		}
+		settings = parseBackend(center.config().getConfigString("storage.mode"));
 		
 		if (first || center.config().getConfigBoolean("storage.restart-on-reload")) {
 			if (data != null) {
