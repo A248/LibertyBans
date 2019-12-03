@@ -29,7 +29,7 @@ public class ArimBansBukkit extends JavaPlugin implements AutoCloseable {
 	
 	private void load() {
 		environment = new BukkitEnv(this);
-		center = new ArimBans(this.getDataFolder(), environment);
+		center = new ArimBansPlugin(this.getDataFolder(), environment);
 		environment.setCenter(center);
 	}
 	
