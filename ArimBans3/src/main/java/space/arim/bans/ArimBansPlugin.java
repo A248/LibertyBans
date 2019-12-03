@@ -20,6 +20,8 @@ package space.arim.bans;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.FileHandler;
@@ -74,14 +76,22 @@ public class ArimBansPlugin implements ArimBans {
 			logger = Logger.getLogger(getName());
 			logger.setParent(environment.logger());
 			logger.setUseParentHandlers(false);
-			String path = dataFolder.getPath() + File.separator + "logs" + File.separator + "information.log";
+			String path = dataFolder.getPath() + File.separator + "logs" + File.separator + (new SimpleDateFormat("dd-MM-yyyy")).format(new Date()) + File.separator;
 			try {
-				logger.addHandler(new FileHandler(path));
+				FileHandler verboseLog = new FileHandler(path + "verbose.log");
+				FileHandler infoLog = new FileHandler(path + "info.log");
+				FileHandler errorLog = new FileHandler(path + "error.log");
+				verboseLog.setLevel(Level.ALL);
+				infoLog.setLevel(Level.INFO);
+				errorLog.setLevel(Level.WARNING);
+				logger.addHandler(verboseLog);
+				logger.addHandler(infoLog);
+				logger.addHandler(errorLog);
 			} catch (IOException ex) {
-				shutdown("ArimBans: **Severe Error**\nLogger initialisation in " + path + " failed!");
+				shutdown("Logger initialisation in " + path + " failed!");
 			}
 		} else {
-			shutdown("ArimBans: **Severe Error**\nDirectory creation of " + dataFolder.getPath() + " failed!");
+			shutdown("Directory creation of " + dataFolder.getPath() + " failed!");
 		}
 		config = new Config(this);
 		sql = new Sql(this);
@@ -152,21 +162,21 @@ public class ArimBansPlugin implements ArimBans {
 	}
 	
 	@Override
-	public void log(String message) {
+	public void log(Level level, String message) {
 		if (logger != null) {
-			logger.info(message);
+			logger.log(level, message);
 		} else {
-			environment().logger().info(message);
+			environment().logger().log(level, message);
 		}
 	}
 	
 	@Override
 	public void logError(Exception ex) {
 		if (logger != null) {
-			environment().logger().warning("Encountered and caught an error: " + ex.getLocalizedMessage() + " \nPlease check the plugin's log for more information. Please create a Github issue to address this.");
+			environment().logger().warning("Encountered and caught an error: " + ex.getLocalizedMessage() + " \nPlease check the plugin's log for more information. Please create a Github issue at https://github.com/A248/ArimBans/issues to address this.");
 			logger.log(Level.WARNING, "Encountered an error:", ex);
 		} else {
-			environment().logger().warning("Encountered and caught an error. \nNote that this plugin's log is inoperative, so the error will be printed to console. Please create a Github issue to address this.");
+			environment().logger().warning("Encountered and caught an error. \nThe plugin's log is inoperative, so the error will be printed to console. Please create a Github issue at https://github.com/A248/ArimBans/issues to address both problems.");
 			ex.printStackTrace();
 		}
 	}

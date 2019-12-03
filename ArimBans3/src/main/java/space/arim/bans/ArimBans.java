@@ -20,6 +20,7 @@ package space.arim.bans;
 
 import java.io.File;
 import java.sql.ResultSet;
+import java.util.logging.Level;
 
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.PunishmentPlugin;
@@ -71,7 +72,11 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 		UniversalRegistry.register(UUIDResolver.class, resolver());
 	}
 	
-	void log(String message);
+	void log(Level level, String message);
+	
+	default void log(String message) {
+		log(Level.INFO, message);
+	}
 	
 	void logError(Exception ex);
 	
