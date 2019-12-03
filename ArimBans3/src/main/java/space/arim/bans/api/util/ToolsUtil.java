@@ -164,7 +164,7 @@ public final class ToolsUtil {
 	}
 	
 	public static String[] chopOffOne(String[] input) {
-		String[] output = new String[input.length - 2];
+		String[] output = new String[input.length - 1];
 		for (int n = 0; n < output.length; n++) {
 			output[n] = input[n + 1];
 		}
