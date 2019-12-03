@@ -27,25 +27,29 @@ public abstract class SqlSettings {
 	
 	final int min_connections;
 	final int max_connections;
-	
-	public final StorageMode mode;
 	final String prefix;
 	
-	protected SqlSettings(ConfigMaster config, StorageMode mode) {
+	private final String storageModeName;
+	
+	SqlSettings(ConfigMaster config, String storageModeName) {
 		this.min_connections = config.getConfigInt("storage.min-connections");
 		this.max_connections = config.getConfigInt("storage.max-connections");
-		this.mode = mode;
 		this.prefix = config.getConfigString("storage.table-prefix");
+		this.storageModeName = storageModeName;
 	}
 	
 	abstract HikariDataSource loadDataSource();
 	
-	protected HikariConfig getInitialConfig() {
+	HikariConfig getInitialConfig() {
 		HikariConfig config = new HikariConfig();
 		config.setDriverClassName("com.mysql.jdbc.Driver");
 		config.setMinimumIdle(min_connections);
 		config.setMaximumPoolSize(max_connections);
 		return config;
+	}
+
+	public String getStorageModeName() {
+		return storageModeName;
 	}
 
 }

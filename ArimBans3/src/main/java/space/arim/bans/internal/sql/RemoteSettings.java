@@ -30,7 +30,7 @@ public class RemoteSettings extends SqlSettings {
 	private final String password;
 	
 	public RemoteSettings(ConfigMaster config) {
-		super(config, StorageMode.MYSQL);
+		super(config, "mysql");
 		url = config.getConfigString("storage.mysql.url").replace("%HOST%", config.getConfigString("storage.mysql.host")).replace("%PORT%", Integer.toString(config.getConfigInt("storage.mysql.port"))).replaceAll("%DATABASE%", config.getConfigString("storage.mysql.database"));
 		username = config.getConfigString("storage.mysql.username");
 		password = config.getConfigString("storage.mysql.password");

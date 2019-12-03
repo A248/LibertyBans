@@ -28,7 +28,7 @@ public class LocalSettings extends SqlSettings {
 	private final String url;
 	
 	public LocalSettings(ConfigMaster config) {
-		super(config, StorageMode.HSQLDB);
+		super(config, "file");
 		url = config.getConfigString("storage.file.url").replace("%FILE%", config.getDataFolder().getPath() + "/" + config.getConfigString("storage.file.filename"));
 	}
 

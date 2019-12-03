@@ -117,15 +117,15 @@ public class SqlQuery {
 		SELECT_ALL_CACHED("SELECT * FROM `%PREFIX%Cache`", "SELECT * FROM Cache");
 
 		private String mysql;
-		private String hsqldb;
+		private String file;
 
-		private Query(String mysql, String hsqldb) {
+		private Query(String mysql, String file) {
 			this.mysql = mysql;
-			this.hsqldb = hsqldb;
+			this.file = file;
 		}
 		
 		public String eval(SqlSettings settings) {
-			String statement = (settings.mode.equals(StorageMode.HSQLDB)) ? hsqldb : mysql;
+			String statement = (settings.getStorageModeName().equals("file")) ? file : mysql;
 			return statement.replace("%PREFIX%", settings.prefix);
 		}
 	}
