@@ -36,7 +36,7 @@ formatting:
     - 'permanently'
   permanent-display: 'Permanently'
   console-display: 'Console'
-  date: 'dd/MM/yyyy HH:mm:ss'
+  dates: 'dd/MM/yyyy HH:mm:ss'
 commands:
   op-permissions: true
   reasons:

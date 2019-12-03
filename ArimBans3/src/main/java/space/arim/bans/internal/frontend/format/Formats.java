@@ -163,7 +163,7 @@ public class Formats implements FormatsMaster {
 	public void refreshConfig(boolean first) {
 		
 		try {
-			dateFormatter = new SimpleDateFormat(center.config().getConfigString("formatting.date"));
+			dateFormatter = new SimpleDateFormat(center.config().getConfigString("formatting.dates"));
 		} catch (IllegalArgumentException ex) {
 			dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		}
