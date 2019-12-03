@@ -20,15 +20,15 @@ package space.arim.bans.internal.sql;
 
 public class SqlQuery {
 	
-	private final String statement;
+	private final Query statement;
 	private final Object[] parameters;
 	
-	public SqlQuery(String statement, Object...params) {
+	public SqlQuery(Query statement, Object...params) {
 		this.statement = statement;
 		this.parameters = params;
 	}
 	
-	public String statement() {
+	public Query statement() {
 		return this.statement;
 	}
 	
@@ -124,7 +124,7 @@ public class SqlQuery {
 			this.file = file;
 		}
 		
-		public String eval(SqlSettings settings) {
+		String eval(SqlSettings settings) {
 			String statement = (settings.getStorageModeName().equals("mysql")) ? mysql : file;
 			return statement.replace("%PREFIX%", settings.prefix);
 		}
