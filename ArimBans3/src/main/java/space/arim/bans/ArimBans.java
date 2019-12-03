@@ -74,10 +74,6 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	
 	void log(Level level, String message);
 	
-	default void log(String message) {
-		log(Level.INFO, message);
-	}
-	
 	void logError(Exception ex);
 	
 	@Override

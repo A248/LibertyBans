@@ -164,6 +164,9 @@ public class ArimBansPlugin implements ArimBans {
 	public void log(Level level, String message) {
 		if (logger != null) {
 			logger.log(level, message);
+			if (level.intValue() >= 800) {
+				environment.logger().log(level, message);
+			}
 		} else {
 			environment().logger().log(level, message);
 		}
