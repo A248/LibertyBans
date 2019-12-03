@@ -53,6 +53,7 @@ public class Punishments implements PunishmentsMaster {
 		// At the end we'll call PostPunishEvent for each punishment in the map
 		HashMap<Punishment, Boolean> passedEvents = new HashMap<Punishment, Boolean>();
 
+		// TODO Determine whether synchronisation is really needed here
 		synchronized (active) {
 			for (Punishment punishment : punishments) {
 
@@ -64,12 +65,12 @@ public class Punishments implements PunishmentsMaster {
 
 					// If it's retro we only need to add it to history
 					// Otherwise we also need to add it to active
-					exec.add(new SqlQuery(SqlQuery.Query.INSERT_HISTORY.eval(center.sql().settings()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
+					exec.add(new SqlQuery(SqlQuery.Query.INSERT_HISTORY, punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
 					history.add(punishment);
 
 					if (!retro) {
 						active.add(punishment);
-						exec.add(new SqlQuery(SqlQuery.Query.INSERT_ACTIVE.eval(center.sql().settings()), punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
+						exec.add(new SqlQuery(SqlQuery.Query.INSERT_ACTIVE, punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
 					}
 
 					// Add punishment to passedEvents so we can remember to call PostPunishEvents
@@ -122,6 +123,7 @@ public class Punishments implements PunishmentsMaster {
 		// At the end we'll call PostUnpunishEvent for each punishment in the set
 		Set<Punishment> passedEvents = new HashSet<Punishment>();
 
+		// TODO Determine whether synchronisation is really needed here
 		synchronized (active) {
 			for (Punishment punishment : punishments) {
 
@@ -129,7 +131,7 @@ public class Punishments implements PunishmentsMaster {
 				if (center.environment().enforcer().callUnpunishEvent(punishment, false)) {
 
 					passedEvents.add(punishment);
-					exec.add(new SqlQuery(SqlQuery.Query.DELETE_ACTIVE_FROM_DATE.eval(center.sql().settings()), punishment.date()));
+					exec.add(new SqlQuery(SqlQuery.Query.DELETE_ACTIVE_FROM_DATE, punishment.date()));
 				
 				}
 			}
@@ -163,10 +165,6 @@ public class Punishments implements PunishmentsMaster {
 	
 	@Override
 	public boolean hasPunishment(Subject subject, PunishmentType type) {
-		
-		// I am not sure if synchronisation is required here
-		// If it is, uncomment the next line
-		//Set<Punishment> active = getAllPunishments();
 		
 		for (Punishment punishment : active) {
 			if (punishment.subject().compare(subject) && punishment.type().equals(type)) {
@@ -288,7 +286,7 @@ public class Punishments implements PunishmentsMaster {
 	
 	@Override
 	public void refreshActive() {
-		center.sql().executeQuery(SqlQuery.Query.REFRESH_ACTIVE.eval(center.sql().settings()));
+		center.sql().executeQuery(new SqlQuery(SqlQuery.Query.REFRESH_ACTIVE));
 	}
 	
 	@Override
