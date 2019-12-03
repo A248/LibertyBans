@@ -45,7 +45,17 @@ public interface ResolverMaster extends Component, UUIDResolver {
 	
 	void update(UUID playeruuid, String name, String address);
 	
-	void clearCachedIp(boolean async, String address);
+	/**
+	 * For every cached element, remove the specified address
+	 * if it is listed. <br>
+	 * <br>
+	 * Returns <b>false</b> if no cached elements had the IP address
+	 * 
+	 * @param async - whether to run sql queries asynchronously
+	 * @param address - the address for which to remove cached listings
+	 * @return true if the address was listed somewhere
+	 */
+	boolean clearCachedIp(boolean async, String address);
 	
 	boolean uuidExists(UUID uuid);
 	
