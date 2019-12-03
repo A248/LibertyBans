@@ -18,6 +18,7 @@
  */
 package space.arim.bans.env.bungee;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -80,7 +81,7 @@ public class BungeeEnforcer implements Enforcer {
 				environment.center().logError(ex);
 			}
 		} else if (strict_ip_checking) {
-			List<String> ips = environment.center().resolver().getIps(evt.getConnection().getUniqueId());
+			List<String> ips = new ArrayList<String>(environment.center().resolver().getIps(evt.getConnection().getUniqueId()));
 			ips.add(evt.getConnection().getAddress().getAddress().getHostAddress());
 			for (String addr : ips) {
 				Subject addrSubj = environment.center().subjects().parseSubject(addr);
