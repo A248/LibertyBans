@@ -264,28 +264,24 @@ public class Punishments implements PunishmentsMaster {
 	private Set<Punishment> active() {
 		Set<Punishment> validated = new HashSet<Punishment>();
 		Set<Punishment> invalidated = new HashSet<Punishment>();
-		// We need to synchronise because iterators are not thread-safe
-		synchronized (active) {
-			for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
-				Punishment punishment = it.next();
-				if (punishment.expiration() != -1L && punishment.expiration() < System.currentTimeMillis()) {
-					// call UnpunishEvent with parameter true because the removal is automatic
-					if (center.environment().enforcer().callUnpunishEvent(punishment, true)) {
-						invalidated.add(punishment);
-						it.remove();
-					} else {
-						validated.add(punishment);
-					}
+		
+		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
+			Punishment punishment = it.next();
+			if (punishment.expiration() != -1L && punishment.expiration() < System.currentTimeMillis()) {
+				// call UnpunishEvent with parameter true because the removal is automatic
+				if (center.environment().enforcer().callUnpunishEvent(punishment, true)) {
+					invalidated.add(punishment);
+					it.remove();
 				} else {
-					validated.add(punishment); // Seems a little redundant. Isn't there something I can use to avoid writing this twice?
+					validated.add(punishment);
 				}
+			} else {
+				validated.add(punishment); // Seems a little redundant. Isn't there something I can use to avoid writing this twice?
 			}
 		}
-		// Call PostUnpunishEvents in a separate thread
-		center.async(() -> {
-			invalidated.forEach((punishment) -> {
-				center.environment().enforcer().callPostUnpunishEvent(punishment, true);
-			});
+		// Call PostUnpunishEvents before proceeding
+		invalidated.forEach((punishment) -> {
+			center.environment().enforcer().callPostUnpunishEvent(punishment, true);
 		});
 		return validated;
 	}
