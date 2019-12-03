@@ -45,6 +45,8 @@ public interface ResolverMaster extends Component, UUIDResolver {
 	
 	void update(UUID playeruuid, String name, String ip);
 	
+	void clearCachedIp(boolean async, String address);
+	
 	boolean uuidExists(UUID uuid);
 	
 	boolean hasIp(UUID playeruuid, String ip);

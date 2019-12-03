@@ -23,8 +23,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -85,18 +87,16 @@ public class Resolver implements ResolverMaster {
 	private String externaliseIpList(List<String> iplist) {
 		StringBuilder builder = new StringBuilder();
 		for (int n = 0; n < iplist.size(); n++) {
-			if (n != 0) {
-				builder.append(',');
-			}
+			builder.append(',');
 			builder.append(iplist.get(n));
 		}
-		return builder.toString();
+		return builder.toString().substring(1);
 	}
 
 	@Override
 	public List<String> getIps(UUID playeruuid) {
 		Objects.requireNonNull(playeruuid, "UUID must not be null!");
-		return ips.containsKey(playeruuid) ? ips.get(playeruuid) : Collections.emptyList();
+		return ips.getOrDefault(playeruuid, Collections.emptyList());
 	}
 	
 	@Override
@@ -169,6 +169,30 @@ public class Resolver implements ResolverMaster {
 					center.sql().executeQuery(SqlQuery.Query.INSERT_CACHE.eval(center.sql().settings()), playeruuid.toString(), name, (ip == null) ? EMPTY_IPLIST_STRING : ip, System.currentTimeMillis(), System.currentTimeMillis());
 				}
 			});
+		}
+	}
+	
+	@Override
+	public void clearCachedIp(boolean async, String address) {
+		Set<SqlQuery> exec = new HashSet<SqlQuery>();
+		ips.forEach((uuid, iplist) -> {
+			if (iplist.contains(address)) {
+				if (iplist.size() == 1) {
+					ips.remove(uuid);
+					exec.add(new SqlQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID.eval(center.sql().settings()), EMPTY_IPLIST_STRING, System.currentTimeMillis(), uuid.toString()));
+				} else {
+					iplist.remove(address);
+				}
+			}
+		});
+		if (!exec.isEmpty()) {
+			if (async) {
+				center.async(() -> {
+					center.sql().executeQuery(exec.toArray(new SqlQuery[] {}));
+				});
+			} else {
+				center.sql().executeQuery(exec.toArray(new SqlQuery[] {}));
+			}
 		}
 	}
 	
