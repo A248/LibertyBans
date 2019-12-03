@@ -20,7 +20,9 @@ package space.arim.bans.api.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Objects;
 
 import com.google.common.net.InetAddresses;
@@ -31,6 +33,8 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 
 public final class ToolsUtil {
+	
+	private static final String fileDateFormat = (new SimpleDateFormat("dd-MM-yyyy")).format(new Date());
 	
 	private ToolsUtil() {}
 	
@@ -169,5 +173,9 @@ public final class ToolsUtil {
 			output[n] = input[n + 1];
 		}
 		return output;
+	}
+	
+	public static String fileDateFormat() {
+		return fileDateFormat;
 	}
 }

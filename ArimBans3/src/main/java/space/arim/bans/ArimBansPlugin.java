@@ -20,8 +20,6 @@ package space.arim.bans;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.FileHandler;
@@ -34,6 +32,7 @@ import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.exception.ConflictingPunishmentException;
+import space.arim.bans.api.util.ToolsUtil;
 import space.arim.bans.env.Environment;
 import space.arim.bans.internal.async.AsyncMaster;
 import space.arim.bans.internal.async.AsyncWrapper;
@@ -76,7 +75,7 @@ public class ArimBansPlugin implements ArimBans {
 			logger = Logger.getLogger(getName());
 			logger.setParent(environment.logger());
 			logger.setUseParentHandlers(false);
-			String path = dataFolder.getPath() + File.separator + "logs" + File.separator + (new SimpleDateFormat("dd-MM-yyyy")).format(new Date()) + File.separator;
+			String path = dataFolder.getPath() + File.separator + "logs" + File.separator + ToolsUtil.fileDateFormat() + File.separator;
 			try {
 				FileHandler verboseLog = new FileHandler(path + "verbose.log");
 				FileHandler infoLog = new FileHandler(path + "info.log");
