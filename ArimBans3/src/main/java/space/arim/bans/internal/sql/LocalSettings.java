@@ -18,6 +18,8 @@
  */
 package space.arim.bans.internal.sql;
 
+import java.io.File;
+
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -29,7 +31,7 @@ public class LocalSettings extends SqlSettings {
 	
 	public LocalSettings(ConfigMaster config) {
 		super(config, "file");
-		url = config.getConfigString("storage.file.url").replace("%FILE%", config.getDataFolder().getPath() + "/" + config.getConfigString("storage.file.filename"));
+		url = config.getConfigString("storage.file.url").replace("%FILE%", config.getDataFolder().getPath() + File.separator + config.getConfigString("storage.file.filename"));
 	}
 
 	@Override
