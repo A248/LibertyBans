@@ -35,7 +35,7 @@ public interface ResolverMaster extends Component, UUIDResolver {
 		return ResolverMaster.class;
 	}
 	
-	List<String> getIps(UUID playeruuid);
+	List<String> getIps(UUID playeruuid) throws MissingCacheException;
 	
 	List<UUID> getPlayers(String address);
 	
@@ -43,7 +43,7 @@ public interface ResolverMaster extends Component, UUIDResolver {
 	
 	UUID getUUID(String name) throws MissingCacheException;
 	
-	void update(UUID playeruuid, String name, String ip);
+	void update(UUID playeruuid, String name, String address);
 	
 	void clearCachedIp(boolean async, String address);
 	
