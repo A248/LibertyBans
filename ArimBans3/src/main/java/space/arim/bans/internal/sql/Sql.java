@@ -22,6 +22,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
+
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetFactory;
 import javax.sql.rowset.RowSetProvider;
@@ -146,7 +148,7 @@ public class Sql implements SqlMaster {
 		case "sql":
 			return new RemoteSettings(center.config());
 		default:
-			center.environment().logger().warning(DEFAULTING_TO_STORAGE_MODE);
+			center.log(Level.WARNING, DEFAULTING_TO_STORAGE_MODE);
 			return new LocalSettings(center.config());
 		}
 	}
