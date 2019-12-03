@@ -72,9 +72,6 @@ public class BungeeEnv implements Environment {
 	@Override
 	public void shutdown(String message) {
 		plugin.getLogger().severe("*** ArimBans Severe Error ***\nShutting down because: " + message);
-		plugin.getProxy().getPluginManager().unregisterListener(listener);
-		plugin.getProxy().getPluginManager().unregisterCommand(commands);
-		plugin.onDisable();
 		close();
 	}
 	
@@ -264,6 +261,10 @@ public class BungeeEnv implements Environment {
 	
 	@Override
 	public void close() {
+		if (registered) {
+			plugin.getProxy().getPluginManager().unregisterListener(listener);
+			plugin.getProxy().getPluginManager().unregisterCommand(commands);
+		}
 		commands.close();
 		listener.close();
 		enforcer.close();

@@ -72,9 +72,8 @@ public class BukkitEnv implements Environment {
 	@Override
 	public void shutdown(String message) {
 		plugin.getLogger().severe("*** ArimBans Severe Error ***\nShutting down because: " + message);
-		HandlerList.unregisterAll(listener);
-		plugin.getServer().getPluginManager().disablePlugin(plugin);
 		close();
+		plugin.getServer().getPluginManager().disablePlugin(plugin);
 	}
 	
 	private void setupMetrics() {
