@@ -39,6 +39,7 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.exception.InternalStateException;
+import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
@@ -278,7 +279,13 @@ public class Commands implements CommandsMaster {
 	private void ipSelector(Subject operator, Subject target, CommandType command, String[] args) {
 		String base = getCmdBaseString(command) + " ";
 		String extra = concat(args);
-		List<String> ips = center.resolver().getIps(target.getUUID());
+		List<String> ips;
+		try {
+			ips = center.resolver().getIps(target.getUUID());
+		} catch (MissingCacheException ex) {
+			center.subjects().sendMessage(operator, invalid.get(IpSpec.IP).replace("%TARGET%", center.formats().formatSubject(target)));
+			return;
+		}
 		StringBuilder builder = new StringBuilder();
 		for (String ip : ips) {
 			builder.append(ip_selector_element.replace("%IP%", ip).replace("%CMD%", base + ip + extra));
@@ -596,7 +603,13 @@ public class Commands implements CommandsMaster {
 	private void ipsCmd(Subject operator, Subject target) {
 		String[] msgs = other_ips_layout_body.toArray(new String[0]);
 		String targetDisplay = center.formats().formatSubject(target);
-		List<String> ips = center.resolver().getIps(target.getUUID());
+		List<String> ips;
+		try {
+			ips = center.resolver().getIps(target.getUUID());
+		} catch (MissingCacheException ex) {
+			center.subjects().sendMessage(operator, other_ips_error_notfound.replace("%TARGET%", targetDisplay));
+			return;
+		}
 		if (ips.isEmpty()) {
 			center.subjects().sendMessage(operator, other_ips_error_notfound.replace("%TARGET%", targetDisplay));
 			return;
