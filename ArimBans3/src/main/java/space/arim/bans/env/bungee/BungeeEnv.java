@@ -69,6 +69,12 @@ public class BungeeEnv implements Environment {
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
+	@Override
+	public boolean isOnlineMode() {
+		return plugin.getProxy().getConfig().isOnlineMode();
+	}
+	
 	@Override
 	public void shutdown(String message) {
 		plugin.getLogger().severe("*** ArimBans Severe Error ***\nShutting down because: " + message);

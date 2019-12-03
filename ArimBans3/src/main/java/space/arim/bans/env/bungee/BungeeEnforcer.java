@@ -19,6 +19,7 @@
 package space.arim.bans.env.bungee;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -35,6 +36,7 @@ import space.arim.bans.api.events.bungee.PostPunishEvent;
 import space.arim.bans.api.events.bungee.PunishEvent;
 import space.arim.bans.api.events.bungee.UnpunishEvent;
 import space.arim.bans.api.exception.ConfigSectionException;
+import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.MissingCenterException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.env.Enforcer;
@@ -81,8 +83,13 @@ public class BungeeEnforcer implements Enforcer {
 				environment.center().logError(ex);
 			}
 		} else if (strict_ip_checking) {
-			List<String> ips = new ArrayList<String>(environment.center().resolver().getIps(evt.getConnection().getUniqueId()));
-			ips.add(evt.getConnection().getAddress().getAddress().getHostAddress());
+			List<String> ips;
+			try {
+				ips = new ArrayList<String>(environment.center().resolver().getIps(evt.getConnection().getUniqueId()));
+				ips.add(evt.getConnection().getAddress().getAddress().getHostAddress());
+			} catch (MissingCacheException ex) {
+				ips = Arrays.asList(evt.getConnection().getAddress().getAddress().getHostAddress());
+			}
 			for (String addr : ips) {
 				Subject addrSubj = environment.center().subjects().parseSubject(addr);
 				if (environment.center().isBanned(addrSubj)) {
@@ -125,7 +132,14 @@ public class BungeeEnforcer implements Enforcer {
 				environment.center().logError(ex);
 			}
 		} else if (strict_ip_checking) {
-			for (String addr : environment.center().resolver().getIps(player.getUniqueId())) {
+			List<String> ips;
+			try {
+				ips = environment.center().resolver().getIps(player.getUniqueId());
+			} catch (MissingCacheException ex) {
+				environment.center().logError(ex);
+				ips = Arrays.asList(player.getAddress().getAddress().getHostAddress());
+			}
+			for (String addr : ips) {
 				Subject addrSubj = environment.center().subjects().parseSubject(addr);
 				if (environment.center().isMuted(addrSubj)) {
 					try {

@@ -70,6 +70,11 @@ public class BukkitEnv implements Environment {
 	}
 	
 	@Override
+	public boolean isOnlineMode() {
+		return plugin.getServer().getOnlineMode();
+	}
+	
+	@Override
 	public void shutdown(String message) {
 		plugin.getLogger().severe("*** ArimBans Severe Error ***\nShutting down because: " + message);
 		close();
