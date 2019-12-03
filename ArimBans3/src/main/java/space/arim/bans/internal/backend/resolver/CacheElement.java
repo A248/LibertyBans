@@ -22,11 +22,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
+
 import space.arim.bans.internal.sql.SqlQuery;
 
 public class CacheElement {
 	
-	private static final String EMPTY_IPLIST_STRING = "<empty_iplist>";
+	static final String EMPTY_IPLIST_STRING = "<empty_iplist>";
 	
 	private String name;
 	private List<String> iplist;
@@ -40,11 +42,31 @@ public class CacheElement {
 		this.updateIplist = updateIplist;
 	}
 	
-	private List<String> parseIpList(String iplist) {
+	CacheElement(String name, String iplist) {
+		this(name, iplist, System.currentTimeMillis(), System.currentTimeMillis());
+	}
+	
+	SqlQuery getInsertionQuery(UUID uuid) {
+		return new SqlQuery(SqlQuery.Query.INSERT_CACHE, uuid.toString().replace("-", ""), name, externaliseIpList(iplist), updateName, updateIplist);
+	}
+	
+	private static List<String> parseIpList(String iplist) {
 		if (iplist.equals(EMPTY_IPLIST_STRING)) {
 			return null;
 		}
 		return new ArrayList<String>(Arrays.asList(iplist.split(",")));
+	}
+	
+	private static String externaliseIpList(List<String> iplist) {
+		if (iplist == null || iplist.isEmpty()) {
+			return EMPTY_IPLIST_STRING;
+		}
+		StringBuilder builder = new StringBuilder();
+		for (String ip : iplist) {
+			builder.append(',');
+			builder.append(ip);
+		}
+		return builder.toString().substring(1);
 	}
 	
 	String getName() {
@@ -63,22 +85,27 @@ public class CacheElement {
 		return updateIplist;
 	}
 	
-	SqlQuery setName(String name) {
+	SqlQuery setName(UUID uuid, String name) {
 		this.name = name;
-		this.updateName = System.currentTimeMillis();
-		return new SqlQuery(SqlQuery.Query.UPDATE_NAME_FOR_UUID);
+		updateName = System.currentTimeMillis();
+		return new SqlQuery(SqlQuery.Query.UPDATE_NAME_FOR_UUID, name, updateName, uuid.toString().replace("-", ""));
 	}
 	
-	void addIp(String address) {
+	SqlQuery addIp(UUID uuid, String address) {
 		if (iplist == null) {
 			iplist = new ArrayList<String>(Arrays.asList(address));
 		} else {
 			iplist.add(address);
 		}
 		updateIplist = System.currentTimeMillis();
+		return new SqlQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID, externaliseIpList(iplist), updateIplist, uuid.toString().replace("-", ""));
 	}
 	
-	void removeIp(String address) {
+	boolean hasIp(String address) {
+		return (iplist == null || iplist.contains(address));
+	}
+	
+	SqlQuery removeIp(UUID uuid, String address) {
 		if (iplist != null) {
 			if (iplist.remove(address)) {
 				if (iplist.isEmpty()) {
@@ -87,6 +114,19 @@ public class CacheElement {
 				updateIplist = System.currentTimeMillis();
 			}
 		}
+		return new SqlQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID, externaliseIpList(iplist), updateIplist, uuid.toString().replace("-", ""));
+	}
+	
+	SqlQuery setNameAndAddIp(UUID uuid, String name, String address) {
+		if (iplist == null) {
+			iplist = new ArrayList<String>(Arrays.asList(address));
+		} else {
+			iplist.add(address);
+		}
+		updateIplist = System.currentTimeMillis();
+		this.name = name;
+		updateName = System.currentTimeMillis();
+		return new SqlQuery(SqlQuery.Query.UPDATE_CACHE_FOR_UUID, name, externaliseIpList(iplist), updateName, updateIplist, uuid.toString().replace("-", ""));
 	}
 	
 }
