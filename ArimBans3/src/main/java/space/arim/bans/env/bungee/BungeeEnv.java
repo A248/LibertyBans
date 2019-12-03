@@ -69,6 +69,15 @@ public class BungeeEnv implements Environment {
 		}
 	}
 	
+	@Override
+	public void shutdown(String message) {
+		plugin.getLogger().severe("*** ArimBans Severe Error ***\nShutting down because: " + message);
+		plugin.getProxy().getPluginManager().unregisterListener(listener);
+		plugin.getProxy().getPluginManager().unregisterCommand(commands);
+		plugin.onDisable();
+		close();
+	}
+	
 	private void setupMetrics() {
 		metrics = new Metrics(plugin);
 		metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().settings().getStorageModeName()));

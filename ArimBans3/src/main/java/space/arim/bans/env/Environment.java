@@ -53,6 +53,8 @@ public interface Environment extends Configurable {
 	
 	boolean isLibrarySupported(EnvLibrary library);
 	
+	void shutdown(String message);
+	
 	enum EnvLibrary {
 		
 		BUKKIT("org.bukkit.Bukkit"),
