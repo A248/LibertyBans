@@ -133,13 +133,13 @@ public class SqlQuery {
 				"UPDATE `%PREFIX%history` SET `reason` = ? WHERE `date` = ?",
 				"UPDATE %PREFIX%history SET reason = ? WHERE date = ?"),
 		
-		UPDATE_IPS_FOR_UUID(
-				"UPDATE `%PREFIX%cache` SET `iplist` = ?, `update-iplist` = ? WHERE `uuid` = ?",
-				"UPDATE %PREFIX%cache SET iplist = ?, update-iplist = ? WHERE uuid = ?"),
-		
 		UPDATE_NAME_FOR_UUID(
 				"UPDATE `%PREFIX%cache` SET `name` = ?, `update-name` = ? WHERE `uuid` = ?",
 				"UPDATE %PREFIX%cache SET name = ?, update-name = ? WHERE uuid = ?"),
+		
+		UPDATE_IPS_FOR_UUID(
+				"UPDATE `%PREFIX%cache` SET `iplist` = ?, `update-iplist` = ? WHERE `uuid` = ?",
+				"UPDATE %PREFIX%cache SET iplist = ?, update-iplist = ? WHERE uuid = ?"),
 		
 		SELECT_ALL_ACTIVE(
 				"SELECT * FROM `%PREFIX%active`",
