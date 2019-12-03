@@ -23,6 +23,8 @@ public class SqlQuery {
 	private final Query statement;
 	private final Object[] parameters;
 	
+	static final int SUBJECT_COLUMN_SIZE = 52;
+	
 	public SqlQuery(Query statement, Object...params) {
 		this.statement = statement;
 		this.parameters = params;
@@ -38,52 +40,74 @@ public class SqlQuery {
 	
 	public enum Query {
 		CREATE_TABLE_ACTIVE(
-				"CREATE TABLE IF NOT EXISTS `%PREFIX%active` (" + "`id` int NOT NULL AUTO_INCREMENT,"
-						+ "`type` VARCHAR(31) NOT NULL," + "`subject` VARCHAR(45) NOT NULL,"
-						+ "`operator` VARCHAR(45) NOT NULL," + "`reason` VARCHAR(255) NOT NULL,"
-						+ "`expiration` BIGINT NOT NULL," + "`date` BIGINT NOT NULL," + "PRIMARY KEY (`id`))",
+				"CREATE TABLE IF NOT EXISTS `%PREFIX%active` ("
+						+ "`id` int NOT NULL,"
+						+ "`type` VARCHAR(31) NOT NULL,"
+						+ "`subject` VARCHAR(" + SUBJECT_COLUMN_SIZE + ") NOT NULL,"
+						+ "`operator` VARCHAR(" + SUBJECT_COLUMN_SIZE + ") NOT NULL,"
+						+ "`reason` VARCHAR(255) NOT NULL,"
+						+ "`expiration` BIGINT NOT NULL,"
+						+ "`date` BIGINT NOT NULL)",
 
-				"CREATE TABLE IF NOT EXISTS %PREFIX%active (" + "id INTEGER IDENTITY PRIMARY KEY," + "type VARCHAR(31),"
-						+ "subject VARCHAR(49)," + "operator VARCHAR(49)," + "reason VARCHAR(255)," + "expiration BIGINT,"
+				"CREATE TABLE IF NOT EXISTS %PREFIX%active ("
+						+ "id INTEGER,"
+						+ "type VARCHAR(31),"
+						+ "subject VARCHAR(" + SUBJECT_COLUMN_SIZE + "),"
+						+ "operator VARCHAR(" + SUBJECT_COLUMN_SIZE + "),"
+						+ "reason VARCHAR(255),"
+						+ "expiration BIGINT,"
 						+ "date BIGINT)"),
 
 		CREATE_TABLE_HISTORY(
-				"CREATE TABLE IF NOT EXISTS `%PREFIX%history` (" + "`id` int NOT NULL AUTO_INCREMENT,"
-						+ "`type` VARCHAR(31) NOT NULL," + "`subject` VARCHAR(45) NOT NULL,"
-						+ "`operator` VARCHAR(45) NOT NULL," + "`reason` VARCHAR(255) NOT NULL,"
-						+ "`expiration` BIGINT NOT NULL," + "`date` BIGINT NOT NULL," + "PRIMARY KEY (`id`))",
+				"CREATE TABLE IF NOT EXISTS `%PREFIX%history` ("
+						+ "`id` int NOT NULL,"
+						+ "`type` VARCHAR(31) NOT NULL,"
+						+ "`subject` VARCHAR(" + SUBJECT_COLUMN_SIZE + ") NOT NULL,"
+						+ "`operator` VARCHAR(" + SUBJECT_COLUMN_SIZE + ") NOT NULL,"
+						+ "`reason` VARCHAR(255) NOT NULL,"
+						+ "`expiration` BIGINT NOT NULL,"
+						+ "`date` BIGINT NOT NULL)",
 
-				"CREATE TABLE IF NOT EXISTS %PREFIX%history (" + "id INTEGER IDENTITY PRIMARY KEY," + "type VARCHAR(31),"
-						+ "subject VARCHAR(49)," + "operator VARCHAR(49)," + "reason VARCHAR(255)," + "expiration BIGINT,"
+				"CREATE TABLE IF NOT EXISTS %PREFIX%history ("
+						+ "id INTEGER,"
+						+ "type VARCHAR(31),"
+						+ "subject VARCHAR(" + SUBJECT_COLUMN_SIZE + "),"
+						+ "operator VARCHAR(" + SUBJECT_COLUMN_SIZE + "),"
+						+ "reason VARCHAR(255),"
+						+ "expiration BIGINT,"
 						+ "date BIGINT)"),
 
 		CREATE_TABLE_CACHE(
-				"CREATE TABLE IF NOT EXISTS `%PREFIX%cache` (" 
-						+ "`index` int NOT NULL AUTO_INCREMENT,"
-						+ "`uuid` VARCHAR(31) NOT NULL," 
+				"CREATE TABLE IF NOT EXISTS `%PREFIX%cache` ("
+						+ "`uuid` VARCHAR(31) NOT NULL,"
 						+ "`name` VARCHAR(15) NOT NULL,"
-						+ "`iplist` TEXT NOT NULL," 
+						+ "`iplist` TEXT NOT NULL,"
 						+ "`update_name` BIGINT NOT NULL," 
 						+ "`update_iplist` BIGINT NOT NULL)",
-				"CREATE TABLE IF NOT EXISTS %PREFIX%cache (" 
-						+ "index INTEGER IDENTITY PRIMARY KEY," 
+				"CREATE TABLE IF NOT EXISTS %PREFIX%cache ("
 						+ "uuid VARCHAR(31),"
-						+ "name VARCHAR(15)," 
-						+ "iplist TEXT," 
+						+ "name VARCHAR(15),"
+						+ "iplist TEXT,"
 						+ "update_name BIGINT,"
 						+ "update_iplist BIGINT)"),
 
 		INSERT_ACTIVE(
-				"INSERT INTO `%PREFIX%active` " + "(`type`, `subject`, `operator`, `reason`, `expiration`, `date`) "
-						+ "VALUES (?, ?, ?, ?, ?)",
+				"INSERT INTO `%PREFIX%active` "
+						+ "(`id`, `type`, `subject`, `operator`, `reason`, `expiration`, `date`) "
+						+ "VALUES (?, ?, ?, ?, ?, ?, ?)",
 
-				"INSERT INTO %PREFIX%active " + "(type, subject, operator, reason, expiration, date) " + "VALUES (?, ?, ?, ?, ?)"),
+				"INSERT INTO %PREFIX%active "
+						+ "(id, type, subject, operator, reason, expiration, date) "
+						+ "VALUES (?, ?, ?, ?, ?, ?, ?)"),
 
 		INSERT_HISTORY(
-				"INSERT INTO `%PREFIX%history` " + "(`type`, `subject`, `operator`, `reason`, `expiration`, `date`) "
-						+ "VALUES (?, ?, ?, ?, ?)",
+				"INSERT INTO `%PREFIX%history` "
+						+ "(`id`, `type`, `subject`, `operator`, `reason`, `expiration`, `date`) "
+						+ "VALUES (?, ?, ?, ?, ?, ?, ?)",
 
-				"INSERT INTO %PREFIX%history " + "(type, subject, operator, reason, expiration, date) " + "VALUES (?, ?, ?, ?, ?)"),
+				"INSERT INTO %PREFIX%history "
+						+ "(id, type, subject, operator, reason, expiration, date) "
+						+ "VALUES (?, ?, ?, ?, ?, ?, ?)"),
 
 		INSERT_CACHE("INSERT INTO `%PREFIX%cache` " 
 				+ "(`uuid`, `name`, `iplist`, `update_name`, `update_iplist`) " 
@@ -93,15 +117,20 @@ public class SqlQuery {
 				+ "(uuid, name, iplist, update_name, update_iplist) " 
 				+ "VALUES (?, ?, ?, ?, ?)"),
 
-		DELETE_ACTIVE_FROM_DATE(
-				"DELETE FROM `%PREFIX%active` WHERE `date` = ?", 
-				"DELETE FROM %PREFIX%active WHERE date = ?"),
-		REFRESH_ACTIVE("DELETE FROM `%PREFIX%active` WHERE `expiration` <= ? AND `expiration` != -1",
+		DELETE_ACTIVE_BY_ID(
+				"DELETE FROM `%PREFIX%active` WHERE `id` = ?", 
+				"DELETE FROM %PREFIX%active WHERE id = ?"),
+		
+		REFRESH_ACTIVE(
+				"DELETE FROM `%PREFIX%active` WHERE `expiration` <= ? AND `expiration` != -1",
 				"DELETE FROM %PREFIX%active WHERE expiration <= ? AND expiration != -1"),
 		
-		UPDATE_ACTIVE_REASON_FROM_DATE("UPDATE `%PREFIX%active` SET `reason` = ? WHERE `date` = ?",
+		UPDATE_ACTIVE_REASON_FOR_ID(
+				"UPDATE `%PREFIX%active` SET `reason` = ? WHERE `date` = ?",
 				"UPDATE %PREFIX%active SET reason = ? WHERE date = ?"),
-		UPDATE_HISTORY_REASON_FROM_DATE("UPDATE `%PREFIX%history` SET `reason` = ? WHERE `date` = ?",
+		
+		UPDATE_HISTORY_REASON_FOR_ID(
+				"UPDATE `%PREFIX%history` SET `reason` = ? WHERE `date` = ?",
 				"UPDATE %PREFIX%history SET reason = ? WHERE date = ?"),
 		
 		UPDATE_IPS_FOR_UUID(
@@ -112,9 +141,17 @@ public class SqlQuery {
 				"UPDATE `%PREFIX%cache` SET `name` = ?, `update-name` = ? WHERE `uuid` = ?",
 				"UPDATE %PREFIX%cache SET name = ?, update-name = ? WHERE uuid = ?"),
 		
-		SELECT_ALL_ACTIVE("SELECT * FROM `%PREFIX%active`", "SELECT * FROM %PREFIX%active"),
-		SELECT_ALL_HISTORY("SELECT * FROM `%PREFIX%history`", "SELECT * FROM %PREFIX%history"),
-		SELECT_ALL_CACHED("SELECT * FROM `%PREFIX%cache`", "SELECT * FROM %PREFIX%cache");
+		SELECT_ALL_ACTIVE(
+				"SELECT * FROM `%PREFIX%active`",
+				"SELECT * FROM %PREFIX%active"),
+		
+		SELECT_ALL_HISTORY(
+				"SELECT * FROM `%PREFIX%history`",
+				"SELECT * FROM %PREFIX%history"),
+		
+		SELECT_ALL_CACHED(
+				"SELECT * FROM `%PREFIX%cache`",
+				"SELECT * FROM %PREFIX%cache");
 
 		private String mysql;
 		private String file;
