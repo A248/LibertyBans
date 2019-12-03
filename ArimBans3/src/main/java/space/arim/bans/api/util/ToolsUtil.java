@@ -162,4 +162,12 @@ public final class ToolsUtil {
 		}
 		return Character.toUpperCase(input.charAt(0)) + input.substring(1);
 	}
+	
+	public static String[] chopOffOne(String[] input) {
+		String[] output = new String[input.length - 2];
+		for (int n = 0; n < output.length; n++) {
+			output[n] = input[n + 1];
+		}
+		return output;
+	}
 }

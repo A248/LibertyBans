@@ -43,6 +43,7 @@ import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.util.GeoIpInfo;
+import space.arim.bans.api.util.ToolsUtil;
 
 public class Commands implements CommandsMaster {
 	
@@ -144,14 +145,6 @@ public class Commands implements CommandsMaster {
 			body.put(cmd.subCategory(), invalid_strings);
 			footer.put(cmd.subCategory(), invalid_strings);
 		}
-	}
-
-	private String[] chopOffOne(String[] input) {
-		String[] output = new String[input.length - 2];
-		for (int n = 0; n < output.length; n++) {
-			output[n] = input[n + 1];
-		}
-		return output;
 	}
 	
 	private int parseNumber(String input, int defaultNumber) {
@@ -262,7 +255,7 @@ public class Commands implements CommandsMaster {
 			if (!checkPermission(subject, command)) {
 				return;
 			}
-			execute(subject, command, (rawArgs.length > 1) ? chopOffOne(rawArgs) : new String[] {});
+			execute(subject, command, (rawArgs.length > 1) ? ToolsUtil.chopOffOne(rawArgs) : new String[] {});
 		} catch (IllegalArgumentException ex) {
 			usage(subject);
 		}
@@ -373,7 +366,7 @@ public class Commands implements CommandsMaster {
 			default:
 				break;
 			}
-			args = chopOffOne(args);
+			args = ToolsUtil.chopOffOne(args);
 			if (command.category().equals(Category.ADD)) {
 				punCmd(operator, target, command, args);
 			} else if (command.category().equals(Category.REMOVE)) {
@@ -408,7 +401,7 @@ public class Commands implements CommandsMaster {
 			if (span == 0) {
 				span = -1L;
 			} else {
-				args = chopOffOne(args);
+				args = ToolsUtil.chopOffOne(args);
 			}
 			if (span == -1L && max != -1L || span > max) {
 				center.subjects().sendMessage(operator, permTime.get(type));
