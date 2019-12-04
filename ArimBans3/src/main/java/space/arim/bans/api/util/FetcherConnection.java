@@ -35,11 +35,11 @@ public class FetcherConnection implements AutoCloseable {
 	private final String url;
 	private HttpURLConnection connection;
 	
-	public FetcherConnection(String url) {
+	FetcherConnection(String url) {
 		this.url = url;
 	}
 	
-	public FetcherConnection connect() throws IOException, HttpStatusException {
+	FetcherConnection connect() throws IOException, HttpStatusException {
 		connection = (HttpURLConnection) (new URL(url)).openConnection();
 		connection.setRequestMethod("GET");
 		connection.connect();
@@ -50,16 +50,12 @@ public class FetcherConnection implements AutoCloseable {
 		return this;
 	}
 	
-	public InputStream inputStream() throws IOException {
+	InputStream inputStream() throws IOException {
 		return connection.getInputStream();
 	}
 	
-	public JSONObject toJson() throws IOException, ParseException {
+	JSONObject toJson() throws IOException, ParseException {
 		return (JSONObject) JSONValue.parseWithException(new InputStreamReader(inputStream()));
-	}
-	
-	public String getHeaderField(String name) {
-		return connection.getHeaderField(name);
 	}
 	
 	@Override

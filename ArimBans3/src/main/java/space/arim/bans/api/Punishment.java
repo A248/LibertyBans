@@ -21,6 +21,7 @@ package space.arim.bans.api;
 import java.util.Objects;
 
 public class Punishment {
+	private final int id;
 	private final PunishmentType type;
 	private final Subject subject;
 	private final Subject operator;
@@ -28,15 +29,16 @@ public class Punishment {
 	private final long expiration;
 	private final long date;
 
-	public Punishment(PunishmentType type, Subject subject, Subject operator, String reason, long expiration) {
-		this(type, subject, operator, reason, expiration, System.currentTimeMillis());
+	public Punishment(int id, PunishmentType type, Subject subject, Subject operator, String reason, long expiration) {
+		this(id, type, subject, operator, reason, expiration, System.currentTimeMillis());
 	}
 	
-	public Punishment(PunishmentType type, Subject subject, Subject operator, String reason, long expiration, long date) {
+	public Punishment(int id, PunishmentType type, Subject subject, Subject operator, String reason, long expiration, long date) {
 		Objects.requireNonNull(type, "No field of a Punishment may be null");
 		Objects.requireNonNull(subject, "No field of a Punishment may be null");
 		Objects.requireNonNull(operator, "No field of a Punishment may be null");
 		Objects.requireNonNull(reason, "No field of a Punishment may be null");
+		this.id = id;
 		this.type = type;
 		this.subject = subject;
 		this.operator = operator;
@@ -45,6 +47,10 @@ public class Punishment {
 		this.date = date;
 	}
 
+	public int id() {
+		return id;
+	}
+	
 	public PunishmentType type() {
 		return type;
 	}
@@ -69,12 +75,22 @@ public class Punishment {
 		return date;
 	}
 	
-	/**
-	 * Compares two punishments
-	 * 
-	 * @return true if and only if punishments are equal in all their attributes
-	 */
-	public boolean compare(Punishment punishment) {
-		return (type().equals(punishment.type()) && subject().compare(punishment.subject()) && operator().compare(punishment.operator()) && expiration() == punishment.expiration() && date() == punishment.date());
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (date ^ (date >>> 32));
+		result = prime * result + (int) (expiration ^ (expiration >>> 32));
+		result = prime * result + ((operator == null) ? 0 : operator.hashCode());
+		result = prime * result + ((reason == null) ? 0 : reason.hashCode());
+		result = prime * result + ((subject == null) ? 0 : subject.hashCode());
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
+		return result;
 	}
+
+	@Override
+	public boolean equals(Object object) {
+		return (object instanceof Punishment && hashCode() == object.hashCode());
+	}
+	
 }

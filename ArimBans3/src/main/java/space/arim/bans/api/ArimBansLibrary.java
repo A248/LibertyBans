@@ -46,6 +46,8 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 		assert (!message.equals(INVALID_STRING_CODE));
 	}
 	
+	int getNextAvailablePunishmentId();
+	
 	/**
 	 * Gets a Subject from a UUID
 	 * 

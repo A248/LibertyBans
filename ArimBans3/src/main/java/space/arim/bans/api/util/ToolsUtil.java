@@ -20,7 +20,10 @@ package space.arim.bans.api.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 import com.google.common.net.InetAddresses;
@@ -31,6 +34,8 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 
 public final class ToolsUtil {
+	
+	private static final String fileDateFormat = (new SimpleDateFormat("dd-MM-yyyy")).format(new Date());
 	
 	private ToolsUtil() {}
 	
@@ -161,5 +166,37 @@ public final class ToolsUtil {
 			return input.toUpperCase();
 		}
 		return Character.toUpperCase(input.charAt(0)) + input.substring(1);
+	}
+	
+	public static String[] chopOffOne(String[] input) {
+		String[] output = new String[input.length - 1];
+		for (int n = 0; n < output.length; n++) {
+			output[n] = input[n + 1];
+		}
+		return output;
+	}
+	
+	public static String concat(List<String> input, char separator) {
+		StringBuilder builder = new StringBuilder();
+		for (String m : input) {
+			if ("".equals(m)) {
+				builder.append(separator).append(m);
+			}
+		}
+		return (builder.length() == 0) ? "" : builder.toString().substring(1);
+	}
+	
+	public static String concat(String[] input, char separator) {
+		StringBuilder builder = new StringBuilder();
+		for (String m : input) {
+			if ("".equals(m)) {
+				builder.append(separator).append(m);
+			}
+		}
+		return (builder.length() == 0) ? "" : builder.toString().substring(1);
+	}
+	
+	public static String fileDateFormat() {
+		return fileDateFormat;
 	}
 }

@@ -22,6 +22,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
+
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetFactory;
 import javax.sql.rowset.RowSetProvider;
@@ -30,7 +32,7 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.exception.InternalStateException;
-import space.arim.bans.api.exception.TypeParseException;
+import space.arim.bans.internal.sql.SqlQuery.Query;
 
 public class Sql implements SqlMaster {
 
@@ -66,8 +68,8 @@ public class Sql implements SqlMaster {
 	}
 	
 	@Override
-	public SqlSettings settings() {
-		return settings;
+	public String getStorageModeName() {
+		return settings.getStorageModeName();
 	}
 	
 	@Override
@@ -76,8 +78,8 @@ public class Sql implements SqlMaster {
 	}
 
 	@Override
-	public void executeQuery(String sql, Object...params) {
-		try (Connection connection = data.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+	public void executeQuery(Query query, Object...params) {
+		try (Connection connection = data.getConnection(); PreparedStatement statement = connection.prepareStatement(query.eval(settings))) {
 			replaceParams(statement, params);
 			statement.execute();
 		} catch (SQLException ex) {
@@ -88,9 +90,9 @@ public class Sql implements SqlMaster {
 	@Override
 	public void executeQuery(SqlQuery...queries) {
 		try (Connection connection = data.getConnection()) {
-			PreparedStatement[] statements = new PreparedStatement[queries.length - 1];
+			PreparedStatement[] statements = new PreparedStatement[queries.length];
 			for (int n = 0; n < queries.length; n++) {
-				statements[n] = connection.prepareStatement(queries[n].statement());
+				statements[n] = connection.prepareStatement(queries[n].statement().eval(settings));
 				replaceParams(statements[n], queries[n].parameters());
 				statements[n].execute();
 				statements[n].close();
@@ -103,10 +105,10 @@ public class Sql implements SqlMaster {
 	@Override
 	public ResultSet[] selectQuery(SqlQuery...queries) {
 		try (Connection connection = data.getConnection()) {
-			PreparedStatement[] statements = new PreparedStatement[queries.length - 1];
+			PreparedStatement[] statements = new PreparedStatement[queries.length];
 			CachedRowSet[] results = new CachedRowSet[queries.length - 1];
 			for (int n = 0; n < queries.length; n++) {
-				statements[n] = connection.prepareStatement(queries[n].statement());
+				statements[n] = connection.prepareStatement(queries[n].statement().eval(settings));
 				replaceParams(statements[n], queries[n].parameters());
 				results[n] = factory.createCachedRowSet();
 				results[n].populate(statements[n].executeQuery());
@@ -119,8 +121,8 @@ public class Sql implements SqlMaster {
 	}
 	
 	@Override
-	public ResultSet selectQuery(String sql, Object...params) {
-		try (Connection connection = data.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+	public ResultSet selectQuery(Query query, Object...params) {
+		try (Connection connection = data.getConnection(); PreparedStatement statement = connection.prepareStatement(query.eval(settings))) {
 			replaceParams(statement, params);
 			CachedRowSet results = factory.createCachedRowSet();
 			results.populate(statement.executeQuery());
@@ -135,22 +137,26 @@ public class Sql implements SqlMaster {
 		stopConnection();
 	}
 	
+	private SqlSettings parseBackend(String input) {
+		switch (input.toLowerCase()) {
+		case "hsqldb":
+		case "local":
+		case "file":
+		case "sqlite":
+			return new LocalSettings(center.config());
+		case "mysql":
+		case "sql":
+			return new RemoteSettings(center.config());
+		default:
+			center.log(Level.WARNING, DEFAULTING_TO_STORAGE_MODE);
+			return new LocalSettings(center.config());
+		}
+	}
+	
 	@Override
 	public void refreshConfig(boolean first) {
 		
-		StorageMode mode;
-		try {
-			mode = StorageMode.fromString(center.config().getConfigString("storage.mode"));
-		} catch (TypeParseException ex) {
-			mode = StorageMode.HSQLDB;
-			center.environment().logger().warning(DEFAULTING_TO_STORAGE_MODE);
-		}
-		
-		if (StorageMode.MYSQL.equals(mode)) {
-			settings = new LocalSettings(center.config());
-		} else if (StorageMode.HSQLDB.equals(mode)) {
-			settings = new RemoteSettings(center.config());
-		}
+		settings = parseBackend(center.config().getConfigString("storage.mode"));
 		
 		if (first || center.config().getConfigBoolean("storage.restart-on-reload")) {
 			if (data != null) {

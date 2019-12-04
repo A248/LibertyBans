@@ -74,7 +74,7 @@ public class Formats implements FormatsMaster {
 	
 	@Override
 	public String formatMessageWithPunishment(String message, Punishment punishment) {
-		return message.replace("%TYPE%", ToolsUtil.capitaliseProperly(punishment.type().toString())).replace("%TARGET%", center.formats().formatSubject(punishment.subject())).replace("%OPERATOR%", center.formats().formatSubject(punishment.operator())).replace("%REASON%", punishment.reason()).replace("%EXP_REL%", center.formats().formatTime(punishment.expiration(), false)).replace("%EXP_ABS%", center.formats().formatTime(punishment.expiration(), true)).replace("%DATE_REL%", center.formats().formatTime(punishment.date(), false)).replace("%DATE_ABS%", center.formats().formatTime(punishment.date(), true));
+		return message.replace("%TYPE%", ToolsUtil.capitaliseProperly(punishment.type().toString())).replace("%TARGET%", center.formats().formatSubject(punishment.subject())).replace("%OPERATOR%", center.formats().formatSubject(punishment.operator())).replace("%REASON%", punishment.reason()).replace("%DURATION%", center.formats().formatTime(punishment.expiration() - punishment.date(), false)).replace("%TIME%", center.formats().formatTime(punishment.expiration(), false)).replace("%EXPIRATION%", center.formats().formatTime(punishment.expiration(), true)).replace("%SINCE%", center.formats().formatTime(punishment.date(), false)).replace("%DATE%", center.formats().formatTime(punishment.date(), true));
 	}
 	
 	@Override
@@ -163,7 +163,7 @@ public class Formats implements FormatsMaster {
 	public void refreshConfig(boolean first) {
 		
 		try {
-			dateFormatter = new SimpleDateFormat(center.config().getConfigString("formatting.date"));
+			dateFormatter = new SimpleDateFormat(center.config().getConfigString("formatting.dates"));
 		} catch (IllegalArgumentException ex) {
 			dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		}

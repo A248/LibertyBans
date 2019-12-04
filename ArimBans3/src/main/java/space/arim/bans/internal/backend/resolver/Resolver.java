@@ -21,10 +21,10 @@ package space.arim.bans.internal.backend.resolver;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,6 +37,7 @@ import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.exception.RateLimitException;
 import space.arim.bans.api.util.FetcherUtil;
 import space.arim.bans.api.util.GeoIpInfo;
+import space.arim.bans.api.util.ToolsUtil;
 import space.arim.bans.internal.sql.SqlQuery;
 import space.arim.registry.RegistryPriority;
 
@@ -44,10 +45,7 @@ public class Resolver implements ResolverMaster {
 	
 	private final ArimBans center;
 	
-	private static final String EMPTY_IPLIST_STRING = "<empty>";
-	
-	private ConcurrentHashMap<UUID, List<String>> ips = new ConcurrentHashMap<UUID, List<String>>();
-	private ConcurrentHashMap<UUID, String> uuids = new ConcurrentHashMap<UUID, String>();
+	private final ConcurrentHashMap<UUID, CacheElement> cache = new ConcurrentHashMap<UUID, CacheElement>();
 
 	private boolean internalFetcher = true;
 	private boolean ashconFetcher = true;
@@ -65,46 +63,34 @@ public class Resolver implements ResolverMaster {
 	public void loadAll(ResultSet data) {
 		try {
 			while (data.next()) {
-				UUID uuid;
+				
 				try {
-					uuid = UUID.fromString(data.getString("uuid"));
-					uuids.put(uuid, data.getString("name"));
-					String iplist = data.getString("iplist");
-					if (iplist != EMPTY_IPLIST_STRING) {
-						ips.put(uuid, new ArrayList<String>(Arrays.asList(iplist.split(","))));
-					}
+					cache.put(UUID.fromString(ToolsUtil.expandUUID(data.getString("uuid"))), new CacheElement(data.getString("name"), data.getString("iplist"), data.getLong("update-name"), data.getLong("update-iplist")));
 				} catch (IllegalArgumentException ex) {
 					center.logError(ex);
 				}
+				
 			}
 		} catch (SQLException ex) {
 			center.logError(ex);
 		}
 	}
-	
-	private String externaliseIpList(List<String> iplist) {
-		StringBuilder builder = new StringBuilder();
-		for (int n = 0; n < iplist.size(); n++) {
-			if (n != 0) {
-				builder.append(',');
-			}
-			builder.append(iplist.get(n));
-		}
-		return builder.toString();
-	}
 
 	@Override
-	public List<String> getIps(UUID playeruuid) {
+	public List<String> getIps(UUID playeruuid) throws MissingCacheException {
 		Objects.requireNonNull(playeruuid, "UUID must not be null!");
-		return ips.containsKey(playeruuid) ? ips.get(playeruuid) : Collections.emptyList();
+		if (cache.containsKey(playeruuid)) {
+			return cache.get(playeruuid).getIps();
+		}
+		throw new MissingCacheException(playeruuid);
 	}
 	
 	@Override
 	public List<UUID> getPlayers(String address) {
 		Objects.requireNonNull(address, "Address must not be null!");
 		List<UUID> applicable = new ArrayList<UUID>();
-		ips.forEach((uuid, ips) -> {
-			if (ips.contains(address)) {
+		cache.forEach((uuid, element) -> {
+			if (element.hasIp(address)) {
 				applicable.add(uuid);
 			}
 		});
@@ -113,16 +99,16 @@ public class Resolver implements ResolverMaster {
 	
 	@Override
 	public String getName(UUID playeruuid) throws MissingCacheException {
-		if (uuids.containsKey(playeruuid)) {
-			return uuids.get(playeruuid);
+		if (cache.containsKey(playeruuid)) {
+			return cache.get(playeruuid).getName();
 		}
 		throw new MissingCacheException(playeruuid);
 	}
 	
 	@Override
 	public UUID getUUID(String name) throws MissingCacheException {
-		for (UUID id : uuids.keySet()) {
-			if (uuids.get(id).equalsIgnoreCase(name)) {
+		for (UUID id : cache.keySet()) {
+			if (cache.get(id).getName().equalsIgnoreCase(name)) {
 				return id;
 			}
 		}
@@ -130,56 +116,62 @@ public class Resolver implements ResolverMaster {
 	}
 	
 	@Override
-	public void update(UUID playeruuid, String name, String ip) {
-		if (uuids.containsKey(playeruuid)) {
-			boolean updateUUID = !uuids.get(playeruuid).equalsIgnoreCase(name);
-			boolean updateIp = (ip != null) && (!ips.containsKey(playeruuid) || !ips.get(playeruuid).contains(ip));
-			if (updateUUID || updateIp) {
+	public void update(final UUID uuid, String name, String address) {
+		
+		if (cache.containsKey(uuid)) {
+			final CacheElement element = cache.get(uuid);
+			final boolean updateName = !element.getName().equalsIgnoreCase(name);
+			final boolean updateIplist = !element.hasIp(address);
+			if (updateName || updateIplist) {
 				center.async(() -> {
-					synchronized (uuids) {
-						if (updateUUID && updateIp) {
-							if (ips.containsKey(playeruuid)) {
-								ips.get(playeruuid).add(ip);
-							} else {
-								ips.put(playeruuid, new ArrayList<String>(Arrays.asList(ip)));
-							}
-							uuids.put(playeruuid, name);
-							center.sql().executeQuery(new SqlQuery(SqlQuery.Query.UPDATE_NAME_FOR_UUID.eval(center.sql().settings()), name, System.currentTimeMillis(), playeruuid.toString()), new SqlQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID.eval(center.sql().settings()), externaliseIpList(ips.get(playeruuid)), System.currentTimeMillis(), playeruuid.toString()));
-						} else if (updateUUID) {
-							uuids.put(playeruuid, name);
-							center.sql().executeQuery(SqlQuery.Query.UPDATE_NAME_FOR_UUID.eval(center.sql().settings()), name, System.currentTimeMillis(), playeruuid.toString());
-						} else if (updateIp) {
-							if (ips.containsKey(playeruuid)) {
-								ips.get(playeruuid).add(ip);
-							} else {
-								ips.put(playeruuid, new ArrayList<String>(Arrays.asList(ip)));
-							}
-							center.sql().executeQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID.eval(center.sql().settings()), externaliseIpList(ips.get(playeruuid)), System.currentTimeMillis(), playeruuid.toString());
-						}
+					if (updateName && updateIplist) {
+						center.sql().executeQuery(element.setNameAndAddIp(uuid, name, address));
+					} else if (updateName) {
+						center.sql().executeQuery(element.setName(uuid, name));
+					} else if (updateIplist) {
+						center.sql().executeQuery(element.addIp(uuid, address));
 					}
 				});
 			}
 		} else {
+			final CacheElement element = new CacheElement(name, (address == null) ? CacheElement.EMPTY_IPLIST_STRING : address);
 			center.async(() -> {
-				synchronized (uuids) {
-					uuids.put(playeruuid, name);
-					if (ip != null) {
-						ips.put(playeruuid, new ArrayList<String>(Arrays.asList(ip)));
-					}
-					center.sql().executeQuery(SqlQuery.Query.INSERT_CACHE.eval(center.sql().settings()), playeruuid.toString(), name, (ip == null) ? EMPTY_IPLIST_STRING : ip, System.currentTimeMillis(), System.currentTimeMillis());
-				}
+				cache.put(uuid, element);
+				center.sql().executeQuery(element.getInsertionQuery(uuid));
 			});
 		}
+
+	}
+	
+	@Override
+	public boolean clearCachedIp(boolean async, String address) {
+		Set<SqlQuery> exec = new HashSet<SqlQuery>();
+		cache.forEach((uuid, element) -> {
+			if (element.hasIp(address)) {
+				exec.add(element.removeIp(uuid, address));
+			}
+		});
+		if (exec.isEmpty()) {
+			return false;
+		}
+		if (async) {
+			center.async(() -> {
+				center.sql().executeQuery(exec.toArray(new SqlQuery[] {}));
+			});
+		} else {
+			center.sql().executeQuery(exec.toArray(new SqlQuery[] {}));
+		}
+		return true;
 	}
 	
 	@Override
 	public boolean uuidExists(UUID uuid) {
-		return uuids.containsKey(uuid);
+		return cache.containsKey(uuid);
 	}
 
 	@Override
-	public boolean hasIp(UUID playeruuid, String ip) {
-		return ips.containsKey(playeruuid) && ips.get(playeruuid).contains(ip);
+	public boolean hasIp(UUID playeruuid, String address) {
+		return cache.containsKey(playeruuid) && cache.get(playeruuid).hasIp(address);
 	}
 	
 	@Override
@@ -220,19 +212,21 @@ public class Resolver implements ResolverMaster {
 				return uuid2;
 			} catch (PlayerNotFoundException ex) {}
 		}
-		if (query && ashconFetcher) {
-			try {
-				UUID uuid3 = FetcherUtil.ashconApi(name);
-				update(uuid3, name, null);
-				return uuid3;
-			} catch (FetcherException | HttpStatusException ex) {}
-		}
-		if (query && mojangFetcher) {
-			try {
-				UUID uuid4 = FetcherUtil.mojangApi(name);
-				update(uuid4, name, null);
-				return uuid4;
-			} catch (FetcherException | HttpStatusException ex) {}
+		if (query && center.environment().isOnlineMode()) {
+			if (ashconFetcher) {
+				try {
+					UUID uuid3 = FetcherUtil.ashconApi(name);
+					update(uuid3, name, null);
+					return uuid3;
+				} catch (FetcherException | HttpStatusException ex) {}
+			}
+			if (mojangFetcher) {
+				try {
+					UUID uuid4 = FetcherUtil.mojangApi(name);
+					update(uuid4, name, null);
+					return uuid4;
+				} catch (FetcherException | HttpStatusException ex) {}
+			}
 		}
 		throw new PlayerNotFoundException(name);
 	}
@@ -249,19 +243,21 @@ public class Resolver implements ResolverMaster {
 				return name2;
 			} catch (PlayerNotFoundException ex) {}
 		}
-		if (query && ashconFetcher) {
-			try {
-				String name3 = FetcherUtil.ashconApi(uuid);
-				update(uuid, name3, null);
-				return name3;
-			} catch (FetcherException | HttpStatusException ex) {}
-		}
-		if (query && mojangFetcher) {
-			try {
-				String name4 = FetcherUtil.mojangApi(uuid);
-				update(uuid, name4, null);
-				return name4;
-			} catch (FetcherException | HttpStatusException ex) {}
+		if (query && center.environment().isOnlineMode()) {
+			if (ashconFetcher) {
+				try {
+					String name3 = FetcherUtil.ashconApi(uuid);
+					update(uuid, name3, null);
+					return name3;
+				} catch (FetcherException | HttpStatusException ex) {}
+			}
+			if (mojangFetcher) {
+				try {
+					String name4 = FetcherUtil.mojangApi(uuid);
+					update(uuid, name4, null);
+					return name4;
+				} catch (FetcherException | HttpStatusException ex) {}
+			}
 		}
 		throw new PlayerNotFoundException(uuid);
 	}

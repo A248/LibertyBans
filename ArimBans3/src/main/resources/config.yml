@@ -25,8 +25,8 @@ storage:
     username: 'ArimBans'
     password: 'defaultpassword'
     url: 'jdbc:mysql://%HOST%:%PORT%/%DATABASE%?autoReconnect=true&useUnicode=true&characterEncoding=utf8'
-  min-connections: 2
-  max-connections: 5
+  min-connections: 1
+  max-connections: 4
   restart-on-reload: false
 formatting:
   use-json: true
@@ -36,7 +36,7 @@ formatting:
     - 'permanently'
   permanent-display: 'Permanently'
   console-display: 'Console'
-  date: 'dd/MM/yyyy HH:mm:ss'
+  dates: 'dd/MM/yyyy HH:mm:ss'
 commands:
   op-permissions: true
   reasons:

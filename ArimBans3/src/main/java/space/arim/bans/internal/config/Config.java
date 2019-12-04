@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 import org.yaml.snakeyaml.Yaml;
 
@@ -46,8 +47,8 @@ public class Config implements ConfigMaster {
 	private final File messagesYml;
 	private final Map<String, Object> configDefaults;
 	private final Map<String, Object> messageDefaults;
-	private ConcurrentHashMap<String, Object> configValues = new ConcurrentHashMap<String, Object>();
-	private ConcurrentHashMap<String, Object> messageValues = new ConcurrentHashMap<String, Object>();
+	private final ConcurrentHashMap<String, Object> configValues = new ConcurrentHashMap<String, Object>();
+	private final ConcurrentHashMap<String, Object> messageValues = new ConcurrentHashMap<String, Object>();
 	
 	private static final String CONFIG_PATH = "/src/main/resources/config.yml";
 	private static final String MESSAGES_PATH = "/src/main/resources/messages.yml";
@@ -127,6 +128,9 @@ public class Config implements ConfigMaster {
 				return;
 			}
 		}
+		File dest = new File(center.dataFolder(), "config-backups" + File.separator + ToolsUtil.fileDateFormat() + "-config.yml");
+		center.log(Level.WARNING, "Detected outdated config version. Saving old configuration to " + dest.getPath());
+		configYml.renameTo(dest);
 		saveIfNotExist(configYml, CONFIG_PATH);
 	}
 	
@@ -137,6 +141,9 @@ public class Config implements ConfigMaster {
 				return;
 			}
 		}
+		File dest = new File(center.dataFolder(), "messages-backups" + File.separator + ToolsUtil.fileDateFormat() + "-messages.yml");
+		center.log(Level.WARNING, "Detected outdated config version. Saving old configuration to " + dest.getPath());
+		messagesYml.renameTo(dest);
 		saveIfNotExist(messagesYml, MESSAGES_PATH);
 	}
 	
@@ -168,8 +175,7 @@ public class Config implements ConfigMaster {
 	}
 
 	private void warning(String message) {
-		center.log(message);
-		center.environment().logger().warning(message);
+		center.log(Level.WARNING, message);
 	}
 	
 	private void configWarning(String key, Class<?> type, File file) {

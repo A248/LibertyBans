@@ -48,7 +48,6 @@ public class BungeeEnv implements Environment {
 	private final BungeeEnforcer enforcer;
 	private final BungeeListener listener;
 	private final BungeeCommands commands;
-	private Metrics metrics;
 	
 	private boolean registered = false;
 	
@@ -69,9 +68,21 @@ public class BungeeEnv implements Environment {
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
+	@Override
+	public boolean isOnlineMode() {
+		return plugin.getProxy().getConfig().isOnlineMode();
+	}
+	
+	@Override
+	public void shutdown(String message) {
+		plugin.getLogger().severe("*** ArimBans Severe Error ***\nShutting down because: " + message);
+		close();
+	}
+	
 	private void setupMetrics() {
-		metrics = new Metrics(plugin);
-		metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().settings().mode.toString()));
+		Metrics metrics = new Metrics(plugin);
+		metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().getStorageModeName()));
 		metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
 	}
 	
@@ -255,6 +266,10 @@ public class BungeeEnv implements Environment {
 	
 	@Override
 	public void close() {
+		if (registered) {
+			plugin.getProxy().getPluginManager().unregisterListener(listener);
+			plugin.getProxy().getPluginManager().unregisterCommand(commands);
+		}
 		commands.close();
 		listener.close();
 		enforcer.close();

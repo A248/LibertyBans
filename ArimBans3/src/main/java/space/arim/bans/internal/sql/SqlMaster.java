@@ -21,6 +21,7 @@ package space.arim.bans.internal.sql;
 import java.sql.ResultSet;
 
 import space.arim.bans.internal.Component;
+import space.arim.bans.internal.sql.SqlQuery.Query;
 
 public interface SqlMaster extends Component {
 	@Override
@@ -28,16 +29,16 @@ public interface SqlMaster extends Component {
 		return SqlMaster.class;
 	}
 	
-	SqlSettings settings();
+	String getStorageModeName();
 	
 	boolean enabled();
 	
 	void executeQuery(SqlQuery...queries);
 	
-	void executeQuery(String statement, Object...params);
+	void executeQuery(Query statement, Object...params);
 	
 	ResultSet[] selectQuery(SqlQuery...queries);
 	
-	ResultSet selectQuery(String statement, Object...params);
+	ResultSet selectQuery(Query statement, Object...params);
 
 }

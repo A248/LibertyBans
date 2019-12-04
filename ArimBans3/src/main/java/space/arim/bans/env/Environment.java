@@ -29,6 +29,8 @@ import space.arim.bans.internal.Configurable;
 
 public interface Environment extends Configurable {
 	
+	boolean isOnlineMode();
+	
 	boolean isOnline(Subject subject);
 	
 	void sendMessage(Subject target, String jsonable, boolean useJson);
@@ -52,6 +54,8 @@ public interface Environment extends Configurable {
 	String getVersion();
 	
 	boolean isLibrarySupported(EnvLibrary library);
+	
+	void shutdown(String message);
 	
 	enum EnvLibrary {
 		

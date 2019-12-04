@@ -48,7 +48,6 @@ public class BukkitEnv implements Environment {
 	private final BukkitEnforcer enforcer;
 	private final BukkitListener listener;
 	private final BukkitCommands commands;
-	private Metrics metrics;
 	
 	private boolean registered = false;
 
@@ -69,9 +68,21 @@ public class BukkitEnv implements Environment {
 		}
 	}
 	
+	@Override
+	public boolean isOnlineMode() {
+		return plugin.getServer().getOnlineMode();
+	}
+	
+	@Override
+	public void shutdown(String message) {
+		plugin.getLogger().severe("*** ArimBans Severe Error ***\nShutting down because: " + message);
+		close();
+		plugin.getServer().getPluginManager().disablePlugin(plugin);
+	}
+	
 	private void setupMetrics() {
-		metrics = new Metrics(plugin);
-		metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().settings().mode.toString()));
+		Metrics metrics = new Metrics(plugin);
+		metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().getStorageModeName()));
 		metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
 	}
 	

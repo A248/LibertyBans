@@ -39,10 +39,12 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.exception.InternalStateException;
+import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.util.GeoIpInfo;
+import space.arim.bans.api.util.ToolsUtil;
 
 public class Commands implements CommandsMaster {
 	
@@ -54,6 +56,8 @@ public class Commands implements CommandsMaster {
 			return (int) (p1.date() - p2.date());
 		}
 	};
+	
+	private static final String ROLLBACK_ALL_ARG = "all";
 	
 	private String base_perm_msg;
 	private final ConcurrentHashMap<IpSpec, String> invalid = new ConcurrentHashMap<IpSpec, String>();
@@ -144,14 +148,6 @@ public class Commands implements CommandsMaster {
 			body.put(cmd.subCategory(), invalid_strings);
 			footer.put(cmd.subCategory(), invalid_strings);
 		}
-	}
-
-	private String[] chopOffOne(String[] input) {
-		String[] output = new String[input.length - 2];
-		for (int n = 0; n < output.length; n++) {
-			output[n] = input[n + 1];
-		}
-		return output;
 	}
 	
 	private int parseNumber(String input, int defaultNumber) {
@@ -262,7 +258,7 @@ public class Commands implements CommandsMaster {
 			if (!checkPermission(subject, command)) {
 				return;
 			}
-			execute(subject, command, (rawArgs.length > 1) ? chopOffOne(rawArgs) : new String[] {});
+			execute(subject, command, (rawArgs.length > 1) ? ToolsUtil.chopOffOne(rawArgs) : new String[] {});
 		} catch (IllegalArgumentException ex) {
 			usage(subject);
 		}
@@ -273,19 +269,17 @@ public class Commands implements CommandsMaster {
 		exec(subject, command, args);
 	}
 	
-	private String concat(String[] args) {
-		StringBuilder builder = new StringBuilder(args[0]);
-		for (int n = 1; n < args.length; n++) {
-			builder.append(args[n]);
-		}
-		return builder.toString();
-	}
-	
 	// Should only be called for targets with SubjectType == SubjectType.PLAYER
 	private void ipSelector(Subject operator, Subject target, CommandType command, String[] args) {
 		String base = getCmdBaseString(command) + " ";
-		String extra = concat(args);
-		List<String> ips = center.resolver().getIps(target.getUUID());
+		String extra = ToolsUtil.concat(args, ' ');
+		List<String> ips;
+		try {
+			ips = center.resolver().getIps(target.getUUID());
+		} catch (MissingCacheException ex) {
+			center.subjects().sendMessage(operator, invalid.get(IpSpec.IP).replace("%TARGET%", center.formats().formatSubject(target)));
+			return;
+		}
 		StringBuilder builder = new StringBuilder();
 		for (String ip : ips) {
 			builder.append(ip_selector_element.replace("%IP%", ip).replace("%CMD%", base + ip + extra));
@@ -373,7 +367,7 @@ public class Commands implements CommandsMaster {
 			default:
 				break;
 			}
-			args = chopOffOne(args);
+			args = ToolsUtil.chopOffOne(args);
 			if (command.category().equals(Category.ADD)) {
 				punCmd(operator, target, command, args);
 			} else if (command.category().equals(Category.REMOVE)) {
@@ -408,7 +402,7 @@ public class Commands implements CommandsMaster {
 			if (span == 0) {
 				span = -1L;
 			} else {
-				args = chopOffOne(args);
+				args = ToolsUtil.chopOffOne(args);
 			}
 			if (span == -1L && max != -1L || span > max) {
 				center.subjects().sendMessage(operator, permTime.get(type));
@@ -418,20 +412,39 @@ public class Commands implements CommandsMaster {
 			span = -1L;
 		}
 		String reason;
+		boolean silent = false;
+		boolean passive = false;
 		if (args.length > 0) {
-			reason = concat(args);
+			for (String arg : args) {
+				if (arg.startsWith("-")) {
+					if (arg.contains("s")) {
+						silent = true;
+					}
+					if (arg.contains("p")) {
+						passive = true;
+					}
+					if (silent || passive) {
+						arg = "";
+					}
+				}
+			}
+			reason = ToolsUtil.concat(args, ' ');
 		} else if (permit_blank_reason) {
 			reason = default_reason;
 		} else {
 			usage(operator, command);
 			return;
 		}
-		Punishment punishment = new Punishment(type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis());
+		Punishment punishment = new Punishment(center.getNextAvailablePunishmentId(), type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis());
 		try {
-			center.punishments().addPunishments(punishment);
+			center.punishments().addPunishments(false, punishment);
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-			center.subjects().sendNotif(punishment, true, operator);
-			center.environment().enforcer().enforce(punishment, center.formats().useJson());
+			if (!silent) {
+				center.subjects().sendNotif(punishment, true, operator);
+			}
+			if (!passive) {
+				center.environment().enforcer().enforce(punishment, center.formats().useJson());
+			}
 		} catch (ConflictingPunishmentException ex) {
 			String conflict = (punishment.type().equals(PunishmentType.BAN)) ? additions_bans_error_conflicting : additions_mutes_error_conflicting;
 			center.subjects().sendMessage(operator, conflict.replace("%TARGET%", center.formats().formatSubject(punishment.subject())));
@@ -439,40 +452,57 @@ public class Commands implements CommandsMaster {
 	}
 	
 	private void unpunCmd(Subject operator, Subject target, CommandType command, String[] args) {
+		boolean silent = false;
+		for (String arg : args) {
+			if (arg.startsWith("-")) {
+				if (arg.contains("s")) {
+					silent = true;
+				}
+			}
+		}
 		PunishmentType type = applicableType(command);
 		if (command.subCategory().equals(SubCategory.UNWARN)) {
 			if (args.length > 0) {
 				if (args[0].equals("internal_confirm")) {
 					try {
-						long date = Long.parseLong(args[1]);
+						int id = Integer.parseInt(args[1]);
 						Set<Punishment> active = center.punishments().getAllPunishments();
 						for (Punishment punishment : active) {
-							if (punishment.date() == date) {
-								center.punishments().removePunishments(punishment);
+							if (punishment.id() == id) {
+								center.punishments().removePunishments(false, punishment);
 								center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-								center.subjects().sendNotif(punishment, false, operator);
+								if (!silent) {
+									center.subjects().sendNotif(punishment, false, operator);
+								}
 								return;
 							}
 						}
 					} catch (NumberFormatException ex) {}
 				} else {
 					try {
-						int id = (Integer.parseInt(args[0]) - 1);
-						ArrayList<Punishment> applicable = new ArrayList<Punishment>(center.punishments().getPunishments(target));
-						applicable.sort(DATE_COMPARATOR);
-						if (id < 0 || id >= applicable.size()) {
+						int id = (Integer.parseInt(args[0]));
+						Punishment punishment = null;
+						Set<Punishment> punishments = center.punishments().getPunishments(target);
+						for (Punishment pun : punishments) {
+							if (pun.id() == id) {
+								punishment = pun;
+								break;
+							}
+						}
+						if (punishment == null) {
 							center.subjects().sendMessage(operator, notfound.get(type).replace("%NUMBER%", args[0]).replace("%TARGET%", center.formats().formatSubject(target)));
 							return;
 						}
-						Punishment punishment = applicable.get(id);
 						if (confirmUnpunish.get(type)) {
-							String cmd = getCmdBaseString(command) + " internal_confirm " + punishment.date();
+							String cmd = getCmdBaseString(command) + " internal_confirm " + punishment.id() + " " + ToolsUtil.concat(args, ' ');
 							center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
 							return;
 						}
-						center.punishments().removePunishments(punishment);
+						center.punishments().removePunishments(false, punishment);
 						center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-						center.subjects().sendNotif(punishment, false, operator);
+						if (!silent) {
+							center.subjects().sendNotif(punishment, false, operator);
+						}
 						return;
 					} catch (NumberFormatException ex) {}
 				}
@@ -488,12 +518,14 @@ public class Commands implements CommandsMaster {
 			return;
 		}
 		if (confirmUnpunish.get(type) && !args[0].equals("internal_confirm")) {
-			String cmd = getCmdBaseString(command) + " internal_confirm";
+			String cmd = getCmdBaseString(command) + " internal_confirm " + ToolsUtil.concat(args, ' ');
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
 		} else {
-			center.punishments().removePunishments(punishment);
+			center.punishments().removePunishments(false, punishment);
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-			center.subjects().sendNotif(punishment, false, operator);
+			if (!silent) {
+				center.subjects().sendNotif(punishment, false, operator);
+			}
 		}
 	}
 	
@@ -537,7 +569,7 @@ public class Commands implements CommandsMaster {
 						return punishment.subject().getType().equals(Subject.SubjectType.IP);
 					}
 				case BLAME:
-					return punishment.subject().compare(target);
+					return punishment.subject().equals(target);
 				default:
 					return true;
 				}
@@ -603,7 +635,13 @@ public class Commands implements CommandsMaster {
 	private void ipsCmd(Subject operator, Subject target) {
 		String[] msgs = other_ips_layout_body.toArray(new String[0]);
 		String targetDisplay = center.formats().formatSubject(target);
-		List<String> ips = center.resolver().getIps(target.getUUID());
+		List<String> ips;
+		try {
+			ips = center.resolver().getIps(target.getUUID());
+		} catch (MissingCacheException ex) {
+			center.subjects().sendMessage(operator, other_ips_error_notfound.replace("%TARGET%", targetDisplay));
+			return;
+		}
 		if (ips.isEmpty()) {
 			center.subjects().sendMessage(operator, other_ips_error_notfound.replace("%TARGET%", targetDisplay));
 			return;
@@ -661,7 +699,7 @@ public class Commands implements CommandsMaster {
 	
 	private void rollbackCmd(Subject operator, Subject target, String numberArg) {
 		int max;
-		if (!numberArg.equals("all")) {
+		if (!ROLLBACK_ALL_ARG.equals(numberArg)) {
 			max = parseNumber(numberArg, 0);
 			if (max == 0) {
 				center.subjects().sendMessage(operator, other_rollback_error_invalidnumber.replace("%NUMBER%", numberArg));
@@ -675,7 +713,7 @@ public class Commands implements CommandsMaster {
 		int n = 0;
 		for (Iterator<Punishment> it = applicable.iterator(); it.hasNext();) {
 			Punishment punishment = it.next();
-			if (punishment.operator().compare(operator)) {
+			if (punishment.operator().equals(operator)) {
 				if (n >= max) {
 					it.remove();
 				} else {
