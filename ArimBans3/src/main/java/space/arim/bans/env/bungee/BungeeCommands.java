@@ -18,14 +18,18 @@
  */
 package space.arim.bans.env.bungee;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
+import net.md_5.bungee.api.plugin.TabExecutor;
 import net.md_5.bungee.command.ConsoleCommandSender;
 import space.arim.bans.api.Subject;
 import space.arim.bans.internal.Configurable;
 
-public class BungeeCommands extends Command implements Configurable {
+public class BungeeCommands extends Command implements TabExecutor, Configurable {
 
 	private final BungeeEnv environment;
 	
@@ -53,4 +57,21 @@ public class BungeeCommands extends Command implements Configurable {
 		});
 	}
 
+	@Override
+	public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
+		Set<String> playerNames = new HashSet<String>();
+		if (args.length == 0) {
+			environment.plugin().getProxy().getPlayers().forEach((player) -> {
+				playerNames.add(player.getName());
+			});
+		} else if (args.length == 1) {
+			environment.plugin().getProxy().getPlayers().forEach((player) -> {
+				if (player.getName().toLowerCase().startsWith(args[0])) {
+					playerNames.add(player.getName());
+				}
+			});
+		}
+		return playerNames;
+	}
+	
 }
