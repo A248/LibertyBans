@@ -50,6 +50,8 @@ public interface PunishmentsMaster extends Component {
 		removePunishments(true, punishments);
 	}
 	
+	void changeReason(boolean async, Punishment punishment, String reason) throws MissingPunishmentException;
+	
 	boolean hasPunishment(Subject subject, PunishmentType type);
 	
 	Set<Punishment> getPunishments(Subject subject);

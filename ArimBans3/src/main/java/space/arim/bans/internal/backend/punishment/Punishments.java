@@ -186,6 +186,32 @@ public class Punishments implements PunishmentsMaster {
 		}
 	}
 	
+	private void directChangeReason(Punishment punishment, String reason) {
+		synchronized (active) {
+			SqlQuery historyQuery = new SqlQuery(SqlQuery.Query.UPDATE_HISTORY_REASON_FOR_ID, reason, punishment.id());
+			if (active.remove(punishment)) {
+				history.remove(punishment);
+				center.sql().executeQuery(historyQuery, new SqlQuery(SqlQuery.Query.UPDATE_ACTIVE_REASON_FOR_ID, reason, punishment.id()));
+			} else {
+				history.remove(punishment);
+				center.sql().executeQuery(historyQuery);
+			}
+		}
+	}
+	
+	@Override
+	public void changeReason(boolean async, Punishment punishment, String reason) throws MissingPunishmentException {
+		if (!history.contains(punishment)) {
+			throw new MissingPunishmentException(punishment);
+		}
+		// Check whether async execution was requested. If so, run queries inside async.
+		if (async) {
+			center.async(() -> directChangeReason(punishment, reason));
+		} else {
+			directChangeReason(punishment, reason);
+		}
+	}
+	
 	@Override
 	public boolean hasPunishment(Subject subject, PunishmentType type) {
 		
