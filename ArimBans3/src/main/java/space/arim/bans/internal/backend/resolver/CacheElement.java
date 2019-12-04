@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import space.arim.bans.api.util.ToolsUtil;
 import space.arim.bans.internal.sql.SqlQuery;
 
 public class CacheElement {
@@ -61,12 +62,7 @@ public class CacheElement {
 		if (iplist == null || iplist.isEmpty()) {
 			return EMPTY_IPLIST_STRING;
 		}
-		StringBuilder builder = new StringBuilder();
-		for (String ip : iplist) {
-			builder.append(',');
-			builder.append(ip);
-		}
-		return builder.toString().substring(1);
+		return ToolsUtil.concat(iplist, ',');
 	}
 	
 	String getName() {

@@ -267,18 +267,10 @@ public class Commands implements CommandsMaster {
 		exec(subject, command, args);
 	}
 	
-	private String concat(String[] args) {
-		StringBuilder builder = new StringBuilder(args[0]);
-		for (int n = 1; n < args.length; n++) {
-			builder.append(args[n]);
-		}
-		return builder.toString();
-	}
-	
 	// Should only be called for targets with SubjectType == SubjectType.PLAYER
 	private void ipSelector(Subject operator, Subject target, CommandType command, String[] args) {
 		String base = getCmdBaseString(command) + " ";
-		String extra = concat(args);
+		String extra = ToolsUtil.concat(args, ' ');
 		List<String> ips;
 		try {
 			ips = center.resolver().getIps(target.getUUID());
@@ -418,8 +410,23 @@ public class Commands implements CommandsMaster {
 			span = -1L;
 		}
 		String reason;
+		boolean silent = false;
+		boolean passive = false;
 		if (args.length > 0) {
-			reason = concat(args);
+			for (String arg : args) {
+				if (arg.startsWith("-")) {
+					if (arg.contains("s")) {
+						silent = true;
+					}
+					if (arg.contains("p")) {
+						passive = true;
+					}
+					if (silent || passive) {
+						arg = "";
+					}
+				}
+			}
+			reason = ToolsUtil.concat(args, ' ');
 		} else if (permit_blank_reason) {
 			reason = default_reason;
 		} else {

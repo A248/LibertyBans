@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 import com.google.common.net.InetAddresses;
@@ -173,6 +174,26 @@ public final class ToolsUtil {
 			output[n] = input[n + 1];
 		}
 		return output;
+	}
+	
+	public static String concat(List<String> input, char separator) {
+		StringBuilder builder = new StringBuilder();
+		for (String m : input) {
+			if (m.equals("")) {
+				builder.append(separator).append(m);
+			}
+		}
+		return (builder.length() == 0) ? "" : builder.toString().substring(1);
+	}
+	
+	public static String concat(String[] input, char separator) {
+		StringBuilder builder = new StringBuilder();
+		for (String m : input) {
+			if (m.equals("")) {
+				builder.append(separator).append(m);
+			}
+		}
+		return (builder.length() == 0) ? "" : builder.toString().substring(1);
 	}
 	
 	public static String fileDateFormat() {
