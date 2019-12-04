@@ -126,12 +126,12 @@ public class SqlQuery {
 				"DELETE FROM %PREFIX%active WHERE expiration <= ? AND expiration != -1"),
 		
 		UPDATE_ACTIVE_REASON_FOR_ID(
-				"UPDATE `%PREFIX%active` SET `reason` = ? WHERE `date` = ?",
-				"UPDATE %PREFIX%active SET reason = ? WHERE date = ?"),
+				"UPDATE `%PREFIX%active` SET `reason` = ? WHERE `id` = ?",
+				"UPDATE %PREFIX%active SET reason = ? WHERE id = ?"),
 		
 		UPDATE_HISTORY_REASON_FOR_ID(
-				"UPDATE `%PREFIX%history` SET `reason` = ? WHERE `date` = ?",
-				"UPDATE %PREFIX%history SET reason = ? WHERE date = ?"),
+				"UPDATE `%PREFIX%history` SET `reason` = ? WHERE `id` = ?",
+				"UPDATE %PREFIX%history SET reason = ? WHERE id = ?"),
 		
 		UPDATE_CACHE_FOR_UUID(
 				"UPDATE `%PREFIX%cache` SET `name` = ?, `iplist` = ?, `update-name` = ?, `update-iplist` = ? WHERE `uuid` = ?",
