@@ -28,12 +28,15 @@ public abstract class SqlSettings {
 	final int min_connections;
 	final int max_connections;
 	final String prefix;
+	// TODO Add regex pattern to sanitise table prefix config option for unaware users
+	//private Pattern prefixPattern = Pattern.compile(" REGEX ");
 	
 	private final String storageModeName;
 	
 	SqlSettings(ConfigMaster config, String storageModeName) {
 		this.min_connections = config.getConfigInt("storage.min-connections");
 		this.max_connections = config.getConfigInt("storage.max-connections");
+		//this.prefix = prefixPattern.matcher(config.getConfigString("storage.table-prefix")).replaceAll("");
 		this.prefix = config.getConfigString("storage.table-prefix");
 		this.storageModeName = storageModeName;
 	}

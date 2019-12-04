@@ -42,7 +42,7 @@ public class SqlQuery {
 		CREATE_TABLE_ACTIVE(
 				"CREATE TABLE IF NOT EXISTS `%PREFIX%active` ("
 						+ "`id` int NOT NULL,"
-						+ "`type` VARCHAR(31) NOT NULL,"
+						+ "`type` VARCHAR(3) NOT NULL,"
 						+ "`subject` VARCHAR(" + SUBJECT_COLUMN_SIZE + ") NOT NULL,"
 						+ "`operator` VARCHAR(" + SUBJECT_COLUMN_SIZE + ") NOT NULL,"
 						+ "`reason` VARCHAR(255) NOT NULL,"
@@ -51,7 +51,7 @@ public class SqlQuery {
 
 				"CREATE TABLE IF NOT EXISTS %PREFIX%active ("
 						+ "id INTEGER,"
-						+ "type VARCHAR(31),"
+						+ "type VARCHAR(3),"
 						+ "subject VARCHAR(" + SUBJECT_COLUMN_SIZE + "),"
 						+ "operator VARCHAR(" + SUBJECT_COLUMN_SIZE + "),"
 						+ "reason VARCHAR(255),"
@@ -61,7 +61,7 @@ public class SqlQuery {
 		CREATE_TABLE_HISTORY(
 				"CREATE TABLE IF NOT EXISTS `%PREFIX%history` ("
 						+ "`id` int NOT NULL,"
-						+ "`type` VARCHAR(31) NOT NULL,"
+						+ "`type` VARCHAR(3) NOT NULL,"
 						+ "`subject` VARCHAR(" + SUBJECT_COLUMN_SIZE + ") NOT NULL,"
 						+ "`operator` VARCHAR(" + SUBJECT_COLUMN_SIZE + ") NOT NULL,"
 						+ "`reason` VARCHAR(255) NOT NULL,"
@@ -70,7 +70,7 @@ public class SqlQuery {
 
 				"CREATE TABLE IF NOT EXISTS %PREFIX%history ("
 						+ "id INTEGER,"
-						+ "type VARCHAR(31),"
+						+ "type VARCHAR(3),"
 						+ "subject VARCHAR(" + SUBJECT_COLUMN_SIZE + "),"
 						+ "operator VARCHAR(" + SUBJECT_COLUMN_SIZE + "),"
 						+ "reason VARCHAR(255),"
@@ -158,15 +158,18 @@ public class SqlQuery {
 				"SELECT * FROM %PREFIX%cache");
 
 		private String mysql;
-		private String file;
 
-		private Query(String mysql, String file) {
+		private Query(String mysql) {
 			this.mysql = mysql;
-			this.file = file;
+		}
+		
+		@Deprecated
+		private Query(String mysql, String file) {
+			this(mysql);
 		}
 		
 		String eval(SqlSettings settings) {
-			String statement = (settings.getStorageModeName().equals("mysql")) ? mysql : file;
+			String statement = settings.getStorageModeName().equals("mysql") ? mysql : mysql.replace(" int ", " INTEGER ").replace(" NOT NULL,", ",").replace("`", "");
 			return statement.replace("%PREFIX%", settings.prefix);
 		}
 	}
