@@ -21,15 +21,19 @@ package space.arim.bans.api;
 import space.arim.bans.api.exception.TypeParseException;
 
 public enum PunishmentType {
-	BAN, MUTE, WARN, KICK;
+	
+	BAN,
+	MUTE,
+	WARN,
+	KICK;
 	
 	public String deserialise() {
-		return this.toString();
+		return toString().toLowerCase();
 	}
 	
 	public static PunishmentType serialise(String input) {
 		for (PunishmentType type : PunishmentType.values()) {
-			if (type.toString().equalsIgnoreCase(input)) {
+			if (type.deserialise().equals(input)) {
 				return type;
 			}
 		}
