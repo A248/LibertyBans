@@ -537,7 +537,7 @@ public class Commands implements CommandsMaster {
 						return punishment.subject().getType().equals(Subject.SubjectType.IP);
 					}
 				case BLAME:
-					return punishment.subject().compare(target);
+					return punishment.subject().equals(target);
 				default:
 					return true;
 				}
@@ -681,7 +681,7 @@ public class Commands implements CommandsMaster {
 		int n = 0;
 		for (Iterator<Punishment> it = applicable.iterator(); it.hasNext();) {
 			Punishment punishment = it.next();
-			if (punishment.operator().compare(operator)) {
+			if (punishment.operator().equals(operator)) {
 				if (n >= max) {
 					it.remove();
 				} else {

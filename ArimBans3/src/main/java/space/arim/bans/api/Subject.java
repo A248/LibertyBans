@@ -193,24 +193,18 @@ public class Subject {
 		}		
 	}
 
-	/**
-	 * Returns true if subjects are equal in their properties.
-	 * 
-	 * @throws InvalidSubjectException for broken subjects.
-	 */
-	public boolean compare(Subject otherSubject) throws InvalidSubjectException {
-		if (getType().equals(otherSubject.getType())) {
-			switch (getType()) {
-			case PLAYER:
-				return (getUUID().equals(otherSubject.getUUID()));
-			case IP:
-				return (getIP().equals(otherSubject.getIP()));
-			case CONSOLE:
-				return true;
-			default:
-				throw new InvalidSubjectException(this);
-			}
-		}
-		return false;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((ip == null) ? 0 : ip.hashCode());
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
+		result = prime * result + ((uuid == null) ? 0 : uuid.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return (object instanceof Subject && hashCode() == object.hashCode());
 	}
 }

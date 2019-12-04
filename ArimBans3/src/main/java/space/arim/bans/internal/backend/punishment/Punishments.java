@@ -128,7 +128,7 @@ public class Punishments implements PunishmentsMaster {
 	public Punishment getPunishment(Subject subject, PunishmentType type) throws MissingPunishmentException {
 		Set<Punishment> active = getAllPunishments();
 		for (Punishment punishment : active) {
-			if (punishment.subject().compare(subject) && punishment.type().equals(type)) {
+			if (punishment.subject().equals(subject) && punishment.type().equals(type)) {
 				return punishment;
 			}
 		}
@@ -190,7 +190,7 @@ public class Punishments implements PunishmentsMaster {
 	public boolean hasPunishment(Subject subject, PunishmentType type) {
 		
 		for (Punishment punishment : active) {
-			if (punishment.subject().compare(subject) && punishment.type().equals(type)) {
+			if (punishment.subject().equals(subject) && punishment.type().equals(type)) {
 				return true;
 			}
 		}
@@ -202,7 +202,7 @@ public class Punishments implements PunishmentsMaster {
 	public Set<Punishment> getPunishments(Subject subject) {
 		Set<Punishment> active = getAllPunishments();
 		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
-			if (!it.next().subject().compare(subject)) {
+			if (!it.next().subject().equals(subject)) {
 				it.remove();
 			}
 		}
@@ -214,7 +214,7 @@ public class Punishments implements PunishmentsMaster {
 		Set<Punishment> active = getAllPunishments();
 		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
 			Punishment punishment = it.next();
-			if (!punishment.subject().compare(subject) || !punishment.type().equals(type)) {
+			if (!punishment.subject().equals(subject) || !punishment.type().equals(type)) {
 				it.remove();
 			}
 		}
@@ -241,7 +241,7 @@ public class Punishments implements PunishmentsMaster {
 	public Set<Punishment> getHistory(Subject subject) {
 		Set<Punishment> history = getAllHistory();
 		for (Iterator<Punishment> it = history.iterator(); it.hasNext();) {
-			if (!it.next().subject().compare(subject)) {
+			if (!it.next().subject().equals(subject)) {
 				it.remove();
 			}
 		}
