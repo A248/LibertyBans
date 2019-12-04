@@ -183,6 +183,12 @@ public class ArimBansPlugin implements ArimBans {
 		}
 	}
 	
+	// TODO Create a counter for this
+	@Override
+	public int getNextAvailablePunishmentId() {
+		return 0;
+	}
+	
 	@Override
 	public boolean isBanned(Subject subject) {
 		return punishments().hasPunishment(subject, PunishmentType.BAN);

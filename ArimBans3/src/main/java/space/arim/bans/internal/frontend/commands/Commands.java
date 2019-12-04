@@ -426,7 +426,7 @@ public class Commands implements CommandsMaster {
 			usage(operator, command);
 			return;
 		}
-		Punishment punishment = new Punishment(type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis());
+		Punishment punishment = new Punishment(center.getNextAvailablePunishmentId(), type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis());
 		try {
 			center.punishments().addPunishments(false, punishment);
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));

@@ -131,7 +131,7 @@ public class Punishments implements PunishmentsMaster {
 				if (center.environment().enforcer().callUnpunishEvent(punishment, false)) {
 
 					passedEvents.add(punishment);
-					exec.add(new SqlQuery(SqlQuery.Query.DELETE_ACTIVE_FROM_DATE, punishment.date()));
+					exec.add(new SqlQuery(SqlQuery.Query.DELETE_ACTIVE_BY_ID, punishment.id()));
 				
 				}
 			}
@@ -233,7 +233,7 @@ public class Punishments implements PunishmentsMaster {
 	public void loadActive(ResultSet data) {
 		try {
 			while (data.next()) {
-				active.add(new Punishment(PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date")));
+				active.add(new Punishment(data.getInt("id"), PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date")));
 			}
 		} catch (SQLException ex) {
 			center.logError(ex);
@@ -244,7 +244,7 @@ public class Punishments implements PunishmentsMaster {
 	public void loadHistory(ResultSet data) {
 		try {
 			while (data.next()) {
-				history.add(new Punishment(PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date")));
+				history.add(new Punishment(data.getInt("id"), PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date")));
 			}
 		} catch (SQLException ex) {
 			center.logError(ex);
