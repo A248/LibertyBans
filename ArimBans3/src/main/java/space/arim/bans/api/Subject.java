@@ -32,7 +32,7 @@ import space.arim.bans.api.util.ToolsUtil;
  * 2. IP addresses
  * 3. The console
  * 
- * @author anandbeh
+ * @author A248
  *
  */
 public class Subject {
@@ -147,7 +147,7 @@ public class Subject {
 	 * <br>
 	 * A subject can be a player, ip, or console.
 	 * 
-	 * @author anandbeh
+	 * @author A248
 	 */
 	public enum SubjectType {
 		PLAYER, IP, CONSOLE
