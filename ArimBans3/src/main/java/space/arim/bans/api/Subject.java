@@ -43,19 +43,19 @@ public class Subject {
 	
 	private static final Subject CONSOLE = new Subject(SubjectType.CONSOLE);
 	
-	protected Subject(UUID uuid) {
+	private Subject(UUID uuid) {
 		this.type = SubjectType.PLAYER;
 		this.uuid = uuid;
 		this.ip = null;
 	}
 	
-	protected Subject(String ip) {
+	private Subject(String ip) {
 		this.type = SubjectType.IP;
 		this.uuid = null;
 		this.ip = ip;
 	}
 	
-	protected Subject(SubjectType type) {
+	private Subject(SubjectType type) {
 		this.type = type;
 		this.uuid = null;
 		this.ip = null;
@@ -92,9 +92,11 @@ public class Subject {
 	}
 	
 	/**
-	 * Gets the console
+	 * Gets the console<br>
+	 * <br>
+	 * Be careful! The console has unlimited permissions.
 	 * 
-	 * @return
+	 * @return Subject representing the console
 	 */
 	public static Subject console() {
 		return CONSOLE;
@@ -126,7 +128,7 @@ public class Subject {
 	 * @return boolean if the specified subject is the console
 	 */
 	public boolean isConsole() {
-		return this.type.equals(SubjectType.CONSOLE);
+		return getType().equals(SubjectType.CONSOLE);
 	}
 
 	/**
@@ -141,10 +143,11 @@ public class Subject {
 	}
 
 	/**
-	 * Determines what kind of Subject a Subject is
+	 * Determines what kind of Subject a Subject is.<br>
+	 * <br>
+	 * A subject can be a player, ip, or console.
 	 * 
 	 * @author anandbeh
-	 *
 	 */
 	public enum SubjectType {
 		PLAYER, IP, CONSOLE
@@ -181,7 +184,7 @@ public class Subject {
 	 * @throws InvalidSubjectException for a broken subject
 	 */
 	public String deserialise() throws InvalidSubjectException {
-		switch (this.type) {
+		switch (getType()) {
 		case PLAYER:
 			return "[subject:uuid]" + this.uuid.toString().replace("-", "");
 		case IP:
