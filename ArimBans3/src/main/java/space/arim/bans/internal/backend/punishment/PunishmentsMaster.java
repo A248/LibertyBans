@@ -34,6 +34,8 @@ public interface PunishmentsMaster extends Component {
 		return PunishmentsMaster.class;
 	}
 	
+	int getNextAvailablePunishmentId();
+	
 	void addPunishments(boolean async, Punishment...punishments) throws ConflictingPunishmentException;
 	
 	default void addPunishments(Punishment...punishments) throws ConflictingPunishmentException {

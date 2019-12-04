@@ -38,11 +38,17 @@ public class Punishments implements PunishmentsMaster {
 	
 	private final ArimBans center;
 	
-	private Set<Punishment> active = ConcurrentHashMap.newKeySet();
-	private Set<Punishment> history = ConcurrentHashMap.newKeySet();
+	private int nextId = 0;
+	private final Set<Punishment> active = ConcurrentHashMap.newKeySet();
+	private final Set<Punishment> history = ConcurrentHashMap.newKeySet();
 
 	public Punishments(ArimBans center) {
 		this.center = center;
+	}
+	
+	@Override
+	public int getNextAvailablePunishmentId() {
+		return nextId++;
 	}
 	
 	private void directAddPunishments(Punishment[] punishments) {
@@ -232,9 +238,15 @@ public class Punishments implements PunishmentsMaster {
 	@Override
 	public void loadActive(ResultSet data) {
 		try {
+			int max = -1;
 			while (data.next()) {
-				active.add(new Punishment(data.getInt("id"), PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date")));
+				int id = data.getInt("id");
+				active.add(new Punishment(id, PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date")));
+				if (id > max) {
+					max = id;
+				}
 			}
+			nextId = ++max;
 		} catch (SQLException ex) {
 			center.logError(ex);
 		}
