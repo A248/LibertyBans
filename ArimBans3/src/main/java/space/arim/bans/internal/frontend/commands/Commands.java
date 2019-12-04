@@ -697,7 +697,7 @@ public class Commands implements CommandsMaster {
 	
 	private void rollbackCmd(Subject operator, Subject target, String numberArg) {
 		int max;
-		if (!numberArg.equals("all")) {
+		if (!"all".equals(numberArg)) {
 			max = parseNumber(numberArg, 0);
 			if (max == 0) {
 				center.subjects().sendMessage(operator, other_rollback_error_invalidnumber.replace("%NUMBER%", numberArg));

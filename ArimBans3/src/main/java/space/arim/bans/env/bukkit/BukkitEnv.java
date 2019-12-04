@@ -48,7 +48,6 @@ public class BukkitEnv implements Environment {
 	private final BukkitEnforcer enforcer;
 	private final BukkitListener listener;
 	private final BukkitCommands commands;
-	private Metrics metrics;
 	
 	private boolean registered = false;
 
@@ -82,7 +81,7 @@ public class BukkitEnv implements Environment {
 	}
 	
 	private void setupMetrics() {
-		metrics = new Metrics(plugin);
+		Metrics metrics = new Metrics(plugin);
 		metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().getStorageModeName()));
 		metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
 	}
