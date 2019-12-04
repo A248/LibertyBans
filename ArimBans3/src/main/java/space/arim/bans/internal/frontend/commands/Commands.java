@@ -57,6 +57,8 @@ public class Commands implements CommandsMaster {
 		}
 	};
 	
+	private static final String ROLLBACK_ALL_ARG = "all";
+	
 	private String base_perm_msg;
 	private final ConcurrentHashMap<IpSpec, String> invalid = new ConcurrentHashMap<IpSpec, String>();
 	private String base_usage;
@@ -697,7 +699,7 @@ public class Commands implements CommandsMaster {
 	
 	private void rollbackCmd(Subject operator, Subject target, String numberArg) {
 		int max;
-		if (!"all".equals(numberArg)) {
+		if (!ROLLBACK_ALL_ARG.equals(numberArg)) {
 			max = parseNumber(numberArg, 0);
 			if (max == 0) {
 				center.subjects().sendMessage(operator, other_rollback_error_invalidnumber.replace("%NUMBER%", numberArg));
