@@ -437,8 +437,12 @@ public class Commands implements CommandsMaster {
 		try {
 			center.punishments().addPunishments(false, punishment);
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-			center.subjects().sendNotif(punishment, true, operator);
-			center.environment().enforcer().enforce(punishment, center.formats().useJson());
+			if (!silent) {
+				center.subjects().sendNotif(punishment, true, operator);
+			}
+			if (!passive) {
+				center.environment().enforcer().enforce(punishment, center.formats().useJson());
+			}
 		} catch (ConflictingPunishmentException ex) {
 			String conflict = (punishment.type().equals(PunishmentType.BAN)) ? additions_bans_error_conflicting : additions_mutes_error_conflicting;
 			center.subjects().sendMessage(operator, conflict.replace("%TARGET%", center.formats().formatSubject(punishment.subject())));
@@ -446,40 +450,57 @@ public class Commands implements CommandsMaster {
 	}
 	
 	private void unpunCmd(Subject operator, Subject target, CommandType command, String[] args) {
+		boolean silent = false;
+		for (String arg : args) {
+			if (arg.startsWith("-")) {
+				if (arg.contains("s")) {
+					silent = true;
+				}
+			}
+		}
 		PunishmentType type = applicableType(command);
 		if (command.subCategory().equals(SubCategory.UNWARN)) {
 			if (args.length > 0) {
 				if (args[0].equals("internal_confirm")) {
 					try {
-						long date = Long.parseLong(args[1]);
+						int id = Integer.parseInt(args[1]);
 						Set<Punishment> active = center.punishments().getAllPunishments();
 						for (Punishment punishment : active) {
-							if (punishment.date() == date) {
+							if (punishment.id() == id) {
 								center.punishments().removePunishments(false, punishment);
 								center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-								center.subjects().sendNotif(punishment, false, operator);
+								if (!silent) {
+									center.subjects().sendNotif(punishment, false, operator);
+								}
 								return;
 							}
 						}
 					} catch (NumberFormatException ex) {}
 				} else {
 					try {
-						int id = (Integer.parseInt(args[0]) - 1);
-						ArrayList<Punishment> applicable = new ArrayList<Punishment>(center.punishments().getPunishments(target));
-						applicable.sort(DATE_COMPARATOR);
-						if (id < 0 || id >= applicable.size()) {
+						int id = (Integer.parseInt(args[0]));
+						Punishment punishment = null;
+						Set<Punishment> punishments = center.punishments().getPunishments(target);
+						for (Punishment pun : punishments) {
+							if (pun.id() == id) {
+								punishment = pun;
+								break;
+							}
+						}
+						if (punishment == null) {
 							center.subjects().sendMessage(operator, notfound.get(type).replace("%NUMBER%", args[0]).replace("%TARGET%", center.formats().formatSubject(target)));
 							return;
 						}
-						Punishment punishment = applicable.get(id);
 						if (confirmUnpunish.get(type)) {
-							String cmd = getCmdBaseString(command) + " internal_confirm " + punishment.date();
+							String cmd = getCmdBaseString(command) + " internal_confirm " + punishment.id() + " " + ToolsUtil.concat(args, ' ');
 							center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
 							return;
 						}
 						center.punishments().removePunishments(false, punishment);
 						center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-						center.subjects().sendNotif(punishment, false, operator);
+						if (!silent) {
+							center.subjects().sendNotif(punishment, false, operator);
+						}
 						return;
 					} catch (NumberFormatException ex) {}
 				}
@@ -495,12 +516,14 @@ public class Commands implements CommandsMaster {
 			return;
 		}
 		if (confirmUnpunish.get(type) && !args[0].equals("internal_confirm")) {
-			String cmd = getCmdBaseString(command) + " internal_confirm";
+			String cmd = getCmdBaseString(command) + " internal_confirm " + ToolsUtil.concat(args, ' ');
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
 		} else {
 			center.punishments().removePunishments(false, punishment);
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-			center.subjects().sendNotif(punishment, false, operator);
+			if (!silent) {
+				center.subjects().sendNotif(punishment, false, operator);
+			}
 		}
 	}
 	
