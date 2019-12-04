@@ -68,6 +68,8 @@ public class ArimBansPlugin implements ArimBans {
 	private final FormatsMaster formats;
 	private final AsyncMaster async;
 	
+	private static final int LOG_TO_ENV_THRESHOLD = 800;
+	
 	public ArimBansPlugin(File dataFolder, Environment environment) {
 		this.folder = dataFolder;
 		this.environment = environment;
@@ -164,7 +166,7 @@ public class ArimBansPlugin implements ArimBans {
 	public void log(Level level, String message) {
 		if (logger != null) {
 			logger.log(level, message);
-			if (level.intValue() >= 800) {
+			if (level.intValue() >= LOG_TO_ENV_THRESHOLD) {
 				environment.logger().log(level, message);
 			}
 		} else {

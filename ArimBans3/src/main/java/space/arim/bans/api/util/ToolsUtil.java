@@ -189,7 +189,7 @@ public final class ToolsUtil {
 	public static String concat(String[] input, char separator) {
 		StringBuilder builder = new StringBuilder();
 		for (String m : input) {
-			if (m.equals("")) {
+			if ("".equals(m)) {
 				builder.append(separator).append(m);
 			}
 		}
