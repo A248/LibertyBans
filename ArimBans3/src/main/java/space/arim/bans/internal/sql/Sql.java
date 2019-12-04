@@ -68,8 +68,8 @@ public class Sql implements SqlMaster {
 	}
 	
 	@Override
-	public SqlSettings settings() {
-		return settings;
+	public String getStorageModeName() {
+		return settings.getStorageModeName();
 	}
 	
 	@Override

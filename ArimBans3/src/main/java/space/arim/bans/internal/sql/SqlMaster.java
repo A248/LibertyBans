@@ -29,7 +29,7 @@ public interface SqlMaster extends Component {
 		return SqlMaster.class;
 	}
 	
-	SqlSettings settings();
+	String getStorageModeName();
 	
 	boolean enabled();
 	
