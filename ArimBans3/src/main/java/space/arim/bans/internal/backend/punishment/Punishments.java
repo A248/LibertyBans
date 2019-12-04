@@ -59,7 +59,20 @@ public class Punishments implements PunishmentsMaster {
 		// At the end we'll call PostPunishEvent for each punishment in the map
 		HashMap<Punishment, Boolean> passedEvents = new HashMap<Punishment, Boolean>();
 
-		// TODO Determine whether synchronisation is really needed here
+		/* Synchronisation is needed here
+		 * 
+		 * Otherwise, the following race condition may occur:
+		 * 
+		 * 1. Thread 1 - Add a punishment to local active set
+		 * 2. Thread 2 - Remove the same punishment from local active set
+		 * 3. Thread 2 - Attempt to query the remote database and remove the punishment
+		 * 4. Thread 2 - SQLException because the punishment isn't yet in the remote database
+		 * 5. Thread 1 - Add punishment to the remote database
+		 * 6. Result - corrupted data, mismatch between local and remote data
+		 * 
+		 * It is HIGHLY unlikely that this condition will occur, but better safe than sorry.
+		 * 
+		 */
 		synchronized (active) {
 			for (Punishment punishment : punishments) {
 
@@ -129,7 +142,11 @@ public class Punishments implements PunishmentsMaster {
 		// At the end we'll call PostUnpunishEvent for each punishment in the set
 		Set<Punishment> passedEvents = new HashSet<Punishment>();
 
-		// TODO Determine whether synchronisation is really needed here
+		/* Synchronisation is needed here
+		 * 
+		 * For same explanation as stated under #directAddPunishments
+		 * 
+		 */
 		synchronized (active) {
 			for (Punishment punishment : punishments) {
 
@@ -178,6 +195,7 @@ public class Punishments implements PunishmentsMaster {
 			}
 		}
 		return false;
+		
 	}
 	
 	@Override
