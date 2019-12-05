@@ -84,6 +84,20 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	
 	void logError(Exception ex);
 	
+	default void checkDeleteLogs() {
+		long keepAlive = 86_400_000L * config().getConfigInt("storage.log-keep-alive");
+		long current = System.currentTimeMillis();
+		for (File dir : (new File(dataFolder().getPath(), "logs")).listFiles()) {
+			if (dir.isDirectory() && (current - dir.lastModified() > keepAlive)) {
+				if (!dir.delete()) {
+					log(Level.WARNING, "Could not delete old logs folder!");
+				} else {
+					log(Level.FINER, "Deleted old log folder " + dir.getName());
+				}
+			}
+		}
+	}
+	
 	@Override
 	default void refreshConfig(boolean first) {
 		config().refreshConfig(first);
@@ -205,6 +219,26 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	@Override
 	default void simulateCommand(Subject subject, CommandType command, String[] args) {
 		commands().execute(subject, command, args);
+	}
+	
+	@Override
+	default void reload() {
+		refresh(false);
+	}
+	
+	@Override
+	default void reloadConfig() {
+		refreshConfig(false);
+	}
+	
+	@Override
+	default void reloadMessages() {
+		refreshMessages(false);
+	}
+	
+	@Override
+	default void sendMessage(Subject subject, String message) {
+		subjects().sendMessage(subject, message);
 	}
 	
 }

@@ -25,7 +25,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import space.arim.bans.api.AsyncExecutor;
-import space.arim.bans.api.Subject;
 import space.arim.bans.api.util.ToolsUtil;
 import space.arim.bans.env.Environment;
 import space.arim.bans.internal.async.AsyncMaster;
@@ -62,6 +61,7 @@ public class ArimBansPlugin implements ArimBans {
 	private final FormatsMaster formats;
 	private final AsyncMaster async;
 	
+	private static final String CREATE_GITHUB_ISSUE = "Please create a Github issue at https://github.com/A248/ArimBans/issues";
 	private static final int LOG_TO_ENV_THRESHOLD = 800;
 	
 	public ArimBansPlugin(File folder, Environment environment) {
@@ -114,12 +114,12 @@ public class ArimBansPlugin implements ArimBans {
 
 	@Override
 	public File dataFolder() {
-		return this.folder;
+		return folder;
 	}
 	
 	@Override
 	public Environment environment() {
-		return this.environment;
+		return environment;
 	}
 	
 	@Override
@@ -172,25 +172,11 @@ public class ArimBansPlugin implements ArimBans {
 	@Override
 	public void logError(Exception ex) {
 		if (logger != null) {
-			environment().logger().warning("Encountered and caught an error: " + ex.getLocalizedMessage() + " \nPlease check the plugin's log for more information. Please create a Github issue at https://github.com/A248/ArimBans/issues to address this.");
+			environment().logger().warning("Encountered and caught an error: " + ex.getLocalizedMessage() + " \nPlease check the plugin's log for more information. " + CREATE_GITHUB_ISSUE + " to address this.");
 			logger.log(Level.WARNING, "Encountered an error:", ex);
 		} else {
-			environment().logger().warning("Encountered and caught an error. \nThe plugin's log is inoperative, so the error will be printed to console. Please create a Github issue at https://github.com/A248/ArimBans/issues to address both problems.");
+			environment().logger().warning("Encountered and caught an error. \nThe plugin's log is inoperative, so the error will be printed to console. " + CREATE_GITHUB_ISSUE + " to address both problems.");
 			ex.printStackTrace();
-		}
-	}
-	
-	private void checkDeleteLogs() {
-		long keepAlive = 86_400_000L * config().getConfigInt("storage.log-keep-alive");
-		long current = System.currentTimeMillis();
-		for (File dir : (new File(folder.getPath(), "logs")).listFiles()) {
-			if (dir.isDirectory() && (current - dir.lastModified() > keepAlive)) {
-				if (!dir.delete()) {
-					log(Level.WARNING, "Could not delete old logs folder!");
-				} else {
-					log(Level.FINER, "Deleted old log folder " + dir.getName());
-				}
-			}
 		}
 	}
 	
@@ -202,26 +188,6 @@ public class ArimBansPlugin implements ArimBans {
 	@Override
 	public Logger getLogger() {
 		return logger;
-	}
-	
-	@Override
-	public void reload() {
-		refresh(false);
-	}
-	
-	@Override
-	public void reloadConfig() {
-		refreshConfig(false);
-	}
-	
-	@Override
-	public void reloadMessages() {
-		refreshMessages(false);
-	}
-	
-	@Override
-	public void sendMessage(Subject subject, String message) {
-		subjects.sendMessage(subject, message);
 	}
 
 }
