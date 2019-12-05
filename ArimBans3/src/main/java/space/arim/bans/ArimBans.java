@@ -28,6 +28,7 @@ import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.CommandType;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentPlugin;
+import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.UUIDResolver;
@@ -39,6 +40,7 @@ import space.arim.bans.internal.backend.punishment.PunishmentsMaster;
 import space.arim.bans.internal.backend.resolver.ResolverMaster;
 import space.arim.bans.internal.backend.subjects.SubjectsMaster;
 import space.arim.bans.internal.config.ConfigMaster;
+import space.arim.bans.internal.correspondance.CorresponderMaster;
 import space.arim.bans.internal.frontend.commands.CommandsMaster;
 import space.arim.bans.internal.frontend.format.FormatsMaster;
 import space.arim.bans.internal.sql.SqlMaster;
@@ -66,6 +68,8 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	CommandsMaster commands();
 	
 	FormatsMaster formats();
+	
+	CorresponderMaster corresponder();
 	
 	default void loadData() {
 		sql().executeQuery(new SqlQuery(SqlQuery.Query.CREATE_TABLE_CACHE), new SqlQuery(SqlQuery.Query.CREATE_TABLE_ACTIVE), new SqlQuery(SqlQuery.Query.CREATE_TABLE_HISTORY));
@@ -107,6 +111,7 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 		resolver().refreshConfig(first);
 		commands().refreshConfig(first);
 		formats().refreshConfig(first);
+		corresponder().refreshConfig(first);
 	}
 	
 	@Override
@@ -118,6 +123,7 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 		resolver().refreshMessages(first);
 		commands().refreshMessages(first);
 		formats().refreshMessages(first);
+		corresponder().refreshMessages(first);
 	}
 	
 	@Override
@@ -129,6 +135,7 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 		commands().close();
 		resolver().close();
 		formats().close();
+		corresponder().close();
 	}
 	
 	@Override
@@ -157,38 +164,33 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	}
 	
 	@Override
-	default boolean isBanned(Subject subject) {
-		return punishments().hasPunishment(subject, PunishmentType.BAN);
+	default PunishmentResult getApplicableBan(UUID uuid, String address) {
+		return corresponder().getApplicablePunishment(uuid, address, PunishmentType.BAN);
 	}
 	
 	@Override
-	default boolean isMuted(Subject subject) {
-		return punishments().hasPunishment(subject, PunishmentType.MUTE);
+	default PunishmentResult getApplicableMute(UUID uuid, String address) {
+		return corresponder().getApplicablePunishment(uuid, address, PunishmentType.MUTE);
 	}
 	
 	@Override
-	default Set<Punishment> getBanList() {
-		return punishments().getAllPunishments(PunishmentType.BAN);
+	default Set<Punishment> getApplicableWarns(UUID uuid, String address) {
+		return corresponder().getApplicablePunishments(uuid, address, PunishmentType.WARN);
 	}
 	
 	@Override
-	default Set<Punishment> getMuteList() {
-		return punishments().getAllPunishments(PunishmentType.MUTE);
+	default Set<Punishment> getApplicableKicks(UUID uuid, String address) {
+		return corresponder().getApplicablePunishments(uuid, address, PunishmentType.KICK);
 	}
 	
 	@Override
-	default Set<Punishment> getWarns(Subject subject) {
-		return punishments().getPunishments(subject, PunishmentType.WARN);
+	default Set<Punishment> getPunishmentsActive() {
+		return punishments().getActive();
 	}
 	
 	@Override
-	default Set<Punishment> getKicks(Subject subject) {
-		return punishments().getPunishments(subject, PunishmentType.KICK);
-	}
-	
-	@Override
-	default Set<Punishment> getHistory(Subject subject) {
-		return punishments().getHistory(subject);
+	default Set<Punishment> getPunishmentsHistory() {
+		return punishments().getHistory();
 	}
 	
 	@Override
@@ -197,8 +199,12 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	}
 	
 	@Override
-	default void removePunishments(Punishment...punishments) throws MissingPunishmentException {
-		punishments().removePunishments(punishments);
+	default void removePunishments(Punishment...punishments) {
+		try {
+			punishments().removePunishments(punishments);
+		} catch (MissingPunishmentException ex) {
+			logError(ex);
+		}
 	}
 	
 	@Override
