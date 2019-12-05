@@ -33,4 +33,9 @@ public class MissingPunishmentException extends InternalAPIException {
 	public MissingPunishmentException(Punishment fakePunishment) {
 		super("Punishment with these details does not exist: " + fakePunishment.type() + "/" + fakePunishment.subject() + "/" + fakePunishment.operator() + "/" + fakePunishment.expiration() + "/" + fakePunishment.date());
 	}
+	
+	public MissingPunishmentException(int id) {
+		super("Punishment with id " + id + " does not exist");
+	}
+	
 }
