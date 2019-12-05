@@ -19,24 +19,23 @@
 package space.arim.bans.api;
 
 import java.util.Set;
+import java.util.UUID;
 
 import space.arim.registry.Registrable;
 
 public interface PunishmentPlugin extends Registrable {
 	
-	boolean isBanned(Subject subject);
+	PunishmentResult getApplicableBan(UUID uuid, String address);
 	
-	boolean isMuted(Subject subject);
+	PunishmentResult getApplicableMute(UUID uuid, String address);
 	
-	Set<Punishment> getBanList();
+	Set<Punishment> getApplicableWarns(UUID uuid, String address);
 	
-	Set<Punishment> getMuteList();
+	Set<Punishment> getApplicableKicks(UUID uuid, String address);
 	
-	Set<Punishment> getWarns(Subject subject);
+	Set<Punishment> getPunishmentsActive();
 	
-	Set<Punishment> getKicks(Subject subject);
-	
-	Set<Punishment> getHistory(Subject subject);
+	Set<Punishment> getPunishmentsHistory();
 	
 	void addPunishments(Punishment...punishments);
 	
