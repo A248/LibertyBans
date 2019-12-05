@@ -70,14 +70,14 @@ public class ArimBansPlugin implements ArimBans {
 	
 	private static final int LOG_TO_ENV_THRESHOLD = 800;
 	
-	public ArimBansPlugin(File dataFolder, Environment environment) {
-		this.folder = dataFolder;
+	public ArimBansPlugin(File folder, Environment environment) {
+		this.folder = folder;
 		this.environment = environment;
-		if (dataFolder.mkdirs()) {
+		if (folder.mkdirs()) {
 			logger = Logger.getLogger(getName());
 			logger.setParent(environment.logger());
 			logger.setUseParentHandlers(false);
-			String path = dataFolder.getPath() + File.separator + "logs" + File.separator + ToolsUtil.fileDateFormat() + File.separator;
+			String path = folder.getPath() + File.separator + "logs" + File.separator + ToolsUtil.fileDateFormat() + File.separator;
 			try {
 				FileHandler verboseLog = new FileHandler(path + "verbose.log");
 				FileHandler infoLog = new FileHandler(path + "info.log");
@@ -92,7 +92,7 @@ public class ArimBansPlugin implements ArimBans {
 				shutdown("Logger initialisation in " + path + " failed!");
 			}
 		} else {
-			shutdown("Directory creation of " + dataFolder.getPath() + " failed!");
+			shutdown("Directory creation of " + folder.getPath() + " failed!");
 		}
 		config = new Config(this);
 		sql = new Sql(this);
@@ -110,6 +110,7 @@ public class ArimBansPlugin implements ArimBans {
 		refresh(true);
 		loadData();
 		register();
+		checkDeleteLogs();
 	}
 	
 	private void shutdown(String message) {
@@ -182,6 +183,20 @@ public class ArimBansPlugin implements ArimBans {
 		} else {
 			environment().logger().warning("Encountered and caught an error. \nThe plugin's log is inoperative, so the error will be printed to console. Please create a Github issue at https://github.com/A248/ArimBans/issues to address both problems.");
 			ex.printStackTrace();
+		}
+	}
+	
+	private void checkDeleteLogs() {
+		long keepAlive = 86_400_000L * config().getConfigInt("storage.log-keep-alive");
+		long current = System.currentTimeMillis();
+		for (File dir : (new File(folder.getPath(), "logs")).listFiles()) {
+			if (dir.isDirectory() && (current - dir.lastModified() > keepAlive)) {
+				if (!dir.delete()) {
+					log(Level.WARNING, "Could not delete old logs folder!");
+				} else {
+					log(Level.FINER, "Deleted old log folder " + dir.getName());
+				}
+			}
 		}
 	}
 	

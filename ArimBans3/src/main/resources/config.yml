@@ -27,6 +27,7 @@ storage:
     url: 'jdbc:mysql://%HOST%:%PORT%/%DATABASE%?autoReconnect=true&useUnicode=true&characterEncoding=utf8'
   min-connections: 1
   max-connections: 4
+  log-keep-alive: 20
   restart-on-reload: false
 formatting:
   use-json: true
@@ -42,13 +43,38 @@ commands:
   reasons:
     permit-blank: false
     default-reason: 'No reason stated.'
-  block-for-muted:
-    - 'me'
   confirm-unpunish:
     unbans: false
     unmutes: false
     unwarns: false
   rollback-detail: true
+  block-for-muted:
+    - 'me'
+    - 'say'
+    - 'action'
+    - 'eaction'
+    - 'describe'
+    - 'edescribe'
+    - 'eme'
+    - 'w'
+    - 'm'
+    - 'pm'
+    - 'whisper'
+    - 'ewhisper'
+    - 'emsg'
+    - 'msg'
+    - 'message'
+    - 'etell'
+    - 'tell'
+    - 'er'
+    - 'r'
+    - 'reply'
+    - 'ereply'
+    - 'ac'
+    - 'eac'
+    - 'amsg'
+    - 'eamsg'
+    - 'ehelpop'
 enforcement:
   strict-ip-checking: true
   priorities:
