@@ -186,9 +186,16 @@ public class Config implements ConfigMaster {
 		configWarning(key, type, configYml);
 	}
 	
+	private List<String> encodeList(List<String> list) {
+		for (int n = 0; n < list.size(); n++) {
+			list.set(n, ToolsUtil.encode(list.get(n)));
+		}
+		return list;
+	}
+	
 	@Override
 	public String getConfigString(String key) {
-		return cfgGet(key, String.class);
+		return ToolsUtil.encode(cfgGet(key, String.class));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -197,11 +204,11 @@ public class Config implements ConfigMaster {
 		if (configValues.containsKey(key)) {
 			Object obj = configValues.get(key);
 			if (obj instanceof List<?>) {
-				return (List<String>) obj;
+				return encodeList((List<String>) obj);
 			}
 			configWarning(key, List.class);
 		}
-		return (List<String>) configDefaults.get(key);
+		return encodeList((List<String>) configDefaults.get(key));
 	}
 	
 	@Override
@@ -226,21 +233,9 @@ public class Config implements ConfigMaster {
 		return (T) configDefaults.get(key);
 	}
 	
-	@SuppressWarnings("unchecked")
-	private <T> T msgGet(String key, Class<T> type) {
-		if (messageValues.containsKey(key)) {
-			Object obj = messageValues.get(key);
-			if (type.isInstance(obj)) {
-				return (T) obj;
-			}
-			configWarning(key, type, messagesYml);
-		}
-		return (T) messageDefaults.get(key);
-	}
-	
 	@Override
 	public String getMessagesString(String key) {
-		return msgGet(key, String.class);
+		return ToolsUtil.encode(msgGet(key, String.class));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -249,7 +244,7 @@ public class Config implements ConfigMaster {
 		if (messageValues.containsKey(key)) {
 			Object obj = messageValues.get(key);
 			if (obj instanceof List<?>) {
-				return (List<String>) obj;
+				return encodeList((List<String>) obj);
 			}
 			configWarning(key, List.class, messagesYml);
 		}
@@ -264,6 +259,18 @@ public class Config implements ConfigMaster {
 	@Override
 	public int getMessagesInt(String key) {
 		return msgGet(key, Integer.class);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private <T> T msgGet(String key, Class<T> type) {
+		if (messageValues.containsKey(key)) {
+			Object obj = messageValues.get(key);
+			if (type.isInstance(obj)) {
+				return (T) obj;
+			}
+			configWarning(key, type, messagesYml);
+		}
+		return (T) messageDefaults.get(key);
 	}
 	
 	private String leadKey(CommandType.Category category) {
