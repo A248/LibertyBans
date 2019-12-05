@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.ArimBansLibrary;
@@ -445,6 +446,7 @@ public class Commands implements CommandsMaster {
 			if (!passive) {
 				center.environment().enforcer().enforce(punishment, center.formats().useJson());
 			}
+			center.log(Level.FINE, "Operator " + operator.toString() + " punished " + target.toString() + ". Silent = " + silent + "; Passive = " + passive);
 		} catch (ConflictingPunishmentException ex) {
 			String conflict = (punishment.type().equals(PunishmentType.BAN)) ? additions_bans_error_conflicting : additions_mutes_error_conflicting;
 			center.subjects().sendMessage(operator, conflict.replace("%TARGET%", center.formats().formatSubject(punishment.subject())));
@@ -474,6 +476,7 @@ public class Commands implements CommandsMaster {
 								if (!silent) {
 									center.subjects().sendNotif(punishment, false, operator);
 								}
+								center.log(Level.FINE, "Operator " + operator.toString() + " unpunished " + target.toString() + ". Silent = " + silent);
 								return;
 							}
 						}
@@ -503,6 +506,7 @@ public class Commands implements CommandsMaster {
 						if (!silent) {
 							center.subjects().sendNotif(punishment, false, operator);
 						}
+						center.log(Level.FINE, "Operator " + operator.toString() + " unpunished " + target.toString() + ". Silent = " + silent);
 						return;
 					} catch (NumberFormatException ex) {}
 				}
@@ -526,6 +530,7 @@ public class Commands implements CommandsMaster {
 			if (!silent) {
 				center.subjects().sendNotif(punishment, false, operator);
 			}
+			center.log(Level.FINE, "Operator " + operator.toString() + " unpunished " + target.toString() + ". Silent = " + silent);
 		}
 	}
 	
