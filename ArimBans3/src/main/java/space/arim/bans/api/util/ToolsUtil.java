@@ -100,7 +100,7 @@ public final class ToolsUtil {
 		return new String(b);
 	}
 	
-	public static BaseComponent[] parseJson(String json, boolean color) {
+	public static BaseComponent[] parseJson(String json) {
 		BaseComponent current = null;
 		ArrayList<BaseComponent> components = new ArrayList<BaseComponent>();
 		for (String node : json.split("||")) {
@@ -109,22 +109,13 @@ public final class ToolsUtil {
 				if (current != null) {
 					components.add(current);
 				}
-				if (color) {
-					current = new TextComponent(TextComponent.fromLegacyText(encode(node)));
-				} else {
-					current = new TextComponent(node);
-				}
+				current = new TextComponent(TextComponent.fromLegacyText(node));
 			} else if (current != null) {
-				String value;
-				if (color) {
-					value = encode(node.substring(3));
-				} else {
-					value = node.substring(3);
-				}
+				String value = node.substring(4);
 				if (tag.equals(TagType.TTP)) {
 					current.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(value)));
 				} else if (tag.equals(TagType.URL)) {
-					if (!value.startsWith("https://") && (!value.startsWith("http://"))) {
+					if (!value.startsWith("https://") && !value.startsWith("http://")) {
 						value = "http://" + value;
 					}
 					current.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, value));
@@ -137,11 +128,7 @@ public final class ToolsUtil {
 				}
 			}
 		}
-		return (BaseComponent[]) components.toArray();
-	}
-	
-	public static BaseComponent[] parseJson(String json) {
-		return parseJson(json, true);
+		return components.toArray(new BaseComponent[] {});
 	}
 	
 	public static boolean generateFile(File file) {
