@@ -40,6 +40,8 @@ public interface PunishmentPlugin extends Registrable {
 	
 	void addPunishments(Punishment...punishments);
 	
+	void removePunishments(Punishment...punishments);
+	
 	void sendMessage(Subject subject, String message);
 	
 	/**
