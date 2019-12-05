@@ -43,15 +43,15 @@ public class PunishmentResult {
 		return has;
 	}
 	
-	public Subject getPossibleApplicableSubject() {
+	public Subject getApplicableSubject() {
 		return subject;
 	}
 	
-	public Punishment getPossiblePunishment() {
+	public Punishment getApplicablePunishment() {
 		return punishment;
 	}
 	
-	public String getPossibleMessage() {
+	public String getApplicableMessage() {
 		return message;
 	}
 	
