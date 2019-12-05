@@ -31,18 +31,12 @@ import space.arim.bans.internal.async.AsyncMaster;
 import space.arim.bans.internal.async.AsyncWrapper;
 import space.arim.bans.internal.async.Async;
 import space.arim.bans.internal.backend.punishment.Punishments;
-import space.arim.bans.internal.backend.punishment.PunishmentsMaster;
 import space.arim.bans.internal.backend.resolver.Resolver;
-import space.arim.bans.internal.backend.resolver.ResolverMaster;
-import space.arim.bans.internal.backend.subjects.SubjectsMaster;
 import space.arim.bans.internal.backend.subjects.Subjects;
 import space.arim.bans.internal.config.Config;
-import space.arim.bans.internal.config.ConfigMaster;
+import space.arim.bans.internal.correspondance.Corresponder;
 import space.arim.bans.internal.frontend.commands.Commands;
-import space.arim.bans.internal.frontend.commands.CommandsMaster;
 import space.arim.bans.internal.frontend.format.Formats;
-import space.arim.bans.internal.frontend.format.FormatsMaster;
-import space.arim.bans.internal.sql.SqlMaster;
 import space.arim.bans.internal.sql.Sql;
 
 import space.arim.registry.UniversalRegistry;
@@ -52,13 +46,14 @@ public class ArimBansPlugin implements ArimBans {
 	private final File folder;
 	private Logger logger;
 	private final Environment environment;
-	private final ConfigMaster config;
-	private final SqlMaster sql;
-	private final PunishmentsMaster punishments;
-	private final SubjectsMaster subjects;
-	private final ResolverMaster resolver;
-	private final CommandsMaster commands;
-	private final FormatsMaster formats;
+	private final Config config;
+	private final Sql sql;
+	private final Punishments punishments;
+	private final Subjects subjects;
+	private final Resolver resolver;
+	private final Commands commands;
+	private final Formats formats;
+	private final Corresponder corresponder;
 	private final AsyncMaster async;
 	
 	private static final String CREATE_GITHUB_ISSUE = "Please create a Github issue at https://github.com/A248/ArimBans/issues";
@@ -95,6 +90,7 @@ public class ArimBansPlugin implements ArimBans {
 		resolver = new Resolver(this);
 		commands = new Commands(this);
 		formats = new Formats(this);
+		corresponder = new Corresponder(this);
 		if (UniversalRegistry.isProvidedFor(AsyncExecutor.class)) {
 			async = new AsyncWrapper(UniversalRegistry.getRegistration(AsyncExecutor.class));
 		} else {
@@ -123,38 +119,43 @@ public class ArimBansPlugin implements ArimBans {
 	}
 	
 	@Override
-	public ConfigMaster config() {
+	public Config config() {
 		return config;
 	}
 	
 	@Override
-	public SqlMaster sql() {
+	public Sql sql() {
 		return sql;
 	}
 	
 	@Override
-	public PunishmentsMaster punishments() {
+	public Punishments punishments() {
 		return punishments;
 	}
 
 	@Override
-	public SubjectsMaster subjects() {
+	public Subjects subjects() {
 		return subjects;
 	}
 
 	@Override
-	public ResolverMaster resolver() {
+	public Resolver resolver() {
 		return resolver;
 	}
 
 	@Override
-	public CommandsMaster commands() {
+	public Commands commands() {
 		return commands;
 	}
 
 	@Override
-	public FormatsMaster formats() {
+	public Formats formats() {
 		return formats;
+	}
+	
+	@Override
+	public Corresponder corresponder() {
+		return corresponder;
 	}
 	
 	@Override
