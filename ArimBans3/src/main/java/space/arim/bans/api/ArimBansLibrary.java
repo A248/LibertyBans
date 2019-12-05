@@ -32,12 +32,10 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	static String INVALID_STRING_CODE = "(internal_invalid_string_code)";
 	
 	/**
-	 * Checks a message for validity.
+	 * Checks a message for validity using assertions.
 	 * <br><br>All this does is:
 	 * <br>1. Check against {@link #INVALID_MESSAGE_CODE} for equality
 	 * <br>2. Check for null values
-	 * 
-	 * <br><br>Throws an unchecked exception if either requirements are met.
 	 * 
 	 * @param message - the string to check
 	 */
