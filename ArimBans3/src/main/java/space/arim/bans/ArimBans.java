@@ -20,11 +20,19 @@ package space.arim.bans;
 
 import java.io.File;
 import java.sql.ResultSet;
+import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 
 import space.arim.bans.api.ArimBansLibrary;
+import space.arim.bans.api.CommandType;
+import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentPlugin;
+import space.arim.bans.api.PunishmentType;
+import space.arim.bans.api.Subject;
 import space.arim.bans.api.UUIDResolver;
+import space.arim.bans.api.exception.ConflictingPunishmentException;
+import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.env.Environment;
 import space.arim.bans.internal.Configurable;
 import space.arim.bans.internal.backend.punishment.PunishmentsMaster;
@@ -127,6 +135,76 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	@Override
 	default byte getPriority() {
 		return RegistryPriority.LOWER;
+	}
+	
+	@Override
+	default int getNextAvailablePunishmentId() {
+		return punishments().getNextAvailablePunishmentId();
+	}
+	
+	@Override
+	default boolean isBanned(Subject subject) {
+		return punishments().hasPunishment(subject, PunishmentType.BAN);
+	}
+	
+	@Override
+	default boolean isMuted(Subject subject) {
+		return punishments().hasPunishment(subject, PunishmentType.MUTE);
+	}
+	
+	@Override
+	default Set<Punishment> getBanList() {
+		return punishments().getAllPunishments(PunishmentType.BAN);
+	}
+	
+	@Override
+	default Set<Punishment> getMuteList() {
+		return punishments().getAllPunishments(PunishmentType.MUTE);
+	}
+	
+	@Override
+	default Set<Punishment> getWarns(Subject subject) {
+		return punishments().getPunishments(subject, PunishmentType.WARN);
+	}
+	
+	@Override
+	default Set<Punishment> getKicks(Subject subject) {
+		return punishments().getPunishments(subject, PunishmentType.KICK);
+	}
+	
+	@Override
+	default Set<Punishment> getHistory(Subject subject) {
+		return punishments().getHistory(subject);
+	}
+	
+	@Override
+	default void addPunishments(Punishment...punishments) throws ConflictingPunishmentException {
+		punishments().addPunishments(punishments);
+	}
+	
+	@Override
+	default void removePunishments(Punishment...punishments) throws MissingPunishmentException {
+		punishments().removePunishments(punishments);
+	}
+	
+	@Override
+	default Subject fromUUID(UUID subject) {
+		return Subject.fromUUID(subject);
+	}
+	
+	@Override
+	default Subject fromIpAddress(String address) throws IllegalArgumentException {
+		return Subject.fromIP(address);
+	}
+	
+	@Override
+	default Subject parseSubject(String input) throws IllegalArgumentException {
+		return subjects().parseSubject(input);
+	}
+	
+	@Override
+	default void simulateCommand(Subject subject, CommandType command, String[] args) {
+		commands().execute(subject, command, args);
 	}
 	
 }

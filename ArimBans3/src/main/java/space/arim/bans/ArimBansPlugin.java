@@ -20,18 +20,12 @@ package space.arim.bans;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Set;
-import java.util.UUID;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import space.arim.bans.api.AsyncExecutor;
-import space.arim.bans.api.CommandType;
-import space.arim.bans.api.Punishment;
-import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
-import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.util.ToolsUtil;
 import space.arim.bans.env.Environment;
 import space.arim.bans.internal.async.AsyncMaster;
@@ -198,71 +192,6 @@ public class ArimBansPlugin implements ArimBans {
 				}
 			}
 		}
-	}
-	
-	@Override
-	public int getNextAvailablePunishmentId() {
-		return punishments.getNextAvailablePunishmentId();
-	}
-	
-	@Override
-	public boolean isBanned(Subject subject) {
-		return punishments().hasPunishment(subject, PunishmentType.BAN);
-	}
-	
-	@Override
-	public boolean isMuted(Subject subject) {
-		return punishments().hasPunishment(subject, PunishmentType.MUTE);
-	}
-	
-	@Override
-	public Set<Punishment> getBanList() {
-		return punishments().getAllPunishments(PunishmentType.BAN);
-	}
-	
-	@Override
-	public Set<Punishment> getMuteList() {
-		return punishments().getAllPunishments(PunishmentType.MUTE);
-	}
-	
-	@Override
-	public Set<Punishment> getWarns(Subject subject) {
-		return punishments().getPunishments(subject, PunishmentType.WARN);
-	}
-	
-	@Override
-	public Set<Punishment> getKicks(Subject subject) {
-		return punishments().getPunishments(subject, PunishmentType.KICK);
-	}
-	
-	@Override
-	public Set<Punishment> getHistory(Subject subject) {
-		return punishments().getHistory(subject);
-	}
-	
-	@Override
-	public void addPunishments(Punishment...punishments) throws ConflictingPunishmentException {
-		punishments().addPunishments(punishments);
-	}
-	
-	@Override
-	public Subject fromUUID(UUID subject) {
-		return Subject.fromUUID(subject);
-	}
-	
-	@Override
-	public Subject fromIpAddress(String address) throws IllegalArgumentException {
-		return Subject.fromIP(address);
-	}
-	
-	@Override
-	public Subject parseSubject(String input) throws IllegalArgumentException {
-		return subjects().parseSubject(input);
-	}
-	
-	@Override
-	public void simulateCommand(Subject subject, CommandType command, String[] args) {
-		commands().execute(subject, command, args);
 	}
 	
 	@Override
