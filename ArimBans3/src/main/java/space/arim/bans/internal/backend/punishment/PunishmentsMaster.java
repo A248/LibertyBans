@@ -36,35 +36,19 @@ public interface PunishmentsMaster extends Component {
 	
 	int getNextAvailablePunishmentId();
 	
-	void addPunishments(boolean async, Punishment...punishments) throws ConflictingPunishmentException;
-	
-	default void addPunishments(Punishment...punishments) throws ConflictingPunishmentException {
-		addPunishments(true, punishments);
-	}
+	void addPunishments(Punishment...punishments) throws ConflictingPunishmentException;
 	
 	Punishment getPunishment(Subject subject, PunishmentType type) throws MissingPunishmentException;
 	
-	void removePunishments(boolean async, Punishment...punishments) throws MissingPunishmentException; 
+	void removePunishments(Punishment...punishments) throws MissingPunishmentException; 
 	
-	default void removePunishments(Punishment...punishments) throws MissingPunishmentException {
-		removePunishments(true, punishments);
-	}
-	
-	void changeReason(boolean async, Punishment punishment, String reason) throws MissingPunishmentException;
+	void changeReason(Punishment punishment, String reason) throws MissingPunishmentException;
 	
 	boolean hasPunishment(Subject subject, PunishmentType type);
 	
-	Set<Punishment> getPunishments(Subject subject);
+	Set<Punishment> getActive();
 	
-	Set<Punishment> getPunishments(Subject subject, PunishmentType type);
-	
-	Set<Punishment> getAllPunishments();
-	
-	Set<Punishment> getAllPunishments(PunishmentType type);
-	
-	Set<Punishment> getHistory(Subject subject);
-	
-	Set<Punishment> getAllHistory();
+	Set<Punishment> getHistory();
 	
 	void loadActive(ResultSet data);
 	

@@ -107,7 +107,7 @@ public class Punishments implements PunishmentsMaster {
 	}
 	
 	@Override
-	public void addPunishments(boolean async, Punishment... punishments) throws ConflictingPunishmentException {
+	public void addPunishments(Punishment... punishments) throws ConflictingPunishmentException {
 		// Before proceeding, determine whether adding the specified punishments
 		// would produce duplicate bans or mutes
 		// If it would, throw an error terminating everything
@@ -116,17 +116,17 @@ public class Punishments implements PunishmentsMaster {
 				throw new ConflictingPunishmentException(punishment.subject(), punishment.type());
 			}
 		}
-		// Check whether async execution was requested. If so, run queries inside async.
-		if (async) {
-			center.async(() -> directAddPunishments(punishments));
-		} else {
+		// Check whether we are already asynchronous. If not, run queries inside async.
+		if (center.corresponder().asynchronous()) {
 			directAddPunishments(punishments);
+		} else {
+			center.async(() -> directAddPunishments(punishments));
 		}
 	}
 	
 	@Override
 	public Punishment getPunishment(Subject subject, PunishmentType type) throws MissingPunishmentException {
-		Set<Punishment> active = getAllPunishments();
+		Set<Punishment> active = getActive();
 		for (Punishment punishment : active) {
 			if (punishment.subject().equals(subject) && punishment.type().equals(type)) {
 				return punishment;
@@ -172,17 +172,17 @@ public class Punishments implements PunishmentsMaster {
 	}
 	
 	@Override
-	public void removePunishments(boolean async, Punishment...punishments) throws MissingPunishmentException {
+	public void removePunishments(Punishment...punishments) throws MissingPunishmentException {
 		for (Punishment punishment : punishments) {
 			if (!active.contains(punishment)) {
 				throw new MissingPunishmentException(punishment);
 			}
 		}
-		// Check whether async execution was requested. If so, run queries inside async.
-		if (async) {
-			center.async(() -> directRemovePunishments(punishments));
-		} else {
+		// Check whether we are already asynchronous. If not, run queries inside async.
+		if (center.corresponder().asynchronous()) {
 			directRemovePunishments(punishments);
+		} else {
+			center.async(() -> directRemovePunishments(punishments));
 		}
 	}
 	
@@ -200,83 +200,36 @@ public class Punishments implements PunishmentsMaster {
 	}
 	
 	@Override
-	public void changeReason(boolean async, Punishment punishment, String reason) throws MissingPunishmentException {
+	public void changeReason(Punishment punishment, String reason) throws MissingPunishmentException {
 		if (!history.contains(punishment)) {
 			throw new MissingPunishmentException(punishment);
 		}
-		// Check whether async execution was requested. If so, run queries inside async.
-		if (async) {
-			center.async(() -> directChangeReason(punishment, reason));
-		} else {
+		// Check whether we are already asynchronous. If not, run queries async.
+		if (center.corresponder().asynchronous()) {
 			directChangeReason(punishment, reason);
+		} else {
+			center.async(() -> directChangeReason(punishment, reason));
 		}
 	}
 	
 	@Override
 	public boolean hasPunishment(Subject subject, PunishmentType type) {
-		
 		for (Punishment punishment : active) {
 			if (punishment.subject().equals(subject) && punishment.type().equals(type)) {
 				return true;
 			}
 		}
 		return false;
-		
 	}
 	
 	@Override
-	public Set<Punishment> getPunishments(Subject subject) {
-		Set<Punishment> active = getAllPunishments();
-		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
-			if (!it.next().subject().equals(subject)) {
-				it.remove();
-			}
-		}
-		return active;
-	}
-	
-	@Override
-	public Set<Punishment> getPunishments(Subject subject, PunishmentType type) {
-		Set<Punishment> active = getAllPunishments();
-		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
-			Punishment punishment = it.next();
-			if (!punishment.subject().equals(subject) || !punishment.type().equals(type)) {
-				it.remove();
-			}
-		}
-		return active;
-	}
-	
-	@Override
-	public Set<Punishment> getAllPunishments() {
+	public Set<Punishment> getActive() {
 		return active();
 	}
 	
 	@Override
-	public Set<Punishment> getAllPunishments(PunishmentType type) {
-		Set<Punishment> active = getAllPunishments();
-		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
-			if (!it.next().type().equals(type)) {
-				it.remove();
-			}
-		}
-		return active;
-	}
-	
-	@Override
-	public Set<Punishment> getHistory(Subject subject) {
-		Set<Punishment> history = getAllHistory();
-		for (Iterator<Punishment> it = history.iterator(); it.hasNext();) {
-			if (!it.next().subject().equals(subject)) {
-				it.remove();
-			}
-		}
-		return history;
-	}
-	
-	@Override
-	public Set<Punishment> getAllHistory() {
-		return new HashSet<Punishment>(this.history);
+	public Set<Punishment> getHistory() {
+		return new HashSet<Punishment>(history);
 	}
 	
 	@Override
@@ -308,17 +261,14 @@ public class Punishments implements PunishmentsMaster {
 	}
 	
 	/**
-	 * Returns a copy of the Set of active punishments,
-	 * purging expired members.
+	 * Returns a copy of the Set of active punishments, purging expired members.
 	 * 
-	 * <br><br>Changes are <b>NOT</b> backed by the set
+	 * <br><br>Changes are <b>NOT</b> backed by the set, and for good reason too.
 	 * 
 	 * @return Set of active punishments
 	 */
 	private Set<Punishment> active() {
-		Set<Punishment> validated = new HashSet<Punishment>();
 		Set<Punishment> invalidated = new HashSet<Punishment>();
-		
 		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
 			Punishment punishment = it.next();
 			if (punishment.expiration() != -1L && punishment.expiration() < System.currentTimeMillis()) {
@@ -326,18 +276,22 @@ public class Punishments implements PunishmentsMaster {
 				if (center.environment().enforcer().callUnpunishEvent(punishment, true)) {
 					invalidated.add(punishment);
 					it.remove();
-				} else {
-					validated.add(punishment);
 				}
-			} else {
-				validated.add(punishment); // Seems a little redundant. Isn't there something I can use to avoid writing this twice?
 			}
 		}
 		// Call PostUnpunishEvents before proceeding
+		if (center.corresponder().asynchronous()) {
+			callPostUnpunish(invalidated);
+		} else {
+			center.async(() -> callPostUnpunish(invalidated));
+		}
+		return new HashSet<Punishment>(active);
+	}
+	
+	private void callPostUnpunish(Set<Punishment> invalidated) {
 		invalidated.forEach((punishment) -> {
 			center.environment().enforcer().callPostUnpunishEvent(punishment, true);
 		});
-		return validated;
 	}
 	
 	@Override
