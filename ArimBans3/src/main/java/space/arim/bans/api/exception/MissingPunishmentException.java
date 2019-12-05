@@ -22,7 +22,7 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentType;
 
-public class MissingPunishmentException extends InternalStateException {
+public class MissingPunishmentException extends InternalAPIException {
 
 	private static final long serialVersionUID = -3749852643537426416L;
 
