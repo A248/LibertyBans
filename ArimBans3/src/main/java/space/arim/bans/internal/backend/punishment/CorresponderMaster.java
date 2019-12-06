@@ -16,7 +16,7 @@
  * along with ArimBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.internal.correspondance;
+package space.arim.bans.internal.backend.punishment;
 
 import java.util.Set;
 import java.util.UUID;
