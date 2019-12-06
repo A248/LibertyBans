@@ -75,7 +75,7 @@ public class Formats implements FormatsMaster {
 	@Override
 	public String formatMessageWithPunishment(String message, Punishment punishment) {
 		long current = System.currentTimeMillis();
-		return message.replace("%ID%", Integer.toString(punishment.id())).replace("%TYPE%", ToolsUtil.capitaliseProperly(punishment.type().toString())).replace("%TARGET%", center.formats().formatSubject(punishment.subject())).replace("%OPERATOR%", center.formats().formatSubject(punishment.operator())).replace("%REASON%", punishment.reason()).replace("%DURATION%", center.formats().formatTime(punishment.expiration() - punishment.date(), false)).replace("%TIME%", center.formats().formatTime(punishment.expiration() - current, false)).replace("%EXPIRATION%", center.formats().formatTime(punishment.expiration(), true)).replace("%SINCE%", center.formats().formatTime(punishment.date() - current, false)).replace("%DATE%", center.formats().formatTime(punishment.date(), true));
+		return message.replace("%ID%", Integer.toString(punishment.id())).replace("%TYPE%", ToolsUtil.capitaliseProperly(punishment.type().toString())).replace("%TARGET%", formatSubject(punishment.subject())).replace("%OPERATOR%", formatSubject(punishment.operator())).replace("%REASON%", punishment.reason()).replace("%DURATION%", formatTime(punishment.expiration() - punishment.date(), false)).replace("%TIME%", formatTime(punishment.expiration() - current, false)).replace("%EXPIRATION%", formatTime(punishment.expiration(), true)).replace("%SINCE%", formatTime(punishment.date() - current, false)).replace("%DATE%", formatTime(punishment.date(), true));
 	}
 	
 	@Override
