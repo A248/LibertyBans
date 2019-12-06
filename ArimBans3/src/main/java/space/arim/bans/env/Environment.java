@@ -35,9 +35,9 @@ public interface Environment extends Configurable {
 	
 	void sendMessage(Subject target, String jsonable, boolean useJson);
 	
-	boolean hasPermission(Subject subject, String permission, boolean opPerms);
-	
 	void sendMessage(String permission, String jsonable, boolean useJson);
+	
+	boolean hasPermission(Subject subject, String permission, boolean opPerms);
 	
 	Enforcer enforcer();
 	
