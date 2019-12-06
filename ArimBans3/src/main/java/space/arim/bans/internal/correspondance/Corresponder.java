@@ -128,6 +128,17 @@ public class Corresponder implements CorresponderMaster {
 	}
 	
 	@Override
+	public Punishment getPunishmentById(int id) throws MissingPunishmentException {
+		Set<Punishment> punishments = center.punishments().getActive();
+		for (Punishment punishment : punishments) {
+			if (punishment.id() == id) {
+				return punishment;
+			}
+		}
+		throw new MissingPunishmentException(id);
+	}
+	
+	@Override
 	public void refreshConfig(boolean first) {
 		strict_ip_checking = center.config().getConfigBoolean("enforcement.strict-ip-checking");
 	}
