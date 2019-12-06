@@ -18,9 +18,6 @@
  */
 package space.arim.bans.env.bungee;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -29,16 +26,14 @@ import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.event.EventPriority;
 
 import space.arim.bans.api.Punishment;
+import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
-import space.arim.bans.api.Subject;
 import space.arim.bans.api.events.bungee.PostUnpunishEvent;
 import space.arim.bans.api.events.bungee.PostPunishEvent;
 import space.arim.bans.api.events.bungee.PunishEvent;
 import space.arim.bans.api.events.bungee.UnpunishEvent;
 import space.arim.bans.api.exception.ConfigSectionException;
-import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.MissingCenterException;
-import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.env.Enforcer;
 
 public class BungeeEnforcer implements Enforcer {
@@ -47,7 +42,6 @@ public class BungeeEnforcer implements Enforcer {
 	
 	private byte ban_priority;
 	private byte mute_priority;
-	private boolean strict_ip_checking;
 	
 	public BungeeEnforcer(BungeeEnv environment) {
 		this.environment = environment;
@@ -74,43 +68,10 @@ public class BungeeEnforcer implements Enforcer {
 		if (evt.isCancelled() || priority != ban_priority) {
 			return;
 		}
-		Subject subject = environment.center().subjects().parseSubject(evt.getConnection().getUniqueId());
-		if (environment.center().isBanned(subject)) {
-			try {
-				evt.setCancelReason(environment.convert(environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(subject, PunishmentType.BAN))));
-				evt.setCancelled(true);
-			} catch (MissingPunishmentException ex) {
-				environment.center().logError(ex);
-			}
-		} else if (strict_ip_checking) {
-			List<String> ips;
-			try {
-				ips = new ArrayList<String>(environment.center().resolver().getIps(evt.getConnection().getUniqueId()));
-				ips.add(evt.getConnection().getAddress().getAddress().getHostAddress());
-			} catch (MissingCacheException ex) {
-				ips = Arrays.asList(evt.getConnection().getAddress().getAddress().getHostAddress());
-			}
-			for (String addr : ips) {
-				Subject addrSubj = environment.center().subjects().parseSubject(addr);
-				if (environment.center().isBanned(addrSubj)) {
-					try {
-						evt.setCancelReason(environment.convert(environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.BAN))));
-						evt.setCancelled(true);
-					} catch (MissingPunishmentException ex) {
-						environment.center().logError(ex);
-					}
-				}
-			}
-		} else {
-			Subject addrSubj = environment.center().subjects().parseSubject(evt.getConnection().getAddress().getAddress().getHostAddress());
-			if (environment.center().isBanned(addrSubj)) {
-				try {
-					evt.setCancelReason(environment.convert(environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.BAN))));
-					evt.setCancelled(true);
-				} catch (MissingPunishmentException ex) {
-					environment.center().logError(ex);
-				}
-			}
+		PunishmentResult result = environment.center().corresponder().getApplicablePunishment(evt.getConnection().getUniqueId(), evt.getConnection().getAddress().getAddress().getHostAddress(), PunishmentType.BAN);
+		if (result.hasPunishment()) {
+			evt.setCancelReason(BungeeEnv.convert(result.getApplicableMessage()));
+			evt.setCancelled(true);
 		}
 	}
 	
@@ -123,43 +84,10 @@ public class BungeeEnforcer implements Enforcer {
 			enforceFailed(player.getName(), PunishmentType.MUTE);
 			return;
 		}
-		Subject subject = environment.center().subjects().parseSubject(player.getUniqueId());
-		if (environment.center().isMuted(subject)) {
-			try {
-				environment.center().subjects().sendMessage(environment.center().subjects().parseSubject(player.getUniqueId()), environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(subject, PunishmentType.MUTE)));
-				evt.setCancelled(true);
-			} catch (MissingPunishmentException ex) {
-				environment.center().logError(ex);
-			}
-		} else if (strict_ip_checking) {
-			List<String> ips;
-			try {
-				ips = environment.center().resolver().getIps(player.getUniqueId());
-			} catch (MissingCacheException ex) {
-				environment.center().logError(ex);
-				ips = Arrays.asList(player.getAddress().getAddress().getHostAddress());
-			}
-			for (String addr : ips) {
-				Subject addrSubj = environment.center().subjects().parseSubject(addr);
-				if (environment.center().isMuted(addrSubj)) {
-					try {
-						environment.center().subjects().sendMessage(subject, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.MUTE)));
-						evt.setCancelled(true);
-					} catch (MissingPunishmentException ex) {
-						environment.center().logError(ex);
-					}
-				}
-			}
-		} else {
-			Subject addrSubj = environment.center().subjects().parseSubject(player.getAddress().getAddress().getHostAddress());
-			if (environment.center().isMuted(addrSubj)) {
-				try {
-					environment.center().subjects().sendMessage(subject, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.MUTE)));
-					evt.setCancelled(true);
-				} catch (MissingPunishmentException ex) {
-					environment.center().logError(ex);
-				}
-			}
+		PunishmentResult result = environment.center().corresponder().getApplicablePunishment(player.getUniqueId(), player.getAddress().getAddress().getHostAddress(), PunishmentType.MUTE);
+		if (result.hasPunishment()) {
+			evt.setCancelled(true);
+			BungeeEnv.sendMessage(player, result.getApplicableMessage(), environment.center().formats().useJson());
 		}
 	}
 	
@@ -177,15 +105,11 @@ public class BungeeEnforcer implements Enforcer {
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
 			for (ProxiedPlayer target : targets) {
-				target.disconnect(environment.convert(message));
+				target.disconnect(BungeeEnv.convert(message));
 			}
 		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
 			for (ProxiedPlayer target : targets) {
-				if (useJson) {
-					environment.json(target, message);
-				} else {
-					target.sendMessage(environment.convert(message));
-				}
+				BungeeEnv.sendMessage(target, message, useJson);
 			}
 		}
 	}
@@ -239,7 +163,6 @@ public class BungeeEnforcer implements Enforcer {
 	public void refreshConfig(boolean fromFile) {
 		ban_priority = parsePriority("enforcement.priorities.event-priority");
 		mute_priority = parsePriority("enforcement.priorities.event-priority");
-		strict_ip_checking = environment.center().config().getConfigBoolean("enforcement.strict-ip-checking");
 	}
 	
 }

@@ -18,9 +18,6 @@
  */
 package space.arim.bans.env.bukkit;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 import org.bukkit.entity.Player;
@@ -31,16 +28,14 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 import space.arim.bans.api.Punishment;
+import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
-import space.arim.bans.api.Subject;
 import space.arim.bans.api.events.bukkit.PostPunishEvent;
 import space.arim.bans.api.events.bukkit.PostUnpunishEvent;
 import space.arim.bans.api.events.bukkit.PunishEvent;
 import space.arim.bans.api.events.bukkit.UnpunishEvent;
 import space.arim.bans.api.exception.ConfigSectionException;
-import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.MissingCenterException;
-import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.env.Enforcer;
 
 public class BukkitEnforcer implements Enforcer {
@@ -49,7 +44,7 @@ public class BukkitEnforcer implements Enforcer {
 	
 	private EventPriority ban_priority;
 	private EventPriority mute_priority;
-	private boolean strict_ip_checking;
+
 	
 	public BukkitEnforcer(final BukkitEnv environment) {
 		this.environment = environment;
@@ -76,41 +71,9 @@ public class BukkitEnforcer implements Enforcer {
 		if (!evt.getLoginResult().equals(AsyncPlayerPreLoginEvent.Result.ALLOWED) || !priority.equals(ban_priority)) {
 			return;
 		}
-		Subject subject = environment.center().subjects().parseSubject(evt.getUniqueId());
-		if (environment.center().isBanned(subject)) {
-			try {
-				evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, environment.center().formats()
-						.formatPunishment(environment.center().punishments().getPunishment(subject, PunishmentType.BAN)));
-			} catch (MissingPunishmentException ex) {
-				environment.center().logError(ex);
-			}
-		} else if (strict_ip_checking) {
-			List<String> ips;
-			try {
-				ips = new ArrayList<String>(environment.center().resolver().getIps(evt.getUniqueId()));
-				ips.add(evt.getAddress().getHostAddress());
-			} catch (MissingCacheException ex) {
-				ips = Arrays.asList(evt.getAddress().getHostAddress());
-			}
-			for (String addr : ips) {
-				Subject addrSubj = environment.center().subjects().parseSubject(addr);
-				if (environment.center().isBanned(addrSubj)) {
-					try {
-						evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.BAN)));
-					} catch (MissingPunishmentException ex) {
-						environment.center().logError(ex);
-					}
-				}
-			}
-		} else {
-			Subject addrSubj = environment.center().subjects().parseSubject(evt.getAddress().getHostAddress());
-			if (environment.center().isBanned(addrSubj)) {
-				try {
-					evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.BAN)));
-				} catch (MissingPunishmentException ex) {
-					environment.center().logError(ex);
-				}
-			}
+		PunishmentResult result = environment.center().corresponder().getApplicablePunishment(evt.getUniqueId(), evt.getAddress().getHostAddress(), PunishmentType.BAN);
+		if (result.hasPunishment()) {
+			evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, result.getApplicableMessage());
 		}
 	}
 	
@@ -118,43 +81,10 @@ public class BukkitEnforcer implements Enforcer {
 		if (evt.isCancelled() || !priority.equals(mute_priority)) {
 			return;
 		}
-		Subject subject = environment.center().subjects().parseSubject(player.getUniqueId());
-		if (environment.center().isMuted(subject)) {
-			try {
-				environment.center().subjects().sendMessage(subject, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(subject, PunishmentType.MUTE)));
-				evt.setCancelled(true);
-			} catch (MissingPunishmentException ex) {
-				environment.center().logError(ex);
-			}
-		} else if (strict_ip_checking) {
-			List<String> ips;
-			try {
-				ips = environment.center().resolver().getIps(subject.getUUID());
-			} catch (MissingCacheException ex) {
-				environment.center().logError(ex);
-				ips = Arrays.asList(player.getAddress().getAddress().getHostAddress());
-			}
-			for (String addr : ips) {
-				Subject addrSubj = environment.center().subjects().parseSubject(addr);
-				if (environment.center().isMuted(addrSubj)) {
-					try {
-						environment.center().subjects().sendMessage(subject, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.MUTE)));
-						evt.setCancelled(true);
-					} catch (MissingPunishmentException ex) {
-						environment.center().logError(ex);
-					}
-				}
-			}
-		} else {
-			Subject addrSubj = environment.center().subjects().parseSubject(player.getAddress().getAddress().getHostAddress());
-			if (environment.center().isMuted(addrSubj)) {
-				try {
-					environment.center().subjects().sendMessage(subject, environment.center().formats().formatPunishment(environment.center().punishments().getPunishment(addrSubj, PunishmentType.MUTE)));
-					evt.setCancelled(true);
-				} catch (MissingPunishmentException ex) {
-					environment.center().logError(ex);
-				}
-			}
+		PunishmentResult result = environment.center().corresponder().getApplicablePunishment(player.getUniqueId(), player.getAddress().getAddress().getHostAddress(), PunishmentType.MUTE);
+		if (result.hasPunishment()) {
+			evt.setCancelled(true);
+			BukkitEnv.sendMessage(player, result.getApplicableMessage(), environment.center().formats().useJson());
 		}
 	}
 
@@ -196,11 +126,7 @@ public class BukkitEnforcer implements Enforcer {
 			});
 		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
 			for (Player target : targets) {
-				if (useJson) {
-					environment.json(target, message);
-				} else {
-					target.sendMessage(message);
-				}
+				BukkitEnv.sendMessage(target, message, useJson);
 			}
 		}
 	}
@@ -251,10 +177,9 @@ public class BukkitEnforcer implements Enforcer {
 	}
 	
 	@Override
-	public void refreshConfig(boolean fromFile) {
+	public void refreshConfig(boolean first) {
 		ban_priority = parsePriority("enforcement.priorities.event-priority");
 		mute_priority = parsePriority("enforcement.priorities.event-priority");
-		strict_ip_checking = environment.center().config().getConfigBoolean("enforcement.strict-ip-checking");
 	}
 	
 }

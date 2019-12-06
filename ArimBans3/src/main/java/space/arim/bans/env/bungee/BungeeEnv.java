@@ -34,7 +34,6 @@ import space.arim.bans.ArimBans;
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
-import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.util.ToolsUtil;
@@ -86,8 +85,12 @@ public class BungeeEnv implements Environment {
 		metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
 	}
 	
-	void json(ProxiedPlayer target, String json) {
-		target.sendMessage(ToolsUtil.parseJson(json));
+	static void sendMessage(ProxiedPlayer target, String jsonable, boolean useJson) {
+		if (useJson) {
+			target.sendMessage(ToolsUtil.parseJson(jsonable));
+		} else {
+			target.sendMessage(convert(jsonable));
+		}
 	}
 	
 	@Override
@@ -113,44 +116,27 @@ public class BungeeEnv implements Environment {
 	@Override
 	public void sendMessage(Subject subj, String jsonable, boolean useJson) {
 		ArimBansLibrary.checkString(jsonable);
-		if (useJson) {
-			if (subj.getType().equals(SubjectType.PLAYER)) {
-				ProxiedPlayer target = plugin.getProxy().getPlayer(subj.getUUID());
-				if (target != null) {
-					json(target, jsonable);
-					return;
-				}
-				throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subj) + " is not online.");
-			} else if (subj.getType().equals(SubjectType.CONSOLE)) {
-				plugin.getProxy().getConsole().sendMessage(convert(ToolsUtil.encode(ToolsUtil.stripJson(jsonable))));
-			} else if (subj.getType().equals(SubjectType.IP)) {
-				for (ProxiedPlayer target : applicable(subj)) {
-					json(target, jsonable);
-				}
-			} else {
-				throw new InvalidSubjectException("Subject type is completely missing!");
+		if (subj.getType().equals(SubjectType.PLAYER)) {
+			ProxiedPlayer target = plugin.getProxy().getPlayer(subj.getUUID());
+			if (target != null) {
+				sendMessage(target, jsonable, useJson);
 			}
-			return;
-		} else if (!useJson) {
-			if (subj.getType().equals(SubjectType.PLAYER)) {
-				ProxiedPlayer target = plugin.getProxy().getPlayer(subj.getUUID());
-				if (target != null) {
-					target.sendMessage(convert(ToolsUtil.encode(jsonable)));
-					return;
-				}
-				throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subj) + " is not online or does not have a valid UUID.");
-			} else if (subj.getType().equals(SubjectType.CONSOLE)) {
-				plugin.getProxy().getConsole().sendMessage(convert(ToolsUtil.encode(jsonable)));
-			} else if (subj.getType().equals(SubjectType.IP)) {
-				for (ProxiedPlayer target : applicable(subj)) {
-					target.sendMessage(convert(ToolsUtil.encode(jsonable)));
-				}
-			} else {
-				throw new InvalidSubjectException("Subject type is completely missing!");
+		} else if (subj.getType().equals(SubjectType.CONSOLE)) {
+			plugin.getProxy().getConsole().sendMessage(convert(ToolsUtil.stripJson(jsonable)));
+		} else if (subj.getType().equals(SubjectType.IP)) {
+			for (ProxiedPlayer target : applicable(subj)) {
+				sendMessage(target, jsonable, useJson);
 			}
-			return;
 		}
-		throw new InternalStateException("Json setting is neither true nor false!");
+	}
+	
+	@Override
+	public void sendMessage(String permission, String jsonable, boolean useJson) {
+		for (ProxiedPlayer player : plugin.getProxy().getPlayers()) {
+			if (player.hasPermission(permission)) {
+				sendMessage(player, jsonable, useJson);
+			}
+		}
 	}
 
 	@Override
@@ -186,24 +172,6 @@ public class BungeeEnv implements Environment {
 			}
 		}
 		return applicable;
-	}
-	
-	@Override
-	public void sendMessage(String permission, String jsonable, boolean useJson) {
-		if (useJson) {
-			for (ProxiedPlayer player : plugin.getProxy().getPlayers()) {
-				if (player.hasPermission(permission)) {
-					json(player, jsonable);
-				}
-			}
-		} else {
-			for (ProxiedPlayer player : plugin.getProxy().getPlayers()) {
-				if (player.hasPermission(permission)) {
-					player.sendMessage(convert(jsonable));
-				}
-			}
-		}
-
 	}
 	
 	@Override
@@ -275,7 +243,7 @@ public class BungeeEnv implements Environment {
 		enforcer.close();
 	}
 	
-	BaseComponent[] convert(String input) {
+	static BaseComponent[] convert(String input) {
 		return TextComponent.fromLegacyText(input);
 	}
 
