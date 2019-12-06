@@ -438,19 +438,23 @@ public class Commands implements CommandsMaster {
 		}
 		Punishment punishment = new Punishment(center.getNextAvailablePunishmentId(), type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis());
 		try {
-			center.punishments().addPunishments(false, punishment);
-			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-			if (!silent) {
-				center.subjects().sendNotif(punishment, true, operator);
-			}
-			if (!passive) {
-				center.environment().enforcer().enforce(punishment, center.formats().useJson());
-			}
-			center.log(Level.FINE, "Operator " + operator.toString() + " punished " + target.toString() + ". Silent = " + silent + "; Passive = " + passive);
+			center.punishments().addPunishments(punishment);
+			enact(operator, target, command, punishment, true, silent, passive);
 		} catch (ConflictingPunishmentException ex) {
 			String conflict = (punishment.type().equals(PunishmentType.BAN)) ? additions_bans_error_conflicting : additions_mutes_error_conflicting;
 			center.subjects().sendMessage(operator, conflict.replace("%TARGET%", center.formats().formatSubject(punishment.subject())));
 		}
+	}
+	
+	private void enact(Subject operator, Subject target, CommandType command, Punishment punishment, boolean add, boolean silent, boolean passive) {
+		center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
+		if (!silent) {
+			center.subjects().sendNotif(punishment, add, operator);
+		}
+		if (!passive && add) {
+			center.environment().enforcer().enforce(punishment, center.formats().useJson());
+		}
+		center.log(Level.FINE, "Operator " + operator.toString() + ((add) ? " punished " : " unpunished ") + target.toString() + ". Silent = " + silent + "; Passive = " + passive);
 	}
 	
 	private void unpunCmd(Subject operator, Subject target, CommandType command, String[] args) {
@@ -467,46 +471,27 @@ public class Commands implements CommandsMaster {
 			if (args.length > 0) {
 				if (args[0].equals("internal_confirm")) {
 					try {
-						int id = Integer.parseInt(args[1]);
-						Set<Punishment> active = center.punishments().getAllPunishments();
-						for (Punishment punishment : active) {
-							if (punishment.id() == id) {
-								center.punishments().removePunishments(false, punishment);
-								center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-								if (!silent) {
-									center.subjects().sendNotif(punishment, false, operator);
-								}
-								center.log(Level.FINE, "Operator " + operator.toString() + " unpunished " + target.toString() + ". Silent = " + silent);
-								return;
-							}
-						}
+						Punishment punishment = center.corresponder().getPunishmentById(Integer.parseInt(args[1]));
+						center.punishments().removePunishments(punishment);
+						enact(operator, target, command, punishment, false, silent, false);
+						return;
+					} catch (MissingPunishmentException ex) {
+						center.subjects().sendMessage(operator, notfound.get(type).replace("%NUMBER%", args[0]).replace("%TARGET%", center.formats().formatSubject(target)));
+						return;
 					} catch (NumberFormatException ex) {}
 				} else {
 					try {
-						int id = (Integer.parseInt(args[0]));
-						Punishment punishment = null;
-						Set<Punishment> punishments = center.punishments().getPunishments(target);
-						for (Punishment pun : punishments) {
-							if (pun.id() == id) {
-								punishment = pun;
-								break;
-							}
-						}
-						if (punishment == null) {
-							center.subjects().sendMessage(operator, notfound.get(type).replace("%NUMBER%", args[0]).replace("%TARGET%", center.formats().formatSubject(target)));
-							return;
-						}
+						Punishment punishment = center.corresponder().getPunishmentById(Integer.parseInt(args[0]));
 						if (confirmUnpunish.get(type)) {
 							String cmd = getCmdBaseString(command) + " internal_confirm " + punishment.id() + " " + ToolsUtil.concat(args, ' ');
 							center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
 							return;
 						}
-						center.punishments().removePunishments(false, punishment);
-						center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-						if (!silent) {
-							center.subjects().sendNotif(punishment, false, operator);
-						}
-						center.log(Level.FINE, "Operator " + operator.toString() + " unpunished " + target.toString() + ". Silent = " + silent);
+						center.punishments().removePunishments(punishment);
+						enact(operator, target, command, punishment, false, silent, false);
+						return;
+					} catch (MissingPunishmentException ex) {
+						center.subjects().sendMessage(operator, notfound.get(type).replace("%NUMBER%", args[0]).replace("%TARGET%", center.formats().formatSubject(target)));
 						return;
 					} catch (NumberFormatException ex) {}
 				}
@@ -525,29 +510,13 @@ public class Commands implements CommandsMaster {
 			String cmd = getCmdBaseString(command) + " internal_confirm " + ToolsUtil.concat(args, ' ');
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
 		} else {
-			center.punishments().removePunishments(false, punishment);
-			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-			if (!silent) {
-				center.subjects().sendNotif(punishment, false, operator);
+			try {
+				center.punishments().removePunishments(punishment);
+				enact(operator, target, command, punishment, false, silent, false);
+			} catch (MissingPunishmentException ex) {
+				center.subjects().sendMessage(operator, notfound.get(type).replace("%TARGET%", center.formats().formatSubject(target)));
+				return;
 			}
-			center.log(Level.FINE, "Operator " + operator.toString() + " unpunished " + target.toString() + ". Silent = " + silent);
-		}
-	}
-	
-	private Set<Punishment> getAllForListParams(Subject target, CommandType command) {
-		switch (command.subCategory()) {
-		case BANLIST:
-			return center.punishments().getAllPunishments(PunishmentType.BAN);
-		case MUTELIST:
-			return center.punishments().getAllPunishments(PunishmentType.MUTE);
-		case HISTORY:
-			return center.punishments().getHistory(target);
-		case WARNS:
-			return center.punishments().getPunishments(target, PunishmentType.WARN);
-		case BLAME:
-			return center.punishments().getAllPunishments();
-		default:
-			return center.punishments().getPunishments(target);
 		}
 	}
 	
@@ -560,29 +529,39 @@ public class Commands implements CommandsMaster {
 		center.subjects().sendMessage(operator, other_reload_successful);
 	}
 	
+	private String nextPageCmd(CommandType command, int page) {
+		int nextPage = page + 1;
+		return getCmdBaseString(command) + " " + nextPage;
+	}
+	
 	private void listCmd(Subject operator, Subject target, CommandType command, int page) {
-		Set<Punishment> applicable = getAllForListParams(target, command);
-		list(operator, new Lister<Punishment>(page, perPage.get(command.subCategory()), maxPage.get(command.subCategory()), noPage.get(command.subCategory()), applicable, header.get(command.subCategory()), body.get(command.subCategory()), footer.get(command.subCategory())) {
+		Set<Punishment> applicable = SubCategory.HISTORY.equals(command.subCategory()) ? center.punishments().getHistory() : center.punishments().getActive();
+		list(operator, new Lister<Punishment>(page, perPage.get(command.subCategory()), maxPage.get(command.subCategory()), noPage.get(command.subCategory()), nextPageCmd(command, page), applicable, header.get(command.subCategory()), body.get(command.subCategory()), footer.get(command.subCategory())) {
 			@Override
-			boolean check(Punishment punishment) {
-				switch (command.subCategory()) {
-				case BANLIST: // falls through to next sub-block
-				case MUTELIST:
-					if (command.ipSpec().equals(IpSpec.UUID)) {
-						return punishment.subject().getType().equals(Subject.SubjectType.PLAYER);
-					} else if (command.ipSpec().equals(IpSpec.IP)) {
-						return punishment.subject().getType().equals(Subject.SubjectType.IP);
+			public boolean check(Punishment punishment) {
+				if (SubCategory.BANLIST.equals(command.subCategory()) || SubCategory.MUTELIST.equals(command.subCategory())) {
+					if (command.ipSpec().equals(IpSpec.UUID) && !punishment.subject().getType().equals(Subject.SubjectType.PLAYER)) {
+						return false;
+					} else if (command.ipSpec().equals(IpSpec.IP) && !punishment.subject().getType().equals(Subject.SubjectType.IP)) {
+						return false;
 					}
-				case BLAME:
+				}
+				switch (command.subCategory()) {
+				case BANLIST:
+					return PunishmentType.BAN.equals(punishment.type());
+				case MUTELIST:
+					return PunishmentType.MUTE.equals(punishment.type());
+				case WARNS:
+					if (!PunishmentType.WARN.equals(punishment.type())) {
+						return false;
+					} // falls through to next sub-block
+				case HISTORY:
 					return punishment.subject().equals(target);
+				case BLAME:
+					return punishment.operator().equals(target);
 				default:
 					return true;
 				}
-			}
-			@Override
-			String getNextPageCmd() {
-				int nextPage = page + 1;
-				return getCmdBaseString(command) + " " + nextPage;
 			}
 		});
 	}
@@ -610,9 +589,20 @@ public class Commands implements CommandsMaster {
 	}
 	
 	private void statusCmd(Subject operator, Subject target) {
-		boolean banned = center.punishments().hasPunishment(target, PunishmentType.BAN);
-		boolean muted = center.punishments().hasPunishment(target, PunishmentType.MUTE);
-		int warns = center.punishments().getPunishments(target, PunishmentType.WARN).size();
+		Set<Punishment> applicable = center.punishments().getActive();
+		applicable.removeIf((punishment) -> punishment.subject().equals(target));
+		Punishment banPunishment = null;
+		Punishment mutePunishment = null;
+		int warns = 0;
+		for (Punishment punishment : applicable) {
+			if (PunishmentType.BAN.equals(punishment.type())) {
+				banPunishment = punishment;
+			} else if (PunishmentType.MUTE.equals(punishment.type())) {
+				mutePunishment = punishment;
+			} else if (PunishmentType.WARN.equals(punishment.type())) {
+				warns++;
+			}
+		}
 		String header;
 		String info;
 		if (target.getType().equals(SubjectType.PLAYER)) {
@@ -624,11 +614,11 @@ public class Commands implements CommandsMaster {
 		} else {
 			throw new InternalStateException("Target cannot be the console!");
 		}
-		String banStatusKey = (banned) ? "ban-status.banned" : "ban-status.not-banned";
-		String muteStatusKey = (muted) ? "mute-status.muted" : "mute-status.not-muted";
+		String banStatusKey = (banPunishment != null) ? "ban-status.banned" : "ban-status.not-banned";
+		String muteStatusKey = (mutePunishment != null) ? "mute-status.muted" : "mute-status.not-muted";
 		String warnStatusKey = (warns == 0) ? "warn-status.no-warns" : "warn-status.warn-count";
-		String banStatus = other_status_layout.get(banStatusKey);
-		String muteStatus = other_status_layout.get(muteStatusKey);
+		String banStatus = (banPunishment != null) ? center.formats().formatMessageWithPunishment(other_status_layout.get(banStatusKey), banPunishment) : other_status_layout.get(banStatusKey);
+		String muteStatus = (mutePunishment != null) ? center.formats().formatMessageWithPunishment(other_status_layout.get(muteStatusKey), mutePunishment) : other_status_layout.get(muteStatusKey);
 		String warnStatus = other_status_layout.get(warnStatusKey);
 		String[] msgs = other_status_layout_body.toArray(new String[0]);
 		for (int n = 0; n < msgs.length; n++) {
@@ -713,7 +703,7 @@ public class Commands implements CommandsMaster {
 		} else {
 			max = Integer.MAX_VALUE;
 		}
-		ArrayList<Punishment> applicable = new ArrayList<Punishment>(center.punishments().getAllPunishments());
+		ArrayList<Punishment> applicable = new ArrayList<Punishment>(center.punishments().getActive());
 		applicable.sort(DATE_COMPARATOR);
 		int n = 0;
 		for (Iterator<Punishment> it = applicable.iterator(); it.hasNext();) {
@@ -740,11 +730,7 @@ public class Commands implements CommandsMaster {
 	
 	private void list(Subject operator, Lister<Punishment> lister) {
 		ArrayList<Punishment> punishments = new ArrayList<Punishment>(lister.applicable);
-		for (Iterator<Punishment> it = punishments.iterator(); it.hasNext();) {
-			if (!lister.check(it.next())) {
-				it.remove();
-			}
-		}
+		punishments.removeIf((punishment) -> !lister.check(punishment));
 		if (punishments.isEmpty()) {
 			center.subjects().sendMessage(operator, lister.noPagesMsg);
 			return;
@@ -758,17 +744,17 @@ public class Commands implements CommandsMaster {
 		List<String> body = lister.body;
 		List<String> footer = lister.footer;
 		for (int n = 0; n < header.size(); n++) {
-			header.set(n, header.get(n).replace("%PAGE%", Integer.toString(lister.page)).replace("%MAXPAGE%", Integer.toString(maxPage)).replace("%CMD%", lister.getNextPageCmd()));
+			header.set(n, header.get(n).replace("%PAGE%", Integer.toString(lister.page)).replace("%MAXPAGE%", Integer.toString(maxPage)).replace("%CMD%", lister.nextPageCmd));
 		}
 		for (int n = 0; n < footer.size(); n++) {
-			footer.set(n, footer.get(n).replace("%PAGE%", Integer.toString(lister.page)).replace("%MAXPAGE%", Integer.toString(maxPage)).replace("%CMD%", lister.getNextPageCmd()));
+			footer.set(n, footer.get(n).replace("%PAGE%", Integer.toString(lister.page)).replace("%MAXPAGE%", Integer.toString(maxPage)).replace("%CMD%", lister.nextPageCmd));
 		}
 		punishments.sort(DATE_COMPARATOR);
 		center.subjects().sendMessage(operator, header.toArray(new String[0]));
 		for (Punishment p : punishments) {
 			String[] msgs = body.toArray(new String[0]);
 			for (int n = 0; n < msgs.length; n++) {
-				msgs[n] = center.formats().formatMessageWithPunishment(msgs[n], p).replace("%PAGE%", Integer.toString(lister.page)).replace("%MAXPAGE%", Integer.toString(maxPage)).replace("%CMD%", lister.getNextPageCmd());
+				msgs[n] = center.formats().formatMessageWithPunishment(msgs[n], p).replace("%PAGE%", Integer.toString(lister.page)).replace("%MAXPAGE%", Integer.toString(maxPage)).replace("%CMD%", lister.nextPageCmd);
 			}
 			center.subjects().sendMessage(operator, true, msgs);
 		}
@@ -940,16 +926,18 @@ abstract class Lister<T> {
 	final int perPage;
 	final String maxPagesMsg;
 	final String noPagesMsg;
+	final String nextPageCmd;
 	final Set<T> applicable;
 	final List<String> header;
 	final List<String> body;
 	final List<String> footer;
 	
-	Lister(int page, int perPage, String maxPagesMsg, String noPagesMsg, Set<T> applicable, List<String> header, List<String> body, List<String> footer) {
+	Lister(int page, int perPage, String maxPagesMsg, String noPagesMsg, String nextPageCmd, Set<T> applicable, List<String> header, List<String> body, List<String> footer) {
 		this.page = page;
 		this.perPage = perPage;
 		this.maxPagesMsg = maxPagesMsg;
 		this.noPagesMsg = noPagesMsg;
+		this.nextPageCmd = nextPageCmd;
 		this.applicable = applicable;
 		this.header = header;
 		this.body = body;
@@ -957,7 +945,5 @@ abstract class Lister<T> {
 	}
 	
 	abstract boolean check(T object);
-	
-	abstract String getNextPageCmd();
 	
 }
