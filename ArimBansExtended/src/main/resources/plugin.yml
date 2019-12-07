@@ -1,0 +1,100 @@
+name: ${project.name}
+main: ${project.groupId}.${project.artifactId}.ArimBansExtendedBukkit
+version: ${project.version}
+author: A248
+description: ${project.description}
+
+commands:
+  ban:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  unban:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  ipban:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  ipunban:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  mute:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  unmute:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  ipmute:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  ipunmute:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  warn:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  unwarn:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  ipwarn:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  ipunwarn:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  kick:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  ipkick:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  banlist:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  ipbanlist:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  playerbanlist:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  mutelist:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  ipmutelist:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  playermutelist:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  history:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  iphistory:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  warns:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  ipwarns:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  status:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  ipstatus:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  ips:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  geoip:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  alts:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  blame:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
+  rollback:
+    description: Command redirected to ArimBans
+    usage: /<command> <arguments>
