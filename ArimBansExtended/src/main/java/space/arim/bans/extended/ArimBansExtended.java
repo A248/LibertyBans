@@ -78,7 +78,7 @@ public class ArimBansExtended implements AutoCloseable {
 		return defaultObj;
 	}
 	
-	boolean getCfgAntiSign() {
+	public boolean antiSignEnabled() {
 		return getCfgObject(Boolean.class, "options.anti-sign", true);
 	}
 	
