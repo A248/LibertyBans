@@ -306,4 +306,28 @@ other:
       warn-status:
         warn-count: '&cWarns &8» &7%WARN_COUNT%||ttp:&7Click to see warns for &e&o%TARGET%&7.||cmd:/%CMD_WARNS%'
         no-warns: '&cWarns &8» &7None'
+time:
+  units:
+    years:
+      enable: true
+      message: '%YEARS% years'
+    months:
+      enable: true
+      message: '%MONTHS% months'
+    weeks:
+      enable: true
+      message: '%WEEKS% weeks'
+    days:
+      enable: true
+      message: '%DAYS% days'
+    hours:
+      enable: true
+      message: '%HOURS% hours'
+    minutes:
+      enable: true
+      message: '%MINUTES% minutes'
+    seconds:
+      enable: true
+      message: '%SECONDS% seconds'
+  enable-comma: true
 messages-version: 1

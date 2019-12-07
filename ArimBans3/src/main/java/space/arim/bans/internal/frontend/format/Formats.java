@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.ArimBansLibrary;
@@ -42,6 +43,8 @@ public class Formats implements FormatsMaster {
 	
 	private final ArimBans center;
 	
+	private static final String DEFAULTING_TO_DATE_FORMAT = "Invalid date format specified! Defaulting to dd/MM/yyyy HH:mm:ss...";
+	
 	private SimpleDateFormat dateFormatter;
 	
 	private List<String> permanent_arguments;
@@ -52,6 +55,9 @@ public class Formats implements FormatsMaster {
 	private boolean json = true;
 	private String permanent_display;
 	private String console_display;
+	
+	private final ConcurrentHashMap<TimeUnit, String> unitsFormat = new ConcurrentHashMap<TimeUnit, String>();
+	private boolean time_enable_comma = true;
 
 	public Formats(ArimBans center) {
 		this.center = center;
@@ -65,6 +71,9 @@ public class Formats implements FormatsMaster {
 				notification.put(fromPunishmentType(type, false), invalid_string);
 			}
 		}
+		for (TimeUnit unit : TimeUnit.values()) {
+			unitsFormat.put(unit, null);
+		}
 	}
 
 	@Override
@@ -75,7 +84,7 @@ public class Formats implements FormatsMaster {
 	@Override
 	public String formatMessageWithPunishment(String message, Punishment punishment) {
 		long current = System.currentTimeMillis();
-		return message.replace("%ID%", Integer.toString(punishment.id())).replace("%TYPE%", ToolsUtil.capitaliseProperly(punishment.type().toString())).replace("%TARGET%", formatSubject(punishment.subject())).replace("%OPERATOR%", formatSubject(punishment.operator())).replace("%REASON%", punishment.reason()).replace("%DURATION%", formatTime(punishment.expiration() - punishment.date(), false)).replace("%TIME%", formatTime(punishment.expiration() - current, false)).replace("%EXPIRATION%", formatTime(punishment.expiration(), true)).replace("%SINCE%", formatTime(punishment.date() - current, false)).replace("%DATE%", formatTime(punishment.date(), true));
+		return message.replace("%ID%", Integer.toString(punishment.id())).replace("%TYPE%", ToolsUtil.capitaliseProperly(punishment.type().toString())).replace("%TARGET%", formatSubject(punishment.subject())).replace("%OPERATOR%", formatSubject(punishment.operator())).replace("%REASON%", punishment.reason()).replace("%DURATION%", formatTime(punishment.expiration() - punishment.date(), false)).replace("%TIME%", formatTime(punishment.expiration() - current, false)).replace("%EXPIRATION%", formatTime(punishment.expiration(), true)).replace("%DATE%", formatTime(punishment.date(), true));
 	}
 	
 	@Override
@@ -106,16 +115,52 @@ public class Formats implements FormatsMaster {
 		return formatMessageWithPunishment(notification.get(fromPunishmentType(punishment.type(), add)), punishment).replace("%UNOPERATOR%", formatSubject(operator));
 	}
 
+	private enum TimeUnit {
+		YEARS(31_536_000L),
+		MONTHS(2_592_000L),
+		WEEKS(604_800L),
+		DAYS(86_400L),
+		HOURS(3_600L),
+		MINUTES(60L),
+		SECONDS(1L);
+		
+		final long value;
+		
+		private TimeUnit(long value) {
+			this.value = value * 1000_000L;
+		}
+		
+		String varName() {
+			return "%" + name() + "%";
+		}
+		
+		String getKeyString() {
+			return "time.units." + name() + ".";
+		}
+		
+	}
+	
 	@Override
 	public String formatTime(long millis, boolean absolute) {
+		
 		if (millis < 0) {
 			return permanent_display;
 		}
 		if (absolute) {
 			return dateFormatter.format(new Date(millis));
 		}
-		// TODO Properly implement this method
-		return null;
+		
+		StringBuilder builder = new StringBuilder();
+		for (TimeUnit unit : TimeUnit.values()) {
+			if (millis > unit.value && unitsFormat.get(unit) != null) {
+				if (time_enable_comma) {
+					builder.append(',').append(' ');
+				}
+				int value = (int) Math.floorDiv(millis, unit.value);
+				builder.append(unitsFormat.get(unit).replace(unit.varName(), Integer.toString(value)));
+			}
+		}
+		return (time_enable_comma) ? builder.toString().substring(2) : builder.toString();
 	}
 	
 	@Override
@@ -161,6 +206,7 @@ public class Formats implements FormatsMaster {
 		try {
 			dateFormatter = new SimpleDateFormat(center.config().getConfigString("formatting.dates"));
 		} catch (IllegalArgumentException ex) {
+			center.log(Level.INFO, DEFAULTING_TO_DATE_FORMAT);
 			dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		}
 		
@@ -193,6 +239,7 @@ public class Formats implements FormatsMaster {
 	
 	@Override
 	public void refreshMessages(boolean first) {
+		
 		for (PunishmentType type : PunishmentType.values()) {
 			String leadKeyAdd = center.config().keyString(type, Category.ADD);
 			String leadKeyRemove = center.config().keyString(type, Category.REMOVE);
@@ -204,6 +251,14 @@ public class Formats implements FormatsMaster {
 				notification.put(categoryRemove, center.config().getMessagesString(leadKeyRemove + "successful.notification"));
 			}
 		}
+		
+		for (TimeUnit unit : TimeUnit.values()) {
+			if (center.config().getMessagesBoolean(unit.getKeyString() + "enable")) {
+				unitsFormat.put(unit, center.config().getMessagesString(unit.getKeyString() + "message"));
+			}
+		}
+		time_enable_comma = center.config().getMessagesBoolean("time.enable-comma");
+		
 	}
 
 }
