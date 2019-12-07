@@ -36,7 +36,7 @@ public class SignListener implements Listener {
 	
 	@EventHandler(priority=EventPriority.LOW)
 	public void onSignEdit(SignChangeEvent evt) {
-		if (plugin.enabled()) {
+		if (plugin.enabled() && plugin.extension().antiSignEnabled()) {
 			PunishmentResult result = plugin.extension().getLib().getApplicableMute(evt.getPlayer().getUniqueId(), evt.getPlayer().getAddress().getAddress().getHostAddress());
 			if (result.hasPunishment()) {
 				evt.setCancelled(true);
