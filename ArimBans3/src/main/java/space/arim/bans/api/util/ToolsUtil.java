@@ -19,13 +19,16 @@
 package space.arim.bans.api.util;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import com.google.common.io.ByteStreams;
 import com.google.common.net.InetAddresses;
 
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -129,6 +132,18 @@ public final class ToolsUtil {
 			}
 		}
 		return components.toArray(new BaseComponent[] {});
+	}
+	
+	public static boolean saveFromStream(File target, InputStream input) {
+		if (!ToolsUtil.generateFile(target)) {
+			return false;
+		}
+		try (FileOutputStream output = new FileOutputStream(target)) {
+			ByteStreams.copy(input, output);
+			return true;
+		} catch (IOException ex) {
+			return false;
+		}
 	}
 	
 	public static boolean generateFile(File file) {
