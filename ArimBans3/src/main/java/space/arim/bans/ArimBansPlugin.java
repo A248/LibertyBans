@@ -63,12 +63,16 @@ public class ArimBansPlugin implements ArimBans {
 	public ArimBansPlugin(File folder, Environment environment) {
 		this.folder = folder;
 		this.environment = environment;
-		if (folder.mkdirs()) {
+		if (folder.exists() || folder.mkdirs()) {
 			logger = Logger.getLogger(getName());
 			logger.setParent(environment.logger());
 			logger.setUseParentHandlers(false);
 			String path = folder.getPath() + File.separator + "logs" + File.separator + ToolsUtil.fileDateFormat() + File.separator;
 			try {
+				File dirPath = new File(path);
+				if (!dirPath.exists() && !dirPath.mkdirs()) {
+					shutdown("Directory creation of " + path + "failed!");
+				}
 				FileHandler verboseLog = new FileHandler(path + "verbose.log");
 				FileHandler infoLog = new FileHandler(path + "info.log");
 				FileHandler errorLog = new FileHandler(path + "error.log");
