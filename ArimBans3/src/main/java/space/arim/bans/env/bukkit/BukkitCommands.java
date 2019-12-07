@@ -46,7 +46,7 @@ public class BukkitCommands implements Configurable, CommandExecutor {
 			return true;
 		}
 		if (args.length > 0) {
-			environment.center().async(() ->environment.center().commands().execute(subject, args));
+			environment.center().commands().execute(subject, args);
 		} else {
 			environment.center().commands().usage(subject);
 		}

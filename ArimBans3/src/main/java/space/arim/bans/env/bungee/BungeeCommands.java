@@ -49,7 +49,7 @@ public class BungeeCommands extends Command implements TabExecutor, Configurable
 			return;
 		}
 		if (args.length > 0) {
-			environment.center().async(() -> environment.center().commands().execute(subject, args));
+			environment.center().commands().execute(subject, args);
 		} else {
 			environment.center().commands().usage(subject);
 		}

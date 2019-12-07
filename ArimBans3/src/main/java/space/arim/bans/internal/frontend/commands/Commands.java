@@ -267,7 +267,11 @@ public class Commands implements CommandsMaster {
 	
 	@Override
 	public void execute(Subject subject, CommandType command, String[] args) {
-		exec(subject, command, args);
+		if (center.corresponder().asynchronous()) {
+			exec(subject, command, args);
+		} else {
+			center.async(() -> exec(subject, command, args));
+		}
 	}
 	
 	// Should only be called for targets with SubjectType == SubjectType.PLAYER
