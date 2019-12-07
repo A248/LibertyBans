@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import space.arim.bans.api.AsyncExecutor;
+import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.util.ToolsUtil;
 import space.arim.bans.env.Environment;
 import space.arim.bans.internal.async.AsyncMaster;
@@ -106,6 +107,7 @@ public class ArimBansPlugin implements ArimBans {
 	private void shutdown(String message) {
 		environment.shutdown(message);
 		close();
+		throw new InternalStateException("Shutting down...");
 	}
 
 	@Override
