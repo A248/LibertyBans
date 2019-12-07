@@ -21,7 +21,6 @@ package space.arim.bans.internal.config;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +47,7 @@ public class Config implements ConfigMaster {
 	private final ConcurrentHashMap<String, Object> configValues = new ConcurrentHashMap<String, Object>();
 	private final ConcurrentHashMap<String, Object> messageValues = new ConcurrentHashMap<String, Object>();
 	
-	private static final String CONFIG_PATH = "config.yml";
+	private static final String CONFIG_PATH = "src/main/resources/config.yml";
 	private static final String MESSAGES_PATH = "messages.yml";
 	
 	private static final int CONFIG_VERSION = 1;
@@ -82,24 +81,15 @@ public class Config implements ConfigMaster {
 	
 	private void saveIfNotExist(File path, String source) {
 		if (!path.exists()) {
-			try (InputStream output = getClass().getResourceAsStream(source)) {
-				if (!ToolsUtil.saveFromStream(path, output)) {
-					center.logError(new ConfigLoadException(path));
-				}
-			} catch (IOException ex) {
-				center.logError(ex);
+			if (!ToolsUtil.saveFromStream(path, getClass().getResourceAsStream(source))) {
+				center.logError(new ConfigLoadException(path));
 			}
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
 	private Map<String, Object> loadDefaults(String source, Yaml yaml) {
-		try (InputStream input = getClass().getResourceAsStream(source)) {
-			return (Map<String, Object>) yaml.load(input);
-		} catch (IOException ex) {
-			center.logError(new ConfigLoadException("Could not load internal resource " + source, ex));
-			return new HashMap<String, Object>();
-		}
+		return (Map<String, Object>) yaml.load(getClass().getResourceAsStream(source));
 	}
 	
 	@SuppressWarnings("unchecked")
