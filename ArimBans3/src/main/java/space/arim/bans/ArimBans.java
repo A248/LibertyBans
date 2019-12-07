@@ -228,6 +228,16 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	}
 	
 	@Override
+	default void simulateCommand(Subject subject, String[] rawArgs) {
+		commands().execute(subject, rawArgs);
+	}
+	
+	@Override
+	default boolean asynchronous() {
+		return corresponder().asynchronous();
+	}
+	
+	@Override
 	default void reload() {
 		refresh(false);
 	}

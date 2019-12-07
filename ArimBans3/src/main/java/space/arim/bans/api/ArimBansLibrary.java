@@ -85,6 +85,17 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	void simulateCommand(Subject subject, CommandType command, String[] args);
 	
 	/**
+	 * Simulates execution of a command. Differs from {@link #simulateCommand(Subject, CommandType, String[])} in that it automatically parses command types. <br>
+	 * <br>
+	 * Example usage if <code>banLib</code> represents an ArimBansLibrary object: <br>
+	 * <code>banLib.simulateCommand(banLib.fromUUID("some uuid"), "ipban player15 19d ip-banned for 19 days!);</code>
+	 * 
+	 * @param subject - the player (or console) executing the command
+	 * @param rawArgs - the arguments including the command itself
+	 */
+	void simulateCommand(Subject subject, String[] rawArgs);
+	
+	/**
 	 * Executes a block of code asynchronously.
 	 * 
 	 * <br><br>Bukkit users may call {@link org.bukkit.scheduler.BukkitScheduler#runTask(Plugin, Runnable) Bukkit.getScheduler().runTask(Plugin, Runnable)} to resynchronize.
@@ -92,6 +103,13 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 * @param task - the lambda/runnable to run async
 	 */
 	void async(Runnable task);
+	
+	/**
+	 * Checks whether the current execution is asynchronous.
+	 * 
+	 * @return true if and only if the current thread does not equal to main server thread.
+	 */
+	boolean asynchronous();
 	
 	/**
 	 * Gets the internal ArimBans logger.
