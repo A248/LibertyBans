@@ -152,7 +152,7 @@ public final class ToolsUtil {
 		} else if (file.exists()) {
 			file.delete();
 		}
-		if (!file.getParentFile().mkdirs()) {
+		if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
 			return false;
 		}
 		try {
