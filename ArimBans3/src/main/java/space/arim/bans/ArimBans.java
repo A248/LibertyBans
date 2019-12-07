@@ -257,4 +257,9 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 		subjects().sendMessage(subject, message);
 	}
 	
+	@Override
+	default void sendMessage(UUID player, String message) {
+		subjects().sendMessage(fromUUID(player), message);
+	}
+	
 }
