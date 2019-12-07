@@ -19,18 +19,16 @@
 package space.arim.bans.internal.config;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 import org.yaml.snakeyaml.Yaml;
-
-import com.google.common.io.ByteStreams;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.CommandType;
@@ -50,8 +48,8 @@ public class Config implements ConfigMaster {
 	private final ConcurrentHashMap<String, Object> configValues = new ConcurrentHashMap<String, Object>();
 	private final ConcurrentHashMap<String, Object> messageValues = new ConcurrentHashMap<String, Object>();
 	
-	private static final String CONFIG_PATH = "/src/main/resources/config.yml";
-	private static final String MESSAGES_PATH = "/src/main/resources/messages.yml";
+	private static final String CONFIG_PATH = "config.yml";
+	private static final String MESSAGES_PATH = "messages.yml";
 	
 	private static final int CONFIG_VERSION = 1;
 	private static final int MESSAGES_VERSION = 1;
@@ -82,19 +80,14 @@ public class Config implements ConfigMaster {
 		messagesVersion();
 	}
 	
-	private void saveIfNotExist(File target, String source) {
-		if (!target.exists()) {
-			if (!ToolsUtil.generateFile(target)) {
-				ConfigLoadException exception = new ConfigLoadException(target);
-				center.logError(exception);
-				throw exception;
-			}
-			try (InputStream input = getClass().getResourceAsStream(source); FileOutputStream output = new FileOutputStream(target)) {
-				ByteStreams.copy(input, output);
+	private void saveIfNotExist(File path, String source) {
+		if (!path.exists()) {
+			try (InputStream output = getClass().getResourceAsStream(source)) {
+				if (!ToolsUtil.saveFromStream(path, output)) {
+					center.logError(new ConfigLoadException(path));
+				}
 			} catch (IOException ex) {
-				ConfigLoadException exception = new ConfigLoadException("Could not save " + target.getPath() + " from " + source, ex);
-				center.logError(exception);
-				throw exception;
+				center.logError(ex);
 			}
 		}
 	}
@@ -104,9 +97,8 @@ public class Config implements ConfigMaster {
 		try (InputStream input = getClass().getResourceAsStream(source)) {
 			return (Map<String, Object>) yaml.load(input);
 		} catch (IOException ex) {
-			ConfigLoadException exception = new ConfigLoadException("Could not load internal resource " + source, ex);
-			center.logError(exception);
-			throw exception;
+			center.logError(new ConfigLoadException("Could not load internal resource " + source, ex));
+			return new HashMap<String, Object>();
 		}
 	}
 	
@@ -115,9 +107,8 @@ public class Config implements ConfigMaster {
 		try (FileReader reader = new FileReader(source)) {
 			return (Map<String, Object>) yaml.load(reader);
 		} catch (IOException ex) {
-			ConfigLoadException exception = new ConfigLoadException(source, ex);
-			center.logError(exception);
-			throw exception;
+			center.logError(new ConfigLoadException(source, ex));
+			return new HashMap<String, Object>();
 		}
 	}
 	
