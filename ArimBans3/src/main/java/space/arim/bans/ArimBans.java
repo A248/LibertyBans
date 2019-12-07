@@ -253,13 +253,13 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	}
 	
 	@Override
-	default void sendMessage(Subject subject, String message) {
-		subjects().sendMessage(subject, message);
+	default void sendMessage(Subject subject, String...messages) {
+		subjects().sendMessage(subject, messages);
 	}
 	
 	@Override
-	default void sendMessage(UUID player, String message) {
-		subjects().sendMessage(fromUUID(player), message);
+	default void sendMessage(UUID player, String...messages) {
+		subjects().sendMessage(fromUUID(player), messages);
 	}
 	
 }

@@ -41,9 +41,9 @@ public interface PunishmentPlugin extends Registrable {
 	
 	void removePunishments(Punishment...punishments);
 	
-	void sendMessage(Subject subject, String message);
+	void sendMessage(Subject subject, String...messages);
 	
-	void sendMessage(UUID player, String message);
+	void sendMessage(UUID player, String...messages);
 	
 	/**
 	 * Returns the server console Subject
