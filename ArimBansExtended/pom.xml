@@ -44,5 +44,23 @@
 			<version>1.8-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>de.exceptionflug</groupId>
+			<artifactId>protocolize-api</artifactId>
+			<version>1.4.7-SNAPSHOT</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>de.exceptionflug</groupId>
+			<artifactId>protocolize-items</artifactId>
+			<version>1.4.7-SNAPSHOT</version>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
+	<repositories>
+		<repository>
+			<id>exceptionflug</id>
+			<url>http://mvn.exceptionflug.de/repository/exceptionflug-public/</url>
+		</repository>
+	</repositories>
 </project>
