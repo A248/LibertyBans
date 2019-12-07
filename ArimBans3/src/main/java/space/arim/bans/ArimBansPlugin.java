@@ -21,6 +21,7 @@ package space.arim.bans;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.FileHandler;
+import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,6 +42,7 @@ import space.arim.bans.internal.frontend.format.Formats;
 import space.arim.bans.internal.sql.Sql;
 
 import space.arim.registry.UniversalRegistry;
+import space.arim.registry.util.UniversalLogFormatter;
 
 public class ArimBansPlugin implements ArimBans {
 	
@@ -73,12 +75,16 @@ public class ArimBansPlugin implements ArimBans {
 				if (!dirPath.exists() && !dirPath.mkdirs()) {
 					shutdown("Directory creation of " + path + "failed!");
 				}
+				Formatter universalFormatter = new UniversalLogFormatter();
 				FileHandler verboseLog = new FileHandler(path + "verbose.log");
 				FileHandler infoLog = new FileHandler(path + "info.log");
 				FileHandler errorLog = new FileHandler(path + "error.log");
 				verboseLog.setLevel(Level.ALL);
 				infoLog.setLevel(Level.INFO);
 				errorLog.setLevel(Level.WARNING);
+				verboseLog.setFormatter(universalFormatter);
+				infoLog.setFormatter(universalFormatter);
+				errorLog.setFormatter(universalFormatter);
 				logger.addHandler(verboseLog);
 				logger.addHandler(infoLog);
 				logger.addHandler(errorLog);

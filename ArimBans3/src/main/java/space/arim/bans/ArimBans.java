@@ -22,6 +22,7 @@ import java.io.File;
 import java.sql.ResultSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 
 import space.arim.bans.api.ArimBansLibrary;
@@ -136,6 +137,11 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 		resolver().close();
 		formats().close();
 		corresponder().close();
+		if (getLogger() != null) {
+			for (Handler fh : getLogger().getHandlers()) {
+				fh.close();
+			}
+		}
 	}
 	
 	@Override
