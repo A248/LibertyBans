@@ -46,6 +46,134 @@
 								</includes>
 							</artifactSet>
 							<minimizeJar>true</minimizeJar>
+							<filters>
+								<filter>
+									<artifact>org.hsqldb:hsqldb</artifact>
+									<includes>
+							<!-- Yes, it is a LOT of files to list in pom. -->
+							<!-- You probably wondering why they're all here, if minimizeJar=true. -->
+							<!-- It's because minimizeJar is not so smart -->
+							<!-- Specifically, it removes files which are indirectly required -->
+							<!-- E.g., it does not care for Class.forName(String) -->
+							<!-- Consequently, minimizeJar was removing hsqldb dependency -->
+							<!-- I could have just force-included all of hsqldb -->
+							<!-- But that would make the uber JAR unnecessarily large. -->
+							<!-- So, quite simply, I found the specific classes I needed and listed them here. -->
+										<include>org/hsqldb/DatabaseManager.java</include>
+										<include>org/hsqldb/TransactionManager.java</include>
+										<include>org/hsqldb/RowDiskDataChange.java</include>
+										<include>org/hsqldb/ColumnSchema.java</include>
+										<include>org/hsqldb/PeriodDefinition.java</include>
+										<include>org/hsqldb/RowAVLDiskLarge.java</include>
+										<include>org/hsqldb/StatementSession.java</include>
+										<include>org/hsqldb/TableWorks.java</include>
+										<include>org/hsqldb/TransactionManagerCommon.java</include>
+										<include>org/hsqldb/RoutineSchema.java</include>
+										<include>org/hsqldb/Tokens.java</include>
+										<include>org/hsqldb/StatementQuery.java</include>
+										<include>org/hsqldb/StatementResultUpdate.java</include>
+										<include>org/hsqldb/SchemaManager.java</include>
+										<include>org/hsqldb/StatementSchemaDefinition.java</include>
+										<include>org/hsqldb/ClientConnection.java</include>
+										<include>org/hsqldb/ClientConnectionHTTP.java</include>
+										<include>org/hsqldb/StatementDML.java</include>
+										<include>org/hsqldb/Statement.java</include>
+										<include>org/hsqldb/ParserCommand.java</include>
+										<include>org/hsqldb/StatementProcedure.java</include>
+										<include>org/hsqldb/RangeVariable.java</include>
+										<include>org/hsqldb/ParserDQL.java</include>
+										<include>org/hsqldb/TypeInvariants.java</include>
+										<include>org/hsqldb/ExpressionPeriodOp.java</include>
+										<include>org/hsqldb/Scanner.java</include>
+										<include>org/hsqldb/ExpressionOp.java</include>
+										<include>org/hsqldb/HsqlDateTime.java</include>
+										<include>org/hsqldb/StatementCompound.java</include>
+										<include>org/hsqldb/StatementDMQL.java</include>
+										<include>org/hsqldb/DatabaseURL.java</include>
+										<include>org/hsqldb/TriggerDefSQL.java</include>
+										<include>org/hsqldb/ParserDML.java</include>
+										<include>org/hsqldb/Schema.java</include>
+										<include>org/hsqldb/SchemaObject.java</include>
+										<include>org/hsqldb/RowAVLDiskData.java</include>
+										<include>org/hsqldb/ReferenceObject.java</include>
+										<include>org/hsqldb/ExpressionLike.java</include>
+										<include>org/hsqldb/StatementSignal.java</include>
+										<include>org/hsqldb/ExpressionTable.java</include>
+										<include>org/hsqldb/TransactionManager2PL.java</include>
+										<include>org/hsqldb/Row.java</include>
+										<include>org/hsqldb/StatementCursor.java</include>
+										<include>org/hsqldb/Table.java</include>
+										<include>org/hsqldb/Database.java</include>
+										<include>org/hsqldb/SetFunctionValueArray.java</include>
+										<include>org/hsqldb/StatementSimple.java</include>
+										<include>org/hsqldb/SqlInvariants.java</include>
+										<include>org/hsqldb/TransactionManagerMVCC.java</include>
+										<include>org/hsqldb/ExpressionOrderBy.java</include>
+										<include>org/hsqldb/StatementSet.java</include>
+										<include>org/hsqldb/RowAVL.java</include>
+										<include>org/hsqldb/RowAVLDisk.java</include>
+										<include>org/hsqldb/OpTypes.java</include>
+										<include>org/hsqldb/SetFunctionValueAggregate.java</include>
+										<include>org/hsqldb/TablePeriodWorks.java</include>
+										<include>org/hsqldb/Expression.java</include>
+										<include>org/hsqldb/TriggerDef.java</include>
+										<include>org/hsqldb/ParserTable.java</include>
+										<include>org/hsqldb/SessionInterface.java</include>
+										<include>org/hsqldb/RowActionBase.java</include>
+										<include>org/hsqldb/RowAction.java</include>
+										<include>org/hsqldb/RangeGroup.java</include>
+										<include>org/hsqldb/Like.java</include>
+										<include>org/hsqldb/ParserBase.java</include>
+										<include>org/hsqldb/ExpressionLogical.java</include>
+										<include>org/hsqldb/ParserRoutine.java</include>
+										<include>org/hsqldb/NumberSequence.java</include>
+										<include>org/hsqldb/DatabaseType.java</include>
+										<include>org/hsqldb/RangeVariableJoined.java</include>
+										<include>org/hsqldb/ExpressionColumn.java</include>
+										<include>org/hsqldb/ConstraintCore.java</include>
+										<include>org/hsqldb/View.java</include>
+										<include>org/hsqldb/SetFunction.java</include>
+										<include>org/hsqldb/ExpressionAccessor.java</include>
+										<include>org/hsqldb/SetFunctionValueUser.java</include>
+										<include>org/hsqldb/SortAndSlice.java</include>
+										<include>org/hsqldb/StatementInsert.java</include>
+										<include>org/hsqldb/StatementCommand.java</include>
+										<include>org/hsqldb/SessionManager.java</include>
+										<include>org/hsqldb/Constraint.java</include>
+										<include>org/hsqldb/QuerySpecification.java</include>
+										<include>org/hsqldb/TransactionManagerMV2PL.java</include>
+										<include>org/hsqldb/HsqlException.java</include>
+										<include>org/hsqldb/FunctionSQL.java</include>
+										<include>org/hsqldb/ExpressionAggregate.java</include>
+										<include>org/hsqldb/TableUtil.java</include>
+										<include>org/hsqldb/TableDerived.java</include>
+										<include>org/hsqldb/HsqlNameManager.java</include>
+										<include>org/hsqldb/SessionData.java</include>
+										<include>org/hsqldb/Token.java</include>
+										<include>org/hsqldb/ExpressionValue.java</include>
+										<include>org/hsqldb/FunctionCustom.java</include>
+										<include>org/hsqldb/FunctionSQLInvoked.java</include>
+										<include>org/hsqldb/SchemaObjectSet.java</include>
+										<include>org/hsqldb/Routine.java</include>
+										<include>org/hsqldb/ExpressionPeriod.java</include>
+										<include>org/hsqldb/SessionContext.java</include>
+										<include>org/hsqldb/StatementExpression.java</include>
+										<include>org/hsqldb/ParserDDL.java</include>
+										<include>org/hsqldb/Session.java</include>
+										<include>org/hsqldb/TableBase.java</include>
+										<include>org/hsqldb/ExpressionColumnAccessor.java</include>
+										<include>org/hsqldb/RangeVariableResolver.java</include>
+										<include>org/hsqldb/ExpressionArrayAggregate.java</include>
+										<include>org/hsqldb/StatementManager.java</include>
+										<include>org/hsqldb/StatementSchema.java</include>
+										<include>org/hsqldb/TextTable.java</include>
+										<include>org/hsqldb/StatementHandler.java</include>
+										<include>org/hsqldb/QueryExpression.java</include>
+										<include>org/hsqldb/ExpressionArithmetic.java</include>
+										<include>org/hsqldb/ColumnBase.java</include>
+									</includes>
+								</filter>
+							</filters>
 							<createDependencyReducedPom>true</createDependencyReducedPom>
 							<relocations>
 								<relocation>
