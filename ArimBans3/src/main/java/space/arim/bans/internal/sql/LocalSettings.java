@@ -23,6 +23,7 @@ import java.io.File;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.internal.config.ConfigMaster;
 
 public class LocalSettings extends SqlSettings {
@@ -36,13 +37,18 @@ public class LocalSettings extends SqlSettings {
 
 	@Override
 	HikariDataSource loadDataSource() {
+		try {
+			Class.forName("org.hsqldb.jdbc.JDBCDriver");
+		} catch (ClassNotFoundException ex) {
+			throw new InternalStateException("HSQLDB dependency missing!", ex);
+		}/**/
 		HikariConfig config = getInitialConfig();
 		config.setJdbcUrl(url);
 		config.setUsername("SA");
 		config.setPassword("");
-		HikariDataSource data = new HikariDataSource(config);
-		data.setConnectionTimeout(25000L);
-		return data;
+		config.setDriverClassName("org.hsqldb.jdbc.JDBCDriver");
+		config.setConnectionTimeout(25000L);
+		return new HikariDataSource(config);
 	}
 
 }

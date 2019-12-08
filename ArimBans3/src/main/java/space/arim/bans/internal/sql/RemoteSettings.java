@@ -42,9 +42,9 @@ public class RemoteSettings extends SqlSettings {
 		config.setJdbcUrl(url);
 		config.setUsername(username);
 		config.setPassword(password);
-		HikariDataSource data = new HikariDataSource(config);
-		data.setConnectionTimeout(25000L);
-		return data;
+		//config.setDriverClassName("com.mysql.jdbc.Driver");
+		config.setConnectionTimeout(25000L);
+		return new HikariDataSource(config);
 	}
 	
 }
