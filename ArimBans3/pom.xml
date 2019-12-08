@@ -50,15 +50,30 @@
 								<filter>
 									<artifact>org.hsqldb:hsqldb</artifact>
 									<includes>
-							<!-- Yes, it is a LOT of files to list in pom. -->
-							<!-- You probably wondering why they're all here, if minimizeJar=true. -->
-							<!-- It's because minimizeJar is not so smart -->
-							<!-- Specifically, it removes files which are indirectly required -->
-							<!-- E.g., it does not care for Class.forName(String) -->
-							<!-- Consequently, minimizeJar was removing hsqldb dependency -->
-							<!-- I could have just force-included all of hsqldb -->
-							<!-- But that would make the uber JAR unnecessarily large. -->
-							<!-- So, quite simply, I found the specific classes I needed and listed them here. -->
+							<!-- 	
+									Yes, I know, there a LOT of files listed here.
+									They're stated here because minimizeJar is not so smart. It removes files implicitly referenced.
+									Specifically, it does not care for indirect dependencies such as Class.forName(String).
+									Consequently, minimizeJar was removing the hsqldb dependency -->
+							
+							<!--
+									So, I had 3 options:
+								 1. Turn off minimizeJar
+								 2. Force-include all of HSQLDB
+								 3. Include an explicit reference to org.hsqldb.jdbc.JDBCDriver
+								 4. Find speifically which classes of HSQLDB I needed and mark them for inclusiond.
+								 
+							 		#1 and #2 would make the JAR unnecessarily large.
+									#3 keeps an unnecessary reference in the bytecode.
+									So I chose #4. -->
+									
+							<!--
+								Here's how I went about finding the required class names:
+								1. I explicitly referenced the HSQLDB driver in ArimBans and compiled the result as ArimBans.jar. 
+										This way, minimizeJar knew I needed the HSQLDB driver class, and thus it shaded all required classes.
+								2. I decompiled the created ArimBans.jar and analyzed the shaded HSQLDB classes.
+								3. Using Java programming (hooray!), I recursed into the directories of the decompiled source
+								and formatted each classname into a nice output file which I then copy+pasted here.  -->
 										<include>org/hsqldb/DatabaseManager.java</include>
 										<include>org/hsqldb/TransactionManager.java</include>
 										<include>org/hsqldb/RowDiskDataChange.java</include>
@@ -69,7 +84,47 @@
 										<include>org/hsqldb/TableWorks.java</include>
 										<include>org/hsqldb/TransactionManagerCommon.java</include>
 										<include>org/hsqldb/RoutineSchema.java</include>
+										<include>org/hsqldb/types/BitType.java</include>
+										<include>org/hsqldb/types/NumberType.java</include>
+										<include>org/hsqldb/types/JavaObjectDataInternal.java</include>
+										<include>org/hsqldb/types/LobData.java</include>
+										<include>org/hsqldb/types/IntervalMonthData.java</include>
+										<include>org/hsqldb/types/BlobData.java</include>
+										<include>org/hsqldb/types/Type.java</include>
+										<include>org/hsqldb/types/NullType.java</include>
+										<include>org/hsqldb/types/OtherType.java</include>
+										<include>org/hsqldb/types/BinaryData.java</include>
+										<include>org/hsqldb/types/BinaryUUIDType.java</include>
+										<include>org/hsqldb/types/Charset.java</include>
+										<include>org/hsqldb/types/BlobInputStream.java</include>
+										<include>org/hsqldb/types/BinaryType.java</include>
+										<include>org/hsqldb/types/BlobDataID.java</include>
+										<include>org/hsqldb/types/RowType.java</include>
+										<include>org/hsqldb/types/DateTimeType.java</include>
+										<include>org/hsqldb/types/BlobType.java</include>
+										<include>org/hsqldb/types/ClobInputStream.java</include>
+										<include>org/hsqldb/types/ClobDataID.java</include>
+										<include>org/hsqldb/types/IntervalSecondData.java</include>
+										<include>org/hsqldb/types/ClobData.java</include>
+										<include>org/hsqldb/types/Collation.java</include>
+										<include>org/hsqldb/types/DTIType.java</include>
+										<include>org/hsqldb/types/IntervalType.java</include>
+										<include>org/hsqldb/types/TypedComparator.java</include>
+										<include>org/hsqldb/types/JavaObjectData.java</include>
+										<include>org/hsqldb/types/Types.java</include>
+										<include>org/hsqldb/types/ClobType.java</include>
+										<include>org/hsqldb/types/BooleanType.java</include>
+										<include>org/hsqldb/types/UserTypeModifier.java</include>
+										<include>org/hsqldb/types/CharacterType.java</include>
+										<include>org/hsqldb/types/TimeData.java</include>
+										<include>org/hsqldb/types/ArrayType.java</include>
+										<include>org/hsqldb/types/TimestampData.java</include>
 										<include>org/hsqldb/Tokens.java</include>
+										<include>org/hsqldb/result/ResultLob.java</include>
+										<include>org/hsqldb/result/ResultMetaData.java</include>
+										<include>org/hsqldb/result/ResultProperties.java</include>
+										<include>org/hsqldb/result/Result.java</include>
+										<include>org/hsqldb/trigger/Trigger.java</include>
 										<include>org/hsqldb/StatementQuery.java</include>
 										<include>org/hsqldb/StatementResultUpdate.java</include>
 										<include>org/hsqldb/SchemaManager.java</include>
@@ -82,6 +137,20 @@
 										<include>org/hsqldb/StatementProcedure.java</include>
 										<include>org/hsqldb/RangeVariable.java</include>
 										<include>org/hsqldb/ParserDQL.java</include>
+										<include>org/hsqldb/util/Colors.png</include>
+										<include>org/hsqldb/util/Italic.gif</include>
+										<include>org/hsqldb/util/problems.gif</include>
+										<include>org/hsqldb/util/Clear.png</include>
+										<include>org/hsqldb/util/run_exc_running.gif</include>
+										<include>org/hsqldb/util/RedCircle.gif</include>
+										<include>org/hsqldb/util/Bold.gif</include>
+										<include>org/hsqldb/util/GreenCircle.gif</include>
+										<include>org/hsqldb/util/run_exc.gif</include>
+										<include>org/hsqldb/util/Hourglass.gif</include>
+										<include>org/hsqldb/util/hsqldb.gif</include>
+										<include>org/hsqldb/util/hsqldbtab.gif</include>
+										<include>org/hsqldb/util/NoWay.gif</include>
+										<include>org/hsqldb/util/Close.png</include>
 										<include>org/hsqldb/TypeInvariants.java</include>
 										<include>org/hsqldb/ExpressionPeriodOp.java</include>
 										<include>org/hsqldb/Scanner.java</include>
@@ -92,14 +161,33 @@
 										<include>org/hsqldb/DatabaseURL.java</include>
 										<include>org/hsqldb/TriggerDefSQL.java</include>
 										<include>org/hsqldb/ParserDML.java</include>
+										<include>org/hsqldb/scriptio/ScriptReaderBase.java</include>
+										<include>org/hsqldb/scriptio/ScriptWriterText.java</include>
+										<include>org/hsqldb/scriptio/ScriptReaderText.java</include>
+										<include>org/hsqldb/scriptio/ScriptWriterBase.java</include>
+										<include>org/hsqldb/scriptio/ScriptReaderDecode.java</include>
+										<include>org/hsqldb/scriptio/ScriptWriterEncode.java</include>
 										<include>org/hsqldb/Schema.java</include>
 										<include>org/hsqldb/SchemaObject.java</include>
 										<include>org/hsqldb/RowAVLDiskData.java</include>
 										<include>org/hsqldb/ReferenceObject.java</include>
 										<include>org/hsqldb/ExpressionLike.java</include>
+										<include>org/hsqldb/dbinfo/DatabaseInformation.java</include>
 										<include>org/hsqldb/StatementSignal.java</include>
 										<include>org/hsqldb/ExpressionTable.java</include>
 										<include>org/hsqldb/TransactionManager2PL.java</include>
+										<include>org/hsqldb/resources/jdklogging-default.properties</include>
+										<include>org/hsqldb/resources/info-table-remarks.properties</include>
+										<include>org/hsqldb/resources/webserver-pages.properties</include>
+										<include>org/hsqldb/resources/webserver-content-types.properties</include>
+										<include>org/hsqldb/resources/org_hsqldb_DatabaseClassLoader.properties</include>
+										<include>org/hsqldb/resources/sql-state-messages_es.properties</include>
+										<include>org/hsqldb/resources/sql-state-messages.properties</include>
+										<include>org/hsqldb/resources/info-column-remarks.properties</include>
+										<include>org/hsqldb/resources/ResourceBundleHandler.java</include>
+										<include>org/hsqldb/resources/information-schema.sql</include>
+										<include>org/hsqldb/resources/org_hsqldb_server_Server_messages.properties</include>
+										<include>org/hsqldb/resources/lob-schema.sql</include>
 										<include>org/hsqldb/Row.java</include>
 										<include>org/hsqldb/StatementCursor.java</include>
 										<include>org/hsqldb/Table.java</include>
@@ -109,6 +197,8 @@
 										<include>org/hsqldb/SqlInvariants.java</include>
 										<include>org/hsqldb/TransactionManagerMVCC.java</include>
 										<include>org/hsqldb/ExpressionOrderBy.java</include>
+										<include>org/hsqldb/server/package.html</include>
+										<include>org/hsqldb/server/HsqlSocketFactory.java</include>
 										<include>org/hsqldb/StatementSet.java</include>
 										<include>org/hsqldb/RowAVL.java</include>
 										<include>org/hsqldb/RowAVLDisk.java</include>
@@ -118,15 +208,64 @@
 										<include>org/hsqldb/Expression.java</include>
 										<include>org/hsqldb/TriggerDef.java</include>
 										<include>org/hsqldb/ParserTable.java</include>
+										<include>org/hsqldb/jdbc/JDBCResultSetMetaData.java</include>
+										<include>org/hsqldb/jdbc/JDBCArrayBasic.java</include>
+										<include>org/hsqldb/jdbc/JDBCColumnMetaData.java</include>
+										<include>org/hsqldb/jdbc/JDBCParameterMetaData.java</include>
+										<include>org/hsqldb/jdbc/JDBCStatementBase.java</include>
+										<include>org/hsqldb/jdbc/JDBCClobClient.java</include>
+										<include>org/hsqldb/jdbc/JDBCResultSet.java</include>
+										<include>org/hsqldb/jdbc/JDBCClob.java</include>
+										<include>org/hsqldb/jdbc/JDBCConnectionEventListener.java</include>
+										<include>org/hsqldb/jdbc/package.html</include>
+										<include>org/hsqldb/jdbc/JDBCDatabaseMetaData.java</include>
+										<include>org/hsqldb/jdbc/JDBCBlob.java</include>
+										<include>org/hsqldb/jdbc/JDBCConnection.java</include>
+										<include>org/hsqldb/jdbc/JDBCArray.java</include>
+										<include>org/hsqldb/jdbc/JDBCCallableStatement.java</include>
+										<include>org/hsqldb/jdbc/JDBCDriver.java</include>
+										<include>org/hsqldb/jdbc/JDBCPreparedStatement.java</include>
+										<include>org/hsqldb/jdbc/JDBCBlobClient.java</include>
+										<include>org/hsqldb/jdbc/JDBCSQLXML.java</include>
+										<include>org/hsqldb/jdbc/JDBCNClob.java</include>
+										<include>org/hsqldb/jdbc/JDBCUtil.java</include>
+										<include>org/hsqldb/jdbc/JDBCSavepoint.java</include>
+										<include>org/hsqldb/jdbc/JDBCStatement.java</include>
 										<include>org/hsqldb/SessionInterface.java</include>
 										<include>org/hsqldb/RowActionBase.java</include>
 										<include>org/hsqldb/RowAction.java</include>
 										<include>org/hsqldb/RangeGroup.java</include>
+										<include>org/hsqldb/map/BaseHashMap.java</include>
+										<include>org/hsqldb/map/HashIndex.java</include>
+										<include>org/hsqldb/map/BitMap.java</include>
+										<include>org/hsqldb/map/ValuePoolHashMap.java</include>
+										<include>org/hsqldb/map/ValuePool.java</include>
 										<include>org/hsqldb/Like.java</include>
 										<include>org/hsqldb/ParserBase.java</include>
+										<include>org/hsqldb/rights/Grantee.java</include>
+										<include>org/hsqldb/rights/GranteeManager.java</include>
+										<include>org/hsqldb/rights/Right.java</include>
+										<include>org/hsqldb/rights/User.java</include>
+										<include>org/hsqldb/rights/UserManager.java</include>
 										<include>org/hsqldb/ExpressionLogical.java</include>
 										<include>org/hsqldb/ParserRoutine.java</include>
 										<include>org/hsqldb/NumberSequence.java</include>
+										<include>org/hsqldb/rowio/RowOutputTextLog.java</include>
+										<include>org/hsqldb/rowio/RowInputText.java</include>
+										<include>org/hsqldb/rowio/RowInputBase.java</include>
+										<include>org/hsqldb/rowio/RowOutputBase.java</include>
+										<include>org/hsqldb/rowio/RowInputBinary180.java</include>
+										<include>org/hsqldb/rowio/RowInputBinaryDecode.java</include>
+										<include>org/hsqldb/rowio/RowInputInterface.java</include>
+										<include>org/hsqldb/rowio/RowOutputBinary.java</include>
+										<include>org/hsqldb/rowio/RowInputTextLog.java</include>
+										<include>org/hsqldb/rowio/RowOutputText.java</include>
+										<include>org/hsqldb/rowio/RowOutputTextQuoted.java</include>
+										<include>org/hsqldb/rowio/RowInputBinary.java</include>
+										<include>org/hsqldb/rowio/RowInputTextQuoted.java</include>
+										<include>org/hsqldb/rowio/RowOutputBinary180.java</include>
+										<include>org/hsqldb/rowio/RowOutputInterface.java</include>
+										<include>org/hsqldb/rowio/RowOutputBinaryEncode.java</include>
 										<include>org/hsqldb/DatabaseType.java</include>
 										<include>org/hsqldb/RangeVariableJoined.java</include>
 										<include>org/hsqldb/ExpressionColumn.java</include>
@@ -136,10 +275,110 @@
 										<include>org/hsqldb/ExpressionAccessor.java</include>
 										<include>org/hsqldb/SetFunctionValueUser.java</include>
 										<include>org/hsqldb/SortAndSlice.java</include>
+										<include>org/hsqldb/navigator/RowSetNavigatorData.java</include>
+										<include>org/hsqldb/navigator/RangeIterator.java</include>
+										<include>org/hsqldb/navigator/RowSetNavigatorDataChangeMemory.java</include>
+										<include>org/hsqldb/navigator/RowIterator.java</include>
+										<include>org/hsqldb/navigator/RowSetNavigatorDataChange.java</include>
+										<include>org/hsqldb/navigator/RowSetNavigatorClient.java</include>
+										<include>org/hsqldb/navigator/RowSetNavigator.java</include>
+										<include>org/hsqldb/navigator/RowSetNavigatorDataTable.java</include>
+										<include>org/hsqldb/lib/BasicTextJdkLogFormatter.java</include>
+										<include>org/hsqldb/lib/IntIndex.java</include>
+										<include>org/hsqldb/lib/RefCapableRBInterface.java</include>
+										<include>org/hsqldb/lib/LongKeyHashMap.java</include>
+										<include>org/hsqldb/lib/ValidatingResourceBundle.java</include>
+										<include>org/hsqldb/lib/HsqlList.java</include>
+										<include>org/hsqldb/lib/WrapperIterator.java</include>
+										<include>org/hsqldb/lib/HashMap.java</include>
+										<include>org/hsqldb/lib/HashMappedList.java</include>
+										<include>org/hsqldb/lib/LineGroupReader.java</include>
+										<include>org/hsqldb/lib/DataOutputStream.java</include>
+										<include>org/hsqldb/lib/RefCapablePropertyResourceBundle.java</include>
+										<include>org/hsqldb/lib/Collection.java</include>
+										<include>org/hsqldb/lib/StopWatch.java</include>
+										<include>org/hsqldb/lib/FileAccess.java</include>
+										<include>org/hsqldb/lib/StringConverter.java</include>
+										<include>org/hsqldb/lib/ReaderInputStream.java</include>
+										<include>org/hsqldb/lib/LongKeyLongValueHashMap.java</include>
+										<include>org/hsqldb/lib/InputStreamWrapper.java</include>
+										<include>org/hsqldb/lib/HsqlDeque.java</include>
+										<include>org/hsqldb/lib/StringUtil.java</include>
+										<include>org/hsqldb/lib/Notified.java</include>
+										<include>org/hsqldb/lib/OrderedIntKeyHashMap.java</include>
+										<include>org/hsqldb/lib/IntValueHashMap.java</include>
+										<include>org/hsqldb/lib/FileUtil.java</include>
+										<include>org/hsqldb/lib/package.html</include>
+										<include>org/hsqldb/lib/DoubleIntIndex.java</include>
+										<include>org/hsqldb/lib/ClosableByteArrayOutputStream.java</include>
+										<include>org/hsqldb/lib/HsqlTimer.java</include>
+										<include>org/hsqldb/lib/StringInputStream.java</include>
+										<include>org/hsqldb/lib/java/JavaSystem.java</include>
+										<include>org/hsqldb/lib/LongValueHashMap.java</include>
+										<include>org/hsqldb/lib/IntKeyHashMap.java</include>
+										<include>org/hsqldb/lib/HsqlArrayList.java</include>
+										<include>org/hsqldb/lib/HsqlByteArrayOutputStream.java</include>
+										<include>org/hsqldb/lib/LongDeque.java</include>
+										<include>org/hsqldb/lib/SimpleLog.java</include>
+										<include>org/hsqldb/lib/IntKeyIntValueHashMap.java</include>
+										<include>org/hsqldb/lib/MultiValueHashMap.java</include>
+										<include>org/hsqldb/lib/Iterator.java</include>
+										<include>org/hsqldb/lib/CharArrayWriter.java</include>
+										<include>org/hsqldb/lib/OrderedLongKeyHashMap.java</include>
+										<include>org/hsqldb/lib/CountUpDownLatch.java</include>
+										<include>org/hsqldb/lib/CountdownInputStream.java</include>
+										<include>org/hsqldb/lib/ArrayListIdentity.java</include>
+										<include>org/hsqldb/lib/LongKeyIntValueHashMap.java</include>
+										<include>org/hsqldb/lib/FileArchiver.java</include>
+										<include>org/hsqldb/lib/ThreadFactory.java</include>
+										<include>org/hsqldb/lib/HsqlArrayHeap.java</include>
+										<include>org/hsqldb/lib/ObjectComparator.java</include>
+										<include>org/hsqldb/lib/InputStreamInterface.java</include>
+										<include>org/hsqldb/lib/FrameworkLogger.java</include>
+										<include>org/hsqldb/lib/HashSet.java</include>
+										<include>org/hsqldb/lib/ArraySort.java</include>
+										<include>org/hsqldb/lib/KMPSearchAlgorithm.java</include>
+										<include>org/hsqldb/lib/InOutUtil.java</include>
+										<include>org/hsqldb/lib/LineReader.java</include>
+										<include>org/hsqldb/lib/BaseList.java</include>
+										<include>org/hsqldb/lib/ArrayCounter.java</include>
+										<include>org/hsqldb/lib/OrderedHashSet.java</include>
+										<include>org/hsqldb/lib/DoubleLongIndex.java</include>
+										<include>org/hsqldb/lib/tar/DbBackup.java</include>
+										<include>org/hsqldb/lib/tar/TarGenerator.java</include>
+										<include>org/hsqldb/lib/tar/PIFGenerator.java</include>
+										<include>org/hsqldb/lib/tar/package.html</include>
+										<include>org/hsqldb/lib/tar/TarFileOutputStream.java</include>
+										<include>org/hsqldb/lib/tar/rb_de.properties</include>
+										<include>org/hsqldb/lib/tar/RB.java</include>
+										<include>org/hsqldb/lib/tar/rb.properties</include>
+										<include>org/hsqldb/lib/tar/TarMalformatException.java</include>
+										<include>org/hsqldb/lib/tar/rb/TarGenerator.syntax_de.text</include>
+										<include>org/hsqldb/lib/tar/rb/DbBackup.syntax.text</include>
+										<include>org/hsqldb/lib/tar/rb/TarGenerator.syntax.text</include>
+										<include>org/hsqldb/lib/tar/rb/TarReader.syntax_de.text</include>
+										<include>org/hsqldb/lib/tar/rb/TarReader.syntax.text</include>
+										<include>org/hsqldb/lib/tar/rb/DbBackup.syntax_de.text</include>
+										<include>org/hsqldb/lib/tar/rb/listing.format_de.text</include>
+										<include>org/hsqldb/lib/tar/rb/listing.format.text</include>
+										<include>org/hsqldb/lib/tar/TarHeaderField.java</include>
+										<include>org/hsqldb/lib/HsqlHeap.java</include>
+										<include>org/hsqldb/lib/Set.java</include>
+										<include>org/hsqldb/lib/ArrayUtil.java</include>
+										<include>org/hsqldb/lib/HsqlByteArrayInputStream.java</include>
+										<include>org/hsqldb/lib/LongLookup.java</include>
+										<include>org/hsqldb/lib/OrderedIntHashSet.java</include>
+										<include>org/hsqldb/lib/OrderedLongHashSet.java</include>
 										<include>org/hsqldb/StatementInsert.java</include>
 										<include>org/hsqldb/StatementCommand.java</include>
 										<include>org/hsqldb/SessionManager.java</include>
 										<include>org/hsqldb/Constraint.java</include>
+										<include>org/hsqldb/index/NodeAVLDiskLarge.java</include>
+										<include>org/hsqldb/index/Index.java</include>
+										<include>org/hsqldb/index/NodeAVL.java</include>
+										<include>org/hsqldb/index/IndexAVLMemory.java</include>
+										<include>org/hsqldb/index/NodeAVLDisk.java</include>
+										<include>org/hsqldb/index/IndexAVL.java</include>
 										<include>org/hsqldb/QuerySpecification.java</include>
 										<include>org/hsqldb/TransactionManagerMV2PL.java</include>
 										<include>org/hsqldb/HsqlException.java</include>
@@ -163,6 +402,66 @@
 										<include>org/hsqldb/TableBase.java</include>
 										<include>org/hsqldb/ExpressionColumnAccessor.java</include>
 										<include>org/hsqldb/RangeVariableResolver.java</include>
+										<include>org/hsqldb/error/ErrorCode.java</include>
+										<include>org/hsqldb/error/Error.java</include>
+										<include>org/hsqldb/persist/LockFile.java</include>
+										<include>org/hsqldb/persist/RAFileNIO.java</include>
+										<include>org/hsqldb/persist/DataSpaceManager.java</include>
+										<include>org/hsqldb/persist/DataFileDefrag.java</include>
+										<include>org/hsqldb/persist/IntArrayCachedObject.java</include>
+										<include>org/hsqldb/persist/RowInsertVersioning.java</include>
+										<include>org/hsqldb/persist/DataSpaceManagerBlocks.java</include>
+										<include>org/hsqldb/persist/TableSpaceManagerSimple.java</include>
+										<include>org/hsqldb/persist/TableSpaceManager.java</include>
+										<include>org/hsqldb/persist/RowStoreAVLMemory.java</include>
+										<include>org/hsqldb/persist/RowStoreAVL.java</include>
+										<include>org/hsqldb/persist/RAFileHybrid.java</include>
+										<include>org/hsqldb/persist/BitMapCachedObject.java</include>
+										<include>org/hsqldb/persist/LobStoreMem.java</include>
+										<include>org/hsqldb/persist/CachedObjectBase.java</include>
+										<include>org/hsqldb/persist/TableSpaceManagerBlocks.java</include>
+										<include>org/hsqldb/persist/RowInsertInterface.java</include>
+										<include>org/hsqldb/persist/PersistentStoreCollection.java</include>
+										<include>org/hsqldb/persist/DataFileCache.java</include>
+										<include>org/hsqldb/persist/DataSpaceManagerSimple.java</include>
+										<include>org/hsqldb/persist/TextTableStorageManager.java</include>
+										<include>org/hsqldb/persist/Logger.java</include>
+										<include>org/hsqldb/persist/RowStoreAVLHybridExtended.java</include>
+										<include>org/hsqldb/persist/LobManager.java</include>
+										<include>org/hsqldb/persist/Cache.java</include>
+										<include>org/hsqldb/persist/BlockObjectStore.java</include>
+										<include>org/hsqldb/persist/HsqlProperties.java</include>
+										<include>org/hsqldb/persist/LobStoreInJar.java</include>
+										<include>org/hsqldb/persist/RandomAccessInterface.java</include>
+										<include>org/hsqldb/persist/ScriptRunner.java</include>
+										<include>org/hsqldb/persist/RowStoreAVLDisk.java</include>
+										<include>org/hsqldb/persist/RowStoreAVLDiskData.java</include>
+										<include>org/hsqldb/persist/SimpleStore.java</include>
+										<include>org/hsqldb/persist/RowStoreDataChange.java</include>
+										<include>org/hsqldb/persist/RowInsertSimple.java</include>
+										<include>org/hsqldb/persist/DataFileCacheSession.java</include>
+										<include>org/hsqldb/persist/HsqlDatabaseProperties.java</include>
+										<include>org/hsqldb/persist/LobStoreRAFile.java</include>
+										<include>org/hsqldb/persist/Log.java</include>
+										<include>org/hsqldb/persist/RowStoreAVLHybrid.java</include>
+										<include>org/hsqldb/persist/LobStore.java</include>
+										<include>org/hsqldb/persist/RAShadowFile.java</include>
+										<include>org/hsqldb/persist/TextFileReader.java</include>
+										<include>org/hsqldb/persist/CachedObject.java</include>
+										<include>org/hsqldb/persist/ScriptLoader.java</include>
+										<include>org/hsqldb/persist/RAFileInJar.java</include>
+										<include>org/hsqldb/persist/PersistentStore.java</include>
+										<include>org/hsqldb/persist/Crypto.java</include>
+										<include>org/hsqldb/persist/PersistentStoreCollectionSession.java</include>
+										<include>org/hsqldb/persist/PersistentStoreCollectionDatabase.java</include>
+										<include>org/hsqldb/persist/TextCache.java</include>
+										<include>org/hsqldb/persist/TextFileSettings.java</include>
+										<include>org/hsqldb/persist/TextFileReader8.java</include>
+										<include>org/hsqldb/persist/RAFileSimple.java</include>
+										<include>org/hsqldb/persist/TextFileReader16.java</include>
+										<include>org/hsqldb/persist/EventLogInterface.java</include>
+										<include>org/hsqldb/persist/RAFile.java</include>
+										<include>org/hsqldb/persist/DirectoryBlockCachedObject.java</include>
 										<include>org/hsqldb/ExpressionArrayAggregate.java</include>
 										<include>org/hsqldb/StatementManager.java</include>
 										<include>org/hsqldb/StatementSchema.java</include>
