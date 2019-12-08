@@ -21,27 +21,27 @@ package space.arim.bans.extended.bungee;
 import de.exceptionflug.protocolize.api.event.PacketReceiveEvent;
 import de.exceptionflug.protocolize.api.handler.PacketAdapter;
 import de.exceptionflug.protocolize.api.protocol.Stream;
-import de.exceptionflug.protocolize.items.packet.BlockPlacement;
+import de.exceptionflug.protocolize.world.packet.SignUpdate;
+
 import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.extended.ArimBansExtendedBungee;
 
-public class SignInterceptor extends PacketAdapter<BlockPlacement> {
+public class SignInterceptor extends PacketAdapter<SignUpdate> {
 
 	private final ArimBansExtendedBungee plugin;
 	
 	public SignInterceptor(ArimBansExtendedBungee plugin) {
-		super(Stream.UPSTREAM, BlockPlacement.class);
+		super(Stream.UPSTREAM, SignUpdate.class);
 		this.plugin = plugin;
 	}
 	
-	@SuppressWarnings("unused")
 	@Override
-	public void receive(PacketReceiveEvent<BlockPlacement> evt) {
-		if (plugin.enabled() && plugin.extension().antiSignEnabled() && !evt.getPacket().isCancelSend()) {
-			if (false) { // Need to check if placed block is a sign
+	public void receive(PacketReceiveEvent<SignUpdate> evt) {
+		if (plugin.enabled() && plugin.extension().antiSignEnabled() && !evt.isCancelled()) {
+			if (evt.isSentByPlayer()) {
 				PunishmentResult result = plugin.extension().getLib().getApplicableBan(evt.getPlayer().getUniqueId(), evt.getPlayer().getAddress().getAddress().getHostAddress());
 				if (result.hasPunishment()) {
-					evt.getPacket().setCancelSend(true);
+					evt.setCancelled(true);
 					plugin.extension().getLib().sendMessage(evt.getPlayer().getUniqueId(), result.getApplicableMessage());
 				}
 			}
