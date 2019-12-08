@@ -134,16 +134,15 @@ public final class ToolsUtil {
 		return components.toArray(new BaseComponent[] {});
 	}
 	
-	public static boolean saveFromStream(File target, InputStream input) {
-		if (!ToolsUtil.generateFile(target)) {
-			return false;
+	public static boolean saveFromStream(File target, InputStream input) throws IOException {
+		if (target.createNewFile()) {
+			try (FileOutputStream output = new FileOutputStream(target)){
+				ByteStreams.copy(input, output);
+				input.close();
+				return true;
+			}
 		}
-		try (FileOutputStream output = new FileOutputStream(target)) {
-			ByteStreams.copy(input, output);
-			return true;
-		} catch (IOException ex) {
-			return false;
-		}
+		return false;
 	}
 	
 	public static boolean generateFile(File file) {
@@ -151,9 +150,6 @@ public final class ToolsUtil {
 			return true;
 		} else if (file.exists()) {
 			file.delete();
-		}
-		if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
-			return false;
 		}
 		try {
 			return file.createNewFile();
