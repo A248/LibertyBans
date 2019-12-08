@@ -68,3 +68,4 @@ local.properties
 .apt_generated
 
 .sts4-cache/
+/dependency-reduced-pom.xml
