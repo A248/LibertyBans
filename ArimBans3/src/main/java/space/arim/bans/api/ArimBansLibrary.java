@@ -29,7 +29,7 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 * Used internally for invalid messages. If you send a message whose sole content
 	 * is this, you will receive an unchecked exception.
 	 */
-	static String INVALID_STRING_CODE = "(internal_invalid_string_code)";
+	static String INVALID_STRING_CODE = "<ArimBans_InvalidStringCode_If_You_See_This_Please_Tell_An_Admin_Immediately>";
 	
 	/**
 	 * Checks a message for validity using assertions.
@@ -39,9 +39,10 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 * 
 	 * @param message - the string to check
 	 */
-	static void checkString(String message) {
-		assert message != null;
-		assert (!message.equals(INVALID_STRING_CODE));
+	static boolean checkString(String message) {
+		boolean ok = message != null && !INVALID_STRING_CODE.equals(message);
+		assert ok;
+		return ok;
 	}
 	
 	int getNextAvailablePunishmentId();
