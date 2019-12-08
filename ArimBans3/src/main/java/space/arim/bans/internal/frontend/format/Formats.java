@@ -72,7 +72,7 @@ public class Formats implements FormatsMaster {
 			}
 		}
 		for (TimeUnit unit : TimeUnit.values()) {
-			unitsFormat.put(unit, null);
+			unitsFormat.put(unit, invalid_string);
 		}
 	}
 
@@ -152,7 +152,7 @@ public class Formats implements FormatsMaster {
 		
 		StringBuilder builder = new StringBuilder();
 		for (TimeUnit unit : TimeUnit.values()) {
-			if (millis > unit.value && unitsFormat.get(unit) != null) {
+			if (millis > unit.value && ArimBansLibrary.checkString(unitsFormat.get(unit))) {
 				if (time_enable_comma) {
 					builder.append(',').append(' ');
 				}
