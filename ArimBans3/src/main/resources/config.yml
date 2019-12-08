@@ -86,9 +86,9 @@ fetchers:
     ashcon: true
     mojang: true
   geoip:
-    ipstack:
-      enabled: false
+    ipStack:
+      enable: false
       key: 'nokey'
-    freegeoip: true
-    ipapi: true
+    freeGeoIp: true
+    ipApi: true
 config-version: 1

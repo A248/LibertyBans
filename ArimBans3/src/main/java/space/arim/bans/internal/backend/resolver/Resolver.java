@@ -287,10 +287,10 @@ public class Resolver implements ResolverMaster {
 		internalFetcher = center.config().getConfigBoolean("fetchers.uuids.internal");
 		ashconFetcher = center.config().getConfigBoolean("fetchers.uuids.ashcon");
 		mojangFetcher = center.config().getConfigBoolean("fetchers.uuids.mojang");
-		ipStack = center.config().getConfigBoolean("fetchers.ips.ipstack.enabled");
-		ipStackKey = center.config().getConfigString("fetchers.ips.ipstack.key");
-		freeGeoIp = center.config().getConfigBoolean("fetchers.ips.freegeoip");
-		ipApi = center.config().getConfigBoolean("fetchers.ips.ipapi");
+		ipStack = center.config().getConfigBoolean("fetchers.geoip.ipStack.enable");
+		ipStackKey = center.config().getConfigString("fetchers.geoip.ipStack.key");
+		freeGeoIp = center.config().getConfigBoolean("fetchers.geoip.freeGeoIp");
+		ipApi = center.config().getConfigBoolean("fetchers.geoip.ipApi");
 	}
 
 }
