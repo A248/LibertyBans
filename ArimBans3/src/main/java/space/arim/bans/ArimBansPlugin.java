@@ -60,7 +60,7 @@ public class ArimBansPlugin implements ArimBans {
 	private final AsyncMaster async;
 	
 	private static final String CREATE_GITHUB_ISSUE = "Please create a Github issue at https://github.com/A248/ArimBans/issues";
-	private static final int LOG_TO_ENV_THRESHOLD = 800;
+	private static final int LOG_TO_ENV_THRESHOLD = Integer.MIN_VALUE;
 	
 	public ArimBansPlugin(File folder, Environment environment) {
 		this.folder = folder;
@@ -75,6 +75,7 @@ public class ArimBansPlugin implements ArimBans {
 				if (!dirPath.exists() && !dirPath.mkdirs()) {
 					shutdown("Directory creation of " + path + "failed!");
 				}
+				environment.logger().info("Starting logger!");
 				Formatter universalFormatter = new UniversalLogFormatter();
 				FileHandler verboseLog = new FileHandler(path + "verbose.log");
 				FileHandler infoLog = new FileHandler(path + "info.log");
@@ -94,6 +95,7 @@ public class ArimBansPlugin implements ArimBans {
 		} else {
 			shutdown("Directory creation of " + folder.getPath() + " failed!");
 		}
+		environment.logger().info("Finished logger initialisation!");
 		config = new Config(this);
 		sql = new Sql(this);
 		punishments = new Punishments(this);
