@@ -33,6 +33,7 @@ import space.arim.bans.ArimBans;
 import space.arim.bans.api.CommandType;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.exception.ConfigLoadException;
+import space.arim.bans.api.exception.ConfigSectionException;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.util.ToolsUtil;
 
@@ -40,14 +41,14 @@ public class Config implements ConfigMaster {
 	
 	private final ArimBans center;
 	
-	private final File configYml;
-	private final File messagesYml;
+	private File configYml;
+	private File messagesYml;
 	private final Map<String, Object> configDefaults;
-	private final Map<String, Object> messageDefaults;
+	private final Map<String, Object> messagesDefaults;
 	private final ConcurrentHashMap<String, Object> configValues = new ConcurrentHashMap<String, Object>();
-	private final ConcurrentHashMap<String, Object> messageValues = new ConcurrentHashMap<String, Object>();
+	private final ConcurrentHashMap<String, Object> messagesValues = new ConcurrentHashMap<String, Object>();
 	
-	private static final String CONFIG_PATH = "src/main/resources/config.yml";
+	private static final String CONFIG_PATH = "config.yml";
 	private static final String MESSAGES_PATH = "messages.yml";
 	
 	private static final int CONFIG_VERSION = 1;
@@ -55,41 +56,46 @@ public class Config implements ConfigMaster {
 
 	public Config(ArimBans center) {
 		this.center = center;
-		this.configYml = new File(center.dataFolder(), "config.yml");
-		this.messagesYml = new File(center.dataFolder(), "messages.yml");
 		
-		Yaml yaml = new Yaml();
-		
-		// Save files if nonexistent
-		saveIfNotExist(configYml, CONFIG_PATH);
-		saveIfNotExist(messagesYml, MESSAGES_PATH);
+		// Load files
+		configYml = saveIfNotExist(CONFIG_PATH);
+		messagesYml = saveIfNotExist(MESSAGES_PATH);
 		
 		// Load config defaults
+		Yaml yaml = new Yaml();
 		configDefaults = loadDefaults(CONFIG_PATH, yaml);
-		messageDefaults = loadDefaults(MESSAGES_PATH, yaml);
+		messagesDefaults = loadDefaults(MESSAGES_PATH, yaml);
 		configValues.putAll(configDefaults);
-		messageValues.putAll(messageDefaults);
-		
-		// Load config values
-		configValues.putAll(loadFile(configYml, yaml));
-		messageValues.putAll(loadFile(messagesYml, yaml));
-		
-		// Check config versions
-		configVersion();
-		messagesVersion();
+		messagesValues.putAll(messagesDefaults);
 	}
 	
-	private void saveIfNotExist(File path, String source) {
-		if (!path.exists()) {
-			if (!ToolsUtil.saveFromStream(path, getClass().getResourceAsStream(source))) {
-				center.logError(new ConfigLoadException(path));
+	@Override
+	public File getDataFolder() {
+		return center.dataFolder();
+	}
+	
+	private File saveIfNotExist(String resource) {
+		File target = new File(center.dataFolder(), resource);
+		if (!target.exists()) {
+			try {
+				if (ToolsUtil.saveFromStream(target, Config.class.getResourceAsStream(File.separator + resource))) {
+					center.log(Level.FINEST, "Copied internal resource to " + target.getPath() + ".");
+				} else {
+					center.log(Level.WARNING, "Creation of " + target.getPath() + " failed.");
+				}
+			} catch (IOException ex) {
+				center.logError(ex);
 			}
+		} else {
+			center.log(Level.FINEST, "File " + target.getPath() + " exists; good!");
 		}
+		
+		return target;
 	}
 	
 	@SuppressWarnings("unchecked")
 	private Map<String, Object> loadDefaults(String source, Yaml yaml) {
-		return (Map<String, Object>) yaml.load(getClass().getResourceAsStream(source));
+		return (Map<String, Object>) yaml.load(Config.class.getResourceAsStream(File.separator + source));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -98,8 +104,8 @@ public class Config implements ConfigMaster {
 			return (Map<String, Object>) yaml.load(reader);
 		} catch (IOException ex) {
 			center.logError(new ConfigLoadException(source, ex));
-			return new HashMap<String, Object>();
 		}
+		return new HashMap<String, Object>();
 	}
 	
 	private void configVersion() {
@@ -110,61 +116,55 @@ public class Config implements ConfigMaster {
 			}
 		}
 		File dest = new File(center.dataFolder(), "config-backups" + File.separator + ToolsUtil.fileDateFormat() + "-config.yml");
-		center.log(Level.WARNING, "Detected outdated config version. Saving old configuration to " + dest.getPath());
+		center.log(Level.WARNING, "Detected outdated config.yml version. Saving old configuration to " + dest.getPath());
 		configYml.renameTo(dest);
-		saveIfNotExist(configYml, CONFIG_PATH);
+		configYml = saveIfNotExist(CONFIG_PATH);
 	}
 	
 	private void messagesVersion() {
-		Object ver = messageValues.get("messages-version");
+		Object ver = messagesValues.get("messages-version");
 		if (ver instanceof Integer) {
 			if ((Integer) ver == MESSAGES_VERSION) {
 				return;
 			}
 		}
 		File dest = new File(center.dataFolder(), "messages-backups" + File.separator + ToolsUtil.fileDateFormat() + "-messages.yml");
-		center.log(Level.WARNING, "Detected outdated config version. Saving old configuration to " + dest.getPath());
+		center.log(Level.WARNING, "Detected outdated messages.yml version. Saving old configuration to " + dest.getPath());
 		messagesYml.renameTo(dest);
-		saveIfNotExist(messagesYml, MESSAGES_PATH);
+		messagesYml = saveIfNotExist(MESSAGES_PATH);
+	}
+	
+	private void loadConfig(Yaml yaml) {
+		configValues.putAll(loadFile(configYml, yaml));
+		configVersion();
+	}
+	
+	private void loadMessages(Yaml yaml) {
+		messagesValues.putAll(loadFile(messagesYml, yaml));
+		messagesVersion();
 	}
 	
 	@Override
 	public void refresh(boolean first) {
 		if (!first) {
 			Yaml yaml = new Yaml();
-			configValues.putAll(loadFile(configYml, yaml));
-			messageValues.putAll(loadFile(messagesYml, yaml));
-			configVersion();
-			messagesVersion();
+			loadConfig(yaml);
+			loadMessages(yaml);
 		}
 	}
 	
 	@Override
 	public void refreshConfig(boolean first) {
 		if (!first) {
-			configValues.putAll(loadFile(configYml, new Yaml()));
-			configVersion();
+			loadConfig(new Yaml());
 		}
 	}
 	
 	@Override
 	public void refreshMessages(boolean first) {
 		if (!first) {
-			messageValues.putAll(loadFile(messagesYml, new Yaml()));
-			messagesVersion();
+			loadMessages(new Yaml());
 		}
-	}
-
-	private void warning(String message) {
-		center.log(Level.WARNING, message);
-	}
-	
-	private void configWarning(String key, Class<?> type, File file) {
-		warning("Configuration " + key + " does not map to a " + type.getSimpleName() + " in " + file.getPath());
-	}
-	
-	private void configWarning(String key, Class<?> type) {
-		configWarning(key, type, configYml);
 	}
 	
 	private List<String> encodeList(List<String> list) {
@@ -178,23 +178,32 @@ public class Config implements ConfigMaster {
 	public String getConfigString(String key) {
 		return ToolsUtil.encode(cfgGet(key, String.class));
 	}
+	
+	@Override
+	public String getMessagesString(String key) {
+		return ToolsUtil.encode(msgsGet(key, String.class));
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<String> getConfigStrings(String key) {
-		if (configValues.containsKey(key)) {
-			Object obj = configValues.get(key);
-			if (obj instanceof List<?>) {
-				return encodeList((List<String>) obj);
-			}
-			configWarning(key, List.class);
-		}
-		return encodeList((List<String>) configDefaults.get(key));
+		return encodeList(cfgGet(key, List.class));
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<String> getMessagesStrings(String key) {
+		return encodeList(msgsGet(key, List.class));
 	}
 	
 	@Override
 	public boolean getConfigBoolean(String key) {
 		return cfgGet(key, Boolean.class);
+	}
+	
+	@Override
+	public boolean getMessagesBoolean(String key) {
+		return msgsGet(key, Boolean.class);
 	}
 
 	@Override
@@ -202,56 +211,30 @@ public class Config implements ConfigMaster {
 		return cfgGet(key, Integer.class);
 	}
 	
-	@SuppressWarnings("unchecked")
-	private <T> T cfgGet(String key, Class<T> type) {
-		if (configValues.containsKey(key)) {
-			Object obj = configValues.get(key);
-			if (type.isInstance(obj)) {
-				return (T) obj;
-			}
-			configWarning(key, type);
-		}
-		return (T) configDefaults.get(key);
-	}
-	
-	@Override
-	public String getMessagesString(String key) {
-		return ToolsUtil.encode(msgGet(key, String.class));
-	}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public List<String> getMessagesStrings(String key) {
-		if (messageValues.containsKey(key)) {
-			Object obj = messageValues.get(key);
-			if (obj instanceof List<?>) {
-				return encodeList((List<String>) obj);
-			}
-			configWarning(key, List.class, messagesYml);
-		}
-		return (List<String>) messageDefaults.get(key);
-	}
-	
-	@Override
-	public boolean getMessagesBoolean(String key) {
-		return msgGet(key, Boolean.class);
-	}
-	
 	@Override
 	public int getMessagesInt(String key) {
-		return msgGet(key, Integer.class);
+		return msgsGet(key, Integer.class);
+	}
+	
+	private <T> T cfgGet(String key, Class<T> type) {
+		T obj = getFromMap(configValues, key, type);
+		return (obj != null) ? obj : getFromMap(configDefaults, key, type);
+	}
+	
+	private <T> T msgsGet(String key, Class<T> type) {
+		T obj = getFromMap(messagesValues, key, type);
+		return (obj != null) ? obj : getFromMap(messagesDefaults, key, type);
 	}
 	
 	@SuppressWarnings("unchecked")
-	private <T> T msgGet(String key, Class<T> type) {
-		if (messageValues.containsKey(key)) {
-			Object obj = messageValues.get(key);
-			if (type.isInstance(obj)) {
-				return (T) obj;
-			}
-			configWarning(key, type, messagesYml);
+	private <T> T getFromMap(Map<String, Object> map, String key, Class<T> type) {
+		if (!key.contains(".")) {
+			Object obj = map.get(key);
+			return (type.isInstance(obj)) ? (T) obj : null;
+		} else if (key.startsWith(".")) {
+			throw new ConfigSectionException(key);
 		}
-		return (T) messageDefaults.get(key);
+		return getFromMap((Map<String, Object>) map.get(key.substring(0, key.indexOf("."))), key.substring(key.indexOf(".") + 1), type);
 	}
 	
 	private String leadKey(CommandType.Category category) {
@@ -284,10 +267,6 @@ public class Config implements ConfigMaster {
 			throw new InternalStateException("What other punishment type is there?!?");
 		}
 	}
-	
-	@Override
-	public File getDataFolder() {
-		return center.dataFolder();
-	}
+
 	
 }
