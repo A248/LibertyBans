@@ -1,0 +1,74 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>space.arim</groupId>
+	<artifactId>bans</artifactId>
+	<version>0.5.6-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<name>ArimBans</name>
+	<description>ArimBans is the ultimate punitive solution for Spigot servers and BungeeCord networks, seeking to maximise efficiency through near-total asynchronous operation.</description>
+	<url>https://github.com/A248/ArimBans</url>
+	<inceptionYear>2019</inceptionYear>
+
+	<properties>
+    		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<registry.version>0.5.0-SNAPSHOT</registry.version>
+		<spigot.version>1.8.8-R0.1-SNAPSHOT</spigot.version>
+		<bungeecord.version>1.8-SNAPSHOT</bungeecord.version>
+	</properties>
+	<build>
+		<resources>
+			<resource>
+				<directory>/</directory>
+				<includes>
+					<include>LICENSE</include>
+				</includes>
+			</resource>
+		</resources>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.0</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<modules>
+		<module>bans-core</module>
+		<module>bans-extended</module>
+	</modules>
+
+	<dependencies>
+		<dependency>
+			<groupId>space.arim</groupId>
+			<artifactId>registry</artifactId>
+			<version>${registry.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.spigotmc</groupId>
+			<artifactId>spigot</artifactId>
+			<version>${spigot.version}</version>
+			<type>jar</type>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.md-5</groupId>
+			<artifactId>bungeecord-api</artifactId>
+			<version>${bungeecord.version}</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+	<repositories>
+		<repository>
+			<id>spigot-repo</id>
+			<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+		</repository>
+	</repositories>
+</project>

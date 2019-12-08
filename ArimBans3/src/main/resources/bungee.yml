@@ -1,5 +1,5 @@
 name: ${project.name}
-main: ${project.groupId}.${project.artifactId}.ArimBansBungee
+main: ${project.groupId}.bans.ArimBansBungee
 version: ${project.version}
 author: A248
 description: ${project.description}
