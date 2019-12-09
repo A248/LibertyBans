@@ -30,6 +30,7 @@ public class ArimBansBungee extends Plugin {
 	private void load() {
 		environment = new BungeeEnv(this);
 		center = new ArimBansPlugin(this.getDataFolder(), environment);
+		center.start();
 		environment.setCenter(center);
 	}
 	

@@ -19,15 +19,12 @@
 package space.arim.bans;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.logging.FileHandler;
-import java.util.logging.Formatter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.sql.ResultSet;
 
 import space.arim.bans.api.AsyncExecutor;
+import space.arim.bans.api.PunishmentPlugin;
+import space.arim.bans.api.UUIDResolver;
 import space.arim.bans.api.exception.InternalStateException;
-import space.arim.bans.api.util.ToolsUtil;
 import space.arim.bans.env.Environment;
 import space.arim.bans.internal.async.AsyncMaster;
 import space.arim.bans.internal.async.AsyncWrapper;
@@ -39,15 +36,15 @@ import space.arim.bans.internal.backend.subjects.Subjects;
 import space.arim.bans.internal.config.Config;
 import space.arim.bans.internal.frontend.commands.Commands;
 import space.arim.bans.internal.frontend.format.Formats;
+import space.arim.bans.internal.logging.Logs;
 import space.arim.bans.internal.sql.Sql;
+import space.arim.bans.internal.sql.SqlQuery;
 
 import space.arim.registry.UniversalRegistry;
-import space.arim.registry.util.UniversalLogFormatter;
 
 public class ArimBansPlugin implements ArimBans {
 	
 	private final File folder;
-	private Logger logger;
 	private final Environment environment;
 	private final Config config;
 	private final Sql sql;
@@ -57,42 +54,15 @@ public class ArimBansPlugin implements ArimBans {
 	private final Commands commands;
 	private final Formats formats;
 	private final Corresponder corresponder;
+	private final Logs logs;
 	private final AsyncMaster async;
 	
-	private static final String CREATE_GITHUB_ISSUE = "Please create a Github issue at https://github.com/A248/ArimBans/issues";
-	private static final int LOG_TO_ENV_THRESHOLD = Integer.MIN_VALUE;
+	private boolean started = false;
 	
 	public ArimBansPlugin(File folder, Environment environment) {
 		this.folder = folder;
 		this.environment = environment;
-		if (folder.exists() || folder.mkdirs()) {
-			logger = Logger.getLogger(getName());
-			logger.setParent(environment.logger());
-			logger.setUseParentHandlers(false);
-			String path = folder.getPath() + File.separator + "logs" + File.separator + ToolsUtil.fileDateFormat() + File.separator;
-			try {
-				File dirPath = new File(path);
-				if (!dirPath.exists() && !dirPath.mkdirs()) {
-					shutdown("Directory creation of " + path + "failed!");
-				}
-				environment.logger().info("Starting logger!");
-				Formatter universalFormatter = new UniversalLogFormatter();
-				FileHandler verboseLog = new FileHandler(path + "verbose.log");
-				FileHandler infoLog = new FileHandler(path + "info.log");
-				FileHandler errorLog = new FileHandler(path + "error.log");
-				verboseLog.setLevel(Level.ALL);
-				infoLog.setLevel(Level.INFO);
-				errorLog.setLevel(Level.WARNING);
-				verboseLog.setFormatter(universalFormatter);
-				infoLog.setFormatter(universalFormatter);
-				errorLog.setFormatter(universalFormatter);
-				logger.addHandler(verboseLog);
-				logger.addHandler(infoLog);
-				logger.addHandler(errorLog);
-			} catch (IOException ex) {
-				shutdown("Logger initialisation in " + path + " failed!");
-			}
-		} else {
+		if (!folder.exists() && !folder.mkdirs()) {
 			shutdown("Directory creation of " + folder.getPath() + " failed!");
 		}
 		environment.logger().info("Finished logger initialisation!");
@@ -104,16 +74,34 @@ public class ArimBansPlugin implements ArimBans {
 		commands = new Commands(this);
 		formats = new Formats(this);
 		corresponder = new Corresponder(this);
+		logs = new Logs(this);
 		if (UniversalRegistry.isProvidedFor(AsyncExecutor.class)) {
 			async = new AsyncWrapper(UniversalRegistry.getRegistration(AsyncExecutor.class));
 		} else {
 			async = new Async(this);
 			UniversalRegistry.register(AsyncExecutor.class, (AsyncExecutor) async); 
 		}
-		refresh(true);
-		loadData();
-		register();
-		checkDeleteLogs();
+	}
+	
+	@Override
+	public void start() {
+		if (!started) {
+			started = true;
+			refresh(true);
+			loadData();
+			UniversalRegistry.register(PunishmentPlugin.class, this);
+			UniversalRegistry.register(UUIDResolver.class, resolver());
+		} else {
+			throw new InternalStateException("#start cannot be called because ArimBans is already started!");
+		}
+	}
+	
+	private void loadData() {
+		sql().executeQuery(new SqlQuery(SqlQuery.Query.CREATE_TABLE_CACHE), new SqlQuery(SqlQuery.Query.CREATE_TABLE_ACTIVE), new SqlQuery(SqlQuery.Query.CREATE_TABLE_HISTORY));
+		ResultSet[] data = sql().selectQuery(new SqlQuery(SqlQuery.Query.SELECT_ALL_CACHED), new SqlQuery(SqlQuery.Query.SELECT_ALL_ACTIVE), new SqlQuery(SqlQuery.Query.SELECT_ALL_HISTORY));
+		resolver().loadAll(data[0]);
+		punishments().loadActive(data[1]);
+		punishments().loadHistory(data[2]);
 	}
 	
 	private void shutdown(String message) {
@@ -173,36 +161,13 @@ public class ArimBansPlugin implements ArimBans {
 	}
 	
 	@Override
-	public void log(Level level, String message) {
-		if (logger != null) {
-			logger.log(level, message);
-			if (level.intValue() >= LOG_TO_ENV_THRESHOLD) {
-				environment.logger().log(level, message);
-			}
-		} else {
-			environment().logger().log(level, message);
-		}
-	}
-	
-	@Override
-	public void logError(Exception ex) {
-		if (logger != null) {
-			environment().logger().warning("Encountered and caught an error: " + ex.getLocalizedMessage() + " \nPlease check the plugin's log for more information. " + CREATE_GITHUB_ISSUE + " to address this.");
-			logger.log(Level.WARNING, "Encountered an error:", ex);
-		} else {
-			environment().logger().warning("Encountered and caught an error. \nThe plugin's log is inoperative, so the error will be printed to console. " + CREATE_GITHUB_ISSUE + " to address both problems.");
-			ex.printStackTrace();
-		}
+	public Logs logs() {
+		return logs;
 	}
 	
 	@Override
 	public void async(Runnable command) {
 		async.execute(command);
-	}
-	
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 }

@@ -19,8 +19,6 @@
 package space.arim.bans.api;
 
 import java.util.UUID;
-import java.util.logging.Logger;
-
 import space.arim.bans.api.util.ToolsUtil;
 
 public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
@@ -111,15 +109,6 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 * @return true if and only if the current thread does not equal to main server thread.
 	 */
 	boolean asynchronous();
-	
-	/**
-	 * Gets the internal ArimBans logger.
-	 * 
-	 * <br><br>This log does not write to server console but instead outputs to the plugin's data folder.
-	 * 
-	 * @return Logger the logger
-	 */
-	Logger getLogger();
 	
 	/**
 	 * Reloads whole plugin configuration, including config.yml and messages.yml

@@ -16,36 +16,25 @@
  * along with ArimBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans;
+package space.arim.bans.internal.logging;
 
-import org.bukkit.plugin.java.JavaPlugin;
+import java.util.logging.Level;
 
-import space.arim.bans.env.bukkit.BukkitEnv;
+import space.arim.bans.internal.Component;
 
-public class ArimBansBukkit extends JavaPlugin {
-	
-	private ArimBans center;
-	private BukkitEnv environment;
-	
-	private void load() {
-		environment = new BukkitEnv(this);
-		center = new ArimBansPlugin(this.getDataFolder(), environment);
-		center.start();
-		environment.setCenter(center);
-	}
-	
-	private void close() {
-		center.close();
-		environment.close();
-	}
+public interface LogsMaster extends Component {
 	
 	@Override
-	public void onEnable() {
-		load();
+	default Class<?> getType() {
+		return LogsMaster.class;
 	}
-
-	@Override
-	public void onDisable() {
-		close();
-	}
+	
+	boolean enabled();
+	
+	void log(Level level, String message);
+	
+	void logBoth(Level level, String message);
+	
+	void logError(Exception ex);
+	
 }
