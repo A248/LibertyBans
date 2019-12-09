@@ -245,7 +245,7 @@ public class Punishments implements PunishmentsMaster {
 			}
 			nextId = ++max;
 		} catch (SQLException ex) {
-			center.logError(ex);
+			center.logs().logError(ex);
 		}
 	}
 	
@@ -256,7 +256,7 @@ public class Punishments implements PunishmentsMaster {
 				history.add(new Punishment(data.getInt("id"), PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date")));
 			}
 		} catch (SQLException ex) {
-			center.logError(ex);
+			center.logs().logError(ex);
 		}
 	}
 	

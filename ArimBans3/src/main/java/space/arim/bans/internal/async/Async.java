@@ -57,7 +57,7 @@ public class Async implements AsyncExecutor, AsyncMaster {
 			try {
 				shutdown();
 			} catch (InterruptedException ex) {
-				center.logError(ex);
+				center.logs().logError(ex);
 			}
 		}
 	}

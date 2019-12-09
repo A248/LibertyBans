@@ -206,7 +206,7 @@ public class Formats implements FormatsMaster {
 		try {
 			dateFormatter = new SimpleDateFormat(center.config().getConfigString("formatting.dates"));
 		} catch (IllegalArgumentException ex) {
-			center.log(Level.INFO, DEFAULTING_TO_DATE_FORMAT);
+			center.logs().log(Level.INFO, DEFAULTING_TO_DATE_FORMAT);
 			dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		}
 		

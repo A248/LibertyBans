@@ -67,12 +67,12 @@ public class Resolver implements ResolverMaster {
 				try {
 					cache.put(UUID.fromString(ToolsUtil.expandUUID(data.getString("uuid"))), new CacheElement(data.getString("name"), data.getString("iplist"), data.getLong("update-name"), data.getLong("update-iplist")));
 				} catch (IllegalArgumentException ex) {
-					center.logError(ex);
+					center.logs().logError(ex);
 				}
 				
 			}
 		} catch (SQLException ex) {
-			center.logError(ex);
+			center.logs().logError(ex);
 		}
 	}
 
@@ -180,21 +180,21 @@ public class Resolver implements ResolverMaster {
 			try {
 				return FetcherUtil.ipStack(address, ipStackKey);
 			} catch (FetcherException | RateLimitException | HttpStatusException ex) {
-				center.logError(ex);
+				center.logs().logError(ex);
 			}
 		}
 		if (freeGeoIp) {
 			try {
 				return FetcherUtil.freeGeoIp(address);
 			} catch (FetcherException| RateLimitException | HttpStatusException ex) {
-				center.logError(ex);
+				center.logs().logError(ex);
 			}
 		}
 		if (ipApi) {
 			try {
 				return FetcherUtil.ipApi(address);
 			} catch (FetcherException| RateLimitException | HttpStatusException ex) {
-				center.logError(ex);
+				center.logs().logError(ex);
 			}
 		}
 		throw new NoGeoIpException(address);

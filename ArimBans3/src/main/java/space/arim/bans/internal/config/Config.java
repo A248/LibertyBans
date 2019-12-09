@@ -67,6 +67,7 @@ public class Config implements ConfigMaster {
 		messagesDefaults = loadDefaults(MESSAGES_PATH, yaml);
 		configValues.putAll(configDefaults);
 		messagesValues.putAll(messagesDefaults);
+		
 	}
 	
 	@Override
@@ -79,15 +80,15 @@ public class Config implements ConfigMaster {
 		if (!target.exists()) {
 			try {
 				if (ToolsUtil.saveFromStream(target, Config.class.getResourceAsStream(File.separator + resource))) {
-					center.log(Level.FINEST, "Copied internal resource to " + target.getPath() + ".");
+					center.logs().log(Level.FINER, "Copied internal resource to " + target.getPath() + ".");
 				} else {
-					center.log(Level.WARNING, "Creation of " + target.getPath() + " failed.");
+					center.logs().log(Level.WARNING, "Creation of " + target.getPath() + " failed.");
 				}
 			} catch (IOException ex) {
-				center.logError(ex);
+				center.logs().logError(ex);
 			}
 		} else {
-			center.log(Level.FINEST, "File " + target.getPath() + " exists; good!");
+			center.logs().log(Level.FINER, "File " + target.getPath() + " exists; good!");
 		}
 		
 		return target;
@@ -103,7 +104,7 @@ public class Config implements ConfigMaster {
 		try (FileReader reader = new FileReader(source)) {
 			return (Map<String, Object>) yaml.load(reader);
 		} catch (IOException ex) {
-			center.logError(new ConfigLoadException(source, ex));
+			center.logs().logError(new ConfigLoadException(source, ex));
 		}
 		return new HashMap<String, Object>();
 	}
@@ -116,7 +117,7 @@ public class Config implements ConfigMaster {
 			}
 		}
 		File dest = new File(center.dataFolder(), "config-backups" + File.separator + ToolsUtil.fileDateFormat() + "-config.yml");
-		center.log(Level.WARNING, "Detected outdated config.yml version. Saving old configuration to " + dest.getPath());
+		center.logs().logBoth(Level.WARNING, "Detected outdated config.yml version. Saving old configuration to " + dest.getPath());
 		configYml.renameTo(dest);
 		configYml = saveIfNotExist(CONFIG_PATH);
 	}
@@ -129,7 +130,7 @@ public class Config implements ConfigMaster {
 			}
 		}
 		File dest = new File(center.dataFolder(), "messages-backups" + File.separator + ToolsUtil.fileDateFormat() + "-messages.yml");
-		center.log(Level.WARNING, "Detected outdated messages.yml version. Saving old configuration to " + dest.getPath());
+		center.logs().logBoth(Level.WARNING, "Detected outdated messages.yml version. Saving old configuration to " + dest.getPath());
 		messagesYml.renameTo(dest);
 		messagesYml = saveIfNotExist(MESSAGES_PATH);
 	}
@@ -228,6 +229,7 @@ public class Config implements ConfigMaster {
 	
 	@SuppressWarnings("unchecked")
 	private <T> T getFromMap(Map<String, Object> map, String key, Class<T> type) {
+		center.logs().log(Level.FINEST, "Getting configuration key " + key);
 		if (!key.contains(".")) {
 			Object obj = map.get(key);
 			return (type.isInstance(obj)) ? (T) obj : null;

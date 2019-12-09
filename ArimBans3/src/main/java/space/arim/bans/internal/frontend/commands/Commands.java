@@ -458,7 +458,7 @@ public class Commands implements CommandsMaster {
 		if (!passive && add) {
 			center.environment().enforcer().enforce(punishment, center.formats().useJson());
 		}
-		center.log(Level.FINE, "Operator " + operator.toString() + ((add) ? " punished " : " unpunished ") + target.toString() + ". Silent = " + silent + "; Passive = " + passive);
+		center.logs().log(Level.FINE, "Operator " + operator.toString() + ((add) ? " punished " : " unpunished ") + target.toString() + ". Silent = " + silent + "; Passive = " + passive);
 	}
 	
 	private void unpunCmd(Subject operator, Subject target, CommandType command, String[] args) {
@@ -685,7 +685,7 @@ public class Commands implements CommandsMaster {
 			try {
 				name = center.resolver().resolveUUID(uuid);
 			} catch (PlayerNotFoundException ex) {
-				center.logError(ex);
+				center.logs().logError(ex);
 				name = uuid.toString();
 			}
 			builder.append(other_alts_layout_element.replace("%PLAYER%", name).replace("%STATUS_CMD%", "arimbans status " + uuid));
@@ -786,7 +786,7 @@ public class Commands implements CommandsMaster {
 		permit_blank_reason = center.config().getConfigBoolean("commands.reasons.permit-blank");
 		default_reason = center.config().getConfigString("commands.reasons.default-reason");
 		
-		String base1 = "commands.confirm-unpunish";
+		String base1 = "commands.confirm-unpunish.";
 		for (PunishmentType type : PunishmentType.values()) {
 			switch (type) {
 			case BAN:

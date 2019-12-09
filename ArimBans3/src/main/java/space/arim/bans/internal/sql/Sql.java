@@ -83,7 +83,7 @@ public class Sql implements SqlMaster {
 			replaceParams(statement, params);
 			statement.execute();
 		} catch (SQLException ex) {
-			center.logError(ex);
+			center.logs().logError(ex);
 		}
 	}
 	
@@ -98,7 +98,7 @@ public class Sql implements SqlMaster {
 				statements[n].close();
 			}
 		} catch (SQLException ex) {
-			center.logError(ex);
+			center.logs().logError(ex);
 		}
 	}
 	
@@ -148,7 +148,7 @@ public class Sql implements SqlMaster {
 		case "sql":
 			return new RemoteSettings(center.config());
 		default:
-			center.log(Level.WARNING, DEFAULTING_TO_STORAGE_MODE);
+			center.logs().log(Level.WARNING, DEFAULTING_TO_STORAGE_MODE);
 			return new LocalSettings(center.config());
 		}
 	}
