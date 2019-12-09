@@ -25,9 +25,6 @@ storage:
     username: 'ArimBans'
     password: 'defaultpassword'
     url: 'jdbc:mysql://%HOST%:%PORT%/%DATABASE%?autoReconnect=true&useUnicode=true&characterEncoding=utf8'
-  min-connections: 1
-  max-connections: 4
-  log-keep-alive: 20
   restart-on-reload: false
 formatting:
   use-json: true
@@ -91,4 +88,7 @@ fetchers:
       key: 'nokey'
     freeGeoIp: true
     ipApi: true
+logs:
+  log-to-console-threshold: 800
+  log-directory-keep-alive: 20
 config-version: 1
