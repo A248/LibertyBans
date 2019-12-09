@@ -5,7 +5,7 @@
 
 	<groupId>space.arim</groupId>
 	<artifactId>bans</artifactId>
-	<version>0.5.6-SNAPSHOT</version>
+	<version>0.5.7-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>ArimBans</name>
@@ -14,11 +14,12 @@
 	<inceptionYear>2019</inceptionYear>
 
 	<properties>
-    		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<registry.version>0.5.0-SNAPSHOT</registry.version>
 		<spigot.version>1.8.8-R0.1-SNAPSHOT</spigot.version>
 		<bungeecord.version>1.8-SNAPSHOT</bungeecord.version>
 	</properties>
+	
 	<build>
 		<resources>
 			<resource>
@@ -45,26 +46,28 @@
 		<module>bans-extended</module>
 	</modules>
 
-	<dependencies>
-		<dependency>
-			<groupId>space.arim</groupId>
-			<artifactId>registry</artifactId>
-			<version>${registry.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.spigotmc</groupId>
-			<artifactId>spigot</artifactId>
-			<version>${spigot.version}</version>
-			<type>jar</type>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>net.md-5</groupId>
-			<artifactId>bungeecord-api</artifactId>
-			<version>${bungeecord.version}</version>
-			<scope>provided</scope>
-		</dependency>
-	</dependencies>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>space.arim</groupId>
+				<artifactId>registry</artifactId>
+				<version>${registry.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.spigotmc</groupId>
+				<artifactId>spigot</artifactId>
+				<version>${spigot.version}</version>
+				<scope>provided</scope>
+			</dependency>
+			<dependency>
+				<groupId>net.md-5</groupId>
+				<artifactId>bungeecord-api</artifactId>
+				<version>${bungeecord.version}</version>
+				<scope>provided</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	
 	<repositories>
 		<repository>
 			<id>spigot-repo</id>
