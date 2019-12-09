@@ -25,25 +25,24 @@ import space.arim.bans.internal.config.ConfigMaster;
 
 public abstract class SqlSettings {
 	
-	final int min_connections;
-	final int max_connections;
 	final String prefix;
 	
 	private final String storageModeName;
 	
 	SqlSettings(ConfigMaster config, String storageModeName) {
-		this.min_connections = config.getConfigInt("storage.min-connections");
-		this.max_connections = config.getConfigInt("storage.max-connections");
 		this.prefix = config.getConfigString("storage.table-prefix");
 		this.storageModeName = storageModeName;
 	}
 	
 	abstract HikariDataSource loadDataSource();
 	
+	abstract Class<?> getDriverClass();
+	
 	HikariConfig getInitialConfig() {
 		HikariConfig config = new HikariConfig();
-		config.setMinimumIdle(min_connections);
-		config.setMaximumPoolSize(max_connections);
+		config.setMinimumIdle(2);
+		config.setMaximumPoolSize(3);
+		config.setDriverClassName(getDriverClass().getName());
 		return config;
 	}
 

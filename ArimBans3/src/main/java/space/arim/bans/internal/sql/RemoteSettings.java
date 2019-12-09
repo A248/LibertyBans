@@ -35,6 +35,11 @@ public class RemoteSettings extends SqlSettings {
 		username = config.getConfigString("storage.mysql.username");
 		password = config.getConfigString("storage.mysql.password");
 	}
+	
+	@Override
+	Class<?> getDriverClass() {
+		return com.mysql.jdbc.Driver.class;
+	}
 
 	@Override
 	HikariDataSource loadDataSource() {
@@ -42,7 +47,6 @@ public class RemoteSettings extends SqlSettings {
 		config.setJdbcUrl(url);
 		config.setUsername(username);
 		config.setPassword(password);
-		//config.setDriverClassName("com.mysql.jdbc.Driver");
 		config.setConnectionTimeout(25000L);
 		return new HikariDataSource(config);
 	}
