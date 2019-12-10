@@ -18,12 +18,22 @@ Download the [latest release](https://github.com/A248/ArimBans/releases) and dro
 
 See [the wiki](https://github.com/A248/ArimBans/wiki) for API documentation and examples.
 
+### Why ArimBans is Free
+
+*Put simply, software may be copied at no cost to the developer. It is the logical that it be sold at no price.*
+
+The basic economics of software are as follows:
+
+For any unit of software, there is a fixed initial cost to develop it, but beyond that, the marginal cost of production is zero. Thus software is said to be non-rival in consumption. No matter how many times it is copied or distributed, the cost remains only that which was originally input. The consumers of software, inasmuch as they download and use it, receive some positive benefit. Therefore it is efficient that no price be charged for software, since the net marginal benefit on each unit distributed is positive.
+
+The good of man is to be in accordance with reason. Where costs and benefits, the substance of economics, are concerned, efficiency is most reasonable. Accordingly, it is proper that software be developed, then provided, simply.
 
 ### Credits
 
-Huge thanks to DevLeoko for inspiration to make ArimBans in the first place.
-Also, a big thanks to the countless members on the Spigot forums and StackOverflow whose answers were the constant subject of my google searches.
+I thank the countless members on the Spigot forums and StackOverflow whose answers were the constant subject of my google searches and queries.
+I would like to thank Ruan, creator of LiteBans, not for making such an expensive plugin, nor for artifically charging access to it, but for inciting me to the just cause of LiteBans' demise.
+I would like to thank @DevLeoko, whose AdvancedBan plugin first interested me in punishment plugins, and also for his cordiality and helpful advice.
 
 ### License
 
-Please see the LICENSE file for the full GNU General Public License.
+See the license file, located at ArimBans3/LICENSE.txt, for the full GNU General Public License. The license applies to this entire repository.
