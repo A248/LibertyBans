@@ -43,7 +43,7 @@ public class Logs implements LogsMaster {
 	private int log_to_console_threshold = 800;
 	private int log_directory_keep_alive = 20;
 	
-	private static final String CREATE_GITHUB_ISSUE = "Please create a Github issue at https://github.com/A248/ArimBans/issues";
+	public static final String PLEASE_CREATE_GITHUB_ISSUE_URL = "Please create a Github issue at https://github.com/A248/ArimBans/issues";
 	
 	public Logs(ArimBans center) {
 		this.center = center;
@@ -75,10 +75,10 @@ public class Logs implements LogsMaster {
 	@Override
 	public void logError(Exception ex) {
 		if (logger != null) {
-			center.environment().logger().warning("Encountered and caught an error: " + ex.getLocalizedMessage() + " \nPlease check the plugin's log for more information. " + CREATE_GITHUB_ISSUE + " to address this.");
+			center.environment().logger().warning("Encountered and caught an error: " + ex.getLocalizedMessage() + " \nPlease check the plugin's log for more information. " + PLEASE_CREATE_GITHUB_ISSUE_URL + " to address this.");
 			logger.log(Level.WARNING, "Encountered and caught an error!", ex);
 		} else {
-			center.environment().logger().warning("Encountered and caught an error. \nThe plugin's log is inoperative, so the error will be printed to console. " + CREATE_GITHUB_ISSUE + " to address both problems.");
+			center.environment().logger().warning("Encountered and caught an error. \nThe plugin's log is inoperative, so the error will be printed to console. " + PLEASE_CREATE_GITHUB_ISSUE_URL + " to address both problems.");
 			ex.printStackTrace();
 		}
 	}
@@ -114,8 +114,6 @@ public class Logs implements LogsMaster {
 		log_to_console_threshold = center.config().getConfigInt("logs.log-to-console-threshold");
 		log_directory_keep_alive = center.config().getConfigInt("logs.log-directory-keep-alive");
 		if (first) {
-			//logger.setParent(center.environment().logger());
-			//logger.setUseParentHandlers(false);
 			String path = center.dataFolder().getPath() + File.separator + "logs" + File.separator + ToolsUtil.fileDateFormat() + File.separator;
 			try {
 				File dirPath = new File(path);
@@ -134,14 +132,15 @@ public class Logs implements LogsMaster {
 				infoLog.setLevel(Level.INFO);
 				errorLog.setLevel(Level.WARNING);
 				logger = Logger.getLogger(center.getName());
+				logger.setUseParentHandlers(false);
 				logger.addHandler(verboseLog);
 				logger.addHandler(infoLog);
 				logger.addHandler(errorLog);
 				redirectHikariLoggers(verboseLog, infoLog, errorLog);
-				checkDeleteLogs();
 			} catch (IOException ex) {
-				logError(ex);
+				center.environment().logger().log(Level.SEVERE, "Log initialisation failed!");
 			}
+			checkDeleteLogs();
 		}
 	}
 	
