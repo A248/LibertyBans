@@ -52,6 +52,8 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	
 	ConfigMaster config();
 	
+	LogsMaster logs();
+	
 	SqlMaster sql();
 	
 	PunishmentsMaster punishments();
@@ -66,13 +68,12 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	
 	CorresponderMaster corresponder();
 	
-	LogsMaster logs();
-	
 	void start();
 	
 	@Override
 	default void refreshConfig(boolean first) {
 		config().refreshConfig(first);
+		logs().refreshConfig(first);
 		sql().refreshConfig(first);
 		punishments().refreshConfig(first);
 		subjects().refreshConfig(first);
@@ -80,12 +81,12 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 		commands().refreshConfig(first);
 		formats().refreshConfig(first);
 		corresponder().refreshConfig(first);
-		logs().refreshConfig(first);
 	}
 	
 	@Override
 	default void refreshMessages(boolean first) {
 		config().refreshMessages(first);
+		logs().refreshMessages(first);
 		sql().refreshMessages(first);
 		punishments().refreshMessages(first);
 		subjects().refreshMessages(first);
@@ -93,12 +94,12 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 		commands().refreshMessages(first);
 		formats().refreshMessages(first);
 		corresponder().refreshMessages(first);
-		logs().refreshMessages(first);
 	}
 	
 	@Override
 	default void close() {
 		config().close();
+		logs().close();
 		sql().close();
 		punishments().close();
 		subjects().close();
@@ -106,7 +107,6 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 		resolver().close();
 		formats().close();
 		corresponder().close();
-		logs().close();
 	}
 	
 	@Override
