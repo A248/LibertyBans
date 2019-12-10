@@ -36,6 +36,7 @@ import space.arim.bans.api.exception.ConfigLoadException;
 import space.arim.bans.api.exception.ConfigSectionException;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.util.ToolsUtil;
+import space.arim.bans.internal.logging.Logs;
 
 public class Config implements ConfigMaster {
 	
@@ -109,6 +110,16 @@ public class Config implements ConfigMaster {
 		return new HashMap<String, Object>();
 	}
 	
+	private void savingLatest(String configType, File backupPath) {
+		center.logs().logBoth(Level.WARNING, "Detected outdated " + configType + " version. Saving old configuration to " + backupPath.getPath());
+	}
+	
+	private void couldNotSaveLatest(String configType) {
+		center.logs().logBoth(Level.SEVERE, "*** PLEASE READ ***\n"
+				+ "Your " + configType + " version is outdated. ArimBans attempted to copy the latest configuration and save your outdated " + configType + " to a backup location. "
+				+ "However, we were unable to complete this operation, and as such, your " + configType + " remains outdated. " + Logs.PLEASE_CREATE_GITHUB_ISSUE_URL + " to address this.");
+	}
+	
 	private void configVersion() {
 		Object ver = configValues.get("config-version");
 		if (ver instanceof Integer) {
@@ -117,7 +128,11 @@ public class Config implements ConfigMaster {
 			}
 		}
 		File dest = new File(center.dataFolder(), "config-backups" + File.separator + ToolsUtil.fileDateFormat() + "-config.yml");
-		center.logs().logBoth(Level.WARNING, "Detected outdated config.yml version. Saving old configuration to " + dest.getPath());
+		if (!dest.getParentFile().exists() && !dest.getParentFile().mkdirs()) {
+			couldNotSaveLatest("config.yml");
+			return;
+		}
+		savingLatest("config.yml", dest);
 		configYml.renameTo(dest);
 		configYml = saveIfNotExist(CONFIG_PATH);
 	}
@@ -130,7 +145,11 @@ public class Config implements ConfigMaster {
 			}
 		}
 		File dest = new File(center.dataFolder(), "messages-backups" + File.separator + ToolsUtil.fileDateFormat() + "-messages.yml");
-		center.logs().logBoth(Level.WARNING, "Detected outdated messages.yml version. Saving old configuration to " + dest.getPath());
+		if (!dest.getParentFile().exists() && !dest.getParentFile().mkdirs()) {
+			couldNotSaveLatest("messages.yml");
+			return;
+		}
+		savingLatest("messages.yml", dest);
 		messagesYml.renameTo(dest);
 		messagesYml = saveIfNotExist(MESSAGES_PATH);
 	}

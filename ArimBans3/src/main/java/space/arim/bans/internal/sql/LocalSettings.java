@@ -34,10 +34,7 @@ public class LocalSettings extends SqlSettings {
 		url = config.getConfigString("storage.file.url").replace("%FILE%", config.getDataFolder().getPath() + File.separator + config.getConfigString("storage.file.filename"));
 	}
 	
-	@Override
-	Class<?> getDriverClass() {
-		return org.hsqldb.jdbc.JDBCDriver.class;
-	}
+	//Class<?> getDriverClass() {return org.hsqldb.jdbc.JDBCDriver.class;}
 
 	@Override
 	HikariDataSource loadDataSource() {
@@ -45,6 +42,7 @@ public class LocalSettings extends SqlSettings {
 		config.setJdbcUrl(url);
 		config.setUsername("SA");
 		config.setPassword("");
+		config.setDriverClassName(org.hsqldb.jdbc.JDBCDriver.class.getName());
 		config.setConnectionTimeout(25000L);
 		return new HikariDataSource(config);
 	}
