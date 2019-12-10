@@ -5,13 +5,34 @@
 
 	<groupId>space.arim</groupId>
 	<artifactId>bans</artifactId>
-	<version>0.5.7-SNAPSHOT</version>
+	<version>0.5.8-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>ArimBans</name>
 	<description>ArimBans is the ultimate punitive solution for Spigot servers and BungeeCord networks, seeking to maximise efficiency through near-total asynchronous operation.</description>
 	<url>https://github.com/A248/ArimBans</url>
 	<inceptionYear>2019</inceptionYear>
+
+	<licenses>
+		<license>
+			<name>GNU General Public License, Version 3</name>
+			<url>https://www.gnu.org/licenses/</url>
+			<distribution>repo</distribution>
+			<comments>Strong copyleft license, commonly known as the GNU GPL v3</comments>
+		</license>
+	</licenses>
+	
+	<developers>
+		<developer>
+			<id>anandbeh</id>
+			<name>Anand Beh</name>
+			<roles>
+				<role>creator</role>
+				<role>developer</role>
+			</roles>
+			<timezone>America/New_York</timezone>
+		</developer>
+	</developers>
 
 	<properties>
     	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -21,14 +42,6 @@
 	</properties>
 	
 	<build>
-		<resources>
-			<resource>
-				<directory>/</directory>
-				<includes>
-					<include>LICENSE</include>
-				</includes>
-			</resource>
-		</resources>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
