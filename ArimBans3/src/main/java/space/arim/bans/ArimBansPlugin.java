@@ -46,6 +46,7 @@ public class ArimBansPlugin implements ArimBans {
 	
 	private final File folder;
 	private final Environment environment;
+	private final Logs logs;
 	private final Config config;
 	private final Sql sql;
 	private final Punishments punishments;
@@ -54,7 +55,6 @@ public class ArimBansPlugin implements ArimBans {
 	private final Commands commands;
 	private final Formats formats;
 	private final Corresponder corresponder;
-	private final Logs logs;
 	private final AsyncMaster async;
 	
 	private boolean started = false;
@@ -67,6 +67,7 @@ public class ArimBansPlugin implements ArimBans {
 		}
 		environment.logger().info("Finished logger initialisation!");
 		config = new Config(this);
+		logs = new Logs(this);
 		sql = new Sql(this);
 		punishments = new Punishments(this);
 		subjects = new Subjects(this);
@@ -74,12 +75,12 @@ public class ArimBansPlugin implements ArimBans {
 		commands = new Commands(this);
 		formats = new Formats(this);
 		corresponder = new Corresponder(this);
-		logs = new Logs(this);
-		if (UniversalRegistry.isProvidedFor(AsyncExecutor.class)) {
-			async = new AsyncWrapper(UniversalRegistry.getRegistration(AsyncExecutor.class));
+		AsyncExecutor registeredAsync = UniversalRegistry.getRegistration(AsyncExecutor.class);
+		if (registeredAsync != null) {
+			async = new AsyncWrapper(registeredAsync);
 		} else {
 			async = new Async(this);
-			UniversalRegistry.register(AsyncExecutor.class, (AsyncExecutor) async); 
+			UniversalRegistry.register(AsyncExecutor.class, (AsyncExecutor) async);
 		}
 	}
 	
@@ -126,6 +127,11 @@ public class ArimBansPlugin implements ArimBans {
 	}
 	
 	@Override
+	public Logs logs() {
+		return logs;
+	}
+	
+	@Override
 	public Sql sql() {
 		return sql;
 	}
@@ -158,11 +164,6 @@ public class ArimBansPlugin implements ArimBans {
 	@Override
 	public Corresponder corresponder() {
 		return corresponder;
-	}
-	
-	@Override
-	public Logs logs() {
-		return logs;
 	}
 	
 	@Override
