@@ -18,7 +18,7 @@
 		<finalName>${project.name}_v${project.version}</finalName>
 		<resources>
 			<resource>
-				<directory>..</directory>
+				<directory>${project.basedir}</directory>
 				<includes>
 					<include>LICENSE.txt</include>
 				</includes>
