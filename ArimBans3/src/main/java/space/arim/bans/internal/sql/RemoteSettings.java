@@ -36,10 +36,7 @@ public class RemoteSettings extends SqlSettings {
 		password = config.getConfigString("storage.mysql.password");
 	}
 	
-	@Override
-	Class<?> getDriverClass() {
-		return com.mysql.jdbc.Driver.class;
-	}
+	//Class<?> getDriverClass() {return com.mysql.jdbc.Driver.class;}
 
 	@Override
 	HikariDataSource loadDataSource() {

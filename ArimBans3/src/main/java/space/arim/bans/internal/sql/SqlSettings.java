@@ -36,13 +36,13 @@ public abstract class SqlSettings {
 	
 	abstract HikariDataSource loadDataSource();
 	
-	abstract Class<?> getDriverClass();
+	//abstract Class<?> getDriverClass();
 	
 	HikariConfig getInitialConfig() {
 		HikariConfig config = new HikariConfig();
 		config.setMinimumIdle(2);
 		config.setMaximumPoolSize(3);
-		config.setDriverClassName(getDriverClass().getName());
+		//config.setDriverClassName(getDriverClass().getName());
 		return config;
 	}
 
