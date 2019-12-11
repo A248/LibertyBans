@@ -18,14 +18,14 @@
 		<finalName>${project.name}_v${project.version}</finalName>
 		<resources>
 			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+			<resource>
 				<directory>..</directory>
 				<includes>
 					<include>LICENSE.txt</include>
 				</includes>
-			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
 			</resource>
 		</resources>
 		<plugins>

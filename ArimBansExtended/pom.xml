@@ -4,32 +4,28 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-    	<groupId>space.arim</groupId>
+		<groupId>space.arim</groupId>
 		<artifactId>bans</artifactId>
 		<version>0.5.8-SNAPSHOT</version>
 	</parent>
-	
+
 	<artifactId>bans-extended</artifactId>
 	<name>ArimBansExtended</name>
 	<description>ArimBansExtended adds many more features to ArimBans.</description>
-
-	<properties>
-		<protocolize.version>1.5.0-SNAPSHOT</protocolize.version>
-	</properties>
 
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<finalName>${project.name}_v${project.version}</finalName>
 		<resources>
 			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+			<resource>
 				<directory>..</directory>
 				<includes>
 					<include>LICENSE.txt</include>
 				</includes>
-			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
 			</resource>
 		</resources>
 	</build>
@@ -54,14 +50,10 @@
 		<dependency>
 			<groupId>de.exceptionflug</groupId>
 			<artifactId>protocolize-api</artifactId>
-			<version>${protocolize.version}</version>
-			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>de.exceptionflug</groupId>
 			<artifactId>protocolize-world</artifactId>
-			<version>${protocolize.version}</version>
-			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 	<repositories>

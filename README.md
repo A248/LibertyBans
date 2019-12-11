@@ -31,9 +31,11 @@ The good of man is to be in accordance with reason. Where costs and benefits, th
 ### Credits
 
 I thank the countless members on the Spigot forums and StackOverflow whose answers were the constant subject of my google searches and queries.
+
 I would like to thank Ruan, creator of LiteBans, not for making such an expensive plugin, nor for artifically charging access to it, but for inciting me to the just cause of LiteBans' demise.
+
 I would like to thank @DevLeoko, whose AdvancedBan plugin first interested me in punishment plugins, and also for his cordiality and helpful advice.
 
 ### License
 
-See the license file, located at ArimBans3/LICENSE.txt, for the full GNU General Public License. The license applies to this entire repository.
+See the license file, LICENSE.txt, for the full GNU General Public License. The license applies to this entire repository.
