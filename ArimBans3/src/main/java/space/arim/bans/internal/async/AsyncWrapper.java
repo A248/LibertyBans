@@ -20,6 +20,8 @@ package space.arim.bans.internal.async;
 
 import space.arim.bans.api.AsyncExecutor;
 
+import space.arim.registry.UniversalRegistry;
+
 public class AsyncWrapper implements AsyncMaster {
 
 	private final AsyncExecutor executor;
@@ -35,7 +37,7 @@ public class AsyncWrapper implements AsyncMaster {
 
 	@Override
 	public boolean isClosed() {
-		return false;
+		return executor != UniversalRegistry.getRegistration(AsyncExecutor.class);
 	}
 	
 }
