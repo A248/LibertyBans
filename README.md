@@ -8,17 +8,16 @@ ArimBans is the ultimate punitive solution for Spigot servers and BungeeCord net
 
 This program is still in development. It is not yet production-ready. **ArimBans will be completed and released by the end of 2019**.
 
+### For Server Owners ###
 
-### For Server Owners
-
-Download the [latest release](https://github.com/A248/ArimBans/releases) and drop into your */plugins* folder.
+Please see the [installation instructions](https://github.com/A248/ArimBans/wiki).
 
 
-### For Developers
+### For Developers ###
 
 See [the wiki](https://github.com/A248/ArimBans/wiki) for API documentation and examples.
 
-### Why ArimBans is Free
+### Why ArimBans is Free ###
 
 *Put simply, software may be copied at no cost to the developer. It is the logical that it be sold at no price.*
 
@@ -28,14 +27,14 @@ For any unit of software, there is a fixed initial cost to develop it, but beyon
 
 The good of man is to be in accordance with reason. Where costs and benefits, the substance of economics, are concerned, efficiency is most reasonable. Accordingly, it is proper that software be developed, then provided, simply.
 
-### Credits
+### Credits ###
 
-I thank the countless members on the Spigot forums and StackOverflow whose answers were the constant subject of my google searches and queries.
+I thank the countless members on the Spigot forums and StackOverflow whose answers were the constant subject of my queries.
 
-I would like to thank Ruan, creator of LiteBans, not for making such an expensive plugin, nor for artifically charging access to it, but for inciting me to the just cause of LiteBans' demise.
+I would like to thank Ruan, creator of LiteBans, not for making such an expensive plugin, nor for artifically charging access to it, but for providing me with just cause to seek its demise.
 
 I would like to thank @DevLeoko, whose AdvancedBan plugin first interested me in punishment plugins, and also for his cordiality and helpful advice.
 
-### License
+### License ###
 
 See the license file, LICENSE.txt, for the full GNU General Public License. The license applies to this entire repository.
