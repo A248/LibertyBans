@@ -37,4 +37,4 @@ I would like to thank @DevLeoko, whose AdvancedBan plugin first interested me in
 
 ### License ###
 
-See the license file, LICENSE.txt, for the full GNU General Public License. The license applies to this entire repository.
+See the license file LICENSE for the full GNU General Public License. The license applies to this entire repository and is copied into binaries as LICENSE.txt.
