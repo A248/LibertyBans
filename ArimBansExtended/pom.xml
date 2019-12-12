@@ -90,10 +90,4 @@
 			<artifactId>protocolize-world</artifactId>
 		</dependency>
 	</dependencies>
-	<repositories>
-		<repository>
-			<id>exceptionflug</id>
-			<url>http://mvn.exceptionflug.de/repository/exceptionflug-public/</url>
-		</repository>
-	</repositories>
 </project>

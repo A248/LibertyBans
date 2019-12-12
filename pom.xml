@@ -119,6 +119,10 @@
 	
 	<repositories>
 		<repository>
+			<id>exceptionflug</id>
+			<url>http://mvn.exceptionflug.de/repository/exceptionflug-public/</url>
+		</repository>
+		<repository>
 			<id>spigot-repo</id>
 			<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
 		</repository>
