@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -160,34 +161,22 @@ public final class ToolsUtil {
 	
 	public static String capitaliseProperly(String input) {
 		Objects.requireNonNull(input, "Input must not be null!");
-		if (input.length() == 1) {
-			return input.toUpperCase();
-		}
-		return Character.toUpperCase(input.charAt(0)) + input.substring(1);
+		return (input.length() == 1) ? input.toUpperCase() : Character.toUpperCase(input.charAt(0)) + input.substring(1);
 	}
 	
 	public static String[] chopOffOne(String[] input) {
-		String[] output = new String[input.length - 1];
-		for (int n = 0; n < output.length; n++) {
-			output[n] = input[n + 1];
-		}
-		return output;
+		Objects.requireNonNull(input, "Args must not be null!");
+		return Arrays.copyOfRange(input, 1, input.length);
 	}
 	
 	public static String concat(List<String> input, char separator) {
-		StringBuilder builder = new StringBuilder();
-		for (String m : input) {
-			if ("".equals(m)) {
-				builder.append(separator).append(m);
-			}
-		}
-		return (builder.length() == 0) ? "" : builder.toString().substring(1);
+		return concat(input.toArray(new String[] {}), separator);
 	}
 	
 	public static String concat(String[] input, char separator) {
 		StringBuilder builder = new StringBuilder();
 		for (String m : input) {
-			if ("".equals(m)) {
+			if (m != null && !m.isEmpty()) {
 				builder.append(separator).append(m);
 			}
 		}
