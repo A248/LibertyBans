@@ -63,9 +63,9 @@ public class ArimBansPlugin implements ArimBans {
 		this.folder = folder;
 		this.environment = environment;
 		if (!folder.exists() && !folder.mkdirs()) {
-			shutdown("Directory creation of " + folder.getPath() + " failed!");
+			environment.shutdown("Directory creation of " + folder.getPath() + " failed!");
+			throw new InternalStateException("Plugin directory creation failed");
 		}
-		environment.logger().info("Finished logger initialisation!");
 		config = new Config(this);
 		logs = new Logs(this);
 		sql = new Sql(this);
@@ -103,12 +103,6 @@ public class ArimBansPlugin implements ArimBans {
 		resolver().loadAll(data[0]);
 		punishments().loadActive(data[1]);
 		punishments().loadHistory(data[2]);
-	}
-	
-	private void shutdown(String message) {
-		environment.shutdown(message);
-		close();
-		throw new InternalStateException("Shutting down...");
 	}
 
 	@Override
