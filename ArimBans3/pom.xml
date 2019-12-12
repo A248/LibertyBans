@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-    	<groupId>space.arim</groupId>
+		<groupId>space.arim</groupId>
 		<artifactId>bans</artifactId>
 		<version>0.5.8-SNAPSHOT</version>
 	</parent>
@@ -21,13 +21,39 @@
 				<filtering>true</filtering>
 			</resource>
 			<resource>
-				<directory>..</directory>
-				<includes>
-					<include>LICENSE.txt</include>
-				</includes>
+				<directory>${project.build.directory}/shared-resources</directory>
 			</resource>
 		</resources>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<configuration>
+					<outputDirectory>${project.build.directory}/shared-resources</outputDirectory>
+					<excludeTransitive>true</excludeTransitive>
+					<artifactItems>
+						<artifactItem>
+							<groupId>space.arim</groupId>
+							<artifactId>bans-resources</artifactId>
+							<version>${project.version}</version>
+							<classifier>resources</classifier>
+						</artifactItem>
+					</artifactItems>
+				</configuration>
+				<executions>
+					<execution>
+						<id>unpack-shared-resources</id>
+						<goals>
+							<goal>unpack-dependencies</goal>
+						</goals>
+						<phase>generate-resources</phase>
+						<configuration>
+							<includes>LICENSE.txt,config.yml,messages.yml</includes>
+							<classifier>resources</classifier>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
@@ -39,6 +65,7 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
+							<shadedArtifactAttached>true</shadedArtifactAttached>
 							<artifactSet>
 								<includes>
 									<include>space.arim:registry</include>
@@ -69,6 +96,13 @@
 		</plugins>
 	</build>
 	<dependencies>
+		<dependency>
+			<groupId>space.arim</groupId>
+			<artifactId>bans-resources</artifactId>
+			<classifier>resources</classifier>
+			<type>zip</type>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>space.arim</groupId>
 			<artifactId>registry</artifactId>
