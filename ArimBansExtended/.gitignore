@@ -9,8 +9,6 @@ dependency-reduced-pom.xml
 ### Eclipse ###
 
 bin/
-.classpath
-.project
 .metadata
 tmp/
 *.tmp
