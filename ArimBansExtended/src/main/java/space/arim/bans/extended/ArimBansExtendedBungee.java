@@ -25,6 +25,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.PunishmentPlugin;
+import space.arim.bans.api.util.BungeeUtil;
 import space.arim.bans.extended.bungee.CommandSkeleton;
 import space.arim.registry.UniversalRegistry;
 
@@ -77,19 +78,7 @@ public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPl
 	}
 	
 	public Set<String> getTabComplete(String[] args) {
-		Set<String> playerNames = new HashSet<String>();
-		if (args.length == 0) {
-			getProxy().getPlayers().forEach((player) -> {
-				playerNames.add(player.getName());
-			});
-		} else if (args.length == 1) {
-			getProxy().getPlayers().forEach((player) -> {
-				if (player.getName().toLowerCase().startsWith(args[0])) {
-					playerNames.add(player.getName());
-				}
-			});
-		}
-		return playerNames;
+		return BungeeUtil.getPlayerNameTabComplete(args, getProxy());
 	}
 	
 }
