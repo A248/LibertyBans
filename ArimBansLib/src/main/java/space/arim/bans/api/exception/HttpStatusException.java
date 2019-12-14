@@ -18,7 +18,7 @@
  */
 package space.arim.bans.api.exception;
 
-import space.arim.bans.api.util.HttpStatus;
+import space.arim.bans.api.util.web.HttpStatus;
 
 public class HttpStatusException extends InternalAPIException {
 

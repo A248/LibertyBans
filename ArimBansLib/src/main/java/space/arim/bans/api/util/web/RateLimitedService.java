@@ -16,7 +16,7 @@
  * along with ArimBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.api.util;
+package space.arim.bans.api.util.web;
 
 import java.util.Objects;
 

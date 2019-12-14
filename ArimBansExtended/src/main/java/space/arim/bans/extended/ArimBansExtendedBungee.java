@@ -25,7 +25,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.PunishmentPlugin;
-import space.arim.bans.api.util.BungeeUtil;
+import space.arim.bans.api.util.minecraft.bungee.BungeeUtil;
 import space.arim.bans.extended.bungee.CommandSkeleton;
 import space.arim.registry.UniversalRegistry;
 

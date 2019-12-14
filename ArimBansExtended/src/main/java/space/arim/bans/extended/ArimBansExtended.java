@@ -31,8 +31,8 @@ import org.yaml.snakeyaml.Yaml;
 
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.Subject;
-import space.arim.bans.api.util.ConfigUtil;
-import space.arim.bans.api.util.ToolsUtil;
+import space.arim.bans.api.util.StringsUtil;
+import space.arim.bans.api.util.minecraft.ConfigUtil;
 
 public class ArimBansExtended implements AutoCloseable {
 	
@@ -98,7 +98,7 @@ public class ArimBansExtended implements AutoCloseable {
 	}
 	
 	public void fireCommand(Subject subject, String command, String[] args) {
-		lib.simulateCommand(subject, (command + " " + ToolsUtil.concat(args, ' ')).split(" "));
+		lib.simulateCommand(subject, (command + " " + StringsUtil.concat(args, ' ')).split(" "));
 	}
 	
 	static String[] commands() {

@@ -34,9 +34,9 @@ import space.arim.bans.api.CommandType;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.exception.ConfigLoadException;
 import space.arim.bans.api.exception.InternalStateException;
-import space.arim.bans.api.util.ConfigUtil;
-import space.arim.bans.api.util.MinecraftUtil;
-import space.arim.bans.api.util.ToolsUtil;
+import space.arim.bans.api.util.StringsUtil;
+import space.arim.bans.api.util.minecraft.ConfigUtil;
+import space.arim.bans.api.util.minecraft.MinecraftUtil;
 import space.arim.bans.internal.logging.Logs;
 
 public class Config implements ConfigMaster {
@@ -128,7 +128,7 @@ public class Config implements ConfigMaster {
 				return;
 			}
 		}
-		File dest = new File(center.dataFolder(), "config-backups" + File.separator + ToolsUtil.fileDateFormat() + "-config.yml");
+		File dest = new File(center.dataFolder(), "config-backups" + File.separator + StringsUtil.fileDateFormat() + "-config.yml");
 		if (!dest.getParentFile().exists() && !dest.getParentFile().mkdirs()) {
 			couldNotSaveLatest("config.yml");
 			return;
@@ -145,7 +145,7 @@ public class Config implements ConfigMaster {
 				return;
 			}
 		}
-		File dest = new File(center.dataFolder(), "messages-backups" + File.separator + ToolsUtil.fileDateFormat() + "-messages.yml");
+		File dest = new File(center.dataFolder(), "messages-backups" + File.separator + StringsUtil.fileDateFormat() + "-messages.yml");
 		if (!dest.getParentFile().exists() && !dest.getParentFile().mkdirs()) {
 			couldNotSaveLatest("messages.yml");
 			return;

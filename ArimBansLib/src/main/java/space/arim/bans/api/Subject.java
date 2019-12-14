@@ -23,8 +23,8 @@ import java.util.UUID;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.exception.TypeParseException;
-import space.arim.bans.api.util.MinecraftUtil;
-import space.arim.bans.api.util.ToolsUtil;
+import space.arim.bans.api.util.StringsUtil;
+import space.arim.bans.api.util.minecraft.MinecraftUtil;
 
 /**
  * 
@@ -86,7 +86,7 @@ public class Subject {
 	 * @throws IllegalArgumentException if the parameter is not a valid ipv4 or ipv6 address
 	 */
 	public static Subject fromIP(String address) {
-		if (!ToolsUtil.validAddress(address)) {
+		if (!StringsUtil.validAddress(address)) {
 			throw new IllegalArgumentException("Could not make " + address + " into a subject because it is not a valid IP address!");
 		}
 		return new Subject(address);

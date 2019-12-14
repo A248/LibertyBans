@@ -26,11 +26,11 @@ import java.util.Objects;
 
 import com.google.common.net.InetAddresses;
 
-public final class ToolsUtil {
+public final class StringsUtil {
 	
 	private static final String fileDateFormat = (new SimpleDateFormat("dd-MM-yyyy")).format(new Date());
 	
-	private ToolsUtil() {}
+	private StringsUtil() {}
 	
 	public static boolean validAddress(String address) {
 		return InetAddresses.isInetAddress(address);

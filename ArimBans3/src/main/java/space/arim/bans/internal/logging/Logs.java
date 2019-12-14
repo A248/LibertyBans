@@ -28,7 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import space.arim.bans.ArimBans;
-import space.arim.bans.api.util.ToolsUtil;
+import space.arim.bans.api.util.StringsUtil;
 import space.arim.registry.util.UniversalLogFormatter;
 
 public class Logs implements LogsMaster {
@@ -114,7 +114,7 @@ public class Logs implements LogsMaster {
 		log_to_console_threshold = center.config().getConfigInt("logs.log-to-console-threshold");
 		log_directory_keep_alive = center.config().getConfigInt("logs.log-directory-keep-alive");
 		if (first) {
-			String path = center.dataFolder().getPath() + File.separator + "logs" + File.separator + ToolsUtil.fileDateFormat() + File.separator;
+			String path = center.dataFolder().getPath() + File.separator + "logs" + File.separator + StringsUtil.fileDateFormat() + File.separator;
 			try {
 				File dirPath = new File(path);
 				if (!dirPath.exists() && !dirPath.mkdirs()) {

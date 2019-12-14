@@ -26,7 +26,7 @@ import space.arim.bans.api.UUIDResolver;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.bans.api.util.GeoIpInfo;
+import space.arim.bans.api.util.web.GeoIpInfo;
 import space.arim.bans.internal.Component;
 
 public interface ResolverMaster extends Component, UUIDResolver {

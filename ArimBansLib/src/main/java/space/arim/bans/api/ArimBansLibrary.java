@@ -19,7 +19,7 @@
 package space.arim.bans.api;
 
 import java.util.UUID;
-import space.arim.bans.api.util.ToolsUtil;
+import space.arim.bans.api.util.StringsUtil;
 
 public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 
@@ -134,7 +134,7 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 * @return true if the address is valid, false otherwise
 	 */
 	default boolean checkAddress(String address) {
-		return ToolsUtil.validAddress(address);
+		return StringsUtil.validAddress(address);
 	}
 	
 }

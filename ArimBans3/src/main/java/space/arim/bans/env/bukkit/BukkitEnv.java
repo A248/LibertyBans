@@ -36,7 +36,7 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.bans.api.util.MinecraftUtil;
+import space.arim.bans.api.util.minecraft.MinecraftUtil;
 import space.arim.bans.env.Environment;
 
 public class BukkitEnv implements Environment {

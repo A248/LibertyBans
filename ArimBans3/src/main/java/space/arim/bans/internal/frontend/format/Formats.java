@@ -37,7 +37,7 @@ import space.arim.bans.api.CommandType.SubCategory;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.bans.api.util.ToolsUtil;
+import space.arim.bans.api.util.StringsUtil;
 
 public class Formats implements FormatsMaster {
 	
@@ -84,12 +84,12 @@ public class Formats implements FormatsMaster {
 	@Override
 	public String formatMessageWithPunishment(String message, Punishment punishment) {
 		long current = System.currentTimeMillis();
-		return message.replace("%ID%", Integer.toString(punishment.id())).replace("%TYPE%", ToolsUtil.capitaliseProperly(punishment.type().toString())).replace("%TARGET%", formatSubject(punishment.subject())).replace("%OPERATOR%", formatSubject(punishment.operator())).replace("%REASON%", punishment.reason()).replace("%DURATION%", formatTime(punishment.expiration() - punishment.date(), false)).replace("%TIME%", formatTime(punishment.expiration() - current, false)).replace("%EXPIRATION%", formatTime(punishment.expiration(), true)).replace("%DATE%", formatTime(punishment.date(), true));
+		return message.replace("%ID%", Integer.toString(punishment.id())).replace("%TYPE%", StringsUtil.capitaliseProperly(punishment.type().toString())).replace("%TARGET%", formatSubject(punishment.subject())).replace("%OPERATOR%", formatSubject(punishment.operator())).replace("%REASON%", punishment.reason()).replace("%DURATION%", formatTime(punishment.expiration() - punishment.date(), false)).replace("%TIME%", formatTime(punishment.expiration() - current, false)).replace("%EXPIRATION%", formatTime(punishment.expiration(), true)).replace("%DATE%", formatTime(punishment.date(), true));
 	}
 	
 	@Override
 	public String formatPunishment(Punishment punishment) {
-		return formatMessageWithPunishment(ToolsUtil.concat(layout.get(punishment.type()), '\n'), punishment);
+		return formatMessageWithPunishment(StringsUtil.concat(layout.get(punishment.type()), '\n'), punishment);
 	}
 	
 	@Override

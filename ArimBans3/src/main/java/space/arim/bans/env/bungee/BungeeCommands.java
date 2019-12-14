@@ -23,8 +23,7 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
 import space.arim.bans.api.Subject;
-
-import space.arim.bans.api.util.BungeeUtil;
+import space.arim.bans.api.util.minecraft.bungee.BungeeUtil;
 import space.arim.bans.internal.Configurable;
 
 public class BungeeCommands extends Command implements TabExecutor, Configurable {

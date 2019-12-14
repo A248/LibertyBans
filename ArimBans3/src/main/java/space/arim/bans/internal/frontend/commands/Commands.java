@@ -44,8 +44,8 @@ import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.bans.api.util.GeoIpInfo;
-import space.arim.bans.api.util.ToolsUtil;
+import space.arim.bans.api.util.StringsUtil;
+import space.arim.bans.api.util.web.GeoIpInfo;
 
 public class Commands implements CommandsMaster {
 	
@@ -259,7 +259,7 @@ public class Commands implements CommandsMaster {
 			if (!checkPermission(subject, command)) {
 				return;
 			}
-			execute(subject, command, (rawArgs.length > 1) ? ToolsUtil.chopOffOne(rawArgs) : new String[] {});
+			execute(subject, command, (rawArgs.length > 1) ? StringsUtil.chopOffOne(rawArgs) : new String[] {});
 		} catch (IllegalArgumentException ex) {
 			usage(subject);
 		}
@@ -277,7 +277,7 @@ public class Commands implements CommandsMaster {
 	// Should only be called for targets with SubjectType == SubjectType.PLAYER
 	private void ipSelector(Subject operator, Subject target, CommandType command, String[] args) {
 		String base = getCmdBaseString(command) + " ";
-		String extra = ToolsUtil.concat(args, ' ');
+		String extra = StringsUtil.concat(args, ' ');
 		List<String> ips;
 		try {
 			ips = center.resolver().getIps(target.getUUID());
@@ -372,7 +372,7 @@ public class Commands implements CommandsMaster {
 			default:
 				break;
 			}
-			args = ToolsUtil.chopOffOne(args);
+			args = StringsUtil.chopOffOne(args);
 			if (command.category().equals(Category.ADD)) {
 				punCmd(operator, target, command, args);
 			} else if (command.category().equals(Category.REMOVE)) {
@@ -407,7 +407,7 @@ public class Commands implements CommandsMaster {
 			if (span == 0) {
 				span = -1L;
 			} else {
-				args = ToolsUtil.chopOffOne(args);
+				args = StringsUtil.chopOffOne(args);
 			}
 			if (span == -1L && max != -1L || span > max) {
 				center.subjects().sendMessage(operator, permTime.get(type));
@@ -433,7 +433,7 @@ public class Commands implements CommandsMaster {
 					}
 				}
 			}
-			reason = ToolsUtil.concat(args, ' ');
+			reason = StringsUtil.concat(args, ' ');
 		} else if (permit_blank_reason) {
 			reason = default_reason;
 		} else {
@@ -487,7 +487,7 @@ public class Commands implements CommandsMaster {
 					try {
 						Punishment punishment = center.corresponder().getPunishmentById(Integer.parseInt(args[0]));
 						if (confirmUnpunish.get(type)) {
-							String cmd = getCmdBaseString(command) + " internal_confirm " + punishment.id() + " " + ToolsUtil.concat(args, ' ');
+							String cmd = getCmdBaseString(command) + " internal_confirm " + punishment.id() + " " + StringsUtil.concat(args, ' ');
 							center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
 							return;
 						}
@@ -511,7 +511,7 @@ public class Commands implements CommandsMaster {
 			return;
 		}
 		if (confirmUnpunish.get(type) && !args[0].equals("internal_confirm")) {
-			String cmd = getCmdBaseString(command) + " internal_confirm " + ToolsUtil.concat(args, ' ');
+			String cmd = getCmdBaseString(command) + " internal_confirm " + StringsUtil.concat(args, ' ');
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
 		} else {
 			try {
