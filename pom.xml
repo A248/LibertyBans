@@ -5,13 +5,22 @@
 
 	<groupId>space.arim</groupId>
 	<artifactId>bans</artifactId>
-	<version>0.5.8-SNAPSHOT</version>
+	<version>0.5.8-SNAPSHOT</version> <!-- Remember to update property coreVersion -->
 	<packaging>pom</packaging>
 
 	<name>ArimBans</name>
 	<description>ArimBans is the ultimate punitive solution for Spigot servers and BungeeCord networks, seeking to maximise efficiency through near-total asynchronous operation.</description>
 	<url>https://github.com/A248/ArimBans</url>
 	<inceptionYear>2019</inceptionYear>
+	
+	<properties>
+    	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    	<core.version>0.5.8</core.version>
+    	<registry.version>0.5.0-SNAPSHOT</registry.version>
+    	<spigot.version>1.12.2-R0.1-SNAPSHOT</spigot.version>
+    	<bungeecord.version>1.14-SNAPSHOT</bungeecord.version>
+		<protocolize.version>1.5.0-SNAPSHOT</protocolize.version>
+	</properties>
 
 	<licenses>
 		<license>
@@ -34,14 +43,6 @@
 			<timezone>America/New_York</timezone>
 		</developer>
 	</developers>
-
-	<properties>
-    	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    	<registry.version>0.5.0-SNAPSHOT</registry.version>
-    	<spigot.version>1.8.8-R0.1-SNAPSHOT</spigot.version>
-    	<bungeecord.version>1.8-SNAPSHOT</bungeecord.version>
-		<protocolize.version>1.5.0-SNAPSHOT</protocolize.version>
-	</properties>
 	
 	<build>
 		<pluginManagement>
@@ -118,13 +119,16 @@
 	</dependencyManagement>
 	
 	<repositories>
-		<repository>
-			<id>exceptionflug</id>
-			<url>http://mvn.exceptionflug.de/repository/exceptionflug-public/</url>
-		</repository>
+		
+		<!-- Apparently spigot-repo is included in bungeecord-repo or something... -->
 		<repository>
 			<id>spigot-repo</id>
 			<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
 		</repository>
+		
+		<repository>
+       		<id>bungeecord-repo</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+   		</repository>
 	</repositories>
 </project>

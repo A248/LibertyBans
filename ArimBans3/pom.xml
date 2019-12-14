@@ -14,7 +14,7 @@
 
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
-		<finalName>${project.name}_v${project.version}</finalName>
+		<finalName>${project.name}_v${core.version}_unshaded</finalName>
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
@@ -65,7 +65,9 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
-							<shadedArtifactAttached>true</shadedArtifactAttached>
+							<outputFile>target/${project.name}_v${core.version}.jar</outputFile>
+							<!-- <shadedArtifactAttached>true</shadedArtifactAttached>
+							<createDependencyReducedPom>true</createDependencyReducedPom>-->
 							<artifactSet>
 								<includes>
 									<include>space.arim:registry</include>
@@ -78,7 +80,6 @@
 								</includes>
 							</artifactSet>
 							<minimizeJar>true</minimizeJar>
-							<createDependencyReducedPom>true</createDependencyReducedPom>
 							<relocations>
 								<relocation>
 									<pattern>org.bstats.bukkit</pattern>
