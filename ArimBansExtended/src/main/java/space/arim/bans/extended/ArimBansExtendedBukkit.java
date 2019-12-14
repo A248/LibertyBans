@@ -48,7 +48,7 @@ public class ArimBansExtendedBukkit extends JavaPlugin implements ArimBansExtend
 		PunishmentPlugin plugin = UniversalRegistry.getRegistration(PunishmentPlugin.class);
 		if (plugin != null) {
 			if (plugin instanceof ArimBansLibrary) {
-				extended = new ArimBansExtended((ArimBansLibrary) plugin, getDataFolder());
+				extended = new ArimBansExtended((ArimBansLibrary) plugin, getDataFolder(), getLogger());
 			} else {
 				shutdown("PunishmentPlugin is not an instance of ArimBansLibrary.");
 			}
