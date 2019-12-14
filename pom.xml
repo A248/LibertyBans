@@ -5,7 +5,11 @@
 
 	<groupId>space.arim</groupId>
 	<artifactId>bans</artifactId>
-	<version>0.5.8-SNAPSHOT</version> <!-- Remember to update property coreVersion -->
+	<version>0.5.8-SNAPSHOT</version>
+	<!-- Remember to update versions: 
+		1. Update property core.version
+		2. Update versions in all child modules
+	-->
 	<packaging>pom</packaging>
 
 	<name>ArimBans</name>
