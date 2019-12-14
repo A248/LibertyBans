@@ -23,6 +23,7 @@ import java.util.UUID;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.exception.TypeParseException;
+import space.arim.bans.api.util.MinecraftUtil;
 import space.arim.bans.api.util.ToolsUtil;
 
 /**
@@ -165,7 +166,7 @@ public class Subject {
 	public static Subject serialise(String input) throws InvalidUUIDException, TypeParseException {
 		if (input.startsWith("[subject:uuid]")) {
 			try {
-				return new Subject(UUID.fromString(ToolsUtil.expandUUID(input.substring(14))));
+				return new Subject(UUID.fromString(MinecraftUtil.expandUUID(input.substring(14))));
 			} catch (IllegalArgumentException ex) {
 				throw new InvalidUUIDException("UUID " + input + " does not conform.");
 			}

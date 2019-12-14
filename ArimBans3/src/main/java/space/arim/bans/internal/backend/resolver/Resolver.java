@@ -37,7 +37,7 @@ import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.exception.RateLimitException;
 import space.arim.bans.api.util.FetcherUtil;
 import space.arim.bans.api.util.GeoIpInfo;
-import space.arim.bans.api.util.ToolsUtil;
+import space.arim.bans.api.util.MinecraftUtil;
 import space.arim.bans.internal.sql.SqlQuery;
 import space.arim.registry.RegistryPriority;
 
@@ -65,7 +65,7 @@ public class Resolver implements ResolverMaster {
 			while (data.next()) {
 				
 				try {
-					cache.put(UUID.fromString(ToolsUtil.expandUUID(data.getString("uuid"))), new CacheElement(data.getString("name"), data.getString("iplist"), data.getLong("update-name"), data.getLong("update-iplist")));
+					cache.put(UUID.fromString(MinecraftUtil.expandUUID(data.getString("uuid"))), new CacheElement(data.getString("name"), data.getString("iplist"), data.getLong("update-name"), data.getLong("update-iplist")));
 				} catch (IllegalArgumentException ex) {
 					center.logs().logError(ex);
 				}

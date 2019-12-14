@@ -36,7 +36,7 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.bans.api.util.ToolsUtil;
+import space.arim.bans.api.util.MinecraftUtil;
 import space.arim.bans.env.Environment;
 
 public class BukkitEnv implements Environment {
@@ -87,7 +87,7 @@ public class BukkitEnv implements Environment {
 	
 	static void sendMessage(Player target, String jsonable, boolean useJson) {
 		if (useJson) {
-			target.spigot().sendMessage(ToolsUtil.parseJson(jsonable));
+			target.spigot().sendMessage(MinecraftUtil.parseJson(jsonable));
 		} else {
 			target.sendMessage(jsonable);
 		}
@@ -122,7 +122,7 @@ public class BukkitEnv implements Environment {
 				sendMessage(target, jsonable, useJson);
 			}
 		} else if (subj.getType().equals(SubjectType.CONSOLE)) {
-			plugin.getServer().getConsoleSender().sendMessage(ToolsUtil.stripJson(jsonable));
+			plugin.getServer().getConsoleSender().sendMessage(MinecraftUtil.stripJson(jsonable));
 		} else if (subj.getType().equals(SubjectType.IP)) {
 			for (Player target : applicable(subj)) {
 				sendMessage(target, jsonable, useJson);

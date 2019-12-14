@@ -54,7 +54,7 @@ public final class FetcherUtil {
 	
 	public static UUID mojangApi(final String name) throws FetcherException, HttpStatusException {
 		Objects.requireNonNull(name, "Name must not be null!");
-		return UUID.fromString(ToolsUtil.expandUUID(getJsonFromUrl(MOJANG_API_FROM_NAME + name).get("id").toString()));
+		return UUID.fromString(MinecraftUtil.expandUUID(getJsonFromUrl(MOJANG_API_FROM_NAME + name).get("id").toString()));
 	}
 	
 	public static String mojangApi(final UUID playeruuid) throws FetcherException, HttpStatusException {

@@ -26,7 +26,7 @@ import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.exception.InvalidUUIDException;
-import space.arim.bans.api.util.ToolsUtil;
+import space.arim.bans.api.util.MinecraftUtil;
 
 public class Subjects implements SubjectsMaster {
 	
@@ -59,7 +59,7 @@ public class Subjects implements SubjectsMaster {
 				throw new InvalidUUIDException("UUID " + input + " does not conform.");
 			}
 		} else if (input.length() == LENGTH_OF_SHORT_UUID) {
-			return parseSubject(ToolsUtil.expandUUID(input));
+			return parseSubject(MinecraftUtil.expandUUID(input));
 		} else if (console && input.equalsIgnoreCase(center.formats().getConsoleDisplay())) {
 			return Subject.console();
 		}

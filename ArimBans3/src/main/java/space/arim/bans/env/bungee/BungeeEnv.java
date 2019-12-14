@@ -36,7 +36,7 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.bans.api.util.ToolsUtil;
+import space.arim.bans.api.util.MinecraftUtil;
 import space.arim.bans.env.Environment;
 
 public class BungeeEnv implements Environment {
@@ -87,7 +87,7 @@ public class BungeeEnv implements Environment {
 	
 	static void sendMessage(ProxiedPlayer target, String jsonable, boolean useJson) {
 		if (useJson) {
-			target.sendMessage(ToolsUtil.parseJson(jsonable));
+			target.sendMessage(MinecraftUtil.parseJson(jsonable));
 		} else {
 			target.sendMessage(convert(jsonable));
 		}
@@ -122,7 +122,7 @@ public class BungeeEnv implements Environment {
 				sendMessage(target, jsonable, useJson);
 			}
 		} else if (subj.getType().equals(SubjectType.CONSOLE)) {
-			plugin.getProxy().getConsole().sendMessage(convert(ToolsUtil.stripJson(jsonable)));
+			plugin.getProxy().getConsole().sendMessage(convert(MinecraftUtil.stripJson(jsonable)));
 		} else if (subj.getType().equals(SubjectType.IP)) {
 			for (ProxiedPlayer target : applicable(subj)) {
 				sendMessage(target, jsonable, useJson);

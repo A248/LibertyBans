@@ -33,8 +33,9 @@ import space.arim.bans.ArimBans;
 import space.arim.bans.api.CommandType;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.exception.ConfigLoadException;
-import space.arim.bans.api.exception.ConfigSectionException;
 import space.arim.bans.api.exception.InternalStateException;
+import space.arim.bans.api.util.ConfigUtil;
+import space.arim.bans.api.util.MinecraftUtil;
 import space.arim.bans.api.util.ToolsUtil;
 import space.arim.bans.internal.logging.Logs;
 
@@ -80,7 +81,7 @@ public class Config implements ConfigMaster {
 		File target = new File(center.dataFolder(), resource);
 		if (!target.exists()) {
 			try {
-				if (ToolsUtil.saveFromStream(target, Config.class.getResourceAsStream(File.separator + resource))) {
+				if (ConfigUtil.saveFromStream(target, Config.class.getResourceAsStream(File.separator + resource))) {
 					center.logs().log(Level.FINER, "Copied internal resource to " + target.getPath() + ".");
 				} else {
 					center.logs().log(Level.WARNING, "Creation of " + target.getPath() + " failed.");
@@ -189,19 +190,19 @@ public class Config implements ConfigMaster {
 	
 	private List<String> encodeList(List<String> list) {
 		for (int n = 0; n < list.size(); n++) {
-			list.set(n, ToolsUtil.encode(list.get(n)));
+			list.set(n, MinecraftUtil.encode(list.get(n)));
 		}
 		return list;
 	}
 	
 	@Override
 	public String getConfigString(String key) {
-		return ToolsUtil.encode(cfgGet(key, String.class));
+		return MinecraftUtil.encode(cfgGet(key, String.class));
 	}
 	
 	@Override
 	public String getMessagesString(String key) {
-		return ToolsUtil.encode(msgsGet(key, String.class));
+		return MinecraftUtil.encode(msgsGet(key, String.class));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -246,16 +247,9 @@ public class Config implements ConfigMaster {
 		return (obj != null) ? obj : getFromMap(messagesDefaults, key, type);
 	}
 	
-	@SuppressWarnings("unchecked")
 	private <T> T getFromMap(Map<String, Object> map, String key, Class<T> type) {
 		center.logs().log(Level.FINEST, "Getting configuration key " + key);
-		if (!key.contains(".")) {
-			Object obj = map.get(key);
-			return (type.isInstance(obj)) ? (T) obj : null;
-		} else if (key.startsWith(".")) {
-			throw new ConfigSectionException(key);
-		}
-		return getFromMap((Map<String, Object>) map.get(key.substring(0, key.indexOf("."))), key.substring(key.indexOf(".") + 1), type);
+		return ConfigUtil.getFromConfigMap(map, key, type);
 	}
 	
 	private String leadKey(CommandType.Category category) {
