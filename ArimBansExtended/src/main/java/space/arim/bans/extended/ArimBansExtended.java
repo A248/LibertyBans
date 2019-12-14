@@ -22,12 +22,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.yaml.snakeyaml.Yaml;
 
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.Subject;
+import space.arim.bans.api.util.ConfigUtil;
 import space.arim.bans.api.util.ToolsUtil;
 
 public class ArimBansExtended implements AutoCloseable {
@@ -36,28 +40,47 @@ public class ArimBansExtended implements AutoCloseable {
 	
 	private final ArimBansLibrary lib;
 	private final File folder;
+	private final Logger logger;
 	
 	private final ConcurrentHashMap<String, Object> cfg = new ConcurrentHashMap<String, Object>();
 	
-	@SuppressWarnings("unchecked")
-	ArimBansExtended(ArimBansLibrary lib, File folder) {
+	ArimBansExtended(ArimBansLibrary lib, File folder, Logger logger) {
+		Objects.requireNonNull(lib, "ArimBansLibrary must not be null!");
+		Objects.requireNonNull(folder, "Folder must not be null!");
+		Objects.requireNonNull(logger, "Logger must not be null!");
 		this.lib = lib;
 		this.folder = folder;
-		if (folder.mkdirs()) {
-			File cfgFile = new File(folder, "config.yml");
-			if (!cfgFile.exists()) {
-				if (!ToolsUtil.generateFile(cfgFile)) {
-					throw new IllegalStateException("Configuration could not be loaded!");
-				}
-			}
-			try (FileReader reader = new FileReader(cfgFile)) {
-				cfg.putAll((Map<String, Object>) (new Yaml()).load(reader));
-			} catch (IOException ex) {
-				throw new IllegalStateException("Configuration could not be loaded!", ex);
-			}
-		} else {
+		this.logger = logger;
+		loadConfig(folder, cfg);
+	}
+	
+	private Logger logger() {
+		return logger;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void loadConfig(File folder, Map<String, Object> cfgMap) {
+		if (!folder.exists() && !folder.mkdirs()) {
 			throw new IllegalStateException("Directory creation failed!");
 		}
+		File cfgFile = new File(folder, "config.yml");
+		if (!cfgFile.exists()) {
+			try {
+				if (ConfigUtil.saveFromStream(cfgFile, ArimBansExtended.class.getResourceAsStream(File.separator + "config.yml"))) {
+					logger().log(Level.WARNING, "Config saved successfully!");
+				} else {
+					throw new IllegalStateException("Config copying failed!");
+				}
+			} catch (IOException ex) {
+				throw new IllegalStateException("Config copying failed!", ex);
+			}
+		}
+		try (FileReader reader = new FileReader(cfgFile)) {
+			cfgMap.putAll((Map<String, Object>) (new Yaml()).load(reader));
+		} catch (IOException ex) {
+			throw new IllegalStateException("Config could not be loaded!", ex);
+		}
+		
 	}
 	
 	public ArimBansLibrary getLib() {
@@ -68,14 +91,9 @@ public class ArimBansExtended implements AutoCloseable {
 		return folder;
 	}
 	
-	@SuppressWarnings("unchecked")
 	private <T> T getCfgObject(Class<T> type, String key, T defaultObj) {
-		if (cfg.isEmpty()) {
-			return defaultObj;
-		} else if (type.isInstance(cfg.get(key))) {
-			return (T) cfg.get(key);
-		}
-		return defaultObj;
+		T obj = ConfigUtil.getFromConfigMap(cfg, key, type);
+		return (obj != null) ? obj : defaultObj;
 	}
 	
 	public boolean antiSignEnabled() {
