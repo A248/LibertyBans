@@ -34,15 +34,11 @@ public class Punishment {
 	}
 	
 	public Punishment(int id, PunishmentType type, Subject subject, Subject operator, String reason, long expiration, long date) {
-		Objects.requireNonNull(type, "No field of a Punishment may be null");
-		Objects.requireNonNull(subject, "No field of a Punishment may be null");
-		Objects.requireNonNull(operator, "No field of a Punishment may be null");
-		Objects.requireNonNull(reason, "No field of a Punishment may be null");
 		this.id = id;
-		this.type = type;
-		this.subject = subject;
-		this.operator = operator;
-		this.reason = reason;
+		this.type = Objects.requireNonNull(type, "No field of a Punishment may be null");
+		this.subject = Objects.requireNonNull(subject, "No field of a Punishment may be null");
+		this.operator = Objects.requireNonNull(operator, "No field of a Punishment may be null");
+		this.reason = Objects.requireNonNull(reason, "No field of a Punishment may be null");
 		this.expiration = expiration;
 		this.date = date;
 	}

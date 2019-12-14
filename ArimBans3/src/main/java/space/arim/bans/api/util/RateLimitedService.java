@@ -42,11 +42,10 @@ public class RateLimitedService {
 	}
 	
 	public String getUrl(String address) throws RateLimitException {
-		Objects.requireNonNull(address, "Address must not be null!");
 		if (isRateLimiting()) {
 			throw new RateLimitException(name);
 		}
-		return genericUrl.replace("$ADDR", address);
+		return genericUrl.replace("$ADDR", Objects.requireNonNull(address, "Address must not be null!"));
 	}
 	
 	private boolean isRateLimiting() {

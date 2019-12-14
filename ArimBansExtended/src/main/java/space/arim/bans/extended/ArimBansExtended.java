@@ -45,12 +45,9 @@ public class ArimBansExtended implements AutoCloseable {
 	private final ConcurrentHashMap<String, Object> cfg = new ConcurrentHashMap<String, Object>();
 	
 	ArimBansExtended(ArimBansLibrary lib, File folder, Logger logger) {
-		Objects.requireNonNull(lib, "ArimBansLibrary must not be null!");
-		Objects.requireNonNull(folder, "Folder must not be null!");
-		Objects.requireNonNull(logger, "Logger must not be null!");
-		this.lib = lib;
-		this.folder = folder;
-		this.logger = logger;
+		this.lib = Objects.requireNonNull(lib, "ArimBansLibrary must not be null!");
+		this.folder = Objects.requireNonNull(folder, "Folder must not be null!");
+		this.logger = Objects.requireNonNull(logger, "Logger must not be null!");
 		loadConfig(folder, cfg);
 	}
 	

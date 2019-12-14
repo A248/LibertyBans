@@ -47,14 +47,12 @@ public final class ToolsUtil {
 	}
 	
 	public static String concat(List<String> input, char separator) {
-		Objects.requireNonNull(input, "Input list must not be null!");
-		return concat(input.toArray(new String[] {}), separator);
+		return concat(Objects.requireNonNull(input, "Input list must not be null!").toArray(new String[] {}), separator);
 	}
 	
 	public static String concat(String[] input, char separator) {
-		Objects.requireNonNull(input, "Input array must not be null!");
 		StringBuilder builder = new StringBuilder();
-		for (String m : input) {
+		for (String m : Objects.requireNonNull(input, "Input array must not be null!")) {
 			if (m != null && !m.isEmpty()) {
 				builder.append(separator).append(m);
 			}

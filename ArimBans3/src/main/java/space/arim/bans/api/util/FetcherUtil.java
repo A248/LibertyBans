@@ -53,13 +53,11 @@ public final class FetcherUtil {
 	}
 	
 	public static UUID mojangApi(final String name) throws FetcherException, HttpStatusException {
-		Objects.requireNonNull(name, "Name must not be null!");
-		return UUID.fromString(MinecraftUtil.expandUUID(getJsonFromUrl(MOJANG_API_FROM_NAME + name).get("id").toString()));
+		return UUID.fromString(MinecraftUtil.expandUUID(getJsonFromUrl(MOJANG_API_FROM_NAME + Objects.requireNonNull(name, "Name must not be null!")).get("id").toString()));
 	}
 	
 	public static String mojangApi(final UUID playeruuid) throws FetcherException, HttpStatusException {
-		Objects.requireNonNull(playeruuid, "UUID must not be null!");
-		final String url = MOJANG_API_FROM_UUID + playeruuid.toString().replace("-", "") + "/names";
+		final String url = MOJANG_API_FROM_UUID + Objects.requireNonNull(playeruuid, "UUID must not be null!").toString().replace("-", "") + "/names";
 		try (FetcherConnection conn = new FetcherConnection(url); Scanner scanner = new Scanner(conn.connect().inputStream())) {
 			String s = scanner.useDelimiter("\\A").next();
 			return ((JSONObject) JSONValue.parseWithException(s.substring(s.lastIndexOf('{'), s.lastIndexOf('}') + 1))).get("name").toString();
@@ -69,13 +67,11 @@ public final class FetcherUtil {
 	}
 	
 	public static UUID ashconApi(final String name) throws FetcherException, HttpStatusException {
-		Objects.requireNonNull(name, "Name must not be null!");
-		return UUID.fromString(getJsonFromUrl(ASHCON_API + name).get("uuid").toString());
+		return UUID.fromString(getJsonFromUrl(ASHCON_API + Objects.requireNonNull(name, "Name must not be null!")).get("uuid").toString());
 	}
 	
 	public static String ashconApi(final UUID playeruuid) throws FetcherException, HttpStatusException {
-		Objects.requireNonNull(playeruuid, "UUID must not be null!");
-		return getJsonFromUrl(ASHCON_API + playeruuid).get("username").toString();
+		return getJsonFromUrl(ASHCON_API + Objects.requireNonNull(playeruuid, "UUID must not be null!")).get("username").toString();
 	}
 	
 	public static String getLatestPluginVersion(final int resourceId) throws FetcherException, HttpStatusException {
@@ -91,8 +87,7 @@ public final class FetcherUtil {
 	}
 	
 	public static GeoIpInfo ipStack(final String address, final String key) throws FetcherException, RateLimitException, HttpStatusException {
-		Objects.requireNonNull(key, "Key must not be null!");
-		final String url = IPSTACK.getUrl(address).replace("$KEY", key);
+		final String url = IPSTACK.getUrl(address).replace("$KEY", Objects.requireNonNull(key, "Key must not be null!"));
 		try {
 			JSONObject json = getJsonFromUrl(url);
 			return new GeoIpInfo(address, json.get("country_code").toString(), json.get("country_name").toString(), json.get("region_code").toString(), json.get("region_name").toString(), json.get("city").toString(), json.get("zip").toString(), Double.parseDouble(json.get("latitude").toString()), Double.parseDouble(json.get("longitude").toString()));
