@@ -18,6 +18,7 @@
  */
 package space.arim.bans.env.bukkit;
 
+import java.util.Objects;
 import java.util.Set;
 
 import org.bukkit.entity.Player;
@@ -26,7 +27,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
@@ -47,7 +47,7 @@ public class BukkitEnforcer implements Enforcer {
 
 	
 	public BukkitEnforcer(final BukkitEnv environment) {
-		this.environment = environment;
+		this.environment = Objects.requireNonNull(environment, "Environment must not be null!");
 	}
 	
 	private void missingCenter(String message) {

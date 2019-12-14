@@ -18,6 +18,7 @@
  */
 package space.arim.bans.env.bungee;
 
+import java.util.Objects;
 import java.util.Set;
 
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -44,7 +45,7 @@ public class BungeeEnforcer implements Enforcer {
 	private byte mute_priority;
 	
 	public BungeeEnforcer(BungeeEnv environment) {
-		this.environment = environment;
+		this.environment = Objects.requireNonNull(environment, "Environment must not be null!");
 	}
 	
 	private void missingCenter(String message) {
