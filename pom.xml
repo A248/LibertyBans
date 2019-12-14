@@ -66,13 +66,19 @@
 	</build>
 
 	<modules>
-		<module>ArimBans3</module>
+		<module>ArimBansLib</module>
 		<module>ArimBansResources</module>
+		<module>ArimBans3</module>
 		<module>ArimBansExtended</module>
 	</modules>
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>space.arim</groupId>
+				<artifactId>bans-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>space.arim</groupId>
 				<artifactId>bans-core</artifactId>

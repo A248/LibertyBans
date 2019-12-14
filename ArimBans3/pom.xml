@@ -106,6 +106,10 @@
 		</dependency>
 		<dependency>
 			<groupId>space.arim</groupId>
+			<artifactId>bans-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim</groupId>
 			<artifactId>registry</artifactId>
 		</dependency>
 		<dependency>
