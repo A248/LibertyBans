@@ -22,7 +22,6 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
-import net.md_5.bungee.command.ConsoleCommandSender;
 
 import space.arim.bans.api.Subject;
 import space.arim.bans.extended.ArimBansExtendedBungee;
@@ -42,10 +41,8 @@ public class CommandSkeleton extends Command implements TabExecutor {
 			Subject subject;
 			if (sender instanceof ProxiedPlayer) {
 				subject = plugin.extension().getLib().fromUUID(((ProxiedPlayer) sender).getUniqueId());
-			} else if (sender instanceof ConsoleCommandSender) {
-				subject = Subject.console();
 			} else {
-				return;
+				subject = Subject.console();
 			}
 			plugin.extension().fireCommand(subject, getName(), args);
 		}

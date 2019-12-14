@@ -25,7 +25,6 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
-import net.md_5.bungee.command.ConsoleCommandSender;
 import space.arim.bans.api.Subject;
 import space.arim.bans.internal.Configurable;
 
@@ -43,10 +42,8 @@ public class BungeeCommands extends Command implements TabExecutor, Configurable
 		Subject subject;
 		if (sender instanceof ProxiedPlayer) {
 			subject = environment.center().subjects().parseSubject(((ProxiedPlayer) sender).getUniqueId());
-		} else if (sender instanceof ConsoleCommandSender){
-			subject = Subject.console();
 		} else {
-			return;
+			subject = Subject.console();
 		}
 		if (args.length > 0) {
 			environment.center().commands().execute(subject, args);
