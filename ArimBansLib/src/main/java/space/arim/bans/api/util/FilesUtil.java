@@ -16,7 +16,7 @@
  * along with ArimBans3. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.api.util.minecraft;
+package space.arim.bans.api.util;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -24,17 +24,30 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-import com.google.common.io.ByteStreams;
+/**
+ * Files utility.
+ * 
+ * @author A248
+ *
+ */
+public class FilesUtil {
 
-public class ConfigUtil {
-
-	private ConfigUtil() {}
+	private FilesUtil() {}
 	
+	/**
+	 * Utilises class <code>com.google.common.io.ByteStreams</code> <br>
+	 * <br>
+	 * <b>If that class is not on the classpath do not call this method!</b>
+	 * 
+	 * @param target - the file to save to
+	 * @param input - the source from which to save. Use <code>YourClass.class.getResourceAsStream(File.separator + "config.yml")<code>
+	 * @return true if the saving was successful
+	 * @throws IOException if an error occurred
+	 */
 	public static boolean saveFromStream(File target, InputStream input) throws IOException {
 		if (target.createNewFile()) {
 			try (FileOutputStream output = new FileOutputStream(target)){
-				ByteStreams.copy(input, output);
-				input.close();
+				com.google.common.io.ByteStreams.copy(input, output);
 				return true;
 			}
 		}

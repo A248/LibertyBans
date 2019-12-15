@@ -21,6 +21,7 @@ package space.arim.bans.extended;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,8 +32,8 @@ import org.yaml.snakeyaml.Yaml;
 
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.Subject;
+import space.arim.bans.api.util.FilesUtil;
 import space.arim.bans.api.util.StringsUtil;
-import space.arim.bans.api.util.minecraft.ConfigUtil;
 
 public class ArimBansExtended implements AutoCloseable {
 	
@@ -62,8 +63,8 @@ public class ArimBansExtended implements AutoCloseable {
 		}
 		File cfgFile = new File(folder, "config.yml");
 		if (!cfgFile.exists()) {
-			try {
-				if (ConfigUtil.saveFromStream(cfgFile, ArimBansExtended.class.getResourceAsStream(File.separator + "config.yml"))) {
+			try (InputStream input = ArimBansExtended.class.getResourceAsStream(File.separator + "config.yml")){
+				if (FilesUtil.saveFromStream(cfgFile, input)) {
 					logger().log(Level.WARNING, "Config saved successfully!");
 				} else {
 					throw new IllegalStateException("Config copying failed!");
@@ -89,7 +90,7 @@ public class ArimBansExtended implements AutoCloseable {
 	}
 	
 	private <T> T getCfgObject(Class<T> type, String key, T defaultObj) {
-		T obj = ConfigUtil.getFromConfigMap(cfg, key, type);
+		T obj = FilesUtil.getFromConfigMap(cfg, key, type);
 		return (obj != null) ? obj : defaultObj;
 	}
 	

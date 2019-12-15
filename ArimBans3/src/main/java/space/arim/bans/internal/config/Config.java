@@ -21,6 +21,7 @@ package space.arim.bans.internal.config;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,8 +35,8 @@ import space.arim.bans.api.CommandType;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.exception.ConfigLoadException;
 import space.arim.bans.api.exception.InternalStateException;
+import space.arim.bans.api.util.FilesUtil;
 import space.arim.bans.api.util.StringsUtil;
-import space.arim.bans.api.util.minecraft.ConfigUtil;
 import space.arim.bans.api.util.minecraft.MinecraftUtil;
 import space.arim.bans.internal.logging.Logs;
 
@@ -80,8 +81,8 @@ public class Config implements ConfigMaster {
 	private File saveIfNotExist(String resource) {
 		File target = new File(center.dataFolder(), resource);
 		if (!target.exists()) {
-			try {
-				if (ConfigUtil.saveFromStream(target, Config.class.getResourceAsStream(File.separator + resource))) {
+			try (InputStream input = Config.class.getResourceAsStream(File.separator + resource)) {
+				if (FilesUtil.saveFromStream(target, input)) {
 					center.logs().log(Level.FINER, "Copied internal resource to " + target.getPath() + ".");
 				} else {
 					center.logs().log(Level.WARNING, "Creation of " + target.getPath() + " failed.");
@@ -249,7 +250,7 @@ public class Config implements ConfigMaster {
 	
 	private <T> T getFromMap(Map<String, Object> map, String key, Class<T> type) {
 		center.logs().log(Level.FINEST, "Getting configuration key " + key);
-		return ConfigUtil.getFromConfigMap(map, key, type);
+		return FilesUtil.getFromConfigMap(map, key, type);
 	}
 	
 	private String leadKey(CommandType.Category category) {
