@@ -30,7 +30,7 @@ import java.util.Map;
  * @author A248
  *
  */
-public class FilesUtil {
+public final class FilesUtil {
 
 	private FilesUtil() {}
 	

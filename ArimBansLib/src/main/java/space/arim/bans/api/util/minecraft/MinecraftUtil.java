@@ -25,7 +25,7 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 
-public class MinecraftUtil {
+public final class MinecraftUtil {
 
 	private MinecraftUtil() {}
 	

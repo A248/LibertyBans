@@ -23,7 +23,7 @@ import java.util.Set;
 
 import net.md_5.bungee.api.ProxyServer;
 
-public class BungeeUtil {
+public final class BungeeUtil {
 
 	private BungeeUtil() {}
 	
