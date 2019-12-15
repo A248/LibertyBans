@@ -155,13 +155,23 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	}
 	
 	@Override
-	default Set<Punishment> getPunishmentsActive() {
+	default Set<Punishment> getActivePunishments() {
 		return punishments().getActive();
 	}
 	
 	@Override
-	default Set<Punishment> getPunishmentsHistory() {
+	default Set<Punishment> getActivePunishmentsCopy() {
+		return punishments().getActiveCopy();
+	}
+	
+	@Override
+	default Set<Punishment> getHistoryPunishments() {
 		return punishments().getHistory();
+	}
+	
+	@Override
+	default Set<Punishment> getHistoryPunishmentsCopy() {
+		return punishments().getHistoryCopy();
 	}
 	
 	@Override

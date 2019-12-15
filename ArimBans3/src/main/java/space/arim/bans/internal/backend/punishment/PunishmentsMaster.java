@@ -48,7 +48,11 @@ public interface PunishmentsMaster extends Component {
 	
 	Set<Punishment> getActive();
 	
+	Set<Punishment> getActiveCopy();
+	
 	Set<Punishment> getHistory();
+	
+	Set<Punishment> getHistoryCopy();
 	
 	void loadActive(ResultSet data);
 	

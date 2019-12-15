@@ -103,7 +103,7 @@ public class Corresponder implements CorresponderMaster {
 		} else {
 			addrSubjs.addAll(Arrays.asList(addressSubj));
 		}
-		Set<Punishment> applicable = center.punishments().getActive();
+		Set<Punishment> applicable = center.punishments().getActiveCopy();
 		for (Iterator<Punishment> it = applicable.iterator(); it.hasNext();) {
 			Punishment punishment = it.next();
 			if (!punishment.type().equals(type) || !punishment.subject().equals(subject)) {

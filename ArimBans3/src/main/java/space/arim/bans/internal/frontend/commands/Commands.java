@@ -539,7 +539,7 @@ public class Commands implements CommandsMaster {
 	}
 	
 	private void listCmd(Subject operator, Subject target, CommandType command, int page) {
-		Set<Punishment> applicable = SubCategory.HISTORY.equals(command.subCategory()) ? center.punishments().getHistory() : center.punishments().getActive();
+		Set<Punishment> applicable = SubCategory.HISTORY.equals(command.subCategory()) ? center.punishments().getHistoryCopy() : center.punishments().getActiveCopy();
 		list(operator, new Lister<Punishment>(page, perPage.get(command.subCategory()), maxPage.get(command.subCategory()), noPage.get(command.subCategory()), nextPageCmd(command, page), applicable, header.get(command.subCategory()), body.get(command.subCategory()), footer.get(command.subCategory())) {
 			@Override
 			public boolean check(Punishment punishment) {
@@ -593,7 +593,7 @@ public class Commands implements CommandsMaster {
 	}
 	
 	private void statusCmd(Subject operator, Subject target) {
-		Set<Punishment> applicable = center.punishments().getActive();
+		Set<Punishment> applicable = center.punishments().getActiveCopy();
 		applicable.removeIf((punishment) -> punishment.subject().equals(target));
 		Punishment banPunishment = null;
 		Punishment mutePunishment = null;
@@ -707,7 +707,7 @@ public class Commands implements CommandsMaster {
 		} else {
 			max = Integer.MAX_VALUE;
 		}
-		ArrayList<Punishment> applicable = new ArrayList<Punishment>(center.punishments().getActive());
+		ArrayList<Punishment> applicable = new ArrayList<Punishment>(center.punishments().getActiveCopy());
 		applicable.sort(DATE_COMPARATOR);
 		int n = 0;
 		for (Iterator<Punishment> it = applicable.iterator(); it.hasNext();) {

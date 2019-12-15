@@ -20,6 +20,7 @@ package space.arim.bans.internal.backend.punishment;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -38,7 +39,7 @@ public class Punishments implements PunishmentsMaster {
 	
 	private final ArimBans center;
 	
-	private int nextId = 0;
+	private int nextId = Integer.MIN_VALUE;
 	private final Set<Punishment> active = ConcurrentHashMap.newKeySet();
 	private final Set<Punishment> history = ConcurrentHashMap.newKeySet();
 
@@ -84,11 +85,11 @@ public class Punishments implements PunishmentsMaster {
 
 					// If it's retro we only need to add it to history
 					// Otherwise we also need to add it to active
-					exec.add(new SqlQuery(SqlQuery.Query.INSERT_HISTORY, punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
-					history.add(punishment);
+					if (history.add(punishment)) {
+						exec.add(new SqlQuery(SqlQuery.Query.INSERT_HISTORY, punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
+					}
 
-					if (!retro) {
-						active.add(punishment);
+					if (!retro && !punishment.type().equals(PunishmentType.KICK) && active.add(punishment)) { // add non-retro non-kick punishments to active
 						exec.add(new SqlQuery(SqlQuery.Query.INSERT_ACTIVE, punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
 					}
 
@@ -101,9 +102,7 @@ public class Punishments implements PunishmentsMaster {
 		}
 
 		// Call PostPunishEvents once done
-		passedEvents.forEach((punishment, retro) -> {
-			center.environment().enforcer().callPostPunishEvent(punishment, retro);
-		});
+		passedEvents.forEach(center.environment().enforcer()::callPostPunishEvent);
 	}
 	
 	@Override
@@ -140,35 +139,34 @@ public class Punishments implements PunishmentsMaster {
 		Set<SqlQuery> exec = new HashSet<SqlQuery>();
 		// A set of punishments for which UnpunishEvents were successfully called
 		// At the end we'll call PostUnpunishEvent for each punishment in the set
-		Set<Punishment> passedEvents = new HashSet<Punishment>();
+		HashMap<Punishment, Boolean> passedEvents = new HashMap<Punishment, Boolean>();
 
 		/* Synchronisation is needed here
 		 * 
-		 * For same explanation as stated under #directAddPunishments
+		 * For same reasons as stated under #directAddPunishments
 		 * 
 		 */
 		synchronized (active) {
 			for (Punishment punishment : punishments) {
 
-				// Call event before proceeding
-				if (center.environment().enforcer().callUnpunishEvent(punishment, false)) {
-
-					passedEvents.add(punishment);
-					exec.add(new SqlQuery(SqlQuery.Query.DELETE_ACTIVE_BY_ID, punishment.id()));
+				// Removal called in this method is never automatic
+				boolean auto = false;
 				
+				// Call event before proceeding
+				if (center.environment().enforcer().callUnpunishEvent(punishment, auto)) {
+					if (active.remove(punishment)) {
+						passedEvents.put(punishment, auto);
+						exec.add(new SqlQuery(SqlQuery.Query.DELETE_ACTIVE_BY_ID, punishment.id()));
+					}
 				}
 			}
 			// Execute queries
 			center.sql().executeQuery((SqlQuery[]) exec.toArray());
 
-			// Remove the punishments
-			active.removeAll(passedEvents);
 		}
 
 		// Call PostUnpunishEvents once done
-		passedEvents.forEach((punishment) -> {
-			center.environment().enforcer().callPostUnpunishEvent(punishment, false);
-		});
+		passedEvents.forEach(center.environment().enforcer()::callPostUnpunishEvent);
 	}
 	
 	@Override
@@ -224,21 +222,42 @@ public class Punishments implements PunishmentsMaster {
 	
 	@Override
 	public Set<Punishment> getActive() {
-		return active();
+		return Collections.unmodifiableSet(active());
+	}
+	
+	@Override
+	public Set<Punishment> getActiveCopy() {
+		return new HashSet<Punishment>(active());
 	}
 	
 	@Override
 	public Set<Punishment> getHistory() {
+		return Collections.unmodifiableSet(history);
+	}
+	
+	@Override
+	public Set<Punishment> getHistoryCopy() {
 		return new HashSet<Punishment>(history);
 	}
 	
 	@Override
 	public void loadActive(ResultSet data) {
 		try {
+			while (data.next()) {
+				active.add(new Punishment(data.getInt("id"), PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date")));
+			}
+		} catch (SQLException ex) {
+			center.logs().logError(ex);
+		}
+	}
+	
+	@Override
+	public void loadHistory(ResultSet data) {
+		try {
 			int max = -1;
 			while (data.next()) {
 				int id = data.getInt("id");
-				active.add(new Punishment(id, PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date")));
+				history.add(new Punishment(id, PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date")));
 				if (id > max) {
 					max = id;
 				}
@@ -249,49 +268,36 @@ public class Punishments implements PunishmentsMaster {
 		}
 	}
 	
-	@Override
-	public void loadHistory(ResultSet data) {
-		try {
-			while (data.next()) {
-				history.add(new Punishment(data.getInt("id"), PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date")));
-			}
-		} catch (SQLException ex) {
-			center.logs().logError(ex);
-		}
-	}
-	
 	/**
-	 * Returns a copy of the Set of active punishments, purging expired members.
+	 * Returns THE set of active punishments, purging expired members.
 	 * 
-	 * <br><br>Changes are <b>NOT</b> backed by the set, and for good reason too.
+	 * <br><br><b>Changes are backed by the set because it is the same set!</b>
 	 * 
-	 * @return Set of active punishments
+	 * @return The set of active punishments
 	 */
 	private Set<Punishment> active() {
-		Set<Punishment> invalidated = new HashSet<Punishment>();
+		HashMap<Punishment, Boolean> invalidated = new HashMap<Punishment, Boolean>();
 		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
 			Punishment punishment = it.next();
 			if (punishment.expiration() != -1L && punishment.expiration() < System.currentTimeMillis()) {
+				
+				// Removal called from this method is always automatic
+				boolean auto = true;
+				
 				// call UnpunishEvent with parameter true because the removal is automatic
-				if (center.environment().enforcer().callUnpunishEvent(punishment, true)) {
-					invalidated.add(punishment);
+				if (center.environment().enforcer().callUnpunishEvent(punishment, auto)) {
+					invalidated.put(punishment, auto);
 					it.remove();
 				}
 			}
 		}
 		// Call PostUnpunishEvents before proceeding
 		if (center.corresponder().asynchronous()) {
-			callPostUnpunish(invalidated);
+			invalidated.forEach(center.environment().enforcer()::callPostUnpunishEvent);
 		} else {
-			center.async(() -> callPostUnpunish(invalidated));
+			center.async(() -> invalidated.forEach(center.environment().enforcer()::callPostUnpunishEvent));
 		}
-		return new HashSet<Punishment>(active);
-	}
-	
-	private void callPostUnpunish(Set<Punishment> invalidated) {
-		invalidated.forEach((punishment) -> {
-			center.environment().enforcer().callPostUnpunishEvent(punishment, true);
-		});
+		return active;
 	}
 	
 	@Override
