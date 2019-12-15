@@ -22,7 +22,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -60,10 +60,6 @@ public class Config implements ConfigMaster {
 	public Config(ArimBans center) {
 		this.center = center;
 		
-		// Load files
-		configYml = saveIfNotExist(CONFIG_PATH);
-		messagesYml = saveIfNotExist(MESSAGES_PATH);
-		
 		// Load config defaults
 		Yaml yaml = new Yaml();
 		configDefaults = loadDefaults(CONFIG_PATH, yaml);
@@ -83,9 +79,9 @@ public class Config implements ConfigMaster {
 		if (!target.exists()) {
 			try (InputStream input = Config.class.getResourceAsStream(File.separator + resource)) {
 				if (FilesUtil.saveFromStream(target, input)) {
-					center.logs().log(Level.FINER, "Copied internal resource to " + target.getPath() + ".");
+					center.logs().logBoth(Level.FINE, "Resource " + resource + " successfully extracted to " + target.getPath());
 				} else {
-					center.logs().log(Level.WARNING, "Creation of " + target.getPath() + " failed.");
+					center.logs().logBoth(Level.WARNING, "Resource extraction to " + target.getPath() + " failed.");
 				}
 			} catch (IOException ex) {
 				center.logs().logError(ex);
@@ -99,7 +95,11 @@ public class Config implements ConfigMaster {
 	
 	@SuppressWarnings("unchecked")
 	private Map<String, Object> loadDefaults(String source, Yaml yaml) {
-		return (Map<String, Object>) yaml.load(Config.class.getResourceAsStream(File.separator + source));
+		try (InputStream stream = Config.class.getResourceAsStream(File.separator + source)) {
+			return (Map<String, Object>) yaml.load(stream);
+		} catch (IOException ex) {
+			throw new ConfigLoadException(source, ex);
+		}
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -109,84 +109,53 @@ public class Config implements ConfigMaster {
 		} catch (IOException ex) {
 			center.logs().logError(new ConfigLoadException(source, ex));
 		}
-		return new HashMap<String, Object>();
+		return Collections.emptyMap();
 	}
 	
-	private void savingLatest(String configType, File backupPath) {
-		center.logs().logBoth(Level.WARNING, "Detected outdated " + configType + " version. Saving old configuration to " + backupPath.getPath());
-	}
-	
-	private void couldNotSaveLatest(String configType) {
-		center.logs().logBoth(Level.SEVERE, "*** PLEASE READ ***\n"
-				+ "Your " + configType + " version is outdated. ArimBans attempted to copy the latest configuration and save your outdated " + configType + " to a backup location. "
-				+ "However, we were unable to complete this operation, and as such, your " + configType + " remains outdated. " + Logs.PLEASE_CREATE_GITHUB_ISSUE_URL + " to address this.");
-	}
-	
-	private void configVersion() {
-		Object ver = configValues.get("config-version");
-		if (ver instanceof Integer) {
-			if ((Integer) ver == CONFIG_VERSION) {
-				return;
+	private File checkVersion(File source, Map<String, Object> values, int version, String resource) {
+		Object ver = values.get("do-not-touch-version");
+		if (!(ver instanceof Integer && (Integer) ver == version)) {
+			File dest = new File(center.dataFolder(), "configuration-backups" + File.separator + StringsUtil.fileDateFormat() + "-" + resource);
+			center.logs().logBoth(Level.WARNING, "Detected outdated " + resource + " version. Saving old configuration to " + dest.getPath());
+			if (!dest.getParentFile().exists() && !dest.getParentFile().mkdirs()) {
+				center.logs().logBoth(Level.SEVERE, "*** PLEASE READ ***\n"
+						+ "Your " + resource + " version is outdated. ArimBans attempted to copy the latest configuration and save your outdated " + resource + " to a backup location. "
+						+ "However, we were unable to complete this operation, and as such, your " + resource + " remains outdated. " + Logs.PLEASE_CREATE_GITHUB_ISSUE_URL + " to address this.");
+				throw new ConfigLoadException(source);
 			}
+			source.renameTo(dest);
+			source = saveIfNotExist(resource);
 		}
-		File dest = new File(center.dataFolder(), "config-backups" + File.separator + StringsUtil.fileDateFormat() + "-config.yml");
-		if (!dest.getParentFile().exists() && !dest.getParentFile().mkdirs()) {
-			couldNotSaveLatest("config.yml");
-			return;
-		}
-		savingLatest("config.yml", dest);
-		configYml.renameTo(dest);
-		configYml = saveIfNotExist(CONFIG_PATH);
-	}
-	
-	private void messagesVersion() {
-		Object ver = messagesValues.get("messages-version");
-		if (ver instanceof Integer) {
-			if ((Integer) ver == MESSAGES_VERSION) {
-				return;
-			}
-		}
-		File dest = new File(center.dataFolder(), "messages-backups" + File.separator + StringsUtil.fileDateFormat() + "-messages.yml");
-		if (!dest.getParentFile().exists() && !dest.getParentFile().mkdirs()) {
-			couldNotSaveLatest("messages.yml");
-			return;
-		}
-		savingLatest("messages.yml", dest);
-		messagesYml.renameTo(dest);
-		messagesYml = saveIfNotExist(MESSAGES_PATH);
+		return source;
 	}
 	
 	private void loadConfig(Yaml yaml) {
+		configYml = saveIfNotExist(CONFIG_PATH);
 		configValues.putAll(loadFile(configYml, yaml));
-		configVersion();
+		configYml = checkVersion(configYml, configValues, CONFIG_VERSION, CONFIG_PATH);
 	}
 	
 	private void loadMessages(Yaml yaml) {
+		messagesYml = saveIfNotExist(MESSAGES_PATH);
 		messagesValues.putAll(loadFile(messagesYml, yaml));
-		messagesVersion();
+		messagesYml = checkVersion(messagesYml, messagesValues, MESSAGES_VERSION, MESSAGES_PATH);
 	}
 	
 	@Override
 	public void refresh(boolean first) {
-		if (!first) {
-			Yaml yaml = new Yaml();
-			loadConfig(yaml);
-			loadMessages(yaml);
-		}
+		Yaml yaml = new Yaml();
+		loadConfig(yaml);
+		loadMessages(yaml);
 	}
 	
 	@Override
 	public void refreshConfig(boolean first) {
-		if (!first) {
-			loadConfig(new Yaml());
-		}
+		loadConfig(new Yaml());
 	}
 	
 	@Override
 	public void refreshMessages(boolean first) {
-		if (!first) {
-			loadMessages(new Yaml());
-		}
+		loadMessages(new Yaml());
 	}
 	
 	private List<String> encodeList(List<String> list) {

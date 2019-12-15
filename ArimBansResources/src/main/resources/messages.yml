@@ -330,4 +330,4 @@ time:
       enable: true
       message: '%SECONDS% seconds'
   enable-comma: true
-messages-version: 1
+do-not-touch-version: 1

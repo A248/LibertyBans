@@ -91,4 +91,4 @@ fetchers:
 logs:
   log-to-console-threshold: 800
   log-directory-keep-alive: 20
-config-version: 1
+do-not-touch-version: 1
