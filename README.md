@@ -1,8 +1,7 @@
 # ArimBans
 ArimBans is the ultimate punitive solution for Spigot servers and BungeeCord networks, seeking to maximise efficiency through near-total asynchronous operation.
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/927a51eabfd64aa3ad77b861b33107bb)](https://www.codacy.com/manual/A248/ArimBans?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=A248/ArimBans&amp;utm_campaign=Badge_Grade)[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/927a51eabfd64aa3ad77b861b33107bb)](https://www.codacy.com/manual/A248/ArimBans?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=A248/ArimBans&amp;utm_campaign=Badge_Grade)[![Issue Resolution Speed](http://isitmaintained.com/badge/resolution/A248/ArimBans.svg)](http://isitmaintained.com/project/A248/ArimBans "Average time to resolve an issue")[![Open Issues](http://isitmaintained.com/badge/open/A248/ArimBans.svg)](http://isitmaintained.com/project/A248/ArimBans)[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ## Development Notice ##
 
@@ -27,6 +26,11 @@ For any unit of software, there is a fixed initial cost to develop it, but beyon
 
 The good of man is to be in accordance with reason. Where costs and benefits, the substance of economics, are concerned, efficiency is most reasonable. Accordingly, it is proper that software be developed, then provided, simply.
 
+### About Me ###
+[![GitHub followers](https://img.shields.io/github/followers/A248.svg?label=Follow)](https://github.com/A248?tab=followers)
+
+My objective is to liberate the SpigotMC community from several premium plugins and especially annihilate those of low-quality but high-cost. Tell me if you are interested in helping and I will add you to the [FreeSpigotFoundation](https://github.com/FreeSpigotFoundation).
+
 ### Credits ###
 
 I thank the countless members on the Spigot forums and StackOverflow whose answers were the constant subject of my queries.
@@ -37,4 +41,4 @@ I would like to thank @DevLeoko, whose AdvancedBan plugin first interested me in
 
 ### License ###
 
-See the license file LICENSE for the full GNU General Public License. The license applies to this entire repository and is copied into binaries as LICENSE.txt.
+See the file LICENSE.txt for the full GNU General Public License v3. The license applies to this entire repository and is copied into binaries as LICENSE.txt.
