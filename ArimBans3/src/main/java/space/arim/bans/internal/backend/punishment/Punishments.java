@@ -32,6 +32,7 @@ import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.exception.ConflictingPunishmentException;
+import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.internal.sql.SqlQuery;
 
@@ -49,6 +50,9 @@ public class Punishments implements PunishmentsMaster {
 	
 	@Override
 	public int getNextAvailablePunishmentId() {
+		if (nextId == Integer.MIN_VALUE) {
+			throw new InternalStateException("Invalid API call: ArimBans plugin data has not been loaded yet, so ArimBansLibrary#getNextAvailablePunishmentId() is inoperative until the plugin is fully loaded.");
+		}
 		return nextId++;
 	}
 	
