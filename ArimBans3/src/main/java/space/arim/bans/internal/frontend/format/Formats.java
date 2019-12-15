@@ -166,7 +166,7 @@ public class Formats implements FormatsMaster {
 	@Override
 	public long toMillis(String timespan) {
 		long mult = 1_000_000;
-		if (permanent_arguments.contains(timespan.toLowerCase()) || timespan.equalsIgnoreCase("internal_perm")) {
+		if (permanent_arguments.contains(timespan.toLowerCase())) {
 			return -1L;
 		} else if (timespan.contains("mo")) {
 			mult = 2592000_000_000L;
