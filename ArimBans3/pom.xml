@@ -71,6 +71,7 @@
 							<artifactSet>
 								<includes>
 									<include>space.arim:registry</include>
+									<include>space.arim:bans-api</include>
 									<include>org.hsqldb:hsqldb</include>
 									<include>com.zaxxer:HikariCP</include>
 									<include>org.slf4j:slf4j-api</include>
