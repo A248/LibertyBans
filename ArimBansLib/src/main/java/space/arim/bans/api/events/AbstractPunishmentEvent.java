@@ -29,6 +29,11 @@ public abstract class AbstractPunishmentEvent extends Event {
 		this.punishment = punishment;
 	}
 	
+	/**
+	 * Gets the punishment involved in this event.
+	 * 
+	 * @return punishment - the punishment
+	 */
 	public Punishment getPunishment() {
 		return punishment;
 	}
