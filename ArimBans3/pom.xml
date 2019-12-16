@@ -38,6 +38,12 @@
 							<version>${project.version}</version>
 							<classifier>resources</classifier>
 						</artifactItem>
+						<artifactItem>
+							<groupId>space.arim</groupId>
+							<artifactId>universal-gpl</artifactId>
+							<version>${universal.version}</version>
+							<classifier>resources</classifier>
+						</artifactItem>
 					</artifactItems>
 				</configuration>
 				<executions>

@@ -20,7 +20,7 @@
 	<properties>
     	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     	<core.version>0.5.8</core.version>
-    	<universal.registry.version>0.5.0-SNAPSHOT</universal.registry.version>
+    	<universal.version>0.5.0-SNAPSHOT</universal.version>
     	<spigot.version>1.15-R0.1-SNAPSHOT</spigot.version>
     	<bungeecord.version>1.15-SNAPSHOT</bungeecord.version>
 		<protocolize.version>1.5.0-SNAPSHOT</protocolize.version>
@@ -60,11 +60,6 @@
 						<target>1.8</target>
 					</configuration>
 				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-assembly-plugin</artifactId>
-					<version>2.2-beta-5</version>
-				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
@@ -99,12 +94,12 @@
 			<dependency>
 				<groupId>space.arim</groupId>
 				<artifactId>universal-registry</artifactId>
-				<version>${universal.registry.version}</version>
+				<version>${universal.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>space.arim</groupId>
 				<artifactId>universal-util</artifactId>
-				<version>${universal.registry.version}</version>
+				<version>${universal.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.spigotmc</groupId>
