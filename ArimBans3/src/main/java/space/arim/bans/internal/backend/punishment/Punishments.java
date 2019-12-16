@@ -85,7 +85,7 @@ public class Punishments implements PunishmentsMaster {
 				boolean retro = (punishment.expiration() > 0 && punishment.expiration() <= System.currentTimeMillis());
 
 				// Call event before proceeding
-				if (center.environment().enforcer().callPunishEvent(punishment, retro)) {
+				if (center.corresponder().callPunishEvent(punishment, retro)) {
 
 					// If it's retro we only need to add it to history
 					// Otherwise we also need to add it to active
@@ -106,7 +106,7 @@ public class Punishments implements PunishmentsMaster {
 		}
 
 		// Call PostPunishEvents once done
-		passedEvents.forEach(center.environment().enforcer()::callPostPunishEvent);
+		passedEvents.forEach(center.corresponder()::callPostPunishEvent);
 	}
 	
 	@Override
@@ -157,7 +157,7 @@ public class Punishments implements PunishmentsMaster {
 				boolean auto = false;
 				
 				// Call event before proceeding
-				if (center.environment().enforcer().callUnpunishEvent(punishment, auto)) {
+				if (center.corresponder().callUnpunishEvent(punishment, auto)) {
 					if (active.remove(punishment)) {
 						passedEvents.put(punishment, auto);
 						exec.add(new SqlQuery(SqlQuery.Query.DELETE_ACTIVE_BY_ID, punishment.id()));
@@ -170,7 +170,7 @@ public class Punishments implements PunishmentsMaster {
 		}
 
 		// Call PostUnpunishEvents once done
-		passedEvents.forEach(center.environment().enforcer()::callPostUnpunishEvent);
+		passedEvents.forEach(center.corresponder()::callPostUnpunishEvent);
 	}
 	
 	@Override
@@ -289,7 +289,7 @@ public class Punishments implements PunishmentsMaster {
 				boolean auto = true;
 				
 				// call UnpunishEvent with parameter true because the removal is automatic
-				if (center.environment().enforcer().callUnpunishEvent(punishment, auto)) {
+				if (center.corresponder().callUnpunishEvent(punishment, auto)) {
 					invalidated.put(punishment, auto);
 					it.remove();
 				}
@@ -297,9 +297,9 @@ public class Punishments implements PunishmentsMaster {
 		}
 		// Call PostUnpunishEvents before proceeding
 		if (center.corresponder().asynchronous()) {
-			invalidated.forEach(center.environment().enforcer()::callPostUnpunishEvent);
+			invalidated.forEach(center.corresponder()::callPostUnpunishEvent);
 		} else {
-			center.async(() -> invalidated.forEach(center.environment().enforcer()::callPostUnpunishEvent));
+			center.async(() -> invalidated.forEach(center.corresponder()::callPostUnpunishEvent));
 		}
 		return active;
 	}
