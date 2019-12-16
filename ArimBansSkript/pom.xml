@@ -35,12 +35,6 @@
 					<artifactItems>
 						<artifactItem>
 							<groupId>space.arim</groupId>
-							<artifactId>bans-resources</artifactId>
-							<version>${project.version}</version>
-							<classifier>resources</classifier>
-						</artifactItem>
-						<artifactItem>
-							<groupId>space.arim</groupId>
 							<artifactId>universal-gpl</artifactId>
 							<version>${universal.version}</version>
 							<classifier>resources</classifier>
@@ -68,13 +62,6 @@
 		<dependency>
 			<groupId>space.arim</groupId>
 			<artifactId>bans-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>space.arim</groupId>
-			<artifactId>bans-resources</artifactId>
-			<classifier>resources</classifier>
-			<type>zip</type>
-			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>space.arim</groupId>
