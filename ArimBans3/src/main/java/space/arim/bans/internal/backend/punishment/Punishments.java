@@ -121,15 +121,34 @@ public class Punishments implements PunishmentsMaster {
 				throw new ConflictingPunishmentException(punishment.subject(), punishment.type());
 			}
 		}
+		
 		// Anti-synchronisation protection, for bad API calls
 		// Check whether we are already asynchronous. If not, run queries inside async.
 		if (center.corresponder().asynchronous()) {
-			directAddPunishments(punishments);
-		} else {
+			directAddPunishments(punishments); // yay! all is good, API was used correctly
+			
+		} else { // uh-oh! potential for rare concurrency issues being silenced
 			center.async(() -> {
 				try {
 					directAddPunishments(punishments);
-				} catch (ConflictingPunishmentException ex) {}
+				} catch (ConflictingPunishmentException ex) {
+					
+					// this exception must be ignored because it cannot be relayed back through the lambda!
+					
+					/*
+					 * This is why it is important to surround your API calls in asynchronisation.
+					 * If you do not, ArimBans is forced to run your queries asynchronously,
+					 * but since lambdas do not throw exceptions outside themselves, ArimBans must catch the exceptions.
+					 * 
+					 * These exceptions are only silenced in the rare case that a race condition
+					 * occurs due to multiple calls to this method. However, while it may this sort
+					 * of error may never occur for most users and servers, it is still
+					 * incredibly important to notify the API caller that the operation was unsuccessful.
+					 * (Otherwise, staff members may think they punished a player, but they really have not)
+					 * Hence, it is thus also incredibly important that the throwable is relayed up the call chain
+					 * 
+					 */
+				}
 			});
 		}
 	}
@@ -195,9 +214,10 @@ public class Punishments implements PunishmentsMaster {
 		}
 		// Anti-synchronisation protection, for bad API calls
 		// Check whether we are already asynchronous. If not, run queries inside async.
-		if (center.corresponder().asynchronous()) {
+		if (center.corresponder().asynchronous()) { // yay! all is good, API was used correctly
 			directRemovePunishments(punishments);
-		} else {
+			
+		} else { // uh-oh! potential for rare concurrency issues being silenced
 			center.async(() -> {
 				try {
 					directRemovePunishments(punishments);
@@ -238,9 +258,10 @@ public class Punishments implements PunishmentsMaster {
 		}
 		// Anti-synchronisation protection, for bad API calls
 		// Check whether we are already asynchronous. If not, run queries async.
-		if (center.corresponder().asynchronous()) {
+		if (center.corresponder().asynchronous()) { // yay! all is good, API was used correctly
 			directChangeReason(punishment, reason);
-		} else {
+			
+		} else { // uh-oh! potential for rare concurrency issues being silenced
 			center.async(() -> {
 				try {
 					directChangeReason(punishment, reason);
