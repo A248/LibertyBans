@@ -19,24 +19,25 @@
 package space.arim.bans.api.events;
 
 import space.arim.bans.api.Punishment;
-import space.arim.registry.events.Cancellable;
 
-public class PunishmentChangeReasonEvent extends AbstractPunishmentChangeReasonEvent implements Cancellable {
+public class AbstractPunishmentChangeReasonEvent extends AbstractPunishmentEvent {
+
+	private final String reason;
 	
-	private boolean cancelled;
-	
-	public PunishmentChangeReasonEvent(Punishment punishment, String reason) {
-		super(punishment, reason);
+	public AbstractPunishmentChangeReasonEvent(Punishment punishment, String reason) {
+		super(punishment);
+		this.reason = reason;
 	}
 	
-	@Override
-	public boolean isCancelled() {
-		return cancelled;
-	}
-	
-	@Override
-	public void setCancelled(boolean cancelled) {
-		this.cancelled = cancelled;
+	/**
+	 * Gets the new reason for the punishment <br>
+	 * <br>
+	 * The old reason can be retrieved by {@link #getPunishment()} for comparison.
+	 * 
+	 * @return String - the new reason
+	 */
+	public String getReason() {
+		return reason;
 	}
 	
 }
