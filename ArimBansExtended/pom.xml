@@ -77,7 +77,10 @@
 		</dependency>
 		<dependency>
 			<groupId>space.arim</groupId>
-			<artifactId>universal-registry</artifactId>
+			<artifactId>universal-gpl</artifactId>
+			<classifier>resources</classifier>
+			<type>zip</type>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.spigotmc</groupId>

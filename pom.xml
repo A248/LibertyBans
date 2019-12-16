@@ -102,6 +102,14 @@
 				<version>${universal.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>space.arim</groupId>
+				<artifactId>universal-gpl</artifactId>
+				<version>${universal.version}</version>
+				<classifier>resources</classifier>
+				<type>zip</type>
+				<scope>provided</scope>
+			</dependency>
+			<dependency>
 				<groupId>org.spigotmc</groupId>
 				<artifactId>spigot</artifactId>
 				<version>${spigot.version}</version>
