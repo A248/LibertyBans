@@ -38,6 +38,12 @@
 							<version>${project.version}</version>
 							<classifier>resources</classifier>
 						</artifactItem>
+						<artifactItem>
+							<groupId>space.arim</groupId>
+							<artifactId>universal-gpl</artifactId>
+							<version>${universal.version}</version>
+							<classifier>resources</classifier>
+						</artifactItem>
 					</artifactItems>
 				</configuration>
 				<executions>
@@ -70,7 +76,9 @@
 							<createDependencyReducedPom>true</createDependencyReducedPom>-->
 							<artifactSet>
 								<includes>
-									<include>space.arim:registry</include>
+									<include>space.arim:universal-events</include>
+									<include>space.arim:universal-registry</include>
+									<include>space.arim:universal-util</include>
 									<include>space.arim:bans-api</include>
 									<include>org.hsqldb:hsqldb</include>
 									<include>com.zaxxer:HikariCP</include>
@@ -108,6 +116,13 @@
 		<dependency>
 			<groupId>space.arim</groupId>
 			<artifactId>bans-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim</groupId>
+			<artifactId>universal-gpl</artifactId>
+			<classifier>resources</classifier>
+			<type>zip</type>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.spigotmc</groupId>

@@ -15,7 +15,7 @@
 
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
-		<finalName>${project.name}_v${project.version}</finalName>
+		<finalName>${project.name}_v${core.version}</finalName>
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
@@ -35,8 +35,8 @@
 					<artifactItems>
 						<artifactItem>
 							<groupId>space.arim</groupId>
-							<artifactId>bans-resources</artifactId>
-							<version>${project.version}</version>
+							<artifactId>universal-gpl</artifactId>
+							<version>${universal.version}</version>
 							<classifier>resources</classifier>
 						</artifactItem>
 					</artifactItems>
@@ -64,14 +64,10 @@
 		</dependency>
 		<dependency>
 			<groupId>space.arim</groupId>
-			<artifactId>bans-resources</artifactId>
+			<artifactId>universal-gpl</artifactId>
 			<classifier>resources</classifier>
 			<type>zip</type>
 			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>space.arim</groupId>
-			<artifactId>universal-registry</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.spigotmc</groupId>

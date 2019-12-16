@@ -12,8 +12,10 @@
 	<artifactId>bans-resources</artifactId>
 	<name>ArimBansResources</name>
 	<description>Controls and distributes shared resources for ArimBans sub-projects.</description>
+	<packaging>pom</packaging>
 	
 	<build>
+		<finalName>${project.name}_v${core.version}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

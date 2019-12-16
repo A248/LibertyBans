@@ -27,7 +27,6 @@ For any unit of software, there is a fixed initial cost to develop it, but beyon
 The good of man is to be in accordance with reason. Where costs and benefits, the substance of economics, are concerned, efficiency is most reasonable. Accordingly, it is proper that software be developed, then provided, simply.
 
 ### About Me ###
-[![GitHub followers](https://img.shields.io/github/followers/A248.svg?label=Follow)](https://github.com/A248?tab=followers)
 
 My objective is to liberate the SpigotMC community from several premium plugins and especially annihilate those of low-quality but high-cost. Tell me if you are interested in helping and I will add you to the [FreeSpigotFoundation](https://github.com/FreeSpigotFoundation).
 
