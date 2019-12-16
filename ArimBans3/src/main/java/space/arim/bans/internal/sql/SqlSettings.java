@@ -42,6 +42,8 @@ public abstract class SqlSettings {
 		HikariConfig config = new HikariConfig();
 		config.setMinimumIdle(2);
 		config.setMaximumPoolSize(3);
+		config.addDataSourceProperty("characterEncoding","utf8");
+		config.addDataSourceProperty("useUnicode","true");
 		//config.setDriverClassName(getDriverClass().getName());
 		return config;
 	}
