@@ -58,9 +58,6 @@ public class ArimBansExtended implements AutoCloseable {
 	
 	@SuppressWarnings("unchecked")
 	private void loadConfig(File folder, Map<String, Object> cfgMap) {
-		if (!folder.exists() && !folder.mkdirs()) {
-			throw new IllegalStateException("Directory creation failed!");
-		}
 		File cfgFile = new File(folder, "config.yml");
 		if (!cfgFile.exists()) {
 			try (InputStream input = ArimBansExtended.class.getResourceAsStream(File.separator + "config.yml")){
@@ -78,7 +75,6 @@ public class ArimBansExtended implements AutoCloseable {
 		} catch (IOException ex) {
 			throw new IllegalStateException("Config could not be loaded!", ex);
 		}
-		
 	}
 	
 	public ArimBansLibrary getLib() {
