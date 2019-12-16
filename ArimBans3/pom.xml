@@ -110,14 +110,6 @@
 			<artifactId>bans-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim</groupId>
-			<artifactId>universal-registry</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>space.arim</groupId>
-			<artifactId>universal-util</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot</artifactId>
 		</dependency>
