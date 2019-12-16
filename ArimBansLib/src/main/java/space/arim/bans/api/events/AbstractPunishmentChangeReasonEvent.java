@@ -16,41 +16,28 @@
  * along with ArimBansLib. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.api.events.bungee;
-
-import net.md_5.bungee.api.plugin.Cancellable;
+package space.arim.bans.api.events;
 
 import space.arim.bans.api.Punishment;
-import space.arim.bans.api.events.UniversalPunishEvent;
 
-public class PunishEvent extends AbstractBungeeEvent implements UniversalPunishEvent, Cancellable {
+public class AbstractPunishmentChangeReasonEvent extends AbstractPunishmentEvent {
 
-	private final boolean retro;
+	private final String reason;
 	
-	private boolean cancel = false;
-	
-	@Override
-	public void setCancelled(boolean cancel) {
-		this.cancel = cancel;
-	}
-	
-	@Override
-	public boolean isCancelled() {
-		return this.cancel;
-	}
-	
-	public PunishEvent(final Punishment punishment) {
-		this(punishment, false);
-	}
-	
-	public PunishEvent(final Punishment punishment, boolean retro) {
+	public AbstractPunishmentChangeReasonEvent(Punishment punishment, String reason) {
 		super(punishment);
-		this.retro = retro;
+		this.reason = reason;
 	}
-
-	@Override
-	public boolean isRetrogade() {
-		return retro;
+	
+	/**
+	 * Gets the new reason for the punishment <br>
+	 * <br>
+	 * The old reason can be retrieved by {@link #getPunishment()} for comparison.
+	 * 
+	 * @return String - the new reason
+	 */
+	public String getReason() {
+		return reason;
 	}
 	
 }

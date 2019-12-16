@@ -56,7 +56,7 @@ public class Punishments implements PunishmentsMaster {
 		return nextId++;
 	}
 	
-	private void directAddPunishments(Punishment[] punishments) {
+	private void directAddPunishments(Punishment[] punishments) throws ConflictingPunishmentException {
 		// A set of queries we'll execute all together for increased efficiency
 		Set<SqlQuery> exec = new HashSet<SqlQuery>();
 		// A map of punishments for which PunishEvents were successfully called
@@ -83,9 +83,11 @@ public class Punishments implements PunishmentsMaster {
 
 				// Check whether punishment is retrogade
 				boolean retro = (punishment.expiration() > 0 && punishment.expiration() <= System.currentTimeMillis());
+				
+				if ((punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
+					throw new ConflictingPunishmentException(punishment.subject(), punishment.type());  // the plague of multi-threaded programs
 
-				// Call event before proceeding
-				if (center.environment().enforcer().callPunishEvent(punishment, retro)) {
+				} else if (center.corresponder().callPunishEvent(punishment, retro)) { // Call event before proceeding
 
 					// If it's retro we only need to add it to history
 					// Otherwise we also need to add it to active
@@ -106,7 +108,7 @@ public class Punishments implements PunishmentsMaster {
 		}
 
 		// Call PostPunishEvents once done
-		passedEvents.forEach(center.environment().enforcer()::callPostPunishEvent);
+		passedEvents.forEach(center.corresponder()::callPostPunishEvent);
 	}
 	
 	@Override
@@ -119,11 +121,35 @@ public class Punishments implements PunishmentsMaster {
 				throw new ConflictingPunishmentException(punishment.subject(), punishment.type());
 			}
 		}
+		
+		// Anti-synchronisation protection, for bad API calls
 		// Check whether we are already asynchronous. If not, run queries inside async.
 		if (center.corresponder().asynchronous()) {
-			directAddPunishments(punishments);
-		} else {
-			center.async(() -> directAddPunishments(punishments));
+			directAddPunishments(punishments); // yay! all is good, API was used correctly
+			
+		} else { // uh-oh! potential for rare concurrency issues being silenced
+			center.async(() -> {
+				try {
+					directAddPunishments(punishments);
+				} catch (ConflictingPunishmentException ex) {
+					
+					// this exception must be ignored because it cannot be relayed back through the lambda!
+					
+					/*
+					 * This is why it is important to surround your API calls in asynchronisation.
+					 * If you do not, ArimBans is forced to run your queries asynchronously,
+					 * but since lambdas do not throw exceptions outside themselves, ArimBans must catch the exceptions.
+					 * 
+					 * These exceptions are only silenced in the rare case that a race condition
+					 * occurs due to multiple calls to this method. However, while it may this sort
+					 * of error may never occur for most users and servers, it is still
+					 * incredibly important to notify the API caller that the operation was unsuccessful.
+					 * (Otherwise, staff members may think they punished a player, but they really have not)
+					 * Hence, it is thus also incredibly important that the throwable is relayed up the call chain
+					 * 
+					 */
+				}
+			});
 		}
 	}
 	
@@ -138,14 +164,15 @@ public class Punishments implements PunishmentsMaster {
 		throw new MissingPunishmentException(subject, type);
 	}
 	
-	private void directRemovePunishments(Punishment[] punishments) {
+	private void directRemovePunishments(Punishment[] punishments) throws MissingPunishmentException {
 		// A set of queries we'll execute all together for increased efficiency
 		Set<SqlQuery> exec = new HashSet<SqlQuery>();
 		// A set of punishments for which UnpunishEvents were successfully called
 		// At the end we'll call PostUnpunishEvent for each punishment in the set
 		HashMap<Punishment, Boolean> passedEvents = new HashMap<Punishment, Boolean>();
 
-		/* Synchronisation is needed here
+		/* 
+		 * Synchronisation is needed here
 		 * 
 		 * For same reasons as stated under #directAddPunishments
 		 * 
@@ -156,12 +183,17 @@ public class Punishments implements PunishmentsMaster {
 				// Removal called in this method is never automatic
 				boolean auto = false;
 				
-				// Call event before proceeding
-				if (center.environment().enforcer().callUnpunishEvent(punishment, auto)) {
-					if (active.remove(punishment)) {
+				if (active.contains(punishment)) {
+				
+					// Call event before proceeding
+					if (center.corresponder().callUnpunishEvent(punishment, auto)) {
+						active.remove(punishment);
 						passedEvents.put(punishment, auto);
 						exec.add(new SqlQuery(SqlQuery.Query.DELETE_ACTIVE_BY_ID, punishment.id()));
 					}
+				
+				} else {
+					throw new MissingPunishmentException(punishment); // the plague of multi-threaded programs
 				}
 			}
 			// Execute queries
@@ -170,7 +202,7 @@ public class Punishments implements PunishmentsMaster {
 		}
 
 		// Call PostUnpunishEvents once done
-		passedEvents.forEach(center.environment().enforcer()::callPostUnpunishEvent);
+		passedEvents.forEach(center.corresponder()::callPostUnpunishEvent);
 	}
 	
 	@Override
@@ -180,23 +212,41 @@ public class Punishments implements PunishmentsMaster {
 				throw new MissingPunishmentException(punishment);
 			}
 		}
+		// Anti-synchronisation protection, for bad API calls
 		// Check whether we are already asynchronous. If not, run queries inside async.
-		if (center.corresponder().asynchronous()) {
+		if (center.corresponder().asynchronous()) { // yay! all is good, API was used correctly
 			directRemovePunishments(punishments);
-		} else {
-			center.async(() -> directRemovePunishments(punishments));
+			
+		} else { // uh-oh! potential for rare concurrency issues being silenced
+			center.async(() -> {
+				try {
+					directRemovePunishments(punishments);
+				} catch (MissingPunishmentException ex) {}
+			});
 		}
 	}
 	
-	private void directChangeReason(Punishment punishment, String reason) {
+	private void directChangeReason(Punishment punishment, String reason) throws MissingPunishmentException {
 		synchronized (active) {
-			SqlQuery historyQuery = new SqlQuery(SqlQuery.Query.UPDATE_HISTORY_REASON_FOR_ID, reason, punishment.id());
-			if (active.remove(punishment)) {
-				history.remove(punishment);
-				center.sql().executeQuery(historyQuery, new SqlQuery(SqlQuery.Query.UPDATE_ACTIVE_REASON_FOR_ID, reason, punishment.id()));
+			if (history.contains(punishment)) {
+				
+				// check if the punishment is in the active set
+				boolean activeAlso = active.contains(punishment);
+				
+				// Call event before proceeding
+				if (center.corresponder().callPunishmentChangeReasonEvent(punishment, reason, activeAlso)) {
+					// Execute queries
+					SqlQuery historyQuery = new SqlQuery(SqlQuery.Query.UPDATE_HISTORY_REASON_FOR_ID, reason, punishment.id());
+					if (activeAlso) {
+						center.sql().executeQuery(historyQuery, new SqlQuery(SqlQuery.Query.UPDATE_ACTIVE_REASON_FOR_ID, reason, punishment.id()));
+					} else {
+						center.sql().executeQuery(historyQuery);
+					}
+					// Call PostUnpunishEvents once done
+					center.corresponder().callPostPunishmentChangeReasonEvent(punishment, reason, activeAlso);
+				}
 			} else {
-				history.remove(punishment);
-				center.sql().executeQuery(historyQuery);
+				throw new MissingPunishmentException(punishment); // the plague of multi-threaded programs
 			}
 		}
 	}
@@ -206,11 +256,17 @@ public class Punishments implements PunishmentsMaster {
 		if (!history.contains(punishment)) {
 			throw new MissingPunishmentException(punishment);
 		}
+		// Anti-synchronisation protection, for bad API calls
 		// Check whether we are already asynchronous. If not, run queries async.
-		if (center.corresponder().asynchronous()) {
+		if (center.corresponder().asynchronous()) { // yay! all is good, API was used correctly
 			directChangeReason(punishment, reason);
-		} else {
-			center.async(() -> directChangeReason(punishment, reason));
+			
+		} else { // uh-oh! potential for rare concurrency issues being silenced
+			center.async(() -> {
+				try {
+					directChangeReason(punishment, reason);
+				} catch (MissingPunishmentException ex) {}
+			});
 		}
 	}
 	
@@ -289,7 +345,7 @@ public class Punishments implements PunishmentsMaster {
 				boolean auto = true;
 				
 				// call UnpunishEvent with parameter true because the removal is automatic
-				if (center.environment().enforcer().callUnpunishEvent(punishment, auto)) {
+				if (center.corresponder().callUnpunishEvent(punishment, auto)) {
 					invalidated.put(punishment, auto);
 					it.remove();
 				}
@@ -297,9 +353,9 @@ public class Punishments implements PunishmentsMaster {
 		}
 		// Call PostUnpunishEvents before proceeding
 		if (center.corresponder().asynchronous()) {
-			invalidated.forEach(center.environment().enforcer()::callPostUnpunishEvent);
+			invalidated.forEach(center.corresponder()::callPostUnpunishEvent);
 		} else {
-			center.async(() -> invalidated.forEach(center.environment().enforcer()::callPostUnpunishEvent));
+			center.async(() -> invalidated.forEach(center.corresponder()::callPostUnpunishEvent));
 		}
 		return active;
 	}

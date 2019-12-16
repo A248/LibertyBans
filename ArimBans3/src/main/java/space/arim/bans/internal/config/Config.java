@@ -42,8 +42,6 @@ public class Config implements ConfigMaster {
 	
 	private final ArimBans center;
 	
-	private File configYml;
-	private File messagesYml;
 	private final Map<String, Object> configDefaults;
 	private final Map<String, Object> messagesDefaults;
 	private final ConcurrentHashMap<String, Object> configValues = new ConcurrentHashMap<String, Object>();
@@ -122,15 +120,15 @@ public class Config implements ConfigMaster {
 	}
 	
 	private void loadConfig(Yaml yaml) {
-		configYml = saveIfNotExist(CONFIG_PATH);
+		File configYml = saveIfNotExist(CONFIG_PATH);
 		configValues.putAll(loadFile(configYml, yaml));
-		configYml = checkVersion(configYml, configValues, CONFIG_VERSION, CONFIG_PATH);
+		checkVersion(configYml, configValues, CONFIG_VERSION, CONFIG_PATH);
 	}
 	
 	private void loadMessages(Yaml yaml) {
-		messagesYml = saveIfNotExist(MESSAGES_PATH);
+		File messagesYml = saveIfNotExist(MESSAGES_PATH);
 		messagesValues.putAll(loadFile(messagesYml, yaml));
-		messagesYml = checkVersion(messagesYml, messagesValues, MESSAGES_VERSION, MESSAGES_PATH);
+		checkVersion(messagesYml, messagesValues, MESSAGES_VERSION, MESSAGES_PATH);
 	}
 	
 	@Override

@@ -16,27 +16,14 @@
  * along with ArimBansLib. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.api.events.bukkit;
+package space.arim.bans.api.events;
 
 import space.arim.bans.api.Punishment;
-import space.arim.bans.api.events.UniversalUnpunishEvent;
 
-public class PostUnpunishEvent extends AbstractBukkitEvent implements UniversalUnpunishEvent {
+public class PostPunishmentChangeReasonEvent extends AbstractPunishmentChangeReasonEvent {
 
-	private final boolean auto;
-	
-	public PostUnpunishEvent(final Punishment punishment) {
-		this(punishment, false);
-	}
-	
-	public PostUnpunishEvent(final Punishment punishment, final boolean auto) {
-		super(punishment);
-		this.auto = auto;
-	}
-
-	@Override
-	public boolean isAutomatic() {
-		return auto;
+	public PostPunishmentChangeReasonEvent(Punishment punishment, String reason) {
+		super(punishment, reason);
 	}
 	
 }

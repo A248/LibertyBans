@@ -50,4 +50,8 @@ public interface CorresponderMaster extends Component {
 	
 	void callPostUnpunishEvent(Punishment punishment, boolean automatic);
 	
+	boolean callPunishmentChangeReasonEvent(Punishment punishment, String reason, boolean active);
+	
+	void callPostPunishmentChangeReasonEvent(Punishment punishment, String reason, boolean active);
+	
 }

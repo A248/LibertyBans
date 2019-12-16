@@ -29,10 +29,6 @@ import net.md_5.bungee.event.EventPriority;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
-import space.arim.bans.api.events.bungee.PostUnpunishEvent;
-import space.arim.bans.api.events.bungee.PostPunishEvent;
-import space.arim.bans.api.events.bungee.PunishEvent;
-import space.arim.bans.api.events.bungee.UnpunishEvent;
 import space.arim.bans.api.exception.ConfigSectionException;
 import space.arim.bans.api.exception.MissingCenterException;
 import space.arim.bans.env.Enforcer;
@@ -113,32 +109,6 @@ public class BungeeEnforcer implements Enforcer {
 				BungeeEnv.sendMessage(target, message, useJson);
 			}
 		}
-	}
-	
-	@Override
-	public boolean callPunishEvent(Punishment punishment, boolean retro) {
-		PunishEvent  evt = new PunishEvent(punishment, retro);
-		environment.plugin().getProxy().getPluginManager().callEvent(evt);
-		return !evt.isCancelled();
-	}
-	
-	@Override
-	public boolean callUnpunishEvent(Punishment punishment, boolean automatic) {
-		UnpunishEvent evt = new UnpunishEvent(punishment, automatic);
-		environment.plugin().getProxy().getPluginManager().callEvent(evt);
-		// Must return true if event is automatic
-		// Otherwise data gets corrupted
-		return automatic || !evt.isCancelled();
-	}
-
-	@Override
-	public void callPostPunishEvent(Punishment punishment, boolean retro) {
-		environment.plugin().getProxy().getPluginManager().callEvent(new PostPunishEvent(punishment, retro));
-	}
-
-	@Override
-	public void callPostUnpunishEvent(Punishment punishment, boolean automatic) {
-		environment.plugin().getProxy().getPluginManager().callEvent(new PostUnpunishEvent(punishment, automatic));
 	}
 	
 	private byte parsePriority(String key) {

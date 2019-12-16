@@ -180,12 +180,8 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	}
 	
 	@Override
-	default void removePunishments(Punishment...punishments) {
-		try {
-			punishments().removePunishments(punishments);
-		} catch (MissingPunishmentException ex) {
-			logs().logError(ex);
-		}
+	default void removePunishments(Punishment...punishments) throws MissingPunishmentException {
+		punishments().removePunishments(punishments);
 	}
 	
 	@Override
