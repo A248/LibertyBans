@@ -60,7 +60,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>space.arim</groupId>
-			<artifactId>bans-core</artifactId>
+			<artifactId>bans-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>space.arim</groupId>
