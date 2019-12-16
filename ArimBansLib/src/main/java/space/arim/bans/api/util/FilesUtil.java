@@ -45,10 +45,12 @@ public final class FilesUtil {
 	 * @throws IOException if an error occurred
 	 */
 	public static boolean saveFromStream(File target, InputStream input) throws IOException {
-		if (target.createNewFile()) {
-			try (FileOutputStream output = new FileOutputStream(target)){
-				com.google.common.io.ByteStreams.copy(input, output);
-				return true;
+		if (target.getParentFile().exists() || target.getParentFile().mkdirs()) {
+			if (target.createNewFile()) {
+				try (FileOutputStream output = new FileOutputStream(target)){
+					com.google.common.io.ByteStreams.copy(input, output);
+					return true;
+				}
 			}
 		}
 		return false;
@@ -61,6 +63,24 @@ public final class FilesUtil {
 			return (type.isInstance(obj)) ? (T) obj : null;
 		}
 		return getFromConfigMap((Map<String, Object>) map.get(key.substring(0, key.indexOf("."))), key.substring(key.indexOf(".") + 1), type);
+	}
+	
+	public static File datePrefixedFile(File folder, String filename) {
+		if (!folder.exists() && !folder.mkdirs()) {
+			throw new IllegalStateException("Directory creation of " + folder.getPath() + " failed.");
+		} else if (!folder.isDirectory()) {
+			throw new IllegalArgumentException(folder.getPath() + " is not a directory!");
+		}
+		return new File(folder, StringsUtil.fileDateFormat() + filename);
+	}
+	
+	public static File datePrefixedFile(File folder, String subFolder, String filename) {
+		if (!folder.exists() && !folder.mkdirs()) {
+			throw new IllegalStateException("Directory creation of " + folder.getPath() + " failed.");
+		} else if (!folder.isDirectory()) {
+			throw new IllegalArgumentException(folder.getPath() + " is not a directory!");
+		}
+		return new File(folder, (subFolder.endsWith(File.separator)) ? subFolder : (subFolder + File.separator) + StringsUtil.fileDateFormat() + filename);
 	}
 	
 	public static boolean generateBlankFile(File file) {

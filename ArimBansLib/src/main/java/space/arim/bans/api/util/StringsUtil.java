@@ -24,16 +24,22 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
-import com.google.common.net.InetAddresses;
-
 public final class StringsUtil {
 	
-	private static final String fileDateFormat = (new SimpleDateFormat("dd-MM-yyyy")).format(new Date());
+	private static final SimpleDateFormat FILE_DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy");
 	
 	private StringsUtil() {}
 	
+	/**
+	 * Utilises class <code>com.google.common.net.InetAddresses</code> <br>
+	 * <br>
+	 * <b>If that class is not on the classpath do not call this method!</b>
+	 * 
+	 * @param address - the address to validate
+	 * @return true if valid, false otherwise
+	 */
 	public static boolean validAddress(String address) {
-		return InetAddresses.isInetAddress(address);
+		return com.google.common.net.InetAddresses.isInetAddress(address);
 	}
 	
 	public static String capitaliseProperly(String input) {
@@ -61,6 +67,6 @@ public final class StringsUtil {
 	}
 	
 	public static String fileDateFormat() {
-		return fileDateFormat;
+		return FILE_DATE_FORMAT.format(new Date());
 	}
 }

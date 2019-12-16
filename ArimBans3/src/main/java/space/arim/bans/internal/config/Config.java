@@ -36,9 +36,7 @@ import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.exception.ConfigLoadException;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.util.FilesUtil;
-import space.arim.bans.api.util.StringsUtil;
 import space.arim.bans.api.util.minecraft.MinecraftUtil;
-import space.arim.bans.internal.logging.Logs;
 
 public class Config implements ConfigMaster {
 	
@@ -89,7 +87,6 @@ public class Config implements ConfigMaster {
 		} else {
 			center.logs().log(Level.FINER, "File " + target.getPath() + " exists; good!");
 		}
-		
 		return target;
 	}
 	
@@ -115,14 +112,9 @@ public class Config implements ConfigMaster {
 	private File checkVersion(File source, Map<String, Object> values, int version, String resource) {
 		Object ver = values.get("do-not-touch-version");
 		if (!(ver instanceof Integer && (Integer) ver == version)) {
-			File dest = new File(center.dataFolder(), "configuration-backups" + File.separator + StringsUtil.fileDateFormat() + "-" + resource);
+			File dest = FilesUtil.datePrefixedFile(center.dataFolder(), "configuration-backups", "-" + resource);
 			center.logs().logBoth(Level.WARNING, "Detected outdated " + resource + " version. Saving old configuration to " + dest.getPath());
-			if (!dest.getParentFile().exists() && !dest.getParentFile().mkdirs()) {
-				center.logs().logBoth(Level.SEVERE, "*** PLEASE READ ***\n"
-						+ "Your " + resource + " version is outdated. ArimBans attempted to copy the latest configuration and save your outdated " + resource + " to a backup location. "
-						+ "However, we were unable to complete this operation, and as such, your " + resource + " remains outdated. " + Logs.PLEASE_CREATE_GITHUB_ISSUE_URL + " to address this.");
-				throw new ConfigLoadException(source);
-			}
+			//center.logs().logBoth(Level.SEVERE, "*** PLEASE READ ***\n" + "Your " + resource + " version is outdated. ArimBans attempted to copy the latest configuration and save your outdated " + resource + " to a backup location. " + "However, we were unable to complete this operation, and as such, your " + resource + " remains outdated. " + Logs.PLEASE_CREATE_GITHUB_ISSUE_URL + " to address this.");
 			source.renameTo(dest);
 			source = saveIfNotExist(resource);
 		}
