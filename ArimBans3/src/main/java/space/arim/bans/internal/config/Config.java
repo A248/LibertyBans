@@ -112,7 +112,7 @@ public class Config implements ConfigMaster {
 	private File checkVersion(File source, Map<String, Object> values, int version, String resource) {
 		Object ver = values.get("do-not-touch-version");
 		if (!(ver instanceof Integer && (Integer) ver == version)) {
-			File dest = FilesUtil.datePrefixedFile(center.dataFolder(), "configuration-backups", "-" + resource);
+			File dest = FilesUtil.dateSuffixedFile(center.dataFolder(), resource + "-", "configuration-backups");
 			center.logs().logBoth(Level.WARNING, "Detected outdated " + resource + " version. Saving old configuration to " + dest.getPath());
 			//center.logs().logBoth(Level.SEVERE, "*** PLEASE READ ***\n" + "Your " + resource + " version is outdated. ArimBans attempted to copy the latest configuration and save your outdated " + resource + " to a backup location. " + "However, we were unable to complete this operation, and as such, your " + resource + " remains outdated. " + Logs.PLEASE_CREATE_GITHUB_ISSUE_URL + " to address this.");
 			source.renameTo(dest);

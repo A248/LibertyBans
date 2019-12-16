@@ -24,9 +24,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import space.arim.registry.util.ThreadLocalSupplier;
+
 public final class StringsUtil {
 	
-	private static final SimpleDateFormat FILE_DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy");
+	private static final ThreadLocalSupplier<SimpleDateFormat> BASIC_DATE_FORMATTER = new ThreadLocalSupplier<SimpleDateFormat>(() -> new SimpleDateFormat(""));
 	
 	private StringsUtil() {}
 	
@@ -66,7 +68,8 @@ public final class StringsUtil {
 		return (builder.length() == 0) ? "" : builder.toString().substring(1);
 	}
 	
-	public static String fileDateFormat() {
-		return FILE_DATE_FORMAT.format(new Date());
+	public static String basicTodaysDate() {
+		return BASIC_DATE_FORMATTER.get().format(new Date());
 	}
+	
 }

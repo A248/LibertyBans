@@ -62,10 +62,6 @@ public class ArimBansPlugin implements ArimBans {
 	public ArimBansPlugin(File folder, Environment environment) {
 		this.folder = folder;
 		this.environment = environment;
-		if (!folder.exists() && !folder.mkdirs()) {
-			environment.shutdown("Directory creation of " + folder.getPath() + " failed!");
-			throw new InternalStateException("Plugin directory creation failed");
-		}
 		config = new Config(this);
 		logs = new Logs(this);
 		sql = new Sql(this);

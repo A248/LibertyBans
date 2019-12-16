@@ -65,22 +65,22 @@ public final class FilesUtil {
 		return getFromConfigMap((Map<String, Object>) map.get(key.substring(0, key.indexOf("."))), key.substring(key.indexOf(".") + 1), type);
 	}
 	
-	public static File datePrefixedFile(File folder, String filename) {
+	public static File dateSuffixedFile(File folder, String filename) {
 		if (!folder.exists() && !folder.mkdirs()) {
 			throw new IllegalStateException("Directory creation of " + folder.getPath() + " failed.");
 		} else if (!folder.isDirectory()) {
 			throw new IllegalArgumentException(folder.getPath() + " is not a directory!");
 		}
-		return new File(folder, StringsUtil.fileDateFormat() + filename);
+		return new File(folder, filename + StringsUtil.basicTodaysDate());
 	}
 	
-	public static File datePrefixedFile(File folder, String subFolder, String filename) {
+	public static File dateSuffixedFile(File folder, String filename, String subFolder) {
 		if (!folder.exists() && !folder.mkdirs()) {
 			throw new IllegalStateException("Directory creation of " + folder.getPath() + " failed.");
 		} else if (!folder.isDirectory()) {
 			throw new IllegalArgumentException(folder.getPath() + " is not a directory!");
 		}
-		return new File(folder, (subFolder.endsWith(File.separator)) ? subFolder : (subFolder + File.separator) + StringsUtil.fileDateFormat() + filename);
+		return new File(folder, (subFolder.endsWith(File.separator)) ? subFolder : (subFolder + File.separator) + filename + StringsUtil.basicTodaysDate());
 	}
 	
 	public static boolean generateBlankFile(File file) {

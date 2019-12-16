@@ -28,7 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import space.arim.bans.ArimBans;
-import space.arim.bans.api.util.StringsUtil;
+import space.arim.bans.api.util.FilesUtil;
 import space.arim.registry.util.LogFormatter;
 
 public class Logs implements LogsMaster {
@@ -114,16 +114,15 @@ public class Logs implements LogsMaster {
 		log_to_console_threshold = center.config().getConfigInt("logs.log-to-console-threshold");
 		log_directory_keep_alive = center.config().getConfigInt("logs.log-directory-keep-alive");
 		if (first) {
-			String path = center.dataFolder().getPath() + File.separator + "logs" + File.separator + StringsUtil.fileDateFormat() + File.separator;
+			File path = FilesUtil.dateSuffixedFile(center.dataFolder(), "-logs");
 			try {
-				File dirPath = new File(path);
-				if (!dirPath.exists() && !dirPath.mkdirs()) {
+				if (!path.exists() && !path.mkdirs()) {
 					center.environment().logger().warning("Failed to create logs directory!");
 					return;
 				}
-				verboseLog = new FileHandler(path + "verbose.log");
-				infoLog = new FileHandler(path + "info.log");
-				errorLog = new FileHandler(path + "error.log");
+				verboseLog = new FileHandler(path + File.separator + "verbose.log");
+				infoLog = new FileHandler(path + File.separator + "info.log");
+				errorLog = new FileHandler(path + File.separator + "error.log");
 				Formatter universalFormatter = new LogFormatter();
 				verboseLog.setFormatter(universalFormatter);
 				infoLog.setFormatter(universalFormatter);
