@@ -33,8 +33,10 @@ import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.events.PostPunishEvent;
+import space.arim.bans.api.events.PostPunishmentChangeReasonEvent;
 import space.arim.bans.api.events.PostUnpunishEvent;
 import space.arim.bans.api.events.PunishEvent;
+import space.arim.bans.api.events.PunishmentChangeReasonEvent;
 import space.arim.bans.api.events.UnpunishEvent;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.MissingPunishmentException;
@@ -161,6 +163,16 @@ public class Corresponder implements CorresponderMaster {
 	@Override
 	public void callPostUnpunishEvent(Punishment punishment, boolean auto) {
 		UniversalEvents.fireEvent(new PostUnpunishEvent(punishment, auto));
+	}
+	
+	@Override
+	public boolean callPunishmentChangeReasonEvent(Punishment punishment, String reason, boolean active) {
+		return UniversalEvents.fireEvent(new PunishmentChangeReasonEvent(punishment, reason));
+	}
+	
+	@Override
+	public void callPostPunishmentChangeReasonEvent(Punishment punishment, String reason, boolean active) {
+		UniversalEvents.fireEvent(new PostPunishmentChangeReasonEvent(punishment, reason));
 	}
 	
 	@Override
