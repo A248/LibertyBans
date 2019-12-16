@@ -22,6 +22,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import space.arim.bans.api.exception.ConflictingPunishmentException;
+import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.registry.Registrable;
 
 public interface PunishmentPlugin extends Registrable {
@@ -46,9 +48,9 @@ public interface PunishmentPlugin extends Registrable {
 		return new HashSet<Punishment>(getHistoryPunishments());
 	}
 	
-	void addPunishments(Punishment...punishments);
+	void addPunishments(Punishment...punishments) throws ConflictingPunishmentException;
 	
-	void removePunishments(Punishment...punishments);
+	void removePunishments(Punishment...punishments) throws MissingPunishmentException;
 	
 	void sendMessage(Subject subject, String...messages);
 	

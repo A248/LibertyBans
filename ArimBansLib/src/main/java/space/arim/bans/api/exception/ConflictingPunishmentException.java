@@ -21,7 +21,7 @@ package space.arim.bans.api.exception;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.PunishmentType;
 
-public class ConflictingPunishmentException extends InternalStateException {
+public class ConflictingPunishmentException extends Exception {
 
 	/**
 	 * Serial version id.
