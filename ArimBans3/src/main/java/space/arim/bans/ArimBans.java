@@ -214,6 +214,11 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	}
 	
 	@Override
+	default void changeReason(Punishment punishment, String reason) throws MissingPunishmentException {
+		punishments().changeReason(punishment, reason);
+	}
+	
+	@Override
 	default boolean asynchronous() {
 		return corresponder().asynchronous();
 	}

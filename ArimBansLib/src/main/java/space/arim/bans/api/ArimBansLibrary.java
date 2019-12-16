@@ -19,6 +19,8 @@
 package space.arim.bans.api;
 
 import java.util.UUID;
+
+import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.api.util.StringsUtil;
 
 public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
@@ -93,6 +95,14 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 * @param rawArgs - the arguments including the command itself
 	 */
 	void simulateCommand(Subject subject, String[] rawArgs);
+	
+	/**
+	 * Changes a punishment reason
+	 * 
+	 * @param punishment - the punishment whose reason to change
+	 * @param newReason - the new reason
+	 */
+	void changeReason(Punishment punishment, String reason) throws MissingPunishmentException;
 	
 	/**
 	 * Executes a block of code asynchronously.
