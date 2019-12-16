@@ -32,8 +32,13 @@ import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
+import space.arim.bans.api.events.PostPunishEvent;
+import space.arim.bans.api.events.PostUnpunishEvent;
+import space.arim.bans.api.events.PunishEvent;
+import space.arim.bans.api.events.UnpunishEvent;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.MissingPunishmentException;
+import space.arim.registry.events.UniversalEvents;
 
 public class Corresponder implements CorresponderMaster {
 
@@ -136,6 +141,26 @@ public class Corresponder implements CorresponderMaster {
 			}
 		}
 		throw new MissingPunishmentException(id);
+	}
+	
+	@Override
+	public boolean callPunishEvent(Punishment punishment, boolean retro) {
+		return UniversalEvents.fireEvent(new PunishEvent(punishment, retro));
+	}
+	
+	@Override
+	public boolean callUnpunishEvent(Punishment punishment, boolean auto) {
+		return UniversalEvents.fireEvent(new UnpunishEvent(punishment, auto)) || auto;
+	}
+	
+	@Override
+	public void callPostPunishEvent(Punishment punishment, boolean retro) {
+		UniversalEvents.fireEvent(new PostPunishEvent(punishment, retro));
+	}
+	
+	@Override
+	public void callPostUnpunishEvent(Punishment punishment, boolean auto) {
+		UniversalEvents.fireEvent(new PostUnpunishEvent(punishment, auto));
 	}
 	
 	@Override
