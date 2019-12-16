@@ -100,9 +100,7 @@ public class Logs implements LogsMaster {
 	private void redirectHikariLoggers(Handler...updateHandlers) {
 		//Logger.getLogger("com.zaxxer.hikari.pool.PoolBase"), Logger.getLogger("com.zaxxer.hikari.pool.HikariPool"), Logger.getLogger("com.zaxxer.hikari.HikariDataSource"), Logger.getLogger("com.zaxxer.hikari.HikariConfig"), Logger.getLogger("com.zaxxer.hikari.util.DriverDataSource")
         Arrays.asList(Logger.getLogger("com.zaxxer.hikari.HikariDataSource"), Logger.getLogger("com.zaxxer.hikari.pool.PoolBase")).forEach((logger) -> {
-        	for (Handler handler : logger.getHandlers()) {
-        		logger.removeHandler(handler);
-        	}
+        	logger.setUseParentHandlers(false);
         	for (Handler updateHandler : updateHandlers) {
         		logger.addHandler(updateHandler);
         	}
@@ -114,12 +112,13 @@ public class Logs implements LogsMaster {
 		log_to_console_threshold = center.config().getConfigInt("logs.log-to-console-threshold");
 		log_directory_keep_alive = center.config().getConfigInt("logs.log-directory-keep-alive");
 		if (first) {
-			File path = FilesUtil.dateSuffixedFile(center.dataFolder(), "-logs");
+			File path = FilesUtil.dateSuffixedFile(center.dataFolder(), "logs-");
 			try {
 				if (!path.exists() && !path.mkdirs()) {
 					center.environment().logger().warning("Failed to create logs directory!");
 					return;
 				}
+				
 				verboseLog = new FileHandler(path + File.separator + "verbose.log");
 				infoLog = new FileHandler(path + File.separator + "info.log");
 				errorLog = new FileHandler(path + File.separator + "error.log");
@@ -136,6 +135,7 @@ public class Logs implements LogsMaster {
 				logger.addHandler(infoLog);
 				logger.addHandler(errorLog);
 				redirectHikariLoggers(verboseLog, infoLog, errorLog);
+				center.environment().logger().log(Level.INFO, "Logging initialised in " + path);
 			} catch (IOException ex) {
 				center.environment().logger().log(Level.SEVERE, "Log initialisation failed!");
 			}
