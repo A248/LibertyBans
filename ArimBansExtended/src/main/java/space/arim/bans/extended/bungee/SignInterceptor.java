@@ -39,7 +39,7 @@ public class SignInterceptor extends PacketAdapter<SignUpdate> {
 	public void receive(PacketReceiveEvent<SignUpdate> evt) {
 		if (plugin.enabled() && plugin.extension().antiSignEnabled() && !evt.isCancelled()) {
 			if (evt.isSentByPlayer()) {
-				PunishmentResult result = plugin.extension().getLib().getApplicableBan(evt.getPlayer().getUniqueId(), evt.getPlayer().getAddress().getAddress().getHostAddress());
+				PunishmentResult result = plugin.extension().getLib().getApplicableMute(evt.getPlayer().getUniqueId(), evt.getPlayer().getAddress().getAddress().getHostAddress());
 				if (result.hasPunishment()) {
 					evt.setCancelled(true);
 					plugin.extension().getLib().sendMessage(evt.getPlayer().getUniqueId(), result.getApplicableMessage());
