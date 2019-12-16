@@ -112,13 +112,12 @@ public class Logs implements LogsMaster {
 		log_to_console_threshold = center.config().getConfigInt("logs.log-to-console-threshold");
 		log_directory_keep_alive = center.config().getConfigInt("logs.log-directory-keep-alive");
 		if (first) {
-			File path = FilesUtil.dateSuffixedFile(center.dataFolder(), "logs-");
+			File path = FilesUtil.datePrefixedFile(center.dataFolder(), "", "logs");
 			try {
 				if (!path.exists() && !path.mkdirs()) {
 					center.environment().logger().warning("Failed to create logs directory!");
 					return;
 				}
-				
 				verboseLog = new FileHandler(path + File.separator + "verbose.log");
 				infoLog = new FileHandler(path + File.separator + "info.log");
 				errorLog = new FileHandler(path + File.separator + "error.log");
@@ -129,7 +128,7 @@ public class Logs implements LogsMaster {
 				verboseLog.setLevel(Level.ALL);
 				infoLog.setLevel(Level.INFO);
 				errorLog.setLevel(Level.WARNING);
-				logger = Logger.getLogger(center.getName());
+				logger = Logger.getLogger(center.getName() + "-Core");
 				logger.setUseParentHandlers(false);
 				logger.addHandler(verboseLog);
 				logger.addHandler(infoLog);
