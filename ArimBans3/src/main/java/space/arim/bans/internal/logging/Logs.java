@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.util.StringsUtil;
-import space.arim.registry.util.UniversalLogFormatter;
+import space.arim.registry.util.LogFormatter;
 
 public class Logs implements LogsMaster {
 
@@ -124,7 +124,7 @@ public class Logs implements LogsMaster {
 				verboseLog = new FileHandler(path + "verbose.log");
 				infoLog = new FileHandler(path + "info.log");
 				errorLog = new FileHandler(path + "error.log");
-				Formatter universalFormatter = new UniversalLogFormatter();
+				Formatter universalFormatter = new LogFormatter();
 				verboseLog.setFormatter(universalFormatter);
 				infoLog.setFormatter(universalFormatter);
 				errorLog.setFormatter(universalFormatter);

@@ -111,7 +111,11 @@
 		</dependency>
 		<dependency>
 			<groupId>space.arim</groupId>
-			<artifactId>registry</artifactId>
+			<artifactId>universal-registry</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim</groupId>
+			<artifactId>universal-util</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.spigotmc</groupId>

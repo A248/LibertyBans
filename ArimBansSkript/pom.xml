@@ -20,7 +20,7 @@
 		</dependency>
 		<dependency>
 			<groupId>space.arim</groupId>
-			<artifactId>registry</artifactId>
+			<artifactId>universal-registry</artifactId>
 		</dependency>
 	</dependencies>
 	
