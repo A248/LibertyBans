@@ -226,8 +226,16 @@ public class Commands implements CommandsMaster {
 			return "blame.";
 		case STATUS:
 			return "status.";
+		case IPS:
+			return "ips.";
+		case ALTS:
+			return "alts.";
+		case ROLLBACK:
+			return "rollback.";
+		case RELOAD:
+			return "reload.";
 		default:
-			return category.name();
+			return category.name().toLowerCase() + ".";
 		}
 	}
 	
