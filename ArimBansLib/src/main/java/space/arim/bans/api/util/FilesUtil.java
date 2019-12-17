@@ -90,7 +90,7 @@ public final class FilesUtil {
 	
 	public static File datePrefixedFile(File folder, String filename, String subFolder) {
 		ensureDir(folder);
-		return new File(folder, StringsUtil.basicTodaysDate() + (subFolder.startsWith(File.separator) ? subFolder : File.separator + subFolder) + filename);
+		return new File(folder, (subFolder.startsWith(File.separator) ? subFolder : File.separator + subFolder) + StringsUtil.basicTodaysDate() + filename);
 	}
 	
 	public static boolean generateBlankFile(File file) {
