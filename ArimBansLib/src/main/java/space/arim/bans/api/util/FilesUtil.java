@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 /**
  * Files utility.
@@ -54,15 +53,6 @@ public final class FilesUtil {
 			}
 		}
 		return false;
-	}
-	
-	@SuppressWarnings("unchecked")
-	public static <T> T getFromConfigMap(Map<String, Object> map, String key, Class<T> type) {
-		if (!key.contains(".")) {
-			Object obj = map.get(key);
-			return (type.isInstance(obj)) ? (T) obj : null;
-		}
-		return getFromConfigMap((Map<String, Object>) map.get(key.substring(0, key.indexOf("."))), key.substring(key.indexOf(".") + 1), type);
 	}
 	
 	private static void ensureDir(File folder) {
