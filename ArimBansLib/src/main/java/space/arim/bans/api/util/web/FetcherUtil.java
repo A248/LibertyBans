@@ -27,9 +27,11 @@ import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
 
 import space.arim.bans.api.exception.FetcherException;
-import space.arim.bans.api.exception.HttpStatusException;
 import space.arim.bans.api.exception.RateLimitException;
 import space.arim.bans.api.util.minecraft.MinecraftUtil;
+
+import space.arim.registry.util.exception.HttpStatusException;
+import space.arim.registry.util.web.HttpStatus;
 
 public final class FetcherUtil {
 	
@@ -59,7 +61,7 @@ public final class FetcherUtil {
 	
 	public static String mojangApi(final UUID playeruuid) throws FetcherException, HttpStatusException {
 		final String url = MOJANG_API_FROM_UUID + Objects.requireNonNull(playeruuid, "UUID must not be null!").toString().replace("-", "") + "/names";
-		try (FetcherConnection conn = new FetcherConnection(url); Scanner scanner = new Scanner(conn.connect().inputStream())) {
+		try (FetcherConnection conn = new FetcherConnection(url); Scanner scanner = conn.connect().scanner()) {
 			String s = scanner.useDelimiter("\\A").next();
 			return ((JSONObject) JSONValue.parseWithException(s.substring(s.lastIndexOf('{'), s.lastIndexOf('}') + 1))).get("name").toString();
 		} catch (IOException | ParseException ex) {
@@ -77,7 +79,7 @@ public final class FetcherUtil {
 	
 	public static String getLatestPluginVersion(final int resourceId) throws FetcherException, HttpStatusException {
 		final String url = SPIGOT_UPDATE_API + resourceId;
-		try (FetcherConnection conn = new FetcherConnection(url); Scanner scanner = new Scanner(conn.connect().inputStream())) {
+		try (FetcherConnection conn = new FetcherConnection(url); Scanner scanner = conn.connect().scanner()) {
 			if (scanner.hasNext()) {
 				return scanner.next();
 			}

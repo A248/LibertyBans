@@ -23,12 +23,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Scanner;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
 
-import space.arim.bans.api.exception.HttpStatusException;
+import space.arim.registry.util.exception.HttpStatusException;
+import space.arim.registry.util.web.HttpStatus;
 
 public class FetcherConnection implements AutoCloseable {
 
@@ -56,6 +58,10 @@ public class FetcherConnection implements AutoCloseable {
 	
 	JSONObject toJson() throws IOException, ParseException {
 		return (JSONObject) JSONValue.parseWithException(new InputStreamReader(inputStream()));
+	}
+	
+	Scanner scanner() throws IOException {
+		return new Scanner(inputStream());
 	}
 	
 	@Override
