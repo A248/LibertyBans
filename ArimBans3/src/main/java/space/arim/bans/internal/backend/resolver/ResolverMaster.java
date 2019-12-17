@@ -41,7 +41,11 @@ public interface ResolverMaster extends Component, UUIDResolver {
 	
 	String getName(UUID playeruuid) throws MissingCacheException;
 	
-	UUID getUUID(String name) throws MissingCacheException;
+	UUID getUUID(String name, boolean ignoreCase) throws MissingCacheException;
+	
+	default UUID getUUID(String name) throws MissingCacheException {
+		return getUUID(name, true);
+	}
 	
 	void update(UUID playeruuid, String name, String address);
 	
@@ -49,13 +53,10 @@ public interface ResolverMaster extends Component, UUIDResolver {
 	 * For every cached element, remove the specified address
 	 * if it is listed. <br>
 	 * <br>
-	 * Returns <b>false</b> if no cached elements had the IP address
 	 * 
-	 * @param async - whether to run sql queries asynchronously
 	 * @param address - the address for which to remove cached listings
-	 * @return true if the address was listed somewhere
 	 */
-	boolean clearCachedIp(boolean async, String address);
+	void clearCachedIp(String address);
 	
 	boolean uuidExists(UUID uuid);
 	
