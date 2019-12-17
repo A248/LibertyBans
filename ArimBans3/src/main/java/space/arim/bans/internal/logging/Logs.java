@@ -86,7 +86,12 @@ public class Logs implements LogsMaster {
 	private void checkDeleteLogs() {
 		long keepAlive = 86_400_000L * log_directory_keep_alive;
 		long current = System.currentTimeMillis();
-		for (File dir : (new File(center.dataFolder().getPath(), "logs")).listFiles()) {
+		File[] logDirs = (new File(center.dataFolder().getPath(), "logs")).listFiles();
+		if (logDirs == null) {
+			log(Level.WARNING, "Could not clean and delete old log folders");
+			return;
+		}
+		for (File dir : logDirs) {
 			if (dir.isDirectory() && current - dir.lastModified() > keepAlive) {
 				if (dir.delete()) {
 					log(Level.FINER, "Successfully cleaned & deleted old log folder " + dir.getPath());
@@ -112,7 +117,7 @@ public class Logs implements LogsMaster {
 		log_to_console_threshold = center.config().getConfigInt("logs.log-to-console-threshold");
 		log_directory_keep_alive = center.config().getConfigInt("logs.log-directory-keep-alive");
 		if (first) {
-			File path = FilesUtil.datePrefixedFile(center.dataFolder(), "", "logs");
+			File path = FilesUtil.dateSuffixedFile(center.dataFolder(), "", "logs");
 			try {
 				if (!path.exists() && !path.mkdirs()) {
 					center.environment().logger().warning("Failed to create logs directory!");
