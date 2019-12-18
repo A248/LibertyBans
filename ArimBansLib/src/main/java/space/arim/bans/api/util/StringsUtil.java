@@ -24,11 +24,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
-import space.arim.registry.util.ThreadLocalSupplier;
-
 public final class StringsUtil {
 	
-	private static final ThreadLocalSupplier<SimpleDateFormat> BASIC_DATE_FORMATTER = new ThreadLocalSupplier<SimpleDateFormat>(() -> new SimpleDateFormat("dd-MM-yyyy"));
+	private static final ThreadLocal<SimpleDateFormat> BASIC_DATE_FORMATTER = ThreadLocal.withInitial(() -> new SimpleDateFormat("dd-MM-yyyy"));
 	
 	private StringsUtil() {}
 	
