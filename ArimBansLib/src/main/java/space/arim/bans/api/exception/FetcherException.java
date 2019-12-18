@@ -18,7 +18,7 @@
  */
 package space.arim.bans.api.exception;
 
-import space.arim.registry.util.web.HttpStatus;
+import space.arim.universal.util.web.HttpStatus;
 
 public class FetcherException extends InternalAPIException {
 

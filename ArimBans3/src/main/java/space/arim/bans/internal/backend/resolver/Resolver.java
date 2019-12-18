@@ -40,8 +40,8 @@ import space.arim.bans.api.util.web.FetcherUtil;
 import space.arim.bans.api.util.web.GeoIpInfo;
 import space.arim.bans.internal.sql.SqlQuery;
 
-import space.arim.registry.RegistryPriority;
-import space.arim.registry.util.exception.HttpStatusException;
+import space.arim.universal.registry.RegistryPriority;
+import space.arim.universal.util.exception.HttpStatusException;
 
 public class Resolver implements ResolverMaster {
 	

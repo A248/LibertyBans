@@ -18,7 +18,7 @@
  */
 package space.arim.bans.api;
 
-import space.arim.registry.Registrable;
+import space.arim.universal.registry.Registrable;
 
 public interface AsyncExecutor extends Registrable {
 

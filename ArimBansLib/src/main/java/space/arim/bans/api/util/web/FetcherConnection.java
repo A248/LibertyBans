@@ -29,8 +29,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
 
-import space.arim.registry.util.exception.HttpStatusException;
-import space.arim.registry.util.web.HttpStatus;
+import space.arim.universal.util.exception.HttpStatusException;
+import space.arim.universal.util.web.HttpStatus;
 
 public class FetcherConnection implements AutoCloseable {
 

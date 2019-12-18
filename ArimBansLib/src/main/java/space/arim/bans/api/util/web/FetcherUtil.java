@@ -30,8 +30,8 @@ import space.arim.bans.api.exception.FetcherException;
 import space.arim.bans.api.exception.RateLimitException;
 import space.arim.bans.api.util.minecraft.MinecraftUtil;
 
-import space.arim.registry.util.exception.HttpStatusException;
-import space.arim.registry.util.web.HttpStatus;
+import space.arim.universal.util.exception.HttpStatusException;
+import space.arim.universal.util.web.HttpStatus;
 
 public final class FetcherUtil {
 	
