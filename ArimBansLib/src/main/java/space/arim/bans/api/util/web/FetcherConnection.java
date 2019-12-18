@@ -25,10 +25,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Scanner;
 
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
-import org.json.simple.parser.ParseException;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
 
+import space.arim.universal.util.UniversalUtil;
 import space.arim.universal.util.exception.HttpStatusException;
 import space.arim.universal.util.web.HttpStatus;
 
@@ -56,12 +56,14 @@ public class FetcherConnection implements AutoCloseable {
 		return connection.getInputStream();
 	}
 	
-	JSONObject toJson() throws IOException, ParseException {
-		return (JSONObject) JSONValue.parseWithException(new InputStreamReader(inputStream()));
+	<T> T getJson(Class<T> type) throws JsonSyntaxException, JsonIOException, IOException {
+		return UniversalUtil.COMMON_GSON.fromJson(new InputStreamReader(inputStream()), type);
 	}
 	
-	Scanner scanner() throws IOException {
-		return new Scanner(inputStream());
+	String getSimpleRaw() throws IOException {
+		try (Scanner scanner = new Scanner(inputStream())) {
+			return scanner.hasNext() ? scanner.next() : "";
+		}
 	}
 	
 	@Override
