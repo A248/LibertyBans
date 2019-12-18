@@ -20,7 +20,7 @@
 	<properties>
     	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     	<core.version>0.5.8</core.version>
-    	<universal.version>0.5.1-SNAPSHOT</universal.version>
+    	<universal.version>0.5.2-SNAPSHOT</universal.version>
     	<spigot.version>1.15-R0.1-SNAPSHOT</spigot.version>
     	<bungeecord.version>1.15-SNAPSHOT</bungeecord.version>
 		<protocolize.version>1.5.0-SNAPSHOT</protocolize.version>
