@@ -1,0 +1,5 @@
+name: ${project.name}
+main: ${project.groupId}.bans.skript.ArimBansSkriptPlugin
+version: ${project.version}
+author: A248
+description: ${project.description}
