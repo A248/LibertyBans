@@ -74,6 +74,24 @@
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.github.SkriptLang</groupId>
+    		<artifactId>Skript</artifactId>
+    		<version>dev25</version>
+    		<exclusions>
+    			<exclusion>
+    				<groupId>*</groupId>
+    				<artifactId>*</artifactId>
+    			</exclusion>
+    		</exclusions>
+		</dependency>
 	</dependencies>
+	
+	<repositories>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+	</repositories>
 	
 </project>
