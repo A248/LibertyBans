@@ -128,12 +128,6 @@
 				<version>${bungeecord.version}</version>
 				<scope>provided</scope>
 			</dependency>
-			<!-- Shaded in spigot. check whether this is also shaded in BungeeCord! -->
-			<dependency>
-				<groupId>com.googlecode.json-simple</groupId>
-				<artifactId>json-simple</artifactId>
-				<version>1.1.1</version>
-			</dependency>
 			<dependency>
 				<groupId>de.exceptionflug</groupId>
 				<artifactId>protocolize-api</artifactId>
