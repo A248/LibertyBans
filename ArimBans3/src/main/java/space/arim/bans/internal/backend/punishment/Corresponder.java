@@ -40,7 +40,8 @@ import space.arim.bans.api.events.PunishmentChangeReasonEvent;
 import space.arim.bans.api.events.UnpunishEvent;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.MissingPunishmentException;
-import space.arim.registry.events.UniversalEvents;
+
+import space.arim.universal.events.UniversalEvents;
 
 public class Corresponder implements CorresponderMaster {
 

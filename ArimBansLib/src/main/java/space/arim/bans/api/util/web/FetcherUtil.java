@@ -19,17 +19,19 @@
 package space.arim.bans.api.util.web;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Scanner;
 import java.util.UUID;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
-import org.json.simple.parser.ParseException;
+
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
 
 import space.arim.bans.api.exception.FetcherException;
-import space.arim.bans.api.exception.HttpStatusException;
 import space.arim.bans.api.exception.RateLimitException;
 import space.arim.bans.api.util.minecraft.MinecraftUtil;
+
+import space.arim.universal.util.exception.HttpStatusException;
+import space.arim.universal.util.web.HttpStatus;
 
 public final class FetcherUtil {
 	
@@ -45,43 +47,36 @@ public final class FetcherUtil {
     
 	private FetcherUtil() {}
 	
-	private static JSONObject getJsonFromUrl(final String url) throws FetcherException, HttpStatusException {
+	private static <T> T getJsonFromUrl(final String url, Class<T> type) throws FetcherException, HttpStatusException {
 		try (FetcherConnection conn = new FetcherConnection(url)) {
-			return conn.connect().toJson();
-		} catch (IOException | ParseException ex) {
-			throw new FetcherException("Failed to connect to and parse JSON from " + url, ex);
+			return conn.connect().getJson(type);
+		} catch (JsonSyntaxException | JsonIOException | IOException ex) {
+			throw new FetcherException("Failed to connect to and parse JSON from " + url + " as " + type.getSimpleName(), ex);
 		}
 	}
 	
 	public static UUID mojangApi(final String name) throws FetcherException, HttpStatusException {
-		return UUID.fromString(MinecraftUtil.expandUUID(getJsonFromUrl(MOJANG_API_FROM_NAME + Objects.requireNonNull(name, "Name must not be null!")).get("id").toString()));
+		return UUID.fromString(MinecraftUtil.expandUUID(getJsonFromUrl(MOJANG_API_FROM_NAME + Objects.requireNonNull(name, "Name must not be null!"), Map.class).get("id").toString()));
 	}
 	
 	public static String mojangApi(final UUID playeruuid) throws FetcherException, HttpStatusException {
-		final String url = MOJANG_API_FROM_UUID + Objects.requireNonNull(playeruuid, "UUID must not be null!").toString().replace("-", "") + "/names";
-		try (FetcherConnection conn = new FetcherConnection(url); Scanner scanner = new Scanner(conn.connect().inputStream())) {
-			String s = scanner.useDelimiter("\\A").next();
-			return ((JSONObject) JSONValue.parseWithException(s.substring(s.lastIndexOf('{'), s.lastIndexOf('}') + 1))).get("name").toString();
-		} catch (IOException | ParseException ex) {
-			throw new FetcherException("Could not connect to " + url, ex);
-		}
+		@SuppressWarnings("unchecked")
+		Map<String, Object>[] names = getJsonFromUrl(MOJANG_API_FROM_UUID + Objects.requireNonNull(playeruuid, "UUID must not be null!").toString().replace("-", "") + "/names", Map[].class);
+		return names[names.length - 1].get("name").toString();
 	}
 	
 	public static UUID ashconApi(final String name) throws FetcherException, HttpStatusException {
-		return UUID.fromString(getJsonFromUrl(ASHCON_API + Objects.requireNonNull(name, "Name must not be null!")).get("uuid").toString());
+		return UUID.fromString(getJsonFromUrl(ASHCON_API + Objects.requireNonNull(name, "Name must not be null!"), Map.class).get("uuid").toString());
 	}
 	
 	public static String ashconApi(final UUID playeruuid) throws FetcherException, HttpStatusException {
-		return getJsonFromUrl(ASHCON_API + Objects.requireNonNull(playeruuid, "UUID must not be null!")).get("username").toString();
+		return getJsonFromUrl(ASHCON_API + Objects.requireNonNull(playeruuid, "UUID must not be null!"), Map.class).get("username").toString();
 	}
 	
 	public static String getLatestPluginVersion(final int resourceId) throws FetcherException, HttpStatusException {
 		final String url = SPIGOT_UPDATE_API + resourceId;
-		try (FetcherConnection conn = new FetcherConnection(url); Scanner scanner = new Scanner(conn.connect().inputStream())) {
-			if (scanner.hasNext()) {
-				return scanner.next();
-			}
-			throw new FetcherException("Scanner has no input data!");
+		try (FetcherConnection conn = new FetcherConnection(url)) {
+			return conn.connect().getSimpleRaw();
 		} catch (IOException ex) {
 			throw new FetcherException("Could not connect to url " + url, ex);
 		}
@@ -90,7 +85,8 @@ public final class FetcherUtil {
 	public static GeoIpInfo ipStack(final String address, final String key) throws FetcherException, RateLimitException, HttpStatusException {
 		final String url = IPSTACK.getUrl(address).replace("$KEY", Objects.requireNonNull(key, "Key must not be null!"));
 		try {
-			JSONObject json = getJsonFromUrl(url);
+			@SuppressWarnings("unchecked")
+			Map<String, Object> json = getJsonFromUrl(url, Map.class);
 			return new GeoIpInfo(address, json.get("country_code").toString(), json.get("country_name").toString(), json.get("region_code").toString(), json.get("region_name").toString(), json.get("city").toString(), json.get("zip").toString(), Double.parseDouble(json.get("latitude").toString()), Double.parseDouble(json.get("longitude").toString()));
 		} catch (HttpStatusException ex) {
 			if (ex.status == HttpStatus.UNASSIGNED_104) {
@@ -105,7 +101,8 @@ public final class FetcherUtil {
 	public static GeoIpInfo freeGeoIp(final String address) throws FetcherException, RateLimitException, HttpStatusException {
 		final String url = FREEGEOIP.getUrl(address);
 		try {
-			JSONObject json = getJsonFromUrl(url);
+			@SuppressWarnings("unchecked")
+			Map<String, Object> json = getJsonFromUrl(url, Map.class);
 			return new GeoIpInfo(address, json.get("country_code").toString(), json.get("country_name").toString(), json.get("region_code").toString(), json.get("region_name").toString(), json.get("city").toString(), json.get("zip_code").toString(), Double.parseDouble(json.get("latitude").toString()), Double.parseDouble(json.get("longitude").toString()));
 		} catch (HttpStatusException ex) {
 			if (ex.status == HttpStatus.FORBIDDEN) {
@@ -120,7 +117,8 @@ public final class FetcherUtil {
 	public static GeoIpInfo ipApi(final String address) throws FetcherException, RateLimitException, HttpStatusException {
 		final String url = IPAPI.getUrl(address);
 		try {
-			JSONObject json = getJsonFromUrl(url);
+			@SuppressWarnings("unchecked")
+			Map<String, Object> json = getJsonFromUrl(url, Map.class);
 			return new GeoIpInfo(address, json.get("country").toString(), json.get("country_name").toString(), json.get("region_code").toString(), json.get("region").toString(), json.get("city").toString(), json.get("postal").toString(), Double.parseDouble(json.get("latitude").toString()), Double.parseDouble(json.get("longitude").toString()));
 		} catch (HttpStatusException ex) {
 			if (ex.status == HttpStatus.TOO_MANY_REQUESTS) {

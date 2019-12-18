@@ -35,6 +35,8 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.util.FilesUtil;
 import space.arim.bans.api.util.StringsUtil;
 
+import space.arim.universal.util.UniversalUtil;
+
 public class ArimBansExtended implements AutoCloseable {
 	
 	private final static String[] COMMANDS = {"ban", "unban", "ipban", "ipunban", "mute", "unmute", "ipmute", "ipunmute", "warn", "unwarn", "ipwarn", "ipunwarn", "kick", "ipkick", "banlist", "ipbanlist", "playerbanlist", "mutelist", "ipmutelist", "playermutelist", "history", "iphistory", "warns", "ipwarns", "status", "ipstatus", "ips", "geoip", "alts", "blame", "rollback"};
@@ -86,7 +88,7 @@ public class ArimBansExtended implements AutoCloseable {
 	}
 	
 	private <T> T getCfgObject(Class<T> type, String key, T defaultObj) {
-		T obj = FilesUtil.getFromConfigMap(cfg, key, type);
+		T obj = UniversalUtil.getFromMapRecursive(cfg, key, type);
 		return (obj != null) ? obj : defaultObj;
 	}
 	

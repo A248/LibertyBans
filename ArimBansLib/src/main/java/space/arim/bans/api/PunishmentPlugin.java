@@ -24,7 +24,8 @@ import java.util.UUID;
 
 import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.exception.MissingPunishmentException;
-import space.arim.registry.Registrable;
+
+import space.arim.universal.registry.Registrable;
 
 public interface PunishmentPlugin extends Registrable {
 	

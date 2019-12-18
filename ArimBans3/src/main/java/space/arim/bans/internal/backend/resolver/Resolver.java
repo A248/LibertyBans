@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -30,7 +31,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.exception.FetcherException;
-import space.arim.bans.api.exception.HttpStatusException;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
@@ -39,7 +39,9 @@ import space.arim.bans.api.util.minecraft.MinecraftUtil;
 import space.arim.bans.api.util.web.FetcherUtil;
 import space.arim.bans.api.util.web.GeoIpInfo;
 import space.arim.bans.internal.sql.SqlQuery;
-import space.arim.registry.RegistryPriority;
+
+import space.arim.universal.registry.RegistryPriority;
+import space.arim.universal.util.exception.HttpStatusException;
 
 public class Resolver implements ResolverMaster {
 	
@@ -105,62 +107,80 @@ public class Resolver implements ResolverMaster {
 	}
 	
 	@Override
-	public UUID getUUID(String name) throws MissingCacheException {
-		for (UUID id : cache.keySet()) {
-			if (cache.get(id).getName().equalsIgnoreCase(name)) {
-				return id;
+	public UUID getUUID(String name, boolean ignoreCase) throws MissingCacheException {
+		for (Map.Entry<UUID, CacheElement> entry : cache.entrySet()) {
+			if (entry.getValue().hasName(name, ignoreCase)) {
+				return entry.getKey();
 			}
 		}
 		throw new MissingCacheException(name);
 	}
 	
-	@Override
-	public void update(final UUID uuid, String name, String address) {
-		
-		if (cache.containsKey(uuid)) {
-			final CacheElement element = cache.get(uuid);
-			final boolean updateName = !element.getName().equalsIgnoreCase(name);
-			final boolean updateIplist = !element.hasIp(address);
-			if (updateName || updateIplist) {
-				center.async(() -> {
-					if (updateName && updateIplist) {
-						center.sql().executeQuery(element.setNameAndAddIp(uuid, name, address));
-					} else if (updateName) {
-						center.sql().executeQuery(element.setName(uuid, name));
-					} else if (updateIplist) {
-						center.sql().executeQuery(element.addIp(uuid, address));
-					}
-				});
-			}
-		} else {
-			final CacheElement element = new CacheElement(name, (address == null) ? CacheElement.EMPTY_IPLIST_STRING : address);
-			center.async(() -> {
-				cache.put(uuid, element);
-				center.sql().executeQuery(element.getInsertionQuery(uuid));
-			});
+	private void directUpdate(UUID uuid, String name, String address) {
+		final CacheElement element = cache.get(uuid);
+		final boolean updateName = !element.getName().equalsIgnoreCase(name);
+		final boolean updateIplist = !element.hasIp(address);
+		if (updateName && updateIplist) {
+			center.sql().executeQuery(element.setNameAndAddIp(uuid, name, address));
+		} else if (updateName) {
+			center.sql().executeQuery(element.setName(uuid, name));
+		} else if (updateIplist) {
+			center.sql().executeQuery(element.addIp(uuid, address));
 		}
-
+	}
+	
+	private void directAdd(UUID uuid, String name, String address) {
+		CacheElement element = new CacheElement(name, address);
+		cache.put(uuid, element);
+		center.sql().executeQuery(element.getInsertionQuery(uuid));
+	}
+	
+	private void directUpdateCache(UUID uuid, String name, String address) {
+		synchronized (cache) {
+			if (cache.containsKey(uuid)) {
+				if (!cache.get(uuid).hasName(name) || !cache.get(uuid).hasIp(address)) {
+					directUpdate(uuid, name, address);
+				}
+			} else {
+				directAdd(uuid, name, address);
+			}
+		}
 	}
 	
 	@Override
-	public boolean clearCachedIp(boolean async, String address) {
-		Set<SqlQuery> exec = new HashSet<SqlQuery>();
-		cache.forEach((uuid, element) -> {
-			if (element.hasIp(address)) {
-				exec.add(element.removeIp(uuid, address));
+	public void update(UUID uuid, String name, String address) {
+		if (!cache.containsKey(uuid) || cache.containsKey(uuid) && (!cache.get(uuid).hasName(name) || !cache.get(uuid).hasIp(address))) {
+			if (center.corresponder().asynchronous()) {
+				directUpdateCache(uuid, name, address);
+			} else {
+				center.async(() -> {
+					directUpdateCache(uuid, name, address);
+				});
 			}
-		});
-		if (exec.isEmpty()) {
-			return false;
 		}
-		if (async) {
-			center.async(() -> {
-				center.sql().executeQuery(exec.toArray(new SqlQuery[] {}));
+	}
+	
+	private void directClearCachedIp(String address) {
+		synchronized (cache) {
+			Set<SqlQuery> exec = new HashSet<SqlQuery>();
+			cache.forEach((uuid, element) -> {
+				if (element.hasIp(address)) {
+					exec.add(element.removeIp(uuid, address));
+				}
 			});
-		} else {
 			center.sql().executeQuery(exec.toArray(new SqlQuery[] {}));
 		}
-		return true;
+	}
+	
+	@Override
+	public void clearCachedIp(String address) {
+		if (center.corresponder().asynchronous()) {
+			directClearCachedIp(address);
+		} else {
+			center.async(() -> {
+				directClearCachedIp(address);
+			});
+		}
 	}
 	
 	@Override

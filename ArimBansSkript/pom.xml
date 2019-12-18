@@ -70,6 +70,10 @@
 			<type>zip</type>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.spigotmc</groupId>
+			<artifactId>spigot-api</artifactId>
+		</dependency>
 	</dependencies>
 	
 </project>

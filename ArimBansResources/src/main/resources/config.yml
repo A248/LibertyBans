@@ -17,7 +17,7 @@ storage:
   table-prefix: 'arimbans_'
   file:
     url: 'jdbc:hsqldb:file:%FILE%;hsqldb.lock_file=false'
-    filename: 'data'
+    filename: 'data/database'
   mysql:
     host: 'localhost'
     port: 3306

@@ -38,6 +38,8 @@ import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.util.FilesUtil;
 import space.arim.bans.api.util.minecraft.MinecraftUtil;
 
+import space.arim.universal.util.UniversalUtil;
+
 public class Config implements ConfigMaster {
 	
 	private final ArimBans center;
@@ -209,7 +211,7 @@ public class Config implements ConfigMaster {
 	
 	private <T> T getFromMap(Map<String, Object> map, String key, Class<T> type) {
 		center.logs().log(Level.FINEST, "Getting configuration key " + key);
-		return FilesUtil.getFromConfigMap(map, key, type);
+		return UniversalUtil.getFromMapRecursive(map, key, type);
 	}
 	
 	private String leadKey(CommandType.Category category) {

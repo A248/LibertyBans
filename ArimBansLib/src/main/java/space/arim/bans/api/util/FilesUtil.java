@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 /**
  * Files utility.
@@ -56,31 +55,32 @@ public final class FilesUtil {
 		return false;
 	}
 	
-	@SuppressWarnings("unchecked")
-	public static <T> T getFromConfigMap(Map<String, Object> map, String key, Class<T> type) {
-		if (!key.contains(".")) {
-			Object obj = map.get(key);
-			return (type.isInstance(obj)) ? (T) obj : null;
-		}
-		return getFromConfigMap((Map<String, Object>) map.get(key.substring(0, key.indexOf("."))), key.substring(key.indexOf(".") + 1), type);
-	}
-	
-	public static File dateSuffixedFile(File folder, String filename) {
+	private static void ensureDir(File folder) {
 		if (!folder.exists() && !folder.mkdirs()) {
 			throw new IllegalStateException("Directory creation of " + folder.getPath() + " failed.");
 		} else if (!folder.isDirectory()) {
 			throw new IllegalArgumentException(folder.getPath() + " is not a directory!");
 		}
+	}
+	
+	public static File dateSuffixedFile(File folder, String filename) {
+		ensureDir(folder);
 		return new File(folder, filename + StringsUtil.basicTodaysDate());
 	}
 	
 	public static File dateSuffixedFile(File folder, String filename, String subFolder) {
-		if (!folder.exists() && !folder.mkdirs()) {
-			throw new IllegalStateException("Directory creation of " + folder.getPath() + " failed.");
-		} else if (!folder.isDirectory()) {
-			throw new IllegalArgumentException(folder.getPath() + " is not a directory!");
-		}
+		ensureDir(folder);
 		return new File(folder, (subFolder.endsWith(File.separator)) ? subFolder : (subFolder + File.separator) + filename + StringsUtil.basicTodaysDate());
+	}
+	
+	public static File datePrefixedFile(File folder, String filename) {
+		ensureDir(folder);
+		return new File(folder, StringsUtil.basicTodaysDate() + filename);
+	}
+	
+	public static File datePrefixedFile(File folder, String filename, String subFolder) {
+		ensureDir(folder);
+		return new File(folder, (subFolder.startsWith(File.separator) ? subFolder : File.separator + subFolder) + StringsUtil.basicTodaysDate() + filename);
 	}
 	
 	public static boolean generateBlankFile(File file) {

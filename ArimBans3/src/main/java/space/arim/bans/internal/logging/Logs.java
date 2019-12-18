@@ -29,7 +29,8 @@ import java.util.logging.Logger;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.util.FilesUtil;
-import space.arim.registry.util.LogFormatter;
+
+import space.arim.universal.util.LogFormatter;
 
 public class Logs implements LogsMaster {
 
@@ -86,7 +87,12 @@ public class Logs implements LogsMaster {
 	private void checkDeleteLogs() {
 		long keepAlive = 86_400_000L * log_directory_keep_alive;
 		long current = System.currentTimeMillis();
-		for (File dir : (new File(center.dataFolder().getPath(), "logs")).listFiles()) {
+		File[] logDirs = (new File(center.dataFolder().getPath(), "logs")).listFiles();
+		if (logDirs == null) {
+			log(Level.WARNING, "Could not clean and delete old log folders");
+			return;
+		}
+		for (File dir : logDirs) {
 			if (dir.isDirectory() && current - dir.lastModified() > keepAlive) {
 				if (dir.delete()) {
 					log(Level.FINER, "Successfully cleaned & deleted old log folder " + dir.getPath());
@@ -100,9 +106,7 @@ public class Logs implements LogsMaster {
 	private void redirectHikariLoggers(Handler...updateHandlers) {
 		//Logger.getLogger("com.zaxxer.hikari.pool.PoolBase"), Logger.getLogger("com.zaxxer.hikari.pool.HikariPool"), Logger.getLogger("com.zaxxer.hikari.HikariDataSource"), Logger.getLogger("com.zaxxer.hikari.HikariConfig"), Logger.getLogger("com.zaxxer.hikari.util.DriverDataSource")
         Arrays.asList(Logger.getLogger("com.zaxxer.hikari.HikariDataSource"), Logger.getLogger("com.zaxxer.hikari.pool.PoolBase")).forEach((logger) -> {
-        	for (Handler handler : logger.getHandlers()) {
-        		logger.removeHandler(handler);
-        	}
+        	logger.setUseParentHandlers(false);
         	for (Handler updateHandler : updateHandlers) {
         		logger.addHandler(updateHandler);
         	}
@@ -114,7 +118,7 @@ public class Logs implements LogsMaster {
 		log_to_console_threshold = center.config().getConfigInt("logs.log-to-console-threshold");
 		log_directory_keep_alive = center.config().getConfigInt("logs.log-directory-keep-alive");
 		if (first) {
-			File path = FilesUtil.dateSuffixedFile(center.dataFolder(), "-logs");
+			File path = FilesUtil.dateSuffixedFile(center.dataFolder(), "", "logs");
 			try {
 				if (!path.exists() && !path.mkdirs()) {
 					center.environment().logger().warning("Failed to create logs directory!");
@@ -130,12 +134,13 @@ public class Logs implements LogsMaster {
 				verboseLog.setLevel(Level.ALL);
 				infoLog.setLevel(Level.INFO);
 				errorLog.setLevel(Level.WARNING);
-				logger = Logger.getLogger(center.getName());
+				logger = Logger.getLogger(center.getName() + "-Core");
 				logger.setUseParentHandlers(false);
 				logger.addHandler(verboseLog);
 				logger.addHandler(infoLog);
 				logger.addHandler(errorLog);
 				redirectHikariLoggers(verboseLog, infoLog, errorLog);
+				center.environment().logger().log(Level.INFO, "Logging initialised in " + path);
 			} catch (IOException ex) {
 				center.environment().logger().log(Level.SEVERE, "Log initialisation failed!");
 			}

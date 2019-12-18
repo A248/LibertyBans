@@ -21,7 +21,8 @@ package space.arim.bans.api;
 import java.util.UUID;
 
 import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.registry.Registrable;
+
+import space.arim.universal.registry.Registrable;
 
 public interface UUIDResolver extends Registrable {
 	

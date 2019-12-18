@@ -42,7 +42,7 @@ import space.arim.bans.internal.frontend.format.FormatsMaster;
 import space.arim.bans.internal.logging.LogsMaster;
 import space.arim.bans.internal.sql.SqlMaster;
 
-import space.arim.registry.RegistryPriority;
+import space.arim.universal.registry.RegistryPriority;
 
 public interface ArimBans extends Configurable, ArimBansLibrary {
 

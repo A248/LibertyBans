@@ -52,7 +52,7 @@ public class CacheElement {
 	}
 	
 	private static List<String> parseIpList(String iplist) {
-		if (iplist.equals(EMPTY_IPLIST_STRING)) {
+		if (iplist == null || iplist.equals(EMPTY_IPLIST_STRING)) {
 			return null;
 		}
 		return new ArrayList<String>(Arrays.asList(iplist.split(",")));
@@ -95,6 +95,14 @@ public class CacheElement {
 		}
 		updateIplist = System.currentTimeMillis();
 		return new SqlQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID, externaliseIpList(iplist), updateIplist, uuid.toString().replace("-", ""));
+	}
+	
+	boolean hasName(String name, boolean ignoreCase) {
+		return getName().equals(name) || ignoreCase && getName().equalsIgnoreCase(name);
+	}
+	
+	boolean hasName(String name) {
+		return hasName(name, true);
 	}
 	
 	boolean hasIp(String address) {

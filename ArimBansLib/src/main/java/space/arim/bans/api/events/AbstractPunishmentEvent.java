@@ -19,7 +19,8 @@
 package space.arim.bans.api.events;
 
 import space.arim.bans.api.Punishment;
-import space.arim.registry.events.Event;
+
+import space.arim.universal.events.Event;
 
 public abstract class AbstractPunishmentEvent extends Event {
 	

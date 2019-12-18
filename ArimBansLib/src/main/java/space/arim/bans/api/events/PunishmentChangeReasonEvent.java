@@ -19,7 +19,8 @@
 package space.arim.bans.api.events;
 
 import space.arim.bans.api.Punishment;
-import space.arim.registry.events.Cancellable;
+
+import space.arim.universal.events.Cancellable;
 
 public class PunishmentChangeReasonEvent extends AbstractPunishmentChangeReasonEvent implements Cancellable {
 	

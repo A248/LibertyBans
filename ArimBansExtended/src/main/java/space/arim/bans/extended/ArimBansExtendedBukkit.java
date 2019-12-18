@@ -23,7 +23,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.extended.bukkit.CommandListener;
-import space.arim.registry.UniversalRegistry;
+
+import space.arim.universal.registry.UniversalRegistry;
 
 public class ArimBansExtendedBukkit extends JavaPlugin implements ArimBansExtendedPluginBase {
 
