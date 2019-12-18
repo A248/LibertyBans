@@ -26,9 +26,9 @@ import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.api.UUIDResolver;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.env.Environment;
+import space.arim.bans.internal.async.Async;
 import space.arim.bans.internal.async.AsyncMaster;
 import space.arim.bans.internal.async.AsyncWrapper;
-import space.arim.bans.internal.async.Async;
 import space.arim.bans.internal.backend.punishment.Corresponder;
 import space.arim.bans.internal.backend.punishment.Punishments;
 import space.arim.bans.internal.backend.resolver.Resolver;
@@ -40,7 +40,7 @@ import space.arim.bans.internal.logging.Logs;
 import space.arim.bans.internal.sql.Sql;
 import space.arim.bans.internal.sql.SqlQuery;
 
-import space.arim.registry.UniversalRegistry;
+import space.arim.universal.registry.UniversalRegistry;
 
 public class ArimBansPlugin implements ArimBans {
 	

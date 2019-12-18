@@ -27,7 +27,8 @@ import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.api.util.minecraft.bungee.BungeeUtil;
 import space.arim.bans.extended.bungee.CommandSkeleton;
-import space.arim.registry.UniversalRegistry;
+
+import space.arim.universal.registry.UniversalRegistry;
 
 public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPluginBase {
 

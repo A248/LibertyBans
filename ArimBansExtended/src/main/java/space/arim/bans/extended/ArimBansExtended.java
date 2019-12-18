@@ -35,7 +35,7 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.util.FilesUtil;
 import space.arim.bans.api.util.StringsUtil;
 
-import space.arim.registry.util.UniversalUtil;
+import space.arim.universal.util.UniversalUtil;
 
 public class ArimBansExtended implements AutoCloseable {
 	
