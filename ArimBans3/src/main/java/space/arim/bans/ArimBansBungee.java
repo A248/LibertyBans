@@ -22,20 +22,21 @@ import net.md_5.bungee.api.plugin.Plugin;
 
 import space.arim.bans.env.bungee.BungeeEnv;
 
-public class ArimBansBungee extends Plugin {
+public class ArimBansBungee extends Plugin implements AutoCloseable {
 
 	private ArimBans center;
 	private BungeeEnv environment;
 	
 	private void load() {
 		environment = new BungeeEnv(this);
-		center = new ArimBansPlugin(this.getDataFolder(), environment);
+		center = new ArimBansPlugin(getDataFolder(), environment);
 		center.start();
 		center.register();
 		environment.setCenter(center);
 	}
 	
-	private void close() {
+	@Override
+	public void close() {
 		center.close();
 		environment.close();
 	}
