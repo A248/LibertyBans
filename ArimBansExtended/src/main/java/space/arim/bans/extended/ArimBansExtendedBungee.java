@@ -44,7 +44,7 @@ public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPl
 	public void onEnable() {
 		try {
 			Class.forName("space.arim.bans.api.ArimBansLibrary");
-			Class.forName("space.arim.registry.UniversalRegistry");
+			Class.forName("space.arim.universal.registry.UniversalRegistry");
 		} catch (ClassNotFoundException ex) {
 			shutdown("ArimBansLibrary / UniversalRegistry not on classpath!");
 			return;
