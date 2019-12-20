@@ -31,6 +31,7 @@ public class ArimBansBungee extends Plugin {
 		environment = new BungeeEnv(this);
 		center = new ArimBansPlugin(this.getDataFolder(), environment);
 		center.start();
+		center.register();
 		environment.setCenter(center);
 	}
 	

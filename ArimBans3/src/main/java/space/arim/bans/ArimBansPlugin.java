@@ -22,8 +22,6 @@ import java.io.File;
 import java.sql.ResultSet;
 
 import space.arim.bans.api.AsyncExecutor;
-import space.arim.bans.api.PunishmentPlugin;
-import space.arim.bans.api.UUIDResolver;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.env.Environment;
 import space.arim.bans.internal.async.Async;
@@ -86,8 +84,6 @@ public class ArimBansPlugin implements ArimBans {
 			started = true;
 			refresh(true);
 			loadData();
-			UniversalRegistry.register(PunishmentPlugin.class, this);
-			UniversalRegistry.register(UUIDResolver.class, resolver());
 		} else {
 			throw new InternalStateException("#start cannot be called because ArimBans is already started!");
 		}

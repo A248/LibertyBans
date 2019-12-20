@@ -31,6 +31,7 @@ public class ArimBansBukkit extends JavaPlugin {
 		environment = new BukkitEnv(this);
 		center = new ArimBansPlugin(this.getDataFolder(), environment);
 		center.start();
+		center.register();
 		environment.setCenter(center);
 	}
 	

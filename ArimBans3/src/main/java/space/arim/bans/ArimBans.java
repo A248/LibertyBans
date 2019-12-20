@@ -43,6 +43,7 @@ import space.arim.bans.internal.logging.LogsMaster;
 import space.arim.bans.internal.sql.SqlMaster;
 
 import space.arim.universal.registry.RegistryPriority;
+import space.arim.universal.registry.UniversalRegistry;
 
 public interface ArimBans extends Configurable, ArimBansLibrary {
 
@@ -69,6 +70,11 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	CorresponderMaster corresponder();
 	
 	void start();
+	
+	default void register() {
+		UniversalRegistry.register(space.arim.bans.api.PunishmentPlugin.class, this);
+		UniversalRegistry.register(space.arim.bans.api.UUIDResolver.class, resolver());
+	}
 	
 	@Override
 	default void refreshConfig(boolean first) {
