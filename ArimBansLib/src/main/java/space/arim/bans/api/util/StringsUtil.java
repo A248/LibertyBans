@@ -43,8 +43,7 @@ public final class StringsUtil {
 	}
 	
 	public static String capitaliseProperly(String input) {
-		Objects.requireNonNull(input, "Input string not be null!");
-		return (input.length() == 1) ? input.toUpperCase() : Character.toUpperCase(input.charAt(0)) + input.substring(1);
+		return (input == null) ? input : (input.length() == 1) ? input.toUpperCase() : Character.toUpperCase(input.charAt(0)) + input.substring(1);
 	}
 	
 	public static String[] chopOffOne(String[] input) {
