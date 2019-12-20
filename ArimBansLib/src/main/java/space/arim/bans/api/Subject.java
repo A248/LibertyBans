@@ -214,7 +214,7 @@ public class Subject {
 	
 	@Override
 	public String toString() {
-		return (SubjectType.PLAYER.equals(getType())) ? uuid.toString() : (SubjectType.IP.equals(getType())) ? ip : "_CONSOLE_";
+		return (SubjectType.PLAYER.equals(getType())) ? uuid.toString() : (SubjectType.IP.equals(getType())) ? ip : "-CONSOLE-";
 	}
 	
 }

@@ -19,6 +19,7 @@
 package space.arim.bans.api;
 
 import space.arim.bans.api.exception.TypeParseException;
+import space.arim.bans.api.util.StringsUtil;
 
 public enum PunishmentType {
 	
@@ -28,7 +29,7 @@ public enum PunishmentType {
 	KICK;
 	
 	public String deserialise() {
-		return toString().toLowerCase();
+		return name().toLowerCase();
 	}
 	
 	public static PunishmentType serialise(String input) {
@@ -38,6 +39,11 @@ public enum PunishmentType {
 			}
 		}
 		throw new TypeParseException(input, PunishmentType.class);
+	}
+	
+	@Override
+	public String toString() {
+		return StringsUtil.capitaliseProperly(name());
 	}
 
 }

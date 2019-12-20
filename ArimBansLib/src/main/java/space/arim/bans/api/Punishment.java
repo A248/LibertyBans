@@ -89,4 +89,9 @@ public class Punishment {
 		return (object instanceof Punishment && hashCode() == object.hashCode());
 	}
 	
+	@Override
+	public String toString() {
+		return "Punishment{id=" + id + ",type=" + type + ",subject=" + subject + ",operator=" + operator + ",reason=" + reason + ",expiration=" + expiration +",date=" + date + "}";
+	}
+	
 }

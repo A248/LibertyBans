@@ -18,18 +18,68 @@
  */
 package space.arim.bans.skript;
 
+import java.util.logging.Logger;
+
 import space.arim.bans.api.ArimBansLibrary;
+import space.arim.bans.api.Punishment;
+
+import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.classes.Parser;
+import ch.njol.skript.registrations.Classes;
 
 public class ArimBansSkript implements AutoCloseable {
 	
+	private final Logger logger;
 	private final ArimBansLibrary lib;
 	
-	ArimBansSkript(ArimBansLibrary lib) {
+	ArimBansSkript(Logger logger, ArimBansLibrary lib) {
+		this.logger = logger;
 		this.lib = lib;
 	}
 	
 	void registerAll() {
+		registerEvents();
+		registerConditions();
+		registerEffects();
+		registerExpressions();
+		registerTypes();
+	}
+	
+	private void registerEvents() {
 		
+	}
+	
+	private void registerConditions() {
+		
+	}
+	
+	private void registerEffects() {
+		
+	}
+	
+	private void registerExpressions() {
+		
+	}
+	
+	private void registerTypes() {
+		Classes.registerClass(new ClassInfo<Punishment>(Punishment.class, "Punishment").parser(new Parser<Punishment>() {
+
+			@Override
+			public String getVariableNamePattern() {
+				return null;
+			}
+
+			@Override
+			public String toString(Punishment arg0, int arg1) {
+				return null;
+			}
+
+			@Override
+			public String toVariableNameString(Punishment punishment) {
+				return punishment.toString();
+			}
+			
+		}));
 	}
 
 	@Override
