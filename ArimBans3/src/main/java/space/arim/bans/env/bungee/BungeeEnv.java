@@ -41,7 +41,7 @@ import space.arim.bans.env.Environment;
 
 public class BungeeEnv implements Environment {
 
-	private Plugin plugin;
+	private final Plugin plugin;
 	private final Set<EnvLibrary> libraries = loadLibraries();
 	private ArimBans center;
 	private final BungeeEnforcer enforcer;

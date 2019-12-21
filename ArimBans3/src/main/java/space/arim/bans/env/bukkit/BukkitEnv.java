@@ -41,7 +41,7 @@ import space.arim.bans.env.Environment;
 
 public class BukkitEnv implements Environment {
 	
-	private JavaPlugin plugin;
+	private final JavaPlugin plugin;
 	private final Set<EnvLibrary> libraries = loadLibraries();
 	private ArimBans center;
 	private final BukkitEnforcer enforcer;
