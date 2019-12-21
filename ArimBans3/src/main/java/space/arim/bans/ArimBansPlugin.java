@@ -69,12 +69,12 @@ public class ArimBansPlugin implements ArimBans {
 		commands = new Commands(this);
 		formats = new Formats(this);
 		corresponder = new Corresponder(this);
-		AsyncExecutor registeredAsync = UniversalRegistry.getRegistration(AsyncExecutor.class);
+		AsyncExecutor registeredAsync = UniversalRegistry.get().getRegistration(AsyncExecutor.class);
 		if (registeredAsync != null) {
 			async = new AsyncWrapper(registeredAsync);
 		} else {
 			async = new Async(this);
-			UniversalRegistry.register(AsyncExecutor.class, (AsyncExecutor) async);
+			UniversalRegistry.get().register(AsyncExecutor.class, (AsyncExecutor) async);
 		}
 	}
 	

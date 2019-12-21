@@ -46,7 +46,7 @@ public class ArimBansExtendedBukkit extends JavaPlugin implements ArimBansExtend
 			shutdown("ArimBansLibrary / UniversalRegistry not on classpath!");
 			return;
 		}
-		PunishmentPlugin plugin = UniversalRegistry.getRegistration(PunishmentPlugin.class);
+		PunishmentPlugin plugin = UniversalRegistry.get().getRegistration(PunishmentPlugin.class);
 		if (plugin != null) {
 			if (plugin instanceof ArimBansLibrary) {
 				extended = new ArimBansExtended((ArimBansLibrary) plugin, getDataFolder(), getLogger());

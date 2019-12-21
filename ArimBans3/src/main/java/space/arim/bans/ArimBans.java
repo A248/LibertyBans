@@ -72,8 +72,8 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	void start();
 	
 	default void register() {
-		UniversalRegistry.register(space.arim.bans.api.PunishmentPlugin.class, this);
-		UniversalRegistry.register(space.arim.bans.api.UUIDResolver.class, resolver());
+		UniversalRegistry.get().register(space.arim.bans.api.PunishmentPlugin.class, this);
+		UniversalRegistry.get().register(space.arim.bans.api.UUIDResolver.class, resolver());
 	}
 	
 	@Override
