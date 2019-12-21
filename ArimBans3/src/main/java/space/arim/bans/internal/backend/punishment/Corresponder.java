@@ -148,32 +148,32 @@ public class Corresponder implements CorresponderMaster {
 	
 	@Override
 	public boolean callPunishEvent(Punishment punishment, boolean retro) {
-		return UniversalEvents.fireEvent(new PunishEvent(punishment, retro));
+		return UniversalEvents.get().fireEvent(new PunishEvent(punishment, retro));
 	}
 	
 	@Override
 	public boolean callUnpunishEvent(Punishment punishment, boolean auto) {
-		return UniversalEvents.fireEvent(new UnpunishEvent(punishment, auto)) || auto;
+		return UniversalEvents.get().fireEvent(new UnpunishEvent(punishment, auto)) || auto;
 	}
 	
 	@Override
 	public void callPostPunishEvent(Punishment punishment, boolean retro) {
-		UniversalEvents.fireEvent(new PostPunishEvent(punishment, retro));
+		UniversalEvents.get().fireEvent(new PostPunishEvent(punishment, retro));
 	}
 	
 	@Override
 	public void callPostUnpunishEvent(Punishment punishment, boolean auto) {
-		UniversalEvents.fireEvent(new PostUnpunishEvent(punishment, auto));
+		UniversalEvents.get().fireEvent(new PostUnpunishEvent(punishment, auto));
 	}
 	
 	@Override
 	public boolean callPunishmentChangeReasonEvent(Punishment punishment, String reason, boolean active) {
-		return UniversalEvents.fireEvent(new PunishmentChangeReasonEvent(punishment, reason));
+		return UniversalEvents.get().fireEvent(new PunishmentChangeReasonEvent(punishment, reason));
 	}
 	
 	@Override
 	public void callPostPunishmentChangeReasonEvent(Punishment punishment, String reason, boolean active) {
-		UniversalEvents.fireEvent(new PostPunishmentChangeReasonEvent(punishment, reason));
+		UniversalEvents.get().fireEvent(new PostPunishmentChangeReasonEvent(punishment, reason));
 	}
 	
 	@Override
