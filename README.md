@@ -34,9 +34,11 @@ My objective is to liberate the SpigotMC community from several premium plugins 
 
 I thank the countless members on the Spigot forums and StackOverflow whose answers were the constant subject of my queries.
 
-I would like to thank Ruan, creator of LiteBans, not for making such an expensive plugin, nor for artifically charging access to it, but for providing me with just cause to seek its demise.
+Thanks to Ruan, creator of LiteBans, not for making such an expensive plugin, nor for artifically charging access to it, but for providing me with just cause to seek its demise. :smiling_imp:
 
-I would like to thank @DevLeoko, whose AdvancedBan plugin first interested me in punishment plugins, and also for his cordiality and helpful advice.
+Thanks to Cervinakuy, who provided me with a simple plugin on personal request, which then helped spur me to start making basic scripts.
+
+Thanks to DevLeoko, whose AdvancedBan plugin first interested me in punishment plugins, and also for his cordiality and helpful advice.
 
 ### License ###
 
