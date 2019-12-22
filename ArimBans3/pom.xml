@@ -76,9 +76,9 @@
 							<createDependencyReducedPom>true</createDependencyReducedPom>-->
 							<artifactSet>
 								<includes>
+									<include>space.arim:universal-util</include>
 									<include>space.arim:universal-events</include>
 									<include>space.arim:universal-registry</include>
-									<include>space.arim:universal-util</include>
 									<include>space.arim:bans-api</include>
 									<include>org.hsqldb:hsqldb</include>
 									<include>com.zaxxer:HikariCP</include>
