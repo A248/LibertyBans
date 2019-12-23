@@ -29,37 +29,20 @@ public class ArimBansSkriptPlugin extends JavaPlugin {
 
 	private ArimBansSkript center;
 	
-	private void shutdown(String message) {
-		getLogger().warning("ArimBansExtended shutting down! Reason: " + message);
-		getServer().getPluginManager().disablePlugin(this);
-		throw new IllegalStateException("Shutting down...");
-	}
-	
 	@Override
 	public void onEnable() {
-		try {
-			Class.forName("space.arim.bans.api.ArimBansLibrary");
-			Class.forName("space.arim.universal.registry.UniversalRegistry");
-		} catch (ClassNotFoundException ex) {
-			shutdown("ArimBansLibrary / UniversalRegistry not on classpath!");
-			return;
-		}
 		PunishmentPlugin plugin = UniversalRegistry.get().getRegistration(PunishmentPlugin.class);
-		if (plugin != null) {
-			if (plugin instanceof ArimBansLibrary) {
-				center = new ArimBansSkript((ArimBansLibrary) plugin, getLogger());
-				center.registerAll();
-			} else {
-				shutdown("PunishmentPlugin is not an instance of ArimBansLibrary.");
-			}
-		} else {
-			shutdown("No PunishmentPlugin's registered!");
+		if (plugin instanceof ArimBansLibrary) {
+			center = new ArimBansSkript((ArimBansLibrary) plugin, getLogger());
+			center.registerAll();
 		}
 	}
 	
 	@Override
 	public void onDisable() {
-		center.close();
+		if (center != null) {
+			center.close();
+		}
 	}
 	
 }
