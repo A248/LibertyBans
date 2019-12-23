@@ -25,9 +25,11 @@ import java.util.UUID;
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.CommandType;
 import space.arim.bans.api.Punishment;
+import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
+import space.arim.bans.api.UUIDResolver;
 import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.env.Environment;
@@ -72,8 +74,8 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	void start();
 	
 	default void register() {
-		UniversalRegistry.get().register(space.arim.bans.api.PunishmentPlugin.class, this);
-		UniversalRegistry.get().register(space.arim.bans.api.UUIDResolver.class, resolver());
+		UniversalRegistry.get().register(PunishmentPlugin.class, this);
+		UniversalRegistry.get().register(UUIDResolver.class, resolver());
 	}
 	
 	@Override
