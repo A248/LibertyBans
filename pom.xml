@@ -74,6 +74,17 @@
 		<module>ArimBansExtended</module>
 		<module>ArimBansSkript</module>
 	</modules>
+	
+	<distributionManagement>
+		<repository>
+			<id>arim-repo</id>
+			<url>https://www.arim.space/repo/repository/maven-releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>arim-repo</id>
+			<url>https://www.arim.space/repo/repository/maven-snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 	<dependencyManagement>
 		<dependencies>
@@ -120,12 +131,6 @@
 				<scope>provided</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.spigotmc</groupId>
-				<artifactId>spigot-api</artifactId>
-				<version>${spigot.version}</version>
-				<scope>provided</scope>
-			</dependency>
-			<dependency>
 				<groupId>net.md-5</groupId>
 				<artifactId>bungeecord-api</artifactId>
 				<version>${bungeecord.version}</version>
@@ -149,16 +154,6 @@
 			<dependency>
 				<groupId>de.exceptionflug</groupId>
 				<artifactId>protocolize-world</artifactId>
-				<version>${protocolize.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>de.exceptionflug</groupId>
-				<artifactId>protocolize-items</artifactId>
-				<version>${protocolize.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>de.exceptionflug</groupId>
-				<artifactId>protocolize-inventory</artifactId>
 				<version>${protocolize.version}</version>
 			</dependency>
 		</dependencies>

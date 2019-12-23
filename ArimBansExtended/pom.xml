@@ -86,20 +86,6 @@
 			<groupId>de.exceptionflug</groupId>
 			<artifactId>protocolize-world</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>de.exceptionflug</groupId>
-			<artifactId>protocolize-items</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.exceptionflug</groupId>
-			<artifactId>protocolize-inventory</artifactId>
-		</dependency>
 	</dependencies>
 	
-	<repositories>
-		<repository>
-   			<id>exceptionflug</id>
-   			<url>http://mvn.exceptionflug.de/repository/exceptionflug-public/</url>
-   		</repository>
-	</repositories>
 </project>
