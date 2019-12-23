@@ -47,18 +47,10 @@ public class Corresponder implements CorresponderMaster {
 
 	private final ArimBans center;
 	
-	private final long mainThread;
-	
 	private boolean strict_ip_checking;
 	
 	public Corresponder(ArimBans center) {
 		this.center = center;
-		mainThread = Thread.currentThread().getId();
-	}
-	
-	@Override
-	public boolean asynchronous() {
-		return Thread.currentThread().getId() != mainThread;
 	}
 	
 	@Override
