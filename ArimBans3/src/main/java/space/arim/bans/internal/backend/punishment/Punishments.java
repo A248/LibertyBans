@@ -33,7 +33,9 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.exception.InternalStateException;
+import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.exception.MissingPunishmentException;
+import space.arim.bans.api.exception.TypeParseException;
 import space.arim.bans.internal.sql.SqlQuery;
 
 import space.arim.universal.util.UniversalUtil;
@@ -302,11 +304,15 @@ public class Punishments implements PunishmentsMaster {
 		return new HashSet<Punishment>(history);
 	}
 	
+	private Punishment punishmentFromResultSet(ResultSet data) throws InvalidUUIDException, TypeParseException, SQLException {
+		return new Punishment(data.getInt("id"), PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date"));
+	}
+	
 	@Override
 	public void loadActive(ResultSet data) {
 		try {
 			while (data.next()) {
-				active.add(new Punishment(data.getInt("id"), PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date")));
+				active.add(punishmentFromResultSet(data));
 			}
 		} catch (SQLException ex) {
 			center.logs().logError(ex);
@@ -318,10 +324,10 @@ public class Punishments implements PunishmentsMaster {
 		try {
 			int max = -1;
 			while (data.next()) {
-				int id = data.getInt("id");
-				history.add(new Punishment(id, PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date")));
-				if (id > max) {
-					max = id;
+				Punishment punishment = punishmentFromResultSet(data);
+				history.add(punishment);
+				if (punishment.id() > max) {
+					max = punishment.id();
 				}
 			}
 			nextId = ++max;
