@@ -20,7 +20,7 @@
 	<properties>
     	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     	<core.version>0.5.8</core.version>
-    	<universal.version>0.6.0-SNAPSHOT</universal.version>
+    	<universal.version>0.6.1-SNAPSHOT</universal.version>
     	<spigot.version>1.15-R0.1-SNAPSHOT</spigot.version>
     	<bungeecord.version>1.15-SNAPSHOT</bungeecord.version>
     	<bstats.version>1.5</bstats.version>
@@ -155,6 +155,10 @@
 	</dependencyManagement>
 	
 	<repositories>
+		<repository>
+			<id>arim-repo</id>
+			<url>https://www.arim.space/repo/repository/maven-snapshots/</url>
+		</repository>
 		<repository>
 			<id>spigot-repo</id>
 			<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
