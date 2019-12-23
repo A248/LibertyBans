@@ -26,7 +26,7 @@ import space.arim.bans.api.Subject;
 import space.arim.bans.api.util.minecraft.bungee.BungeeUtil;
 import space.arim.bans.internal.Configurable;
 
-public class BungeeCommands extends Command implements TabExecutor, Configurable {
+public class BungeeCommands extends Command implements Configurable, TabExecutor {
 
 	private final BungeeEnv environment;
 	

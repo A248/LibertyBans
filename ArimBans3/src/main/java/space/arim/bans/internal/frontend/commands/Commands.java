@@ -47,6 +47,8 @@ import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.util.StringsUtil;
 import space.arim.bans.api.util.web.GeoIpInfo;
 
+import space.arim.universal.util.UniversalUtil;
+
 public class Commands implements CommandsMaster {
 	
 	private final ArimBans center;
@@ -267,7 +269,7 @@ public class Commands implements CommandsMaster {
 			if (!checkPermission(subject, command)) {
 				return;
 			}
-			execute(subject, command, (rawArgs.length > 1) ? StringsUtil.chopOffOne(rawArgs) : new String[] {});
+			execute(subject, command, StringsUtil.chopOffOne(rawArgs));
 		} catch (IllegalArgumentException ex) {
 			usage(subject);
 		}
@@ -275,7 +277,7 @@ public class Commands implements CommandsMaster {
 	
 	@Override
 	public void execute(Subject subject, CommandType command, String[] args) {
-		if (center.corresponder().asynchronous()) {
+		if (UniversalUtil.get().isAsynchronous()) {
 			exec(subject, command, args);
 		} else {
 			center.async(() -> exec(subject, command, args));
@@ -464,7 +466,7 @@ public class Commands implements CommandsMaster {
 			center.subjects().sendNotif(punishment, add, operator);
 		}
 		if (!passive && add) {
-			center.environment().enforcer().enforce(punishment, center.formats().useJson());
+			center.environment().enforce(punishment, center.formats().useJson());
 		}
 		center.logs().log(Level.FINE, "Operator " + operator.toString() + ((add) ? " punished " : " unpunished ") + target.toString() + ". Silent = " + silent + "; Passive = " + passive);
 	}

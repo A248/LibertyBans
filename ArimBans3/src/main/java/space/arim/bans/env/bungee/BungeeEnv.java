@@ -32,6 +32,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.ArimBansLibrary;
+import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InvalidSubjectException;
@@ -41,7 +42,7 @@ import space.arim.bans.env.Environment;
 
 public class BungeeEnv implements Environment {
 
-	private Plugin plugin;
+	private final Plugin plugin;
 	private final Set<EnvLibrary> libraries = loadLibraries();
 	private ArimBans center;
 	private final BungeeEnforcer enforcer;
@@ -203,7 +204,11 @@ public class BungeeEnv implements Environment {
 	}
 	
 	@Override
-	public BungeeEnforcer enforcer() {
+	public void enforce(Punishment punishment, boolean useJson) {
+		enforcer().enforce(punishment, useJson);
+	}
+	
+	BungeeEnforcer enforcer() {
 		return enforcer;
 	}
 	
@@ -230,6 +235,20 @@ public class BungeeEnv implements Environment {
 	@Override
 	public boolean isLibrarySupported(EnvLibrary type) {
 		return libraries.contains(type);
+	}
+	
+	@Override
+	public void refreshConfig(boolean first) {
+		commands.refreshConfig(first);
+		listener.refreshConfig(first);
+		enforcer.refreshConfig(first);
+	}
+	
+	@Override
+	public void refreshMessages(boolean first) {
+		commands.refreshMessages(first);
+		listener.refreshMessages(first);
+		enforcer.refreshMessages(first);
 	}
 	
 	@Override

@@ -57,6 +57,7 @@
 			</plugin>
 		</plugins>
 	</build>
+	
 	<dependencies>
 		<dependency>
 			<groupId>space.arim</groupId>
@@ -71,7 +72,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.spigotmc</groupId>
-			<artifactId>spigot</artifactId>
+			<artifactId>spigot-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>net.md-5</groupId>
@@ -86,4 +87,5 @@
 			<artifactId>protocolize-world</artifactId>
 		</dependency>
 	</dependencies>
+	
 </project>

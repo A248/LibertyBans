@@ -37,7 +37,7 @@ public class AsyncWrapper implements AsyncMaster {
 
 	@Override
 	public boolean isClosed() {
-		return executor != UniversalRegistry.getRegistration(AsyncExecutor.class);
+		return executor != UniversalRegistry.get().getRegistration(AsyncExecutor.class);
 	}
 	
 }

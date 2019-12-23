@@ -20,16 +20,29 @@ package space.arim.bans.skript;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
+import space.arim.bans.api.ArimBansLibrary;
+import space.arim.bans.api.PunishmentPlugin;
+
+import space.arim.universal.registry.UniversalRegistry;
+
 public class ArimBansSkriptPlugin extends JavaPlugin {
 
+	private ArimBansSkript center;
+	
 	@Override
 	public void onEnable() {
-		
+		PunishmentPlugin plugin = UniversalRegistry.get().getRegistration(PunishmentPlugin.class);
+		if (plugin instanceof ArimBansLibrary) {
+			center = new ArimBansSkript((ArimBansLibrary) plugin, getLogger());
+			center.registerAll();
+		}
 	}
 	
 	@Override
 	public void onDisable() {
-		
+		if (center != null) {
+			center.close();
+		}
 	}
 	
 }

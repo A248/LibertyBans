@@ -22,19 +22,21 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import space.arim.bans.env.bukkit.BukkitEnv;
 
-public class ArimBansBukkit extends JavaPlugin {
+public class ArimBansBukkit extends JavaPlugin implements AutoCloseable {
 	
 	private ArimBans center;
 	private BukkitEnv environment;
 	
 	private void load() {
 		environment = new BukkitEnv(this);
-		center = new ArimBansPlugin(this.getDataFolder(), environment);
+		center = new ArimBansPlugin(getDataFolder(), environment);
 		center.start();
+		center.register();
 		environment.setCenter(center);
 	}
 	
-	private void close() {
+	@Override
+	public void close() {
 		center.close();
 		environment.close();
 	}

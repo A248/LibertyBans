@@ -76,9 +76,9 @@
 							<createDependencyReducedPom>true</createDependencyReducedPom>-->
 							<artifactSet>
 								<includes>
+									<include>space.arim:universal-util</include>
 									<include>space.arim:universal-events</include>
 									<include>space.arim:universal-registry</include>
-									<include>space.arim:universal-util</include>
 									<include>space.arim:bans-api</include>
 									<include>org.hsqldb:hsqldb</include>
 									<include>com.zaxxer:HikariCP</include>
@@ -126,7 +126,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.spigotmc</groupId>
-			<artifactId>spigot</artifactId>
+			<artifactId>spigot-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>net.md-5</groupId>
@@ -150,12 +150,10 @@
 		<dependency>
 			<groupId>org.bstats</groupId>
 			<artifactId>bstats-bukkit</artifactId>
-			<version>1.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.bstats</groupId>
 			<artifactId>bstats-bungeecord</artifactId>
-			<version>1.5</version>
 		</dependency>
 	</dependencies>
 	<repositories>

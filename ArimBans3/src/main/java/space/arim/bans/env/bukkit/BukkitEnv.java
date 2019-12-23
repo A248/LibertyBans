@@ -32,6 +32,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.ArimBansLibrary;
+import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InvalidSubjectException;
@@ -41,7 +42,7 @@ import space.arim.bans.env.Environment;
 
 public class BukkitEnv implements Environment {
 	
-	private JavaPlugin plugin;
+	private final JavaPlugin plugin;
 	private final Set<EnvLibrary> libraries = loadLibraries();
 	private ArimBans center;
 	private final BukkitEnforcer enforcer;
@@ -203,7 +204,11 @@ public class BukkitEnv implements Environment {
 	}
 
 	@Override
-	public BukkitEnforcer enforcer() {
+	public void enforce(Punishment punishment, boolean useJson) {
+		enforcer().enforce(punishment, useJson);
+	}
+	
+	BukkitEnforcer enforcer() {
 		return enforcer;
 	}
 
@@ -230,6 +235,20 @@ public class BukkitEnv implements Environment {
 	@Override
 	public boolean isLibrarySupported(EnvLibrary type) {
 		return libraries.contains(type);
+	}
+	
+	@Override
+	public void refreshConfig(boolean first) {
+		commands.refreshConfig(first);
+		listener.refreshConfig(first);
+		enforcer.refreshConfig(first);
+	}
+	
+	@Override
+	public void refreshMessages(boolean first) {
+		commands.refreshMessages(first);
+		listener.refreshMessages(first);
+		enforcer.refreshMessages(first);
 	}
 	
 	@Override

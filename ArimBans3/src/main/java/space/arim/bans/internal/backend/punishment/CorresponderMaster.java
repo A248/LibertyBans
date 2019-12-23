@@ -34,8 +34,6 @@ public interface CorresponderMaster extends Component {
 		return CorresponderMaster.class;
 	}
 	
-	boolean asynchronous();
-	
 	PunishmentResult getApplicablePunishment(UUID uuid, String address, PunishmentType type);
 	
 	Set<Punishment> getApplicablePunishments(UUID uuid, String address, PunishmentType type);

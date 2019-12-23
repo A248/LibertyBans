@@ -25,9 +25,11 @@ import java.util.UUID;
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.CommandType;
 import space.arim.bans.api.Punishment;
+import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
+import space.arim.bans.api.UUIDResolver;
 import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.env.Environment;
@@ -43,6 +45,7 @@ import space.arim.bans.internal.logging.LogsMaster;
 import space.arim.bans.internal.sql.SqlMaster;
 
 import space.arim.universal.registry.RegistryPriority;
+import space.arim.universal.registry.UniversalRegistry;
 
 public interface ArimBans extends Configurable, ArimBansLibrary {
 
@@ -69,6 +72,11 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	CorresponderMaster corresponder();
 	
 	void start();
+	
+	default void register() {
+		UniversalRegistry.get().register(PunishmentPlugin.class, this);
+		UniversalRegistry.get().register(UUIDResolver.class, resolver());
+	}
 	
 	@Override
 	default void refreshConfig(boolean first) {
@@ -212,11 +220,6 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	@Override
 	default void changeReason(Punishment punishment, String reason) throws MissingPunishmentException {
 		punishments().changeReason(punishment, reason);
-	}
-	
-	@Override
-	default boolean asynchronous() {
-		return corresponder().asynchronous();
 	}
 	
 	@Override

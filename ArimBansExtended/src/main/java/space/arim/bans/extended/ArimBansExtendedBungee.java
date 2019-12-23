@@ -23,42 +23,17 @@ import java.util.Set;
 
 import net.md_5.bungee.api.plugin.Plugin;
 
-import space.arim.bans.api.ArimBansLibrary;
-import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.api.util.minecraft.bungee.BungeeUtil;
 import space.arim.bans.extended.bungee.CommandSkeleton;
-
-import space.arim.universal.registry.UniversalRegistry;
 
 public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPluginBase {
 
 	private ArimBansExtended extended = null;
 	private Set<CommandSkeleton> cmds = new HashSet<CommandSkeleton>();
 	
-	private void shutdown(String message) {
-		getLogger().warning("ArimBansExtended shutting down! Reason: " + message);
-		throw new IllegalStateException("Shuttind down...");
-	}
-	
 	@Override
 	public void onEnable() {
-		try {
-			Class.forName("space.arim.bans.api.ArimBansLibrary");
-			Class.forName("space.arim.registry.UniversalRegistry");
-		} catch (ClassNotFoundException ex) {
-			shutdown("ArimBansLibrary / UniversalRegistry not on classpath!");
-			return;
-		}
-		PunishmentPlugin plugin = UniversalRegistry.getRegistration(PunishmentPlugin.class);
-		if (plugin != null) {
-			if (plugin instanceof ArimBansLibrary) {
-				extended = new ArimBansExtended((ArimBansLibrary) plugin, getDataFolder(), getLogger());
-			} else {
-				shutdown("PunishmentPlugin is not an instance of ArimBansLibrary.");
-			}
-		} else {
-			shutdown("No PunishmentPlugin's registered!");
-		}
+		extended = new ArimBansExtended(getDataFolder(), getLogger());
 		loadCmds();
 	}
 	

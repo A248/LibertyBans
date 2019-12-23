@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.util.FilesUtil;
 
-import space.arim.universal.util.LogFormatter;
+import space.arim.universal.util.logging.LogFormatter;
 
 public class Logs implements LogsMaster {
 

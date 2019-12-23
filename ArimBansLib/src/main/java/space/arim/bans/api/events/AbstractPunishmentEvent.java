@@ -22,7 +22,7 @@ import space.arim.bans.api.Punishment;
 
 import space.arim.universal.events.Event;
 
-public abstract class AbstractPunishmentEvent extends Event {
+public abstract class AbstractPunishmentEvent implements Event {
 	
 	private final Punishment punishment;
 	
@@ -37,6 +37,11 @@ public abstract class AbstractPunishmentEvent extends Event {
 	 */
 	public Punishment getPunishment() {
 		return punishment;
+	}
+	
+	@Override
+	public boolean isAsynchronous() {
+		return true;
 	}
 	
 }

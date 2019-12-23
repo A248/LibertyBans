@@ -19,11 +19,14 @@
 	
 	<properties>
     	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    	<maven.compiler.source>1.8</maven.compiler.source>
+    	<maven.compiler.target>1.8</maven.compiler.target>
     	<core.version>0.5.8</core.version>
-    	<universal.version>0.5.2-SNAPSHOT</universal.version>
+    	<universal.version>0.6.1-SNAPSHOT</universal.version>
     	<spigot.version>1.15-R0.1-SNAPSHOT</spigot.version>
     	<bungeecord.version>1.15-SNAPSHOT</bungeecord.version>
-		<protocolize.version>1.5.0-SNAPSHOT</protocolize.version>
+    	<bstats.version>1.5</bstats.version>
+		<protocolize.version>1.5.2-SNAPSHOT</protocolize.version>
 	</properties>
 
 	<licenses>
@@ -71,6 +74,17 @@
 		<module>ArimBansExtended</module>
 		<module>ArimBansSkript</module>
 	</modules>
+	
+	<distributionManagement>
+		<repository>
+			<id>arim-repo</id>
+			<url>https://www.arim.space/repo/repository/maven-releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>arim-repo</id>
+			<url>https://www.arim.space/repo/repository/maven-snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 	<dependencyManagement>
 		<dependencies>
@@ -117,39 +131,39 @@
 				<scope>provided</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.spigotmc</groupId>
-				<artifactId>spigot</artifactId>
-				<version>${spigot.version}</version>
-				<scope>provided</scope>
-			</dependency>
-			<dependency>
 				<groupId>net.md-5</groupId>
 				<artifactId>bungeecord-api</artifactId>
 				<version>${bungeecord.version}</version>
 				<scope>provided</scope>
 			</dependency>
-			<!-- Shaded in spigot. check whether this is also shaded in BungeeCord! -->
 			<dependency>
-				<groupId>com.googlecode.json-simple</groupId>
-				<artifactId>json-simple</artifactId>
-				<version>1.1.1</version>
+				<groupId>org.bstats</groupId>
+				<artifactId>bstats-bukkit</artifactId>
+				<version>${bstats.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.bstats</groupId>
+				<artifactId>bstats-bungeecord</artifactId>
+				<version>${bstats.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>de.exceptionflug</groupId>
 				<artifactId>protocolize-api</artifactId>
 				<version>${protocolize.version}</version>
-				<scope>provided</scope>
 			</dependency>
 			<dependency>
 				<groupId>de.exceptionflug</groupId>
 				<artifactId>protocolize-world</artifactId>
 				<version>${protocolize.version}</version>
-				<scope>provided</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	
 	<repositories>
+		<repository>
+			<id>arim-repo</id>
+			<url>https://www.arim.space/repo/repository/maven-snapshots/</url>
+		</repository>
 		<repository>
 			<id>spigot-repo</id>
 			<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
