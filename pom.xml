@@ -24,7 +24,7 @@
     	<spigot.version>1.15-R0.1-SNAPSHOT</spigot.version>
     	<bungeecord.version>1.15-SNAPSHOT</bungeecord.version>
     	<bstats.version>1.5</bstats.version>
-		<protocolize.version>1.5.0-SNAPSHOT</protocolize.version>
+		<protocolize.version>1.5.2-SNAPSHOT</protocolize.version>
 	</properties>
 
 	<licenses>
@@ -166,6 +166,10 @@
 		<repository>
        		<id>bungeecord-repo</id>
 			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+   		</repository>
+   		<repository>
+   			<id>exceptionflug</id>
+   			<url>http://mvn.exceptionflug.de/repository/exceptionflug-public/</url>
    		</repository>
 	</repositories>
 </project>
