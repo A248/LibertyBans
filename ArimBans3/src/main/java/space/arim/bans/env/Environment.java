@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.internal.Configurable;
@@ -39,7 +40,7 @@ public interface Environment extends Configurable {
 	
 	boolean hasPermission(Subject subject, String permission, boolean opPerms);
 	
-	Enforcer enforcer();
+	void enforce(Punishment punishment, boolean useJson);
 	
 	Logger logger();
 	

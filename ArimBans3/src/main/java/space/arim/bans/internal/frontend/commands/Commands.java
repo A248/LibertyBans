@@ -466,7 +466,7 @@ public class Commands implements CommandsMaster {
 			center.subjects().sendNotif(punishment, add, operator);
 		}
 		if (!passive && add) {
-			center.environment().enforcer().enforce(punishment, center.formats().useJson());
+			center.environment().enforce(punishment, center.formats().useJson());
 		}
 		center.logs().log(Level.FINE, "Operator " + operator.toString() + ((add) ? " punished " : " unpunished ") + target.toString() + ". Silent = " + silent + "; Passive = " + passive);
 	}

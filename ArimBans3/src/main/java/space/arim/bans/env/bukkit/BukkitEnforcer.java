@@ -32,9 +32,9 @@ import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.exception.ConfigSectionException;
 import space.arim.bans.api.exception.MissingCenterException;
-import space.arim.bans.env.Enforcer;
+import space.arim.bans.internal.Configurable;
 
-public class BukkitEnforcer implements Enforcer {
+public class BukkitEnforcer implements Configurable {
 
 	private final BukkitEnv environment;
 	
@@ -110,8 +110,7 @@ public class BukkitEnforcer implements Enforcer {
 		environment.center().resolver().update(evt.getUniqueId(), evt.getName(), evt.getAddress().getHostAddress());
 	}
 
-	@Override
-	public void enforce(Punishment punishment, boolean useJson) {
+	void enforce(Punishment punishment, boolean useJson) {
 		Set<? extends Player> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
