@@ -143,13 +143,21 @@
 				<groupId>de.exceptionflug</groupId>
 				<artifactId>protocolize-api</artifactId>
 				<version>${protocolize.version}</version>
-				<scope>provided</scope>
 			</dependency>
 			<dependency>
 				<groupId>de.exceptionflug</groupId>
 				<artifactId>protocolize-world</artifactId>
 				<version>${protocolize.version}</version>
-				<scope>provided</scope>
+			</dependency>
+			<dependency>
+				<groupId>de.exceptionflug</groupId>
+				<artifactId>protocolize-items</artifactId>
+				<version>${protocolize.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.exceptionflug</groupId>
+				<artifactId>protocolize-inventory</artifactId>
+				<version>${protocolize.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -166,10 +174,6 @@
 		<repository>
        		<id>bungeecord-repo</id>
 			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-   		</repository>
-   		<repository>
-   			<id>exceptionflug</id>
-   			<url>http://mvn.exceptionflug.de/repository/exceptionflug-public/</url>
    		</repository>
 	</repositories>
 </project>
