@@ -107,18 +107,11 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	/**
 	 * Executes a block of code asynchronously.
 	 * 
-	 * <br><br>Bukkit users may call {@link org.bukkit.scheduler.BukkitScheduler#runTask(Plugin, Runnable) Bukkit.getScheduler().runTask(Plugin, Runnable)} to resynchronize.
+	 * <br><br>Bukkit/Spigot users may call {@link org.bukkit.scheduler.BukkitScheduler#runTask(Plugin, Runnable) Bukkit.getScheduler().runTask(Plugin, Runnable)} to resynchronize.
 	 * 
 	 * @param task - the lambda/runnable to run async
 	 */
 	void async(Runnable task);
-	
-	/**
-	 * Checks whether the current execution is asynchronous.
-	 * 
-	 * @return true if and only if the current thread does not equal to main server thread.
-	 */
-	boolean asynchronous();
 	
 	/**
 	 * Reloads whole plugin configuration, including config.yml and messages.yml

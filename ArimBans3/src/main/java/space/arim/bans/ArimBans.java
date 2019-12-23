@@ -46,7 +46,6 @@ import space.arim.bans.internal.sql.SqlMaster;
 
 import space.arim.universal.registry.RegistryPriority;
 import space.arim.universal.registry.UniversalRegistry;
-import space.arim.universal.util.UniversalUtil;
 
 public interface ArimBans extends Configurable, ArimBansLibrary {
 
@@ -221,11 +220,6 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	@Override
 	default void changeReason(Punishment punishment, String reason) throws MissingPunishmentException {
 		punishments().changeReason(punishment, reason);
-	}
-	
-	@Override
-	default boolean asynchronous() {
-		return UniversalUtil.get().isAsynchronous();
 	}
 	
 	@Override
