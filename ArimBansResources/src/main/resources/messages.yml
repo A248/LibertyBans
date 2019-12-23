@@ -102,12 +102,12 @@ additions:
     successful:
       message: '&7Successfully kicked %TARGET% for %TIME% because of %REASON%'
       notification: '&7%OPERATOR% kicked %TARGET% for %TIME% because of %REASON%'
-  layout:
-    - 'Kicked'
-    - 'Reason: %REASON%'
-    - ''
-    - 'Please read the rules'
-    - 'Forums: www.site.com'
+    layout:
+      - 'Kicked'
+      - 'Reason: %REASON%'
+      - ''
+      - 'Please read the rules'
+      - 'Forums: www.site.com'
 removals:
   bans:
     usage: '/unban <player>'
