@@ -31,10 +31,12 @@ import java.util.logging.Logger;
 import org.yaml.snakeyaml.Yaml;
 
 import space.arim.bans.api.ArimBansLibrary;
+import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.util.FilesUtil;
 import space.arim.bans.api.util.StringsUtil;
 
+import space.arim.universal.registry.UniversalRegistry;
 import space.arim.universal.util.UniversalUtil;
 
 public class ArimBansExtended implements AutoCloseable {
@@ -47,8 +49,19 @@ public class ArimBansExtended implements AutoCloseable {
 	
 	private final ConcurrentHashMap<String, Object> cfg = new ConcurrentHashMap<String, Object>();
 	
-	ArimBansExtended(ArimBansLibrary lib, File folder, Logger logger) {
-		this.lib = Objects.requireNonNull(lib, "ArimBansLibrary must not be null!");
+	ArimBansExtended(File folder, Logger logger) {
+		try {
+			Class.forName("space.arim.bans.api.ArimBansLibrary");
+			Class.forName("space.arim.universal.registry.UniversalRegistry");
+		} catch (ClassNotFoundException ex) {
+			throw new IllegalStateException("ArimBansLibrary / UniversalRegistry not on classpath!", ex);
+		}
+		PunishmentPlugin plugin = UniversalRegistry.get().getRegistration(PunishmentPlugin.class);
+		if (plugin != null && plugin instanceof ArimBansLibrary) {
+			this.lib = (ArimBansLibrary) plugin;
+		} else {
+			throw new IllegalStateException("Registered PunishmentPlugin does not implement ArimBansLibrary!");
+		}
 		this.folder = Objects.requireNonNull(folder, "Folder must not be null!");
 		this.logger = Objects.requireNonNull(logger, "Logger must not be null!");
 		loadConfig(folder, cfg);

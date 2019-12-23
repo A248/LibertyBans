@@ -20,47 +20,21 @@ package space.arim.bans.extended;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
-import space.arim.bans.api.ArimBansLibrary;
-import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.extended.bukkit.CommandListener;
-
-import space.arim.universal.registry.UniversalRegistry;
 
 public class ArimBansExtendedBukkit extends JavaPlugin implements ArimBansExtendedPluginBase {
 
 	private ArimBansExtended extended = null;
 	private CommandListener cmds;
 	
-	private void shutdown(String message) {
-		getLogger().warning("ArimBansExtended shutting down! Reason: " + message);
-		getServer().getPluginManager().disablePlugin(this);
-		throw new IllegalStateException("Shutting down...");
-	}
-	
 	@Override
 	public void onEnable() {
-		try {
-			Class.forName("space.arim.bans.api.ArimBansLibrary");
-			Class.forName("space.arim.universal.registry.UniversalRegistry");
-		} catch (ClassNotFoundException ex) {
-			shutdown("ArimBansLibrary / UniversalRegistry not on classpath!");
-			return;
-		}
-		PunishmentPlugin plugin = UniversalRegistry.get().getRegistration(PunishmentPlugin.class);
-		if (plugin != null) {
-			if (plugin instanceof ArimBansLibrary) {
-				extended = new ArimBansExtended((ArimBansLibrary) plugin, getDataFolder(), getLogger());
-			} else {
-				shutdown("PunishmentPlugin is not an instance of ArimBansLibrary.");
-			}
-		} else {
-			shutdown("No PunishmentPlugin's registered!");
-		}
-		cmds = new CommandListener(this);
-		registerCommands();
+		extended = new ArimBansExtended(getDataFolder(), getLogger());
+		loadCmds();
 	}
 	
-	private void registerCommands() {
+	private void loadCmds() {
+		cmds = new CommandListener(this);
 		for (String cmd : ArimBansExtended.commands()) {
 			getServer().getPluginCommand(cmd).setExecutor(cmds);
 		}
