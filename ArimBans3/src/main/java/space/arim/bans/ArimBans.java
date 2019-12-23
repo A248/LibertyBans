@@ -46,6 +46,7 @@ import space.arim.bans.internal.sql.SqlMaster;
 
 import space.arim.universal.registry.RegistryPriority;
 import space.arim.universal.registry.UniversalRegistry;
+import space.arim.universal.util.UniversalUtil;
 
 public interface ArimBans extends Configurable, ArimBansLibrary {
 
@@ -224,7 +225,7 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	
 	@Override
 	default boolean asynchronous() {
-		return corresponder().asynchronous();
+		return UniversalUtil.get().isAsynchronous();
 	}
 	
 	@Override
