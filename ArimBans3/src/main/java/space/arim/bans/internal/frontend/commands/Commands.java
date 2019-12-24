@@ -53,12 +53,7 @@ public class Commands implements CommandsMaster {
 	
 	private final ArimBans center;
 	
-	private static final Comparator<Punishment> DATE_COMPARATOR = new Comparator<Punishment>() {
-		@Override
-		public int compare(Punishment p1, Punishment p2) {
-			return (int) (p1.date() - p2.date());
-		}
-	};
+	private static final Comparator<Punishment> DATE_LATEST_FIRST_COMPARATOR = (p1, p2) -> (int) (p1.date() - p2.date());
 	
 	private static final String ROLLBACK_ALL_ARG = "all";
 	
@@ -741,11 +736,11 @@ public class Commands implements CommandsMaster {
 			max = Integer.MAX_VALUE;
 		}
 		ArrayList<Punishment> applicable = new ArrayList<Punishment>(center.punishments().getActiveCopy());
-		applicable.sort(DATE_COMPARATOR);
+		applicable.sort(DATE_LATEST_FIRST_COMPARATOR);
 		int n = 0;
 		for (Iterator<Punishment> it = applicable.iterator(); it.hasNext();) {
 			Punishment punishment = it.next();
-			if (punishment.operator().equals(operator)) {
+			if (punishment.operator().equals(target)) {
 				if (n >= max) {
 					it.remove();
 				} else {
@@ -756,6 +751,19 @@ public class Commands implements CommandsMaster {
 				}
 			} else {
 				it.remove();
+			}
+		}
+		if (applicable.isEmpty()) {
+			center.subjects().sendMessage(operator, other_rollback_error_notfound.replace("%TARGET%", center.formats().formatSubject(target)));
+			return;
+		}
+		boolean succeed = false;
+		while (!succeed) {
+			try {
+				center.punishments().removePunishments(applicable.toArray(new Punishment[] {}));
+				succeed = true;
+			} catch (MissingPunishmentException ex) {
+				applicable.remove(ex.getNonExistentPunishment());
 			}
 		}
 		if (applicable.isEmpty()) {
@@ -786,7 +794,7 @@ public class Commands implements CommandsMaster {
 		for (int n = 0; n < footer.size(); n++) {
 			footer.set(n, footer.get(n).replace("%PAGE%", Integer.toString(lister.page)).replace("%MAXPAGE%", Integer.toString(maxPage)).replace("%CMD%", lister.nextPageCmd));
 		}
-		punishments.sort(DATE_COMPARATOR);
+		punishments.sort(DATE_LATEST_FIRST_COMPARATOR);
 		center.subjects().sendMessage(operator, header.toArray(new String[0]));
 		for (Punishment p : punishments) {
 			String[] msgs = body.toArray(new String[0]);

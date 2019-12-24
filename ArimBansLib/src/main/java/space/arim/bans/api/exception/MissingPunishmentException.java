@@ -18,24 +18,33 @@
  */
 package space.arim.bans.api.exception;
 
-import space.arim.bans.api.Subject;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentType;
+import space.arim.bans.api.Subject;
 
 public class MissingPunishmentException extends Exception {
 
 	private static final long serialVersionUID = -3749852643537426416L;
 
-	public MissingPunishmentException(Subject subject, PunishmentType type) {
-		super("Subject " + subject + " does not have a corresponding punishment " + type.deserialise());
-	}
-
+	private final Punishment punishment;
+	
 	public MissingPunishmentException(Punishment fakePunishment) {
 		super("Punishment with these details does not exist: " + fakePunishment.type() + "/" + fakePunishment.subject() + "/" + fakePunishment.operator() + "/" + fakePunishment.expiration() + "/" + fakePunishment.date());
+		punishment = fakePunishment;
+	}
+	
+	public MissingPunishmentException(Subject subject, PunishmentType type) {
+		super("Subject " + subject + " does not have a punishment of type " + type);
+		punishment = null;
 	}
 	
 	public MissingPunishmentException(int id) {
 		super("Punishment with id " + id + " does not exist");
+		punishment = null;
+	}
+	
+	public Punishment getNonExistentPunishment() {
+		return punishment;
 	}
 	
 }

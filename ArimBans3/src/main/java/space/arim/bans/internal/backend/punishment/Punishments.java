@@ -93,7 +93,7 @@ public class Punishments implements PunishmentsMaster {
 				boolean retro = (punishment.expiration() > 0 && punishment.expiration() <= System.currentTimeMillis());
 				
 				if ((punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
-					throw new ConflictingPunishmentException(punishment.subject(), punishment.type());  // the plague of multi-threaded programs
+					throw new ConflictingPunishmentException(punishment);  // the plague of multi-threaded programs
 
 				} else if (center.corresponder().callPunishEvent(punishment, retro)) { // Call event before proceeding
 
@@ -126,7 +126,7 @@ public class Punishments implements PunishmentsMaster {
 		// If it would, throw an error terminating everything
 		for (Punishment punishment : punishments) {
 			if ((punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
-				throw new ConflictingPunishmentException(punishment.subject(), punishment.type());
+				throw new ConflictingPunishmentException(punishment);
 			}
 		}
 		
