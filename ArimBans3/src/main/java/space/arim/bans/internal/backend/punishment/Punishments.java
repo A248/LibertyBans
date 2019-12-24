@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.Punishment;
@@ -44,7 +45,8 @@ public class Punishments implements PunishmentsMaster {
 	
 	private final ArimBans center;
 	
-	private int nextId = Integer.MIN_VALUE;
+	private AtomicInteger nextId = new AtomicInteger(Integer.MIN_VALUE);
+	//private volatile int nextId = Integer.MIN_VALUE;
 	private final Object lock = new Object();
 	
 	// MUST be modified by synchronising on lock object
@@ -57,11 +59,11 @@ public class Punishments implements PunishmentsMaster {
 	
 	@Override
 	public int getNextAvailablePunishmentId() {
-		if (nextId == Integer.MIN_VALUE) {
+		if (nextId.get() == Integer.MIN_VALUE) {
 			throw new InternalStateException("Invalid API call: ArimBans plugin data has not been loaded yet, so ArimBansLibrary#getNextAvailablePunishmentId() is inoperative until the plugin is fully loaded.");
 		}
 		// return the value and then increment it
-		return nextId++;
+		return nextId.getAndIncrement();
 	}
 	
 	private void directAddPunishments(Punishment[] punishments) throws ConflictingPunishmentException {
@@ -334,7 +336,7 @@ public class Punishments implements PunishmentsMaster {
 					max = punishment.id();
 				}
 			}
-			nextId = ++max;
+			nextId.set(++max);
 		} catch (SQLException ex) {
 			center.logs().logError(ex);
 		}
