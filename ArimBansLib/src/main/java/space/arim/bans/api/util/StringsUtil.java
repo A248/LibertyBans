@@ -46,23 +46,35 @@ public final class StringsUtil {
 		return (input == null) ? input : (input.length() == 1) ? input.toUpperCase() : Character.toUpperCase(input.charAt(0)) + input.substring(1);
 	}
 	
-	public static String[] chopOffOne(String[] input) {
-		Objects.requireNonNull(input, "Input array must not be null!");
-		return Arrays.copyOfRange(input, 1, input.length);
+	public static <T> T[] chopOffOne(T[] input) {
+		return copyRange(input, 1, input.length);
 	}
 	
-	public static String concat(List<String> input, char separator) {
-		return concat(Objects.requireNonNull(input, "Input list must not be null!").toArray(new String[] {}), separator);
+	private static <T> T[] copyRange(T[] input, int start, int end) {
+		return Arrays.copyOfRange(Objects.requireNonNull(input, "Input array must not be null!"), start, end);
 	}
 	
-	public static String concat(String[] input, char separator) {
+	public static String concatRange(List<String> input, char separator, int start, int end) {
+		return concatRange(Objects.requireNonNull(input, "Input list must not be null!").toArray(new String[] {}), separator, start, end);
+	}
+	
+	public static String concatRange(String[] input, char separator, int start, int end) {
 		StringBuilder builder = new StringBuilder();
-		for (String m : Objects.requireNonNull(input, "Input array must not be null!")) {
+		String[] selected = copyRange(Objects.requireNonNull(input, "Input array must not be null!"), start, end);
+		for (String m : selected) {
 			if (m != null && !m.isEmpty()) {
 				builder.append(separator).append(m);
 			}
 		}
-		return (builder.length() == 0) ? "" : builder.toString().substring(1);
+		return builder.length() == 0 ? "" : builder.toString().substring(1);
+	}
+	
+	public static String concat(List<String> input, char separator) {
+		return concatRange(input, separator, 0, input.size());
+	}
+	
+	public static String concat(String[] input, char separator) {
+		return concatRange(input, separator, 0, input.length);
 	}
 	
 	public static String basicTodaysDate() {
