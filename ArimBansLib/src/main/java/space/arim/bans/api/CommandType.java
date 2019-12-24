@@ -59,6 +59,7 @@ public enum CommandType {
 	
 	BLAME(SubCategory.BLAME, IpSpec.UUID),
 	ROLLBACK(SubCategory.ROLLBACK, IpSpec.UUID),
+	EDITREASON(SubCategory.EDITREASON, IpSpec.BOTH),
 	RELOAD(SubCategory.RELOAD, IpSpec.BOTH);
 	
 	public enum SubCategory {
@@ -79,6 +80,7 @@ public enum CommandType {
 		ALTS(Category.OTHER, "alts"),
 		BLAME(Category.LIST, "blame"),
 		ROLLBACK(Category.OTHER, "rollback"),
+		EDITREASON(Category.OTHER, "editreason"),
 		RELOAD(Category.OTHER, "reload", true);
 		
 		private final Category category;
