@@ -23,10 +23,6 @@
 			<artifactId>universal-registry</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim</groupId>
-			<artifactId>universal-util</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>net.md-5</groupId>
 			<artifactId>bungeecord-api</artifactId>
 		</dependency>
