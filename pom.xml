@@ -22,7 +22,7 @@
     	<maven.compiler.source>1.8</maven.compiler.source>
     	<maven.compiler.target>1.8</maven.compiler.target>
     	<core.version>0.5.8</core.version>
-    	<universal.version>0.6.1-SNAPSHOT</universal.version>
+    	<universal.version>0.6.2-SNAPSHOT</universal.version>
     	<spigot.version>1.15-R0.1-SNAPSHOT</spigot.version>
     	<bungeecord.version>1.15-SNAPSHOT</bungeecord.version>
     	<bstats.version>1.5</bstats.version>
@@ -109,11 +109,6 @@
 			<dependency>
 				<groupId>space.arim</groupId>
 				<artifactId>universal-registry</artifactId>
-				<version>${universal.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>space.arim</groupId>
-				<artifactId>universal-util</artifactId>
 				<version>${universal.version}</version>
 			</dependency>
 			<dependency>
