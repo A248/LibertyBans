@@ -764,11 +764,11 @@ public class Commands implements CommandsMaster {
 				succeed = true;
 			} catch (MissingPunishmentException ex) {
 				applicable.remove(ex.getNonExistentPunishment());
+				if (applicable.isEmpty()) {
+					center.subjects().sendMessage(operator, other_rollback_error_notfound.replace("%TARGET%", center.formats().formatSubject(target)));
+					return;
+				}
 			}
-		}
-		if (applicable.isEmpty()) {
-			center.subjects().sendMessage(operator, other_rollback_error_notfound.replace("%TARGET%", center.formats().formatSubject(target)));
-			return;
 		}
 		center.subjects().sendMessage(operator, other_rollback_successful_message.replace("%NUMBER%", numberArg).replace("%TARGET%", center.formats().formatSubject(target)));
 	}
