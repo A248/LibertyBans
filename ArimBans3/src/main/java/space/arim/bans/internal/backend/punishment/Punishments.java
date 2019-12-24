@@ -45,6 +45,9 @@ public class Punishments implements PunishmentsMaster {
 	private final ArimBans center;
 	
 	private int nextId = Integer.MIN_VALUE;
+	private final Object lock = new Object();
+	
+	// MUST be modified by synchronising on lock object
 	private final Set<Punishment> active = ConcurrentHashMap.newKeySet();
 	private final Set<Punishment> history = ConcurrentHashMap.newKeySet();
 
@@ -57,6 +60,7 @@ public class Punishments implements PunishmentsMaster {
 		if (nextId == Integer.MIN_VALUE) {
 			throw new InternalStateException("Invalid API call: ArimBans plugin data has not been loaded yet, so ArimBansLibrary#getNextAvailablePunishmentId() is inoperative until the plugin is fully loaded.");
 		}
+		// return the value and then increment it
 		return nextId++;
 	}
 	
@@ -82,7 +86,7 @@ public class Punishments implements PunishmentsMaster {
 		 * It is HIGHLY unlikely that this condition will occur, but better safe than sorry.
 		 * 
 		 */
-		synchronized (active) {
+		synchronized (lock) {
 			for (Punishment punishment : punishments) {
 
 				// Check whether punishment is retrogade
@@ -135,7 +139,7 @@ public class Punishments implements PunishmentsMaster {
 			center.async(() -> {
 				try {
 					directAddPunishments(punishments);
-				} catch (ConflictingPunishmentException ex) {
+				} catch (ConflictingPunishmentException ignored) {
 					
 					// this exception must be ignored because it cannot be relayed back through the lambda!
 					
@@ -181,7 +185,7 @@ public class Punishments implements PunishmentsMaster {
 		 * For same reasons as stated under #directAddPunishments
 		 * 
 		 */
-		synchronized (active) {
+		synchronized (lock) {
 			for (Punishment punishment : punishments) {
 
 				// Removal called in this method is never automatic
@@ -225,13 +229,13 @@ public class Punishments implements PunishmentsMaster {
 			center.async(() -> {
 				try {
 					directRemovePunishments(punishments);
-				} catch (MissingPunishmentException ex) {}
+				} catch (MissingPunishmentException ignored) {}
 			});
 		}
 	}
 	
 	private void directChangeReason(Punishment punishment, String reason) throws MissingPunishmentException {
-		synchronized (active) {
+		synchronized (lock) {
 			if (history.contains(punishment)) {
 				
 				// check if the punishment is in the active set
@@ -269,7 +273,7 @@ public class Punishments implements PunishmentsMaster {
 			center.async(() -> {
 				try {
 					directChangeReason(punishment, reason);
-				} catch (MissingPunishmentException ex) {}
+				} catch (MissingPunishmentException ignored) {}
 			});
 		}
 	}
@@ -304,7 +308,7 @@ public class Punishments implements PunishmentsMaster {
 		return new HashSet<Punishment>(history);
 	}
 	
-	private Punishment punishmentFromResultSet(ResultSet data) throws InvalidUUIDException, TypeParseException, SQLException {
+	private static Punishment punishmentFromResultSet(ResultSet data) throws InvalidUUIDException, TypeParseException, SQLException {
 		return new Punishment(data.getInt("id"), PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date"));
 	}
 	
