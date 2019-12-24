@@ -309,6 +309,14 @@ other:
     usage: '&cUsage: /arimbans reload.'
     permission:
       command: '&cYou may not use /arimbans reload.'
+    successful: '&aReloaded ArimBans3 successfully!'
+  editreason:
+    usage: '&cUsage: /arimbans editreason <id> <new_reason>.'
+    permission:
+      command: '&cYou may not use /arimbans editreason.'
+    error:
+      not-found: '&cNo punishment was found for ID &e%ID%&c.'
+    successful: '&aChanged reason of &e%ID%&a to &f%REASON%&a.'
 time:
   units:
     years:
