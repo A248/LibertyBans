@@ -151,7 +151,14 @@ public class Subject {
 	 * @author A248
 	 */
 	public enum SubjectType {
-		PLAYER, IP, CONSOLE
+		PLAYER,
+		IP,
+		CONSOLE;
+		
+		@Override
+		public String toString() {
+			return this == IP ? name() : StringsUtil.capitaliseProperly(name());
+		}
 	}
 	
 	/**
