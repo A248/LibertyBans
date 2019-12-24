@@ -24,13 +24,13 @@ import de.exceptionflug.protocolize.api.protocol.Stream;
 import de.exceptionflug.protocolize.world.packet.SignUpdate;
 
 import space.arim.bans.api.PunishmentResult;
-import space.arim.bans.extended.ArimBansExtendedBungee;
+import space.arim.bans.extended.ArimBansExtendedPluginBase;
 
 public class SignInterceptor extends PacketAdapter<SignUpdate> {
 
-	private final ArimBansExtendedBungee plugin;
+	private final ArimBansExtendedPluginBase plugin;
 	
-	public SignInterceptor(ArimBansExtendedBungee plugin) {
+	public SignInterceptor(ArimBansExtendedPluginBase plugin) {
 		super(Stream.UPSTREAM, SignUpdate.class);
 		this.plugin = plugin;
 	}
