@@ -111,6 +111,7 @@
 			<artifactId>bans-resources</artifactId>
 			<classifier>resources</classifier>
 			<type>zip</type>
+			<optional>true</optional>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -122,6 +123,7 @@
 			<artifactId>universal-gpl</artifactId>
 			<classifier>resources</classifier>
 			<type>zip</type>
+			<optional>true</optional>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
