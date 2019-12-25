@@ -15,7 +15,7 @@
 all:
   prefix:
     use: true
-    value: '&6&lArim &r&8» '
+    value: '&6&lArim &r&8»&7 '
   base-permission-message: '&cYou may not use this.'
   invalid:
     uuid: '&c&o%TARGET%&r&7 is not a valid player.'
@@ -35,6 +35,9 @@ additions:
       dur-perms:
         - '5d'
         - '1mo'
+      extra:
+        no-silent: '&cYou may not use silent bans.'
+        no-passive: '&cYou may not use passive bans.'
     error:
       conflicting: '&c&o%TARGET%&r&7is already banned!'
       exempt: '&cYou may not ban %TARGET%.'
@@ -57,6 +60,9 @@ additions:
       dur-perms:
         - '5d'
         - '1mo'
+      extra:
+        no-silent: '&cYou may not use silent bans.'
+        no-passive: '&cYou may not use passive bans.'
     error:
       conflicting: '&c&o%TARGET%&r&7is already muted!'
       exempt: '&cYou may not mute %TARGET%.'
@@ -79,6 +85,9 @@ additions:
       dur-perms:
         - '5d'
         - '1mo'
+      extra:
+        no-silent: '&cYou may not use silent bans.'
+        no-passive: '&cYou may not use passive bans.'
     error:
       exempt: '&cYou may not warn %TARGET%.'
     successful:
@@ -96,6 +105,9 @@ additions:
     permission:
       command: '&cYou may not kick other players.'
       no-ip: '&cYou may not ipkick other players.'
+      extra:
+        no-silent: '&cYou may not use silent bans.'
+        no-passive: '&cYou may not use passive bans.'
     error:
       exempt: '&cYou may not kick %TARGET%.'
       target-offline: '&c&o%TARGET%&r&7 is offline.'

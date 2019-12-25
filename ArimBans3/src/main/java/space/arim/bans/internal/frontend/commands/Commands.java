@@ -72,6 +72,8 @@ public class Commands implements CommandsMaster {
 	// Maps related to punishment additions.
 	private final ConcurrentHashMap<PunishmentType, String> permTime = new ConcurrentHashMap<PunishmentType, String>();
 	private final ConcurrentHashMap<PunishmentType, List<String>> durations = new ConcurrentHashMap<PunishmentType, List<String>>();
+	private final ConcurrentHashMap<PunishmentType, String> noSilent = new ConcurrentHashMap<PunishmentType, String>();
+	private final ConcurrentHashMap<PunishmentType, String> noPassive = new ConcurrentHashMap<PunishmentType, String>();
 	private final ConcurrentHashMap<PunishmentType, String> exempt = new ConcurrentHashMap<PunishmentType, String>();
 	private String additions_bans_error_conflicting;
 	private String additions_mutes_error_conflicting;
@@ -129,6 +131,8 @@ public class Commands implements CommandsMaster {
 			notfound.put(pun, invalid_string);
 			permTime.put(pun, invalid_string);
 			durations.put(pun, invalid_strings);
+			noSilent.put(pun, invalid_string);
+			noPassive.put(pun, invalid_string);
 			exempt.put(pun, invalid_string);
 			confirmUnpunish.put(pun, true);
 			confirmUnpunishMsg.put(pun, invalid_string);
@@ -439,9 +443,17 @@ public class Commands implements CommandsMaster {
 			for (String arg : args) {
 				if (arg.startsWith("-")) {
 					if (arg.contains("s")) {
+						if (!center.subjects().hasPermission(operator, "arimbans." + type.name() + ".passive")) {
+							center.subjects().sendMessage(operator, noSilent.get(type));
+							return;
+						}
 						silent = true;
 					}
 					if (arg.contains("p")) {
+						if (!center.subjects().hasPermission(operator, "arimbans." + type.name() + ".passive")) {
+							center.subjects().sendMessage(operator, noPassive.get(type));
+							return;
+						}
 						passive = true;
 					}
 					if (silent || passive) {
@@ -916,6 +928,8 @@ public class Commands implements CommandsMaster {
 			case KICK:
 				exempt.put(type, center.config().getMessagesString(leadKey1 + "error.exempt"));
 				successful.put(categoryAdd, center.config().getMessagesString(leadKey1 + "successful.message"));
+				noSilent.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.silent"));
+				noPassive.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.passive"));
 				break;
 			default:
 				throw new InternalStateException("What other punishment type is there?!?");
