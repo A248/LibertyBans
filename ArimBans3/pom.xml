@@ -22,6 +22,7 @@
 			</resource>
 			<resource>
 				<directory>${project.build.directory}/shared-resources</directory>
+				<filtering>true</filtering>
 			</resource>
 		</resources>
 		<plugins>
