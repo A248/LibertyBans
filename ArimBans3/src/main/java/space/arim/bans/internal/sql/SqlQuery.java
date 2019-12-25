@@ -31,11 +31,11 @@ public class SqlQuery {
 	}
 	
 	public Query statement() {
-		return this.statement;
+		return statement;
 	}
 	
 	public Object[] parameters() {
-		return this.parameters;
+		return parameters;
 	}
 	
 	public enum Query {
@@ -118,5 +118,11 @@ public class SqlQuery {
 			String statement = settings.toString().equals("mysql") ? mysql : mysql.replace(" int ", " INTEGER ").replace(" NOT NULL", "").replace("`", "").replace("TEXT", "CLOB");
 			return statement.replace("%PREFIX%", settings.prefix);
 		}
+		
+		@Override
+		public String toString() {
+			return mysql;
+		}
+		
 	}
 }
