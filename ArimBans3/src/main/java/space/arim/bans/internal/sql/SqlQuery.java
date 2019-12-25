@@ -115,7 +115,7 @@ public class SqlQuery {
 		}
 		
 		String eval(SqlSettings settings) {
-			String statement = settings.getStorageModeName().equals("mysql") ? mysql : mysql.replace(" int ", " INTEGER ").replace(" NOT NULL", "").replace("`", "").replace("TEXT", "CLOB");
+			String statement = settings.toString().equals("mysql") ? mysql : mysql.replace(" int ", " INTEGER ").replace(" NOT NULL", "").replace("`", "").replace("TEXT", "CLOB");
 			return statement.replace("%PREFIX%", settings.prefix);
 		}
 	}

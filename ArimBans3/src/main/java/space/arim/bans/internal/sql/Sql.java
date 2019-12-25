@@ -69,7 +69,7 @@ public class Sql implements SqlMaster {
 	
 	@Override
 	public String getStorageModeName() {
-		return settings.getStorageModeName();
+		return settings.toString();
 	}
 	
 	@Override
@@ -162,6 +162,7 @@ public class Sql implements SqlMaster {
 		settings = parseBackend(center.config().getConfigString("storage.mode"));
 		
 		if (first || center.config().getConfigBoolean("storage.restart-on-reload")) {
+			center.logs().log(Level.CONFIG, "Loading data backend " + settings);
 			if (data != null) {
 				data.close();
 			}
