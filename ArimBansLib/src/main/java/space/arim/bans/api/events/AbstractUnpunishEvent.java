@@ -20,12 +20,12 @@ package space.arim.bans.api.events;
 
 import space.arim.bans.api.Punishment;
 
-public abstract class AbstractUnpunishEvent extends AbstractPunishmentEvent {
+public abstract class AbstractUnpunishEvent extends AbstractPunishmentEditEvent {
 
 	private final boolean auto;
 	
-	public AbstractUnpunishEvent(Punishment punishment, boolean auto) {
-		super(punishment);
+	public AbstractUnpunishEvent(Punishment punishment, boolean silent, boolean auto) {
+		super(punishment, silent);
 		this.auto = auto;
 	}
 	

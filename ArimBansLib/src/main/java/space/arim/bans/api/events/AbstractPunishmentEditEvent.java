@@ -20,10 +20,17 @@ package space.arim.bans.api.events;
 
 import space.arim.bans.api.Punishment;
 
-public class PostPunishEvent extends AbstractPunishEvent {
+public abstract class AbstractPunishmentEditEvent extends AbstractPunishmentEvent {
 	
-	public PostPunishEvent(Punishment punishment, boolean silent, boolean retro, boolean passive) {
-		super(punishment, silent, retro, passive);
+	private final boolean silent;
+	
+	public AbstractPunishmentEditEvent(Punishment punishment, boolean silent) {
+		super(punishment);
+		this.silent = silent;
+	}
+	
+	public boolean isSilent() {
+		return silent;
 	}
 	
 }

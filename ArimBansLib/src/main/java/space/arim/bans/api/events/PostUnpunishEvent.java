@@ -22,8 +22,8 @@ import space.arim.bans.api.Punishment;
 
 public class PostUnpunishEvent extends AbstractUnpunishEvent {
 	
-	public PostUnpunishEvent(Punishment punishment, boolean auto) {
-		super(punishment, auto);
+	public PostUnpunishEvent(Punishment punishment, boolean silent, boolean auto) {
+		super(punishment, silent, auto);
 	}
 	
 }
