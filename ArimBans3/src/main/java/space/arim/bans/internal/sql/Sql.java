@@ -89,6 +89,9 @@ public class Sql implements SqlMaster {
 	
 	@Override
 	public void executeQuery(SqlQuery...queries) {
+		if (queries.length == 0) {
+			return;
+		}
 		try (Connection connection = data.getConnection()) {
 			PreparedStatement[] statements = new PreparedStatement[queries.length];
 			for (int n = 0; n < queries.length; n++) {
