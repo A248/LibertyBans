@@ -47,7 +47,7 @@ public class CacheElement {
 		this(name, iplist, System.currentTimeMillis(), System.currentTimeMillis());
 	}
 	
-	SqlQuery getInsertionQuery(UUID uuid) {
+	SqlQuery insert(UUID uuid) {
 		return new SqlQuery(SqlQuery.Query.INSERT_CACHE, uuid.toString().replace("-", ""), name, externaliseIpList(iplist), updateName, updateIplist);
 	}
 	
@@ -70,7 +70,7 @@ public class CacheElement {
 	}
 	
 	List<String> getIps() {
-		return (iplist != null) ? Collections.unmodifiableList(iplist) : Collections.emptyList();
+		return iplist != null ? Collections.unmodifiableList(iplist) : Collections.emptyList();
 	}
 	
 	long getNameUpdate() {
