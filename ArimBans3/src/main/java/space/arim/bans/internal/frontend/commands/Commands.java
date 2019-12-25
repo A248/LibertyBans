@@ -337,7 +337,7 @@ public class Commands implements CommandsMaster {
 	}
 	
 	private void exec(Subject operator, CommandType command, String[] args) {
-		center.logs().log(Level.FINE, "Executing command " + command + " for operator " + operator + " with args " + args);
+		center.logs().log(Level.FINE, "Executing command " + command + " for operator " + operator + " with args " + StringsUtil.concat(args, ','));
 		if (!checkPermission(operator, command)) {
 			return;
 		}
