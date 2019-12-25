@@ -26,8 +26,8 @@ public class PunishEvent extends AbstractPunishEvent implements Cancellable {
 
 	private boolean cancelled;
 	
-	public PunishEvent(Punishment punishment, boolean silent, boolean retro, boolean passive) {
-		super(punishment, silent, retro, passive);
+	public PunishEvent(Punishment punishment, boolean retro) {
+		super(punishment, retro);
 	}
 	
 	@Override

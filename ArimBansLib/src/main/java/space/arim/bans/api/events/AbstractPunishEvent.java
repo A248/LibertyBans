@@ -20,16 +20,13 @@ package space.arim.bans.api.events;
 
 import space.arim.bans.api.Punishment;
 
-public abstract class AbstractPunishEvent extends AbstractPunishmentEditEvent {
+public abstract class AbstractPunishEvent extends AbstractPunishmentEvent {
 
 	private final boolean retro;
 	
-	private final boolean passive;
-	
-	public AbstractPunishEvent(Punishment punishment, boolean silent, boolean retro, boolean passive) {
-		super(punishment, silent);
+	public AbstractPunishEvent(Punishment punishment, boolean retro) {
+		super(punishment);
 		this.retro = retro;
-		this.passive = passive;
 	}
 	
 	/**
@@ -43,10 +40,6 @@ public abstract class AbstractPunishEvent extends AbstractPunishmentEditEvent {
 	 */
 	boolean isRetrogade() {
 		return retro;
-	}
-	
-	public boolean isPassive() {
-		return passive;
 	}
 	
 }

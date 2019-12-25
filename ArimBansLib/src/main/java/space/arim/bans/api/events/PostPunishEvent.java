@@ -22,8 +22,8 @@ import space.arim.bans.api.Punishment;
 
 public class PostPunishEvent extends AbstractPunishEvent {
 	
-	public PostPunishEvent(Punishment punishment, boolean silent, boolean retro, boolean passive) {
-		super(punishment, silent, retro, passive);
+	public PostPunishEvent(Punishment punishment, boolean retro) {
+		super(punishment, retro);
 	}
 	
 }
