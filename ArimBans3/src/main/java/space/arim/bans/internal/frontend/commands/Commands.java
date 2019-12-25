@@ -889,7 +889,7 @@ public class Commands implements CommandsMaster {
 				break;
 			case EDITREASON: // both cases fall-through to here
 			case RELOAD:
-				center.config().getMessagesString(leadKey + "successful");
+				successful.put(category, center.config().getMessagesString(leadKey + "successful"));
 				break;
 			default:
 				break;
