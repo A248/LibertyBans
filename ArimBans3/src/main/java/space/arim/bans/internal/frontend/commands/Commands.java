@@ -931,7 +931,7 @@ public class Commands implements CommandsMaster {
 		other_geoip_error_notfound = center.config().getMessagesString("other.geoip.error.not-found");
 		other_alts_layout_body = center.config().getMessagesStrings("other.alts.layout.body");
 		other_alts_layout_element = center.config().getMessagesString("other.alts.layout.element");
-		other_alts_error_notfound = center.config().getMessagesString("other.alts.error-not-found");
+		other_alts_error_notfound = center.config().getMessagesString("other.alts.error.not-found");
 		
 		other_rollback_error_notfound = center.config().getMessagesString("other.rollback.error.not-found");
 		other_rollback_error_invalidnumber = center.config().getMessagesString("other.rollback.error.invalid-number");
