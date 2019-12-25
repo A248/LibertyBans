@@ -20,17 +20,18 @@ package space.arim.bans.extended.bungee;
 
 import de.exceptionflug.protocolize.api.event.PacketReceiveEvent;
 import de.exceptionflug.protocolize.api.handler.PacketAdapter;
+import de.exceptionflug.protocolize.api.protocol.ProtocolAPI;
 import de.exceptionflug.protocolize.api.protocol.Stream;
 import de.exceptionflug.protocolize.world.packet.SignUpdate;
 
 import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.extended.ArimBansExtendedPluginBase;
 
-public class SignInterceptor extends PacketAdapter<SignUpdate> {
-
+public class SignInterceptorProtocolize extends PacketAdapter<SignUpdate> {
+	
 	private final ArimBansExtendedPluginBase plugin;
 	
-	public SignInterceptor(ArimBansExtendedPluginBase plugin) {
+	public SignInterceptorProtocolize(ArimBansExtendedPluginBase plugin) {
 		super(Stream.UPSTREAM, SignUpdate.class);
 		this.plugin = plugin;
 	}
@@ -46,6 +47,10 @@ public class SignInterceptor extends PacketAdapter<SignUpdate> {
 				}
 			}
 		}
+	}
+	
+	public void register() {
+		ProtocolAPI.getEventManager().registerListener(this);
 	}
 
 }

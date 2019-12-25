@@ -18,25 +18,36 @@
  */
 package space.arim.bans.extended;
 
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import space.arim.bans.extended.bukkit.CommandListener;
+import space.arim.bans.extended.bukkit.SignListener;
 
 public class ArimBansExtendedBukkit extends JavaPlugin implements ArimBansExtendedPluginBase {
 
-	private ArimBansExtended extended = null;
+	private ArimBansExtended extended;
 	private CommandListener cmds;
+	private SignListener listener;
 	
 	@Override
 	public void onEnable() {
 		extended = new ArimBansExtended(getDataFolder(), getLogger());
 		loadCmds();
+		loadAntiSign();
 	}
 	
 	private void loadCmds() {
 		cmds = new CommandListener(this);
 		for (String cmd : ArimBansExtended.commands()) {
 			getServer().getPluginCommand(cmd).setExecutor(cmds);
+		}
+	}
+	
+	private void loadAntiSign() {
+		if (extension().antiSignEnabled()) {
+			listener = new SignListener(this);
+			getServer().getPluginManager().registerEvents(listener, this);
 		}
 	}
 	
@@ -48,6 +59,14 @@ public class ArimBansExtendedBukkit extends JavaPlugin implements ArimBansExtend
 	@Override
 	public ArimBansExtended extension() {
 		return extended;
+	}
+	
+	@Override
+	public void close() {
+		if (listener != null) {
+			HandlerList.unregisterAll(listener);
+		}
+		ArimBansExtendedPluginBase.super.close();
 	}
 
 }
