@@ -18,6 +18,10 @@
  */
 package space.arim.bans.internal.sql;
 
+import space.arim.bans.api.util.StringsUtil;
+
+import space.arim.universal.util.collections.CollectionsUtil;
+
 public class SqlQuery {
 	
 	private final Query statement;
@@ -25,9 +29,13 @@ public class SqlQuery {
 	
 	static final int SUBJECT_COLUMN_SIZE = 52;
 	
-	public SqlQuery(Query statement, Object...params) {
+	public SqlQuery(Query statement, Object...parameters) {
 		this.statement = statement;
-		this.parameters = params;
+		this.parameters = parameters;
+	}
+	
+	public ExecutableQuery convertToExecutable(SqlSettings settings) {
+		return new ExecutableQuery(statement.eval(settings), parameters);
 	}
 	
 	public Query statement() {
@@ -36,6 +44,11 @@ public class SqlQuery {
 	
 	public Object[] parameters() {
 		return parameters;
+	}
+	
+	@Override
+	public String toString() {
+		return "{[" + statement + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAll(parameters, (param) -> param.toString()), ',') + "]}";
 	}
 	
 	public enum Query {

@@ -19,6 +19,7 @@
 package space.arim.bans.internal.sql;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import space.arim.bans.internal.Component;
 import space.arim.bans.internal.sql.SqlQuery.Query;
@@ -32,6 +33,14 @@ public interface SqlMaster extends Component {
 	String getStorageModeName();
 	
 	boolean enabled();
+	
+	void executeQuery(ExecutableQuery...queries) throws SQLException;
+	
+	void executeQuery(String query, Object...params) throws SQLException;
+	
+	ResultSet[] selectQuery(ExecutableQuery...queries) throws SQLException;
+	
+	ResultSet selectQuery(String query, Object...params) throws SQLException;
 	
 	void executeQuery(SqlQuery...queries);
 	
