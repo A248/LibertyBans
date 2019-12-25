@@ -333,6 +333,7 @@ public class Commands implements CommandsMaster {
 	}
 	
 	private void exec(Subject operator, CommandType command, String[] args) {
+		center.logs().log(Level.FINE, "Executing command " + command + " for operator " + operator + " with args " + args);
 		if (!checkPermission(operator, command)) {
 			return;
 		}
@@ -403,15 +404,20 @@ public class Commands implements CommandsMaster {
 			return;
 		}
 		PunishmentType type = applicableType(command);
-		long span;
+		long span = -1L;
 		if (!type.equals(PunishmentType.KICK)) {
 			long max = 0;
+			String basePerm = "arimbans." + type.name() + ".dur.";
 			List<String> durPerms = durations.get(type);
-			for (String perm : durPerms) {
-				long permTime = center.formats().toMillis(perm);
-				if (permTime > max) {
-					if (center.subjects().hasPermission(operator, perm)) {
-						max = permTime;
+			if (center.subjects().hasPermission(operator, basePerm + "perm")) {
+				max = -1L;
+			} else {
+				for (String timePerm : durPerms) {
+					long permTime = center.formats().toMillis(timePerm);
+					if (permTime > max) {
+						if (center.subjects().hasPermission(operator, basePerm + timePerm)) {
+							max = permTime;
+						}
 					}
 				}
 			}
@@ -422,11 +428,9 @@ public class Commands implements CommandsMaster {
 				args = StringsUtil.chopOffOne(args);
 			}
 			if (span == -1L && max != -1L || span > max) {
-				center.subjects().sendMessage(operator, permTime.get(type));
+				center.subjects().sendMessage(operator, permTime.get(type).replace("%MAXTIME%", Long.toString(max)));
 				return;
 			}
-		} else {
-			span = -1L;
 		}
 		String reason;
 		boolean silent = false;
