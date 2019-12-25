@@ -120,7 +120,7 @@ public class Logs implements LogsMaster {
 				infoLog.setFormatter(universalFormatter);
 				errorLog.setFormatter(universalFormatter);
 				verboseLog.setLevel(Level.ALL);
-				infoLog.setLevel(Level.INFO);
+				infoLog.setLevel(Level.CONFIG);
 				errorLog.setLevel(Level.WARNING);
 				logger = Logger.getLogger(center.getName() + "-Core");
 				logger.setParent(center.environment().logger());
@@ -128,9 +128,9 @@ public class Logs implements LogsMaster {
 				logger.addHandler(verboseLog);
 				logger.addHandler(infoLog);
 				logger.addHandler(errorLog);
-				center.environment().logger().log(Level.INFO, "Logging initialised in " + path);
+				log(Level.INFO, "Logging initialised in " + path);
 			} catch (IOException ex) {
-				center.environment().logger().log(Level.SEVERE, "Log initialisation failed!");
+				log(Level.SEVERE, "Log initialisation failed!");
 			}
 			checkDeleteLogs();
 		}
