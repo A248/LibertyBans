@@ -62,7 +62,7 @@ public class BukkitEnv implements Environment {
 		this.center = center;
 		if (!registered) {
 			plugin.getServer().getPluginManager().registerEvents(listener, plugin);
-			plugin.getServer().getPluginCommand("arimban").setExecutor(commands);
+			plugin.getServer().getPluginCommand("arimbans").setExecutor(commands);
 			setupMetrics();
 			registered = true;
 		}

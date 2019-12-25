@@ -109,7 +109,7 @@ public class Sql implements SqlMaster {
 	public ResultSet[] selectQuery(SqlQuery...queries) {
 		try (Connection connection = data.getConnection()) {
 			PreparedStatement[] statements = new PreparedStatement[queries.length];
-			CachedRowSet[] results = new CachedRowSet[queries.length - 1];
+			CachedRowSet[] results = new CachedRowSet[queries.length];
 			for (int n = 0; n < queries.length; n++) {
 				statements[n] = connection.prepareStatement(queries[n].statement().eval(settings));
 				replaceParams(statements[n], queries[n].parameters());
