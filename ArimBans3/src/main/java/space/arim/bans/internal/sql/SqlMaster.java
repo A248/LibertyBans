@@ -21,6 +21,7 @@ package space.arim.bans.internal.sql;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import space.arim.bans.api.sql.ExecutableQuery;
 import space.arim.bans.internal.Component;
 import space.arim.bans.internal.sql.SqlQuery.Query;
 

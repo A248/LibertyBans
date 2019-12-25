@@ -32,6 +32,7 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.exception.InternalStateException;
+import space.arim.bans.api.sql.ExecutableQuery;
 import space.arim.bans.api.util.StringsUtil;
 import space.arim.bans.internal.sql.SqlQuery.Query;
 

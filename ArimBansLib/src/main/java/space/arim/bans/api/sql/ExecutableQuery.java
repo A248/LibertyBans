@@ -16,7 +16,7 @@
  * along with ArimBans3. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.internal.sql;
+package space.arim.bans.api.sql;
 
 import space.arim.bans.api.util.StringsUtil;
 
