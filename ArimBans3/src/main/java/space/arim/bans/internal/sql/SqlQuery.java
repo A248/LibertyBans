@@ -115,8 +115,9 @@ public class SqlQuery {
 		}
 		
 		String eval(SqlSettings settings) {
-			String statement = settings.getStorageModeName().equals("mysql") ? mysql : mysql.replace(" int ", " INTEGER ").replace(" NOT NULL,", ",").replace("`", "");
-			return statement.replace("%PREFIX%", settings.prefix);
+			//String statement = settings.getStorageModeName().equals("mysql") ? mysql : mysql.replace(" int ", " INTEGER ").replace(" NOT NULL", "").replace("`", "").replace("TEXT", "CLOB");
+			//return statement.replace("%PREFIX%", settings.prefix);
+			return mysql.replace("%PREFIX%", settings.prefix);
 		}
 	}
 }
