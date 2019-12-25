@@ -58,7 +58,8 @@ public class BungeeEnv implements Environment {
 		this.commands = new BungeeCommands(this);
 	}
 	
-	public void setCenter(ArimBans center) {
+	@Override
+	public void loadFor(ArimBans center) {
 		this.center = center;
 		if (!registered) {
 			plugin.getProxy().getPluginManager().registerListener(plugin, listener);

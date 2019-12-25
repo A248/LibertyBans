@@ -23,12 +23,15 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import space.arim.bans.ArimBans;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.internal.Configurable;
 
 public interface Environment extends Configurable {
+	
+	void loadFor(ArimBans center);
 	
 	boolean isOnlineMode();
 	

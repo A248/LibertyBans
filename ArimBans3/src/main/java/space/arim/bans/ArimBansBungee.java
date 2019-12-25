@@ -32,7 +32,7 @@ public class ArimBansBungee extends Plugin implements AutoCloseable {
 		center = new ArimBansPlugin(getDataFolder(), environment);
 		center.start();
 		center.register();
-		environment.setCenter(center);
+		environment.loadFor(center);
 	}
 	
 	@Override
