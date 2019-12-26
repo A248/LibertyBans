@@ -27,7 +27,6 @@ import space.arim.bans.extended.bukkit.SignListener;
 public class ArimBansExtendedBukkit extends JavaPlugin implements ArimBansExtendedPluginBase {
 
 	private ArimBansExtended extended;
-	private CommandListener cmds;
 	private SignListener listener;
 	
 	@Override
@@ -38,7 +37,7 @@ public class ArimBansExtendedBukkit extends JavaPlugin implements ArimBansExtend
 	}
 	
 	private void loadCmds() {
-		cmds = new CommandListener(this);
+		CommandListener cmds = new CommandListener(this);
 		for (String cmd : ArimBansExtended.commands()) {
 			getServer().getPluginCommand(cmd).setExecutor(cmds);
 		}
