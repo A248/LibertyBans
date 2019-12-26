@@ -26,8 +26,9 @@ import java.util.logging.Logger;
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
-import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.internal.Configurable;
+
+import space.arim.api.uuid.PlayerNotFoundException;
 
 public interface Environment extends Configurable {
 	

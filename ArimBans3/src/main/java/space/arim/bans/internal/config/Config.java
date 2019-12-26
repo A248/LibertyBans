@@ -35,10 +35,11 @@ import space.arim.bans.api.CommandType;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.exception.ConfigLoadException;
 import space.arim.bans.api.exception.InternalStateException;
-import space.arim.bans.api.util.FilesUtil;
-import space.arim.bans.api.util.minecraft.MinecraftUtil;
 
 import space.arim.universal.util.UniversalUtil;
+
+import space.arim.api.util.FilesUtil;
+import space.arim.api.util.minecraft.MinecraftUtil;
 
 public class Config implements ConfigMaster {
 	

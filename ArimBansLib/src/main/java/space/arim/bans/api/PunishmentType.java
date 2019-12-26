@@ -19,7 +19,8 @@
 package space.arim.bans.api;
 
 import space.arim.bans.api.exception.TypeParseException;
-import space.arim.bans.api.util.StringsUtil;
+
+import space.arim.api.util.StringsUtil;
 
 public enum PunishmentType {
 	

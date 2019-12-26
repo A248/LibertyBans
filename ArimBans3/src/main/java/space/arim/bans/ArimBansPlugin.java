@@ -21,7 +21,6 @@ package space.arim.bans;
 import java.io.File;
 import java.sql.ResultSet;
 
-import space.arim.bans.api.AsyncExecutor;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.env.Environment;
 import space.arim.bans.internal.async.Async;
@@ -39,6 +38,8 @@ import space.arim.bans.internal.sql.Sql;
 import space.arim.bans.internal.sql.SqlQuery;
 
 import space.arim.universal.registry.UniversalRegistry;
+
+import space.arim.api.AsyncExecutor;
 
 public class ArimBansPlugin implements ArimBans {
 	

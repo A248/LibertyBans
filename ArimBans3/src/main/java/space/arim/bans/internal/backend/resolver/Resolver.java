@@ -30,19 +30,20 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import space.arim.bans.ArimBans;
-import space.arim.bans.api.exception.FetcherException;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
-import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.bans.api.exception.RateLimitException;
-import space.arim.bans.api.util.minecraft.MinecraftUtil;
-import space.arim.bans.api.util.web.FetcherUtil;
-import space.arim.bans.api.util.web.GeoIpInfo;
 import space.arim.bans.internal.sql.SqlQuery;
 
 import space.arim.universal.registry.RegistryPriority;
 import space.arim.universal.util.UniversalUtil;
 import space.arim.universal.util.exception.HttpStatusException;
+
+import space.arim.api.util.minecraft.MinecraftUtil;
+import space.arim.api.util.web.FetcherException;
+import space.arim.api.util.web.FetcherUtil;
+import space.arim.api.util.web.GeoIpInfo;
+import space.arim.api.util.web.RateLimitException;
+import space.arim.api.uuid.PlayerNotFoundException;
 
 public class Resolver implements ResolverMaster {
 	
@@ -206,6 +207,28 @@ public class Resolver implements ResolverMaster {
 		if (freeGeoIp) {
 			try {
 				return FetcherUtil.freeGeoIp(address);
+			} catch (FetcherException | RateLimitException | HttpStatusException ex) {
+				center.logs().logError(ex);
+			}
+		}
+		if (ipApi) {
+			try {
+				return FetcherUtil.ipApi(address);
+			} catch (FetcherException | RateLimitException | HttpStatusException ex) {
+				center.logs().logError(ex);
+			}
+		}
+		/*if (ipStack) {
+			try {
+				return FetcherUtil.ipStack(address, ipStackKey);
+			} catch (FetcherException | RateLimitException | HttpStatusException ex) {
+				center.logs().logError(ex);
+			}
+		}
+		if (freeGeoIp) {
+			return FetcherUtil.freeGeoIp(address);
+			try {
+				return FetcherUtil.freeGeoIp(address);
 			} catch (FetcherException| RateLimitException | HttpStatusException ex) {
 				center.logs().logError(ex);
 			}
@@ -213,10 +236,10 @@ public class Resolver implements ResolverMaster {
 		if (ipApi) {
 			try {
 				return FetcherUtil.ipApi(address);
-			} catch (FetcherException| RateLimitException | HttpStatusException ex) {
+			} catch (FetcherException | RateLimitException | HttpStatusException ex) {
 				center.logs().logError(ex);
 			}
-		}
+		}*/
 		throw new NoGeoIpException(address);
 	}
 	

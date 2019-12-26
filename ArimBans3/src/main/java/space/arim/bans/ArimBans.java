@@ -19,6 +19,8 @@
 package space.arim.bans;
 
 import java.io.File;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Set;
 import java.util.UUID;
 
@@ -29,7 +31,6 @@ import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
-import space.arim.bans.api.UUIDResolver;
 import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.env.Environment;
@@ -46,6 +47,9 @@ import space.arim.bans.internal.sql.SqlMaster;
 
 import space.arim.universal.registry.RegistryPriority;
 import space.arim.universal.registry.UniversalRegistry;
+
+import space.arim.api.sql.ExecutableQuery;
+import space.arim.api.uuid.UUIDResolver;
 
 public interface ArimBans extends Configurable, ArimBansLibrary {
 
@@ -190,6 +194,26 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	@Override
 	default void removePunishments(Punishment...punishments) throws MissingPunishmentException {
 		punishments().removePunishments(punishments);
+	}
+	
+	@Override
+	default void executionQueries(ExecutableQuery...queries) throws SQLException {
+		sql().executeQuery(queries);
+	}
+	
+	@Override
+	default void executionQuery(String query, Object...parameters) throws SQLException {
+		sql().executeQuery(query, parameters);
+	}
+	
+	@Override
+	default ResultSet[] selectionQueries(ExecutableQuery...queries) throws SQLException {
+		return sql().selectQuery(queries);
+	}
+	
+	@Override
+	default ResultSet selectionQuery(String query, Object...parameters) throws SQLException {
+		return sql().selectQuery(query, parameters);
 	}
 	
 	@Override

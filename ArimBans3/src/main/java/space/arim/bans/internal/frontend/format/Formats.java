@@ -36,8 +36,9 @@ import space.arim.bans.api.CommandType.Category;
 import space.arim.bans.api.CommandType.SubCategory;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.InvalidSubjectException;
-import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.bans.api.util.StringsUtil;
+
+import space.arim.api.util.StringsUtil;
+import space.arim.api.uuid.PlayerNotFoundException;
 
 public class Formats implements FormatsMaster {
 	

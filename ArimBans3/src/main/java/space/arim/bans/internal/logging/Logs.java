@@ -26,9 +26,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import space.arim.bans.ArimBans;
-import space.arim.bans.api.util.FilesUtil;
 
 import space.arim.universal.util.logging.LogFormatter;
+
+import space.arim.api.util.FilesUtil;
 
 public class Logs implements LogsMaster {
 
