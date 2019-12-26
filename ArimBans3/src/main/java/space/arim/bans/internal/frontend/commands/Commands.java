@@ -43,12 +43,12 @@ import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.api.exception.NoGeoIpException;
-import space.arim.bans.api.exception.PlayerNotFoundException;
 
 import space.arim.universal.util.UniversalUtil;
 
 import space.arim.api.util.StringsUtil;
 import space.arim.api.util.web.GeoIpInfo;
+import space.arim.api.uuid.PlayerNotFoundException;
 
 public class Commands implements CommandsMaster {
 	
