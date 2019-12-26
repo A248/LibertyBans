@@ -22,9 +22,10 @@
     	<maven.compiler.source>1.8</maven.compiler.source>
     	<maven.compiler.target>1.8</maven.compiler.target>
     	<core.version>0.5.8</core.version>
-    	<universal.version>0.6.1-SNAPSHOT</universal.version>
+    	<universal.version>0.6.3-SNAPSHOT</universal.version>
     	<spigot.version>1.15-R0.1-SNAPSHOT</spigot.version>
     	<bungeecord.version>1.15-SNAPSHOT</bungeecord.version>
+    	<slf4j.version>1.7.9</slf4j.version>
     	<bstats.version>1.5</bstats.version>
 		<protocolize.version>1.5.2-SNAPSHOT</protocolize.version>
 	</properties>
@@ -113,11 +114,6 @@
 			</dependency>
 			<dependency>
 				<groupId>space.arim</groupId>
-				<artifactId>universal-util</artifactId>
-				<version>${universal.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>space.arim</groupId>
 				<artifactId>universal-gpl</artifactId>
 				<version>${universal.version}</version>
 				<classifier>resources</classifier>
@@ -135,6 +131,16 @@
 				<artifactId>bungeecord-api</artifactId>
 				<version>${bungeecord.version}</version>
 				<scope>provided</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-nop</artifactId>
+				<version>${slf4j.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.bstats</groupId>

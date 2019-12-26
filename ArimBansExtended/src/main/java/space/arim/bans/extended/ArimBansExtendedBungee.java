@@ -25,21 +25,33 @@ import net.md_5.bungee.api.plugin.Plugin;
 
 import space.arim.bans.api.util.minecraft.bungee.BungeeUtil;
 import space.arim.bans.extended.bungee.CommandSkeleton;
+import space.arim.bans.extended.bungee.SignInterceptorProtocolize;
 
 public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPluginBase {
 
-	private ArimBansExtended extended = null;
+	private ArimBansExtended extended;
 	private Set<CommandSkeleton> cmds = new HashSet<CommandSkeleton>();
+	private SignInterceptorProtocolize listener;
 	
 	@Override
 	public void onEnable() {
 		extended = new ArimBansExtended(getDataFolder(), getLogger());
 		loadCmds();
+		loadAntiSign();
 	}
 	
 	private void loadCmds() {
 		for (String cmd : ArimBansExtended.commands()) {
-			cmds.add(new CommandSkeleton(this, cmd));
+			CommandSkeleton skeleton = new CommandSkeleton(this, cmd);
+			cmds.add(skeleton);
+			getProxy().getPluginManager().registerCommand(this, skeleton);
+		}
+	}
+	
+	private void loadAntiSign() {
+		if (extension().antiSignEnabled()) {
+			listener = new SignInterceptorProtocolize(this);
+			listener.register();
 		}
 	}
 	
@@ -51,6 +63,12 @@ public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPl
 	@Override
 	public ArimBansExtended extension() {
 		return extended;
+	}
+	
+	@Override
+	public void close() {
+		getProxy().getPluginManager().unregisterCommands(this);
+		ArimBansExtendedPluginBase.super.close();
 	}
 	
 	public Set<String> getTabComplete(String[] args) {

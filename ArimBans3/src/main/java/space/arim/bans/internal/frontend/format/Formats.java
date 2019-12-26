@@ -135,7 +135,7 @@ public class Formats implements FormatsMaster {
 		}
 		
 		String getKeyString() {
-			return "time.units." + name() + ".";
+			return "time.units." + name().toLowerCase() + ".";
 		}
 		
 	}
@@ -247,7 +247,7 @@ public class Formats implements FormatsMaster {
 			SubCategory categoryRemove = fromPunishmentType(type, false);
 			layout.put(type, center.config().getMessagesStrings(leadKeyAdd + "layout"));
 			notification.put(categoryAdd, center.config().getMessagesString(leadKeyAdd + "successful.notification"));
-			if (type != PunishmentType.KICK) { 
+			if (type != PunishmentType.KICK) {
 				notification.put(categoryRemove, center.config().getMessagesString(leadKeyRemove + "successful.notification"));
 			}
 		}

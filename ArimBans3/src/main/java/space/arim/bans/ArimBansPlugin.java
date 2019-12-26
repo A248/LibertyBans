@@ -57,7 +57,7 @@ public class ArimBansPlugin implements ArimBans {
 	
 	private boolean started = false;
 	
-	public ArimBansPlugin(File folder, Environment environment) {
+	ArimBansPlugin(File folder, Environment environment) {
 		this.folder = folder;
 		this.environment = environment;
 		config = new Config(this);

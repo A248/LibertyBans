@@ -21,6 +21,7 @@ package space.arim.bans.api;
 import java.util.Objects;
 
 public class Punishment {
+	
 	private final int id;
 	private final PunishmentType type;
 	private final Subject subject;
@@ -28,12 +29,18 @@ public class Punishment {
 	private final String reason;
 	private final long expiration;
 	private final long date;
+	private final transient boolean silent;
+	private final transient boolean passive;
 
 	public Punishment(int id, PunishmentType type, Subject subject, Subject operator, String reason, long expiration) {
 		this(id, type, subject, operator, reason, expiration, System.currentTimeMillis());
 	}
 	
 	public Punishment(int id, PunishmentType type, Subject subject, Subject operator, String reason, long expiration, long date) {
+		this(id, type, subject, operator, reason, expiration, date, false, false);
+	}
+	
+	public Punishment(int id, PunishmentType type, Subject subject, Subject operator, String reason, long expiration, long date, boolean silent, boolean passive) {
 		this.id = id;
 		this.type = Objects.requireNonNull(type, "No field of a Punishment may be null");
 		this.subject = Objects.requireNonNull(subject, "No field of a Punishment may be null");
@@ -41,6 +48,8 @@ public class Punishment {
 		this.reason = Objects.requireNonNull(reason, "No field of a Punishment may be null");
 		this.expiration = expiration;
 		this.date = date;
+		this.silent = silent;
+		this.passive = passive;
 	}
 
 	public int id() {
@@ -69,6 +78,14 @@ public class Punishment {
 
 	public long date() {
 		return date;
+	}
+	
+	public boolean silent() {
+		return silent;
+	}
+	
+	public boolean passive() {
+		return passive;
 	}
 	
 	@Override

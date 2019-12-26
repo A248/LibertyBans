@@ -20,10 +20,8 @@ package space.arim.bans.internal.logging;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
-import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -103,16 +101,6 @@ public class Logs implements LogsMaster {
 		}
 	}
 	
-	private void redirectHikariLoggers(Handler...updateHandlers) {
-		//Logger.getLogger("com.zaxxer.hikari.pool.PoolBase"), Logger.getLogger("com.zaxxer.hikari.pool.HikariPool"), Logger.getLogger("com.zaxxer.hikari.HikariDataSource"), Logger.getLogger("com.zaxxer.hikari.HikariConfig"), Logger.getLogger("com.zaxxer.hikari.util.DriverDataSource")
-        Arrays.asList(Logger.getLogger("com.zaxxer.hikari.HikariDataSource"), Logger.getLogger("com.zaxxer.hikari.pool.PoolBase")).forEach((logger) -> {
-        	logger.setUseParentHandlers(false);
-        	for (Handler updateHandler : updateHandlers) {
-        		logger.addHandler(updateHandler);
-        	}
-        });
-	}
-	
 	@Override
 	public void refreshConfig(boolean first) {
 		log_to_console_threshold = center.config().getConfigInt("logs.log-to-console-threshold");
@@ -132,17 +120,17 @@ public class Logs implements LogsMaster {
 				infoLog.setFormatter(universalFormatter);
 				errorLog.setFormatter(universalFormatter);
 				verboseLog.setLevel(Level.ALL);
-				infoLog.setLevel(Level.INFO);
+				infoLog.setLevel(Level.CONFIG);
 				errorLog.setLevel(Level.WARNING);
 				logger = Logger.getLogger(center.getName() + "-Core");
+				logger.setParent(center.environment().logger());
 				logger.setUseParentHandlers(false);
 				logger.addHandler(verboseLog);
 				logger.addHandler(infoLog);
 				logger.addHandler(errorLog);
-				redirectHikariLoggers(verboseLog, infoLog, errorLog);
-				center.environment().logger().log(Level.INFO, "Logging initialised in " + path);
+				log(Level.INFO, "Logging initialised in " + path);
 			} catch (IOException ex) {
-				center.environment().logger().log(Level.SEVERE, "Log initialisation failed!");
+				log(Level.SEVERE, "Log initialisation failed!");
 			}
 			checkDeleteLogs();
 		}
@@ -150,7 +138,7 @@ public class Logs implements LogsMaster {
 	
 	@Override
 	public void close() {
-		if (logger != null) {
+		if (enabled()) {
 			verboseLog.close();
 			infoLog.close();
 			errorLog.close();

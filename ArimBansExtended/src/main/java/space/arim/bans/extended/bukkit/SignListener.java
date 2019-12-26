@@ -24,13 +24,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.SignChangeEvent;
 
 import space.arim.bans.api.PunishmentResult;
-import space.arim.bans.extended.ArimBansExtendedBukkit;
+import space.arim.bans.extended.ArimBansExtendedPluginBase;
 
 public class SignListener implements Listener {
 	
-	private final ArimBansExtendedBukkit plugin;
+	private final ArimBansExtendedPluginBase plugin;
 	
-	public SignListener(ArimBansExtendedBukkit plugin) {
+	public SignListener(ArimBansExtendedPluginBase plugin) {
 		this.plugin = plugin;
 	}
 	

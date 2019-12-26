@@ -53,12 +53,7 @@ public class Commands implements CommandsMaster {
 	
 	private final ArimBans center;
 	
-	private static final Comparator<Punishment> DATE_COMPARATOR = new Comparator<Punishment>() {
-		@Override
-		public int compare(Punishment p1, Punishment p2) {
-			return (int) (p1.date() - p2.date());
-		}
-	};
+	private static final Comparator<Punishment> DATE_LATEST_FIRST_COMPARATOR = (p1, p2) -> (int) (p1.date() - p2.date());
 	
 	private static final String ROLLBACK_ALL_ARG = "all";
 	
@@ -77,6 +72,8 @@ public class Commands implements CommandsMaster {
 	// Maps related to punishment additions.
 	private final ConcurrentHashMap<PunishmentType, String> permTime = new ConcurrentHashMap<PunishmentType, String>();
 	private final ConcurrentHashMap<PunishmentType, List<String>> durations = new ConcurrentHashMap<PunishmentType, List<String>>();
+	private final ConcurrentHashMap<PunishmentType, String> noSilent = new ConcurrentHashMap<PunishmentType, String>();
+	private final ConcurrentHashMap<PunishmentType, String> noPassive = new ConcurrentHashMap<PunishmentType, String>();
 	private final ConcurrentHashMap<PunishmentType, String> exempt = new ConcurrentHashMap<PunishmentType, String>();
 	private String additions_bans_error_conflicting;
 	private String additions_mutes_error_conflicting;
@@ -105,7 +102,7 @@ public class Commands implements CommandsMaster {
 	private String other_alts_layout_element;
 	private String other_alts_error_notfound;
 	
-	private String other_reload_successful;
+	private String other_editreason_error_notfound;
 	
 	private boolean rollback_detail;
 	private String other_rollback_error_notfound;
@@ -134,6 +131,8 @@ public class Commands implements CommandsMaster {
 			notfound.put(pun, invalid_string);
 			permTime.put(pun, invalid_string);
 			durations.put(pun, invalid_strings);
+			noSilent.put(pun, invalid_string);
+			noPassive.put(pun, invalid_string);
 			exempt.put(pun, invalid_string);
 			confirmUnpunish.put(pun, true);
 			confirmUnpunishMsg.put(pun, invalid_string);
@@ -234,6 +233,8 @@ public class Commands implements CommandsMaster {
 			return "alts.";
 		case ROLLBACK:
 			return "rollback.";
+		case EDITREASON:
+			return "editreason.";
 		case RELOAD:
 			return "reload.";
 		default:
@@ -336,62 +337,68 @@ public class Commands implements CommandsMaster {
 	}
 	
 	private void exec(Subject operator, CommandType command, String[] args) {
+		center.logs().log(Level.FINE, "Executing command " + command + " for operator " + operator + " with args " + StringsUtil.concat(args, ','));
 		if (!checkPermission(operator, command)) {
 			return;
 		}
 		if (command.canHaveNoTarget()) {
-			if (command.subCategory().equals(SubCategory.RELOAD)) {
+			switch (command.subCategory()) {
+			case RELOAD:
 				reloadCmd(operator);
 				return;
-			}
-			listCmd(operator, null, command, (args.length == 0) ? 1 : parseNumber(args[0], 1));
-		} else {
-			if (args.length <= 0) {
-				usage(operator, command);
+			case EDITREASON:
+				editReasonCmd(operator, args);
+				return;
+			default:
+				listCmd(operator, null, command, (args.length == 0) ? 1 : parseNumber(args[0], 1));
 				return;
 			}
-			Subject target = null;
-			try {
-				target = center.subjects().parseSubject(args[0], false);
-			} catch (IllegalArgumentException ex) {}
-			try {
-				target = center.subjects().parseSubject(center.resolver().resolveName(args[0]));
-			} catch (PlayerNotFoundException ex) {}
-			if (target == null) {
+		}
+		if (args.length <= 0) {
+			usage(operator, command);
+			return;
+		}
+		Subject target = null;
+		try {
+			target = center.subjects().parseSubject(args[0], false);
+		} catch (IllegalArgumentException ex) {}
+		try {
+			target = center.subjects().parseSubject(center.resolver().resolveName(args[0]));
+		} catch (PlayerNotFoundException ex) {}
+		if (target == null) {
+			center.subjects().sendMessage(operator, invalid.get(command.ipSpec()).replace("%TARGET%", args[0]));
+			return;
+		}
+		switch (command.ipSpec()) {
+		case UUID:
+			if (!target.getType().equals(SubjectType.PLAYER)) {
 				center.subjects().sendMessage(operator, invalid.get(command.ipSpec()).replace("%TARGET%", args[0]));
 				return;
 			}
-			switch (command.ipSpec()) {
-			case UUID:
-				if (!target.getType().equals(SubjectType.PLAYER)) {
-					center.subjects().sendMessage(operator, invalid.get(command.ipSpec()).replace("%TARGET%", args[0]));
+			break;
+		case IP:
+			if (target.getType().equals(SubjectType.PLAYER)) {
+				ipSelector(operator, target, command, args);
+				return;
+			}
+		case BOTH:
+			if (!target.getType().equals(SubjectType.PLAYER)) {
+				if (!checkPermission(operator, alternateIpSpec(command), false)) {
 					return;
 				}
-				break;
-			case IP:
-				if (target.getType().equals(SubjectType.PLAYER)) {
-					ipSelector(operator, target, command, args);
-					return;
-				}
-			case BOTH:
-				if (!target.getType().equals(SubjectType.PLAYER)) {
-					if (!checkPermission(operator, alternateIpSpec(command), false)) {
-						return;
-					}
-				}
-			default:
-				break;
 			}
-			args = StringsUtil.chopOffOne(args);
-			if (command.category().equals(Category.ADD)) {
-				punCmd(operator, target, command, args);
-			} else if (command.category().equals(Category.REMOVE)) {
-				unpunCmd(operator, target, command, args);
-			} else if (command.category().equals(Category.LIST)) {
-				listCmd(operator, target, command, (args.length == 0) ? 1 : parseNumber(args[0], 1));
-			} else if (command.category().equals(Category.OTHER)) {
-				otherCmd(operator, target, command, args);
-			}
+		default:
+			break;
+		}
+		args = StringsUtil.chopOffOne(args);
+		if (command.category().equals(Category.ADD)) {
+			punCmd(operator, target, command, args);
+		} else if (command.category().equals(Category.REMOVE)) {
+			unpunCmd(operator, target, command, args);
+		} else if (command.category().equals(Category.LIST)) {
+			listCmd(operator, target, command, (args.length == 0) ? 1 : parseNumber(args[0], 1));
+		} else if (command.category().equals(Category.OTHER)) {
+			otherCmd(operator, target, command, args);
 		}
 	}
 	
@@ -401,15 +408,20 @@ public class Commands implements CommandsMaster {
 			return;
 		}
 		PunishmentType type = applicableType(command);
-		long span;
+		long span = -1L;
 		if (!type.equals(PunishmentType.KICK)) {
 			long max = 0;
+			String basePerm = "arimbans." + type.name() + ".dur.";
 			List<String> durPerms = durations.get(type);
-			for (String perm : durPerms) {
-				long permTime = center.formats().toMillis(perm);
-				if (permTime > max) {
-					if (center.subjects().hasPermission(operator, perm)) {
-						max = permTime;
+			if (center.subjects().hasPermission(operator, basePerm + "perm")) {
+				max = -1L;
+			} else {
+				for (String timePerm : durPerms) {
+					long permTime = center.formats().toMillis(timePerm);
+					if (permTime > max) {
+						if (center.subjects().hasPermission(operator, basePerm + timePerm)) {
+							max = permTime;
+						}
 					}
 				}
 			}
@@ -420,11 +432,9 @@ public class Commands implements CommandsMaster {
 				args = StringsUtil.chopOffOne(args);
 			}
 			if (span == -1L && max != -1L || span > max) {
-				center.subjects().sendMessage(operator, permTime.get(type));
+				center.subjects().sendMessage(operator, permTime.get(type).replace("%MAXTIME%", Long.toString(max)));
 				return;
 			}
-		} else {
-			span = -1L;
 		}
 		String reason;
 		boolean silent = false;
@@ -433,9 +443,17 @@ public class Commands implements CommandsMaster {
 			for (String arg : args) {
 				if (arg.startsWith("-")) {
 					if (arg.contains("s")) {
+						if (!center.subjects().hasPermission(operator, "arimbans." + type.name() + ".passive")) {
+							center.subjects().sendMessage(operator, noSilent.get(type));
+							return;
+						}
 						silent = true;
 					}
 					if (arg.contains("p")) {
+						if (!center.subjects().hasPermission(operator, "arimbans." + type.name() + ".passive")) {
+							center.subjects().sendMessage(operator, noPassive.get(type));
+							return;
+						}
 						passive = true;
 					}
 					if (silent || passive) {
@@ -492,7 +510,7 @@ public class Commands implements CommandsMaster {
 					} catch (MissingPunishmentException ex) {
 						center.subjects().sendMessage(operator, notfound.get(type).replace("%NUMBER%", args[0]).replace("%TARGET%", center.formats().formatSubject(target)));
 						return;
-					} catch (NumberFormatException ex) {}
+					} catch (NumberFormatException ignored) {}
 				} else {
 					try {
 						Punishment punishment = center.corresponder().getPunishmentById(Integer.parseInt(args[0]));
@@ -507,7 +525,7 @@ public class Commands implements CommandsMaster {
 					} catch (MissingPunishmentException ex) {
 						center.subjects().sendMessage(operator, notfound.get(type).replace("%NUMBER%", args[0]).replace("%TARGET%", center.formats().formatSubject(target)));
 						return;
-					} catch (NumberFormatException ex) {}
+					} catch (NumberFormatException ignored) {}
 				}
 			}
 			usage(operator, command);
@@ -540,7 +558,23 @@ public class Commands implements CommandsMaster {
 	
 	private void reloadCmd(Subject operator) {
 		center.refresh(false);
-		center.subjects().sendMessage(operator, other_reload_successful);
+		center.subjects().sendMessage(operator, successful.get(SubCategory.RELOAD));
+	}
+	
+	private void editReasonCmd(Subject operator, String[] args) {
+		if (args.length > 1) {
+			try {
+				Punishment punishment = center.corresponder().getPunishmentById(Integer.parseInt(args[0]));
+				String reason = StringsUtil.concatRange(args, ' ', 1, args.length);
+				center.punishments().changeReason(punishment, reason);
+				center.subjects().sendMessage(operator, successful.get(SubCategory.EDITREASON).replace("%ID%", args[0]).replace("%REASON%", reason));
+				return;
+			} catch (MissingPunishmentException ex) {
+				center.subjects().sendMessage(operator, other_editreason_error_notfound.replace("%ID%", args[0]));
+				return;
+			} catch (NumberFormatException ignored) {}
+		}
+		usage(operator, CommandType.EDITREASON);
 	}
 	
 	private String nextPageCmd(CommandType command, int page) {
@@ -718,11 +752,11 @@ public class Commands implements CommandsMaster {
 			max = Integer.MAX_VALUE;
 		}
 		ArrayList<Punishment> applicable = new ArrayList<Punishment>(center.punishments().getActiveCopy());
-		applicable.sort(DATE_COMPARATOR);
+		applicable.sort(DATE_LATEST_FIRST_COMPARATOR);
 		int n = 0;
 		for (Iterator<Punishment> it = applicable.iterator(); it.hasNext();) {
 			Punishment punishment = it.next();
-			if (punishment.operator().equals(operator)) {
+			if (punishment.operator().equals(target)) {
 				if (n >= max) {
 					it.remove();
 				} else {
@@ -738,6 +772,19 @@ public class Commands implements CommandsMaster {
 		if (applicable.isEmpty()) {
 			center.subjects().sendMessage(operator, other_rollback_error_notfound.replace("%TARGET%", center.formats().formatSubject(target)));
 			return;
+		}
+		boolean succeed = false;
+		while (!succeed) {
+			try {
+				center.punishments().removePunishments(applicable.toArray(new Punishment[] {}));
+				succeed = true;
+			} catch (MissingPunishmentException ex) {
+				applicable.remove(ex.getNonExistentPunishment());
+				if (applicable.isEmpty()) {
+					center.subjects().sendMessage(operator, other_rollback_error_notfound.replace("%TARGET%", center.formats().formatSubject(target)));
+					return;
+				}
+			}
 		}
 		center.subjects().sendMessage(operator, other_rollback_successful_message.replace("%NUMBER%", numberArg).replace("%TARGET%", center.formats().formatSubject(target)));
 	}
@@ -763,7 +810,7 @@ public class Commands implements CommandsMaster {
 		for (int n = 0; n < footer.size(); n++) {
 			footer.set(n, footer.get(n).replace("%PAGE%", Integer.toString(lister.page)).replace("%MAXPAGE%", Integer.toString(maxPage)).replace("%CMD%", lister.nextPageCmd));
 		}
-		punishments.sort(DATE_COMPARATOR);
+		punishments.sort(DATE_LATEST_FIRST_COMPARATOR);
 		center.subjects().sendMessage(operator, header.toArray(new String[0]));
 		for (Punishment p : punishments) {
 			String[] msgs = body.toArray(new String[0]);
@@ -851,6 +898,11 @@ public class Commands implements CommandsMaster {
 				header.put(category, center.config().getMessagesStrings(leadKey + "layout.header"));
 				body.put(category, center.config().getMessagesStrings(leadKey + "layout.body"));
 				footer.put(category, center.config().getMessagesStrings(leadKey + "layout.footer"));
+				break;
+			case EDITREASON: // both cases fall-through to here
+			case RELOAD:
+				successful.put(category, center.config().getMessagesString(leadKey + "successful"));
+				break;
 			default:
 				break;
 			}
@@ -876,6 +928,8 @@ public class Commands implements CommandsMaster {
 			case KICK:
 				exempt.put(type, center.config().getMessagesString(leadKey1 + "error.exempt"));
 				successful.put(categoryAdd, center.config().getMessagesString(leadKey1 + "successful.message"));
+				noSilent.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.silent"));
+				noPassive.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.passive"));
 				break;
 			default:
 				throw new InternalStateException("What other punishment type is there?!?");
@@ -895,14 +949,14 @@ public class Commands implements CommandsMaster {
 		other_geoip_error_notfound = center.config().getMessagesString("other.geoip.error.not-found");
 		other_alts_layout_body = center.config().getMessagesStrings("other.alts.layout.body");
 		other_alts_layout_element = center.config().getMessagesString("other.alts.layout.element");
-		other_alts_error_notfound = center.config().getMessagesString("other.alts.error-not-found");
-		
-		other_reload_successful = center.config().getMessagesString("other.reload.successful");
+		other_alts_error_notfound = center.config().getMessagesString("other.alts.error.not-found");
 		
 		other_rollback_error_notfound = center.config().getMessagesString("other.rollback.error.not-found");
 		other_rollback_error_invalidnumber = center.config().getMessagesString("other.rollback.error.invalid-number");
 		other_rollback_successful_detail = center.config().getMessagesString("other.rollback.successful.detail");
 		other_rollback_successful_message = center.config().getMessagesString("other.rollback.successful.message");
+		
+		other_editreason_error_notfound = center.config().getMessagesString("other.editreason.error.not-found");
 		
 	}
 	

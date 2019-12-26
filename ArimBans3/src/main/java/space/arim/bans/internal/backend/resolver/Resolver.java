@@ -49,6 +49,8 @@ public class Resolver implements ResolverMaster {
 	private final ArimBans center;
 	
 	private final ConcurrentHashMap<UUID, CacheElement> cache = new ConcurrentHashMap<UUID, CacheElement>();
+	
+	private final Object lock = new Object();
 
 	private boolean internalFetcher = true;
 	private boolean ashconFetcher = true;
@@ -133,17 +135,15 @@ public class Resolver implements ResolverMaster {
 	private void directAdd(UUID uuid, String name, String address) {
 		CacheElement element = new CacheElement(name, address);
 		cache.put(uuid, element);
-		center.sql().executeQuery(element.getInsertionQuery(uuid));
+		center.sql().executeQuery(element.insert(uuid));
 	}
 	
 	private void directUpdateCache(UUID uuid, String name, String address) {
-		synchronized (cache) {
-			if (cache.containsKey(uuid)) {
-				if (!cache.get(uuid).hasName(name) || !cache.get(uuid).hasIp(address)) {
-					directUpdate(uuid, name, address);
-				}
-			} else {
+		synchronized (lock) {
+			if (!cache.containsKey(uuid)) {
 				directAdd(uuid, name, address);
+			} else if (!cache.get(uuid).hasName(name) || !cache.get(uuid).hasIp(address)) {
+				directUpdate(uuid, name, address);
 			}
 		}
 	}
@@ -162,7 +162,7 @@ public class Resolver implements ResolverMaster {
 	}
 	
 	private void directClearCachedIp(String address) {
-		synchronized (cache) {
+		synchronized (lock) {
 			Set<SqlQuery> exec = new HashSet<SqlQuery>();
 			cache.forEach((uuid, element) -> {
 				if (element.hasIp(address)) {

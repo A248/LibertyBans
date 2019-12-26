@@ -18,6 +18,11 @@
  */
 package space.arim.bans.internal.sql;
 
+import space.arim.bans.api.sql.ExecutableQuery;
+import space.arim.bans.api.util.StringsUtil;
+
+import space.arim.universal.util.collections.CollectionsUtil;
+
 public class SqlQuery {
 	
 	private final Query statement;
@@ -25,17 +30,26 @@ public class SqlQuery {
 	
 	static final int SUBJECT_COLUMN_SIZE = 52;
 	
-	public SqlQuery(Query statement, Object...params) {
+	public SqlQuery(Query statement, Object...parameters) {
 		this.statement = statement;
-		this.parameters = params;
+		this.parameters = parameters;
+	}
+	
+	public ExecutableQuery convertToExecutable(SqlSettings settings) {
+		return new ExecutableQuery(statement.eval(settings), parameters);
 	}
 	
 	public Query statement() {
-		return this.statement;
+		return statement;
 	}
 	
 	public Object[] parameters() {
-		return this.parameters;
+		return parameters;
+	}
+	
+	@Override
+	public String toString() {
+		return "{[" + statement + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAll(parameters, (param) -> param.toString()), ',') + "]}";
 	}
 	
 	public enum Query {
@@ -115,8 +129,14 @@ public class SqlQuery {
 		}
 		
 		String eval(SqlSettings settings) {
-			String statement = settings.getStorageModeName().equals("mysql") ? mysql : mysql.replace(" int ", " INTEGER ").replace(" NOT NULL,", ",").replace("`", "");
+			String statement = settings.toString().equals("mysql") ? mysql : mysql.replace(" int ", " INTEGER ").replace(" NOT NULL", "").replace("`", "").replace("TEXT", "CLOB");
 			return statement.replace("%PREFIX%", settings.prefix);
 		}
+		
+		@Override
+		public String toString() {
+			return mysql;
+		}
+		
 	}
 }

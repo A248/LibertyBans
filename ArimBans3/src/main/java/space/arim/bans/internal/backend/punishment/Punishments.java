@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.Punishment;
@@ -44,7 +45,11 @@ public class Punishments implements PunishmentsMaster {
 	
 	private final ArimBans center;
 	
-	private int nextId = Integer.MIN_VALUE;
+	private AtomicInteger nextId = new AtomicInteger(Integer.MIN_VALUE);
+	//private volatile int nextId = Integer.MIN_VALUE;
+	private final Object lock = new Object();
+	
+	// MUST be modified by synchronising on lock object
 	private final Set<Punishment> active = ConcurrentHashMap.newKeySet();
 	private final Set<Punishment> history = ConcurrentHashMap.newKeySet();
 
@@ -54,10 +59,11 @@ public class Punishments implements PunishmentsMaster {
 	
 	@Override
 	public int getNextAvailablePunishmentId() {
-		if (nextId == Integer.MIN_VALUE) {
+		if (nextId.get() == Integer.MIN_VALUE) {
 			throw new InternalStateException("Invalid API call: ArimBans plugin data has not been loaded yet, so ArimBansLibrary#getNextAvailablePunishmentId() is inoperative until the plugin is fully loaded.");
 		}
-		return nextId++;
+		// return the value and then increment it
+		return nextId.getAndIncrement();
 	}
 	
 	private void directAddPunishments(Punishment[] punishments) throws ConflictingPunishmentException {
@@ -82,14 +88,14 @@ public class Punishments implements PunishmentsMaster {
 		 * It is HIGHLY unlikely that this condition will occur, but better safe than sorry.
 		 * 
 		 */
-		synchronized (active) {
+		synchronized (lock) {
 			for (Punishment punishment : punishments) {
 
 				// Check whether punishment is retrogade
 				boolean retro = (punishment.expiration() > 0 && punishment.expiration() <= System.currentTimeMillis());
 				
 				if ((punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
-					throw new ConflictingPunishmentException(punishment.subject(), punishment.type());  // the plague of multi-threaded programs
+					throw new ConflictingPunishmentException(punishment);  // the plague of multi-threaded programs
 
 				} else if (center.corresponder().callPunishEvent(punishment, retro)) { // Call event before proceeding
 
@@ -122,7 +128,7 @@ public class Punishments implements PunishmentsMaster {
 		// If it would, throw an error terminating everything
 		for (Punishment punishment : punishments) {
 			if ((punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
-				throw new ConflictingPunishmentException(punishment.subject(), punishment.type());
+				throw new ConflictingPunishmentException(punishment);
 			}
 		}
 		
@@ -135,7 +141,7 @@ public class Punishments implements PunishmentsMaster {
 			center.async(() -> {
 				try {
 					directAddPunishments(punishments);
-				} catch (ConflictingPunishmentException ex) {
+				} catch (ConflictingPunishmentException ignored) {
 					
 					// this exception must be ignored because it cannot be relayed back through the lambda!
 					
@@ -181,7 +187,7 @@ public class Punishments implements PunishmentsMaster {
 		 * For same reasons as stated under #directAddPunishments
 		 * 
 		 */
-		synchronized (active) {
+		synchronized (lock) {
 			for (Punishment punishment : punishments) {
 
 				// Removal called in this method is never automatic
@@ -225,13 +231,13 @@ public class Punishments implements PunishmentsMaster {
 			center.async(() -> {
 				try {
 					directRemovePunishments(punishments);
-				} catch (MissingPunishmentException ex) {}
+				} catch (MissingPunishmentException ignored) {}
 			});
 		}
 	}
 	
 	private void directChangeReason(Punishment punishment, String reason) throws MissingPunishmentException {
-		synchronized (active) {
+		synchronized (lock) {
 			if (history.contains(punishment)) {
 				
 				// check if the punishment is in the active set
@@ -269,7 +275,7 @@ public class Punishments implements PunishmentsMaster {
 			center.async(() -> {
 				try {
 					directChangeReason(punishment, reason);
-				} catch (MissingPunishmentException ex) {}
+				} catch (MissingPunishmentException ignored) {}
 			});
 		}
 	}
@@ -304,7 +310,7 @@ public class Punishments implements PunishmentsMaster {
 		return new HashSet<Punishment>(history);
 	}
 	
-	private Punishment punishmentFromResultSet(ResultSet data) throws InvalidUUIDException, TypeParseException, SQLException {
+	private static Punishment punishmentFromResultSet(ResultSet data) throws InvalidUUIDException, TypeParseException, SQLException {
 		return new Punishment(data.getInt("id"), PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date"));
 	}
 	
@@ -330,7 +336,7 @@ public class Punishments implements PunishmentsMaster {
 					max = punishment.id();
 				}
 			}
-			nextId = ++max;
+			nextId.set(++max);
 		} catch (SQLException ex) {
 			center.logs().logError(ex);
 		}

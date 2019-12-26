@@ -58,11 +58,12 @@ public class BukkitEnv implements Environment {
 		this.commands = new BukkitCommands(this);
 	}
 	
-	public void setCenter(ArimBans center) {
+	@Override
+	public void loadFor(ArimBans center) {
 		this.center = center;
 		if (!registered) {
 			plugin.getServer().getPluginManager().registerEvents(listener, plugin);
-			plugin.getServer().getPluginCommand("arimban").setExecutor(commands);
+			plugin.getServer().getPluginCommand("arimbans").setExecutor(commands);
 			setupMetrics();
 			registered = true;
 		}

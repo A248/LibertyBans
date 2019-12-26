@@ -56,7 +56,7 @@ public class Subject {
 		this.ip = ip;
 	}
 	
-	protected Subject(SubjectType type) {
+	private Subject(SubjectType type) {
 		this.type = type;
 		this.uuid = null;
 		this.ip = null;
@@ -110,7 +110,7 @@ public class Subject {
 	 * @return the corresponding player's UUID
 	 */
 	public UUID getUUID() {
-		return this.uuid;
+		return uuid;
 	}
 
 	/**
@@ -120,7 +120,7 @@ public class Subject {
 	 * @return the ip address represented by this Subject
 	 */
 	public String getIP() {
-		return this.ip;
+		return ip;
 	}
 	
 	/**
@@ -140,7 +140,7 @@ public class Subject {
 	 * @see SubjectType
 	 */
 	public SubjectType getType() {
-		return this.type;
+		return type;
 	}
 
 	/**
@@ -151,7 +151,14 @@ public class Subject {
 	 * @author A248
 	 */
 	public enum SubjectType {
-		PLAYER, IP, CONSOLE
+		PLAYER,
+		IP,
+		CONSOLE;
+		
+		@Override
+		public String toString() {
+			return this == IP ? name() : StringsUtil.capitaliseProperly(name());
+		}
 	}
 	
 	/**
@@ -173,7 +180,7 @@ public class Subject {
 		} else if (input.startsWith("[subject:addr]")) {
 			return new Subject(input.substring(14));
 		} else if (input.equalsIgnoreCase("[subject:cons]")) {
-			return new Subject(SubjectType.CONSOLE);
+			return console();
 		}
 		throw new TypeParseException(input, Subject.class);
 	}

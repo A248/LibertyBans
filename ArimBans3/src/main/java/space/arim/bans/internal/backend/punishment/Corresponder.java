@@ -21,10 +21,10 @@ package space.arim.bans.internal.backend.punishment;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Level;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.Punishment;
@@ -59,6 +59,7 @@ public class Corresponder implements CorresponderMaster {
 		if (center.punishments().hasPunishment(subject, type)) {
 			try {
 				Punishment punishment = center.punishments().getPunishment(subject, type);
+				center.logs().log(Level.CONFIG, "Player:(" + uuid + "," + address + ") has punishment " + type + ".");
 				return new PunishmentResult(subject, punishment, center.formats().formatPunishment(punishment));
 			} catch (MissingPunishmentException ex) {}
 		} else if (strict_ip_checking) {
@@ -71,6 +72,7 @@ public class Corresponder implements CorresponderMaster {
 				if (center.punishments().hasPunishment(addrSubj, type)) {
 					try {
 						Punishment punishment = center.punishments().getPunishment(addrSubj, type);
+						center.logs().log(Level.CONFIG, "Player:(" + uuid + "," + address + ") has ip-based punishment " + type + " (strict-ip-checking ENABLED).");
 						return new PunishmentResult(subject, punishment, center.formats().formatPunishment(punishment));
 					} catch (MissingPunishmentException ex) {}
 				}
@@ -80,6 +82,7 @@ public class Corresponder implements CorresponderMaster {
 			if (center.punishments().hasPunishment(addrSubj, type)) {
 				try {
 					Punishment punishment = center.punishments().getPunishment(addrSubj, type);
+					center.logs().log(Level.CONFIG, "Player:(" + uuid + "," + address + ") has ip-based punishment " + type + " (strict-ip-checking DISABLED).");
 					return new PunishmentResult(subject, punishment, center.formats().formatPunishment(punishment));
 				} catch (MissingPunishmentException ex) {}
 			}
@@ -93,7 +96,7 @@ public class Corresponder implements CorresponderMaster {
 		Subject addressSubj = center.subjects().parseSubject(address);
 		Set<Subject> addrSubjs = new HashSet<Subject>();
 		if (strict_ip_checking) {
-			List<String> ips = (address != null) ? new ArrayList<String>(Arrays.asList(address)) : new ArrayList<String>();
+			List<String> ips = address != null ? new ArrayList<String>(Arrays.asList(address)) : new ArrayList<String>();
 			try {
 				ips.addAll(center.resolver().getIps(uuid));
 			} catch (MissingCacheException ex) {}
@@ -101,29 +104,11 @@ public class Corresponder implements CorresponderMaster {
 				addrSubjs.add(center.subjects().parseSubject(addr, false));
 			});
 		} else {
-			addrSubjs.addAll(Arrays.asList(addressSubj));
+			addrSubjs.add(addressSubj);
 		}
 		Set<Punishment> applicable = center.punishments().getActiveCopy();
-		for (Iterator<Punishment> it = applicable.iterator(); it.hasNext();) {
-			Punishment punishment = it.next();
-			if (!punishment.type().equals(type) || !punishment.subject().equals(subject)) {
-				boolean remove = true;
-				if (SubjectType.IP.equals(punishment.subject().getType())) {
-					remove = true;
-				} else if (strict_ip_checking) {
-					for (Subject addrSubj : addrSubjs) {
-						if (addrSubj.equals(punishment.subject())) {
-							remove = false;
-						}
-					}
-				} else if (!strict_ip_checking) {
-					remove = !addressSubj.equals(punishment.subject());
-				}
-				if (remove) {
-					it.remove();
-				}
-			}
-		}
+		applicable.removeIf((punishment) -> !punishment.type().equals(type) || !punishment.subject().equals(subject) && (!punishment.subject().getType().equals(SubjectType.IP) || strict_ip_checking && !addrSubjs.contains(punishment.subject()) || !strict_ip_checking && !addressSubj.equals(punishment.subject())));
+		center.logs().log(Level.CONFIG, "Player:(" + uuid + "," + address + ") has the following punishments applicable for " + type + ": " + applicable.toString() + " (strict-ip-checking " + (strict_ip_checking ? "ENABLED" : "DISABLED") + " ).");
 		return applicable;
 	}
 	

@@ -18,8 +18,7 @@
  */
 package space.arim.bans.api.exception;
 
-import space.arim.bans.api.Subject;
-import space.arim.bans.api.PunishmentType;
+import space.arim.bans.api.Punishment;
 
 public class ConflictingPunishmentException extends Exception {
 
@@ -27,9 +26,16 @@ public class ConflictingPunishmentException extends Exception {
 	 * Serial version id.
 	 */
 	private static final long serialVersionUID = -1375684402484585054L;
-
-	public ConflictingPunishmentException(Subject subject, PunishmentType type) {
-		super("Subject " + subject + " already has a punishment " + type.deserialise());
+	
+	private final Punishment punishment;
+	
+	public ConflictingPunishmentException(Punishment punishment) {
+		super("Subject " + punishment.subject() + " already has a punishment " + punishment.type());
+		this.punishment = punishment;
+	}
+	
+	public Punishment getPunishment() {
+		return punishment;
 	}
 	
 }

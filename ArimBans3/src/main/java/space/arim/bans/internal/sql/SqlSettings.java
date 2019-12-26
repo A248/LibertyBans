@@ -48,7 +48,8 @@ public abstract class SqlSettings {
 		return config;
 	}
 
-	public String getStorageModeName() {
+	@Override
+	public String toString() {
 		return storageModeName;
 	}
 

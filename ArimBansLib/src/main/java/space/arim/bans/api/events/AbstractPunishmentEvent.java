@@ -22,8 +22,8 @@ import space.arim.bans.api.Punishment;
 
 import space.arim.universal.events.Event;
 
-public abstract class AbstractPunishmentEvent implements Event {
-	
+public class AbstractPunishmentEvent implements Event {
+
 	private final Punishment punishment;
 	
 	public AbstractPunishmentEvent(Punishment punishment) {
