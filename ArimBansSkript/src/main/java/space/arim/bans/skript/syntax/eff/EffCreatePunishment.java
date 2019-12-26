@@ -25,6 +25,7 @@ import org.bukkit.event.Event;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
+import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.skript.ArimBansSkript;
 
 import ch.njol.skript.lang.Effect;
@@ -65,7 +66,12 @@ public class EffCreatePunishment extends Effect {
 	@Override
 	protected void execute(Event evt) {
 		Punishment punishment = new Punishment(main.lib().getNextAvailablePunishmentId(), type.getSingle(evt), subject.getSingle(evt), operator.getSingle(evt), reason.getSingle(evt), expiration.getSingle(evt).longValue());
-		main.setLatest(Punishment.class, punishment);
+		try {
+			main.lib().addPunishments(punishment);
+			main.setLatest(Punishment.class, punishment);
+		} catch (ConflictingPunishmentException ex) {
+			main.setLatest(Exception.class, ex);
+		}
 	}
 
 }

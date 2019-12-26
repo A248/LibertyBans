@@ -27,6 +27,7 @@ import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
 import space.arim.bans.skript.syntax.eff.EffCreatePunishment;
+import space.arim.bans.skript.syntax.expr.ExprLastError;
 import space.arim.bans.skript.syntax.expr.ExprLastPunishment;
 import space.arim.bans.skript.syntax.expr.ExprTypeOfPunishment;
 
@@ -74,6 +75,8 @@ public class ArimBansSkript implements AutoCloseable {
 	}
 	
 	private void registerExpressions() {
+		ExprLastError.setCenter(this);
+		Skript.registerExpression(ExprLastError.class, String.class, ExpressionType.SIMPLE, "[arimbans] last error");
 		ExprLastPunishment.setCenter(this);
 		Skript.registerExpression(ExprLastPunishment.class, Punishment.class, ExpressionType.SIMPLE, "[arimbans] [the] last created punishment");
 		Skript.registerExpression(ExprTypeOfPunishment.class, PunishmentType.class, ExpressionType.PROPERTY, "[arimbans] punishment type (of|for) %punishment%");
