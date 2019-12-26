@@ -23,7 +23,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import space.arim.bans.ArimBans;
-import space.arim.bans.api.AsyncExecutor;
+
+import space.arim.api.AsyncExecutor;
 
 public class Async implements AsyncExecutor, AsyncMaster {
 	

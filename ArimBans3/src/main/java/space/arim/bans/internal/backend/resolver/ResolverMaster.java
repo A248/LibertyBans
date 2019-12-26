@@ -22,12 +22,13 @@ import java.sql.ResultSet;
 import java.util.List;
 import java.util.UUID;
 
-import space.arim.bans.api.UUIDResolver;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
-import space.arim.bans.api.util.web.GeoIpInfo;
 import space.arim.bans.internal.Component;
+
+import space.arim.api.UUIDResolver;
+import space.arim.api.util.web.GeoIpInfo;
 
 public interface ResolverMaster extends Component, UUIDResolver {
 	@Override

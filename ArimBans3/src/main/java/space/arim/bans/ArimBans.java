@@ -31,10 +31,8 @@ import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
-import space.arim.bans.api.UUIDResolver;
 import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.exception.MissingPunishmentException;
-import space.arim.bans.api.sql.ExecutableQuery;
 import space.arim.bans.env.Environment;
 import space.arim.bans.internal.Configurable;
 import space.arim.bans.internal.backend.punishment.CorresponderMaster;
@@ -49,6 +47,9 @@ import space.arim.bans.internal.sql.SqlMaster;
 
 import space.arim.universal.registry.RegistryPriority;
 import space.arim.universal.registry.UniversalRegistry;
+
+import space.arim.api.UUIDResolver;
+import space.arim.api.sql.ExecutableQuery;
 
 public interface ArimBans extends Configurable, ArimBansLibrary {
 

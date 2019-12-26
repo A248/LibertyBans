@@ -35,14 +35,15 @@ import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.api.exception.PlayerNotFoundException;
 import space.arim.bans.api.exception.RateLimitException;
-import space.arim.bans.api.util.minecraft.MinecraftUtil;
-import space.arim.bans.api.util.web.FetcherUtil;
-import space.arim.bans.api.util.web.GeoIpInfo;
 import space.arim.bans.internal.sql.SqlQuery;
 
 import space.arim.universal.registry.RegistryPriority;
 import space.arim.universal.util.UniversalUtil;
 import space.arim.universal.util.exception.HttpStatusException;
+
+import space.arim.api.util.minecraft.MinecraftUtil;
+import space.arim.api.util.web.FetcherUtil;
+import space.arim.api.util.web.GeoIpInfo;
 
 public class Resolver implements ResolverMaster {
 	

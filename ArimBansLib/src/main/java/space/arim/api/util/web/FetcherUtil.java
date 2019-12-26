@@ -16,7 +16,7 @@
  * along with ArimBansLib. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.api.util.web;
+package space.arim.api.util.web;
 
 import java.io.IOException;
 import java.util.Map;
@@ -28,10 +28,11 @@ import com.google.gson.JsonSyntaxException;
 
 import space.arim.bans.api.exception.FetcherException;
 import space.arim.bans.api.exception.RateLimitException;
-import space.arim.bans.api.util.minecraft.MinecraftUtil;
 
 import space.arim.universal.util.exception.HttpStatusException;
 import space.arim.universal.util.web.HttpStatus;
+
+import space.arim.api.util.minecraft.MinecraftUtil;
 
 public final class FetcherUtil {
 	

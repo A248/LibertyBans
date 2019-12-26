@@ -18,9 +18,9 @@
  */
 package space.arim.bans.internal.async;
 
-import space.arim.bans.api.AsyncExecutor;
-
 import space.arim.universal.registry.UniversalRegistry;
+
+import space.arim.api.AsyncExecutor;
 
 public class AsyncWrapper implements AsyncMaster {
 

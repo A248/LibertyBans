@@ -33,11 +33,12 @@ import org.yaml.snakeyaml.Yaml;
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.api.Subject;
-import space.arim.bans.api.util.FilesUtil;
-import space.arim.bans.api.util.StringsUtil;
 
 import space.arim.universal.registry.UniversalRegistry;
 import space.arim.universal.util.UniversalUtil;
+
+import space.arim.api.util.FilesUtil;
+import space.arim.api.util.StringsUtil;
 
 public class ArimBansExtended implements AutoCloseable {
 	

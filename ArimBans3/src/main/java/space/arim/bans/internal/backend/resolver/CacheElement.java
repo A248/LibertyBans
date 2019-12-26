@@ -24,8 +24,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import space.arim.bans.api.util.StringsUtil;
 import space.arim.bans.internal.sql.SqlQuery;
+
+import space.arim.api.util.StringsUtil;
 
 public class CacheElement {
 	

@@ -16,11 +16,11 @@
  * along with ArimBans3. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.api.sql;
-
-import space.arim.bans.api.util.StringsUtil;
+package space.arim.api.sql;
 
 import space.arim.universal.util.collections.CollectionsUtil;
+
+import space.arim.api.util.StringsUtil;
 
 public class ExecutableQuery {
 

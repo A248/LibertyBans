@@ -21,8 +21,9 @@ package space.arim.bans.api;
 import java.util.UUID;
 
 import space.arim.bans.api.exception.MissingPunishmentException;
-import space.arim.bans.api.sql.SQLPlugin;
-import space.arim.bans.api.util.StringsUtil;
+
+import space.arim.api.sql.SQLPlugin;
+import space.arim.api.util.StringsUtil;
 
 public interface ArimBansLibrary extends PunishmentPlugin, SQLPlugin, AutoCloseable {
 

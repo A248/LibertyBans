@@ -16,7 +16,7 @@
  * along with ArimBansLib. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.api.util.web;
+package space.arim.api.util.web;
 
 import java.io.IOException;
 import java.io.InputStream;

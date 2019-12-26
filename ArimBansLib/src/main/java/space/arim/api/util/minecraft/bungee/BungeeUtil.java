@@ -16,12 +16,31 @@
  * along with ArimBansLib. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.api;
+package space.arim.api.util.minecraft.bungee;
 
-import space.arim.universal.registry.Registrable;
+import java.util.HashSet;
+import java.util.Set;
 
-public interface AsyncExecutor extends Registrable {
+import net.md_5.bungee.api.ProxyServer;
 
-	void execute(Runnable command);
+public final class BungeeUtil {
+
+	private BungeeUtil() {}
+	
+	public static Set<String> getPlayerNameTabComplete(String[] args, ProxyServer proxy) {
+		Set<String> playerNames = new HashSet<String>();
+		if (args.length == 0) {
+			proxy.getPlayers().forEach((player) -> {
+				playerNames.add(player.getName());
+			});
+		} else if (args.length == 1) {
+			proxy.getPlayers().forEach((player) -> {
+				if (player.getName().toLowerCase().startsWith(args[0])) {
+					playerNames.add(player.getName());
+				}
+			});
+		}
+		return playerNames;
+	}
 	
 }

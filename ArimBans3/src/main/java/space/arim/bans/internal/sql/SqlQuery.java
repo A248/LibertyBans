@@ -18,10 +18,10 @@
  */
 package space.arim.bans.internal.sql;
 
-import space.arim.bans.api.sql.ExecutableQuery;
-import space.arim.bans.api.util.StringsUtil;
-
 import space.arim.universal.util.collections.CollectionsUtil;
+
+import space.arim.api.sql.ExecutableQuery;
+import space.arim.api.util.StringsUtil;
 
 public class SqlQuery {
 	

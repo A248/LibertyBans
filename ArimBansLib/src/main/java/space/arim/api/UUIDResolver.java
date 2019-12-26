@@ -16,7 +16,7 @@
  * along with ArimBansLib. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.api;
+package space.arim.api;
 
 import java.util.UUID;
 
