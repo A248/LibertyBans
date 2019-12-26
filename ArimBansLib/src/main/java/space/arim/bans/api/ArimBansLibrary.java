@@ -21,9 +21,10 @@ package space.arim.bans.api;
 import java.util.UUID;
 
 import space.arim.bans.api.exception.MissingPunishmentException;
+import space.arim.bans.api.sql.SQLPlugin;
 import space.arim.bans.api.util.StringsUtil;
 
-public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
+public interface ArimBansLibrary extends PunishmentPlugin, SQLPlugin, AutoCloseable {
 
 	/**
 	 * Used internally for invalid messages. If you send a message whose sole content
@@ -32,7 +33,7 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	static String INVALID_STRING_CODE = "<ArimBans_InvalidStringCode_If_You_See_This_Please_Tell_An_Admin_Immediately>";
 	
 	/**
-	 * Checks a message for validity using assertions.
+	 * Checks a message for validity
 	 * <br><br>All this does is:
 	 * <br>1. Check against {@link #INVALID_MESSAGE_CODE} for equality
 	 * <br>2. Check for null values
@@ -40,9 +41,7 @@ public interface ArimBansLibrary extends PunishmentPlugin, AutoCloseable {
 	 * @param message - the string to check
 	 */
 	static boolean checkString(String message) {
-		boolean ok = message != null && !INVALID_STRING_CODE.equals(message);
-		assert ok;
-		return ok;
+		return message != null && !INVALID_STRING_CODE.equals(message);
 	}
 	
 	int getNextAvailablePunishmentId();
