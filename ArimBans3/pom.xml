@@ -73,8 +73,6 @@
 						</goals>
 						<configuration>
 							<outputFile>target/${project.name}_v${core.version}.jar</outputFile>
-							<!-- <shadedArtifactAttached>true</shadedArtifactAttached>
-							<createDependencyReducedPom>true</createDependencyReducedPom>-->
 							<artifactSet>
 								<includes>
 									<include>space.arim:universal-util</include>
@@ -84,13 +82,21 @@
 									<include>org.hsqldb:hsqldb</include>
 									<include>com.zaxxer:HikariCP</include>
 									<include>org.slf4j:slf4j-api</include>
-									<include>org.slf4j:slf4j-simple</include>
+									<include>org.slf4j:slf4j-nop</include>
 									<include>org.bstats:bstats-bukkit</include>
 									<include>org.bstats:bstats-bungeecord</include>
 								</includes>
 							</artifactSet>
 							<minimizeJar>true</minimizeJar>
 							<relocations>
+								<relocation>
+									<pattern>com.zaxxer.hikari</pattern>
+									<shadedPattern>space.arim.bans.internal.sql.com.zaxxer.hikari</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.slf4j</pattern>
+									<shadedPattern>space.arim.bans.internal.sql.org.slf4j</shadedPattern>
+								</relocation>
 								<relocation>
 									<pattern>org.bstats.bukkit</pattern>
 									<shadedPattern>space.arim.bans.env.bukkit.metrics</shadedPattern>
@@ -147,8 +153,11 @@
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<version>1.6.4</version>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-nop</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.bstats</groupId>
