@@ -1,5 +1,5 @@
 # ArimBans
-ArimBans is the ultimate punitive solution for Spigot servers and BungeeCord networks, seeking to maximise efficiency through near-total asynchronous operation.
+The ultimate punitive solution for Spigot servers and BungeeCord networks, seeking to maximise efficiency through near-total asynchronous operation.
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/927a51eabfd64aa3ad77b861b33107bb)](https://www.codacy.com/manual/A248/ArimBans?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=A248/ArimBans&amp;utm_campaign=Badge_Grade)[![GitHub last commit](https://img.shields.io/github/last-commit/A248/ArimBans.svg)](https://github.com/A248/ArimBans/commits/master)[![Issue Resolution Time](http://isitmaintained.com/badge/resolution/A248/ArimBans.svg)](http://isitmaintained.com/project/A248/ArimBans "Average time to resolve an issue")[![Open Issues](http://isitmaintained.com/badge/open/A248/ArimBans.svg)](http://isitmaintained.com/project/A248/ArimBans)[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
