@@ -929,8 +929,8 @@ public class Commands implements CommandsMaster {
 			case KICK:
 				exempt.put(type, center.config().getMessagesString(leadKey1 + "error.exempt"));
 				successful.put(categoryAdd, center.config().getMessagesString(leadKey1 + "successful.message"));
-				noSilent.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.silent"));
-				noPassive.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.passive"));
+				noSilent.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.no-silent"));
+				noPassive.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.no-passive"));
 				break;
 			default:
 				throw new InternalStateException("What other punishment type is there?!?");
