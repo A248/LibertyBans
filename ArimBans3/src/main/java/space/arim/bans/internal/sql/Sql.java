@@ -131,33 +131,33 @@ public class Sql implements SqlMaster {
 	
 	@Override
 	public void executeQuery(ExecutableQuery...queries) throws SQLException {
-		center.logs().log(Level.CONFIG, "Executing externally-called queries [" + StringsUtil.concat(CollectionsUtil.convertAll(queries, (query) -> query.toString()), ',') + "]");
+		center.logs().log(Level.CONFIG, "Executing externally-called queries [" + StringsUtil.concat(CollectionsUtil.convertAllToString(queries), ',') + "]");
 		execQuery(queries);
 	}
 	
 	@Override
 	public void executeQuery(String query, Object...params) throws SQLException {
-		center.logs().log(Level.CONFIG, "Executing query [" + query + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAll(params, (param) -> param.toString()), ',') + "]");
+		center.logs().log(Level.CONFIG, "Executing query [" + query + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAllToString(params), ',') + "]");
 		execQuery(query, params);
 	}
 	
 	@Override
 	public ResultSet[] selectQuery(ExecutableQuery...queries) throws SQLException {
-		center.logs().log(Level.CONFIG, "Executing selection queries [" + StringsUtil.concat(CollectionsUtil.convertAll(queries, (query) -> query.toString()), ',') + "]");
+		center.logs().log(Level.CONFIG, "Executing selection queries [" + StringsUtil.concat(CollectionsUtil.convertAllToString(queries), ',') + "]");
 		return selQuery(queries);
 	}
 	
 	@Override
 	public ResultSet selectQuery(String query, Object...params) throws SQLException {
-		center.logs().log(Level.CONFIG, "Executing selection query [" + query + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAll(params, (param) -> param.toString()), ',') + "]");
+		center.logs().log(Level.CONFIG, "Executing selection query [" + query + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAllToString(params), ',') + "]");
 		return selQuery(query, params);
 	}
 	
 	@Override
 	public void executeQuery(SqlQuery...queries) {
-		center.logs().log(Level.CONFIG, "Executing queries [" + StringsUtil.concat(CollectionsUtil.convertAll(queries, (query) -> query.toString()), ',') + "]");
+		center.logs().log(Level.CONFIG, "Executing queries [" + StringsUtil.concat(CollectionsUtil.convertAllToString(queries), ',') + "]");
 		try {
-			execQuery(CollectionsUtil.convertAll(queries, (query) -> query.convertToExecutable(settings)));
+			execQuery(convertAllToExecutable(queries));
 		} catch (SQLException ex) {
 			center.logs().logError(ex);
 		}
@@ -165,7 +165,7 @@ public class Sql implements SqlMaster {
 	
 	@Override
 	public void executeQuery(Query query, Object...params) {
-		center.logs().log(Level.CONFIG, "Executing query [" + query + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAll(params, (param) -> param.toString()), ',') + "]");
+		center.logs().log(Level.CONFIG, "Executing query [" + query + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAllToString(params), ',') + "]");
 		try {
 			execQuery(query.eval(settings), params);
 		} catch (SQLException ex) {
@@ -175,9 +175,9 @@ public class Sql implements SqlMaster {
 	
 	@Override
 	public ResultSet[] selectQuery(SqlQuery...queries) {
-		center.logs().log(Level.CONFIG, "Executing selection queries [" + StringsUtil.concat(CollectionsUtil.convertAll(queries, (query) -> query.toString()), ',') + "]");
+		center.logs().log(Level.CONFIG, "Executing selection queries [" + StringsUtil.concat(CollectionsUtil.convertAllToString(queries), ',') + "]");
 		try {
-			return selQuery(CollectionsUtil.convertAll(queries, (query) -> query.convertToExecutable(settings)));
+			return selQuery(convertAllToExecutable(queries));
 		} catch (SQLException ex) {
 			throw new InternalStateException("Query retrieval failed!", ex);
 		}
@@ -185,12 +185,16 @@ public class Sql implements SqlMaster {
 	
 	@Override
 	public ResultSet selectQuery(Query query, Object...params) {
-		center.logs().log(Level.CONFIG, "Executing selection query [" + query + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAll(params, (param) -> param.toString()), ',') + "]");
+		center.logs().log(Level.CONFIG, "Executing selection query [" + query + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAllToString(params), ',') + "]");
 		try {
 			return selQuery(query.eval(settings), params);
 		} catch (SQLException ex) {
 			throw new InternalStateException("Query retrieval failed!", ex);
 		}
+	}
+	
+	private ExecutableQuery[] convertAllToExecutable(SqlQuery[] queries) {
+		return CollectionsUtil.convertAll(queries, (query) -> query.convertToExecutable(settings));
 	}
 
 	@Override

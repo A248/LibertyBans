@@ -49,7 +49,7 @@ public class SqlQuery {
 	
 	@Override
 	public String toString() {
-		return "{[" + statement + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAll(parameters, (param) -> param.toString()), ',') + "]}";
+		return "{[" + statement + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAllToString(parameters), ',') + "]}";
 	}
 	
 	public enum Query {
