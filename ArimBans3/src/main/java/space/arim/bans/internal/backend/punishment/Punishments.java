@@ -94,7 +94,7 @@ public class Punishments implements PunishmentsMaster {
 				// Check whether punishment is retrogade
 				boolean retro = (punishment.expiration() > 0 && punishment.expiration() <= System.currentTimeMillis());
 				
-				if ((punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
+				if (punishment.id() < nextId.get() || (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
 					throw new ConflictingPunishmentException(punishment);  // the plague of multi-threaded programs
 
 				} else if (center.corresponder().callPunishEvent(punishment, retro)) { // Call event before proceeding
@@ -127,7 +127,7 @@ public class Punishments implements PunishmentsMaster {
 		// would produce duplicate bans or mutes
 		// If it would, throw an error terminating everything
 		for (Punishment punishment : punishments) {
-			if ((punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
+			if (punishment.id() < nextId.get() || (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
 				throw new ConflictingPunishmentException(punishment);
 			}
 		}
@@ -189,21 +189,17 @@ public class Punishments implements PunishmentsMaster {
 		 */
 		synchronized (lock) {
 			for (Punishment punishment : punishments) {
-
+				
 				// Removal called in this method is never automatic
 				boolean auto = false;
 				
-				if (active.contains(punishment)) {
-				
-					// Call event before proceeding
-					if (center.corresponder().callUnpunishEvent(punishment, auto)) {
-						active.remove(punishment);
-						passedEvents.put(punishment, auto);
-						exec.add(new SqlQuery(SqlQuery.Query.DELETE_ACTIVE_BY_ID, punishment.id()));
-					}
-				
-				} else {
+				if (!active.contains(punishment)) {
 					throw new MissingPunishmentException(punishment); // the plague of multi-threaded programs
+					
+				} else if (center.corresponder().callUnpunishEvent(punishment, auto)) { // Call event before proceeding
+					active.remove(punishment);
+					passedEvents.put(punishment, auto);
+					exec.add(new SqlQuery(SqlQuery.Query.DELETE_ACTIVE_BY_ID, punishment.id()));
 				}
 			}
 			// Execute queries
@@ -238,25 +234,23 @@ public class Punishments implements PunishmentsMaster {
 	
 	private void directChangeReason(Punishment punishment, String reason) throws MissingPunishmentException {
 		synchronized (lock) {
-			if (history.contains(punishment)) {
-				
-				// check if the punishment is in the active set
-				boolean activeAlso = active.contains(punishment);
-				
-				// Call event before proceeding
-				if (center.corresponder().callPunishmentChangeReasonEvent(punishment, reason, activeAlso)) {
-					// Execute queries
-					SqlQuery historyQuery = new SqlQuery(SqlQuery.Query.UPDATE_HISTORY_REASON_FOR_ID, reason, punishment.id());
-					if (activeAlso) {
-						center.sql().executeQuery(historyQuery, new SqlQuery(SqlQuery.Query.UPDATE_ACTIVE_REASON_FOR_ID, reason, punishment.id()));
-					} else {
-						center.sql().executeQuery(historyQuery);
-					}
-					// Call PostUnpunishEvents once done
-					center.corresponder().callPostPunishmentChangeReasonEvent(punishment, reason, activeAlso);
-				}
-			} else {
+			
+			// check if the punishment is in the active set
+			boolean activeAlso = active.contains(punishment);
+			
+			if (!history.contains(punishment)) {
 				throw new MissingPunishmentException(punishment); // the plague of multi-threaded programs
+				
+			} else if (center.corresponder().callPunishmentChangeReasonEvent(punishment, reason, activeAlso)) { // Call event before proceeding
+				// Execute queries
+				SqlQuery historyQuery = new SqlQuery(SqlQuery.Query.UPDATE_HISTORY_REASON_FOR_ID, reason, punishment.id());
+				if (activeAlso) {
+					center.sql().executeQuery(historyQuery, new SqlQuery(SqlQuery.Query.UPDATE_ACTIVE_REASON_FOR_ID, reason, punishment.id()));
+				} else {
+					center.sql().executeQuery(historyQuery);
+				}
+				// Call PostUnpunishEvents once done
+				center.corresponder().callPostPunishmentChangeReasonEvent(punishment, reason, activeAlso);
 			}
 		}
 	}

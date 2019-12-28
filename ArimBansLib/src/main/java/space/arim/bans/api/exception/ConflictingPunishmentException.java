@@ -30,7 +30,7 @@ public class ConflictingPunishmentException extends Exception {
 	private final Punishment punishment;
 	
 	public ConflictingPunishmentException(Punishment punishment) {
-		super("Subject " + punishment.subject() + " already has a punishment " + punishment.type());
+		super("Punishment " + punishment + " conflicts.");
 		this.punishment = punishment;
 	}
 	
