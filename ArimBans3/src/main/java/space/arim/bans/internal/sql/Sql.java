@@ -49,15 +49,21 @@ public class Sql implements SqlMaster {
 
 	private SqlSettings settings;
 	
-	private RowSetFactory factory;
+	private volatile RowSetFactory factory;
 
 	public Sql(ArimBans center) {
 		this.center = center;
-		try {
-			factory = RowSetProvider.newFactory();
-		} catch (SQLException ex) {
-			throw new InternalStateException("RowSetProvider could not load its factory!", ex);
+	}
+	
+	private CachedRowSet createCachedRowSet() throws SQLException {
+		if (factory == null) {
+			synchronized (factory) {
+				if (factory == null) {
+					factory = RowSetProvider.newFactory();
+				}
+			}
 		}
+		return factory.createCachedRowSet();
 	}
 	
 	private void stopConnection() {
@@ -79,7 +85,7 @@ public class Sql implements SqlMaster {
 	
 	@Override
 	public boolean enabled() {
-		return (data != null) ? !data.isClosed() : false;
+		return data != null && !data.isClosed();
 	}
 	
 	private void execQuery(ExecutableQuery...queries) throws SQLException {
@@ -112,7 +118,7 @@ public class Sql implements SqlMaster {
 			for (int n = 0; n < queries.length; n++) {
 				statements[n] = connection.prepareStatement(queries[n].statement());
 				replaceParams(statements[n], queries[n].parameters());
-				results[n] = factory.createCachedRowSet();
+				results[n] = createCachedRowSet();
 				results[n].populate(statements[n].executeQuery());
 				statements[n].close();
 			}
@@ -123,7 +129,7 @@ public class Sql implements SqlMaster {
 	private ResultSet selQuery(String query, Object...params) throws SQLException {
 		try (Connection connection = data.getConnection(); PreparedStatement statement = connection.prepareStatement(query)) {
 			replaceParams(statement, params);
-			CachedRowSet results = factory.createCachedRowSet();
+			CachedRowSet results = createCachedRowSet();
 			results.populate(statement.executeQuery());
 			return results;
 		}
