@@ -26,9 +26,11 @@ public class TypeParseException extends InternalStateException {
 
 	/**
      * Constructs a <code>TypeParseException</code> with the
-     * specified input. Used when subject cannot be parsed or serialised.
+     * specified input. For example, this is used
+     * when a <code>Subject</code> cannot be parsed or serialised.
      *
-     * @param   s   the input to be parsed.
+     * @param s the input to be parsed.
+     * @param clazz the class of object which the string could not be parsed as
      */
 	public TypeParseException(String s, Class<?> clazz) {
 		super("Could not parse " + s + " as " + clazz);

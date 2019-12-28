@@ -66,21 +66,15 @@ public class Subject {
 	/**
 	 * Creates a Subject from a player UUID
 	 * 
-	 * <br><br><b>You need to check the UUID first.</b>
-	 * See {@link ArimBansLibrary#checkUUID(UUID)}
-	 * 
-	 * @param uuid - the uuid to use
+	 * @param playeruuid - the uuid to use
 	 * @return Subject representing the uuid
 	 */
-	public static Subject fromUUID(UUID playeruuid) throws IllegalArgumentException {
+	public static Subject fromUUID(UUID playeruuid) {
 		return new Subject(playeruuid);
 	}
 	
 	/**
 	 * Creates a Subject from an IP address
-	 * 
-	 * <br><br><b>You need to validate the address first.</b>
-	 * See {@link ArimBansLibrary#checkAddress(String)}
 	 * 
 	 * @param address - the IP address to create a Subject from
 	 * @return Subject representing the ip specified
