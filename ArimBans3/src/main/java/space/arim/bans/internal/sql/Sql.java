@@ -34,6 +34,7 @@ import space.arim.bans.ArimBans;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.internal.sql.SqlQuery.Query;
 
+import space.arim.universal.util.ErringLazySingleton;
 import space.arim.universal.util.collections.CollectionsUtil;
 
 import space.arim.api.sql.ExecutableQuery;
@@ -49,21 +50,14 @@ public class Sql implements SqlMaster {
 
 	private SqlSettings settings;
 	
-	private volatile RowSetFactory factory;
+	private final ErringLazySingleton<RowSetFactory, SQLException> factory = new ErringLazySingleton<RowSetFactory, SQLException>(() -> RowSetProvider.newFactory());
 
 	public Sql(ArimBans center) {
 		this.center = center;
 	}
 	
 	private CachedRowSet createCachedRowSet() throws SQLException {
-		if (factory == null) {
-			synchronized (factory) {
-				if (factory == null) {
-					factory = RowSetProvider.newFactory();
-				}
-			}
-		}
-		return factory.createCachedRowSet();
+		return factory.get().createCachedRowSet();
 	}
 	
 	private void stopConnection() {
