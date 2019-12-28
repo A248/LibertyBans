@@ -124,6 +124,17 @@ public class Corresponder implements CorresponderMaster {
 	}
 	
 	@Override
+	public void enact(Punishment punishment, boolean add, Subject operator) {
+		if (!punishment.silent()) {
+			center.subjects().sendNotif(punishment, add, operator);
+		}
+		if (!punishment.passive() && add) {
+			center.environment().enforce(punishment, center.formats().useJson());
+		}
+		center.logs().log(Level.FINE, "Operator " + operator.toString() + ((add) ? " punished " : " unpunished ") + punishment.subject().toString() + ". Punishment details: " + punishment.toString());
+	}
+	
+	@Override
 	public boolean callPunishEvent(Punishment punishment, boolean retro) {
 		return UniversalEvents.get().fireEvent(new PunishEvent(punishment, retro));
 	}

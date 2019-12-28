@@ -46,7 +46,7 @@ public class Punishments implements PunishmentsMaster {
 	private final ArimBans center;
 	
 	private AtomicInteger nextId = new AtomicInteger(Integer.MIN_VALUE);
-	//private volatile int nextId = Integer.MIN_VALUE;
+	
 	private final Object lock = new Object();
 	
 	// MUST be modified by synchronising on lock object

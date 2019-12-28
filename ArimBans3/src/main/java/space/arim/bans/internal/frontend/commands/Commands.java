@@ -471,25 +471,19 @@ public class Commands implements CommandsMaster {
 			usage(operator, command);
 			return;
 		}
-		Punishment punishment = new Punishment(center.getNextAvailablePunishmentId(), type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis());
+		Punishment punishment = new Punishment(center.getNextAvailablePunishmentId(), type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis(), silent, passive);
 		try {
 			center.punishments().addPunishments(punishment);
-			enact(operator, target, command, punishment, true, silent, passive);
+			enact(operator, command, punishment, true);
 		} catch (ConflictingPunishmentException ex) {
 			String conflict = (punishment.type().equals(PunishmentType.BAN)) ? additions_bans_error_conflicting : additions_mutes_error_conflicting;
 			center.subjects().sendMessage(operator, conflict.replace("%TARGET%", center.formats().formatSubject(punishment.subject())));
 		}
 	}
 	
-	private void enact(Subject operator, Subject target, CommandType command, Punishment punishment, boolean add, boolean silent, boolean passive) {
+	private void enact(Subject operator, CommandType command, Punishment punishment, boolean add) {
 		center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-		if (!silent) {
-			center.subjects().sendNotif(punishment, add, operator);
-		}
-		if (!passive && add) {
-			center.environment().enforce(punishment, center.formats().useJson());
-		}
-		center.logs().log(Level.FINE, "Operator " + operator.toString() + ((add) ? " punished " : " unpunished ") + target.toString() + ". Silent = " + silent + "; Passive = " + passive);
+		center.corresponder().enact(punishment, add, operator);
 	}
 	
 	private void unpunCmd(Subject operator, Subject target, CommandType command, String[] args) {
@@ -507,8 +501,9 @@ public class Commands implements CommandsMaster {
 				if (args[0].equals("internal_confirm")) {
 					try {
 						Punishment punishment = center.corresponder().getPunishmentById(Integer.parseInt(args[1]));
+						punishment.setSilent(silent);
 						center.punishments().removePunishments(punishment);
-						enact(operator, target, command, punishment, false, silent, false);
+						enact(operator, command, punishment, false);
 						return;
 					} catch (MissingPunishmentException ex) {
 						center.subjects().sendMessage(operator, notfound.get(type).replace("%NUMBER%", args[0]).replace("%TARGET%", center.formats().formatSubject(target)));
@@ -522,8 +517,9 @@ public class Commands implements CommandsMaster {
 							center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
 							return;
 						}
+						punishment.setSilent(silent);
 						center.punishments().removePunishments(punishment);
-						enact(operator, target, command, punishment, false, silent, false);
+						enact(operator, command, punishment, false);
 						return;
 					} catch (MissingPunishmentException ex) {
 						center.subjects().sendMessage(operator, notfound.get(type).replace("%NUMBER%", args[0]).replace("%TARGET%", center.formats().formatSubject(target)));
@@ -546,8 +542,9 @@ public class Commands implements CommandsMaster {
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
 		} else {
 			try {
+				punishment.setSilent(silent);
 				center.punishments().removePunishments(punishment);
-				enact(operator, target, command, punishment, false, silent, false);
+				enact(operator, command, punishment, false);
 			} catch (MissingPunishmentException ex) {
 				center.subjects().sendMessage(operator, notfound.get(type).replace("%TARGET%", center.formats().formatSubject(target)));
 				return;
