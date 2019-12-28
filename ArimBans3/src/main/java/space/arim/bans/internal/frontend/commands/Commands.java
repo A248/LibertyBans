@@ -413,7 +413,7 @@ public class Commands implements CommandsMaster {
 		long span = -1L;
 		if (!type.equals(PunishmentType.KICK)) {
 			long max = 0;
-			String basePerm = "arimbans." + type.name() + ".dur.";
+			String basePerm = "arimbans." + type.name().toLowerCase() + ".dur.";
 			List<String> durPerms = durations.get(type);
 			if (center.subjects().hasPermission(operator, basePerm + "perm")) {
 				max = -1L;
@@ -434,7 +434,7 @@ public class Commands implements CommandsMaster {
 				args = StringsUtil.chopOffOne(args);
 			}
 			if (span == -1L && max != -1L || span > max) {
-				center.subjects().sendMessage(operator, permTime.get(type).replace("%MAXTIME%", Long.toString(max)));
+				center.subjects().sendMessage(operator, permTime.get(type).replace("%MAXTIME%", center.formats().formatTime(max, false)));
 				return;
 			}
 		}
@@ -445,14 +445,14 @@ public class Commands implements CommandsMaster {
 			for (String arg : args) {
 				if (arg.startsWith("-")) {
 					if (arg.contains("s")) {
-						if (!center.subjects().hasPermission(operator, "arimbans." + type.name() + ".passive")) {
+						if (!center.subjects().hasPermission(operator, "arimbans." + type.name().toLowerCase() + ".passive")) {
 							center.subjects().sendMessage(operator, noSilent.get(type));
 							return;
 						}
 						silent = true;
 					}
 					if (arg.contains("p")) {
-						if (!center.subjects().hasPermission(operator, "arimbans." + type.name() + ".passive")) {
+						if (!center.subjects().hasPermission(operator, "arimbans." + type.name().toLowerCase() + ".passive")) {
 							center.subjects().sendMessage(operator, noPassive.get(type));
 							return;
 						}
@@ -469,6 +469,10 @@ public class Commands implements CommandsMaster {
 			reason = default_reason;
 		} else if (reason.isEmpty()) {
 			usage(operator, command);
+			return;
+		}
+		if (!center.subjects().hasPermission(target, "arimbans." + type.name().toLowerCase() + "exempt") || center.subjects().hasPermission(operator, "arimbans." + type.name().toLowerCase() + "exempt.bypass")) {
+			center.subjects().sendMessage(operator, exempt.get(type).replace("%TARGET%", center.formats().formatSubject(target)));
 			return;
 		}
 		Punishment punishment = new Punishment(center.getNextAvailablePunishmentId(), type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis(), silent, passive);
