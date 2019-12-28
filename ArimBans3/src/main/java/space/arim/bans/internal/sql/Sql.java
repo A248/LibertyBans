@@ -68,7 +68,7 @@ public class Sql implements SqlMaster {
 	
 	private void replaceParams(PreparedStatement statement, Object...parameters) throws SQLException {
 		for (int n = 0; n < parameters.length; n++) {
-			statement.setObject(n, parameters[n]);
+			statement.setObject(n + 1, parameters[n]);
 		}
 	}
 	

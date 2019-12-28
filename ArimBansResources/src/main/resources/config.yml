@@ -16,7 +16,7 @@ storage:
   mode: 'file'
   table-prefix: 'arimbans_'
   file:
-    url: 'jdbc:hsqldb:file:%FILE%;hsqldb.lock_file=false;sql.syntax_mys=true'
+    url: 'jdbc:hsqldb:file:%FILE%;hsqldb.lock_file=false'
     filename: 'data/database'
   mysql:
     host: 'localhost'

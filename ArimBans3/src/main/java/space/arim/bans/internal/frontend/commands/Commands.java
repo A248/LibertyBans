@@ -346,14 +346,15 @@ public class Commands implements CommandsMaster {
 			switch (command.subCategory()) {
 			case RELOAD:
 				reloadCmd(operator);
-				return;
+				break;
 			case EDITREASON:
 				editReasonCmd(operator, args);
-				return;
+				break;
 			default:
 				listCmd(operator, null, command, (args.length == 0) ? 1 : parseNumber(args[0], 1));
-				return;
+				break;
 			}
+			return;
 		}
 		if (args.length <= 0) {
 			usage(operator, command);
@@ -437,7 +438,7 @@ public class Commands implements CommandsMaster {
 				return;
 			}
 		}
-		String reason;
+		String reason = "";
 		boolean silent = false;
 		boolean passive = false;
 		if (args.length > 0) {
@@ -463,9 +464,10 @@ public class Commands implements CommandsMaster {
 				}
 			}
 			reason = StringsUtil.concat(args, ' ');
-		} else if (permit_blank_reason) {
+		}
+		if (reason.isEmpty() && permit_blank_reason) {
 			reason = default_reason;
-		} else {
+		} else if (reason.isEmpty()) {
 			usage(operator, command);
 			return;
 		}

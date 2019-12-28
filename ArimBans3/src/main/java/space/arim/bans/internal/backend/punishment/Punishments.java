@@ -114,7 +114,7 @@ public class Punishments implements PunishmentsMaster {
 				}
 			}
 			// Execute queries
-			center.sql().executeQuery((SqlQuery[]) exec.toArray());
+			center.sql().executeQuery(exec.toArray(new SqlQuery[] {}));
 		}
 
 		// Call PostPunishEvents once done
@@ -207,7 +207,7 @@ public class Punishments implements PunishmentsMaster {
 				}
 			}
 			// Execute queries
-			center.sql().executeQuery((SqlQuery[]) exec.toArray());
+			center.sql().executeQuery(exec.toArray(new SqlQuery[] {}));
 
 		}
 
