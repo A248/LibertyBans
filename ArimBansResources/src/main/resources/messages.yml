@@ -35,7 +35,7 @@ additions:
       dur-perms:
         - '5d'
         - '1mo'
-      extra:
+      args:
         no-silent: '&cYou may not use silent bans.'
         no-passive: '&cYou may not use passive bans.'
     error:
@@ -60,7 +60,7 @@ additions:
       dur-perms:
         - '5d'
         - '1mo'
-      extra:
+      args:
         no-silent: '&cYou may not use silent bans.'
         no-passive: '&cYou may not use passive bans.'
     error:
@@ -85,7 +85,7 @@ additions:
       dur-perms:
         - '5d'
         - '1mo'
-      extra:
+      args:
         no-silent: '&cYou may not use silent bans.'
         no-passive: '&cYou may not use passive bans.'
     error:
@@ -105,7 +105,7 @@ additions:
     permission:
       command: '&cYou may not kick other players.'
       no-ip: '&cYou may not ipkick other players.'
-      extra:
+      args:
         no-silent: '&cYou may not use silent bans.'
         no-passive: '&cYou may not use passive bans.'
     error:

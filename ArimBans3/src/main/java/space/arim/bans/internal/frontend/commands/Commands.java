@@ -592,9 +592,7 @@ public class Commands implements CommandsMaster {
 			@Override
 			public boolean check(Punishment punishment) {
 				if (SubCategory.BANLIST.equals(command.subCategory()) || SubCategory.MUTELIST.equals(command.subCategory())) {
-					if (command.ipSpec().equals(IpSpec.UUID) && !punishment.subject().getType().equals(Subject.SubjectType.PLAYER)) {
-						return false;
-					} else if (command.ipSpec().equals(IpSpec.IP) && !punishment.subject().getType().equals(Subject.SubjectType.IP)) {
+					if (command.ipSpec().equals(IpSpec.UUID) && !punishment.subject().getType().equals(Subject.SubjectType.PLAYER) || command.ipSpec().equals(IpSpec.IP) && !punishment.subject().getType().equals(Subject.SubjectType.IP)) {
 						return false;
 					}
 				}
@@ -604,9 +602,7 @@ public class Commands implements CommandsMaster {
 				case MUTELIST:
 					return PunishmentType.MUTE.equals(punishment.type());
 				case WARNS:
-					if (!PunishmentType.WARN.equals(punishment.type())) {
-						return false;
-					} // falls through to next sub-block
+					return punishment.subject().equals(target) && PunishmentType.WARN.equals(punishment.type());
 				case HISTORY:
 					return punishment.subject().equals(target);
 				case BLAME:
@@ -642,7 +638,7 @@ public class Commands implements CommandsMaster {
 	
 	private void statusCmd(Subject operator, Subject target) {
 		Set<Punishment> applicable = center.punishments().getActiveCopy();
-		applicable.removeIf((punishment) -> punishment.subject().equals(target));
+		applicable.removeIf((punishment) -> !punishment.subject().equals(target));
 		Punishment banPunishment = null;
 		Punishment mutePunishment = null;
 		int warns = 0;
@@ -666,12 +662,9 @@ public class Commands implements CommandsMaster {
 		} else {
 			throw new InternalStateException("Target cannot be the console!");
 		}
-		String banStatusKey = (banPunishment != null) ? "ban-status.banned" : "ban-status.not-banned";
-		String muteStatusKey = (mutePunishment != null) ? "mute-status.muted" : "mute-status.not-muted";
-		String warnStatusKey = (warns == 0) ? "warn-status.no-warns" : "warn-status.warn-count";
-		String banStatus = (banPunishment != null) ? center.formats().formatMessageWithPunishment(other_status_layout.get(banStatusKey), banPunishment) : other_status_layout.get(banStatusKey);
-		String muteStatus = (mutePunishment != null) ? center.formats().formatMessageWithPunishment(other_status_layout.get(muteStatusKey), mutePunishment) : other_status_layout.get(muteStatusKey);
-		String warnStatus = other_status_layout.get(warnStatusKey);
+		String banStatus = banPunishment != null ? center.formats().formatMessageWithPunishment(other_status_layout.get("ban-status.banned"), banPunishment) : other_status_layout.get("ban-status.not-banned");
+		String muteStatus = mutePunishment != null ? center.formats().formatMessageWithPunishment(other_status_layout.get("mute-status.muted"), mutePunishment) : other_status_layout.get("mute-status.not-muted");
+		String warnStatus = warns != 0 ? other_status_layout.get("warn-status.warn-count") : other_status_layout.get("warn-status.no-warns");
 		String[] msgs = other_status_layout_body.toArray(new String[0]);
 		for (int n = 0; n < msgs.length; n++) {
 			msgs[n] = msgs[n].replace("%HEADER%", header).replace("%INFO%", info).replace("%BAN_STATUS%", banStatus).replace("%MUTE_STATUS%", muteStatus).replace("%WARN_STATUS%", warnStatus);
@@ -682,14 +675,11 @@ public class Commands implements CommandsMaster {
 	private void ipsCmd(Subject operator, Subject target) {
 		String[] msgs = other_ips_layout_body.toArray(new String[0]);
 		String targetDisplay = center.formats().formatSubject(target);
-		List<String> ips;
+		List<String> ips = null;
 		try {
 			ips = center.resolver().getIps(target.getUUID());
-		} catch (MissingCacheException ex) {
-			center.subjects().sendMessage(operator, other_ips_error_notfound.replace("%TARGET%", targetDisplay));
-			return;
-		}
-		if (ips.isEmpty()) {
+		} catch (MissingCacheException ex) {}
+		if (ips == null || ips.isEmpty()) {
 			center.subjects().sendMessage(operator, other_ips_error_notfound.replace("%TARGET%", targetDisplay));
 			return;
 		}
@@ -704,9 +694,9 @@ public class Commands implements CommandsMaster {
 	}
 	
 	private void geoipCmd(Subject operator, Subject target) {
-		String[] msgs = other_geoip_layout.toArray(new String[0]);
-		GeoIpInfo geoip;
+		String[] msgs = other_geoip_layout.toArray(new String[] {});
 		String targetDisplay = center.formats().formatSubject(target);
+		GeoIpInfo geoip;
 		try {
 			geoip = center.resolver().lookupIp(target.getIP());
 		} catch (NoGeoIpException ex) {
@@ -932,8 +922,8 @@ public class Commands implements CommandsMaster {
 			case KICK:
 				exempt.put(type, center.config().getMessagesString(leadKey1 + "error.exempt"));
 				successful.put(categoryAdd, center.config().getMessagesString(leadKey1 + "successful.message"));
-				noSilent.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.no-silent"));
-				noPassive.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.no-passive"));
+				noSilent.put(type, center.config().getMessagesString(leadKey1 + "permission.args.no-silent"));
+				noPassive.put(type, center.config().getMessagesString(leadKey1 + "permission.args.no-passive"));
 				break;
 			default:
 				throw new InternalStateException("What other punishment type is there?!?");
