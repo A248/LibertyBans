@@ -75,7 +75,6 @@ public class Resolver implements ResolverMaster {
 				} catch (IllegalArgumentException ex) {
 					center.logs().logError(ex);
 				}
-				
 			}
 		} catch (SQLException ex) {
 			center.logs().logError(ex);
@@ -104,7 +103,7 @@ public class Resolver implements ResolverMaster {
 	
 	@Override
 	public String getName(UUID playeruuid) throws MissingCacheException {
-		if (cache.containsKey(playeruuid)) {
+		if (cache.containsKey(Objects.requireNonNull(playeruuid, "UUID must not be null!"))) {
 			return cache.get(playeruuid).getName();
 		}
 		throw new MissingCacheException(playeruuid);
@@ -218,28 +217,6 @@ public class Resolver implements ResolverMaster {
 				center.logs().logError(ex);
 			}
 		}
-		/*if (ipStack) {
-			try {
-				return FetcherUtil.ipStack(address, ipStackKey);
-			} catch (FetcherException | RateLimitException | HttpStatusException ex) {
-				center.logs().logError(ex);
-			}
-		}
-		if (freeGeoIp) {
-			return FetcherUtil.freeGeoIp(address);
-			try {
-				return FetcherUtil.freeGeoIp(address);
-			} catch (FetcherException| RateLimitException | HttpStatusException ex) {
-				center.logs().logError(ex);
-			}
-		}
-		if (ipApi) {
-			try {
-				return FetcherUtil.ipApi(address);
-			} catch (FetcherException | RateLimitException | HttpStatusException ex) {
-				center.logs().logError(ex);
-			}
-		}*/
 		throw new NoGeoIpException(address);
 	}
 	
@@ -255,21 +232,19 @@ public class Resolver implements ResolverMaster {
 				return uuid2;
 			} catch (PlayerNotFoundException ex) {}
 		}
-		if (query && center.environment().isOnlineMode()) {
-			if (ashconFetcher) {
-				try {
-					UUID uuid3 = FetcherUtil.ashconApi(name);
-					update(uuid3, name, null);
-					return uuid3;
-				} catch (FetcherException | HttpStatusException ex) {}
-			}
-			if (mojangFetcher) {
-				try {
-					UUID uuid4 = FetcherUtil.mojangApi(name);
-					update(uuid4, name, null);
-					return uuid4;
-				} catch (FetcherException | HttpStatusException ex) {}
-			}
+		if (query && ashconFetcher) {
+			try {
+				UUID uuid3 = FetcherUtil.ashconApi(name);
+				update(uuid3, name, null);
+				return uuid3;
+			} catch (FetcherException | HttpStatusException ex) {}
+		}
+		if (query && mojangFetcher) {
+			try {
+				UUID uuid4 = FetcherUtil.mojangApi(name);
+				update(uuid4, name, null);
+				return uuid4;
+			} catch (FetcherException | HttpStatusException ex) {}
 		}
 		throw new PlayerNotFoundException(name);
 	}
@@ -286,21 +261,19 @@ public class Resolver implements ResolverMaster {
 				return name2;
 			} catch (PlayerNotFoundException ex) {}
 		}
-		if (query && center.environment().isOnlineMode()) {
-			if (ashconFetcher) {
-				try {
-					String name3 = FetcherUtil.ashconApi(uuid);
-					update(uuid, name3, null);
-					return name3;
-				} catch (FetcherException | HttpStatusException ex) {}
-			}
-			if (mojangFetcher) {
-				try {
-					String name4 = FetcherUtil.mojangApi(uuid);
-					update(uuid, name4, null);
-					return name4;
-				} catch (FetcherException | HttpStatusException ex) {}
-			}
+		if (query && ashconFetcher) {
+			try {
+				String name3 = FetcherUtil.ashconApi(uuid);
+				update(uuid, name3, null);
+				return name3;
+			} catch (FetcherException | HttpStatusException ex) {}
+		}
+		if (query && mojangFetcher) {
+			try {
+				String name4 = FetcherUtil.mojangApi(uuid);
+				update(uuid, name4, null);
+				return name4;
+			} catch (FetcherException | HttpStatusException ex) {}
 		}
 		throw new PlayerNotFoundException(uuid);
 	}
