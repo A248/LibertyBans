@@ -26,7 +26,6 @@ import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.internal.Component;
 
-import space.arim.api.uuid.PlayerNotFoundException;
 import space.arim.api.uuid.UUIDResolver;
 import space.arim.api.util.web.GeoIpInfo;
 
@@ -64,14 +63,6 @@ public interface ResolverMaster extends Component, UUIDResolver {
 	boolean hasIp(UUID playeruuid, String ip);
 	
 	GeoIpInfo lookupIp(final String address) throws NoGeoIpException;
-	
-	default String resolveUUID(UUID uuid) throws PlayerNotFoundException {
-		return resolveUUID(uuid, true);
-	}
-	
-	default UUID resolveName(String name) throws PlayerNotFoundException {
-		return resolveName(name, true);
-	}
 	
 	void loadAll(ResultSet data);
 	

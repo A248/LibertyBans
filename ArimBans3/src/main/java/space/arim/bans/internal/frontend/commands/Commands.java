@@ -279,10 +279,10 @@ public class Commands implements CommandsMaster {
 	
 	@Override
 	public void execute(Subject subject, CommandType command, String[] args) {
-		if (UniversalUtil.get().isAsynchronous()) {
-			exec(subject, command, args);
-		} else {
+		if (command.requiresAsynchronisation() && !UniversalUtil.get().isAsynchronous()) {
 			center.async(() -> exec(subject, command, args));
+		} else {
+			exec(subject, command, args);
 		}
 	}
 	
@@ -365,7 +365,7 @@ public class Commands implements CommandsMaster {
 			target = center.subjects().parseSubject(args[0], false);
 		} catch (IllegalArgumentException ex) {}
 		try {
-			target = center.subjects().parseSubject(center.resolver().resolveName(args[0]));
+			target = center.subjects().parseSubject(center.resolver().resolveName(args[0], center.environment().isOnlineMode()));
 		} catch (PlayerNotFoundException ex) {}
 		if (target == null) {
 			center.subjects().sendMessage(operator, invalid.get(command.ipSpec()).replace("%TARGET%", args[0]));
@@ -721,7 +721,7 @@ public class Commands implements CommandsMaster {
 		for (UUID uuid : players) {
 			String name;
 			try {
-				name = center.resolver().resolveUUID(uuid);
+				name = center.resolver().resolveUUID(uuid, center.environment().isOnlineMode());
 			} catch (PlayerNotFoundException ex) {
 				center.logs().logError(ex);
 				name = uuid.toString();

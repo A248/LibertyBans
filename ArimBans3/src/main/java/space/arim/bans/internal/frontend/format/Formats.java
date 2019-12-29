@@ -98,7 +98,7 @@ public class Formats implements FormatsMaster {
 		switch (subj.getType()) {
 		case PLAYER:
 			try {
-				return center.resolver().resolveUUID(subj.getUUID());
+				return center.resolver().resolveUUID(subj.getUUID(), center.environment().isOnlineMode());
 			} catch (PlayerNotFoundException ex) {
 				throw new InvalidSubjectException("Subject's UUID could not be resolved to a name!", ex);
 			}

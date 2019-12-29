@@ -81,16 +81,22 @@ public enum CommandType {
 		BLAME(Category.LIST, "blame"),
 		ROLLBACK(Category.OTHER, "rollback"),
 		EDITREASON(Category.OTHER, "editreason"),
-		RELOAD(Category.OTHER, "reload", true);
+		RELOAD(Category.OTHER, "reload", true, false);
 		
 		private final Category category;
 		private final String permissionBase;
 		private final boolean noArg;
+		private final boolean reqAsync;
 		
-		private SubCategory(Category category, String permissionBase, final boolean noArg) {
+		private SubCategory(Category category, String permissionBase, boolean noArg, boolean reqAsync) {
 			this.category = category;
 			this.permissionBase = "arimbans." + permissionBase;
 			this.noArg = noArg;
+			this.reqAsync = reqAsync;
+		}
+		
+		private SubCategory(Category category, String permissionBase, boolean noArg) {
+			this(category, permissionBase, noArg, true);
 		}
 		
 		private SubCategory(Category category, String permissionBase) {
@@ -107,6 +113,10 @@ public enum CommandType {
 		
 		boolean noTarget() {
 			return noArg;
+		}
+		
+		boolean requiresAsynchronisation() {
+			return reqAsync;
 		}
 		
 	}
@@ -150,6 +160,10 @@ public enum CommandType {
 	
 	public boolean canHaveNoTarget() {
 		return subCategory().noTarget();
+	}
+	
+	public boolean requiresAsynchronisation() {
+		return subCategory().requiresAsynchronisation();
 	}
 	
 	public String getPermission() {
