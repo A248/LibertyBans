@@ -43,6 +43,7 @@ import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.api.exception.NoGeoIpException;
+import space.arim.bans.api.exception.TypeParseException;
 
 import space.arim.universal.util.UniversalUtil;
 
@@ -272,7 +273,7 @@ public class Commands implements CommandsMaster {
 				return;
 			}
 			execute(subject, command, StringsUtil.chopOffOne(rawArgs));
-		} catch (IllegalArgumentException ex) {
+		} catch (TypeParseException ex) {
 			usage(subject);
 		}
 	}

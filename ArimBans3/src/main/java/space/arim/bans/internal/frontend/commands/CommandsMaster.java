@@ -20,6 +20,7 @@ package space.arim.bans.internal.frontend.commands;
 
 import space.arim.bans.api.CommandType;
 import space.arim.bans.api.Subject;
+import space.arim.bans.api.exception.TypeParseException;
 import space.arim.bans.internal.Component;
 
 public interface CommandsMaster extends Component {
@@ -38,7 +39,7 @@ public interface CommandsMaster extends Component {
 				return type;
 			}
 		}
-		throw new IllegalArgumentException("Input '" + input + "' could not be parsed as a CommandType!");
+		throw new TypeParseException(input, CommandType.class);
 	}
 
 	void usage(Subject subject);
