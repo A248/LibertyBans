@@ -28,7 +28,7 @@ public class SqlQuery {
 	private final Query statement;
 	private final Object[] parameters;
 	
-	static final int SUBJECT_COLUMN_SIZE = 52;
+	static final int SUBJECT_COLUMN_SIZE = 53;
 	
 	public SqlQuery(Query statement, Object...parameters) {
 		this.statement = statement;
@@ -49,34 +49,34 @@ public class SqlQuery {
 	
 	@Override
 	public String toString() {
-		return "{[" + statement + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAll(parameters, (param) -> param.toString()), ',') + "]}";
+		return "{[" + statement + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAllToString(parameters), ',') + "]}";
 	}
 	
 	public enum Query {
 		CREATE_TABLE_ACTIVE(
 				"CREATE TABLE IF NOT EXISTS `%PREFIX%active` ("
 						+ "`id` int NOT NULL,"
-						+ "`type` VARCHAR(3) NOT NULL,"
+						+ "`type` VARCHAR(4) NOT NULL,"
 						+ "`subject` VARCHAR(" + SUBJECT_COLUMN_SIZE + ") NOT NULL,"
 						+ "`operator` VARCHAR(" + SUBJECT_COLUMN_SIZE + ") NOT NULL,"
-						+ "`reason` VARCHAR(255) NOT NULL,"
+						+ "`reason` TEXT NOT NULL,"
 						+ "`expiration` BIGINT NOT NULL,"
 						+ "`date` BIGINT NOT NULL)"),
 
 		CREATE_TABLE_HISTORY(
 				"CREATE TABLE IF NOT EXISTS `%PREFIX%history` ("
 						+ "`id` int NOT NULL,"
-						+ "`type` VARCHAR(3) NOT NULL,"
+						+ "`type` VARCHAR(4) NOT NULL,"
 						+ "`subject` VARCHAR(" + SUBJECT_COLUMN_SIZE + ") NOT NULL,"
 						+ "`operator` VARCHAR(" + SUBJECT_COLUMN_SIZE + ") NOT NULL,"
-						+ "`reason` VARCHAR(255) NOT NULL,"
+						+ "`reason` TEXT NOT NULL,"
 						+ "`expiration` BIGINT NOT NULL,"
 						+ "`date` BIGINT NOT NULL)"),
 
 		CREATE_TABLE_CACHE(
 				"CREATE TABLE IF NOT EXISTS `%PREFIX%cache` ("
-						+ "`uuid` VARCHAR(31) NOT NULL,"
-						+ "`name` VARCHAR(15) NOT NULL,"
+						+ "`uuid` VARCHAR(32) NOT NULL,"
+						+ "`name` VARCHAR(16) NOT NULL,"
 						+ "`iplist` TEXT NOT NULL,"
 						+ "`update_name` BIGINT NOT NULL," 
 						+ "`update_iplist` BIGINT NOT NULL)"),

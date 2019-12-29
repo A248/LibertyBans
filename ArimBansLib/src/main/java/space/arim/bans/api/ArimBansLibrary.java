@@ -31,15 +31,16 @@ public interface ArimBansLibrary extends PunishmentPlugin, SQLPlugin, AutoClosea
 	 * Used internally for invalid messages. If you send a message whose sole content
 	 * is this, you will receive an unchecked exception.
 	 */
-	static String INVALID_STRING_CODE = "<ArimBans_InvalidStringCode_If_You_See_This_Please_Tell_An_Admin_Immediately>";
+	static String INVALID_STRING_CODE = "<ArimBans_Invalid_String_Code:_If_You_See_This_Please_Tell_An_Admin_Immediately>";
 	
 	/**
 	 * Checks a message for validity
 	 * <br><br>All this does is:
-	 * <br>1. Check against {@link #INVALID_MESSAGE_CODE} for equality
+	 * <br>1. Check against {@link #INVALID_STRING_CODE} for equality
 	 * <br>2. Check for null values
 	 * 
 	 * @param message - the string to check
+	 * @return true if valid
 	 */
 	static boolean checkString(String message) {
 		return message != null && !INVALID_STRING_CODE.equals(message);
@@ -100,14 +101,15 @@ public interface ArimBansLibrary extends PunishmentPlugin, SQLPlugin, AutoClosea
 	 * Changes a punishment reason
 	 * 
 	 * @param punishment - the punishment whose reason to change
-	 * @param newReason - the new reason
+	 * @param reason - the new reason
+	 * @throws MissingPunishmentException if the punishment is neither found in active punishments nor history
 	 */
 	void changeReason(Punishment punishment, String reason) throws MissingPunishmentException;
 	
 	/**
 	 * Executes a block of code asynchronously.
 	 * 
-	 * <br><br>Bukkit/Spigot users may call {@link org.bukkit.scheduler.BukkitScheduler#runTask(Plugin, Runnable) Bukkit.getScheduler().runTask(Plugin, Runnable)} to resynchronize.
+	 * <br><br>Bukkit/Spigot users may call Bukkit.getScheduler().runTask(Plugin, Runnable) to resynchronize.
 	 * 
 	 * @param task - the lambda/runnable to run async
 	 */

@@ -24,6 +24,7 @@ import java.util.UUID;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
+import space.arim.bans.api.Subject;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.internal.Component;
 
@@ -39,6 +40,8 @@ public interface CorresponderMaster extends Component {
 	Set<Punishment> getApplicablePunishments(UUID uuid, String address, PunishmentType type);
 	
 	Punishment getPunishmentById(int id) throws MissingPunishmentException;
+	
+	void enact(Punishment punishment, boolean add, Subject operator);
 	
 	boolean callPunishEvent(Punishment punishment, boolean retro);
 	

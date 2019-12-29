@@ -74,6 +74,7 @@
 							<outputFile>target/${project.name}_v${core.version}.jar</outputFile>
 							<artifactSet>
 								<includes>
+									<include>space.arim:arimapi-core</include>
 									<include>space.arim:universal-util</include>
 									<include>space.arim:universal-events</include>
 									<include>space.arim:universal-registry</include>

@@ -346,14 +346,15 @@ public class Commands implements CommandsMaster {
 			switch (command.subCategory()) {
 			case RELOAD:
 				reloadCmd(operator);
-				return;
+				break;
 			case EDITREASON:
 				editReasonCmd(operator, args);
-				return;
+				break;
 			default:
 				listCmd(operator, null, command, (args.length == 0) ? 1 : parseNumber(args[0], 1));
-				return;
+				break;
 			}
+			return;
 		}
 		if (args.length <= 0) {
 			usage(operator, command);
@@ -412,7 +413,7 @@ public class Commands implements CommandsMaster {
 		long span = -1L;
 		if (!type.equals(PunishmentType.KICK)) {
 			long max = 0;
-			String basePerm = "arimbans." + type.name() + ".dur.";
+			String basePerm = "arimbans." + type.name().toLowerCase() + ".dur.";
 			List<String> durPerms = durations.get(type);
 			if (center.subjects().hasPermission(operator, basePerm + "perm")) {
 				max = -1L;
@@ -433,25 +434,25 @@ public class Commands implements CommandsMaster {
 				args = StringsUtil.chopOffOne(args);
 			}
 			if (span == -1L && max != -1L || span > max) {
-				center.subjects().sendMessage(operator, permTime.get(type).replace("%MAXTIME%", Long.toString(max)));
+				center.subjects().sendMessage(operator, permTime.get(type).replace("%MAXTIME%", center.formats().formatTime(max, false)));
 				return;
 			}
 		}
-		String reason;
+		String reason = "";
 		boolean silent = false;
 		boolean passive = false;
 		if (args.length > 0) {
 			for (String arg : args) {
 				if (arg.startsWith("-")) {
 					if (arg.contains("s")) {
-						if (!center.subjects().hasPermission(operator, "arimbans." + type.name() + ".passive")) {
+						if (!center.subjects().hasPermission(operator, "arimbans." + type.name().toLowerCase() + ".passive")) {
 							center.subjects().sendMessage(operator, noSilent.get(type));
 							return;
 						}
 						silent = true;
 					}
 					if (arg.contains("p")) {
-						if (!center.subjects().hasPermission(operator, "arimbans." + type.name() + ".passive")) {
+						if (!center.subjects().hasPermission(operator, "arimbans." + type.name().toLowerCase() + ".passive")) {
 							center.subjects().sendMessage(operator, noPassive.get(type));
 							return;
 						}
@@ -463,31 +464,30 @@ public class Commands implements CommandsMaster {
 				}
 			}
 			reason = StringsUtil.concat(args, ' ');
-		} else if (permit_blank_reason) {
+		}
+		if (reason.isEmpty() && permit_blank_reason) {
 			reason = default_reason;
-		} else {
+		} else if (reason.isEmpty()) {
 			usage(operator, command);
 			return;
 		}
-		Punishment punishment = new Punishment(center.getNextAvailablePunishmentId(), type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis());
+		if (!center.subjects().hasPermission(target, "arimbans." + type.name().toLowerCase() + "exempt") || center.subjects().hasPermission(operator, "arimbans." + type.name().toLowerCase() + "exempt.bypass")) {
+			center.subjects().sendMessage(operator, exempt.get(type).replace("%TARGET%", center.formats().formatSubject(target)));
+			return;
+		}
+		Punishment punishment = new Punishment(center.getNextAvailablePunishmentId(), type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis(), silent, passive);
 		try {
 			center.punishments().addPunishments(punishment);
-			enact(operator, target, command, punishment, true, silent, passive);
+			enact(operator, command, punishment, true);
 		} catch (ConflictingPunishmentException ex) {
 			String conflict = (punishment.type().equals(PunishmentType.BAN)) ? additions_bans_error_conflicting : additions_mutes_error_conflicting;
 			center.subjects().sendMessage(operator, conflict.replace("%TARGET%", center.formats().formatSubject(punishment.subject())));
 		}
 	}
 	
-	private void enact(Subject operator, Subject target, CommandType command, Punishment punishment, boolean add, boolean silent, boolean passive) {
+	private void enact(Subject operator, CommandType command, Punishment punishment, boolean add) {
 		center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
-		if (!silent) {
-			center.subjects().sendNotif(punishment, add, operator);
-		}
-		if (!passive && add) {
-			center.environment().enforce(punishment, center.formats().useJson());
-		}
-		center.logs().log(Level.FINE, "Operator " + operator.toString() + ((add) ? " punished " : " unpunished ") + target.toString() + ". Silent = " + silent + "; Passive = " + passive);
+		center.corresponder().enact(punishment, add, operator);
 	}
 	
 	private void unpunCmd(Subject operator, Subject target, CommandType command, String[] args) {
@@ -505,8 +505,9 @@ public class Commands implements CommandsMaster {
 				if (args[0].equals("internal_confirm")) {
 					try {
 						Punishment punishment = center.corresponder().getPunishmentById(Integer.parseInt(args[1]));
+						punishment.setSilent(silent);
 						center.punishments().removePunishments(punishment);
-						enact(operator, target, command, punishment, false, silent, false);
+						enact(operator, command, punishment, false);
 						return;
 					} catch (MissingPunishmentException ex) {
 						center.subjects().sendMessage(operator, notfound.get(type).replace("%NUMBER%", args[0]).replace("%TARGET%", center.formats().formatSubject(target)));
@@ -520,8 +521,9 @@ public class Commands implements CommandsMaster {
 							center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
 							return;
 						}
+						punishment.setSilent(silent);
 						center.punishments().removePunishments(punishment);
-						enact(operator, target, command, punishment, false, silent, false);
+						enact(operator, command, punishment, false);
 						return;
 					} catch (MissingPunishmentException ex) {
 						center.subjects().sendMessage(operator, notfound.get(type).replace("%NUMBER%", args[0]).replace("%TARGET%", center.formats().formatSubject(target)));
@@ -544,8 +546,9 @@ public class Commands implements CommandsMaster {
 			center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(confirmUnpunishMsg.get(type), punishment).replace("%CMD%", cmd));
 		} else {
 			try {
+				punishment.setSilent(silent);
 				center.punishments().removePunishments(punishment);
-				enact(operator, target, command, punishment, false, silent, false);
+				enact(operator, command, punishment, false);
 			} catch (MissingPunishmentException ex) {
 				center.subjects().sendMessage(operator, notfound.get(type).replace("%TARGET%", center.formats().formatSubject(target)));
 				return;
@@ -929,8 +932,8 @@ public class Commands implements CommandsMaster {
 			case KICK:
 				exempt.put(type, center.config().getMessagesString(leadKey1 + "error.exempt"));
 				successful.put(categoryAdd, center.config().getMessagesString(leadKey1 + "successful.message"));
-				noSilent.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.silent"));
-				noPassive.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.passive"));
+				noSilent.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.no-silent"));
+				noPassive.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.no-passive"));
 				break;
 			default:
 				throw new InternalStateException("What other punishment type is there?!?");

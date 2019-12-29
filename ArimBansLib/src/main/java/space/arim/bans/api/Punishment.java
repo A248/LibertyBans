@@ -29,11 +29,15 @@ public class Punishment {
 	private final String reason;
 	private final long expiration;
 	private final long date;
-	private final transient boolean silent;
+	private transient volatile boolean silent;
 	private final transient boolean passive;
 
 	public Punishment(int id, PunishmentType type, Subject subject, Subject operator, String reason, long expiration) {
 		this(id, type, subject, operator, reason, expiration, System.currentTimeMillis());
+	}
+	
+	public Punishment(int id, PunishmentType type, Subject subject, Subject operator, String reason, long expiration, boolean silent, boolean passive) {
+		this(id, type, subject, operator, reason, expiration, System.currentTimeMillis(), silent, passive);
 	}
 	
 	public Punishment(int id, PunishmentType type, Subject subject, Subject operator, String reason, long expiration, long date) {
@@ -88,6 +92,10 @@ public class Punishment {
 		return passive;
 	}
 	
+	public void setSilent(boolean silent) {
+		this.silent = silent;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -103,12 +111,12 @@ public class Punishment {
 
 	@Override
 	public boolean equals(Object object) {
-		return (object instanceof Punishment && hashCode() == object.hashCode());
+		return object instanceof Punishment && hashCode() == object.hashCode();
 	}
 	
 	@Override
 	public String toString() {
-		return "Punishment{id=" + id + ",type=" + type + ",subject=" + subject + ",operator=" + operator + ",reason=" + reason + ",expiration=" + expiration +",date=" + date + "}";
+		return "Punishment{id=" + id + ",type=" + type + ",subject=" + subject + ",operator=" + operator + ",reason=" + reason + ",expiration=" + expiration +",date=" + date + ",silent=" + silent + ",passive=" + passive + "}";
 	}
 	
 }
