@@ -86,7 +86,7 @@ public class Subjects implements SubjectsMaster {
 	
 	@Override
 	public boolean hasPermission(Subject subject, String permission) {
-		return center.environment().hasPermission(subject, permission, op_permissions);
+		return ArimBansLibrary.checkString(permission) && center.environment().hasPermission(subject, permission, op_permissions);
 	}
 	
 	private String notifyPerm(PunishmentType type) {
