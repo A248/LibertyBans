@@ -324,7 +324,7 @@ public class Commands implements CommandsMaster {
 				editReasonCmd(operator, args);
 				break;
 			default:
-				listCmd(operator, null, command, (args.length == 0) ? 1 : parseNumber(args[0], 1));
+				listCmd(operator, null, command, args.length == 0 ? 1 : parseNumber(args[0], 1));
 				break;
 			}
 			return;
@@ -356,12 +356,12 @@ public class Commands implements CommandsMaster {
 				ipSelector(operator, target, command, args);
 				return;
 			}
+			break;
 		case BOTH:
-			if (!target.getType().equals(SubjectType.PLAYER)) {
-				if (!checkPermission(operator, command.alternateIpSpec(), false)) {
-					return;
-				}
+			if (!target.getType().equals(SubjectType.PLAYER) && !checkPermission(operator, command.alternateIpSpec(), false)) {
+				return;
 			}
+			break;
 		default:
 			break;
 		}
