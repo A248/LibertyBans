@@ -265,56 +265,6 @@ public class Commands implements CommandsMaster {
 		}
 	}
 	
-	@Override
-	public void execute(Subject subject, String[] rawArgs) {
-		try {
-			CommandType command = CommandType.parseCommand(rawArgs[0]);
-			if (!checkPermission(subject, command)) {
-				return;
-			}
-			execute(subject, command, StringsUtil.chopOffOne(rawArgs));
-		} catch (TypeParseException ex) {
-			usage(subject);
-		}
-	}
-	
-	@Override
-	public void execute(Subject subject, CommandType command, String[] args) {
-		if (command.requiresAsynchronisation() && !UniversalUtil.get().isAsynchronous()) {
-			center.async(() -> exec(subject, command, args));
-		} else {
-			exec(subject, command, args);
-		}
-	}
-	
-	// Should only be called for targets with SubjectType == SubjectType.PLAYER
-	private void ipSelector(Subject operator, Subject target, CommandType command, String[] args) {
-		String base = getCmdBaseString(command) + " ";
-		String extra = StringsUtil.concat(args, ' ');
-		List<String> ips;
-		try {
-			ips = center.resolver().getIps(target.getUUID());
-		} catch (MissingCacheException ex) {
-			center.subjects().sendMessage(operator, invalid.get(IpSpec.IP).replace("%TARGET%", center.formats().formatSubject(target)));
-			return;
-		}
-		StringBuilder builder = new StringBuilder();
-		for (String ip : ips) {
-			builder.append(ip_selector_element.replace("%IP%", ip).replace("%CMD%", base + ip + extra));
-		}
-		String list = builder.toString();
-		center.subjects().sendMessage(operator, ip_selector_message.replace("%TARGET%", center.formats().formatSubject(target)).replace("%LIST%", list));
-	}
-	
-	private CommandType alternateIpSpec(CommandType command) {
-		for (CommandType alt : CommandType.values()) {
-			if (alt.subCategory().equals(command.subCategory()) && alt.ipSpec().equals(IpSpec.IP)) {
-				return alt;
-			}
-		}
-		throw new InternalStateException("Could not find command with IpSpec.IP for subcategory " + command.subCategory());
-	}
-	
 	private PunishmentType applicableType(CommandType command) {
 		switch (command.subCategory()) {
 		case BAN:
@@ -335,6 +285,28 @@ public class Commands implements CommandsMaster {
 		case STATUS:
 		default:
 			throw new InternalStateException("You called a bad method :/");
+		}
+	}
+	
+	@Override
+	public void execute(Subject subject, String[] rawArgs) {
+		try {
+			CommandType command = CommandType.parseCommand(rawArgs[0]);
+			if (!checkPermission(subject, command)) {
+				return;
+			}
+			execute(subject, command, StringsUtil.chopOffOne(rawArgs));
+		} catch (TypeParseException ex) {
+			usage(subject);
+		}
+	}
+	
+	@Override
+	public void execute(Subject subject, CommandType command, String[] args) {
+		if (command.requiresAsynchronisation() && !UniversalUtil.get().isAsynchronous()) {
+			center.async(() -> exec(subject, command, args));
+		} else {
+			exec(subject, command, args);
 		}
 	}
 	
@@ -386,7 +358,7 @@ public class Commands implements CommandsMaster {
 			}
 		case BOTH:
 			if (!target.getType().equals(SubjectType.PLAYER)) {
-				if (!checkPermission(operator, alternateIpSpec(command), false)) {
+				if (!checkPermission(operator, command.alternateIpSpec(), false)) {
 					return;
 				}
 			}
@@ -403,6 +375,25 @@ public class Commands implements CommandsMaster {
 		} else if (command.category().equals(Category.OTHER)) {
 			otherCmd(operator, target, command, args);
 		}
+	}
+	
+	// Should only be called for targets with SubjectType == SubjectType.PLAYER
+	private void ipSelector(Subject operator, Subject target, CommandType command, String[] args) {
+		String base = getCmdBaseString(command) + " ";
+		String extra = StringsUtil.concat(args, ' ');
+		List<String> ips;
+		try {
+			ips = center.resolver().getIps(target.getUUID());
+		} catch (MissingCacheException ex) {
+			center.subjects().sendMessage(operator, invalid.get(IpSpec.IP).replace("%TARGET%", center.formats().formatSubject(target)));
+			return;
+		}
+		StringBuilder builder = new StringBuilder();
+		for (String ip : ips) {
+			builder.append(ip_selector_element.replace("%IP%", ip).replace("%CMD%", base + ip + extra));
+		}
+		String list = builder.toString();
+		center.subjects().sendMessage(operator, ip_selector_message.replace("%TARGET%", center.formats().formatSubject(target)).replace("%LIST%", list));
 	}
 	
 	private void punCmd(Subject operator, Subject target, CommandType command, String[] args) {

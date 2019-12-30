@@ -18,6 +18,7 @@
  */
 package space.arim.bans.api;
 
+import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.TypeParseException;
 
 public enum CommandType {
@@ -40,12 +41,12 @@ public enum CommandType {
 	KICK(SubCategory.KICK),
 	IPKICK(SubCategory.KICK, IpSpec.IP),
 	
-	BANLIST(SubCategory.BANLIST, IpSpec.UUID),
+	BANLIST(SubCategory.BANLIST),
 	IPBANLIST(SubCategory.BANLIST, IpSpec.IP),
-	PLAYERBANLIST(SubCategory.BANLIST),
-	MUTELIST(SubCategory.MUTELIST, IpSpec.UUID),
+	PLAYERBANLIST(SubCategory.BANLIST, IpSpec.UUID),
+	MUTELIST(SubCategory.MUTELIST),
 	IPMUTELIST(SubCategory.MUTELIST, IpSpec.IP),
-	PLAYERMUTELIST(SubCategory.MUTELIST),
+	PLAYERMUTELIST(SubCategory.MUTELIST, IpSpec.UUID),
 	
 	HISTORY(SubCategory.HISTORY),
 	IPHISTORY(SubCategory.HISTORY, IpSpec.IP),
@@ -181,6 +182,15 @@ public enum CommandType {
 			assert false;
 			throw new IllegalStateException("IpSpec is invalid!");
 		}
+	}
+	
+	public CommandType alternateIpSpec() {
+		for (CommandType alt : CommandType.values()) {
+			if (alt.subCategory().equals(subCategory()) && alt.ipSpec().equals(IpSpec.IP)) {
+				return alt;
+			}
+		}
+		throw new InternalStateException("Could not find command with IpSpec.IP for subcategory " + subCategory());
 	}
 	
 	public static CommandType parseCommand(String input) {
