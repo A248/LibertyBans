@@ -268,7 +268,7 @@ public class Commands implements CommandsMaster {
 	@Override
 	public void execute(Subject subject, String[] rawArgs) {
 		try {
-			CommandType command = parseCommand(rawArgs[0]);
+			CommandType command = CommandType.parseCommand(rawArgs[0]);
 			if (!checkPermission(subject, command)) {
 				return;
 			}

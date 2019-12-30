@@ -18,6 +18,8 @@
  */
 package space.arim.bans.api;
 
+import space.arim.bans.api.exception.TypeParseException;
+
 public enum CommandType {
 	
 	BAN(SubCategory.BAN),
@@ -179,6 +181,15 @@ public enum CommandType {
 			assert false;
 			throw new IllegalStateException("IpSpec is invalid!");
 		}
+	}
+	
+	public static CommandType parseCommand(String input) {
+		for (CommandType type : CommandType.values()) {
+			if (type.toString().equalsIgnoreCase(input)) {
+				return type;
+			}
+		}
+		throw new TypeParseException(input, CommandType.class);
 	}
 
 }

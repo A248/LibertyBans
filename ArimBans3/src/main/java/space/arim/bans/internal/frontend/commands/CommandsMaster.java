@@ -20,7 +20,6 @@ package space.arim.bans.internal.frontend.commands;
 
 import space.arim.bans.api.CommandType;
 import space.arim.bans.api.Subject;
-import space.arim.bans.api.exception.TypeParseException;
 import space.arim.bans.internal.Component;
 
 public interface CommandsMaster extends Component {
@@ -32,15 +31,6 @@ public interface CommandsMaster extends Component {
 	void execute(Subject subject, String[] rawArgs);
 	
 	void execute(Subject subject, CommandType command, String[] extraArgs);
-
-	default CommandType parseCommand(String input) {
-		for (CommandType type : CommandType.values()) {
-			if (type.toString().equalsIgnoreCase(input)) {
-				return type;
-			}
-		}
-		throw new TypeParseException(input, CommandType.class);
-	}
 
 	void usage(Subject subject);
 	
