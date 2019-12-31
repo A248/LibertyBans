@@ -35,7 +35,7 @@ import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.internal.sql.SqlQuery.Query;
 
 import space.arim.universal.util.collections.CollectionsUtil;
-import space.arim.universal.util.function.ErringLazySingleton;
+import space.arim.universal.util.function.erring.ErringLazySingleton;
 
 import space.arim.api.sql.ExecutableQuery;
 import space.arim.api.util.StringsUtil;
