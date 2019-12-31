@@ -45,7 +45,6 @@ import space.arim.bans.internal.logging.LogsMaster;
 import space.arim.bans.internal.sql.SqlMaster;
 
 import space.arim.universal.registry.RegistryPriority;
-import space.arim.universal.registry.UniversalRegistry;
 
 import space.arim.api.sql.ExecutableQuery;
 
@@ -74,10 +73,6 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	CorresponderMaster corresponder();
 	
 	void start();
-	
-	default UniversalRegistry getRegistry() {
-		return UniversalRegistry.get();
-	}
 	
 	@Override
 	default void refreshConfig(boolean first) {

@@ -25,6 +25,12 @@ import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.api.sql.SQLPlugin;
 import space.arim.api.util.StringsUtil;
 
+/**
+ * A {@link PunishmentPlugin} with specific support for ArimBans' features.
+ * 
+ * @author A248
+ *
+ */
 public interface ArimBansLibrary extends PunishmentPlugin, SQLPlugin, AutoCloseable {
 
 	/**
@@ -45,8 +51,6 @@ public interface ArimBansLibrary extends PunishmentPlugin, SQLPlugin, AutoClosea
 	static boolean checkString(String message) {
 		return message != null && !INVALID_STRING_CODE.equals(message);
 	}
-	
-	int getNextAvailablePunishmentId();
 	
 	/**
 	 * Gets a Subject from a UUID
