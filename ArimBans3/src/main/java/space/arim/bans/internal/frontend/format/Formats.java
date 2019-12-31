@@ -100,7 +100,7 @@ public class Formats implements FormatsMaster {
 			try {
 				return center.resolver().resolveUUID(subj.getUUID(), center.environment().isOnlineMode());
 			} catch (PlayerNotFoundException ex) {
-				throw new InvalidSubjectException("Subject's UUID could not be resolved to a name!", ex);
+				throw new InvalidSubjectException("Subject's UUID " + subj.getUUID() + " could not be resolved to a name!", ex);
 			}
 		case IP:
 			return subj.getIP();
