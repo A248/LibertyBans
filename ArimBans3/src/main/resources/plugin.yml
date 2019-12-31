@@ -3,7 +3,7 @@ main: ${project.groupId}.bans.ArimBansBukkit
 version: ${project.version}
 author: A248
 description: ${project.description}
-depends: [ArimAPI]
+depend: [ArimAPI]
 
 commands:
   arimbans:
