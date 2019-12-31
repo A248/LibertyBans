@@ -40,6 +40,7 @@ import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.env.Environment;
 
 import space.arim.universal.util.collections.CollectionsUtil;
+import space.arim.universal.util.collections.ErringCollectionsUtil;
 
 import space.arim.api.util.minecraft.MinecraftUtil;
 import space.arim.api.uuid.PlayerNotFoundException;
@@ -146,9 +147,9 @@ public class BungeeEnv implements Environment {
 			}
 		} else if (subject.getType().equals(SubjectType.IP)) {
 			try {
-				return CollectionsUtil.<UUID, MissingCacheException>checkForAnyMatchesErring(center.resolver().getPlayers(subject.getIP()), (uuid) -> {
+				return ErringCollectionsUtil.<UUID, MissingCacheException>checkForAnyMatches(center.resolver().getPlayers(subject.getIP()), (uuid) -> {
 					ProxiedPlayer target = plugin.getProxy().getPlayer(uuid);
-					return target != null ? target.hasPermission(permission) : CollectionsUtil.<String, MissingCacheException>checkForAnyMatchesErring(plugin.getProxy().getConfigurationAdapter().getGroups(center.resolver().getName(uuid)), (group) -> plugin.getProxy().getConfigurationAdapter().getPermissions(group).contains(permission));
+					return target != null ? target.hasPermission(permission) : ErringCollectionsUtil.<String, MissingCacheException>checkForAnyMatches(plugin.getProxy().getConfigurationAdapter().getGroups(center.resolver().getName(uuid)), (group) -> plugin.getProxy().getConfigurationAdapter().getPermissions(group).contains(permission));
 				});
 			} catch (MissingCacheException ex) {
 				throw new InvalidSubjectException("One of the names of an ip-based subject could not be resolved", ex);
