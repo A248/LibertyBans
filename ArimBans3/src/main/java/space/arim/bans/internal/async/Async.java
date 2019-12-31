@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import space.arim.bans.ArimBans;
 
-import space.arim.api.AsyncExecutor;
+import space.arim.api.framework.AsyncExecutor;
 
 public class Async implements AsyncExecutor, AsyncMaster {
 	

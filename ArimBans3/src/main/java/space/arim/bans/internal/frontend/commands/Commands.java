@@ -49,9 +49,9 @@ import space.arim.bans.api.exception.TypeParseException;
 import space.arim.universal.util.UniversalUtil;
 import space.arim.universal.util.collections.CollectionsUtil;
 
+import space.arim.api.framework.PlayerNotFoundException;
 import space.arim.api.util.StringsUtil;
 import space.arim.api.util.web.GeoIpInfo;
-import space.arim.api.uuid.PlayerNotFoundException;
 
 public class Commands implements CommandsMaster {
 	

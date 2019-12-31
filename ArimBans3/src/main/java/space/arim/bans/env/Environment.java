@@ -28,7 +28,7 @@ import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.internal.Configurable;
 
-import space.arim.api.uuid.PlayerNotFoundException;
+import space.arim.api.framework.PlayerNotFoundException;
 
 public interface Environment extends Configurable {
 	

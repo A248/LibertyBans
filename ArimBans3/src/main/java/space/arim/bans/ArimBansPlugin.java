@@ -39,7 +39,7 @@ import space.arim.bans.internal.sql.SqlQuery;
 
 import space.arim.universal.registry.UniversalRegistry;
 
-import space.arim.api.AsyncExecutor;
+import space.arim.api.framework.AsyncExecutor;
 
 public class ArimBansPlugin implements ArimBans {
 	

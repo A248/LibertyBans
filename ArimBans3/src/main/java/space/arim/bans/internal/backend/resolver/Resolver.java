@@ -38,12 +38,12 @@ import space.arim.universal.registry.RegistryPriority;
 import space.arim.universal.util.UniversalUtil;
 import space.arim.universal.util.exception.HttpStatusException;
 
+import space.arim.api.framework.PlayerNotFoundException;
 import space.arim.api.util.minecraft.MinecraftUtil;
 import space.arim.api.util.web.FetcherException;
 import space.arim.api.util.web.FetcherUtil;
 import space.arim.api.util.web.GeoIpInfo;
 import space.arim.api.util.web.RateLimitException;
-import space.arim.api.uuid.PlayerNotFoundException;
 
 public class Resolver implements ResolverMaster {
 	
