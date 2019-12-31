@@ -27,7 +27,6 @@ import java.util.UUID;
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.CommandType;
 import space.arim.bans.api.Punishment;
-import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
@@ -48,7 +47,6 @@ import space.arim.bans.internal.sql.SqlMaster;
 import space.arim.universal.registry.RegistryPriority;
 import space.arim.universal.registry.UniversalRegistry;
 
-import space.arim.api.framework.UUIDResolver;
 import space.arim.api.sql.ExecutableQuery;
 
 public interface ArimBans extends Configurable, ArimBansLibrary {
@@ -77,9 +75,8 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	
 	void start();
 	
-	default void register() {
-		UniversalRegistry.get().register(PunishmentPlugin.class, this);
-		UniversalRegistry.get().register(UUIDResolver.class, resolver());
+	default UniversalRegistry getRegistry() {
+		return UniversalRegistry.get();
 	}
 	
 	@Override
@@ -269,6 +266,10 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	@Override
 	default void sendMessage(UUID player, String...messages) {
 		subjects().sendMessage(fromUUID(player), messages);
+	}
+	
+	default String invalidStringCode() {
+		return ArimBansLibrary.INVALID_STRING_CODE;
 	}
 	
 }

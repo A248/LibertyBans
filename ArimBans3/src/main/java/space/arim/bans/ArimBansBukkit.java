@@ -20,7 +20,10 @@ package space.arim.bans;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
+import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.env.bukkit.BukkitEnv;
+
+import space.arim.api.framework.UUIDResolver;
 
 import net.milkbowl.vault.permission.Permission;
 
@@ -33,8 +36,9 @@ public class ArimBansBukkit extends JavaPlugin implements AutoCloseable {
 		environment = new BukkitEnv(this, getServer().getServicesManager().getRegistration(Permission.class).getProvider());
 		center = new ArimBansPlugin(getDataFolder(), environment);
 		center.start();
-		center.register();
 		environment.loadFor(center);
+		center.getRegistry().register(PunishmentPlugin.class, center);
+		center.getRegistry().register(UUIDResolver.class, center.resolver());
 	}
 	
 	@Override

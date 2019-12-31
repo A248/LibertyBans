@@ -39,8 +39,6 @@ import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.api.exception.TypeParseException;
 import space.arim.bans.internal.sql.SqlQuery;
 
-import space.arim.universal.util.UniversalUtil;
-
 public class Punishments implements PunishmentsMaster {
 	
 	private final ArimBans center;
@@ -134,7 +132,7 @@ public class Punishments implements PunishmentsMaster {
 		
 		// Anti-synchronisation protection, for bad API calls
 		// Check whether we are already asynchronous. If not, run queries inside async.
-		if (UniversalUtil.get().isAsynchronous()) {
+		if (center.getRegistry().getEvents().getUtil().isAsynchronous()) {
 			directAddPunishments(punishments); // yay! all is good, API was used correctly
 			
 		} else { // uh-oh! potential for rare concurrency issues being silenced
@@ -220,7 +218,7 @@ public class Punishments implements PunishmentsMaster {
 		}
 		// Anti-synchronisation protection, for bad API calls
 		// Check whether we are already asynchronous. If not, run queries inside async.
-		if (UniversalUtil.get().isAsynchronous()) { // yay! all is good, API was used correctly
+		if (center.getRegistry().getEvents().getUtil().isAsynchronous()) { // yay! all is good, API was used correctly
 			directRemovePunishments(punishments);
 			
 		} else { // uh-oh! potential for rare concurrency issues being silenced
@@ -262,7 +260,7 @@ public class Punishments implements PunishmentsMaster {
 		}
 		// Anti-synchronisation protection, for bad API calls
 		// Check whether we are already asynchronous. If not, run queries async.
-		if (UniversalUtil.get().isAsynchronous()) { // yay! all is good, API was used correctly
+		if (center.getRegistry().getEvents().getUtil().isAsynchronous()) { // yay! all is good, API was used correctly
 			directChangeReason(punishment, reason);
 			
 		} else { // uh-oh! potential for rare concurrency issues being silenced
@@ -360,7 +358,7 @@ public class Punishments implements PunishmentsMaster {
 			}
 		}
 		// Call PostUnpunishEvents before proceeding
-		if (UniversalUtil.get().isAsynchronous()) {
+		if (center.getRegistry().getEvents().getUtil().isAsynchronous()) {
 			invalidated.forEach(center.corresponder()::callPostUnpunishEvent);
 		} else {
 			center.async(() -> invalidated.forEach(center.corresponder()::callPostUnpunishEvent));
