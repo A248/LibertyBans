@@ -3,3 +3,4 @@ main: ${project.groupId}.bans.ArimBansBungee
 version: ${project.version}
 author: A248
 description: ${project.description}
+depends: [ArimAPI]
