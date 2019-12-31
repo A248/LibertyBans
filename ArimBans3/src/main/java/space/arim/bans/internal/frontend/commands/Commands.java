@@ -32,7 +32,6 @@ import java.util.logging.Level;
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.CommandType;
-import space.arim.bans.api.CommandType.Category;
 import space.arim.bans.api.CommandType.IpSpec;
 import space.arim.bans.api.CommandType.SubCategory;
 import space.arim.bans.api.Punishment;
@@ -191,7 +190,7 @@ public class Commands implements CommandsMaster {
 		return checkPermission(subject, command, true);
 	}
 	
-	private String keyString(Category category) {
+	private String keyString(CommandType.Category category) {
 		switch (category) {
 		case ADD:
 			return "additions.";
@@ -368,13 +367,13 @@ public class Commands implements CommandsMaster {
 			break;
 		}
 		args = StringsUtil.chopOffOne(args);
-		if (command.category().equals(Category.ADD)) {
+		if (command.category().equals(CommandType.Category.ADD)) {
 			punCmd(operator, target, command, args);
-		} else if (command.category().equals(Category.REMOVE)) {
+		} else if (command.category().equals(CommandType.Category.REMOVE)) {
 			unpunCmd(operator, target, command, args);
-		} else if (command.category().equals(Category.LIST)) {
+		} else if (command.category().equals(CommandType.Category.LIST)) {
 			listCmd(operator, target, command, (args.length == 0) ? 1 : parseNumber(args[0], 1));
-		} else if (command.category().equals(Category.OTHER)) {
+		} else if (command.category().equals(CommandType.Category.OTHER)) {
 			otherCmd(operator, target, command, args);
 		}
 	}
@@ -881,8 +880,8 @@ public class Commands implements CommandsMaster {
 		}
 		
 		for (PunishmentType type : PunishmentType.values()) {
-			String leadKey1 = center.config().keyString(type, Category.ADD);
-			String leadKey2 = center.config().keyString(type, Category.REMOVE);
+			String leadKey1 = center.config().keyString(type, CommandType.Category.ADD);
+			String leadKey2 = center.config().keyString(type, CommandType.Category.REMOVE);
 			SubCategory categoryAdd = fromPunishmentType(type, true);
 			SubCategory categoryRemove = fromPunishmentType(type, false);
 			switch (type) {
