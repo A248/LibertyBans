@@ -18,6 +18,7 @@
  */
 package space.arim.bans.env.bukkit;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -31,12 +32,13 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import space.arim.bans.ArimBans;
-import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.env.Environment;
+
+import space.arim.universal.util.collections.CollectionsUtil;
 
 import space.arim.api.util.minecraft.MinecraftUtil;
 import space.arim.api.uuid.PlayerNotFoundException;
@@ -98,27 +100,18 @@ public class BukkitEnv implements Environment {
 
 	@Override
 	public boolean isOnline(Subject subj) {
-		if (subj.getType().equals(SubjectType.PLAYER)) {
-			for (Player check : plugin.getServer().getOnlinePlayers()) {
-				if (subj.getUUID().equals(check.getUniqueId())) {
-					return true;
-				}
-			}
-			return false;
-		} else if (subj.getType().equals(SubjectType.IP)) {
-			for (Player check : plugin.getServer().getOnlinePlayers()) {
-				if (center.resolver().hasIp(check.getUniqueId(), subj.getIP())) {
-					return true;
-				}
-			}
-			return false;
+		switch (subj.getType()) {
+		case PLAYER:
+			return CollectionsUtil.checkForAnyMatches(plugin.getServer().getOnlinePlayers(), (check) -> subj.getUUID().equals(check.getUniqueId()));
+		case IP:
+			return CollectionsUtil.checkForAnyMatches(plugin.getServer().getOnlinePlayers(), (check) -> center.resolver().hasIp(check.getUniqueId(), subj.getIP()));
+		default:
+			return subj.getType().equals(SubjectType.CONSOLE);
 		}
-		return subj.getType().equals(SubjectType.CONSOLE);
 	}
 	
 	@Override
 	public void sendMessage(Subject subj, String jsonable, boolean useJson) {
-		ArimBansLibrary.checkString(jsonable);
 		if (subj.getType().equals(SubjectType.PLAYER)) {
 			Player target = plugin.getServer().getPlayer(subj.getUUID());
 			if (target != null) {
@@ -148,33 +141,35 @@ public class BukkitEnv implements Environment {
 			OfflinePlayer target = plugin.getServer().getOfflinePlayer(subject.getUUID());
 			return target != null && (opPerms && target.isOp() || !opPerms && target.isOnline() && target.getPlayer().hasPermission(permission) || !opPerms && permissions.playerHas(plugin.getServer().getWorlds().get(0).getName(), target, permission));
 		} else if (subject.getType().equals(SubjectType.IP)) {
-			for (UUID uuid : center.resolver().getPlayers(subject.getIP())) {
+			return CollectionsUtil.checkForAnyMatches(center.resolver().getPlayers(subject.getIP()), (uuid) -> {
 				OfflinePlayer target = plugin.getServer().getOfflinePlayer(uuid);
-				if (target != null && (opPerms && target.isOp() || !opPerms && target.isOnline() && target.getPlayer().hasPermission(permission) || !opPerms && permissions.playerHas(plugin.getServer().getWorlds().get(0).getName(), target, permission))) {
-					return true;
-				}
-			}
-			return false;
+				return target != null && (opPerms && target.isOp() || !opPerms && target.isOnline() && target.getPlayer().hasPermission(permission) || !opPerms && permissions.playerHas(plugin.getServer().getWorlds().get(0).getName(), target, permission));
+			});
 		}
 		throw new InvalidSubjectException("Subject type is completely missing!");
 	}
 	
 	public Set<? extends Player> applicable(Subject subject) {
-		Set<Player> applicable = new HashSet<Player>();
-		if (subject.getType().equals(SubjectType.PLAYER)) {
-			for (Player check : plugin.getServer().getOnlinePlayers()) {
+		switch (subject.getType()) {
+		case PLAYER:
+			Set<Player> applicable1 = new HashSet<Player>();
+			plugin.getServer().getOnlinePlayers().forEach((check) -> {
 				if (subject.getUUID().equals(check.getUniqueId())) {
-					applicable.add(check);
+					applicable1.add(check);
 				}
-			}
-		} else if (subject.getType().equals(SubjectType.IP)) {
-			for (Player check : plugin.getServer().getOnlinePlayers()) {
+			});
+			return applicable1;
+		case IP:
+			Set<Player> applicable2 = new HashSet<Player>();
+			plugin.getServer().getOnlinePlayers().forEach((check) -> {
 				if (center.resolver().hasIp(check.getUniqueId(), subject.getIP())) {
-					applicable.add(check);
+					applicable2.add(check);
 				}
-			}
+			});
+			return applicable2;
+		default:
+			return Collections.emptySet();
 		}
-		return applicable;
 	}
 	
 	@Override
