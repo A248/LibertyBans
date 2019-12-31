@@ -37,8 +37,8 @@ import space.arim.bans.api.CommandType.SubCategory;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.InvalidSubjectException;
 
+import space.arim.api.framework.PlayerNotFoundException;
 import space.arim.api.util.StringsUtil;
-import space.arim.api.uuid.PlayerNotFoundException;
 
 public class Formats implements FormatsMaster {
 	
@@ -98,9 +98,9 @@ public class Formats implements FormatsMaster {
 		switch (subj.getType()) {
 		case PLAYER:
 			try {
-				return center.resolver().resolveUUID(subj.getUUID());
+				return center.resolver().resolveUUID(subj.getUUID(), center.environment().isOnlineMode());
 			} catch (PlayerNotFoundException ex) {
-				throw new InvalidSubjectException("Subject's UUID could not be resolved to a name!", ex);
+				throw new InvalidSubjectException("Subject's UUID " + subj.getUUID() + " could not be resolved to a name!", ex);
 			}
 		case IP:
 			return subj.getIP();

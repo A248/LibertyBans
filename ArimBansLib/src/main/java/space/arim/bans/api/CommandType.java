@@ -18,6 +18,9 @@
  */
 package space.arim.bans.api;
 
+import space.arim.bans.api.exception.InternalStateException;
+import space.arim.bans.api.exception.TypeParseException;
+
 public enum CommandType {
 	
 	BAN(SubCategory.BAN),
@@ -38,12 +41,12 @@ public enum CommandType {
 	KICK(SubCategory.KICK),
 	IPKICK(SubCategory.KICK, IpSpec.IP),
 	
-	BANLIST(SubCategory.BANLIST, IpSpec.UUID),
+	BANLIST(SubCategory.BANLIST),
 	IPBANLIST(SubCategory.BANLIST, IpSpec.IP),
-	PLAYERBANLIST(SubCategory.BANLIST),
-	MUTELIST(SubCategory.MUTELIST, IpSpec.UUID),
+	PLAYERBANLIST(SubCategory.BANLIST, IpSpec.UUID),
+	MUTELIST(SubCategory.MUTELIST),
 	IPMUTELIST(SubCategory.MUTELIST, IpSpec.IP),
-	PLAYERMUTELIST(SubCategory.MUTELIST),
+	PLAYERMUTELIST(SubCategory.MUTELIST, IpSpec.UUID),
 	
 	HISTORY(SubCategory.HISTORY),
 	IPHISTORY(SubCategory.HISTORY, IpSpec.IP),
@@ -81,16 +84,22 @@ public enum CommandType {
 		BLAME(Category.LIST, "blame"),
 		ROLLBACK(Category.OTHER, "rollback"),
 		EDITREASON(Category.OTHER, "editreason"),
-		RELOAD(Category.OTHER, "reload", true);
+		RELOAD(Category.OTHER, "reload", true, false);
 		
 		private final Category category;
 		private final String permissionBase;
 		private final boolean noArg;
+		private final boolean reqAsync;
 		
-		private SubCategory(Category category, String permissionBase, final boolean noArg) {
+		private SubCategory(Category category, String permissionBase, boolean noArg, boolean reqAsync) {
 			this.category = category;
 			this.permissionBase = "arimbans." + permissionBase;
 			this.noArg = noArg;
+			this.reqAsync = reqAsync;
+		}
+		
+		private SubCategory(Category category, String permissionBase, boolean noArg) {
+			this(category, permissionBase, noArg, true);
 		}
 		
 		private SubCategory(Category category, String permissionBase) {
@@ -107,6 +116,10 @@ public enum CommandType {
 		
 		boolean noTarget() {
 			return noArg;
+		}
+		
+		boolean requiresAsynchronisation() {
+			return reqAsync;
 		}
 		
 	}
@@ -152,6 +165,10 @@ public enum CommandType {
 		return subCategory().noTarget();
 	}
 	
+	public boolean requiresAsynchronisation() {
+		return subCategory().requiresAsynchronisation();
+	}
+	
 	public String getPermission() {
 		String base = subCategory().permissionBase();
 		switch (ipSpec()) {
@@ -165,6 +182,24 @@ public enum CommandType {
 			assert false;
 			throw new IllegalStateException("IpSpec is invalid!");
 		}
+	}
+	
+	public CommandType alternateIpSpec() {
+		for (CommandType alt : CommandType.values()) {
+			if (alt.subCategory().equals(subCategory()) && alt.ipSpec().equals(IpSpec.IP)) {
+				return alt;
+			}
+		}
+		throw new InternalStateException("Could not find command with IpSpec.IP for subcategory " + subCategory());
+	}
+	
+	public static CommandType parseCommand(String input) {
+		for (CommandType type : CommandType.values()) {
+			if (type.toString().equalsIgnoreCase(input)) {
+				return type;
+			}
+		}
+		throw new TypeParseException(input, CommandType.class);
 	}
 
 }

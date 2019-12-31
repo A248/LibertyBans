@@ -26,12 +26,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.CommandType;
-import space.arim.bans.api.CommandType.Category;
 import space.arim.bans.api.CommandType.IpSpec;
 import space.arim.bans.api.CommandType.SubCategory;
 import space.arim.bans.api.Punishment;
@@ -43,12 +43,14 @@ import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.api.exception.NoGeoIpException;
+import space.arim.bans.api.exception.TypeParseException;
 
 import space.arim.universal.util.UniversalUtil;
+import space.arim.universal.util.collections.CollectionsUtil;
 
+import space.arim.api.framework.PlayerNotFoundException;
 import space.arim.api.util.StringsUtil;
 import space.arim.api.util.web.GeoIpInfo;
-import space.arim.api.uuid.PlayerNotFoundException;
 
 public class Commands implements CommandsMaster {
 	
@@ -188,7 +190,7 @@ public class Commands implements CommandsMaster {
 		return checkPermission(subject, command, true);
 	}
 	
-	private String keyString(Category category) {
+	private String keyString(CommandType.Category category) {
 		switch (category) {
 		case ADD:
 			return "additions.";
@@ -264,56 +266,6 @@ public class Commands implements CommandsMaster {
 		}
 	}
 	
-	@Override
-	public void execute(Subject subject, String[] rawArgs) {
-		try {
-			CommandType command = parseCommand(rawArgs[0]);
-			if (!checkPermission(subject, command)) {
-				return;
-			}
-			execute(subject, command, StringsUtil.chopOffOne(rawArgs));
-		} catch (IllegalArgumentException ex) {
-			usage(subject);
-		}
-	}
-	
-	@Override
-	public void execute(Subject subject, CommandType command, String[] args) {
-		if (UniversalUtil.get().isAsynchronous()) {
-			exec(subject, command, args);
-		} else {
-			center.async(() -> exec(subject, command, args));
-		}
-	}
-	
-	// Should only be called for targets with SubjectType == SubjectType.PLAYER
-	private void ipSelector(Subject operator, Subject target, CommandType command, String[] args) {
-		String base = getCmdBaseString(command) + " ";
-		String extra = StringsUtil.concat(args, ' ');
-		List<String> ips;
-		try {
-			ips = center.resolver().getIps(target.getUUID());
-		} catch (MissingCacheException ex) {
-			center.subjects().sendMessage(operator, invalid.get(IpSpec.IP).replace("%TARGET%", center.formats().formatSubject(target)));
-			return;
-		}
-		StringBuilder builder = new StringBuilder();
-		for (String ip : ips) {
-			builder.append(ip_selector_element.replace("%IP%", ip).replace("%CMD%", base + ip + extra));
-		}
-		String list = builder.toString();
-		center.subjects().sendMessage(operator, ip_selector_message.replace("%TARGET%", center.formats().formatSubject(target)).replace("%LIST%", list));
-	}
-	
-	private CommandType alternateIpSpec(CommandType command) {
-		for (CommandType alt : CommandType.values()) {
-			if (alt.subCategory().equals(command.subCategory()) && alt.ipSpec().equals(IpSpec.IP)) {
-				return alt;
-			}
-		}
-		throw new InternalStateException("Could not find command with IpSpec.IP for subcategory " + command.subCategory());
-	}
-	
 	private PunishmentType applicableType(CommandType command) {
 		switch (command.subCategory()) {
 		case BAN:
@@ -337,6 +289,28 @@ public class Commands implements CommandsMaster {
 		}
 	}
 	
+	@Override
+	public void execute(Subject subject, String[] rawArgs) {
+		try {
+			CommandType command = CommandType.parseCommand(rawArgs[0]);
+			if (!checkPermission(subject, command)) {
+				return;
+			}
+			execute(subject, command, StringsUtil.chopOffOne(rawArgs));
+		} catch (TypeParseException ex) {
+			usage(subject);
+		}
+	}
+	
+	@Override
+	public void execute(Subject subject, CommandType command, String[] args) {
+		if (command.requiresAsynchronisation() && !UniversalUtil.get().isAsynchronous()) {
+			center.async(() -> exec(subject, command, args));
+		} else {
+			exec(subject, command, args);
+		}
+	}
+	
 	private void exec(Subject operator, CommandType command, String[] args) {
 		center.logs().log(Level.FINE, "Executing command " + command + " for operator " + operator + " with args " + StringsUtil.concat(args, ','));
 		if (!checkPermission(operator, command)) {
@@ -351,7 +325,7 @@ public class Commands implements CommandsMaster {
 				editReasonCmd(operator, args);
 				break;
 			default:
-				listCmd(operator, null, command, (args.length == 0) ? 1 : parseNumber(args[0], 1));
+				listCmd(operator, null, command, args.length == 0 ? 1 : parseNumber(args[0], 1));
 				break;
 			}
 			return;
@@ -365,7 +339,7 @@ public class Commands implements CommandsMaster {
 			target = center.subjects().parseSubject(args[0], false);
 		} catch (IllegalArgumentException ex) {}
 		try {
-			target = center.subjects().parseSubject(center.resolver().resolveName(args[0]));
+			target = center.subjects().parseSubject(center.resolver().resolveName(args[0], center.environment().isOnlineMode()));
 		} catch (PlayerNotFoundException ex) {}
 		if (target == null) {
 			center.subjects().sendMessage(operator, invalid.get(command.ipSpec()).replace("%TARGET%", args[0]));
@@ -383,25 +357,44 @@ public class Commands implements CommandsMaster {
 				ipSelector(operator, target, command, args);
 				return;
 			}
+			break;
 		case BOTH:
-			if (!target.getType().equals(SubjectType.PLAYER)) {
-				if (!checkPermission(operator, alternateIpSpec(command), false)) {
-					return;
-				}
+			if (!target.getType().equals(SubjectType.PLAYER) && !checkPermission(operator, command.alternateIpSpec(), false)) {
+				return;
 			}
+			break;
 		default:
 			break;
 		}
 		args = StringsUtil.chopOffOne(args);
-		if (command.category().equals(Category.ADD)) {
+		if (command.category().equals(CommandType.Category.ADD)) {
 			punCmd(operator, target, command, args);
-		} else if (command.category().equals(Category.REMOVE)) {
+		} else if (command.category().equals(CommandType.Category.REMOVE)) {
 			unpunCmd(operator, target, command, args);
-		} else if (command.category().equals(Category.LIST)) {
+		} else if (command.category().equals(CommandType.Category.LIST)) {
 			listCmd(operator, target, command, (args.length == 0) ? 1 : parseNumber(args[0], 1));
-		} else if (command.category().equals(Category.OTHER)) {
+		} else if (command.category().equals(CommandType.Category.OTHER)) {
 			otherCmd(operator, target, command, args);
 		}
+	}
+	
+	// Should only be called for targets with SubjectType == SubjectType.PLAYER
+	private void ipSelector(Subject operator, Subject target, CommandType command, String[] args) {
+		String base = getCmdBaseString(command) + " ";
+		String extra = StringsUtil.concat(args, ' ');
+		List<String> ips;
+		try {
+			ips = center.resolver().getIps(target.getUUID());
+		} catch (MissingCacheException ex) {
+			center.subjects().sendMessage(operator, invalid.get(IpSpec.IP).replace("%TARGET%", center.formats().formatSubject(target)));
+			return;
+		}
+		StringBuilder builder = new StringBuilder();
+		for (String ip : ips) {
+			builder.append(ip_selector_element.replace("%IP%", ip).replace("%CMD%", base + ip + extra));
+		}
+		String list = builder.toString();
+		center.subjects().sendMessage(operator, ip_selector_message.replace("%TARGET%", center.formats().formatSubject(target)).replace("%LIST%", list));
 	}
 	
 	private void punCmd(Subject operator, Subject target, CommandType command, String[] args) {
@@ -410,6 +403,10 @@ public class Commands implements CommandsMaster {
 			return;
 		}
 		PunishmentType type = applicableType(command);
+		if (center.subjects().hasPermission(target, "arimbans." + type.name().toLowerCase() + ".exempt") && !center.subjects().hasPermission(operator, "arimbans." + type.name().toLowerCase() + ".exempt.bypass")) {
+			center.subjects().sendMessage(operator, exempt.get(type).replace("%TARGET%", center.formats().formatSubject(target)));
+			return;
+		}
 		long span = -1L;
 		if (!type.equals(PunishmentType.KICK)) {
 			long max = 0;
@@ -469,10 +466,6 @@ public class Commands implements CommandsMaster {
 			reason = default_reason;
 		} else if (reason.isEmpty()) {
 			usage(operator, command);
-			return;
-		}
-		if (!center.subjects().hasPermission(target, "arimbans." + type.name().toLowerCase() + "exempt") || center.subjects().hasPermission(operator, "arimbans." + type.name().toLowerCase() + "exempt.bypass")) {
-			center.subjects().sendMessage(operator, exempt.get(type).replace("%TARGET%", center.formats().formatSubject(target)));
 			return;
 		}
 		Punishment punishment = new Punishment(center.getNextAvailablePunishmentId(), type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis(), silent, passive);
@@ -586,36 +579,50 @@ public class Commands implements CommandsMaster {
 		return getCmdBaseString(command) + " " + nextPage;
 	}
 	
+	private Predicate<Punishment> getListFilter(CommandType command, Subject target) {
+		switch (command.subCategory()) {
+		case BANLIST:
+			return (punishment) -> !punishment.type().equals(PunishmentType.BAN) || command.ipSpec().equals(IpSpec.UUID) && !punishment.subject().getType().equals(Subject.SubjectType.PLAYER) || command.ipSpec().equals(IpSpec.IP) && !punishment.subject().getType().equals(Subject.SubjectType.IP);
+		case MUTELIST:
+			return (punishment) -> !punishment.type().equals(PunishmentType.MUTE) || command.ipSpec().equals(IpSpec.UUID) && !punishment.subject().getType().equals(Subject.SubjectType.PLAYER) || command.ipSpec().equals(IpSpec.IP) && !punishment.subject().getType().equals(Subject.SubjectType.IP);
+		case WARNS:
+			return (punishment) -> !punishment.subject().equals(target) || !punishment.type().equals(PunishmentType.WARN);
+		case HISTORY:
+			return (punishment) -> !punishment.subject().equals(target);
+		case BLAME:
+			return (punishment) -> !punishment.operator().equals(target);
+		default:
+			return (punishment) -> false;
+		}
+	}
+	
+	private static String replaceListVars(String input, int page, int maxPage, String nextPageCmd) {
+		return input.replace("%PAGE%", Integer.toString(page)).replace("%MAXPAGE%", Integer.toString(maxPage)).replace("%CMD%", nextPageCmd);
+	}
+	
 	private void listCmd(Subject operator, Subject target, CommandType command, int page) {
-		Set<Punishment> applicable = SubCategory.HISTORY.equals(command.subCategory()) ? center.punishments().getHistoryCopy() : center.punishments().getActiveCopy();
-		list(operator, new Lister<Punishment>(page, perPage.get(command.subCategory()), maxPage.get(command.subCategory()), noPage.get(command.subCategory()), nextPageCmd(command, page), applicable, header.get(command.subCategory()), body.get(command.subCategory()), footer.get(command.subCategory())) {
-			@Override
-			public boolean check(Punishment punishment) {
-				if (SubCategory.BANLIST.equals(command.subCategory()) || SubCategory.MUTELIST.equals(command.subCategory())) {
-					if (command.ipSpec().equals(IpSpec.UUID) && !punishment.subject().getType().equals(Subject.SubjectType.PLAYER)) {
-						return false;
-					} else if (command.ipSpec().equals(IpSpec.IP) && !punishment.subject().getType().equals(Subject.SubjectType.IP)) {
-						return false;
-					}
-				}
-				switch (command.subCategory()) {
-				case BANLIST:
-					return PunishmentType.BAN.equals(punishment.type());
-				case MUTELIST:
-					return PunishmentType.MUTE.equals(punishment.type());
-				case WARNS:
-					if (!PunishmentType.WARN.equals(punishment.type())) {
-						return false;
-					} // falls through to next sub-block
-				case HISTORY:
-					return punishment.subject().equals(target);
-				case BLAME:
-					return punishment.operator().equals(target);
-				default:
-					return true;
-				}
-			}
+		List<Punishment> punishments = new ArrayList<Punishment>(SubCategory.HISTORY.equals(command.subCategory()) ? center.punishments().getHistoryCopy() : center.punishments().getActiveCopy());
+		punishments.removeIf(getListFilter(command, target));
+		if (punishments.isEmpty()) {
+			center.subjects().sendMessage(operator, noPage.get(command.subCategory()));
+			return;
+		}
+		String maxPagesMsg = maxPage.get(command.subCategory());
+		int maxPage = (punishments.size() - 1)/perPage.get(command.subCategory()) + 1;
+		if (page > maxPage) {
+			center.subjects().sendMessage(operator, maxPagesMsg.replace("%PAGE%", Integer.toString(page)).replace("%MAXPAGE%", Integer.toString(maxPage)));
+			return;
+		}
+		List<String> headerList = header.get(command.subCategory());
+		List<String> bodyList = body.get(command.subCategory());
+		List<String> footerList = footer.get(command.subCategory());
+		String nextPageCmd = nextPageCmd(command, page);
+		punishments.sort(DATE_LATEST_FIRST_COMPARATOR);
+		center.subjects().sendMessage(operator, false, CollectionsUtil.wrapAll(headerList.toArray(new String[] {}), (headerItem) -> replaceListVars(headerItem, page, maxPage, nextPageCmd)));
+		punishments.forEach((punishment) -> {
+			center.subjects().sendMessage(operator, true, CollectionsUtil.wrapAll(bodyList.toArray(new String[] {}), (bodyItem) -> replaceListVars(center.formats().formatMessageWithPunishment(bodyItem, punishment), page, maxPage, nextPageCmd)));
 		});
+		center.subjects().sendMessage(operator, true, CollectionsUtil.wrapAll(footerList.toArray(new String[] {}), (footerItem) -> replaceListVars(footerItem, page, maxPage, nextPageCmd)));
 	}
 	
 	private void otherCmd(Subject operator, Subject target, CommandType command, String[] extraArgs) {
@@ -642,7 +649,7 @@ public class Commands implements CommandsMaster {
 	
 	private void statusCmd(Subject operator, Subject target) {
 		Set<Punishment> applicable = center.punishments().getActiveCopy();
-		applicable.removeIf((punishment) -> punishment.subject().equals(target));
+		applicable.removeIf((punishment) -> !punishment.subject().equals(target));
 		Punishment banPunishment = null;
 		Punishment mutePunishment = null;
 		int warns = 0;
@@ -655,6 +662,7 @@ public class Commands implements CommandsMaster {
 				warns++;
 			}
 		}
+		final int warnCount = warns;
 		String header;
 		String info;
 		if (target.getType().equals(SubjectType.PLAYER)) {
@@ -666,30 +674,22 @@ public class Commands implements CommandsMaster {
 		} else {
 			throw new InternalStateException("Target cannot be the console!");
 		}
-		String banStatusKey = (banPunishment != null) ? "ban-status.banned" : "ban-status.not-banned";
-		String muteStatusKey = (mutePunishment != null) ? "mute-status.muted" : "mute-status.not-muted";
-		String warnStatusKey = (warns == 0) ? "warn-status.no-warns" : "warn-status.warn-count";
-		String banStatus = (banPunishment != null) ? center.formats().formatMessageWithPunishment(other_status_layout.get(banStatusKey), banPunishment) : other_status_layout.get(banStatusKey);
-		String muteStatus = (mutePunishment != null) ? center.formats().formatMessageWithPunishment(other_status_layout.get(muteStatusKey), mutePunishment) : other_status_layout.get(muteStatusKey);
-		String warnStatus = other_status_layout.get(warnStatusKey);
+		String banStatus = banPunishment != null ? center.formats().formatMessageWithPunishment(other_status_layout.get("ban-status.banned"), banPunishment) : other_status_layout.get("ban-status.not-banned");
+		String muteStatus = mutePunishment != null ? center.formats().formatMessageWithPunishment(other_status_layout.get("mute-status.muted"), mutePunishment) : other_status_layout.get("mute-status.not-muted");
+		String warnStatus = warnCount != 0 ? other_status_layout.get("warn-status.warn-count") : other_status_layout.get("warn-status.no-warns");
+		String targetDisplay = center.formats().formatSubject(target);
 		String[] msgs = other_status_layout_body.toArray(new String[0]);
-		for (int n = 0; n < msgs.length; n++) {
-			msgs[n] = msgs[n].replace("%HEADER%", header).replace("%INFO%", info).replace("%BAN_STATUS%", banStatus).replace("%MUTE_STATUS%", muteStatus).replace("%WARN_STATUS%", warnStatus);
-		}
-		center.subjects().sendMessage(operator, msgs);
+		center.subjects().sendMessage(operator, CollectionsUtil.wrapAll(msgs, (msg) -> msg.replace("%TARGET%", targetDisplay).replace("%HEADER%", header).replace("%INFO%", info).replace("%BAN_STATUS%", banStatus).replace("%MUTE_STATUS%", muteStatus).replace("%WARN_STATUS%", warnStatus).replace("%WARN_COUNT%", Integer.toString(warnCount)).replace("%CMD_WARNS%", "arimbans warns " + targetDisplay)));
 	}
 	
 	private void ipsCmd(Subject operator, Subject target) {
 		String[] msgs = other_ips_layout_body.toArray(new String[0]);
 		String targetDisplay = center.formats().formatSubject(target);
-		List<String> ips;
+		List<String> ips = null;
 		try {
 			ips = center.resolver().getIps(target.getUUID());
-		} catch (MissingCacheException ex) {
-			center.subjects().sendMessage(operator, other_ips_error_notfound.replace("%TARGET%", targetDisplay));
-			return;
-		}
-		if (ips.isEmpty()) {
+		} catch (MissingCacheException ex) {}
+		if (ips == null || ips.isEmpty()) {
 			center.subjects().sendMessage(operator, other_ips_error_notfound.replace("%TARGET%", targetDisplay));
 			return;
 		}
@@ -704,9 +704,9 @@ public class Commands implements CommandsMaster {
 	}
 	
 	private void geoipCmd(Subject operator, Subject target) {
-		String[] msgs = other_geoip_layout.toArray(new String[0]);
-		GeoIpInfo geoip;
+		String[] msgs = other_geoip_layout.toArray(new String[] {});
 		String targetDisplay = center.formats().formatSubject(target);
+		GeoIpInfo geoip;
 		try {
 			geoip = center.resolver().lookupIp(target.getIP());
 		} catch (NoGeoIpException ex) {
@@ -731,7 +731,7 @@ public class Commands implements CommandsMaster {
 		for (UUID uuid : players) {
 			String name;
 			try {
-				name = center.resolver().resolveUUID(uuid);
+				name = center.resolver().resolveUUID(uuid, center.environment().isOnlineMode());
 			} catch (PlayerNotFoundException ex) {
 				center.logs().logError(ex);
 				name = uuid.toString();
@@ -791,39 +791,6 @@ public class Commands implements CommandsMaster {
 			}
 		}
 		center.subjects().sendMessage(operator, other_rollback_successful_message.replace("%NUMBER%", numberArg).replace("%TARGET%", center.formats().formatSubject(target)));
-	}
-	
-	private void list(Subject operator, Lister<Punishment> lister) {
-		ArrayList<Punishment> punishments = new ArrayList<Punishment>(lister.applicable);
-		punishments.removeIf((punishment) -> !lister.check(punishment));
-		if (punishments.isEmpty()) {
-			center.subjects().sendMessage(operator, lister.noPagesMsg);
-			return;
-		}
-		int maxPage = (punishments.size() - 1)/lister.perPage + 1;
-		if (lister.page > maxPage) {
-			center.subjects().sendMessage(operator, lister.maxPagesMsg.replace("%PAGE%", Integer.toString(lister.page)).replace("%MAXPAGE%", Integer.toString(maxPage)));
-			return;
-		}
-		List<String> header = lister.header;
-		List<String> body = lister.body;
-		List<String> footer = lister.footer;
-		for (int n = 0; n < header.size(); n++) {
-			header.set(n, header.get(n).replace("%PAGE%", Integer.toString(lister.page)).replace("%MAXPAGE%", Integer.toString(maxPage)).replace("%CMD%", lister.nextPageCmd));
-		}
-		for (int n = 0; n < footer.size(); n++) {
-			footer.set(n, footer.get(n).replace("%PAGE%", Integer.toString(lister.page)).replace("%MAXPAGE%", Integer.toString(maxPage)).replace("%CMD%", lister.nextPageCmd));
-		}
-		punishments.sort(DATE_LATEST_FIRST_COMPARATOR);
-		center.subjects().sendMessage(operator, header.toArray(new String[0]));
-		for (Punishment p : punishments) {
-			String[] msgs = body.toArray(new String[0]);
-			for (int n = 0; n < msgs.length; n++) {
-				msgs[n] = center.formats().formatMessageWithPunishment(msgs[n], p).replace("%PAGE%", Integer.toString(lister.page)).replace("%MAXPAGE%", Integer.toString(maxPage)).replace("%CMD%", lister.nextPageCmd);
-			}
-			center.subjects().sendMessage(operator, true, msgs);
-		}
-		center.subjects().sendMessage(operator, true, footer.toArray(new String[0]));
 	}
 
 	@Override
@@ -913,8 +880,8 @@ public class Commands implements CommandsMaster {
 		}
 		
 		for (PunishmentType type : PunishmentType.values()) {
-			String leadKey1 = center.config().keyString(type, Category.ADD);
-			String leadKey2 = center.config().keyString(type, Category.REMOVE);
+			String leadKey1 = center.config().keyString(type, CommandType.Category.ADD);
+			String leadKey2 = center.config().keyString(type, CommandType.Category.REMOVE);
 			SubCategory categoryAdd = fromPunishmentType(type, true);
 			SubCategory categoryRemove = fromPunishmentType(type, false);
 			switch (type) {
@@ -932,8 +899,8 @@ public class Commands implements CommandsMaster {
 			case KICK:
 				exempt.put(type, center.config().getMessagesString(leadKey1 + "error.exempt"));
 				successful.put(categoryAdd, center.config().getMessagesString(leadKey1 + "successful.message"));
-				noSilent.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.no-silent"));
-				noPassive.put(type, center.config().getMessagesString(leadKey1 + "permission.extra.no-passive"));
+				noSilent.put(type, center.config().getMessagesString(leadKey1 + "permission.args.no-silent"));
+				noPassive.put(type, center.config().getMessagesString(leadKey1 + "permission.args.no-passive"));
 				break;
 			default:
 				throw new InternalStateException("What other punishment type is there?!?");
@@ -989,33 +956,5 @@ public class Commands implements CommandsMaster {
 	public void noPermission(Subject subject, CommandType command) {
 		center.subjects().sendMessage(subject, perm.get(command));
 	}
-	
-}
-
-abstract class Lister<T> {
-	
-	final int page;
-	final int perPage;
-	final String maxPagesMsg;
-	final String noPagesMsg;
-	final String nextPageCmd;
-	final Set<T> applicable;
-	final List<String> header;
-	final List<String> body;
-	final List<String> footer;
-	
-	Lister(int page, int perPage, String maxPagesMsg, String noPagesMsg, String nextPageCmd, Set<T> applicable, List<String> header, List<String> body, List<String> footer) {
-		this.page = page;
-		this.perPage = perPage;
-		this.maxPagesMsg = maxPagesMsg;
-		this.noPagesMsg = noPagesMsg;
-		this.nextPageCmd = nextPageCmd;
-		this.applicable = applicable;
-		this.header = header;
-		this.body = body;
-		this.footer = footer;
-	}
-	
-	abstract boolean check(T object);
 	
 }

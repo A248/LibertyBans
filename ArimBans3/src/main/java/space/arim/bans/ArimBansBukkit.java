@@ -22,13 +22,15 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import space.arim.bans.env.bukkit.BukkitEnv;
 
+import net.milkbowl.vault.permission.Permission;
+
 public class ArimBansBukkit extends JavaPlugin implements AutoCloseable {
 	
 	private ArimBans center;
 	private BukkitEnv environment;
 	
 	private void load() {
-		environment = new BukkitEnv(this);
+		environment = new BukkitEnv(this, getServer().getServicesManager().getRegistration(Permission.class).getProvider());
 		center = new ArimBansPlugin(getDataFolder(), environment);
 		center.start();
 		center.register();

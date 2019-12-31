@@ -48,8 +48,8 @@ import space.arim.bans.internal.sql.SqlMaster;
 import space.arim.universal.registry.RegistryPriority;
 import space.arim.universal.registry.UniversalRegistry;
 
+import space.arim.api.framework.UUIDResolver;
 import space.arim.api.sql.ExecutableQuery;
-import space.arim.api.uuid.UUIDResolver;
 
 public interface ArimBans extends Configurable, ArimBansLibrary {
 

@@ -18,6 +18,7 @@
  */
 package space.arim.bans.env.bungee;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -31,15 +32,18 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 
 import space.arim.bans.ArimBans;
-import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InvalidSubjectException;
+import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.env.Environment;
 
+import space.arim.universal.util.collections.CollectionsUtil;
+import space.arim.universal.util.collections.ErringCollectionsUtil;
+
+import space.arim.api.framework.PlayerNotFoundException;
 import space.arim.api.util.minecraft.MinecraftUtil;
-import space.arim.api.uuid.PlayerNotFoundException;
 
 public class BungeeEnv implements Environment {
 
@@ -65,7 +69,9 @@ public class BungeeEnv implements Environment {
 		if (!registered) {
 			plugin.getProxy().getPluginManager().registerListener(plugin, listener);
 			plugin.getProxy().getPluginManager().registerCommand(plugin, commands);
-			setupMetrics();
+			Metrics metrics = new Metrics(plugin);
+			metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().getStorageModeName()));
+			metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
 			registered = true;
 		}
 	}
@@ -82,12 +88,6 @@ public class BungeeEnv implements Environment {
 		close();
 	}
 	
-	private void setupMetrics() {
-		Metrics metrics = new Metrics(plugin);
-		metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().getStorageModeName()));
-		metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
-	}
-	
 	static void sendMessage(ProxiedPlayer target, String jsonable, boolean useJson) {
 		if (useJson) {
 			target.sendMessage(MinecraftUtil.parseJson(jsonable));
@@ -98,27 +98,18 @@ public class BungeeEnv implements Environment {
 	
 	@Override
 	public boolean isOnline(Subject subj) {
-		if (subj.getType().equals(SubjectType.PLAYER)) {
-			for (ProxiedPlayer check : plugin.getProxy().getPlayers()) {
-				if (subj.getUUID().equals(check.getUniqueId())) {
-					return true;
-				}
-			}
-			return false;
-		} else if (subj.getType().equals(SubjectType.IP)) {
-			for (ProxiedPlayer check : plugin.getProxy().getPlayers()) {
-				if (center.resolver().hasIp(check.getUniqueId(), subj.getIP())) {
-					return true;
-				}
-			}
-			return false;
+		switch (subj.getType()) {
+		case PLAYER:
+			return CollectionsUtil.checkForAnyMatches(plugin.getProxy().getPlayers(), (check) -> subj.getUUID().equals(check.getUniqueId()));
+		case IP:
+			return CollectionsUtil.checkForAnyMatches(plugin.getProxy().getPlayers(), (check) -> center.resolver().hasIp(check.getUniqueId(), subj.getIP()));
+		default:
+			return subj.getType().equals(SubjectType.CONSOLE);
 		}
-		return subj.getType().equals(SubjectType.CONSOLE);
 	}
 	
 	@Override
 	public void sendMessage(Subject subj, String jsonable, boolean useJson) {
-		ArimBansLibrary.checkString(jsonable);
 		if (subj.getType().equals(SubjectType.PLAYER)) {
 			ProxiedPlayer target = plugin.getProxy().getPlayer(subj.getUUID());
 			if (target != null) {
@@ -127,24 +118,21 @@ public class BungeeEnv implements Environment {
 		} else if (subj.getType().equals(SubjectType.CONSOLE)) {
 			plugin.getProxy().getConsole().sendMessage(convert(MinecraftUtil.stripJson(jsonable)));
 		} else if (subj.getType().equals(SubjectType.IP)) {
-			for (ProxiedPlayer target : applicable(subj)) {
-				sendMessage(target, jsonable, useJson);
-			}
+			applicable(subj).forEach((target) -> sendMessage(target, jsonable, useJson));
 		}
 	}
 	
 	@Override
 	public void sendMessage(String permission, String jsonable, boolean useJson) {
-		for (ProxiedPlayer player : plugin.getProxy().getPlayers()) {
+		plugin.getProxy().getPlayers().forEach((player) -> {
 			if (player.hasPermission(permission)) {
 				sendMessage(player, jsonable, useJson);
 			}
-		}
+		});
 	}
 
 	@Override
 	public boolean hasPermission(Subject subject, String permission, boolean opPerms) {
-		ArimBansLibrary.checkString(permission);
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
 			return true;
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {
@@ -152,34 +140,50 @@ public class BungeeEnv implements Environment {
 			if (target != null) {
 				return target.hasPermission(permission);
 			}
-			throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subject) + " is not online.");
+			try {
+				return CollectionsUtil.checkForAnyMatches(plugin.getProxy().getConfigurationAdapter().getGroups(center.resolver().getName(subject.getUUID())), (group) -> plugin.getProxy().getConfigurationAdapter().getPermissions(group).contains(permission)); 
+			} catch (MissingCacheException ex) {
+				throw new InvalidSubjectException("The name of a player subject could not be resolved", ex);
+			}
 		} else if (subject.getType().equals(SubjectType.IP)) {
-			throw new InvalidSubjectException("Cannot invoke Environment#hasPermission(Subject, Permission[]) for IP-based subjects");
+			try {
+				return ErringCollectionsUtil.<UUID, MissingCacheException>checkForAnyMatches(center.resolver().getPlayers(subject.getIP()), (uuid) -> {
+					ProxiedPlayer target = plugin.getProxy().getPlayer(uuid);
+					return target != null ? target.hasPermission(permission) : ErringCollectionsUtil.<String, MissingCacheException>checkForAnyMatches(plugin.getProxy().getConfigurationAdapter().getGroups(center.resolver().getName(uuid)), (group) -> plugin.getProxy().getConfigurationAdapter().getPermissions(group).contains(permission));
+				});
+			} catch (MissingCacheException ex) {
+				throw new InvalidSubjectException("One of the names of an ip-based subject could not be resolved", ex);
+			}
 		}
 		throw new InvalidSubjectException("Subject type is completely missing!");
 	}
 	
 	public Set<ProxiedPlayer> applicable(Subject subject) {
-		Set<ProxiedPlayer> applicable = new HashSet<ProxiedPlayer>();
-		if (subject.getType().equals(SubjectType.PLAYER)) {
-			for (ProxiedPlayer check : plugin.getProxy().getPlayers()) {
+		switch (subject.getType()) {
+		case PLAYER:
+			Set<ProxiedPlayer> applicable1 = new HashSet<ProxiedPlayer>();
+			plugin.getProxy().getPlayers().forEach((check) -> {
 				if (subject.getUUID().equals(check.getUniqueId())) {
-					applicable.add(check);
+					applicable1.add(check);
 				}
-			}
-		} else if (subject.getType().equals(SubjectType.IP)) {
-			for (ProxiedPlayer check : plugin.getProxy().getPlayers()) {
+			});
+			return applicable1;
+		case IP:
+			Set<ProxiedPlayer> applicable2 = new HashSet<ProxiedPlayer>();
+			plugin.getProxy().getPlayers().forEach((check) -> {
 				if (center.resolver().hasIp(check.getUniqueId(), subject.getIP())) {
-					applicable.add(check);
+					applicable2.add(check);
 				}
-			}
+			});
+			return applicable2;
+		default:
+			return Collections.emptySet();
 		}
-		return applicable;
 	}
 	
 	@Override
 	public UUID uuidFromName(String name) throws PlayerNotFoundException {
-		for (final ProxiedPlayer player : plugin.getProxy().getPlayers()) {
+		for (ProxiedPlayer player : plugin.getProxy().getPlayers()) {
 			if (player.getName().equals(name)) {
 				return player.getUniqueId();
 			}
@@ -189,9 +193,9 @@ public class BungeeEnv implements Environment {
 	
 	@Override
 	public String nameFromUUID(UUID uuid) throws PlayerNotFoundException {
-		for (final ProxiedPlayer player : plugin.getProxy().getPlayers()) {
+		for (ProxiedPlayer player : plugin.getProxy().getPlayers()) {
 			if (player.getUniqueId().equals(uuid)) {
-					return player.getName();
+				return player.getName();
 			}
 		}
 		throw new PlayerNotFoundException(uuid);
