@@ -41,9 +41,12 @@ import space.arim.bans.env.Environment;
 import space.arim.api.util.minecraft.MinecraftUtil;
 import space.arim.api.uuid.PlayerNotFoundException;
 
+import net.milkbowl.vault.permission.Permission;
+
 public class BukkitEnv implements Environment {
 	
 	private final JavaPlugin plugin;
+	private final Permission permissions;
 	private final Set<EnvLibrary> libraries = loadLibraries();
 	private ArimBans center;
 	private final BukkitEnforcer enforcer;
@@ -52,8 +55,9 @@ public class BukkitEnv implements Environment {
 	
 	private boolean registered = false;
 
-	public BukkitEnv(JavaPlugin plugin) {
+	public BukkitEnv(JavaPlugin plugin, Permission permissions) {
 		this.plugin = plugin;
+		this.permissions = permissions;
 		this.enforcer = new BukkitEnforcer(this);
 		this.listener = new BukkitListener(this);
 		this.commands = new BukkitCommands(this);
@@ -65,7 +69,9 @@ public class BukkitEnv implements Environment {
 		if (!registered) {
 			plugin.getServer().getPluginManager().registerEvents(listener, plugin);
 			plugin.getServer().getPluginCommand("arimbans").setExecutor(commands);
-			setupMetrics();
+			Metrics metrics = new Metrics(plugin);
+			metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().getStorageModeName()));
+			metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
 			registered = true;
 		}
 	}
@@ -80,12 +86,6 @@ public class BukkitEnv implements Environment {
 		plugin.getLogger().severe("*** ArimBans Severe Error ***\nShutting down because: " + message);
 		close();
 		plugin.getServer().getPluginManager().disablePlugin(plugin);
-	}
-	
-	private void setupMetrics() {
-		Metrics metrics = new Metrics(plugin);
-		metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().getStorageModeName()));
-		metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
 	}
 	
 	static void sendMessage(Player target, String jsonable, boolean useJson) {
@@ -127,34 +127,34 @@ public class BukkitEnv implements Environment {
 		} else if (subj.getType().equals(SubjectType.CONSOLE)) {
 			plugin.getServer().getConsoleSender().sendMessage(MinecraftUtil.stripJson(jsonable));
 		} else if (subj.getType().equals(SubjectType.IP)) {
-			for (Player target : applicable(subj)) {
-				sendMessage(target, jsonable, useJson);
-			}
+			applicable(subj).forEach((target) -> sendMessage(target, jsonable, useJson));
 		}
 	}
 	
 	@Override
 	public void sendMessage(String permission, String jsonable, boolean useJson) {
-		for (Player player : plugin.getServer().getOnlinePlayers()) {
+		plugin.getServer().getOnlinePlayers().forEach((player) -> {
 			if (player.hasPermission(permission)) {
 				sendMessage(player, jsonable, useJson);
 			}
-		}
+		});
 	}
 	
 	@Override
 	public boolean hasPermission(Subject subject, String permission, boolean opPerms) {
-		ArimBansLibrary.checkString(permission);
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
 			return true;
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {
 			OfflinePlayer target = plugin.getServer().getOfflinePlayer(subject.getUUID());
-			if (target != null) {
-				return target.isOp() ? opPerms : target.getPlayer().hasPermission(permission);
-			}
-			throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subject) + " does not have a valid UUID.");
+			return target != null && (opPerms && target.isOp() || !opPerms && target.isOnline() && target.getPlayer().hasPermission(permission) || !opPerms && permissions.playerHas(plugin.getServer().getWorlds().get(0).getName(), target, permission));
 		} else if (subject.getType().equals(SubjectType.IP)) {
-			throw new InvalidSubjectException("Cannot invoke Environment#hasPermission(Subject, Permission[]) for IP-based subjects");
+			for (UUID uuid : center.resolver().getPlayers(subject.getIP())) {
+				OfflinePlayer target = plugin.getServer().getOfflinePlayer(uuid);
+				if (target != null && (opPerms && target.isOp() || !opPerms && target.isOnline() && target.getPlayer().hasPermission(permission) || !opPerms && permissions.playerHas(plugin.getServer().getWorlds().get(0).getName(), target, permission))) {
+					return true;
+				}
+			}
+			return false;
 		}
 		throw new InvalidSubjectException("Subject type is completely missing!");
 	}
@@ -179,7 +179,7 @@ public class BukkitEnv implements Environment {
 	
 	@Override
 	public UUID uuidFromName(String name) throws PlayerNotFoundException {
-		for (final OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
+		for (OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
 			if (player.getName().equalsIgnoreCase(name)) {
 				return player.getUniqueId();
 			}
@@ -189,7 +189,7 @@ public class BukkitEnv implements Environment {
 	
 	@Override
 	public String nameFromUUID(UUID uuid) throws PlayerNotFoundException {
-		for (final OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
+		for (OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
 			if (player.getUniqueId().equals(uuid)) {
 				return player.getName();
 			}
