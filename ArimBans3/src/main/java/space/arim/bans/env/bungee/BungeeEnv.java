@@ -36,6 +36,7 @@ import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InvalidSubjectException;
+import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.env.Environment;
 
 import space.arim.api.util.minecraft.MinecraftUtil;
@@ -65,7 +66,9 @@ public class BungeeEnv implements Environment {
 		if (!registered) {
 			plugin.getProxy().getPluginManager().registerListener(plugin, listener);
 			plugin.getProxy().getPluginManager().registerCommand(plugin, commands);
-			setupMetrics();
+			Metrics metrics = new Metrics(plugin);
+			metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().getStorageModeName()));
+			metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
 			registered = true;
 		}
 	}
@@ -80,12 +83,6 @@ public class BungeeEnv implements Environment {
 	public void shutdown(String message) {
 		plugin.getLogger().severe("*** ArimBans Severe Error ***\nShutting down because: " + message);
 		close();
-	}
-	
-	private void setupMetrics() {
-		Metrics metrics = new Metrics(plugin);
-		metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().getStorageModeName()));
-		metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
 	}
 	
 	static void sendMessage(ProxiedPlayer target, String jsonable, boolean useJson) {
@@ -127,34 +124,47 @@ public class BungeeEnv implements Environment {
 		} else if (subj.getType().equals(SubjectType.CONSOLE)) {
 			plugin.getProxy().getConsole().sendMessage(convert(MinecraftUtil.stripJson(jsonable)));
 		} else if (subj.getType().equals(SubjectType.IP)) {
-			for (ProxiedPlayer target : applicable(subj)) {
-				sendMessage(target, jsonable, useJson);
-			}
+			applicable(subj).forEach((target) -> sendMessage(target, jsonable, useJson));
 		}
 	}
 	
 	@Override
 	public void sendMessage(String permission, String jsonable, boolean useJson) {
-		for (ProxiedPlayer player : plugin.getProxy().getPlayers()) {
+		plugin.getProxy().getPlayers().forEach((player) -> {
 			if (player.hasPermission(permission)) {
 				sendMessage(player, jsonable, useJson);
 			}
-		}
+		});
 	}
 
 	@Override
 	public boolean hasPermission(Subject subject, String permission, boolean opPerms) {
-		ArimBansLibrary.checkString(permission);
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
 			return true;
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {
-			ProxiedPlayer target = plugin.getProxy().getPlayer(subject.getUUID());
-			if (target != null) {
-				return target.hasPermission(permission);
+			try {
+				for (String group : plugin.getProxy().getConfigurationAdapter().getGroups(center.resolver().getName(subject.getUUID()))) {
+					if (plugin.getProxy().getConfigurationAdapter().getPermissions(group).contains(permission)) {
+						return true;
+					}
+				}
+				return false;
+			} catch (MissingCacheException ex) {
+				throw new InvalidSubjectException("The name of a player subject could not be resolved", ex);
 			}
-			throw new InvalidSubjectException("Subject " + center.formats().formatSubject(subject) + " is not online.");
 		} else if (subject.getType().equals(SubjectType.IP)) {
-			throw new InvalidSubjectException("Cannot invoke Environment#hasPermission(Subject, Permission[]) for IP-based subjects");
+			try {
+				for (UUID uuid : center.resolver().getPlayers(subject.getIP())) {
+					for (String group : plugin.getProxy().getConfigurationAdapter().getGroups(center.resolver().getName(uuid))) {
+						if (plugin.getProxy().getConfigurationAdapter().getPermissions(group).contains(permission)) {
+							return true;
+						}
+					}
+				}
+				return false;
+			} catch (MissingCacheException ex) {
+				throw new InvalidSubjectException("One of the names of an ip-based subject could not be resolved", ex);
+			}
 		}
 		throw new InvalidSubjectException("Subject type is completely missing!");
 	}
