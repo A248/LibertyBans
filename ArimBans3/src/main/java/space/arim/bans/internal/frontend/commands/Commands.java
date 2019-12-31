@@ -402,6 +402,10 @@ public class Commands implements CommandsMaster {
 			return;
 		}
 		PunishmentType type = applicableType(command);
+		if (center.subjects().hasPermission(target, "arimbans." + type.name().toLowerCase() + ".exempt") && !center.subjects().hasPermission(operator, "arimbans." + type.name().toLowerCase() + ".exempt.bypass")) {
+			center.subjects().sendMessage(operator, exempt.get(type).replace("%TARGET%", center.formats().formatSubject(target)));
+			return;
+		}
 		long span = -1L;
 		if (!type.equals(PunishmentType.KICK)) {
 			long max = 0;
@@ -461,10 +465,6 @@ public class Commands implements CommandsMaster {
 			reason = default_reason;
 		} else if (reason.isEmpty()) {
 			usage(operator, command);
-			return;
-		}
-		if (!center.subjects().hasPermission(target, "arimbans." + type.name().toLowerCase() + "exempt") || center.subjects().hasPermission(operator, "arimbans." + type.name().toLowerCase() + "exempt.bypass")) {
-			center.subjects().sendMessage(operator, exempt.get(type).replace("%TARGET%", center.formats().formatSubject(target)));
 			return;
 		}
 		Punishment punishment = new Punishment(center.getNextAvailablePunishmentId(), type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis(), silent, passive);
