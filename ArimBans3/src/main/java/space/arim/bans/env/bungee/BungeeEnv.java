@@ -142,6 +142,10 @@ public class BungeeEnv implements Environment {
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
 			return true;
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {
+			ProxiedPlayer target = plugin.getProxy().getPlayer(subject.getUUID());
+			if (target != null) {
+				return target.hasPermission(permission);
+			}
 			try {
 				for (String group : plugin.getProxy().getConfigurationAdapter().getGroups(center.resolver().getName(subject.getUUID()))) {
 					if (plugin.getProxy().getConfigurationAdapter().getPermissions(group).contains(permission)) {
@@ -155,9 +159,16 @@ public class BungeeEnv implements Environment {
 		} else if (subject.getType().equals(SubjectType.IP)) {
 			try {
 				for (UUID uuid : center.resolver().getPlayers(subject.getIP())) {
-					for (String group : plugin.getProxy().getConfigurationAdapter().getGroups(center.resolver().getName(uuid))) {
-						if (plugin.getProxy().getConfigurationAdapter().getPermissions(group).contains(permission)) {
-							return true;
+					ProxiedPlayer target = plugin.getProxy().getPlayer(uuid);
+					if (target != null) {
+						 if (target.hasPermission(permission)) {
+							 return true;
+						 }
+					} else {
+						for (String group : plugin.getProxy().getConfigurationAdapter().getGroups(center.resolver().getName(uuid))) {
+							if (plugin.getProxy().getConfigurationAdapter().getPermissions(group).contains(permission)) {
+								return true;
+							}
 						}
 					}
 				}
