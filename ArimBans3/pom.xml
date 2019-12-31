@@ -74,10 +74,6 @@
 							<outputFile>target/${project.name}_v${core.version}.jar</outputFile>
 							<artifactSet>
 								<includes>
-									<include>space.arim:arimapi-core</include>
-									<include>space.arim:universal-util</include>
-									<include>space.arim:universal-events</include>
-									<include>space.arim:universal-registry</include>
 									<include>space.arim:bans-api</include>
 									<include>org.hsqldb:hsqldb</include>
 									<include>com.zaxxer:HikariCP</include>
