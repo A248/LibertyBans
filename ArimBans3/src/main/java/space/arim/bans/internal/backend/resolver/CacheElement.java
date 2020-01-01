@@ -107,17 +107,22 @@ public class CacheElement {
 	}
 	
 	boolean hasIp(String address) {
-		return (iplist == null || iplist.contains(address));
+		return iplist == null || iplist.contains(address);
 	}
 	
+	/**
+	 * Caller should check {@link #hasIp(String)} before this method.
+	 * 
+	 * @param uuid the related uuid
+	 * @param address the IP address
+	 * @return a SqlQuery
+	 */
 	SqlQuery removeIp(UUID uuid, String address) {
-		if (iplist != null) {
-			if (iplist.remove(address)) {
-				if (iplist.isEmpty()) {
-					iplist = null;
-				}
-				updateIplist = System.currentTimeMillis();
+		if (iplist.remove(address)) {
+			if (iplist.isEmpty()) {
+				iplist = null;
 			}
+			updateIplist = System.currentTimeMillis();
 		}
 		return new SqlQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID, externaliseIpList(iplist), updateIplist, uuid.toString().replace("-", ""));
 	}
