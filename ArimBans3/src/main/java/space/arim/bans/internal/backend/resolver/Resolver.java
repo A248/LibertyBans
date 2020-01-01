@@ -71,7 +71,7 @@ public class Resolver implements ResolverMaster {
 			while (data.next()) {
 				
 				try {
-					cache.put(UUID.fromString(MinecraftUtil.expandUUID(data.getString("uuid"))), new CacheElement(data.getString("name"), data.getString("iplist"), data.getLong("update-name"), data.getLong("update-iplist")));
+					cache.put(UUID.fromString(MinecraftUtil.expandUUID(data.getString("uuid"))), new CacheElement(data.getString("name"), data.getString("iplist"), data.getLong("update_name"), data.getLong("update_iplist")));
 				} catch (IllegalArgumentException ex) {
 					center.logs().logError(ex);
 				}
