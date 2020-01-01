@@ -30,7 +30,6 @@ import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.exception.ConfigSectionException;
-import space.arim.bans.api.exception.MissingCenterException;
 import space.arim.bans.internal.Configurable;
 
 public class BungeeEnforcer implements Configurable {
@@ -40,13 +39,12 @@ public class BungeeEnforcer implements Configurable {
 	private byte ban_priority;
 	private byte mute_priority;
 	
-	public BungeeEnforcer(BungeeEnv environment) {
+	BungeeEnforcer(BungeeEnv environment) {
 		this.environment = Objects.requireNonNull(environment, "Environment must not be null!");
 	}
 	
 	private void missingCenter(String message) {
-		environment.logger().warning("MissingCenterException! Are you restarting ArimBans?");
-		(new MissingCenterException(message)).printStackTrace();
+		environment.logger().warning("Warning: " + message + "! Are you restarting ArimBans?");
 	}
 	
 	private void cacheFailed(String subject) {
@@ -100,13 +98,9 @@ public class BungeeEnforcer implements Configurable {
 		Set<ProxiedPlayer> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
-			for (ProxiedPlayer target : targets) {
-				target.disconnect(BungeeEnv.convert(message));
-			}
+			targets.forEach((target) -> target.disconnect(BungeeEnv.convert(message)));
 		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
-			for (ProxiedPlayer target : targets) {
-				BungeeEnv.sendMessage(target, message, useJson);
-			}
+			targets.forEach((target) -> BungeeEnv.sendMessage(target, message, useJson));
 		}
 	}
 	
