@@ -130,7 +130,7 @@ public class BungeeEnv implements Environment {
 			}
 		});
 	}
-
+	
 	@Override
 	public boolean hasPermission(Subject subject, String permission, boolean opPerms) {
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
@@ -140,11 +140,7 @@ public class BungeeEnv implements Environment {
 			if (target != null) {
 				return target.hasPermission(permission);
 			}
-			try {
-				return CollectionsUtil.checkForAnyMatches(plugin.getProxy().getConfigurationAdapter().getGroups(center.resolver().getName(subject.getUUID())), (group) -> plugin.getProxy().getConfigurationAdapter().getPermissions(group).contains(permission)); 
-			} catch (MissingCacheException ex) {
-				throw new InvalidSubjectException("The name of a player subject could not be resolved", ex);
-			}
+			return CollectionsUtil.checkForAnyMatches(plugin.getProxy().getConfigurationAdapter().getGroups(subject.getUUID().toString()), (group) -> plugin.getProxy().getConfigurationAdapter().getPermissions(group).contains(permission));
 		} else if (subject.getType().equals(SubjectType.IP)) {
 			try {
 				return ErringCollectionsUtil.<UUID, MissingCacheException>checkForAnyMatches(center.resolver().getPlayers(subject.getIP()), (uuid) -> {
