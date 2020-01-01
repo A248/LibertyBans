@@ -18,10 +18,10 @@
  */
 package space.arim.bans.internal.backend.resolver;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import space.arim.bans.internal.sql.SqlQuery;
@@ -33,7 +33,7 @@ public class CacheElement {
 	static final String EMPTY_IPLIST_STRING = "<empty_iplist>";
 	
 	private String name;
-	private List<String> iplist;
+	private Set<String> iplist;
 	private long updateName;
 	private long updateIplist;
 	
@@ -52,26 +52,26 @@ public class CacheElement {
 		return new SqlQuery(SqlQuery.Query.INSERT_CACHE, uuid.toString().replace("-", ""), name, externaliseIpList(iplist), updateName, updateIplist);
 	}
 	
-	private static List<String> parseIpList(String iplist) {
+	private static Set<String> parseIpList(String iplist) {
 		if (iplist == null || iplist.equals(EMPTY_IPLIST_STRING)) {
 			return null;
 		}
-		return new ArrayList<String>(Arrays.asList(iplist.split(",")));
+		return new HashSet<String>(Arrays.asList(iplist.split(",")));
 	}
 	
-	private static String externaliseIpList(List<String> iplist) {
+	private static String externaliseIpList(Set<String> iplist) {
 		if (iplist == null || iplist.isEmpty()) {
 			return EMPTY_IPLIST_STRING;
 		}
-		return StringsUtil.concat(iplist, ',');
+		return StringsUtil.concat(iplist.toArray(new String[] {}), ',');
 	}
 	
 	String getName() {
 		return name;
 	}
 	
-	List<String> getIps() {
-		return iplist != null ? Collections.unmodifiableList(iplist) : Collections.emptyList();
+	Set<String> getIps() {
+		return iplist != null ? Collections.unmodifiableSet(iplist) : Collections.emptySet();
 	}
 	
 	long getNameUpdate() {
@@ -90,7 +90,7 @@ public class CacheElement {
 	
 	SqlQuery addIp(UUID uuid, String address) {
 		if (iplist == null) {
-			iplist = new ArrayList<String>(Arrays.asList(address));
+			iplist = new HashSet<String>(Arrays.asList(address));
 		} else {
 			iplist.add(address);
 		}
@@ -148,7 +148,7 @@ public class CacheElement {
 	
 	SqlQuery setNameAndAddIp(UUID uuid, String newName, String address) {
 		if (iplist == null) {
-			iplist = new ArrayList<String>(Arrays.asList(address));
+			iplist = new HashSet<String>(Arrays.asList(address));
 		} else {
 			iplist.add(address);
 		}
