@@ -35,7 +35,6 @@ import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.internal.sql.SqlQuery;
 
 import space.arim.universal.registry.RegistryPriority;
-import space.arim.universal.util.UniversalUtil;
 import space.arim.universal.util.exception.HttpStatusException;
 
 import space.arim.api.framework.PlayerNotFoundException;
@@ -151,7 +150,7 @@ public class Resolver implements ResolverMaster {
 	@Override
 	public void update(UUID uuid, String name, String address) {
 		if (!cache.containsKey(uuid) || cache.containsKey(uuid) && (!cache.get(uuid).hasName(name) || !cache.get(uuid).hasIp(address))) {
-			if (UniversalUtil.get().isAsynchronous()) {
+			if (center.getRegistry().getEvents().getUtil().isAsynchronous()) {
 				directUpdateCache(uuid, name, address);
 			} else {
 				center.async(() -> {
@@ -175,7 +174,7 @@ public class Resolver implements ResolverMaster {
 	
 	@Override
 	public void clearCachedIp(String address) {
-		if (UniversalUtil.get().isAsynchronous()) {
+		if (center.getRegistry().getEvents().getUtil().isAsynchronous()) {
 			directClearCachedIp(address);
 		} else {
 			center.async(() -> {
