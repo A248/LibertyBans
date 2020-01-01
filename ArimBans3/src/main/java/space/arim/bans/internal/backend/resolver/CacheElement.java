@@ -119,6 +119,12 @@ public class CacheElement {
 		return hasName(name, true);
 	}
 	
+	/**
+	 * Checks whether this CacheElement has ever had a specific IP address
+	 * 
+	 * @param address the IP address
+	 * @return true if the address is in the list
+	 */
 	boolean hasIp(String address) {
 		return iplist != null && iplist.contains(address);
 	}
