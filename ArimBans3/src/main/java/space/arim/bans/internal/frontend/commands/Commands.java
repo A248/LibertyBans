@@ -19,7 +19,7 @@
 package space.arim.bans.internal.frontend.commands;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -30,7 +30,6 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 
 import space.arim.bans.ArimBans;
-import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.CommandType;
 import space.arim.bans.api.CommandType.IpSpec;
 import space.arim.bans.api.CommandType.SubCategory;
@@ -45,7 +44,6 @@ import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.api.exception.TypeParseException;
 
-import space.arim.universal.util.UniversalUtil;
 import space.arim.universal.util.collections.CollectionsUtil;
 
 import space.arim.api.framework.PlayerNotFoundException;
@@ -115,8 +113,8 @@ public class Commands implements CommandsMaster {
 	
 	public Commands(ArimBans center) {
 		this.center = center;
-		String invalid_string = ArimBansLibrary.INVALID_STRING_CODE;
-		List<String> invalid_strings = Arrays.asList(invalid_string);
+		String invalid_string = center.invalidStringCode();
+		List<String> invalid_strings = Collections.singletonList(invalid_string);
 		base_perm_msg = invalid_string;
 		base_usage = invalid_string;
 		ip_selector_message = invalid_string;
@@ -304,7 +302,7 @@ public class Commands implements CommandsMaster {
 	
 	@Override
 	public void execute(Subject subject, CommandType command, String[] args) {
-		if (command.requiresAsynchronisation() && !UniversalUtil.get().isAsynchronous()) {
+		if (command.requiresAsynchronisation() && !center.getRegistry().getEvents().getUtil().isAsynchronous()) {
 			center.async(() -> exec(subject, command, args));
 		} else {
 			exec(subject, command, args);
@@ -382,7 +380,7 @@ public class Commands implements CommandsMaster {
 	private void ipSelector(Subject operator, Subject target, CommandType command, String[] args) {
 		String base = getCmdBaseString(command) + " ";
 		String extra = StringsUtil.concat(args, ' ');
-		List<String> ips;
+		Set<String> ips;
 		try {
 			ips = center.resolver().getIps(target.getUUID());
 		} catch (MissingCacheException ex) {
@@ -685,7 +683,7 @@ public class Commands implements CommandsMaster {
 	private void ipsCmd(Subject operator, Subject target) {
 		String[] msgs = other_ips_layout_body.toArray(new String[0]);
 		String targetDisplay = center.formats().formatSubject(target);
-		List<String> ips = null;
+		Set<String> ips = null;
 		try {
 			ips = center.resolver().getIps(target.getUUID());
 		} catch (MissingCacheException ex) {}

@@ -41,8 +41,6 @@ import space.arim.bans.api.events.UnpunishEvent;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 
-import space.arim.universal.events.UniversalEvents;
-
 public class Corresponder implements CorresponderMaster {
 
 	private final ArimBans center;
@@ -136,32 +134,32 @@ public class Corresponder implements CorresponderMaster {
 	
 	@Override
 	public boolean callPunishEvent(Punishment punishment, boolean retro) {
-		return UniversalEvents.get().fireEvent(new PunishEvent(punishment, retro));
+		return center.getRegistry().getEvents().fireEvent(new PunishEvent(punishment, retro));
 	}
 	
 	@Override
 	public boolean callUnpunishEvent(Punishment punishment, boolean auto) {
-		return UniversalEvents.get().fireEvent(new UnpunishEvent(punishment, auto)) || auto;
+		return center.getRegistry().getEvents().fireEvent(new UnpunishEvent(punishment, auto)) || auto;
 	}
 	
 	@Override
 	public void callPostPunishEvent(Punishment punishment, boolean retro) {
-		UniversalEvents.get().fireEvent(new PostPunishEvent(punishment, retro));
+		center.getRegistry().getEvents().fireEvent(new PostPunishEvent(punishment, retro));
 	}
 	
 	@Override
 	public void callPostUnpunishEvent(Punishment punishment, boolean auto) {
-		UniversalEvents.get().fireEvent(new PostUnpunishEvent(punishment, auto));
+		center.getRegistry().getEvents().fireEvent(new PostUnpunishEvent(punishment, auto));
 	}
 	
 	@Override
 	public boolean callPunishmentChangeReasonEvent(Punishment punishment, String reason, boolean active) {
-		return UniversalEvents.get().fireEvent(new PunishmentChangeReasonEvent(punishment, reason));
+		return center.getRegistry().getEvents().fireEvent(new PunishmentChangeReasonEvent(punishment, reason));
 	}
 	
 	@Override
 	public void callPostPunishmentChangeReasonEvent(Punishment punishment, String reason, boolean active) {
-		UniversalEvents.get().fireEvent(new PostPunishmentChangeReasonEvent(punishment, reason));
+		center.getRegistry().getEvents().fireEvent(new PostPunishmentChangeReasonEvent(punishment, reason));
 	}
 	
 	@Override

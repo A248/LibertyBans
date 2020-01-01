@@ -20,6 +20,7 @@ package space.arim.bans.internal.backend.resolver;
 
 import java.sql.ResultSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import space.arim.bans.api.exception.MissingCacheException;
@@ -35,7 +36,7 @@ public interface ResolverMaster extends Component, UUIDResolver {
 		return ResolverMaster.class;
 	}
 	
-	List<String> getIps(UUID playeruuid) throws MissingCacheException;
+	Set<String> getIps(UUID playeruuid) throws MissingCacheException;
 	
 	List<UUID> getPlayers(String address);
 	
