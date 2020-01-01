@@ -107,7 +107,7 @@ public class CacheElement {
 	}
 	
 	boolean hasIp(String address) {
-		return iplist == null || iplist.contains(address);
+		return iplist != null && iplist.contains(address);
 	}
 	
 	/**
