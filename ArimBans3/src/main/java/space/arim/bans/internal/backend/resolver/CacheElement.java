@@ -98,10 +98,23 @@ public class CacheElement {
 		return new SqlQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID, externaliseIpList(iplist), updateIplist, uuid.toString().replace("-", ""));
 	}
 	
+	/**
+	 * Checks if this CacheElement's player name is the input string
+	 * 
+	 * @param name the playername
+	 * @param ignoreCase whether to check case sensitivity
+	 * @return true if and only if the internal name equals the playername
+	 */
 	boolean hasName(String name, boolean ignoreCase) {
 		return getName().equals(name) || ignoreCase && getName().equalsIgnoreCase(name);
 	}
 	
+	/**
+	 * Equivalent to calling <code>hasName(name, true)</code>
+	 * 
+	 * @param name the playername to check for
+	 * @return true if and only if the internal name equals the playername
+	 */
 	boolean hasName(String name) {
 		return hasName(name, true);
 	}
