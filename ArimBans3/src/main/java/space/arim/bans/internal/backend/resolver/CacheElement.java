@@ -122,16 +122,16 @@ public class CacheElement {
 		return new SqlQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID, externaliseIpList(iplist), updateIplist, uuid.toString().replace("-", ""));
 	}
 	
-	SqlQuery setNameAndAddIp(UUID uuid, String name, String address) {
+	SqlQuery setNameAndAddIp(UUID uuid, String newName, String address) {
 		if (iplist == null) {
 			iplist = new ArrayList<String>(Arrays.asList(address));
 		} else {
 			iplist.add(address);
 		}
 		updateIplist = System.currentTimeMillis();
-		this.name = name;
+		name = newName;
 		updateName = System.currentTimeMillis();
-		return new SqlQuery(SqlQuery.Query.UPDATE_CACHE_FOR_UUID, name, externaliseIpList(iplist), updateName, updateIplist, uuid.toString().replace("-", ""));
+		return new SqlQuery(SqlQuery.Query.UPDATE_CACHE_FOR_UUID, newName, externaliseIpList(iplist), updateName, updateIplist, uuid.toString().replace("-", ""));
 	}
 	
 }
