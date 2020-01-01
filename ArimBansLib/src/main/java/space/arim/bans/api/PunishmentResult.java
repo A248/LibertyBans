@@ -20,27 +20,24 @@ package space.arim.bans.api;
 
 public class PunishmentResult {
 	
-	private final boolean has;
 	private final Subject subject;
 	private final Punishment punishment;
 	private final String message;
 	
 	public PunishmentResult(Subject subject, Punishment punishment, String message) {
-		has = true;
 		this.subject = subject;
 		this.punishment = punishment;
 		this.message = message;
 	}
 	
 	public PunishmentResult() {
-		has = false;
 		subject = null;
 		punishment = null;
 		message = null;
 	}
 	
 	public boolean hasPunishment() {
-		return has;
+		return punishment != null;
 	}
 	
 	public Subject getApplicableSubject() {
