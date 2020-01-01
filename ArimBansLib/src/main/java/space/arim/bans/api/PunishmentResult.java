@@ -18,6 +18,12 @@
  */
 package space.arim.bans.api;
 
+/**
+ * Represents an answered request regarding a player's status.
+ * 
+ * @author A248
+ *
+ */
 public class PunishmentResult {
 	
 	private final Subject subject;
@@ -30,24 +36,48 @@ public class PunishmentResult {
 		this.message = message;
 	}
 	
+	/**
+	 * Creates an empty object, indicating there is no applicable punishment.
+	 * 
+	 */
 	public PunishmentResult() {
 		subject = null;
 		punishment = null;
 		message = null;
 	}
 	
+	/**
+	 * Checks whether there is a punishment associated with this PunishmentResult
+	 * 
+	 * @return true if and only if the punishment is set
+	 */
 	public boolean hasPunishment() {
 		return punishment != null;
 	}
 	
+	/**
+	 * Returns the subject about whom the PunishmentResult was asked
+	 * 
+	 * @return the subject
+	 */
 	public Subject getApplicableSubject() {
 		return subject;
 	}
 	
+	/**
+	 * Returns a possible punishment, if applicable
+	 * 
+	 * @return the punishment, or null if not found
+	 */
 	public Punishment getApplicablePunishment() {
 		return punishment;
 	}
 	
+	/**
+	 * Returns a possible message, if applicable
+	 * 
+	 * @return the message
+	 */
 	public String getApplicableMessage() {
 		return message;
 	}
