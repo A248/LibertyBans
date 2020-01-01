@@ -380,7 +380,7 @@ public class Commands implements CommandsMaster {
 	private void ipSelector(Subject operator, Subject target, CommandType command, String[] args) {
 		String base = getCmdBaseString(command) + " ";
 		String extra = StringsUtil.concat(args, ' ');
-		List<String> ips;
+		Set<String> ips;
 		try {
 			ips = center.resolver().getIps(target.getUUID());
 		} catch (MissingCacheException ex) {
@@ -683,7 +683,7 @@ public class Commands implements CommandsMaster {
 	private void ipsCmd(Subject operator, Subject target) {
 		String[] msgs = other_ips_layout_body.toArray(new String[0]);
 		String targetDisplay = center.formats().formatSubject(target);
-		List<String> ips = null;
+		Set<String> ips = null;
 		try {
 			ips = center.resolver().getIps(target.getUUID());
 		} catch (MissingCacheException ex) {}

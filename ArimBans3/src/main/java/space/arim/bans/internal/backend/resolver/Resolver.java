@@ -82,7 +82,7 @@ public class Resolver implements ResolverMaster {
 	}
 
 	@Override
-	public List<String> getIps(UUID playeruuid) throws MissingCacheException {
+	public Set<String> getIps(UUID playeruuid) throws MissingCacheException {
 		if (cache.containsKey(Objects.requireNonNull(playeruuid, "UUID must not be null!"))) {
 			return cache.get(playeruuid).getIps();
 		}
