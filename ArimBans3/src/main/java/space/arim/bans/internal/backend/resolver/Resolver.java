@@ -37,7 +37,7 @@ import space.arim.bans.internal.sql.SqlQuery;
 import space.arim.universal.registry.RegistryPriority;
 import space.arim.universal.util.exception.HttpStatusException;
 
-import space.arim.api.framework.PlayerNotFoundException;
+import space.arim.api.uuid.PlayerNotFoundException;
 import space.arim.api.util.minecraft.MinecraftUtil;
 import space.arim.api.util.web.FetcherException;
 import space.arim.api.util.web.FetcherUtil;

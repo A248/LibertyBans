@@ -18,9 +18,12 @@
  */
 package space.arim.bans.internal.async;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+
 import space.arim.universal.registry.UniversalRegistry;
 
-import space.arim.api.framework.AsyncExecutor;
+import space.arim.api.concurrent.AsyncExecutor;
 
 public class AsyncWrapper implements AsyncMaster {
 
@@ -33,6 +36,11 @@ public class AsyncWrapper implements AsyncMaster {
 	@Override
 	public void execute(Runnable command) {
 		executor.execute(command);
+	}
+	
+	@Override
+	public <T> Future<T> submit(Callable<T> task) {
+		return executor.submit(task);
 	}
 
 	@Override

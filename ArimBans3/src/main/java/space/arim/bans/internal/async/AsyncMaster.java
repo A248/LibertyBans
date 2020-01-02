@@ -18,9 +18,14 @@
  */
 package space.arim.bans.internal.async;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+
 public interface AsyncMaster extends AutoCloseable {
 	
 	void execute(Runnable command);
+	
+	<T> Future<T> submit(Callable<T> task);
 	
 	boolean isClosed();
 	

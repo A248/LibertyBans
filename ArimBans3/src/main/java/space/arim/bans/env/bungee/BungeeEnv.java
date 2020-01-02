@@ -42,7 +42,7 @@ import space.arim.bans.env.Environment;
 import space.arim.universal.util.collections.CollectionsUtil;
 import space.arim.universal.util.collections.ErringCollectionsUtil;
 
-import space.arim.api.framework.PlayerNotFoundException;
+import space.arim.api.uuid.PlayerNotFoundException;
 import space.arim.api.util.minecraft.MinecraftUtil;
 
 public class BungeeEnv implements Environment {

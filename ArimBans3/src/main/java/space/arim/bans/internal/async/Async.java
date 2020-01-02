@@ -18,13 +18,15 @@
  */
 package space.arim.bans.internal.async;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import space.arim.bans.ArimBans;
 
-import space.arim.api.framework.AsyncExecutor;
+import space.arim.api.concurrent.AsyncExecutor;
 
 public class Async implements AsyncExecutor, AsyncMaster {
 	
@@ -40,6 +42,11 @@ public class Async implements AsyncExecutor, AsyncMaster {
 	@Override
 	public void execute(Runnable command) {
 		threads.execute(command);
+	}
+	
+	@Override
+	public <T> Future<T> submit(Callable<T> task) {
+		return threads.submit(task);
 	}
 	
 	@Override
