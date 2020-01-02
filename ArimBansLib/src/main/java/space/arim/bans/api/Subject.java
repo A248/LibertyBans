@@ -211,12 +211,12 @@ public class Subject {
 
 	@Override
 	public boolean equals(Object object) {
-		return (object instanceof Subject && hashCode() == object.hashCode());
+		return object instanceof Subject && hashCode() == object.hashCode();
 	}
 	
 	@Override
 	public String toString() {
-		return (SubjectType.PLAYER.equals(getType())) ? uuid.toString() : (SubjectType.IP.equals(getType())) ? ip : "-CONSOLE-";
+		return SubjectType.PLAYER.equals(getType()) ? uuid.toString() : (SubjectType.IP.equals(getType())) ? ip : "-CONSOLE-";
 	}
 	
 }

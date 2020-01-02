@@ -428,7 +428,7 @@ public class Commands implements CommandsMaster {
 			} else {
 				args = StringsUtil.chopOffOne(args);
 			}
-			if (span == -1L && max != -1L || span > max) {
+			if (span == -1L && max != -1L || span != -1L && span > max) {
 				center.subjects().sendMessage(operator, permTime.get(type).replace("%MAXTIME%", center.formats().formatTime(max, false)));
 				return;
 			}

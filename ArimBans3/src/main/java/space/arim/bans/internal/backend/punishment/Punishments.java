@@ -125,7 +125,7 @@ public class Punishments implements PunishmentsMaster {
 		// would produce duplicate bans or mutes
 		// If it would, throw an error terminating everything
 		for (Punishment punishment : punishments) {
-			if (punishment.id() < nextId.get() || (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
+			if ((punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
 				throw new ConflictingPunishmentException(punishment);
 			}
 		}
