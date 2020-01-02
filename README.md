@@ -5,7 +5,7 @@ The ultimate punitive solution for Spigot servers and BungeeCord networks, seeki
 
 ## Development Notice ##
 
-**ArimBans will be completed and released very soon**.
+This program is still in development. Seeing as I have a lot of work with other issues, there is no longer a timeline for this program's completion.
 
 ### For Server Owners ###
 
