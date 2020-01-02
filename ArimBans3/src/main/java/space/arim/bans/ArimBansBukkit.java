@@ -23,7 +23,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.env.bukkit.BukkitEnv;
 
-import space.arim.api.framework.UUIDResolver;
+import space.arim.api.uuid.UUIDResolver;
 
 import net.milkbowl.vault.permission.Permission;
 

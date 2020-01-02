@@ -104,13 +104,13 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	default void close() {
 		config().close();
 		logs().close();
-		sql().close();
 		punishments().close();
 		subjects().close();
 		commands().close();
 		resolver().close();
 		formats().close();
 		corresponder().close();
+		sql().close();
 	}
 	
 	@Override

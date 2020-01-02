@@ -111,10 +111,6 @@
 	<dependencies>
 		<dependency>
 			<groupId>space.arim</groupId>
-			<artifactId>arimapi-framework</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>space.arim</groupId>
 			<artifactId>bans-resources</artifactId>
 			<classifier>resources</classifier>
 			<type>zip</type>

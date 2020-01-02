@@ -23,7 +23,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.env.bungee.BungeeEnv;
 
-import space.arim.api.framework.UUIDResolver;
+import space.arim.api.uuid.UUIDResolver;
 
 public class ArimBansBungee extends Plugin implements AutoCloseable {
 
