@@ -19,7 +19,7 @@
 package space.arim.bans.internal.backend.resolver;
 
 import java.sql.ResultSet;
-import java.util.List;
+import java.sql.SQLException;
 import java.util.Set;
 import java.util.UUID;
 
@@ -27,7 +27,7 @@ import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.internal.Component;
 
-import space.arim.api.framework.UUIDResolver;
+import space.arim.api.uuid.UUIDResolver;
 import space.arim.api.util.web.GeoIpInfo;
 
 public interface ResolverMaster extends Component, UUIDResolver {
@@ -36,9 +36,13 @@ public interface ResolverMaster extends Component, UUIDResolver {
 		return ResolverMaster.class;
 	}
 	
+	CacheElement singleFromResultSet(ResultSet data) throws SQLException;
+	
+	Set<CacheElement> setFromResultSet(ResultSet data) throws SQLException;
+	
 	Set<String> getIps(UUID playeruuid) throws MissingCacheException;
 	
-	List<UUID> getPlayers(String address);
+	Set<UUID> getPlayers(String address);
 	
 	String getName(UUID playeruuid) throws MissingCacheException;
 	
@@ -50,21 +54,8 @@ public interface ResolverMaster extends Component, UUIDResolver {
 	
 	void update(UUID playeruuid, String name, String address);
 	
-	/**
-	 * For every cached element, remove the specified address
-	 * if it is listed. <br>
-	 * <br>
-	 * 
-	 * @param address - the address for which to remove cached listings
-	 */
-	void clearCachedIp(String address);
-	
-	boolean uuidExists(UUID uuid);
-	
 	boolean hasIp(UUID playeruuid, String ip);
 	
 	GeoIpInfo lookupIp(final String address) throws NoGeoIpException;
-	
-	void loadAll(ResultSet data);
 	
 }

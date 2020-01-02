@@ -33,8 +33,6 @@ public class LocalSettings extends SqlSettings {
 		super(config, "file");
 		url = config.getConfigString("storage.file.url").replace("%FILE%", config.getDataFolder().getPath() + File.separator + config.getConfigString("storage.file.filename"));
 	}
-	
-	//Class<?> getDriverClass() {return org.hsqldb.jdbc.JDBCDriver.class;}
 
 	@Override
 	HikariDataSource loadDataSource() {

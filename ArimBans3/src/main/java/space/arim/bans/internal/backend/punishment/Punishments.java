@@ -20,36 +20,40 @@ package space.arim.bans.internal.backend.punishment;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 
 import space.arim.bans.ArimBans;
+import space.arim.bans.api.CommandType;
 import space.arim.bans.api.Punishment;
-import space.arim.bans.api.Subject;
 import space.arim.bans.api.PunishmentType;
-import space.arim.bans.api.exception.ConflictingPunishmentException;
+import space.arim.bans.api.Subject;
+import space.arim.bans.api.CommandType.IpSpec;
+import space.arim.bans.api.CommandType.SubCategory;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.api.exception.TypeParseException;
-import space.arim.bans.internal.sql.SqlQuery;
+import space.arim.bans.internal.sql.SelectionQuery;
+import space.arim.bans.internal.sql.BasicQuery;
+import space.arim.bans.internal.sql.BasicQuery.PreQuery;
+import space.arim.bans.internal.sql.Query;
+
+import space.arim.universal.util.collections.CollectionsUtil;
 
 public class Punishments implements PunishmentsMaster {
 	
 	private final ArimBans center;
 	
-	private AtomicInteger nextId = new AtomicInteger(Integer.MIN_VALUE);
+	private final AtomicInteger nextId = new AtomicInteger(Integer.MIN_VALUE);
 	
 	private final Object lock = new Object();
-	
-	// MUST be modified by synchronising on lock object
-	private final Set<Punishment> active = ConcurrentHashMap.newKeySet();
-	private final Set<Punishment> history = ConcurrentHashMap.newKeySet();
 
 	public Punishments(ArimBans center) {
 		this.center = center;
@@ -64,14 +68,105 @@ public class Punishments implements PunishmentsMaster {
 		return nextId.getAndIncrement();
 	}
 	
-	private void directAddPunishments(Punishment[] punishments) throws ConflictingPunishmentException {
+	@Override
+	public Punishment singleFromResultSet(ResultSet data) throws InvalidUUIDException, TypeParseException, SQLException {
+		return new Punishment(data.getInt("id"), PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date"));
+	}
+	
+	@Override
+	public Set<Punishment> setFromResultSet(ResultSet data) throws InvalidUUIDException, TypeParseException, SQLException {
+		Set<Punishment> punishments = new HashSet<Punishment>();
+		while (data.next()) {
+			punishments.add(singleFromResultSet(data));
+		}
+		return punishments;
+	}
+	
+	@Override
+	public List<Punishment> listFromResultSet(ResultSet data) throws InvalidUUIDException, TypeParseException, SQLException {
+		List<Punishment> punishments = new ArrayList<Punishment>();
+		while (data.next()) {
+			punishments.add(singleFromResultSet(data));
+		}
+		return punishments;
+	}
+	
+	@Override
+	public Punishment firstFromQuery(SelectionQuery query) throws MissingPunishmentException {
+		try (ResultSet data = center.sql().execute(query)[0]) {
+			if (data.next()) {
+				return singleFromResultSet(data);
+			}
+		} catch (InvalidUUIDException | TypeParseException | SQLException ex) {
+			throw new MissingPunishmentException(ex);
+		}
+		throw new MissingPunishmentException();
+	}
+	
+	@Override
+	public Set<Punishment> setFromQuery(SelectionQuery query) {
+		try (ResultSet data = center.sql().execute(query)[0]) {
+			return setFromResultSet(data);
+		} catch (SQLException ex) {
+			center.logs().logError(ex);
+		}
+		return Collections.emptySet();
+	}
+	
+	@Override
+	public List<Punishment> listFromQuery(SelectionQuery query) {
+		try (ResultSet data = center.sql().execute(query)[0]) {
+			return listFromResultSet(data);
+		} catch (SQLException ex) {
+			center.logs().logError(ex);
+		}
+		return Collections.emptyList();
+	}
+	
+	private SelectionQuery getQueryFilter(CommandType command, Subject target) {
+		switch (command.subCategory()) {
+		case BANLIST:
+			return SelectionQuery.create("active").addCondition("type", PunishmentType.BAN);
+		case MUTELIST:
+			return SelectionQuery.create("active").addCondition("type", PunishmentType.MUTE);
+		case WARNS:
+			return SelectionQuery.create("active").addCondition("type", PunishmentType.WARN).addCondition("subject", target);
+		case HISTORY:
+			return SelectionQuery.create("history").addCondition("subject", target);
+		case BLAME:
+		case ROLLBACK:
+			return SelectionQuery.create("active").addCondition("operator", target);
+		default:
+			return SelectionQuery.create("active");
+		}
+	}
+	
+	private Predicate<Punishment> getIpSpecFilter(CommandType command, Subject target) {
+		if (command.subCategory().equals(SubCategory.BANLIST) || command.subCategory().equals(SubCategory.MUTELIST)) {
+			return (punishment) -> command.ipSpec().equals(IpSpec.UUID) && !punishment.subject().getType().equals(Subject.SubjectType.PLAYER) || command.ipSpec().equals(IpSpec.IP) && !punishment.subject().getType().equals(Subject.SubjectType.IP);
+		}
+		return (punishment) -> false;
+	}
+	
+	@Override
+	public List<Punishment> getForCmd(CommandType command, Subject target) {
+		try (ResultSet data = center.sql().execute(getQueryFilter(command, target))[0]) {
+			List<Punishment> punishments = listFromResultSet(data);
+			punishments.removeIf(getIpSpecFilter(command, target));
+			return punishments;
+		} catch (SQLException ex) {
+			center.logs().logError(ex);
+			return Collections.emptyList();
+		}
+	}
+	
+	private void directAddPunishments(Punishment[] punishments) {
 		// A set of queries we'll execute all together for increased efficiency
-		Set<SqlQuery> exec = new HashSet<SqlQuery>();
+		Set<Query> exec = new HashSet<Query>();
 		// A map of punishments for which PunishEvents were successfully called
 		// Key = the punishment, Value = whether it's retro
 		// At the end we'll call PostPunishEvent for each punishment in the map
 		HashMap<Punishment, Boolean> passedEvents = new HashMap<Punishment, Boolean>();
-
 		/* Synchronisation is needed here
 		 * 
 		 * Otherwise, the following race condition may occur:
@@ -88,97 +183,39 @@ public class Punishments implements PunishmentsMaster {
 		 */
 		synchronized (lock) {
 			for (Punishment punishment : punishments) {
-
 				// Check whether punishment is retrogade
 				boolean retro = (punishment.expiration() > 0 && punishment.expiration() <= System.currentTimeMillis());
-				
-				if (punishment.id() < nextId.get() || (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
-					throw new ConflictingPunishmentException(punishment);  // the plague of multi-threaded programs
-
-				} else if (center.corresponder().callPunishEvent(punishment, retro)) { // Call event before proceeding
-
-					// If it's retro we only need to add it to history
-					// Otherwise we also need to add it to active
-					if (history.add(punishment)) {
-						exec.add(new SqlQuery(SqlQuery.Query.INSERT_HISTORY, punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
+				if (center.corresponder().callPunishEvent(punishment, retro)) {
+					exec.add(new BasicQuery(PreQuery.INSERT_HISTORY, punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
+					if (!retro && !punishment.type().equals(PunishmentType.WARN)) {
+						exec.add(new BasicQuery(PreQuery.INSERT_ACTIVE, punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
 					}
-
-					if (!retro && !punishment.type().equals(PunishmentType.KICK) && active.add(punishment)) { // add non-retro non-kick punishments to active
-						exec.add(new SqlQuery(SqlQuery.Query.INSERT_ACTIVE, punishment.type().deserialise(), punishment.subject().deserialise(), punishment.operator().deserialise(), punishment.expiration(), punishment.date()));
-					}
-
-					// Add punishment to passedEvents so we can remember to call PostPunishEvents
 					passedEvents.put(punishment, retro);
 				}
 			}
 			// Execute queries
-			center.sql().executeQuery(exec.toArray(new SqlQuery[] {}));
+			center.sql().execute(exec);
 		}
-
 		// Call PostPunishEvents once done
 		passedEvents.forEach(center.corresponder()::callPostPunishEvent);
 	}
 	
 	@Override
-	public void addPunishments(Punishment... punishments) throws ConflictingPunishmentException {
-		// Before proceeding, determine whether adding the specified punishments
-		// would produce duplicate bans or mutes
-		// If it would, throw an error terminating everything
-		for (Punishment punishment : punishments) {
-			if (punishment.id() < nextId.get() || (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) && hasPunishment(punishment.subject(), punishment.type())) {
-				throw new ConflictingPunishmentException(punishment);
-			}
-		}
-		
+	public void addPunishments(Punishment... punishments) {
 		// Anti-synchronisation protection, for bad API calls
 		// Check whether we are already asynchronous. If not, run queries inside async.
 		if (center.getRegistry().getEvents().getUtil().isAsynchronous()) {
 			directAddPunishments(punishments); // yay! all is good, API was used correctly
-			
 		} else { // uh-oh! potential for rare concurrency issues being silenced
-			center.async(() -> {
-				try {
-					directAddPunishments(punishments);
-				} catch (ConflictingPunishmentException ignored) {
-					
-					// this exception must be ignored because it cannot be relayed back through the lambda!
-					
-					/*
-					 * This is why it is important to surround your API calls in asynchronisation.
-					 * If you do not, ArimBans is forced to run your queries asynchronously,
-					 * but since lambdas do not throw exceptions outside themselves, ArimBans must catch the exceptions.
-					 * 
-					 * These exceptions are only silenced in the rare case that a race condition
-					 * occurs due to multiple calls to this method. However, while it may this sort
-					 * of error may never occur for most users and servers, it is still
-					 * incredibly important to notify the API caller that the operation was unsuccessful.
-					 * (Otherwise, staff members may think they punished a player, but they really have not)
-					 * Hence, it is thus also incredibly important that the throwable is relayed up the call chain
-					 * 
-					 */
-				}
-			});
+			center.async(() -> directAddPunishments(punishments));
 		}
 	}
 	
-	@Override
-	public Punishment getPunishment(Subject subject, PunishmentType type) throws MissingPunishmentException {
-		Set<Punishment> active = getActive();
-		for (Punishment punishment : active) {
-			if (punishment.subject().equals(subject) && punishment.type().equals(type)) {
-				return punishment;
-			}
-		}
-		throw new MissingPunishmentException(subject, type);
-	}
-	
-	private void directRemovePunishments(Punishment[] punishments) throws MissingPunishmentException {
-		// A set of queries we'll execute all together for increased efficiency
-		Set<SqlQuery> exec = new HashSet<SqlQuery>();
+	private void directRemovePunishments(Punishment[] punishments) {
 		// A set of punishments for which UnpunishEvents were successfully called
-		// At the end we'll call PostUnpunishEvent for each punishment in the set
-		HashMap<Punishment, Boolean> passedEvents = new HashMap<Punishment, Boolean>();
-
+		// At the end we'll execute all the queries and then
+		// we'll call PostUnpunishEvent for each punishment in the set
+		Set<Punishment> passed = new HashSet<Punishment>();
 		/* 
 		 * Synchronisation is needed here
 		 * 
@@ -187,195 +224,105 @@ public class Punishments implements PunishmentsMaster {
 		 */
 		synchronized (lock) {
 			for (Punishment punishment : punishments) {
-				
-				// Removal called in this method is never automatic
-				boolean auto = false;
-				
-				if (!active.contains(punishment)) {
-					throw new MissingPunishmentException(punishment); // the plague of multi-threaded programs
-					
-				} else if (center.corresponder().callUnpunishEvent(punishment, auto)) { // Call event before proceeding
-					active.remove(punishment);
-					passedEvents.put(punishment, auto);
-					exec.add(new SqlQuery(SqlQuery.Query.DELETE_ACTIVE_BY_ID, punishment.id()));
+				if (center.corresponder().callUnpunishEvent(punishment)) { // Call event before proceeding
+					passed.add(punishment);
 				}
 			}
 			// Execute queries
-			center.sql().executeQuery(exec.toArray(new SqlQuery[] {}));
-
+			center.sql().execute(CollectionsUtil.convertAll(passed.toArray(new Punishment[] {}), (punishment) -> new BasicQuery(PreQuery.DELETE_ACTIVE_BY_ID, punishment.id())));
 		}
-
 		// Call PostUnpunishEvents once done
-		passedEvents.forEach(center.corresponder()::callPostUnpunishEvent);
+		passed.forEach(center.corresponder()::callPostUnpunishEvent);
 	}
 	
 	@Override
-	public void removePunishments(Punishment...punishments) throws MissingPunishmentException {
-		for (Punishment punishment : punishments) {
-			if (!active.contains(punishment)) {
-				throw new MissingPunishmentException(punishment);
-			}
-		}
+	public void removePunishments(Punishment...punishments) {
 		// Anti-synchronisation protection, for bad API calls
 		// Check whether we are already asynchronous. If not, run queries inside async.
 		if (center.getRegistry().getEvents().getUtil().isAsynchronous()) { // yay! all is good, API was used correctly
 			directRemovePunishments(punishments);
-			
 		} else { // uh-oh! potential for rare concurrency issues being silenced
-			center.async(() -> {
-				try {
-					directRemovePunishments(punishments);
-				} catch (MissingPunishmentException ignored) {}
-			});
+			center.async(() -> directRemovePunishments(punishments));
 		}
 	}
 	
-	private void directChangeReason(Punishment punishment, String reason) throws MissingPunishmentException {
-		synchronized (lock) {
-			
-			// check if the punishment is in the active set
-			boolean activeAlso = active.contains(punishment);
-			
-			if (!history.contains(punishment)) {
-				throw new MissingPunishmentException(punishment); // the plague of multi-threaded programs
-				
-			} else if (center.corresponder().callPunishmentChangeReasonEvent(punishment, reason, activeAlso)) { // Call event before proceeding
-				// Execute queries
-				SqlQuery historyQuery = new SqlQuery(SqlQuery.Query.UPDATE_HISTORY_REASON_FOR_ID, reason, punishment.id());
-				if (activeAlso) {
-					center.sql().executeQuery(historyQuery, new SqlQuery(SqlQuery.Query.UPDATE_ACTIVE_REASON_FOR_ID, reason, punishment.id()));
-				} else {
-					center.sql().executeQuery(historyQuery);
-				}
-				// Call PostUnpunishEvents once done
-				center.corresponder().callPostPunishmentChangeReasonEvent(punishment, reason, activeAlso);
-			}
+	private void directChangeReason(Punishment punishment, String reason) {
+		if (center.corresponder().callPunishmentChangeReasonEvent(punishment, reason)) {
+			center.sql().execute(new BasicQuery(PreQuery.UPDATE_HISTORY_REASON_FOR_ID, punishment.id()), new BasicQuery(PreQuery.UPDATE_ACTIVE_REASON_FOR_ID, punishment.id()));
+			center.corresponder().callPostPunishmentChangeReasonEvent(punishment, reason);
 		}
 	}
 	
 	@Override
-	public void changeReason(Punishment punishment, String reason) throws MissingPunishmentException {
-		if (!history.contains(punishment)) {
-			throw new MissingPunishmentException(punishment);
-		}
+	public void changeReason(Punishment punishment, String reason) {
 		// Anti-synchronisation protection, for bad API calls
 		// Check whether we are already asynchronous. If not, run queries async.
 		if (center.getRegistry().getEvents().getUtil().isAsynchronous()) { // yay! all is good, API was used correctly
 			directChangeReason(punishment, reason);
-			
 		} else { // uh-oh! potential for rare concurrency issues being silenced
-			center.async(() -> {
-				try {
-					directChangeReason(punishment, reason);
-				} catch (MissingPunishmentException ignored) {}
-			});
+			center.async(() -> directChangeReason(punishment, reason));
 		}
 	}
 	
 	@Override
-	public boolean hasPunishment(Subject subject, PunishmentType type) {
-		for (Punishment punishment : active) {
-			if (punishment.subject().equals(subject) && punishment.type().equals(type)) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	@Override
-	public Set<Punishment> getActive() {
-		return Collections.unmodifiableSet(active());
-	}
-	
-	@Override
-	public Set<Punishment> getActiveCopy() {
-		return new HashSet<Punishment>(active());
-	}
-	
-	@Override
-	public Set<Punishment> getHistory() {
-		return Collections.unmodifiableSet(history);
-	}
-	
-	@Override
-	public Set<Punishment> getHistoryCopy() {
-		return new HashSet<Punishment>(history);
-	}
-	
-	private static Punishment punishmentFromResultSet(ResultSet data) throws InvalidUUIDException, TypeParseException, SQLException {
-		return new Punishment(data.getInt("id"), PunishmentType.serialise(data.getString("type")), Subject.serialise(data.getString("subject")), Subject.serialise(data.getString("operator")), data.getString("reason"), data.getLong("expiration"), data.getLong("date"));
-	}
-	
-	@Override
-	public void loadActive(ResultSet data) {
-		try {
-			while (data.next()) {
-				active.add(punishmentFromResultSet(data));
+	public Punishment getPunishmentForSubjectAndType(Subject subject, PunishmentType type) throws MissingPunishmentException {
+		try (ResultSet data = center.sql().execute(SelectionQuery.create("active").addCondition("subject", subject).addCondition("type", type))[0]) {
+			if (data.next()) {
+				return singleFromResultSet(data);
 			}
 		} catch (SQLException ex) {
 			center.logs().logError(ex);
 		}
+		throw new MissingPunishmentException(subject, type);
 	}
 	
 	@Override
-	public void loadHistory(ResultSet data) {
-		try {
-			int max = -1;
-			while (data.next()) {
-				Punishment punishment = punishmentFromResultSet(data);
-				history.add(punishment);
-				if (punishment.id() > max) {
-					max = punishment.id();
-				}
+	public Punishment getPunishmentById(int id) throws MissingPunishmentException {
+		try (ResultSet data = center.sql().execute(SelectionQuery.create("active").addCondition("id", id))[0]) {
+			if (data.next()) {
+				return singleFromResultSet(data);
 			}
-			nextId.set(++max);
 		} catch (SQLException ex) {
 			center.logs().logError(ex);
 		}
+		throw new MissingPunishmentException(id);
 	}
 	
-	/**
-	 * Returns THE set of active punishments, purging expired members.
-	 * 
-	 * <br><br><b>Changes are backed by the set because it is the same set!</b>
-	 * 
-	 * @return The set of active punishments
-	 */
-	private Set<Punishment> active() {
-		HashMap<Punishment, Boolean> invalidated = new HashMap<Punishment, Boolean>();
-		for (Iterator<Punishment> it = active.iterator(); it.hasNext();) {
-			Punishment punishment = it.next();
-			if (punishment.expiration() != -1L && punishment.expiration() < System.currentTimeMillis()) {
-				
-				// Removal called from this method is always automatic
-				boolean auto = true;
-				
-				// call UnpunishEvent with parameter true because the removal is automatic
-				if (center.corresponder().callUnpunishEvent(punishment, auto)) {
-					invalidated.put(punishment, auto);
-					it.remove();
+	@Override
+	public Set<Punishment> getPunishmentsForSubject(Subject subject) {
+		try (ResultSet data = center.sql().execute(SelectionQuery.create("active").addCondition("subject", subject))[0]) {
+			return setFromResultSet(data);
+		} catch (SQLException ex) {
+			center.logs().logError(ex);
+		}
+		return Collections.emptySet();
+	}
+	
+	@Override
+	public Set<Punishment> getPunishmentsByOperator(Subject operator) {
+		try (ResultSet data = center.sql().execute(SelectionQuery.create("active").addCondition("operator", operator))[0]) {
+			return setFromResultSet(data);
+		} catch (SQLException ex) {
+			center.logs().logError(ex);
+		}
+		return Collections.emptySet();
+	}
+	
+	@Override
+	public void refreshConfig(boolean first) {
+		if (first) {
+			int id = -1;
+			try (ResultSet data = center.sql().execute(SelectionQuery.create("active"))[0]) {
+				Set<Punishment> punishments = setFromResultSet(data);
+				for (Punishment punishment : punishments) {
+					if (punishment.id() > id) {
+						id = punishment.id();
+					}
 				}
+			} catch (InvalidUUIDException | TypeParseException | SQLException ex) {
+				center.logs().logError(ex);
 			}
+			nextId.set(++id);
 		}
-		// Call PostUnpunishEvents before proceeding
-		if (center.getRegistry().getEvents().getUtil().isAsynchronous()) {
-			invalidated.forEach(center.corresponder()::callPostUnpunishEvent);
-		} else {
-			center.async(() -> invalidated.forEach(center.corresponder()::callPostUnpunishEvent));
-		}
-		return active;
 	}
-	
-	@Override
-	public void refreshActive() {
-		center.sql().executeQuery(new SqlQuery(SqlQuery.Query.REFRESH_ACTIVE));
-	}
-	
-	@Override
-	public void close() {
-		refreshActive();
-		active.clear();
-		history.clear();
-	}
-
 }

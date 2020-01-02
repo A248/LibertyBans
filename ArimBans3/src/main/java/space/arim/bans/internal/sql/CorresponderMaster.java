@@ -16,7 +16,7 @@
  * along with ArimBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.internal.backend.punishment;
+package space.arim.bans.internal.sql;
 
 import java.util.Set;
 import java.util.UUID;
@@ -25,7 +25,6 @@ import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
-import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.internal.Component;
 
 public interface CorresponderMaster extends Component {
@@ -39,20 +38,18 @@ public interface CorresponderMaster extends Component {
 	
 	Set<Punishment> getApplicablePunishments(UUID uuid, String address, PunishmentType type);
 	
-	Punishment getPunishmentById(int id) throws MissingPunishmentException;
-	
 	void enact(Punishment punishment, boolean add, Subject operator);
 	
 	boolean callPunishEvent(Punishment punishment, boolean retro);
 	
-	boolean callUnpunishEvent(Punishment punishment, boolean auto);
+	boolean callUnpunishEvent(Punishment punishment);
 	
 	void callPostPunishEvent(Punishment punishment, boolean retro);
 	
-	void callPostUnpunishEvent(Punishment punishment, boolean auto);
+	void callPostUnpunishEvent(Punishment punishment);
 	
-	boolean callPunishmentChangeReasonEvent(Punishment punishment, String reason, boolean active);
+	boolean callPunishmentChangeReasonEvent(Punishment punishment, String reason);
 	
-	void callPostPunishmentChangeReasonEvent(Punishment punishment, String reason, boolean active);
+	void callPostPunishmentChangeReasonEvent(Punishment punishment, String reason);
 	
 }

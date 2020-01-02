@@ -39,7 +39,6 @@ additions:
         no-silent: '&cYou may not use silent bans.'
         no-passive: '&cYou may not use passive bans.'
     error:
-      conflicting: '&c&o%TARGET%&r&7is already banned!'
       exempt: '&cYou may not ban %TARGET%.'
     successful:
       message: '&7Banned &c&o%TARGET%&r&7 for &a&o%TIME%&r&7 because of &o%REASON%'
@@ -64,7 +63,6 @@ additions:
         no-silent: '&cYou may not use silent bans.'
         no-passive: '&cYou may not use passive bans.'
     error:
-      conflicting: '&c&o%TARGET%&r&7is already muted!'
       exempt: '&cYou may not mute %TARGET%.'
     successful:
       message: '&7Muted %TARGET% for %TIME% because of %REASON%'

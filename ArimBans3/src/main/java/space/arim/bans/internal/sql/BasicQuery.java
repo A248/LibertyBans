@@ -18,41 +18,29 @@
  */
 package space.arim.bans.internal.sql;
 
-import space.arim.universal.util.collections.CollectionsUtil;
-
-import space.arim.api.sql.ExecutableQuery;
-import space.arim.api.util.StringsUtil;
-
-public class SqlQuery {
+public class BasicQuery implements Query {
 	
-	private final Query statement;
+	private final PreQuery preQuery;
 	private final Object[] parameters;
 	
 	static final int SUBJECT_COLUMN_SIZE = 53;
 	
-	public SqlQuery(Query statement, Object...parameters) {
-		this.statement = statement;
+	public BasicQuery(PreQuery preQuery, Object...parameters) {
+		this.preQuery = preQuery;
 		this.parameters = parameters;
 	}
 	
-	public ExecutableQuery convertToExecutable(SqlSettings settings) {
-		return new ExecutableQuery(statement.eval(settings), parameters);
+	@Override
+	public String statement() {
+		return preQuery.toString();
 	}
 	
-	public Query statement() {
-		return statement;
-	}
-	
+	@Override
 	public Object[] parameters() {
 		return parameters;
 	}
 	
-	@Override
-	public String toString() {
-		return "{[" + statement + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAllToString(parameters), ',') + "]}";
-	}
-	
-	public enum Query {
+	public enum PreQuery {
 		CREATE_TABLE_ACTIVE(
 				"CREATE TABLE IF NOT EXISTS `%PREFIX%active` ("
 						+ "`id` int NOT NULL,"
@@ -94,7 +82,7 @@ public class SqlQuery {
 		INSERT_CACHE("INSERT INTO `%PREFIX%cache` " 
 				+ "(`uuid`, `name`, `iplist`, `update_name`, `update_iplist`) " 
 				+ "VALUES (?, ?, ?, ?, ?)"),
-
+		
 		DELETE_ACTIVE_BY_ID(
 				"DELETE FROM `%PREFIX%active` WHERE `id` = ?"),
 		
@@ -114,29 +102,17 @@ public class SqlQuery {
 				"UPDATE `%PREFIX%cache` SET `name` = ?, `update-name` = ? WHERE `uuid` = ?"),
 		
 		UPDATE_IPS_FOR_UUID(
-				"UPDATE `%PREFIX%cache` SET `iplist` = ?, `update-iplist` = ? WHERE `uuid` = ?"),
-		
-		SELECT_ALL_ACTIVE("SELECT * FROM `%PREFIX%active`"),
-		
-		SELECT_ALL_HISTORY("SELECT * FROM `%PREFIX%history`"),
-		
-		SELECT_ALL_CACHED("SELECT * FROM `%PREFIX%cache`");
+				"UPDATE `%PREFIX%cache` SET `iplist` = ?, `update-iplist` = ? WHERE `uuid` = ?");
 
-		private String mysql;
+		private String statement;
 
-		private Query(String mysql) {
-			this.mysql = mysql;
-		}
-		
-		String eval(SqlSettings settings) {
-			String statement = settings.toString().equals("mysql") ? mysql : mysql.replace(" int ", " INTEGER ").replace(" NOT NULL", "").replace("`", "").replace("TEXT", "CLOB");
-			return statement.replace("%PREFIX%", settings.prefix);
+		private PreQuery(String statement) {
+			this.statement = statement;
 		}
 		
 		@Override
 		public String toString() {
-			return mysql;
+			return statement;
 		}
-		
 	}
 }

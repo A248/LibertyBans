@@ -19,16 +19,22 @@
 package space.arim.bans.internal.backend.punishment;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.Set;
 
+import space.arim.bans.api.CommandType;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
-import space.arim.bans.api.exception.ConflictingPunishmentException;
+import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.exception.MissingPunishmentException;
+import space.arim.bans.api.exception.TypeParseException;
 import space.arim.bans.internal.Component;
+import space.arim.bans.internal.sql.SelectionQuery;
 
 public interface PunishmentsMaster extends Component {
+	
 	@Override
 	default Class<?> getType() {
 		return PunishmentsMaster.class;
@@ -36,27 +42,32 @@ public interface PunishmentsMaster extends Component {
 	
 	int getNextAvailablePunishmentId();
 	
-	void addPunishments(Punishment...punishments) throws ConflictingPunishmentException;
+	Punishment singleFromResultSet(ResultSet data) throws InvalidUUIDException, TypeParseException, SQLException;
 	
-	Punishment getPunishment(Subject subject, PunishmentType type) throws MissingPunishmentException;
+	Set<Punishment> setFromResultSet(ResultSet data) throws InvalidUUIDException, TypeParseException, SQLException;
 	
-	void removePunishments(Punishment...punishments) throws MissingPunishmentException; 
+	List<Punishment> listFromResultSet(ResultSet data) throws InvalidUUIDException, TypeParseException, SQLException;
 	
-	void changeReason(Punishment punishment, String reason) throws MissingPunishmentException;
+	Punishment firstFromQuery(SelectionQuery query) throws MissingPunishmentException;
 	
-	boolean hasPunishment(Subject subject, PunishmentType type);
+	Set<Punishment> setFromQuery(SelectionQuery query);
 	
-	Set<Punishment> getActive();
+	List<Punishment> listFromQuery(SelectionQuery query);
 	
-	Set<Punishment> getActiveCopy();
+	List<Punishment> getForCmd(CommandType command, Subject target);
 	
-	Set<Punishment> getHistory();
+	void addPunishments(Punishment...punishments);
 	
-	Set<Punishment> getHistoryCopy();
+	void removePunishments(Punishment...punishments); 
 	
-	void loadActive(ResultSet data);
+	void changeReason(Punishment punishment, String reason);
 	
-	void loadHistory(ResultSet data);
+	Punishment getPunishmentForSubjectAndType(Subject subject, PunishmentType type) throws MissingPunishmentException;
 	
-	void refreshActive();
+	Punishment getPunishmentById(int id) throws MissingPunishmentException;
+	
+	Set<Punishment> getPunishmentsForSubject(Subject subject);
+	
+	Set<Punishment> getPunishmentsByOperator(Subject operator);
+	
 }

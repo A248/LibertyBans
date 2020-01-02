@@ -20,11 +20,11 @@ package space.arim.bans.extended;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import net.md_5.bungee.api.plugin.Plugin;
 
 import space.arim.bans.extended.bungee.CommandSkeleton;
-import space.arim.bans.extended.bungee.SignInterceptorProtocolize;
 
 import space.arim.api.util.minecraft.bungee.BungeeUtil;
 
@@ -32,13 +32,11 @@ public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPl
 
 	private ArimBansExtended extended;
 	private Set<CommandSkeleton> cmds = new HashSet<CommandSkeleton>();
-	private SignInterceptorProtocolize listener;
 	
 	@Override
 	public void onEnable() {
-		extended = new ArimBansExtended(getDataFolder(), getLogger());
+		extended = new ArimBansExtended();
 		loadCmds();
-		loadAntiSign();
 	}
 	
 	private void loadCmds() {
@@ -46,13 +44,6 @@ public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPl
 			CommandSkeleton skeleton = new CommandSkeleton(this, cmd);
 			cmds.add(skeleton);
 			getProxy().getPluginManager().registerCommand(this, skeleton);
-		}
-	}
-	
-	private void loadAntiSign() {
-		if (extension().antiSignEnabled()) {
-			listener = new SignInterceptorProtocolize(this);
-			listener.register();
 		}
 	}
 	
@@ -74,6 +65,11 @@ public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPl
 	
 	public Set<String> getTabComplete(String[] args) {
 		return BungeeUtil.getPlayerNameTabComplete(args, getProxy());
+	}
+
+	@Override
+	public Logger logger() {
+		return getLogger();
 	}
 	
 }

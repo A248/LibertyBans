@@ -21,24 +21,9 @@ package space.arim.bans.api.events;
 import space.arim.bans.api.Punishment;
 
 public abstract class AbstractUnpunishEvent extends AbstractPunishmentEvent {
-
-	private final boolean auto;
 	
-	public AbstractUnpunishEvent(Punishment punishment, boolean auto) {
+	public AbstractUnpunishEvent(Punishment punishment) {
 		super(punishment);
-		this.auto = auto;
-	}
-	
-	/**
-	 * Whenever ArimBans internally retrieves its active punishments list,
-	 * it will clear all expired punishments.
-	 * 
-	 * <br><br>In such cases, a UnpunishEvent is deemed <b>automatic</b>
-	 * 
-	 * @return true if and only if this UnpunishEvent is automatic
-	 */
-	boolean isAutomatic() {
-		return auto;
 	}
 	
 }

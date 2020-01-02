@@ -20,24 +20,28 @@ package space.arim.bans.env.bungee;
 
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
 import net.md_5.bungee.api.event.LoginEvent;
+import net.md_5.bungee.api.plugin.Listener;
+import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.api.PunishmentType;
-import space.arim.bans.api.exception.ConfigSectionException;
 import space.arim.bans.internal.Configurable;
 
-public class BungeeEnforcer implements Configurable {
+public class BungeeEnforcer implements Configurable, Listener {
 
 	private final BungeeEnv environment;
 	
-	private byte ban_priority;
-	private byte mute_priority;
+	private final ConcurrentHashMap<LoginEvent, Future<PunishmentResult>> logins = new ConcurrentHashMap<LoginEvent, Future<PunishmentResult>>();
 	
 	BungeeEnforcer(BungeeEnv environment) {
 		this.environment = Objects.requireNonNull(environment, "Environment must not be null!");
@@ -55,13 +59,39 @@ public class BungeeEnforcer implements Configurable {
 		missingCenter(subject + " was not checked for " + type.toString());
 	}
 	
-	void enforceBans(LoginEvent evt, byte priority) {
+	@EventHandler(priority = EventPriority.LOWEST)
+	private void enforceBansStart(LoginEvent evt) {
 		if (environment.center() == null) {
 			enforceFailed(evt.getConnection().getName(), PunishmentType.BAN);
 			return;
 		}
-		if (evt.isCancelled() || priority != ban_priority) {
+		logins.put(evt, environment.center().submit(() -> {
+			UUID uuid = evt.getConnection().getUniqueId();
+			String address = evt.getConnection().getAddress().getAddress().getHostAddress();
+			environment.center().resolver().update(uuid, evt.getConnection().getName(), address);
+			return environment.center().corresponder().getApplicablePunishment(uuid, address, PunishmentType.BAN);
+		}));
+	}
+	
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void enforceBans(LoginEvent evt) {
+		if (environment.center() == null) {
+			enforceFailed(evt.getConnection().getName(), PunishmentType.BAN);
 			return;
+		}
+		if (evt.isCancelled()) {
+			logins.remove(evt);
+			return;
+		} else if (logins.containsKey(evt)) {
+			try {
+				PunishmentResult result = logins.get(evt).get();
+				if (result.hasPunishment()) {
+					evt.setCancelReason(BungeeEnv.convert(result.getApplicableMessage()));
+					evt.setCancelled(true);
+				}
+			} catch (InterruptedException | ExecutionException ex) {
+				environment.center().logs().logError(ex);
+			}
 		}
 		PunishmentResult result = environment.center().corresponder().getApplicablePunishment(evt.getConnection().getUniqueId(), evt.getConnection().getAddress().getAddress().getHostAddress(), PunishmentType.BAN);
 		if (result.hasPunishment()) {
@@ -71,7 +101,7 @@ public class BungeeEnforcer implements Configurable {
 	}
 	
 	void enforceMutes(ChatEvent evt, byte priority) {
-		if (!(evt.getSender() instanceof ProxiedPlayer) || evt.isCancelled() || priority != mute_priority || evt.isCommand() && !environment.center().formats().isCmdMuteBlocked(evt.getMessage())) {
+		if (!(evt.getSender() instanceof ProxiedPlayer) || evt.isCancelled() || evt.isCommand() && !environment.center().formats().isCmdMuteBlocked(evt.getMessage())) {
 			return;
 		}
 		ProxiedPlayer player = (ProxiedPlayer) evt.getSender();
@@ -102,31 +132,6 @@ public class BungeeEnforcer implements Configurable {
 		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
 			targets.forEach((target) -> BungeeEnv.sendMessage(target, message, useJson));
 		}
-	}
-	
-	private byte parsePriority(String key) {
-		switch (environment.center().config().getConfigString(key).toLowerCase()) {
-		case "highest":
-			return EventPriority.HIGHEST;
-		case "high":
-			return EventPriority.HIGH;
-		case "normal":
-			return EventPriority.NORMAL;
-		case "low":
-			return EventPriority.LOW;
-		case "lowest":
-			return EventPriority.LOWEST;
-		case "none":
-			return (byte) -2;
-		default:
-			throw new ConfigSectionException(key);
-		}
-	}
-	
-	@Override
-	public void refreshConfig(boolean fromFile) {
-		ban_priority = parsePriority("enforcement.priorities.event-priority");
-		mute_priority = parsePriority("enforcement.priorities.event-priority");
 	}
 	
 }

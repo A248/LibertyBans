@@ -19,6 +19,8 @@
 package space.arim.bans.api;
 
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 import space.arim.bans.api.exception.MissingPunishmentException;
 
@@ -115,9 +117,16 @@ public interface ArimBansLibrary extends PunishmentPlugin, SQLPlugin, AutoClosea
 	 * 
 	 * <br><br>Bukkit/Spigot users may call Bukkit.getScheduler().runTask(Plugin, Runnable) to resynchronize.
 	 * 
-	 * @param task - the lambda/runnable to run async
+	 * @param task the lambda/runnable to run async
 	 */
 	void async(Runnable task);
+	
+	/**
+	 * Returns a value asynchronously
+	 * 
+	 * @param task the Callable
+	 */
+	<T> Future<T> submit(Callable<T> task);
 	
 	/**
 	 * Reloads whole plugin configuration, including config.yml and messages.yml

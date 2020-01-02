@@ -18,7 +18,6 @@
  */
 package space.arim.bans.api;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -91,38 +90,6 @@ public interface PunishmentPlugin extends Registrable {
 	 * @return set of kicks, empty if none found
 	 */
 	Set<Punishment> getApplicableKicks(UUID uuid, String address);
-	
-	/**
-	 * Returns an umodifiable active punishments set
-	 * 
-	 * @return a backed set of active punishments
-	 */
-	Set<Punishment> getActivePunishments();
-	
-	/**
-	 * A copy of the active punishments
-	 * 
-	 * @return a deep clone of the set of the active punishments
-	 */
-	default Set<Punishment> getActivePunishmentsCopy() {
-		return new HashSet<Punishment>(getActivePunishments());
-	}
-	
-	/**
-	 * Returns an unmodifiable punishment history set
-	 * 
-	 * @return a backed set of historical punishments
-	 */
-	Set<Punishment> getHistoryPunishments();
-	
-	/**
-	 * A copy of punishment history
-	 * 
-	 * @return a deep clone of the set of historical punishments
-	 */
-	default Set<Punishment> getHistoryPunishmentsCopy() {
-		return new HashSet<Punishment>(getHistoryPunishments());
-	}
 	
 	/**
 	 * Adds punishments to the backend server.

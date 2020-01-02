@@ -18,6 +18,8 @@
  */
 package space.arim.bans.extended;
 
+import java.util.logging.Logger;
+
 public interface ArimBansExtendedPluginBase extends AutoCloseable {
 	
 	ArimBansExtended extension();
@@ -32,5 +34,7 @@ public interface ArimBansExtendedPluginBase extends AutoCloseable {
 			extension().close();
 		}
 	}
+	
+	Logger logger();
 	
 }

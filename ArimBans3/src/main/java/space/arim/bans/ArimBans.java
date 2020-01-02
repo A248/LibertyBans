@@ -34,7 +34,6 @@ import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 import space.arim.bans.env.Environment;
 import space.arim.bans.internal.Configurable;
-import space.arim.bans.internal.backend.punishment.CorresponderMaster;
 import space.arim.bans.internal.backend.punishment.PunishmentsMaster;
 import space.arim.bans.internal.backend.resolver.ResolverMaster;
 import space.arim.bans.internal.backend.subjects.SubjectsMaster;
@@ -42,6 +41,7 @@ import space.arim.bans.internal.config.ConfigMaster;
 import space.arim.bans.internal.frontend.commands.CommandsMaster;
 import space.arim.bans.internal.frontend.format.FormatsMaster;
 import space.arim.bans.internal.logging.LogsMaster;
+import space.arim.bans.internal.sql.CorresponderMaster;
 import space.arim.bans.internal.sql.SqlMaster;
 
 import space.arim.universal.registry.RegistryPriority;
@@ -159,26 +159,6 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	}
 	
 	@Override
-	default Set<Punishment> getActivePunishments() {
-		return punishments().getActive();
-	}
-	
-	@Override
-	default Set<Punishment> getActivePunishmentsCopy() {
-		return punishments().getActiveCopy();
-	}
-	
-	@Override
-	default Set<Punishment> getHistoryPunishments() {
-		return punishments().getHistory();
-	}
-	
-	@Override
-	default Set<Punishment> getHistoryPunishmentsCopy() {
-		return punishments().getHistoryCopy();
-	}
-	
-	@Override
 	default void addPunishments(Punishment...punishments) throws ConflictingPunishmentException {
 		punishments().addPunishments(punishments);
 	}
@@ -189,23 +169,8 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	}
 	
 	@Override
-	default void executionQueries(ExecutableQuery...queries) throws SQLException {
-		sql().executeQuery(queries);
-	}
-	
-	@Override
-	default void executionQuery(String query, Object...parameters) throws SQLException {
-		sql().executeQuery(query, parameters);
-	}
-	
-	@Override
-	default ResultSet[] selectionQueries(ExecutableQuery...queries) throws SQLException {
-		return sql().selectQuery(queries);
-	}
-	
-	@Override
-	default ResultSet selectionQuery(String query, Object...parameters) throws SQLException {
-		return sql().selectQuery(query, parameters);
+	default ResultSet[] execute(ExecutableQuery...queries) throws SQLException {
+		return sql().execute(queries);
 	}
 	
 	@Override

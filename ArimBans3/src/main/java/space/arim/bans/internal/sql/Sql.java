@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 import java.util.logging.Level;
 
 import javax.sql.rowset.CachedRowSet;
@@ -31,8 +32,10 @@ import javax.sql.rowset.RowSetProvider;
 import com.zaxxer.hikari.HikariDataSource;
 
 import space.arim.bans.ArimBans;
+import space.arim.bans.api.PunishmentType;
+import space.arim.bans.api.Subject;
 import space.arim.bans.api.exception.InternalStateException;
-import space.arim.bans.internal.sql.SqlQuery.Query;
+import space.arim.bans.internal.sql.BasicQuery.PreQuery;
 
 import space.arim.universal.util.collections.CollectionsUtil;
 import space.arim.universal.util.function.erring.ErringLazySingleton;
@@ -56,19 +59,9 @@ public class Sql implements SqlMaster {
 		this.center = center;
 	}
 	
-	private CachedRowSet createCachedRowSet() throws SQLException {
-		return factory.get().createCachedRowSet();
-	}
-	
 	private void stopConnection() {
 		if (!data.isClosed()) {
 			data.close();
-		}
-	}
-	
-	private void replaceParams(PreparedStatement statement, Object...parameters) throws SQLException {
-		for (int n = 0; n < parameters.length; n++) {
-			statement.setObject(n + 1, parameters[n]);
 		}
 	}
 	
@@ -82,119 +75,69 @@ public class Sql implements SqlMaster {
 		return data != null && !data.isClosed();
 	}
 	
-	private void execQuery(ExecutableQuery...queries) throws SQLException {
-		if (queries.length == 0) {
-			return;
+	private static Object convert(Object obj) {
+		if (obj instanceof Subject) {
+			return ((Subject) obj).deserialise();
+		} else if (obj instanceof UUID) {
+			return obj.toString().replace("-", "");
+		} else if (obj instanceof PunishmentType) {
+			return ((PunishmentType) obj).deserialise();
 		}
-		try (Connection connection = data.getConnection()) {
-			PreparedStatement[] statements = new PreparedStatement[queries.length];
-			for (int n = 0; n < queries.length; n++) {
-				statements[n] = connection.prepareStatement(queries[n].statement());
-				replaceParams(statements[n], queries[n].parameters());
-				statements[n].execute();
-				statements[n].close();
-			}
-		}
+		return obj;
 	}
 	
-	private void execQuery(String query, Object...params) throws SQLException {
-		center.logs().log(Level.CONFIG, "Executing query [" + query + "] with params [" + params + "]");
-		try (Connection connection = data.getConnection(); PreparedStatement statement = connection.prepareStatement(query)) {
-			replaceParams(statement, params);
-			statement.execute();
+	private static PreparedStatement replaceParameters(PreparedStatement statement, Object...parameters) throws SQLException {
+		for (int n = 0; n < parameters.length; n++) {
+			statement.setObject(n + 1, convert(parameters[n]));
 		}
+		return statement;
 	}
 	
-	private ResultSet[] selQuery(ExecutableQuery...queries) throws SQLException {
+	private CachedRowSet executeAndCache(PreparedStatement statement) throws SQLException {
+		if (!statement.execute()) {
+			return null;
+		}
+		CachedRowSet results = factory.get().createCachedRowSet();
+		results.populate(statement.getResultSet());
+		return results;
+	}
+	
+	private PreparedStatement prepareStatement(Connection connection, ExecutableQuery query) throws SQLException {
+		center.logs().log(Level.CONFIG, "Executing query " + query.toString());
+		return replaceParameters(connection.prepareStatement(query.statement()), query.parameters());
+	}
+	
+	@Override
+	public ResultSet[] execute(ExecutableQuery...queries) throws SQLException {
+		center.logs().log(Level.CONFIG, "Executing externally-called queries [" + StringsUtil.concat(CollectionsUtil.convertAllToString(queries), ',') + "]");
 		try (Connection connection = data.getConnection()) {
 			PreparedStatement[] statements = new PreparedStatement[queries.length];
 			CachedRowSet[] results = new CachedRowSet[queries.length];
 			for (int n = 0; n < queries.length; n++) {
-				statements[n] = connection.prepareStatement(queries[n].statement());
-				replaceParams(statements[n], queries[n].parameters());
-				results[n] = createCachedRowSet();
-				results[n].populate(statements[n].executeQuery());
+				statements[n] = prepareStatement(connection, queries[n]);
+				results[n] = executeAndCache(statements[n]);
 				statements[n].close();
 			}
 			return results;
 		}
 	}
 	
-	private ResultSet selQuery(String query, Object...params) throws SQLException {
-		try (Connection connection = data.getConnection(); PreparedStatement statement = connection.prepareStatement(query)) {
-			replaceParams(statement, params);
-			CachedRowSet results = createCachedRowSet();
-			results.populate(statement.executeQuery());
-			return results;
-		}
-	}
-	
 	@Override
-	public void executeQuery(ExecutableQuery...queries) throws SQLException {
-		center.logs().log(Level.CONFIG, "Executing externally-called queries [" + StringsUtil.concat(CollectionsUtil.convertAllToString(queries), ',') + "]");
-		execQuery(queries);
-	}
-	
-	@Override
-	public void executeQuery(String query, Object...params) throws SQLException {
-		center.logs().log(Level.CONFIG, "Executing query [" + query + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAllToString(params), ',') + "]");
-		execQuery(query, params);
-	}
-	
-	@Override
-	public ResultSet[] selectQuery(ExecutableQuery...queries) throws SQLException {
-		center.logs().log(Level.CONFIG, "Executing selection queries [" + StringsUtil.concat(CollectionsUtil.convertAllToString(queries), ',') + "]");
-		return selQuery(queries);
-	}
-	
-	@Override
-	public ResultSet selectQuery(String query, Object...params) throws SQLException {
-		center.logs().log(Level.CONFIG, "Executing selection query [" + query + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAllToString(params), ',') + "]");
-		return selQuery(query, params);
-	}
-	
-	@Override
-	public void executeQuery(SqlQuery...queries) {
+	public ResultSet[] execute(Query...queries) {
 		center.logs().log(Level.CONFIG, "Executing queries [" + StringsUtil.concat(CollectionsUtil.convertAllToString(queries), ',') + "]");
-		try {
-			execQuery(convertAllToExecutable(queries));
+		try (Connection connection = data.getConnection()) {
+			PreparedStatement[] statements = new PreparedStatement[queries.length];
+			CachedRowSet[] results = new CachedRowSet[queries.length];
+			for (int n = 0; n < queries.length; n++) {
+				statements[n] = prepareStatement(connection, queries[n].convertToExecutable(settings));
+				results[n] = executeAndCache(statements[n]);
+				statements[n].close();
+			}
+			return results;
 		} catch (SQLException ex) {
 			center.logs().logError(ex);
+			throw new InternalStateException("Query execution failed!", ex);
 		}
-	}
-	
-	@Override
-	public void executeQuery(Query query, Object...params) {
-		center.logs().log(Level.CONFIG, "Executing query [" + query + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAllToString(params), ',') + "]");
-		try {
-			execQuery(query.eval(settings), params);
-		} catch (SQLException ex) {
-			center.logs().logError(ex);
-		}
-	}
-	
-	@Override
-	public ResultSet[] selectQuery(SqlQuery...queries) {
-		center.logs().log(Level.CONFIG, "Executing selection queries [" + StringsUtil.concat(CollectionsUtil.convertAllToString(queries), ',') + "]");
-		try {
-			return selQuery(convertAllToExecutable(queries));
-		} catch (SQLException ex) {
-			throw new InternalStateException("Query retrieval failed!", ex);
-		}
-	}
-	
-	@Override
-	public ResultSet selectQuery(Query query, Object...params) {
-		center.logs().log(Level.CONFIG, "Executing selection query [" + query + "] with parameters [" + StringsUtil.concat(CollectionsUtil.convertAllToString(params), ',') + "]");
-		try {
-			return selQuery(query.eval(settings), params);
-		} catch (SQLException ex) {
-			throw new InternalStateException("Query retrieval failed!", ex);
-		}
-	}
-	
-	private ExecutableQuery[] convertAllToExecutable(SqlQuery[] queries) {
-		return CollectionsUtil.convertAll(queries, (query) -> query.convertToExecutable(settings));
 	}
 
 	@Override
@@ -211,6 +154,8 @@ public class Sql implements SqlMaster {
 			return new LocalSettings(center.config());
 		case "mysql":
 		case "sql":
+		case "remote":
+		case "external":
 			return new RemoteSettings(center.config());
 		default:
 			center.logs().log(Level.WARNING, DEFAULTING_TO_STORAGE_MODE);
@@ -222,6 +167,7 @@ public class Sql implements SqlMaster {
 	public void refreshConfig(boolean first) {
 		
 		settings = parseBackend(center.config().getConfigString("storage.mode"));
+		center.logs().log(Level.FINE, "Set data backend " + settings);
 		
 		if (first || center.config().getConfigBoolean("storage.restart-on-reload")) {
 			center.logs().log(Level.CONFIG, "Loading data backend " + settings);
@@ -229,6 +175,7 @@ public class Sql implements SqlMaster {
 				data.close();
 			}
 			data = settings.loadDataSource();
+			execute(new BasicQuery(PreQuery.CREATE_TABLE_ACTIVE), new BasicQuery(PreQuery.CREATE_TABLE_HISTORY), new BasicQuery(PreQuery.CREATE_TABLE_CACHE));
 		}
 		
 	}

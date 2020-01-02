@@ -20,24 +20,21 @@ package space.arim.bans.internal.backend.resolver;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.api.exception.NoGeoIpException;
-import space.arim.bans.internal.sql.SqlQuery;
+import space.arim.bans.internal.sql.SelectionQuery;
 
 import space.arim.universal.registry.RegistryPriority;
 import space.arim.universal.util.exception.HttpStatusException;
 
-import space.arim.api.framework.PlayerNotFoundException;
+import space.arim.api.uuid.PlayerNotFoundException;
 import space.arim.api.util.minecraft.MinecraftUtil;
 import space.arim.api.util.web.FetcherException;
 import space.arim.api.util.web.FetcherUtil;
@@ -47,8 +44,6 @@ import space.arim.api.util.web.RateLimitException;
 public class Resolver implements ResolverMaster {
 	
 	private final ArimBans center;
-	
-	private final ConcurrentHashMap<UUID, CacheElement> cache = new ConcurrentHashMap<UUID, CacheElement>();
 	
 	private final Object lock = new Object();
 
@@ -63,134 +58,119 @@ public class Resolver implements ResolverMaster {
 	public Resolver(ArimBans center) {
 		this.center = center;
 	}
-
+	
 	@Override
-	public void loadAll(ResultSet data) {
-		try {
-			while (data.next()) {
-				
-				try {
-					cache.put(UUID.fromString(MinecraftUtil.expandUUID(data.getString("uuid"))), new CacheElement(data.getString("name"), data.getString("iplist"), data.getLong("update_name"), data.getLong("update_iplist")));
-				} catch (IllegalArgumentException ex) {
-					center.logs().logError(ex);
-				}
+	public CacheElement singleFromResultSet(ResultSet data) throws SQLException {
+		return new CacheElement(MinecraftUtil.expandAndParseUUID(data.getString("uuid")), data.getString("name"), data.getString("iplist"), data.getLong("update_name"), data.getLong("update_iplist"));
+	}
+	
+	@Override
+	public Set<CacheElement> setFromResultSet(ResultSet data) throws SQLException {
+		Set<CacheElement> cache = new HashSet<CacheElement>();
+		while (data.next()) {
+			cache.add(singleFromResultSet(data));
+		}
+		return cache;
+	}
+	
+	@Override
+	public Set<String> getIps(UUID playeruuid) throws MissingCacheException {
+		Objects.requireNonNull(playeruuid, "UUID must not be null!");
+		try (ResultSet data = center.sql().execute(SelectionQuery.create("cache").addCondition("uuid", playeruuid))[0]){
+			if (data.next()) {
+				return singleFromResultSet(data).getIps();
 			}
 		} catch (SQLException ex) {
 			center.logs().logError(ex);
 		}
-	}
-
-	@Override
-	public Set<String> getIps(UUID playeruuid) throws MissingCacheException {
-		if (cache.containsKey(Objects.requireNonNull(playeruuid, "UUID must not be null!"))) {
-			return cache.get(playeruuid).getIps();
-		}
-		throw new MissingCacheException(playeruuid);
+		return Collections.emptySet();
 	}
 	
 	@Override
-	public List<UUID> getPlayers(String address) {
+	public Set<UUID> getPlayers(String address) {
 		Objects.requireNonNull(address, "Address must not be null!");
-		List<UUID> applicable = new ArrayList<UUID>();
-		cache.forEach((uuid, element) -> {
+		Set<CacheElement> cache;
+		try (ResultSet data = center.sql().execute(SelectionQuery.create("cache"))[0]){
+			cache = setFromResultSet(data);
+		} catch (SQLException ex) {
+			center.logs().logError(ex);
+			return Collections.emptySet();
+		}
+		if (cache.isEmpty()) {
+			return Collections.emptySet();
+		}
+		Set<UUID> uuids = new HashSet<UUID>();
+		cache.forEach((element) -> {
 			if (element.hasIp(address)) {
-				applicable.add(uuid);
+				uuids.add(element.uuid());
 			}
 		});
-		return applicable;
+		return uuids;
 	}
 	
 	@Override
 	public String getName(UUID playeruuid) throws MissingCacheException {
-		if (cache.containsKey(Objects.requireNonNull(playeruuid, "UUID must not be null!"))) {
-			return cache.get(playeruuid).getName();
+		try (ResultSet data = center.sql().execute(SelectionQuery.create("cache").addCondition("uuid", playeruuid))[0]) {
+			if (data.next()) {
+				return singleFromResultSet(data).getName();
+			}
+		} catch (SQLException ex) {
+			center.logs().logError(ex);
 		}
 		throw new MissingCacheException(playeruuid);
 	}
 	
 	@Override
 	public UUID getUUID(String name, boolean ignoreCase) throws MissingCacheException {
-		for (Map.Entry<UUID, CacheElement> entry : cache.entrySet()) {
-			if (entry.getValue().hasName(name, ignoreCase)) {
-				return entry.getKey();
+		Objects.requireNonNull(name, "Name must not be null!");
+		Set<CacheElement> cache;
+		try (ResultSet data = center.sql().execute(SelectionQuery.create("cache"))[0]){
+			cache = setFromResultSet(data);
+		} catch (SQLException ex) {
+			center.logs().logError(ex);
+			throw new MissingCacheException(name);
+		}
+		for (CacheElement element : cache) {
+			if (element.hasName(name, ignoreCase)) {
+				return element.uuid();
 			}
 		}
 		throw new MissingCacheException(name);
 	}
 	
-	private void directUpdate(UUID uuid, String name, String address) {
-		final CacheElement element = cache.get(uuid);
-		final boolean updateName = !element.getName().equalsIgnoreCase(name);
+	private void directUpdate(CacheElement element, String name, String address) {
+		final boolean updateName = !element.hasName(name);
 		final boolean updateIplist = !element.hasIp(address);
-		if (updateName && updateIplist) {
-			center.sql().executeQuery(element.setNameAndAddIp(uuid, name, address));
-		} else if (updateName) {
-			center.sql().executeQuery(element.setName(uuid, name));
-		} else if (updateIplist) {
-			center.sql().executeQuery(element.addIp(uuid, address));
-		}
+		center.sql().execute((updateName && updateIplist) ? element.setNameAndAddIp(name, address) : updateName ? element.setName(name) : element.addIp(address));
 	}
 	
-	private void directAdd(UUID uuid, String name, String address) {
-		CacheElement element = new CacheElement(name, address);
-		cache.put(uuid, element);
-		center.sql().executeQuery(element.insert(uuid));
-	}
-	
-	private void directUpdateCache(UUID uuid, String name, String address) {
-		synchronized (lock) {
-			if (!cache.containsKey(uuid)) {
-				directAdd(uuid, name, address);
-			} else if (!cache.get(uuid).hasName(name) || !cache.get(uuid).hasIp(address)) {
-				directUpdate(uuid, name, address);
-			}
-		}
+	private void directInsert(CacheElement element) {
+		center.sql().execute(element.insert());
 	}
 	
 	@Override
 	public void update(UUID uuid, String name, String address) {
-		if (!cache.containsKey(uuid) || cache.containsKey(uuid) && (!cache.get(uuid).hasName(name) || !cache.get(uuid).hasIp(address))) {
-			if (center.getRegistry().getEvents().getUtil().isAsynchronous()) {
-				directUpdateCache(uuid, name, address);
-			} else {
-				center.async(() -> {
-					directUpdateCache(uuid, name, address);
-				});
+		synchronized (lock) {
+			try (ResultSet data = center.sql().execute(SelectionQuery.create("cache").addCondition("uuid", uuid))[0]) {
+				if (data.next()) {
+					directUpdate(singleFromResultSet(data), name, address);
+				} else {
+					directInsert(new CacheElement(uuid, name, address));
+				}
+			} catch (SQLException ex) {
+				center.logs().logError(ex);
 			}
 		}
-	}
-	
-	private void directClearCachedIp(String address) {
-		synchronized (lock) {
-			Set<SqlQuery> exec = new HashSet<SqlQuery>();
-			cache.forEach((uuid, element) -> {
-				if (element.hasIp(address)) {
-					exec.add(element.removeIp(uuid, address));
-				}
-			});
-			center.sql().executeQuery(exec.toArray(new SqlQuery[] {}));
-		}
-	}
-	
-	@Override
-	public void clearCachedIp(String address) {
-		if (center.getRegistry().getEvents().getUtil().isAsynchronous()) {
-			directClearCachedIp(address);
-		} else {
-			center.async(() -> {
-				directClearCachedIp(address);
-			});
-		}
-	}
-	
-	@Override
-	public boolean uuidExists(UUID uuid) {
-		return cache.containsKey(uuid);
 	}
 
 	@Override
 	public boolean hasIp(UUID playeruuid, String address) {
-		return cache.containsKey(playeruuid) && cache.get(playeruuid).hasIp(address);
+		try (ResultSet data = center.sql().execute(SelectionQuery.create("cache").addCondition("uuid", playeruuid))[0]) {
+			return data.next() && singleFromResultSet(data).hasIp(address);
+		} catch (SQLException ex) {
+			center.logs().logError(ex);
+		}
+		return false;
 	}
 	
 	@Override

@@ -52,7 +52,6 @@ public class BukkitEnv implements Environment {
 	private final Set<EnvLibrary> libraries = loadLibraries();
 	private ArimBans center;
 	private final BukkitEnforcer enforcer;
-	private final BukkitListener listener;
 	private final BukkitCommands commands;
 	
 	private boolean registered = false;
@@ -61,7 +60,6 @@ public class BukkitEnv implements Environment {
 		this.plugin = plugin;
 		this.permissions = permissions;
 		this.enforcer = new BukkitEnforcer(this);
-		this.listener = new BukkitListener(this);
 		this.commands = new BukkitCommands(this);
 	}
 	
@@ -69,7 +67,7 @@ public class BukkitEnv implements Environment {
 	public void loadFor(ArimBans center) {
 		this.center = center;
 		if (!registered) {
-			plugin.getServer().getPluginManager().registerEvents(listener, plugin);
+			plugin.getServer().getPluginManager().registerEvents(enforcer, plugin);
 			plugin.getServer().getPluginCommand("arimbans").setExecutor(commands);
 			Metrics metrics = new Metrics(plugin);
 			metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().getStorageModeName()));
@@ -237,24 +235,21 @@ public class BukkitEnv implements Environment {
 	@Override
 	public void refreshConfig(boolean first) {
 		commands.refreshConfig(first);
-		listener.refreshConfig(first);
 		enforcer.refreshConfig(first);
 	}
 	
 	@Override
 	public void refreshMessages(boolean first) {
 		commands.refreshMessages(first);
-		listener.refreshMessages(first);
 		enforcer.refreshMessages(first);
 	}
 	
 	@Override
 	public void close() {
 		if (registered) {
-			HandlerList.unregisterAll(listener);
+			HandlerList.unregisterAll(enforcer);
 		}
 		commands.close();
-		listener.close();
 		enforcer.close();
 	}
 

@@ -26,8 +26,8 @@ public class UnpunishEvent extends AbstractUnpunishEvent implements Cancellable 
 
 	private boolean cancelled;
 	
-	public UnpunishEvent(Punishment punishment, boolean auto) {
-		super(punishment, auto);
+	public UnpunishEvent(Punishment punishment) {
+		super(punishment);
 	}
 	
 	@Override

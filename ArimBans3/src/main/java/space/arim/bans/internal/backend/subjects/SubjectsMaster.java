@@ -50,7 +50,5 @@ public interface SubjectsMaster extends Component {
 	boolean hasPermission(Subject subject, String permission);
 	
 	void sendNotif(Punishment punishment, boolean add, Subject operator);
-	
-	boolean checkUUID(UUID uuid);
 
 }

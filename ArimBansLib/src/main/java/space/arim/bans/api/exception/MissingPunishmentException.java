@@ -43,6 +43,15 @@ public class MissingPunishmentException extends Exception {
 		punishment = null;
 	}
 	
+	public MissingPunishmentException() {
+		punishment = null;
+	}
+
+	public MissingPunishmentException(Exception ex) {
+		super(ex);
+		punishment = null;
+	}
+
 	public Punishment getNonExistentPunishment() {
 		return punishment;
 	}

@@ -18,84 +18,73 @@
  */
 package space.arim.bans.internal.backend.resolver;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import space.arim.bans.internal.sql.SqlQuery;
-
-import space.arim.api.util.StringsUtil;
+import space.arim.bans.internal.sql.BasicQuery;
 
 public class CacheElement {
 	
 	static final String EMPTY_IPLIST_STRING = "<empty_iplist>";
 	
-	private String name;
-	private Set<String> iplist;
-	private long updateName;
-	private long updateIplist;
+	private final UUID uuid;
+	private final String name;
+	private final String iplist;
+	private final long updateName;
+	private final long updateIplist;
 	
-	CacheElement(String name, String iplist, long updateName, long updateIplist) {
+	CacheElement(UUID uuid, String name, String iplist, long updateName, long updateIplist) {
+		this.uuid = uuid;
 		this.name = name;
-		this.iplist = parseIpList(iplist);
+		this.iplist = iplist;
 		this.updateName = updateName;
 		this.updateIplist = updateIplist;
 	}
 	
-	CacheElement(String name, String iplist) {
-		this(name, iplist, System.currentTimeMillis(), System.currentTimeMillis());
+	CacheElement(UUID uuid, String name, String iplist) {
+		this(uuid, name, iplist, System.currentTimeMillis(), System.currentTimeMillis());
 	}
 	
-	SqlQuery insert(UUID uuid) {
-		return new SqlQuery(SqlQuery.Query.INSERT_CACHE, uuid.toString().replace("-", ""), name, externaliseIpList(iplist), updateName, updateIplist);
+	private String updateIps(String address) {
+		return iplist == null ? address : iplist + "," + address;
 	}
 	
-	private static Set<String> parseIpList(String iplist) {
-		if (iplist == null || iplist.equals(EMPTY_IPLIST_STRING)) {
-			return null;
-		}
-		return new HashSet<String>(Arrays.asList(iplist.split(",")));
+	BasicQuery insert() {
+		return new BasicQuery(BasicQuery.PreQuery.INSERT_CACHE, uuid, name, iplist, updateName, updateIplist);
 	}
 	
-	private static String externaliseIpList(Set<String> iplist) {
-		if (iplist == null || iplist.isEmpty()) {
-			return EMPTY_IPLIST_STRING;
-		}
-		return StringsUtil.concat(iplist.toArray(new String[] {}), ',');
+	BasicQuery setNameAndAddIp(String name, String address) {
+		long current = System.currentTimeMillis();
+		return new BasicQuery(BasicQuery.PreQuery.UPDATE_CACHE_FOR_UUID, name, updateIps(address), current, current, uuid);
+	}
+	
+	BasicQuery setName(String name) {
+		return new BasicQuery(BasicQuery.PreQuery.UPDATE_NAME_FOR_UUID, name, System.currentTimeMillis(), uuid);
+	}
+	
+	public BasicQuery addIp(String address) {
+		return new BasicQuery(BasicQuery.PreQuery.UPDATE_IPS_FOR_UUID, updateIps(address), System.currentTimeMillis(), uuid);
+	}
+	
+	UUID uuid() {
+		return uuid;
 	}
 	
 	String getName() {
 		return name;
 	}
 	
-	Set<String> getIps() {
-		return iplist != null ? Collections.unmodifiableSet(iplist) : Collections.emptySet();
-	}
-	
-	long getNameUpdate() {
-		return updateName;
-	}
-	
-	long getIplistUpdate() {
-		return updateIplist;
-	}
-	
-	SqlQuery setName(UUID uuid, String name) {
-		this.name = name;
-		updateName = System.currentTimeMillis();
-		return new SqlQuery(SqlQuery.Query.UPDATE_NAME_FOR_UUID, name, updateName, uuid.toString().replace("-", ""));
-	}
-	
-	SqlQuery addIp(UUID uuid, String address) {
+	public Set<String> getIps() {
 		if (iplist == null) {
-			iplist = new HashSet<String>(Arrays.asList(address));
-		} else {
-			iplist.add(address);
+			return Collections.emptySet();
 		}
-		updateIplist = System.currentTimeMillis();
-		return new SqlQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID, externaliseIpList(iplist), updateIplist, uuid.toString().replace("-", ""));
+		Set<String> ips = new HashSet<String>();
+		for (String ip : iplist.split(",")) {
+			ips.add(ip);
+		}
+		return ips;
 	}
 	
 	/**
@@ -125,37 +114,8 @@ public class CacheElement {
 	 * @param address the IP address
 	 * @return true if the address is in the list
 	 */
-	boolean hasIp(String address) {
+	public boolean hasIp(String address) {
 		return iplist != null && iplist.contains(address);
-	}
-	
-	/**
-	 * Caller should check {@link #hasIp(String)} before this method.
-	 * 
-	 * @param uuid the related uuid
-	 * @param address the IP address
-	 * @return a SqlQuery
-	 */
-	SqlQuery removeIp(UUID uuid, String address) {
-		if (iplist.remove(address)) {
-			if (iplist.isEmpty()) {
-				iplist = null;
-			}
-			updateIplist = System.currentTimeMillis();
-		}
-		return new SqlQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID, externaliseIpList(iplist), updateIplist, uuid.toString().replace("-", ""));
-	}
-	
-	SqlQuery setNameAndAddIp(UUID uuid, String newName, String address) {
-		if (iplist == null) {
-			iplist = new HashSet<String>(Arrays.asList(address));
-		} else {
-			iplist.add(address);
-		}
-		updateIplist = System.currentTimeMillis();
-		name = newName;
-		updateName = System.currentTimeMillis();
-		return new SqlQuery(SqlQuery.Query.UPDATE_CACHE_FOR_UUID, newName, externaliseIpList(iplist), updateName, updateIplist, uuid.toString().replace("-", ""));
 	}
 	
 }

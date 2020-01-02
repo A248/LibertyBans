@@ -69,10 +69,7 @@ public class Subjects implements SubjectsMaster {
 	
 	@Override
 	public Subject parseSubject(UUID input) {
-		if (checkUUID(input)) {
-			return Subject.fromUUID(input);
-		}
-		throw new InvalidUUIDException(input);
+		return Subject.fromUUID(input);
 	}
 	
 	@Override
@@ -102,11 +99,6 @@ public class Subjects implements SubjectsMaster {
 	
 	private String addQuotes(String message) {
 		return message.replace("%APOS%", "'").replace("%QUOTE%", "\"");
-	}
-	
-	@Override
-	public boolean checkUUID(UUID uuid) {
-		return center.resolver().uuidExists(uuid);
 	}
 	
 	@Override

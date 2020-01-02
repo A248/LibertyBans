@@ -102,11 +102,6 @@
 			</dependency>
 			<dependency>
 				<groupId>space.arim</groupId>
-				<artifactId>arimapi-framework</artifactId>
-				<version>${arimapi.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>space.arim</groupId>
 				<artifactId>universal-registry</artifactId>
 				<version>${universal.version}</version>
 			</dependency>

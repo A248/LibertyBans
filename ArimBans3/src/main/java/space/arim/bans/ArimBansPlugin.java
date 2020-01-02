@@ -19,14 +19,14 @@
 package space.arim.bans;
 
 import java.io.File;
-import java.sql.ResultSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.env.Environment;
 import space.arim.bans.internal.async.Async;
 import space.arim.bans.internal.async.AsyncMaster;
 import space.arim.bans.internal.async.AsyncWrapper;
-import space.arim.bans.internal.backend.punishment.Corresponder;
 import space.arim.bans.internal.backend.punishment.Punishments;
 import space.arim.bans.internal.backend.resolver.Resolver;
 import space.arim.bans.internal.backend.subjects.Subjects;
@@ -34,12 +34,12 @@ import space.arim.bans.internal.config.Config;
 import space.arim.bans.internal.frontend.commands.Commands;
 import space.arim.bans.internal.frontend.format.Formats;
 import space.arim.bans.internal.logging.Logs;
+import space.arim.bans.internal.sql.Corresponder;
 import space.arim.bans.internal.sql.Sql;
-import space.arim.bans.internal.sql.SqlQuery;
 
 import space.arim.universal.registry.UniversalRegistry;
 
-import space.arim.api.framework.AsyncExecutor;
+import space.arim.api.concurrent.AsyncExecutor;
 
 public class ArimBansPlugin implements ArimBans {
 	
@@ -84,18 +84,9 @@ public class ArimBansPlugin implements ArimBans {
 		if (!started) {
 			started = true;
 			refresh(true);
-			loadData();
 		} else {
 			throw new InternalStateException("#start cannot be called because ArimBans is already started!");
 		}
-	}
-	
-	private void loadData() {
-		sql().executeQuery(new SqlQuery(SqlQuery.Query.CREATE_TABLE_CACHE), new SqlQuery(SqlQuery.Query.CREATE_TABLE_ACTIVE), new SqlQuery(SqlQuery.Query.CREATE_TABLE_HISTORY));
-		ResultSet[] data = sql().selectQuery(new SqlQuery(SqlQuery.Query.SELECT_ALL_CACHED), new SqlQuery(SqlQuery.Query.SELECT_ALL_ACTIVE), new SqlQuery(SqlQuery.Query.SELECT_ALL_HISTORY));
-		resolver().loadAll(data[0]);
-		punishments().loadActive(data[1]);
-		punishments().loadHistory(data[2]);
 	}
 
 	@Override
@@ -156,6 +147,11 @@ public class ArimBansPlugin implements ArimBans {
 	@Override
 	public void async(Runnable command) {
 		async.execute(command);
+	}
+	
+	@Override
+	public <T> Future<T> submit(Callable<T> task) {
+		return async.submit(task);
 	}
 
 }

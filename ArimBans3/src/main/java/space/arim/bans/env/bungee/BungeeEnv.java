@@ -51,7 +51,6 @@ public class BungeeEnv implements Environment {
 	private final Set<EnvLibrary> libraries = loadLibraries();
 	private ArimBans center;
 	private final BungeeEnforcer enforcer;
-	private final BungeeListener listener;
 	private final BungeeCommands commands;
 	
 	private boolean registered = false;
@@ -59,7 +58,6 @@ public class BungeeEnv implements Environment {
 	public BungeeEnv(Plugin plugin) {
 		this.plugin = plugin;
 		this.enforcer = new BungeeEnforcer(this);
-		this.listener = new BungeeListener(this);
 		this.commands = new BungeeCommands(this);
 	}
 	
@@ -67,7 +65,7 @@ public class BungeeEnv implements Environment {
 	public void loadFor(ArimBans center) {
 		this.center = center;
 		if (!registered) {
-			plugin.getProxy().getPluginManager().registerListener(plugin, listener);
+			plugin.getProxy().getPluginManager().registerListener(plugin, enforcer);
 			plugin.getProxy().getPluginManager().registerCommand(plugin, commands);
 			Metrics metrics = new Metrics(plugin);
 			metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().getStorageModeName()));
@@ -242,25 +240,22 @@ public class BungeeEnv implements Environment {
 	@Override
 	public void refreshConfig(boolean first) {
 		commands.refreshConfig(first);
-		listener.refreshConfig(first);
 		enforcer.refreshConfig(first);
 	}
 	
 	@Override
 	public void refreshMessages(boolean first) {
 		commands.refreshMessages(first);
-		listener.refreshMessages(first);
 		enforcer.refreshMessages(first);
 	}
 	
 	@Override
 	public void close() {
 		if (registered) {
-			plugin.getProxy().getPluginManager().unregisterListener(listener);
+			plugin.getProxy().getPluginManager().unregisterListener(enforcer);
 			plugin.getProxy().getPluginManager().unregisterCommand(commands);
 		}
 		commands.close();
-		listener.close();
 		enforcer.close();
 	}
 	
