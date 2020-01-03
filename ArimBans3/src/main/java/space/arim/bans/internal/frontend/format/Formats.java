@@ -85,7 +85,7 @@ public class Formats implements FormatsMaster {
 	@Override
 	public String formatMessageWithPunishment(String message, Punishment punishment) {
 		long current = System.currentTimeMillis();
-		return message.replace("%ID%", Integer.toString(punishment.id())).replace("%TYPE%", StringsUtil.capitaliseProperly(punishment.type().toString())).replace("%TARGET%", formatSubject(punishment.subject())).replace("%OPERATOR%", formatSubject(punishment.operator())).replace("%REASON%", punishment.reason()).replace("%DURATION%", formatTime(punishment.expiration() - punishment.date(), false)).replace("%TIME%", formatTime(punishment.expiration() - current, false)).replace("%EXPIRATION%", formatTime(punishment.expiration(), true)).replace("%DATE%", formatTime(punishment.date(), true));
+		return message.replace("%ID%", Integer.toString(punishment.id())).replace("%TYPE%", punishment.type().toString()).replace("%TARGET%", formatSubject(punishment.subject())).replace("%OPERATOR%", formatSubject(punishment.operator())).replace("%REASON%", punishment.reason()).replace("%DURATION%", formatTime(punishment.expiration() - punishment.date(), false)).replace("%TIME%", formatTime(punishment.expiration() - current, false)).replace("%EXPIRATION%", formatTime(punishment.expiration(), true)).replace("%DATE%", formatTime(punishment.date(), true)).replace("%SINCE%", formatTime(current - punishment.date(), false)).replace("%NOW%", formatTime(current, true));
 	}
 	
 	@Override
@@ -146,8 +146,7 @@ public class Formats implements FormatsMaster {
 		
 		if (millis < 0) {
 			return permanent_display;
-		}
-		if (absolute) {
+		} else if (absolute) {
 			return dateFormatter.format(new Date(millis));
 		}
 		
@@ -161,12 +160,12 @@ public class Formats implements FormatsMaster {
 				builder.append(unitsFormat.get(unit).replace(unit.varName(), Integer.toString(value)));
 			}
 		}
-		return (time_enable_comma) ? builder.toString().substring(2) : builder.toString();
+		return time_enable_comma ? builder.toString().substring(2) : builder.toString();
 	}
 	
 	@Override
 	public long toMillis(String timespan) {
-		long mult = 1_000_000;
+		long mult = 1_000_000L;
 		if (permanent_arguments.contains(timespan.toLowerCase())) {
 			return -1L;
 		} else if (timespan.contains("mo")) {
@@ -211,7 +210,7 @@ public class Formats implements FormatsMaster {
 			dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		}
 		
-		dateFormatter.getCalendar().setTimeZone(TimeZone.getDefault());
+		dateFormatter.setTimeZone(TimeZone.getDefault());
 		
 		permanent_arguments = center.config().getConfigStrings("formatting.permanent-arguments");
 		

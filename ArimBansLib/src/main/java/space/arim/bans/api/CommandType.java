@@ -118,6 +118,7 @@ public enum CommandType {
 			return noArg;
 		}
 		
+		@Deprecated
 		boolean requiresAsynchronisation() {
 			return reqAsync;
 		}
@@ -165,6 +166,7 @@ public enum CommandType {
 		return subCategory().noTarget();
 	}
 	
+	@Deprecated
 	public boolean requiresAsynchronisation() {
 		return subCategory().requiresAsynchronisation();
 	}

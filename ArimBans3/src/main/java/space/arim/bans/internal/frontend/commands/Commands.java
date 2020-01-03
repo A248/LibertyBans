@@ -58,6 +58,7 @@ public class Commands implements CommandsMaster {
 	
 	private static final String ROLLBACK_ALL_ARG = "all";
 	
+	private String no_json_char;
 	private String base_perm_msg;
 	private final ConcurrentHashMap<IpSpec, String> invalid = new ConcurrentHashMap<IpSpec, String>();
 	private String base_usage;
@@ -115,6 +116,7 @@ public class Commands implements CommandsMaster {
 		this.center = center;
 		String invalid_string = center.invalidStringCode();
 		List<String> invalid_strings = Collections.singletonList(invalid_string);
+		no_json_char = invalid_string;
 		base_perm_msg = invalid_string;
 		base_usage = invalid_string;
 		ip_selector_message = invalid_string;
@@ -302,7 +304,7 @@ public class Commands implements CommandsMaster {
 	
 	@Override
 	public void execute(Subject subject, CommandType command, String[] args) {
-		if (command.requiresAsynchronisation() && !center.getRegistry().getEvents().getUtil().isAsynchronous()) {
+		if (!center.getRegistry().getEvents().getUtil().isAsynchronous()) {
 			center.async(() -> exec(subject, command, args));
 		} else {
 			exec(subject, command, args);
@@ -313,6 +315,14 @@ public class Commands implements CommandsMaster {
 		center.logs().log(Level.FINE, "Executing command " + command + " for operator " + operator + " with args " + StringsUtil.concat(args, ','));
 		if (!checkPermission(operator, command)) {
 			return;
+		}
+		if (center.formats().useJson()) {
+			for (String arg : args) {
+				if (arg.contains("||")) {
+					center.subjects().sendMessage(operator, no_json_char);
+					return;
+				}
+			}
 		}
 		if (command.canHaveNoTarget()) {
 			switch (command.subCategory()) {
@@ -478,7 +488,7 @@ public class Commands implements CommandsMaster {
 	}
 	
 	private void enact(Subject operator, CommandType command, Punishment punishment, boolean add) {
-		center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment));
+		center.subjects().sendMessage(operator, center.formats().formatMessageWithPunishment(successful.get(command.subCategory()), punishment).replace("%UNOPERATOR%", center.formats().formatSubject(operator)));
 		center.corresponder().enact(punishment, add, operator);
 	}
 	
@@ -504,7 +514,7 @@ public class Commands implements CommandsMaster {
 						enact(operator, command, punishment, false);
 						return;
 					} catch (MissingPunishmentException ex) {
-						center.subjects().sendMessage(operator, notfound.get(type).replace("%NUMBER%", args[0]).replace("%TARGET%", center.formats().formatSubject(target)));
+						center.subjects().sendMessage(operator, notfound.get(type).replace("%ID%", args[0]).replace("%TARGET%", center.formats().formatSubject(target)));
 						return;
 					} catch (NumberFormatException ignored) {}
 				} else {
@@ -839,6 +849,7 @@ public class Commands implements CommandsMaster {
 	@Override
 	public void refreshMessages(boolean first) {
 		
+		no_json_char = center.config().getMessagesString("all.no-json-character");
 		base_perm_msg = center.config().getMessagesString("all.base-permission-message");
 		for (IpSpec spec : IpSpec.values()) {
 			invalid.put(spec, center.config().getMessagesString("all.invalid." + spec.name().toLowerCase()));

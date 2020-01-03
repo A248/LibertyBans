@@ -16,6 +16,7 @@ all:
   prefix:
     use: true
     value: '&6&lArim &r&8»&7 '
+  no-json-character: '&cYou may not use this character in commands: |'
   base-permission-message: '&cYou may not use this.'
   invalid:
     uuid: '&c&o%TARGET%&r&7 is not a valid player.'
@@ -27,237 +28,254 @@ all:
   usage: '/arimbans ban, mute, etc.'
 additions:
   bans:
-    usage: '&c/ban &e<player> [time] <reason>&c.'
+    usage: '&cUsage: /ban &e<player> [time] <reason>&c.'
     permission:
       command: '&7You may not ban other players.'
       no-ip: '&7You may not ipban other players.'
-      time: '&7You may only ban players for a maximum of &a&o%MAX_TIME%&7.'
+      time: '&7You may only ban players for a maximum of &a&o%MAX_TIME%&r&7.'
       dur-perms:
         - '5d'
         - '1mo'
       args:
-        no-silent: '&cYou may not use silent bans.'
-        no-passive: '&cYou may not use passive bans.'
+        no-silent: '&7You may not use silent bans.'
+        no-passive: '&7You may not use passive bans.'
     error:
       conflicting: '&c&o%TARGET%&r&7is already banned!'
-      exempt: '&cYou may not ban %TARGET%.'
+      exempt: '&7You may not ban &c&o%TARGET%&7.'
     successful:
-      message: '&7Banned &c&o%TARGET%&r&7 for &a&o%TIME%&r&7 because of &o%REASON%'
-      notification: '&7%OPERATOR% banned &c&o%TARGET%&r&7 for &a&o%TIME%&r&7 because of &o%REASON%'
+      message: '&aBanned &c&o%TARGET%&r&a for &a&o%TIME%&r&a because of &e&o%REASON%'
+      notification: '&c&o%OPERATOR%&r&7 banned &c&o%TARGET%&r&7 for &a&o%TIME%&r&7 because of &e&o%REASON%&r&7.'
     layout:
-      - 'Banned'
-      - 'Duration: %TIME%'
-      - 'Reason: %REASON%'
+      - '&7&lBanned'
+      - '&cDuration: &e%TIME%'
+      - '&7'
+      - '&c&lReason'
+      - '&7%REASON%'
       - ''
-      - 'Please read the rules'
-      - 'Forums: www.site.com'
+      - '&3&lAppeal Your Punishment'
+      - '&cWebsite: &7www.arim.space'
+      - '&cDiscord: &7discord.gg/8pRkq8u'
   mutes:
-    usage: '/mute <player> [time] <reason>'
+    usage: '&cUsage: /mute &e<player> [time] <reason>&c.'
     permission:
-      command: '&cYou may not mute other players.'
-      no-ip: '&cYou may not ipmute other players.'
-      time: '&cYou may only mute players for a maximum of %MAX_TIME%'
+      command: '&7You may not mute other players.'
+      no-ip: '&7You may not ipmute other players.'
+      time: '&7You may only mute players for a maximum of &a&o%MAX_TIME%&r&7.'
       dur-perms:
         - '5d'
         - '1mo'
       args:
-        no-silent: '&cYou may not use silent bans.'
-        no-passive: '&cYou may not use passive bans.'
+        no-silent: '&7You may not use silent bans.'
+        no-passive: '&7You may not use passive bans.'
     error:
       conflicting: '&c&o%TARGET%&r&7is already muted!'
-      exempt: '&cYou may not mute %TARGET%.'
+      exempt: '&7You may not mute &c&o%TARGET%&7.'
     successful:
-      message: '&7Muted %TARGET% for %TIME% because of %REASON%'
-      notification: '&7%OPERATOR% muted %TARGET% for %TIME% because of %REASON%'
+      message: '&aMuted &c&o%TARGET%&r&a for &a&o%TIME%&r&a because of &e&o%REASON%'
+      notification: '&c&o%OPERATOR%&r&7 muted &c&o%TARGET%&r&7 for &a&o%TIME%&r&7 because of &e&o%REASON%&r&7.'
     layout:
-      - 'Muted'
-      - 'Duration: %TIME%'
-      - 'Reason: %REASON%'
+      - '&7&lMuted'
+      - '&cDuration: &e%TIME%'
+      - '&7'
+      - '&c&lReason'
+      - '&7%REASON%'
       - ''
-      - 'Please read the rules'
-      - 'Forums: www.site.com'
+      - '&3&lAppeal Your Punishment'
+      - '&cWebsite: &7www.arim.space'
+      - '&cDiscord: &7discord.gg/8pRkq8u'
   warns:
-    usage: '/warn <player> [time] <reason>'
+    usage: '&cUsage: /warn &e<player> [time] <reason>&c.'
     permission:
-      command: '&cYou may not warn other players.'
-      no-ip: '&cYou may not ipwarn other players.'
-      time: '&cYou may only warn players for a maximum of %MAX_TIME%'
+      command: '&7You may not warn other players.'
+      no-ip: '&7You may not ipwarn other players.'
+      time: '&7You may only warn players for a maximum of &a&o%MAX_TIME%&r&7.'
       dur-perms:
         - '5d'
         - '1mo'
       args:
-        no-silent: '&cYou may not use silent bans.'
-        no-passive: '&cYou may not use passive bans.'
+        no-silent: '&7You may not use silent bans.'
+        no-passive: '&7You may not use passive bans.'
     error:
-      exempt: '&cYou may not warn %TARGET%.'
+      exempt: '&7You may not warn &c&o%TARGET%&r&7.'
     successful:
-      message: '&7Warned %TARGET% for %TIME% because of %REASON%'
-      notification: '&7%OPERATOR% warned %TARGET% for %TIME% because of %REASON%'
+      message: '&7Warned &c&o%TARGET%&r&7 for &a&o%TIME%&r&7 because of &e&o%REASON%&r&7.'
+      notification: '&c&o%OPERATOR%&r&7 warned &c&o%TARGET%&r&7 for &a&o%TIME%&r&7 because of &e&o%REASON%&r&7.'
     layout:
-      - 'Warned'
-      - 'Duration: %TIME%'
-      - 'Reason: %REASON%'
+      - '&7&lWarned'
+      - '&cDuration: &e%TIME%'
+      - '&7'
+      - '&c&lReason'
+      - '&7%REASON%'
       - ''
-      - 'Please read the rules'
-      - 'Forums: www.site.com'
+      - '&3&lAppeal Your Punishment'
+      - '&cWebsite: &7www.arim.space'
+      - '&cDiscord: &7discord.gg/8pRkq8u'
   kicks:
-    usage: '/kick <player> <reason>'
+    usage: '&cUsage: /kick &e<player> <reason>&c.'
     permission:
-      command: '&cYou may not kick other players.'
-      no-ip: '&cYou may not ipkick other players.'
+      command: '&7You may not kick other players.'
+      no-ip: '&7You may not ipkick other players.'
       args:
-        no-silent: '&cYou may not use silent bans.'
-        no-passive: '&cYou may not use passive bans.'
+        no-silent: '&7You may not use silent bans.'
+        no-passive: '&7You may not use passive bans.'
     error:
-      exempt: '&cYou may not kick %TARGET%.'
+      exempt: '&7You may not kick &c&o%TARGET%&r&7.'
       target-offline: '&c&o%TARGET%&r&7 is offline.'
     successful:
-      message: '&7Successfully kicked %TARGET% for %TIME% because of %REASON%'
-      notification: '&7%OPERATOR% kicked %TARGET% for %TIME% because of %REASON%'
+      message: '&7Kicked &c&o%TARGET%&r&7 for &a&o%TIME%&r&7 because of &e&o%REASON%&r&7.'
+      notification: '&c&o%OPERATOR%&r&7 kicked &c&o%TARGET%&r&7 for &a&o%TIME%&r&7 because of &e&o%REASON%&r&7.'
     layout:
-      - 'Kicked'
-      - 'Reason: %REASON%'
+      - '&7&lKicked'
+      - '&7'
+      - '&c&lReason'
+      - '&7%REASON%'
       - ''
-      - 'Please read the rules'
-      - 'Forums: www.site.com'
+      - '&3&lAppeal Your Punishment'
+      - '&cWebsite: &7www.arim.space'
+      - '&cDiscord: &7discord.gg/8pRkq8u'
 removals:
   bans:
-    usage: '/unban <player>'
+    usage: '&cUsage: /unban &e<player>&c.'
     permission:
-      command: '&cYou may not unban other players.'
-      no-ip: '&cYou may not unban IPs.'
+      command: '&7You may not unban other players.'
+      no-ip: '&7You may not unban IPs.'
     error:
       not-found: '&c&o%TARGET%&r&7is not banned.'
-      confirm: '&7Are you sure you want to unban &c&o%TARGET%&r&7 for %REASON%?||ttp:&7Ban enacted by %OPERATOR%, %DATE%||&7 Click to confirm.||ttp:&7Click here!||cmd:/%CMD%'
+      confirm: '&7Are you sure you want to unban &c&o%TARGET%&r&7 for &e&o%REASON%&r&7?||ttp:&7Ban enacted by %OPERATOR%, %DATE%||&7 Click to confirm.||ttp:&7Click here!||cmd:/%CMD%'
     successful:
-      message: '&7Successfully unbanned &c&o%TARGET%&r&7.'
-      notification: '%UNOPERATOR% unbanned %TARGET%.'
+      message: '&7Unbanned &c&o%TARGET%&r&7.'
+      notification: '&c&o%UNOPERATOR%&r&7 unbanned &c&o%TARGET%&r&7.'
   mutes:
-    usage: '/unmute <player>'
+    usage: '&cUsage: /unmute &e<player>&c.'
     permission:
-      command: '&cYou may not unmute other players.'
-      no-ip: '&cYou may not unmute IPs.'
+      command: '&7You may not unmute other players.'
+      no-ip: '&7You may not unmute IPs.'
     error:
       not-found: '&c&o%TARGET%&r&7is not muted.'
-      confirm: '&7Are you sure you want to unmute &c&o%TARGET%&r&7 for %REASON%?||ttp:&7Mute enacted by %OPERATOR%, %DATE%||&7 Click to confirm.||ttp:&7Click here!||cmd:/%CMD%'
+      confirm: '&7Are you sure you want to unmute &c&o%TARGET%&r&7 for &e&o%REASON%&r&7?||ttp:&7Mute enacted by %OPERATOR%, %DATE%||&7 Click to confirm.||ttp:&7Click here!||cmd:/%CMD%'
     successful:
-      message: '&7Successfully unmuted &c&o%TARGET%&r&7.'
-      notification: '%UNOPERATOR% unmuted %TARGET%.'
+      message: '&7Unmuted &c&o%TARGET%&r&7.'
+      notification: '&c&o%UNOPERATOR%&r&7 unmuted &c&o%TARGET%&r&7.'
   warns:
-    usage: '/unwarn <player>'
+    usage: '&cUsage: /unwarn &e<player>&c.'
     permission:
-      command: '&cYou may not unwarn other players.'
-      no-ip: '&cYou may not unwarn IPs.'
+      command: '&7You may not unwarn other players.'
+      no-ip: '&7You may not unwarn IPs.'
     error:
-      not-found: '&7Could not find warn No.&e%NUMBER%&7 for &c&o%TARGET%&r&7.'
-      confirm: '&7Are you sure you want to unwarn &c&o%TARGET%&r&7 for %REASON%?||ttp:&7Warn enacted by %OPERATOR%, %DATE%||&7 Click to confirm.||ttp:&7Click here!||cmd:/%CMD%'
+      not-found: '&7Could not find punishment ID &e%ID%&7.'
+      confirm: '&7Are you sure you want to unwarn &c&o%TARGET%&r&7 for &e&o%REASON%&r&7?||ttp:&7Warn enacted by %OPERATOR%, %DATE%||&7 Click to confirm.||ttp:&7Click here!||cmd:/%CMD%'
     successful:
-      message: '&7Successfully unwarned &c&o%TARGET%&r&7.'
-      notification: '%UNOPERATOR% unwarned %TARGET% No.&e%NUMBER%&7.'
+      message: '&7Unwarned &c&o%TARGET%&r&7.'
+      notification: '&c&o%UNOPERATOR%&r&7 unwarned &c&o%TARGET%&r&7 (ID &e%ID%&7).'
 list:
   banlist:
-    usage: '/banlist [page]'
+    usage: '&cUsage: /banlist [page].'
     per-page: 10
-    no-pages: '&cThere are no active bans.'
-    max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
+    no-pages: '&7There are no active bans.'
+    max-pages: '&e%PAGE%&7 does not exist. Max pages: &e%MAXPAGE%&7.'
     permission:
-      command: '&cYou may not view the banlist.'
-      no-ip: '&cYou may not view the ip banlist.'
+      command: '&7You may not view the banlist.'
+      no-ip: '&7You may not view the ip banlist.'
     layout:
       header:
-        - '[Number] Subject'
-        - 'Operator / Reason / Time Remaining'
+        - '&7[&eID&7] &e&oSubject'
+        - '&7Operator &8/ &7Reason &8/ &7Time Remaining'
+        - '&7'
       body:
-        - '[%NUMBER%] %TARGET%'
-        - '%OPERATOR% / %REASON% / %TIME%'
+        - '&7[&e%ID%&7] &e&o%TARGET%'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME%'
+        - '&7'
       footer:
-        - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
+        - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
   mutelist:
     usage: '/mutelist [page]'
     per-page: 10
-    no-pages: '&cThere are no active mutes.'
-    max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
+    no-pages: '&7There are no active mutes.'
+    max-pages: '&e%PAGE%&7 does not exist. Max pages: &e%MAXPAGE%&7.'
     permission:
-      command: '&cYou may not view the mutelist.'
-      no-ip: '&cYou may not view the ip mutelist.'
+      command: '&7You may not view the mutelist.'
+      no-ip: '&7You may not view the ip mutelist.'
     layout:
       header:
-        - '[Number] Subject'
-        - 'Operator / Reason / Time Remaining'
+        - '&7[&eID&7] Subject'
+        - '&7Operator &8/ &7Reason &8/ &7Time Remaining'
+        - '&7'
       body:
-        - '[%NUMBER%] %TARGET%'
-        - '%OPERATOR% / %REASON% / %TIME%'
+        - '&7[&e%ID%&7] &e&o%TARGET%'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME%'
+        - '&7'
       footer:
-        - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
+        - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
   history:
     usage: '/history <player> [page]'
     per-page: 10
     no-pages: '&c&o%TARGET%&r&7 has no history.'
-    max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
+    max-pages: '&e%PAGE%&7 does not exist. Max pages: &e%MAXPAGE%&7.'
     permission:
-      command: '&cYou may not view history.'
-      no-ip: '&cYou may not view history for an ip address.'
+      command: '&7You may not view history.'
+      no-ip: '&7You may not view history for an ip address.'
     layout:
       header:
-        - '[Number] Subject / Punishment Type'
-        - 'Operator / Reason / Time Remaining'
+        - '&7[&eID&7] &e&oSubject &r&8/ &7Punishment Type'
+        - '&7Operator &8/ &7Reason &8/ &7Time Remaining'
+        - '&7'
       body:
-        - '[%NUMBER%] %TARGET% / %PUNISHMENT%'
-        - '%OPERATOR% / %REASON% / %TIME%'
+        - '&7[&e%ID%&7] &e&o%TARGET% &r&7/ &7%TYPE%'
+        - '&7%OPERATOR% &8/ &7REASON% &8/ &7%TIME%'
+        - '&7'
       footer:
-        - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
+        - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
   warns:
     usage: '/warns <player> [page]'
     per-page: 10
     no-pages: '&c&o%TARGET%&r&7 has no warns.'
-    max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
+    max-pages: '&e%PAGE%&7 does not exist. Max pages: &e%MAXPAGE%&7.'
     permission:
-      command: '&cYou may not view warns.'
-      no-ip: '&cYou may not view warns for an ip address.'
+      command: '&7You may not view warns.'
+      no-ip: '&7You may not view warns for an ip address.'
     layout:
       header:
-        - '[Number] Operator / Reason / Time Remaining'
+        - '&7[&eID&7] Operator &8/ &7Reason &8/ &7Time Remaining'
+        - '&7'
       body:
-        - '[%NUMBER%] %OPERATOR% / %REASON% / %TIME%'
+        - '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME%'
+        - '&7'
       footer:
-        - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
+        - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
   blame:
     usage: '/blame <player> [page]'
     per-page: 10
-    no-pages: '&c&o%TARGET%&r&7 has no warns.'
-    max-pages: '%PAGE% does not exist. Max pages: %MAXPAGE%'
+    no-pages: '&c&o%TARGET%&r&7 has not punished any players.'
+    max-pages: '&e%PAGE%&7 does not exist. Max pages: &e%MAXPAGE%&7.'
     permission:
-      command: '&cYou may not use blame.'
+      command: '&7You may not use blame.'
     layout:
       header:
-        - '[Number] Subject / Punishment Type'
-        - 'Reason / Time Remaining'
+        - '&7[&eID&7] &e&oSubject &r&8/ &7Punishment Type'
+        - '&7Reason &8/ &7Time Remaining'
+        - '&7'
       body:
-        - '[%NUMBER%] %SUBJECT%'
-        - '%REASON% / %TIME%'
+        - '&7[&e%ID%&7] &e&o%SUBJECT% &r&8 / &7%TYPE%'
+        - '&7%REASON% &8/ &7%TIME%'
+        - '&7'
       footer:
-        - 'Page %PAGE%/%MAXPAGE%.||ttp:Click for next page||cmd:/%CMD%'
+        - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
 other:
   rollback:
     usage: '&cUsage: /rollback &e<player> [number]&c.'
     permission:
-      command: '&cYou may not use this.'
+      command: '&7You may not use rollback.'
     error:
-      not-found: '&cNo punishments made by &7&o%TARGET%&r&c.'
-      invalid-number: '&cInvalid number specified: %NUMBER%.'
+      not-found: '&cNo punishments made by &e&o%TARGET%&r&c.'
+      invalid-number: '&cInvalid number specified: &e%NUMBER%&c.'
     successful:
-      detail: '&7Rolling back punishment: %TYPE% / %SUBJECT% / %REASON% / %DATE%'
-      message: '&7Rolled back &e%NUMBER%&7 punishments by &7&o%TARGET%&r&7.'
-  reload:
-    usage: '&cUsage: /reload.'
-    permission:
-      command: '&cYou may not use this.'
-    successful: '&aReloaded ArimBans configuration!'
+      detail: '&7Rolling back punishment: %TYPE% &8/ &7%DATE% &8/ &7%SUBJECT% &8/ &7%REASON%'
+      message: '&7Rolled back &e%NUMBER%&7 punishments by &e&o%TARGET%&r&7.'
   ips:
     usage: '&cUsage: /ips &e<player>&c.'
     permission:
-      command: '&cYou may not lookup IPs.'
-      no-ip: '&cYou may not lookup IPs.'
+      command: '&7You may not lookup IPs.'
+      no-ip: '&7You may not lookup IPs.'
     error:
       not-found: '&cNo information found for &7&o%TARGET%&r&c.'
     layout:
@@ -268,8 +286,8 @@ other:
   geoip:
     usage: '&cUsage: /geoip &e<IP>&c.'
     permission:
-      command: '&cYou may not lookup Geo IP information.'
-      no-ip: '&cYou may not lookup Geo IP information.'
+      command: '&7You may not lookup Geo IP information.'
+      no-ip: '&7You may not lookup Geo IP information.'
     error:
       not-found: '&cNo information found for &r&7&o%TARGET%&r&c. Perhaps you have incurred rate-limiting.'
     layout:
@@ -281,8 +299,8 @@ other:
   alts:
     usage: '&cUsage: /alts &e<IP>&c.'
     permission:
-      command: '&cYou may not check for alts.'
-      no-ip: '&cYou may not check for alts.'
+      command: '&7You may not check for alts.'
+      no-ip: '&7You may not check for alts.'
     error:
       not-found: '&cNo information found for &r&7&o%TARGET%&r&c.'
     layout:
@@ -293,8 +311,8 @@ other:
   status:
     usage: '&cUsage: /check &e<player/IP>&c.'
     permission:
-      command: '&cYou may not view statuses.'
-      no-ip: '&cYou may not view statuses for an IP address.'
+      command: '&7You may not view statuses.'
+      no-ip: '&7You may not view statuses for an IP address.'
     layout:
       player:
         header: '&cPlayer &8» &7%TARGET%'
@@ -320,15 +338,15 @@ other:
   reload:
     usage: '&cUsage: /arimbans reload.'
     permission:
-      command: '&cYou may not use /arimbans reload.'
-    successful: '&aReloaded ArimBans3 successfully!'
+      command: '&7You may not reload configuration.'
+    successful: '&aReloaded ArimBans configuration!'
   editreason:
-    usage: '&cUsage: /arimbans editreason <id> <new_reason>.'
+    usage: '&cUsage: /arimbans editreason &e<id> <new_reason>&c.'
     permission:
-      command: '&cYou may not use /arimbans editreason.'
+      command: '&7You may not edit reasons.'
     error:
-      not-found: '&cNo punishment was found for ID &e%ID%&c.'
-    successful: '&aChanged reason of &e%ID%&a to &f%REASON%&a.'
+      not-found: '&7No punishment was found by ID &e%ID%&7.'
+    successful: '&7Changed reason of &e%ID%&7 to &f%REASON%&7.'
 time:
   units:
     years:
