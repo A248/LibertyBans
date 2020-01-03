@@ -437,7 +437,8 @@ public class Commands implements CommandsMaster {
 		boolean silent = false;
 		boolean passive = false;
 		if (args.length > 0) {
-			for (String arg : args) {
+			for (int n = 0; n < args.length; n++) {
+				String arg = args[n];
 				if (arg.startsWith("-")) {
 					if (arg.contains("s")) {
 						if (!center.subjects().hasPermission(operator, "arimbans." + type.name().toLowerCase() + ".passive")) {
@@ -454,7 +455,7 @@ public class Commands implements CommandsMaster {
 						passive = true;
 					}
 					if (silent || passive) {
-						arg = "";
+						args[n] = "";
 					}
 				}
 			}
@@ -483,10 +484,12 @@ public class Commands implements CommandsMaster {
 	
 	private void unpunCmd(Subject operator, Subject target, CommandType command, String[] args) {
 		boolean silent = false;
-		for (String arg : args) {
+		for (int n = 0; n < args.length; n++) {
+			String arg = args[n];
 			if (arg.startsWith("-")) {
 				if (arg.contains("s")) {
 					silent = true;
+					args[n] = "";
 				}
 			}
 		}
