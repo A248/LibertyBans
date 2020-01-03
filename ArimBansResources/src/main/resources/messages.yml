@@ -56,7 +56,7 @@ additions:
     permission:
       command: '&cYou may not mute other players.'
       no-ip: '&cYou may not ipmute other players.'
-      time: '&cYou may only mute players for a maximum of %TIME%'
+      time: '&cYou may only mute players for a maximum of %MAX_TIME%'
       dur-perms:
         - '5d'
         - '1mo'
@@ -81,7 +81,7 @@ additions:
     permission:
       command: '&cYou may not warn other players.'
       no-ip: '&cYou may not ipwarn other players.'
-      time: '&cYou may only warn players for a maximum of %TIME%'
+      time: '&cYou may only warn players for a maximum of %MAX_TIME%'
       dur-perms:
         - '5d'
         - '1mo'
