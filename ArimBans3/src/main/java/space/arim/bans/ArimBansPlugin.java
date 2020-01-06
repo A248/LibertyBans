@@ -23,9 +23,6 @@ import java.sql.ResultSet;
 
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.env.Environment;
-import space.arim.bans.internal.async.Async;
-import space.arim.bans.internal.async.AsyncMaster;
-import space.arim.bans.internal.async.AsyncWrapper;
 import space.arim.bans.internal.backend.punishment.Corresponder;
 import space.arim.bans.internal.backend.punishment.Punishments;
 import space.arim.bans.internal.backend.resolver.Resolver;
@@ -36,8 +33,6 @@ import space.arim.bans.internal.frontend.format.Formats;
 import space.arim.bans.internal.logging.Logs;
 import space.arim.bans.internal.sql.Sql;
 import space.arim.bans.internal.sql.SqlQuery;
-
-import space.arim.universal.registry.UniversalRegistry;
 
 import space.arim.api.concurrent.AsyncExecutor;
 
@@ -54,7 +49,6 @@ public class ArimBansPlugin implements ArimBans {
 	private final Commands commands;
 	private final Formats formats;
 	private final Corresponder corresponder;
-	private final AsyncMaster async;
 	
 	private boolean started = false;
 	
@@ -70,13 +64,6 @@ public class ArimBansPlugin implements ArimBans {
 		commands = new Commands(this);
 		formats = new Formats(this);
 		corresponder = new Corresponder(this);
-		AsyncExecutor registeredAsync = UniversalRegistry.get().getRegistration(AsyncExecutor.class);
-		if (registeredAsync != null) {
-			async = new AsyncWrapper(registeredAsync);
-		} else {
-			async = new Async(this);
-			UniversalRegistry.get().register(AsyncExecutor.class, (AsyncExecutor) async);
-		}
 	}
 	
 	@Override
@@ -97,7 +84,7 @@ public class ArimBansPlugin implements ArimBans {
 		punishments().loadActive(data[1]);
 		punishments().loadHistory(data[2]);
 	}
-
+	
 	@Override
 	public File dataFolder() {
 		return folder;
@@ -155,7 +142,7 @@ public class ArimBansPlugin implements ArimBans {
 	
 	@Override
 	public void async(Runnable command) {
-		async.execute(command);
+		getRegistry().getRegistration(AsyncExecutor.class).execute(command);
 	}
 
 }
