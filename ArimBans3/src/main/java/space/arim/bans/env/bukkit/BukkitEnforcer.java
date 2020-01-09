@@ -34,7 +34,7 @@ import space.arim.bans.api.exception.ConfigSectionException;
 import space.arim.bans.api.exception.MissingCenterException;
 import space.arim.bans.internal.Configurable;
 
-import space.arim.api.concurrent.Synchroniser;
+import space.arim.api.concurrent.SyncExecutor;
 
 public class BukkitEnforcer implements Configurable {
 
@@ -116,7 +116,7 @@ public class BukkitEnforcer implements Configurable {
 		Set<? extends Player> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
-			environment.center().getRegistry().getRegistration(Synchroniser.class).runTask(() -> targets.forEach((target) -> target.kickPlayer(message)));
+			environment.center().getRegistry().getRegistration(SyncExecutor.class).execute(() -> targets.forEach((target) -> target.kickPlayer(message)));
 		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
 			targets.forEach((target) -> BukkitEnv.sendMessage(target, message, useJson));
 		}
