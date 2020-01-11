@@ -34,7 +34,7 @@ import space.arim.bans.internal.logging.Logs;
 import space.arim.bans.internal.sql.Sql;
 import space.arim.bans.internal.sql.SqlQuery;
 
-import space.arim.api.concurrent.AsyncExecutor;
+import space.arim.api.concurrent.AsyncExecution;
 
 public class ArimBansPlugin implements ArimBans {
 	
@@ -142,7 +142,7 @@ public class ArimBansPlugin implements ArimBans {
 	
 	@Override
 	public void async(Runnable command) {
-		getRegistry().getRegistration(AsyncExecutor.class).execute(command);
+		getRegistry().getRegistration(AsyncExecution.class).execute(command);
 	}
 
 }

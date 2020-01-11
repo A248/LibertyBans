@@ -18,7 +18,9 @@
  */
 package space.arim.bans.internal;
 
-public interface Configurable extends AutoCloseable {
+import space.arim.universal.util.lang.AutoClosable;
+
+public interface Configurable extends AutoClosable {
 	
 	default void refresh(boolean first) {
 		refreshConfig(first);
@@ -30,11 +32,6 @@ public interface Configurable extends AutoCloseable {
 	}
 	
 	default void refreshMessages(boolean first) {
-		
-	}
-	
-	@Override
-	default void close() {
 		
 	}
 	

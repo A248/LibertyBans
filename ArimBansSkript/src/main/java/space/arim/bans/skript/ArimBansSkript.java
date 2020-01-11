@@ -31,13 +31,15 @@ import space.arim.bans.skript.syntax.expr.ExprLastError;
 import space.arim.bans.skript.syntax.expr.ExprLastPunishment;
 import space.arim.bans.skript.syntax.expr.ExprTypeOfPunishment;
 
+import space.arim.universal.util.lang.AutoClosable;
+
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.classes.Parser;
 import ch.njol.skript.lang.ExpressionType;
 import ch.njol.skript.registrations.Classes;
 
-public class ArimBansSkript implements AutoCloseable {
+public class ArimBansSkript implements AutoClosable {
 	
 	private final ArimBansLibrary lib;
 	private final Logger logger;

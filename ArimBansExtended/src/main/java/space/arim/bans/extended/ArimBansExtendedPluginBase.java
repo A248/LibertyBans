@@ -18,7 +18,9 @@
  */
 package space.arim.bans.extended;
 
-public interface ArimBansExtendedPluginBase extends AutoCloseable {
+import space.arim.universal.util.lang.AutoClosable;
+
+public interface ArimBansExtendedPluginBase extends AutoClosable {
 	
 	ArimBansExtended extension();
 	

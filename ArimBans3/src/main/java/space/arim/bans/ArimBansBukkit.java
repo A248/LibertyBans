@@ -23,11 +23,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.env.bukkit.BukkitEnv;
 
+import space.arim.universal.util.lang.AutoClosable;
+
 import space.arim.api.uuid.UUIDResolver;
 
 import net.milkbowl.vault.permission.Permission;
 
-public class ArimBansBukkit extends JavaPlugin implements AutoCloseable {
+public class ArimBansBukkit extends JavaPlugin implements AutoClosable {
 	
 	private ArimBans center;
 	private BukkitEnv environment;

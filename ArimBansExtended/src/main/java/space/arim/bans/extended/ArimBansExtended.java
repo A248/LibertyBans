@@ -36,11 +36,12 @@ import space.arim.bans.api.Subject;
 
 import space.arim.universal.registry.UniversalRegistry;
 import space.arim.universal.util.UniversalUtil;
+import space.arim.universal.util.lang.AutoClosable;
 
 import space.arim.api.util.FilesUtil;
 import space.arim.api.util.StringsUtil;
 
-public class ArimBansExtended implements AutoCloseable {
+public class ArimBansExtended implements AutoClosable {
 	
 	private static final String[] COMMANDS = {"ban", "unban", "ipban", "ipunban", "mute", "unmute", "ipmute", "ipunmute", "warn", "unwarn", "ipwarn", "ipunwarn", "kick", "ipkick", "banlist", "ipbanlist", "playerbanlist", "mutelist", "ipmutelist", "playermutelist", "history", "iphistory", "warns", "ipwarns", "status", "ipstatus", "ips", "geoip", "alts", "blame", "rollback"};
 	
