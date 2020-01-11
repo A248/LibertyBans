@@ -27,7 +27,7 @@ import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.exception.InvalidUUIDException;
 
-import space.arim.api.util.minecraft.MinecraftUtil;
+import space.arim.api.util.MinecraftUtil;
 
 public class Subjects implements SubjectsMaster {
 	

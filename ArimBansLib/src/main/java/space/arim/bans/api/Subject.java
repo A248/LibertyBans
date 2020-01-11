@@ -24,8 +24,8 @@ import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.exception.TypeParseException;
 
+import space.arim.api.util.MinecraftUtil;
 import space.arim.api.util.StringsUtil;
-import space.arim.api.util.minecraft.MinecraftUtil;
 
 /**
  * 

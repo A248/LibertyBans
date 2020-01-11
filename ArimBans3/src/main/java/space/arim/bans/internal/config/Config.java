@@ -39,7 +39,7 @@ import space.arim.bans.api.exception.InternalStateException;
 import space.arim.universal.util.UniversalUtil;
 
 import space.arim.api.util.FilesUtil;
-import space.arim.api.util.minecraft.MinecraftUtil;
+import space.arim.api.util.MinecraftUtil;
 
 public class Config implements ConfigMaster {
 	

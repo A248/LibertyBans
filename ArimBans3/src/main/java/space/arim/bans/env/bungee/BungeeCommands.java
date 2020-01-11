@@ -25,7 +25,7 @@ import net.md_5.bungee.api.plugin.TabExecutor;
 import space.arim.bans.api.Subject;
 import space.arim.bans.internal.Configurable;
 
-import space.arim.api.util.minecraft.bungee.BungeeUtil;
+import space.arim.api.server.bungee.BungeeUtil;
 
 public class BungeeCommands extends Command implements Configurable, TabExecutor {
 

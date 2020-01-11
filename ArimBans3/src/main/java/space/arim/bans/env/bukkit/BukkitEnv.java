@@ -40,8 +40,8 @@ import space.arim.bans.env.Environment;
 
 import space.arim.universal.util.collections.CollectionsUtil;
 
+import space.arim.api.util.MinecraftUtil;
 import space.arim.api.uuid.PlayerNotFoundException;
-import space.arim.api.util.minecraft.MinecraftUtil;
 
 import net.milkbowl.vault.permission.Permission;
 

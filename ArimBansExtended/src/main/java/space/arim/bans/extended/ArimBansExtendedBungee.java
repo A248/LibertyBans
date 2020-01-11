@@ -26,7 +26,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 import space.arim.bans.extended.bungee.CommandSkeleton;
 import space.arim.bans.extended.bungee.SignInterceptorProtocolize;
 
-import space.arim.api.util.minecraft.bungee.BungeeUtil;
+import space.arim.api.server.bungee.BungeeUtil;
 
 public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPluginBase {
 
