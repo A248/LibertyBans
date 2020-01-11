@@ -21,8 +21,8 @@
     	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     	<maven.compiler.source>1.8</maven.compiler.source>
     	<maven.compiler.target>1.8</maven.compiler.target>
-    	<arimapi.version>0.4.0-SNAPSHOT</arimapi.version>
     	<core.version>0.6.0</core.version>
+    	<arimapi.version>0.4.1-SNAPSHOT</arimapi.version>
     	<universal.version>0.6.6-SNAPSHOT</universal.version>
     	<spigot.version>1.15-R0.1-SNAPSHOT</spigot.version>
     	<bungeecord.version>1.15-SNAPSHOT</bungeecord.version>
