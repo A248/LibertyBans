@@ -24,8 +24,8 @@ import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.api.exception.InvalidUUIDException;
 import space.arim.bans.api.exception.TypeParseException;
 
-import space.arim.api.util.MinecraftUtil;
 import space.arim.api.util.StringsUtil;
+import space.arim.api.uuid.UUIDUtil;
 
 /**
  * 
@@ -168,7 +168,7 @@ public class Subject {
 	public static Subject serialise(String input) throws InvalidUUIDException, TypeParseException {
 		if (input.startsWith("[subject:uuid]")) {
 			try {
-				return new Subject(UUID.fromString(MinecraftUtil.expandUUID(input.substring(14))));
+				return new Subject(UUID.fromString(UUIDUtil.expand(input.substring(14))));
 			} catch (IllegalArgumentException ex) {
 				throw new InvalidUUIDException("UUID " + input + " does not conform.");
 			}

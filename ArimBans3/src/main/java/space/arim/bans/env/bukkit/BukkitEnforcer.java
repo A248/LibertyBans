@@ -35,6 +35,7 @@ import space.arim.bans.api.exception.MissingCenterException;
 import space.arim.bans.internal.Configurable;
 
 import space.arim.api.concurrent.SyncExecution;
+import space.arim.api.server.bukkit.SpigotUtil;
 
 public class BukkitEnforcer implements Configurable {
 
@@ -82,7 +83,7 @@ public class BukkitEnforcer implements Configurable {
 		PunishmentResult result = environment.center().corresponder().getApplicablePunishment(player.getUniqueId(), player.getAddress().getAddress().getHostAddress(), PunishmentType.MUTE);
 		if (result.hasPunishment()) {
 			evt.setCancelled(true);
-			BukkitEnv.sendMessage(player, result.getApplicableMessage(), environment.center().formats().useJson());
+			environment.sendMessage(player, result.getApplicableMessage(), environment.center().formats().useJson());
 		}
 	}
 	
@@ -116,9 +117,9 @@ public class BukkitEnforcer implements Configurable {
 		Set<? extends Player> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
-			environment.center().getRegistry().getRegistration(SyncExecution.class).execute(() -> targets.forEach((target) -> target.kickPlayer(message)));
+			environment.center().getRegistry().getRegistration(SyncExecution.class).execute(() -> targets.forEach((target) -> target.kickPlayer(SpigotUtil.color(message))));
 		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
-			targets.forEach((target) -> BukkitEnv.sendMessage(target, message, useJson));
+			targets.forEach((target) -> environment.sendMessage(target, message, useJson));
 		}
 	}
 	

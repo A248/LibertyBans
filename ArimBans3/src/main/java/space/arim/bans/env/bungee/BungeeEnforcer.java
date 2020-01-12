@@ -32,6 +32,8 @@ import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.exception.ConfigSectionException;
 import space.arim.bans.internal.Configurable;
 
+import space.arim.api.server.bungee.BungeeUtil;
+
 public class BungeeEnforcer implements Configurable {
 
 	private final BungeeEnv environment;
@@ -65,7 +67,7 @@ public class BungeeEnforcer implements Configurable {
 		}
 		PunishmentResult result = environment.center().corresponder().getApplicablePunishment(evt.getConnection().getUniqueId(), evt.getConnection().getAddress().getAddress().getHostAddress(), PunishmentType.BAN);
 		if (result.hasPunishment()) {
-			evt.setCancelReason(BungeeEnv.convert(result.getApplicableMessage()));
+			evt.setCancelReason(BungeeUtil.color(result.getApplicableMessage()));
 			evt.setCancelled(true);
 		}
 	}
@@ -82,7 +84,7 @@ public class BungeeEnforcer implements Configurable {
 		PunishmentResult result = environment.center().corresponder().getApplicablePunishment(player.getUniqueId(), player.getAddress().getAddress().getHostAddress(), PunishmentType.MUTE);
 		if (result.hasPunishment()) {
 			evt.setCancelled(true);
-			BungeeEnv.sendMessage(player, result.getApplicableMessage(), environment.center().formats().useJson());
+			environment.sendMessage(player, result.getApplicableMessage(), environment.center().formats().useJson());
 		}
 	}
 	
@@ -98,9 +100,9 @@ public class BungeeEnforcer implements Configurable {
 		Set<ProxiedPlayer> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
-			targets.forEach((target) -> target.disconnect(BungeeEnv.convert(message)));
+			targets.forEach((target) -> target.disconnect(BungeeUtil.color(message)));
 		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
-			targets.forEach((target) -> BungeeEnv.sendMessage(target, message, useJson));
+			targets.forEach((target) -> environment.sendMessage(target, message, useJson));
 		}
 	}
 	

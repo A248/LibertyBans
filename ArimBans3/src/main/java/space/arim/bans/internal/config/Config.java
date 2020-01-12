@@ -39,7 +39,6 @@ import space.arim.bans.api.exception.InternalStateException;
 import space.arim.universal.util.UniversalUtil;
 
 import space.arim.api.util.FilesUtil;
-import space.arim.api.util.MinecraftUtil;
 
 public class Config implements ConfigMaster {
 	
@@ -153,19 +152,19 @@ public class Config implements ConfigMaster {
 	
 	private List<String> encodeList(List<String> list) {
 		for (int n = 0; n < list.size(); n++) {
-			list.set(n, MinecraftUtil.encode(list.get(n)));
+			list.set(n, list.get(n));
 		}
 		return list;
 	}
 	
 	@Override
 	public String getConfigString(String key) {
-		return MinecraftUtil.encode(cfgGet(key, String.class));
+		return cfgGet(key, String.class);
 	}
 	
 	@Override
 	public String getMessagesString(String key) {
-		return MinecraftUtil.encode(msgsGet(key, String.class));
+		return msgsGet(key, String.class);
 	}
 
 	@SuppressWarnings("unchecked")

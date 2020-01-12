@@ -26,8 +26,6 @@ import java.util.logging.Logger;
 
 import org.bstats.bungeecord.Metrics;
 
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 
@@ -42,7 +40,7 @@ import space.arim.bans.env.Environment;
 import space.arim.universal.util.collections.CollectionsUtil;
 import space.arim.universal.util.collections.ErringCollectionsUtil;
 
-import space.arim.api.util.MinecraftUtil;
+import space.arim.api.server.bungee.BungeeUtil;
 import space.arim.api.uuid.PlayerNotFoundException;
 
 public class BungeeEnv implements Environment {
@@ -88,12 +86,16 @@ public class BungeeEnv implements Environment {
 		close();
 	}
 	
-	static void sendMessage(ProxiedPlayer target, String jsonable, boolean useJson) {
+	void sendMessage(ProxiedPlayer target, String jsonable, boolean useJson) {
 		if (useJson) {
-			target.sendMessage(MinecraftUtil.parseJson(jsonable));
+			target.sendMessage(BungeeUtil.parseJson(jsonable));
 		} else {
-			target.sendMessage(convert(jsonable));
+			target.sendMessage(BungeeUtil.color(jsonable));
 		}
+	}
+	
+	void sendConsoleMessage(String jsonable) {
+		plugin.getProxy().getConsole().sendMessage(BungeeUtil.color(BungeeUtil.stripJson(jsonable)));
 	}
 	
 	@Override
@@ -116,7 +118,7 @@ public class BungeeEnv implements Environment {
 				sendMessage(target, jsonable, useJson);
 			}
 		} else if (subj.getType().equals(SubjectType.CONSOLE)) {
-			plugin.getProxy().getConsole().sendMessage(convert(MinecraftUtil.stripJson(jsonable)));
+			sendConsoleMessage(jsonable);
 		} else if (subj.getType().equals(SubjectType.IP)) {
 			applicable(subj).forEach((target) -> sendMessage(target, jsonable, useJson));
 		}
@@ -262,10 +264,6 @@ public class BungeeEnv implements Environment {
 		commands.close();
 		listener.close();
 		enforcer.close();
-	}
-	
-	static BaseComponent[] convert(String input) {
-		return TextComponent.fromLegacyText(input);
 	}
 
 }

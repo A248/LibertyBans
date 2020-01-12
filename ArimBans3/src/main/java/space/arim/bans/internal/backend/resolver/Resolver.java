@@ -38,7 +38,7 @@ import space.arim.universal.registry.RegistryPriority;
 import space.arim.universal.util.exception.HttpStatusException;
 
 import space.arim.api.uuid.PlayerNotFoundException;
-import space.arim.api.util.MinecraftUtil;
+import space.arim.api.uuid.UUIDUtil;
 import space.arim.api.util.web.FetcherException;
 import space.arim.api.util.web.FetcherUtil;
 import space.arim.api.util.web.GeoIpInfo;
@@ -70,7 +70,7 @@ public class Resolver implements ResolverMaster {
 			while (data.next()) {
 				
 				try {
-					cache.put(UUID.fromString(MinecraftUtil.expandUUID(data.getString("uuid"))), new CacheElement(data.getString("name"), data.getString("iplist"), data.getLong("update_name"), data.getLong("update_iplist")));
+					cache.put(UUID.fromString(UUIDUtil.expand(data.getString("uuid"))), new CacheElement(data.getString("name"), data.getString("iplist"), data.getLong("update_name"), data.getLong("update_iplist")));
 				} catch (IllegalArgumentException ex) {
 					center.logs().logError(ex);
 				}

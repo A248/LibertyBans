@@ -40,7 +40,7 @@ import space.arim.bans.env.Environment;
 
 import space.arim.universal.util.collections.CollectionsUtil;
 
-import space.arim.api.util.MinecraftUtil;
+import space.arim.api.server.bukkit.SpigotUtil;
 import space.arim.api.uuid.PlayerNotFoundException;
 
 import net.milkbowl.vault.permission.Permission;
@@ -90,14 +90,18 @@ public class BukkitEnv implements Environment {
 		plugin.getServer().getPluginManager().disablePlugin(plugin);
 	}
 	
-	static void sendMessage(Player target, String jsonable, boolean useJson) {
+	void sendMessage(Player target, String jsonable, boolean useJson) {
 		if (useJson) {
-			target.spigot().sendMessage(MinecraftUtil.parseJson(jsonable));
+			target.spigot().sendMessage(SpigotUtil.parseJson(jsonable));
 		} else {
-			target.sendMessage(jsonable);
+			target.sendMessage(SpigotUtil.color(jsonable));
 		}
 	}
-
+	
+	void sendConsoleMessage(String jsonable) {
+		plugin.getServer().getConsoleSender().sendMessage(SpigotUtil.color(SpigotUtil.stripJson(jsonable)));
+	}
+	
 	@Override
 	public boolean isOnline(Subject subj) {
 		switch (subj.getType()) {
@@ -118,7 +122,7 @@ public class BukkitEnv implements Environment {
 				sendMessage(target, jsonable, useJson);
 			}
 		} else if (subj.getType().equals(SubjectType.CONSOLE)) {
-			plugin.getServer().getConsoleSender().sendMessage(MinecraftUtil.stripJson(jsonable));
+			sendConsoleMessage(jsonable);
 		} else if (subj.getType().equals(SubjectType.IP)) {
 			applicable(subj).forEach((target) -> sendMessage(target, jsonable, useJson));
 		}
