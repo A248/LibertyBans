@@ -165,10 +165,12 @@
 		<dependency>
 			<groupId>org.bstats</groupId>
 			<artifactId>bstats-bukkit</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.bstats</groupId>
 			<artifactId>bstats-bungeecord</artifactId>
+			<optional>true</optional>
 		</dependency>
 	</dependencies>
 	<repositories>
