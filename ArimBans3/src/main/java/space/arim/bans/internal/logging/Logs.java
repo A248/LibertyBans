@@ -86,7 +86,7 @@ public class Logs implements LogsMaster {
 	private void checkDeleteLogs() {
 		long keepAlive = 86_400_000L * log_directory_keep_alive;
 		long current = System.currentTimeMillis();
-		File[] logDirs = (new File(center.dataFolder().getPath(), "logs")).listFiles();
+		File[] logDirs = (new File(center.dataFolder(), "logs")).listFiles();
 		if (logDirs == null) {
 			log(Level.WARNING, "Could not clean and delete old log folders");
 			return;
