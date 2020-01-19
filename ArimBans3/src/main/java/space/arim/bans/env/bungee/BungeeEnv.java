@@ -90,12 +90,12 @@ public class BungeeEnv implements Environment {
 		if (useJson) {
 			target.sendMessage(BungeeUtil.parseJson(jsonable));
 		} else {
-			target.sendMessage(BungeeUtil.color(jsonable));
+			target.sendMessage(BungeeUtil.colour(jsonable));
 		}
 	}
 	
 	void sendConsoleMessage(String jsonable) {
-		plugin.getProxy().getConsole().sendMessage(BungeeUtil.color(BungeeUtil.stripJson(jsonable)));
+		plugin.getProxy().getConsole().sendMessage(BungeeUtil.colour(BungeeUtil.stripJson(jsonable)));
 	}
 	
 	@Override

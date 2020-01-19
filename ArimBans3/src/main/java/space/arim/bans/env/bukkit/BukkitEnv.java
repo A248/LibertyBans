@@ -94,12 +94,12 @@ public class BukkitEnv implements Environment {
 		if (useJson) {
 			target.spigot().sendMessage(SpigotUtil.parseJson(jsonable));
 		} else {
-			target.sendMessage(SpigotUtil.color(jsonable));
+			target.sendMessage(SpigotUtil.colour(jsonable));
 		}
 	}
 	
 	void sendConsoleMessage(String jsonable) {
-		plugin.getServer().getConsoleSender().sendMessage(SpigotUtil.color(SpigotUtil.stripJson(jsonable)));
+		plugin.getServer().getConsoleSender().sendMessage(SpigotUtil.colour(SpigotUtil.stripJson(jsonable)));
 	}
 	
 	@Override

@@ -67,7 +67,7 @@ public class BungeeEnforcer implements Configurable {
 		}
 		PunishmentResult result = environment.center().corresponder().getApplicablePunishment(evt.getConnection().getUniqueId(), evt.getConnection().getAddress().getAddress().getHostAddress(), PunishmentType.BAN);
 		if (result.hasPunishment()) {
-			evt.setCancelReason(BungeeUtil.color(result.getApplicableMessage()));
+			evt.setCancelReason(BungeeUtil.colour(result.getApplicableMessage()));
 			evt.setCancelled(true);
 		}
 	}
@@ -100,7 +100,7 @@ public class BungeeEnforcer implements Configurable {
 		Set<ProxiedPlayer> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
-			targets.forEach((target) -> target.disconnect(BungeeUtil.color(message)));
+			targets.forEach((target) -> target.disconnect(BungeeUtil.colour(message)));
 		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
 			targets.forEach((target) -> environment.sendMessage(target, message, useJson));
 		}
