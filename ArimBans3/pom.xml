@@ -75,24 +75,12 @@
 							<artifactSet>
 								<includes>
 									<include>space.arim:bans-api</include>
-									<include>org.hsqldb:hsqldb</include>
-									<include>com.zaxxer:HikariCP</include>
-									<include>org.slf4j:slf4j-api</include>
-									<include>org.slf4j:slf4j-nop</include>
 									<include>org.bstats:bstats-bukkit</include>
 									<include>org.bstats:bstats-bungeecord</include>
 								</includes>
 							</artifactSet>
 							<minimizeJar>true</minimizeJar>
 							<relocations>
-								<relocation>
-									<pattern>com.zaxxer.hikari</pattern>
-									<shadedPattern>space.arim.bans.internal.sql.com.zaxxer.hikari</shadedPattern>
-								</relocation>
-								<relocation>
-									<pattern>org.slf4j</pattern>
-									<shadedPattern>space.arim.bans.internal.sql.org.slf4j</shadedPattern>
-								</relocation>
 								<relocation>
 									<pattern>org.bstats.bukkit</pattern>
 									<shadedPattern>space.arim.bans.env.bukkit.metrics</shadedPattern>
@@ -143,24 +131,6 @@
 			<groupId>net.milkbowl.vault</groupId>
 			<artifactId>Vault</artifactId>
 			<version>1.7.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.hsqldb</groupId>
-			<artifactId>hsqldb</artifactId>
-			<version>2.5.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.zaxxer</groupId>
-			<artifactId>HikariCP</artifactId>
-			<version>3.4.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-nop</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.bstats</groupId>
