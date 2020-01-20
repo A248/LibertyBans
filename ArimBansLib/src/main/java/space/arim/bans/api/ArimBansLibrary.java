@@ -24,7 +24,7 @@ import space.arim.bans.api.exception.MissingPunishmentException;
 
 import space.arim.universal.util.lang.AutoClosable;
 
-import space.arim.api.sql.SQLPlugin;
+import space.arim.api.sql.SQLExecution;
 import space.arim.api.util.StringsUtil;
 
 /**
@@ -33,7 +33,7 @@ import space.arim.api.util.StringsUtil;
  * @author A248
  *
  */
-public interface ArimBansLibrary extends PunishmentPlugin, SQLPlugin, AutoClosable {
+public interface ArimBansLibrary extends PunishmentPlugin, SQLExecution, AutoClosable {
 
 	/**
 	 * Used internally for invalid messages. If you send a message whose sole content

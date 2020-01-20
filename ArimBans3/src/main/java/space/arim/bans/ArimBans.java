@@ -190,22 +190,22 @@ public interface ArimBans extends Configurable, ArimBansLibrary {
 	
 	@Override
 	default void executionQueries(ExecutableQuery...queries) throws SQLException {
-		sql().executeQuery(queries);
+		sql().executionQueries(queries);
 	}
 	
 	@Override
 	default void executionQuery(String query, Object...parameters) throws SQLException {
-		sql().executeQuery(query, parameters);
+		sql().executionQuery(query, parameters);
 	}
 	
 	@Override
 	default ResultSet[] selectionQueries(ExecutableQuery...queries) throws SQLException {
-		return sql().selectQuery(queries);
+		return sql().selectionQueries(queries);
 	}
 	
 	@Override
 	default ResultSet selectionQuery(String query, Object...parameters) throws SQLException {
-		return sql().selectQuery(query, parameters);
+		return sql().selectionQuery(query, parameters);
 	}
 	
 	@Override
