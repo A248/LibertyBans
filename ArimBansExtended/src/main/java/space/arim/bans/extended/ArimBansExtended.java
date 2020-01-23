@@ -35,7 +35,7 @@ import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.api.Subject;
 
 import space.arim.universal.registry.UniversalRegistry;
-import space.arim.universal.util.UniversalUtil;
+import space.arim.universal.util.collections.CollectionsUtil;
 import space.arim.universal.util.lang.AutoClosable;
 
 import space.arim.api.util.FilesUtil;
@@ -97,7 +97,7 @@ public class ArimBansExtended implements AutoClosable {
 	}
 	
 	private <T> T getCfgObject(Class<T> type, String key, T defaultObj) {
-		T obj = UniversalUtil.getFromMapRecursive(cfg, key, type);
+		T obj = CollectionsUtil.getFromMapRecursive(cfg, key, type);
 		return (obj != null) ? obj : defaultObj;
 	}
 	

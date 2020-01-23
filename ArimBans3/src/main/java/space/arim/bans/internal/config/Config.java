@@ -36,7 +36,7 @@ import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.exception.ConfigLoadException;
 import space.arim.bans.api.exception.InternalStateException;
 
-import space.arim.universal.util.UniversalUtil;
+import space.arim.universal.util.collections.CollectionsUtil;
 
 import space.arim.api.util.FilesUtil;
 
@@ -211,7 +211,7 @@ public class Config implements ConfigMaster {
 	
 	private <T> T getFromMap(Map<String, Object> map, String key, Class<T> type) {
 		center.logs().log(Level.FINEST, "Getting configuration key " + key);
-		return UniversalUtil.getFromMapRecursive(map, key, type);
+		return CollectionsUtil.getFromMapRecursive(map, key, type);
 	}
 	
 	private String leadKey(CommandType.Category category) {
