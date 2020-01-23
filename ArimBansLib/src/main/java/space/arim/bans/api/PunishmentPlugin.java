@@ -26,6 +26,7 @@ import space.arim.bans.api.exception.ConflictingPunishmentException;
 import space.arim.bans.api.exception.MissingPunishmentException;
 
 import space.arim.universal.registry.Registrable;
+import space.arim.universal.registry.Registry;
 import space.arim.universal.registry.UniversalRegistry;
 
 /**
@@ -37,13 +38,13 @@ import space.arim.universal.registry.UniversalRegistry;
 public interface PunishmentPlugin extends Registrable {
 	
 	/**
-	 * Retrieves the {@link UniversalRegistry} instance associated with this plugin. <br>
+	 * Retrieves the {@link Registry} instance associated with this plugin. <br>
 	 * <br>
-	 * The corresponding events manager, retrievable with {@link UniversalRegistry#getEvents()}, should be used for event listening and firing.
+	 * The corresponding events manager, retrievable with {@link Registry#getEvents()}, should be used for event listening and firing.
 	 * 
-	 * @return a UniversalRegistry instance
+	 * @return a Registry instance
 	 */
-	default UniversalRegistry getRegistry() {
+	default Registry getRegistry() {
 		return UniversalRegistry.get();
 	}
 	
