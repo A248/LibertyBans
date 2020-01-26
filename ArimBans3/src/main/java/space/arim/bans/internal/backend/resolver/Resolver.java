@@ -291,10 +291,10 @@ public class Resolver implements ResolverMaster {
 	public String getVersion() {
 		return center.getVersion();
 	}
-
+	
 	@Override
 	public byte getPriority() {
-		return RegistryPriority.HIGHER;
+		return RegistryPriority.HIGH;
 	}
 	
 	@Override
