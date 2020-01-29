@@ -106,7 +106,7 @@ public class ArimBansExtended implements AutoClosable {
 	}
 	
 	public void fireCommand(Subject subject, String command, String[] args) {
-		lib.simulateCommand(subject, (command + " " + StringsUtil.concat(args, ' ')).split(" "));
+		lib.simulateCommand(subject, command + " " + StringsUtil.concat(args, ' '));
 	}
 	
 	static String[] commands() {
