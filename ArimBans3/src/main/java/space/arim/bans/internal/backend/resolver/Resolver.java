@@ -79,7 +79,7 @@ public class Resolver implements ResolverMaster {
 			center.logs().logError(ex);
 		}
 	}
-
+	
 	@Override
 	public Set<String> getIps(UUID playeruuid) throws MissingCacheException {
 		if (cache.containsKey(Objects.requireNonNull(playeruuid, "UUID must not be null!"))) {
@@ -102,10 +102,11 @@ public class Resolver implements ResolverMaster {
 	
 	@Override
 	public String getName(UUID playeruuid) throws MissingCacheException {
-		if (cache.containsKey(Objects.requireNonNull(playeruuid, "UUID must not be null!"))) {
-			return cache.get(playeruuid).getName();
+		CacheElement element = cache.get(Objects.requireNonNull(playeruuid, "UUID must not be null!"));
+		if (element == null) {
+			throw new MissingCacheException(playeruuid);
 		}
-		throw new MissingCacheException(playeruuid);
+		return element.getName();
 	}
 	
 	@Override
