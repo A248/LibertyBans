@@ -29,7 +29,7 @@ import org.bstats.bukkit.Metrics;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.Plugin;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.Punishment;
@@ -47,7 +47,7 @@ import net.milkbowl.vault.permission.Permission;
 
 public class BukkitEnv implements Environment {
 	
-	private final JavaPlugin plugin;
+	private final Plugin plugin;
 	private final Permission permissions;
 	private final Set<EnvLibrary> libraries = loadLibraries();
 	private ArimBans center;
@@ -57,7 +57,7 @@ public class BukkitEnv implements Environment {
 	
 	private boolean registered = false;
 
-	public BukkitEnv(JavaPlugin plugin, Permission permissions) {
+	public BukkitEnv(Plugin plugin, Permission permissions) {
 		this.plugin = plugin;
 		this.permissions = permissions;
 		this.enforcer = new BukkitEnforcer(this);
@@ -178,6 +178,11 @@ public class BukkitEnv implements Environment {
 	
 	@Override
 	public UUID uuidFromName(String name) throws PlayerNotFoundException {
+		for (Player player : plugin.getServer().getOnlinePlayers()) {
+			if (player.getName().equalsIgnoreCase(name)) {
+				return player.getUniqueId();
+			}
+		}
 		for (OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
 			if (player.getName().equalsIgnoreCase(name)) {
 				return player.getUniqueId();
@@ -188,6 +193,11 @@ public class BukkitEnv implements Environment {
 	
 	@Override
 	public String nameFromUUID(UUID uuid) throws PlayerNotFoundException {
+		for (Player player : plugin.getServer().getOnlinePlayers()) {
+			if (player.getUniqueId().equals(uuid)) {
+				return player.getName();
+			}
+		}
 		for (OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
 			if (player.getUniqueId().equals(uuid)) {
 				return player.getName();
@@ -196,7 +206,7 @@ public class BukkitEnv implements Environment {
 		throw new PlayerNotFoundException(uuid);
 	}
 	
-	public JavaPlugin plugin() {
+	public Plugin plugin() {
 		return plugin;
 	}
 	
