@@ -18,14 +18,13 @@
  */
 package space.arim.bans.env.sponge;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
@@ -157,26 +156,18 @@ public class SpongeEnv implements Environment, YmlLoader {
 		throw new InvalidSubjectException("Subject type is completely missing!");
 	}
 	
-	Set<Player> applicable(Subject subject) {
+	private Stream<Player> applicable(Predicate<Player> predicate) {
+		return server().getOnlinePlayers().stream().filter(predicate);
+	}
+	
+	Stream<Player> applicable(Subject subject) {
 		switch (subject.getType()) {
 		case PLAYER:
-			Set<Player> applicable1 = new HashSet<Player>();
-			server().getOnlinePlayers().forEach((check) -> {
-				if (subject.getUUID().equals(check.getUniqueId())) {
-					applicable1.add(check);
-				}
-			});
-			return applicable1;
+			return applicable((player) -> subject.getUUID().equals(player.getUniqueId()));
 		case IP:
-			Set<Player> applicable2 = new HashSet<Player>();
-			server().getOnlinePlayers().forEach((check) -> {
-				if (center.resolver().hasIp(check.getUniqueId(), subject.getIP())) {
-					applicable2.add(check);
-				}
-			});
-			return applicable2;
+			return applicable((player) -> center.resolver().hasIp(player.getUniqueId(), subject.getIP()));
 		default:
-			return Collections.emptySet();
+			return Stream.empty();
 		}
 	}
 	

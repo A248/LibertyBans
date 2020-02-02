@@ -18,11 +18,10 @@
  */
 package space.arim.bans.env.bungee;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import org.bstats.bungeecord.Metrics;
 
@@ -140,26 +139,18 @@ public class BungeeEnv implements Environment {
 		throw new InvalidSubjectException("Subject type is completely missing!");
 	}
 	
-	Set<ProxiedPlayer> applicable(Subject subject) {
+	private Stream<ProxiedPlayer> applicable(Predicate<ProxiedPlayer> predicate) {
+		return plugin.getProxy().getPlayers().stream().filter(predicate);
+	}
+	
+	Stream<ProxiedPlayer> applicable(Subject subject) {
 		switch (subject.getType()) {
 		case PLAYER:
-			Set<ProxiedPlayer> applicable1 = new HashSet<ProxiedPlayer>();
-			plugin.getProxy().getPlayers().forEach((check) -> {
-				if (subject.getUUID().equals(check.getUniqueId())) {
-					applicable1.add(check);
-				}
-			});
-			return applicable1;
+			return applicable((player) -> subject.getUUID().equals(player.getUniqueId()));
 		case IP:
-			Set<ProxiedPlayer> applicable2 = new HashSet<ProxiedPlayer>();
-			plugin.getProxy().getPlayers().forEach((check) -> {
-				if (center.resolver().hasIp(check.getUniqueId(), subject.getIP())) {
-					applicable2.add(check);
-				}
-			});
-			return applicable2;
+			return applicable((player) -> center.resolver().hasIp(player.getUniqueId(), subject.getIP()));
 		default:
-			return Collections.emptySet();
+			return Stream.empty();
 		}
 	}
 	

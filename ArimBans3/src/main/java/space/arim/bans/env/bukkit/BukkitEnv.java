@@ -18,11 +18,10 @@
  */
 package space.arim.bans.env.bukkit;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import org.bstats.bukkit.Metrics;
 
@@ -143,26 +142,18 @@ public class BukkitEnv implements Environment {
 		throw new InvalidSubjectException("Subject type is completely missing!");
 	}
 	
-	Set<? extends Player> applicable(Subject subject) {
+	private Stream<? extends Player> applicable(Predicate<? super Player> predicate) {
+		return plugin.getServer().getOnlinePlayers().stream().filter(predicate);
+	}
+	
+	Stream<? extends Player> applicable(Subject subject) {
 		switch (subject.getType()) {
 		case PLAYER:
-			Set<Player> applicable1 = new HashSet<Player>();
-			plugin.getServer().getOnlinePlayers().forEach((check) -> {
-				if (subject.getUUID().equals(check.getUniqueId())) {
-					applicable1.add(check);
-				}
-			});
-			return applicable1;
+			return applicable((player) -> subject.getUUID().equals(player.getUniqueId()));
 		case IP:
-			Set<Player> applicable2 = new HashSet<Player>();
-			plugin.getServer().getOnlinePlayers().forEach((check) -> {
-				if (center.resolver().hasIp(check.getUniqueId(), subject.getIP())) {
-					applicable2.add(check);
-				}
-			});
-			return applicable2;
+			return applicable((player) -> center.resolver().hasIp(player.getUniqueId(), subject.getIP()));
 		default:
-			return Collections.emptySet();
+			return Stream.empty();
 		}
 	}
 	
@@ -183,17 +174,8 @@ public class BukkitEnv implements Environment {
 	
 	@Override
 	public String nameFromUUID(UUID uuid) {
-		for (Player player : plugin.getServer().getOnlinePlayers()) {
-			if (player.getUniqueId().equals(uuid)) {
-				return player.getName();
-			}
-		}
-		for (OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
-			if (player.getUniqueId().equals(uuid)) {
-				return player.getName();
-			}
-		}
-		return null;
+		OfflinePlayer player = plugin.getServer().getOfflinePlayer(uuid);
+		return player != null ? player.getName() : null;
 	}
 	
 	public Plugin plugin() {

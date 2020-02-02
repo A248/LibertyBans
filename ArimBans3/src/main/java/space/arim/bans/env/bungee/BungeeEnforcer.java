@@ -19,7 +19,7 @@
 package space.arim.bans.env.bungee;
 
 import java.util.Objects;
-import java.util.Set;
+import java.util.stream.Stream;
 
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
@@ -95,9 +95,9 @@ public class BungeeEnforcer implements Configurable {
 		}
 		environment.center().resolver().update(evt.getConnection().getUniqueId(), evt.getConnection().getName(), evt.getConnection().getAddress().getAddress().getHostAddress());
 	}
-
+	
 	void enforce(Punishment punishment, boolean useJson) {
-		Set<ProxiedPlayer> targets = environment.applicable(punishment.subject());
+		Stream<ProxiedPlayer> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
 			targets.forEach((target) -> target.disconnect(BungeeUtil.colour(message)));

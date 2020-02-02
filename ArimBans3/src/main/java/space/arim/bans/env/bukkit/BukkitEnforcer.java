@@ -19,7 +19,7 @@
 package space.arim.bans.env.bukkit;
 
 import java.util.Objects;
-import java.util.Set;
+import java.util.stream.Stream;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -113,7 +113,7 @@ public class BukkitEnforcer implements Configurable {
 	}
 	
 	void enforce(Punishment punishment, boolean useJson) {
-		Set<? extends Player> targets = environment.applicable(punishment.subject());
+		Stream<? extends Player> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
 			environment.center().getRegistry().getRegistration(SyncExecution.class).execute(() -> targets.forEach((target) -> target.kickPlayer(SpigotUtil.colour(message))));

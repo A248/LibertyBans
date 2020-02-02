@@ -18,8 +18,8 @@
  */
 package space.arim.bans.env.sponge;
 
-import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Cancellable;
@@ -119,7 +119,7 @@ public class SpongeEnforcer implements Configurable {
 	}
 	
 	void enforce(Punishment punishment, boolean useJson) {
-		Set<Player> targets = environment.applicable(punishment.subject());
+		Stream<Player> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
 			environment.center().getRegistry().getRegistration(SyncExecution.class).execute(() -> targets.forEach((target) -> target.kick(SpongeUtil.colour(message))));
