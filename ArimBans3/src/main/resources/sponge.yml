@@ -1,0 +1,4 @@
+name: ${project.name}
+version: ${project.version}
+author: A248
+description: ${project.description}

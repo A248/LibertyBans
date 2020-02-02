@@ -128,9 +128,19 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.spongepowered</groupId>
+			<artifactId>spongeapi</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.spongepowered</groupId>
+			<artifactId>spongecommon</artifactId>
+			<version>1.12.2-7.1.1</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
 			<groupId>net.milkbowl.vault</groupId>
 			<artifactId>Vault</artifactId>
-			<version>1.7.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.bstats</groupId>
@@ -142,15 +152,10 @@
 			<artifactId>bstats-bungeecord</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>org.bstats</groupId>
+			<artifactId>bstats-sponge</artifactId>
+			<optional>true</optional>
+		</dependency>
 	</dependencies>
-	<repositories>
-		<repository>
-			<id>vault-repo</id>
-			<url>http://nexus.hc.to/content/repositories/pub_releases</url>
-		</repository>
-		<repository>
-			<id>CodeMC</id>
-			<url>https://repo.codemc.org/repository/maven-public</url>
-		</repository>
-	</repositories>
 </project>
