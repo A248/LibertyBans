@@ -291,13 +291,17 @@ public class Commands implements CommandsMaster {
 	
 	@Override
 	public void execute(Subject subject, String[] rawArgs) {
-		try {
-			CommandType command = CommandType.parseCommand(rawArgs[0]);
-			if (!checkPermission(subject, command)) {
-				return;
+		if (rawArgs.length > 0) {
+			try {
+				CommandType command = CommandType.parseCommand(rawArgs[0]);
+				if (!checkPermission(subject, command)) {
+					return;
+				}
+				execute(subject, command, StringsUtil.chopOffOne(rawArgs));
+			} catch (TypeParseException ex) {
+				usage(subject);
 			}
-			execute(subject, command, StringsUtil.chopOffOne(rawArgs));
-		} catch (TypeParseException ex) {
+		} else {
 			usage(subject);
 		}
 	}
