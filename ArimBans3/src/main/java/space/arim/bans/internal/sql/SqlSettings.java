@@ -36,15 +36,14 @@ public abstract class SqlSettings {
 	
 	abstract HikariDataSource loadDataSource();
 	
-	//abstract Class<?> getDriverClass();
-	
 	HikariConfig getInitialConfig() {
 		HikariConfig config = new HikariConfig();
 		config.setMinimumIdle(2);
 		config.setMaximumPoolSize(3);
+		config.addDataSourceProperty("autoReconnect", "true");
 		config.addDataSourceProperty("characterEncoding","utf8");
 		config.addDataSourceProperty("useUnicode","true");
-		//config.setDriverClassName(getDriverClass().getName());
+		config.addDataSourceProperty("serverTimezone", "UTC");
 		return config;
 	}
 
