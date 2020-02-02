@@ -24,7 +24,7 @@ storage:
     database: 'punishment'
     username: 'ArimBans'
     password: 'defaultpassword'
-    url: 'jdbc:mysql://%HOST%:%PORT%/%DATABASE%?autoReconnect=true&useUnicode=true&characterEncoding=utf8'
+    url: 'jdbc:mysql://%HOST%:%PORT%/%DATABASE%?autoReconnect=true&useUnicode=true&characterEncoding=utf8&serverTimezone=UTC'
   restart-on-reload: false
 formatting:
   use-json: true
