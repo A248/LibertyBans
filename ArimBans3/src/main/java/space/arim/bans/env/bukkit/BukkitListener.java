@@ -23,6 +23,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 import space.arim.bans.internal.Configurable;
 
@@ -86,6 +87,31 @@ public class BukkitListener implements Configurable, Listener {
 	
 	@EventHandler(priority = EventPriority.LOWEST)
 	private void enforceMutesLowest(AsyncPlayerChatEvent evt) {
+		environment.enforcer().enforceMutes(evt, EventPriority.LOWEST);
+	}
+	
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void enforceMutesCmdsHighest(PlayerCommandPreprocessEvent evt) {
+		environment.enforcer().enforceMutes(evt, EventPriority.HIGHEST);
+	}
+	
+	@EventHandler(priority = EventPriority.HIGH)
+	private void enforceMutesCmdsHigh(PlayerCommandPreprocessEvent evt) {
+		environment.enforcer().enforceMutes(evt, EventPriority.HIGH);
+	}
+	
+	@EventHandler(priority = EventPriority.NORMAL)
+	private void enforceMutesCmdsNormal(PlayerCommandPreprocessEvent evt) {
+		environment.enforcer().enforceMutes(evt, EventPriority.NORMAL);
+	}
+	
+	@EventHandler(priority = EventPriority.LOW)
+	private void enforceMutesCmdsLow(PlayerCommandPreprocessEvent evt) {
+		environment.enforcer().enforceMutes(evt, EventPriority.LOW);
+	}
+	
+	@EventHandler(priority = EventPriority.LOWEST)
+	private void enforceMutesCmdsLowest(PlayerCommandPreprocessEvent evt) {
 		environment.enforcer().enforceMutes(evt, EventPriority.LOWEST);
 	}
 	

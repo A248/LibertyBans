@@ -44,16 +44,12 @@ public class BungeeCommands extends Command implements Configurable, TabExecutor
 		} else {
 			subject = Subject.console();
 		}
-		if (args.length > 0) {
-			environment.center().commands().execute(subject, args);
-		} else {
-			environment.center().commands().usage(subject);
-		}
+		environment.center().commands().execute(subject, args);
 	}
 	
 	@Override
 	public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
-		return BungeeUtil.getPlayerNameTabComplete(args, environment.plugin().getProxy().getPlayers());
+		return BungeeUtil.getPlayerNameTabComplete(args, environment.plugin().getProxy());
 	}
 	
 }

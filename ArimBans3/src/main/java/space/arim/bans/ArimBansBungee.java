@@ -23,6 +23,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.env.bungee.BungeeEnv;
 
+import space.arim.universal.registry.UniversalRegistry;
 import space.arim.universal.util.lang.AutoClosable;
 
 import space.arim.api.uuid.UUIDResolver;
@@ -34,7 +35,7 @@ public class ArimBansBungee extends Plugin implements AutoClosable {
 	
 	private void load() {
 		environment = new BungeeEnv(this);
-		center = new ArimBansPlugin(getDataFolder(), environment);
+		center = new ArimBansPlugin(UniversalRegistry.get(), getDataFolder(), environment);
 		center.start();
 		environment.loadFor(center);
 		center.getRegistry().register(PunishmentPlugin.class, center);

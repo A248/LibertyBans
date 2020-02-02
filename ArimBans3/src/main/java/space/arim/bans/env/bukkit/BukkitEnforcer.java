@@ -43,9 +43,8 @@ public class BukkitEnforcer implements Configurable {
 	
 	private EventPriority ban_priority;
 	private EventPriority mute_priority;
-
 	
-	public BukkitEnforcer(final BukkitEnv environment) {
+	public BukkitEnforcer(BukkitEnv environment) {
 		this.environment = Objects.requireNonNull(environment, "Environment must not be null!");
 	}
 	
@@ -100,7 +99,7 @@ public class BukkitEnforcer implements Configurable {
 			enforceFailed(evt.getPlayer().getName(), PunishmentType.MUTE);
 			return;
 		}
-		if (environment.center().formats().isCmdMuteBlocked(evt.getMessage())) {
+		if (environment.center().formats().isCmdMuteBlocked(evt.getMessage().split(" ")[0])) {
 			enforceMutes(evt, priority, evt.getPlayer());
 		}
 	}
@@ -112,7 +111,7 @@ public class BukkitEnforcer implements Configurable {
 		}
 		environment.center().resolver().update(evt.getUniqueId(), evt.getName(), evt.getAddress().getHostAddress());
 	}
-
+	
 	void enforce(Punishment punishment, boolean useJson) {
 		Set<? extends Player> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);

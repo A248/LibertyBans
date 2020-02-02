@@ -43,13 +43,9 @@ public class BukkitCommands implements Configurable, CommandExecutor {
 		} else if (sender instanceof ConsoleCommandSender) {
 			subject = Subject.console();
 		} else {
-			return true;
+			return false;
 		}
-		if (args.length > 0) {
-			environment.center().commands().execute(subject, args);
-		} else {
-			environment.center().commands().usage(subject);
-		}
+		environment.center().commands().execute(subject, args);
 		return true;
 	}
 

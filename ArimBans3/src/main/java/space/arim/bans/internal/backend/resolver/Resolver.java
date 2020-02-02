@@ -226,11 +226,11 @@ public class Resolver implements ResolverMaster {
 			return getUUID(name);
 		} catch (MissingCacheException ex) {}
 		if (internalFetcher) {
-			try {
-				UUID uuid2 = center.environment().uuidFromName(name);
+			UUID uuid2 = center.environment().uuidFromName(name);
+			if (uuid2 != null) {
 				update(uuid2, name, null);
 				return uuid2;
-			} catch (PlayerNotFoundException ex) {}
+			}
 		}
 		if (query && ashconFetcher) {
 			try {
@@ -255,11 +255,11 @@ public class Resolver implements ResolverMaster {
 			return getName(uuid);
 		} catch (MissingCacheException ex) {}
 		if (internalFetcher) {
-			try {
-				String name2 = center.environment().nameFromUUID(uuid);
+			String name2 = center.environment().nameFromUUID(uuid);
+			if (name2 != null) {
 				update(uuid, name2, null);
 				return name2;
-			} catch (PlayerNotFoundException ex) {}
+			}
 		}
 		if (query && ashconFetcher) {
 			try {

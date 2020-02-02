@@ -18,8 +18,6 @@
  */
 package space.arim.bans.env;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -27,8 +25,6 @@ import space.arim.bans.ArimBans;
 import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.internal.Configurable;
-
-import space.arim.api.uuid.PlayerNotFoundException;
 
 public interface Environment extends Configurable {
 	
@@ -48,48 +44,14 @@ public interface Environment extends Configurable {
 	
 	Logger logger();
 	
-	UUID uuidFromName(String name) throws PlayerNotFoundException;
+	UUID uuidFromName(String name);
 	
-	String nameFromUUID(UUID uuid) throws PlayerNotFoundException;
+	String nameFromUUID(UUID uuid);
 	
 	String getName();
 	
 	String getAuthor();
 	
 	String getVersion();
-	
-	boolean isLibrarySupported(EnvLibrary library);
-	
-	void shutdown(String message);
-	
-	enum EnvLibrary {
-		
-		BUKKIT("org.bukkit.Bukkit"),
-		SPIGOT("org.spigotmc.SpigotConfig"),
-		PAPER("com.destroystokyo.paper.PaperConfig"),
-		BUNGEE("net.md_5.bungee.api.ProxyConfig");
-		
-		private final String uniqueClassName;
-		
-		private EnvLibrary(String uniqueClassName) {
-			this.uniqueClassName = uniqueClassName;
-		}
-		
-		public String uniqueClassName() {
-			return uniqueClassName;
-		}
-		
-	}
-	
-	default Set<EnvLibrary> loadLibraries() {
-		Set<EnvLibrary> libraries = new HashSet<EnvLibrary>();
-		for (EnvLibrary lib : EnvLibrary.values()) {
-			try {
-				Class.forName(lib.uniqueClassName());
-				libraries.add(lib);
-			} catch (ClassNotFoundException ex) {}
-		}
-		return libraries;
-	}
 
 }

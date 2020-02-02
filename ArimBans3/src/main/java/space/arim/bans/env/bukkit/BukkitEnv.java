@@ -38,10 +38,7 @@ import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.env.Environment;
 
-import space.arim.universal.util.collections.CollectionsUtil;
-
 import space.arim.api.server.bukkit.SpigotUtil;
-import space.arim.api.uuid.PlayerNotFoundException;
 
 import net.milkbowl.vault.permission.Permission;
 
@@ -49,14 +46,13 @@ public class BukkitEnv implements Environment {
 	
 	private final Plugin plugin;
 	private final Permission permissions;
-	private final Set<EnvLibrary> libraries = loadLibraries();
 	private ArimBans center;
 	private final BukkitEnforcer enforcer;
 	private final BukkitListener listener;
 	private final BukkitCommands commands;
 	
 	private boolean registered = false;
-
+	
 	public BukkitEnv(Plugin plugin, Permission permissions) {
 		this.plugin = plugin;
 		this.permissions = permissions;
@@ -71,7 +67,7 @@ public class BukkitEnv implements Environment {
 		if (!registered) {
 			plugin.getServer().getPluginManager().registerEvents(listener, plugin);
 			plugin.getServer().getPluginCommand("arimbans").setExecutor(commands);
-			Metrics metrics = new Metrics(plugin);
+			Metrics metrics = new Metrics(plugin, 5990);
 			metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().getStorageModeName()));
 			metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
 			registered = true;
@@ -81,13 +77,6 @@ public class BukkitEnv implements Environment {
 	@Override
 	public boolean isOnlineMode() {
 		return plugin.getServer().getOnlineMode();
-	}
-	
-	@Override
-	public void shutdown(String message) {
-		plugin.getLogger().severe("*** ArimBans Severe Error ***\nShutting down because: " + message);
-		close();
-		plugin.getServer().getPluginManager().disablePlugin(plugin);
 	}
 	
 	void sendMessage(Player target, String jsonable, boolean useJson) {
@@ -103,14 +92,14 @@ public class BukkitEnv implements Environment {
 	}
 	
 	@Override
-	public boolean isOnline(Subject subj) {
-		switch (subj.getType()) {
+	public boolean isOnline(Subject subject) {
+		switch (subject.getType()) {
 		case PLAYER:
-			return CollectionsUtil.checkForAnyMatches(plugin.getServer().getOnlinePlayers(), (check) -> subj.getUUID().equals(check.getUniqueId()));
+			return plugin.getServer().getPlayer(subject.getUUID()) != null;
 		case IP:
-			return CollectionsUtil.checkForAnyMatches(plugin.getServer().getOnlinePlayers(), (check) -> center.resolver().hasIp(check.getUniqueId(), subj.getIP()));
+			return plugin.getServer().getOnlinePlayers().stream().anyMatch((player) -> center.resolver().hasIp(player.getUniqueId(), subject.getIP()));
 		default:
-			return subj.getType().equals(SubjectType.CONSOLE);
+			return subject.getType().equals(SubjectType.CONSOLE);
 		}
 	}
 	
@@ -137,23 +126,24 @@ public class BukkitEnv implements Environment {
 		});
 	}
 	
+	private boolean checkOfflinePlayerPermission(UUID uuid, String permission, boolean opPerms) {
+		OfflinePlayer target = plugin.getServer().getOfflinePlayer(uuid);
+		return target != null && (target.isOp() ? opPerms : target.isOnline() && target.getPlayer().hasPermission(permission) || permissions != null && permissions.playerHas(plugin.getServer().getWorlds().get(0).getName(), target, permission));
+	}
+	
 	@Override
 	public boolean hasPermission(Subject subject, String permission, boolean opPerms) {
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
 			return true;
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {
-			OfflinePlayer target = plugin.getServer().getOfflinePlayer(subject.getUUID());
-			return target != null && (opPerms && target.isOp() || !opPerms && target.isOnline() && target.getPlayer().hasPermission(permission) || !opPerms && permissions.playerHas(plugin.getServer().getWorlds().get(0).getName(), target, permission));
+			return checkOfflinePlayerPermission(subject.getUUID(), permission, opPerms);
 		} else if (subject.getType().equals(SubjectType.IP)) {
-			return CollectionsUtil.checkForAnyMatches(center.resolver().getPlayers(subject.getIP()), (uuid) -> {
-				OfflinePlayer target = plugin.getServer().getOfflinePlayer(uuid);
-				return target != null && (opPerms && target.isOp() || !opPerms && target.isOnline() && target.getPlayer().hasPermission(permission) || !opPerms && permissions.playerHas(plugin.getServer().getWorlds().get(0).getName(), target, permission));
-			});
+			return center.resolver().getPlayers(subject.getIP()).stream().anyMatch((uuid) -> checkOfflinePlayerPermission(uuid, permission, opPerms));
 		}
 		throw new InvalidSubjectException("Subject type is completely missing!");
 	}
 	
-	public Set<? extends Player> applicable(Subject subject) {
+	Set<? extends Player> applicable(Subject subject) {
 		switch (subject.getType()) {
 		case PLAYER:
 			Set<Player> applicable1 = new HashSet<Player>();
@@ -177,7 +167,7 @@ public class BukkitEnv implements Environment {
 	}
 	
 	@Override
-	public UUID uuidFromName(String name) throws PlayerNotFoundException {
+	public UUID uuidFromName(String name) {
 		for (Player player : plugin.getServer().getOnlinePlayers()) {
 			if (player.getName().equalsIgnoreCase(name)) {
 				return player.getUniqueId();
@@ -188,11 +178,11 @@ public class BukkitEnv implements Environment {
 				return player.getUniqueId();
 			}
 		}
-		throw new PlayerNotFoundException(name);
+		return null;
 	}
 	
 	@Override
-	public String nameFromUUID(UUID uuid) throws PlayerNotFoundException {
+	public String nameFromUUID(UUID uuid) {
 		for (Player player : plugin.getServer().getOnlinePlayers()) {
 			if (player.getUniqueId().equals(uuid)) {
 				return player.getName();
@@ -203,7 +193,7 @@ public class BukkitEnv implements Environment {
 				return player.getName();
 			}
 		}
-		throw new PlayerNotFoundException(uuid);
+		return null;
 	}
 	
 	public Plugin plugin() {
@@ -241,11 +231,6 @@ public class BukkitEnv implements Environment {
 	@Override
 	public String getVersion() {
 		return plugin.getDescription().getVersion();
-	}
-	
-	@Override
-	public boolean isLibrarySupported(EnvLibrary type) {
-		return libraries.contains(type);
 	}
 	
 	@Override

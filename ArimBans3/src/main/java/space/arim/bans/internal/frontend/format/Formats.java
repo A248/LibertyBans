@@ -195,8 +195,7 @@ public class Formats implements FormatsMaster {
 	
 	@Override
 	public boolean isCmdMuteBlocked(String command) {
-		String cmd = command.split(" ")[0];
-		cmd = (cmd.contains(":")) ? cmd.split(":")[1] : cmd.substring(0);
+		String cmd = (command.contains(":")) ? command.split(":")[1] : command;
 		return blockForMuted.contains(cmd);
 	}
 	

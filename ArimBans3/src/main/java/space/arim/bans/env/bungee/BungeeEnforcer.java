@@ -73,7 +73,7 @@ public class BungeeEnforcer implements Configurable {
 	}
 	
 	void enforceMutes(ChatEvent evt, byte priority) {
-		if (!(evt.getSender() instanceof ProxiedPlayer) || evt.isCancelled() || priority != mute_priority || evt.isCommand() && !environment.center().formats().isCmdMuteBlocked(evt.getMessage())) {
+		if (!(evt.getSender() instanceof ProxiedPlayer) || evt.isCancelled() || priority != mute_priority || evt.isCommand() && !environment.center().formats().isCmdMuteBlocked(evt.getMessage().split(" ")[0])) {
 			return;
 		}
 		ProxiedPlayer player = (ProxiedPlayer) evt.getSender();

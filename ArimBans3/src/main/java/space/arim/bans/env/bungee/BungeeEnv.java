@@ -34,19 +34,15 @@ import space.arim.bans.api.Punishment;
 import space.arim.bans.api.Subject;
 import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InvalidSubjectException;
-import space.arim.bans.api.exception.MissingCacheException;
 import space.arim.bans.env.Environment;
 
 import space.arim.universal.util.collections.CollectionsUtil;
-import space.arim.universal.util.collections.ErringCollectionsUtil;
 
 import space.arim.api.server.bungee.BungeeUtil;
-import space.arim.api.uuid.PlayerNotFoundException;
 
 public class BungeeEnv implements Environment {
 
 	private final Plugin plugin;
-	private final Set<EnvLibrary> libraries = loadLibraries();
 	private ArimBans center;
 	private final BungeeEnforcer enforcer;
 	private final BungeeListener listener;
@@ -67,7 +63,7 @@ public class BungeeEnv implements Environment {
 		if (!registered) {
 			plugin.getProxy().getPluginManager().registerListener(plugin, listener);
 			plugin.getProxy().getPluginManager().registerCommand(plugin, commands);
-			Metrics metrics = new Metrics(plugin);
+			Metrics metrics = new Metrics(plugin, 5991);
 			metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().getStorageModeName()));
 			metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
 			registered = true;
@@ -78,12 +74,6 @@ public class BungeeEnv implements Environment {
 	@Override
 	public boolean isOnlineMode() {
 		return plugin.getProxy().getConfig().isOnlineMode();
-	}
-	
-	@Override
-	public void shutdown(String message) {
-		plugin.getLogger().severe("*** ArimBans Severe Error ***\nShutting down because: " + message);
-		close();
 	}
 	
 	void sendMessage(ProxiedPlayer target, String jsonable, boolean useJson) {
@@ -99,14 +89,14 @@ public class BungeeEnv implements Environment {
 	}
 	
 	@Override
-	public boolean isOnline(Subject subj) {
-		switch (subj.getType()) {
+	public boolean isOnline(Subject subject) {
+		switch (subject.getType()) {
 		case PLAYER:
-			return CollectionsUtil.checkForAnyMatches(plugin.getProxy().getPlayers(), (check) -> subj.getUUID().equals(check.getUniqueId()));
+			return plugin.getProxy().getPlayer(subject.getUUID()) != null;
 		case IP:
-			return CollectionsUtil.checkForAnyMatches(plugin.getProxy().getPlayers(), (check) -> center.resolver().hasIp(check.getUniqueId(), subj.getIP()));
+			return plugin.getProxy().getPlayers().stream().anyMatch((player) -> center.resolver().hasIp(player.getUniqueId(), subject.getIP()));
 		default:
-			return subj.getType().equals(SubjectType.CONSOLE);
+			return subject.getType().equals(SubjectType.CONSOLE);
 		}
 	}
 	
@@ -133,30 +123,24 @@ public class BungeeEnv implements Environment {
 		});
 	}
 	
+	private boolean checkOfflinePlayerPermission(UUID uuid, String permission) {
+		ProxiedPlayer target = plugin.getProxy().getPlayer(uuid);
+		return target != null ? target.hasPermission(permission) : CollectionsUtil.checkForAnyMatches(plugin.getProxy().getConfigurationAdapter().getGroups(uuid.toString()), (group) -> plugin.getProxy().getConfigurationAdapter().getPermissions(group).contains(permission));
+	}
+	
 	@Override
 	public boolean hasPermission(Subject subject, String permission, boolean opPerms) {
 		if (subject.getType().equals(SubjectType.CONSOLE)) {
 			return true;
 		} else if (subject.getType().equals(SubjectType.PLAYER)) {
-			ProxiedPlayer target = plugin.getProxy().getPlayer(subject.getUUID());
-			if (target != null) {
-				return target.hasPermission(permission);
-			}
-			return CollectionsUtil.checkForAnyMatches(plugin.getProxy().getConfigurationAdapter().getGroups(subject.getUUID().toString()), (group) -> plugin.getProxy().getConfigurationAdapter().getPermissions(group).contains(permission));
+			return checkOfflinePlayerPermission(subject.getUUID(), permission);
 		} else if (subject.getType().equals(SubjectType.IP)) {
-			try {
-				return ErringCollectionsUtil.<UUID, MissingCacheException>checkForAnyMatches(center.resolver().getPlayers(subject.getIP()), (uuid) -> {
-					ProxiedPlayer target = plugin.getProxy().getPlayer(uuid);
-					return target != null ? target.hasPermission(permission) : ErringCollectionsUtil.<String, MissingCacheException>checkForAnyMatches(plugin.getProxy().getConfigurationAdapter().getGroups(center.resolver().getName(uuid)), (group) -> plugin.getProxy().getConfigurationAdapter().getPermissions(group).contains(permission));
-				});
-			} catch (MissingCacheException ex) {
-				throw new InvalidSubjectException("One of the names of an ip-based subject could not be resolved", ex);
-			}
+			return center.resolver().getPlayers(subject.getIP()).stream().anyMatch((uuid) -> checkOfflinePlayerPermission(uuid, permission));
 		}
 		throw new InvalidSubjectException("Subject type is completely missing!");
 	}
 	
-	public Set<ProxiedPlayer> applicable(Subject subject) {
+	Set<ProxiedPlayer> applicable(Subject subject) {
 		switch (subject.getType()) {
 		case PLAYER:
 			Set<ProxiedPlayer> applicable1 = new HashSet<ProxiedPlayer>();
@@ -180,23 +164,23 @@ public class BungeeEnv implements Environment {
 	}
 	
 	@Override
-	public UUID uuidFromName(String name) throws PlayerNotFoundException {
+	public UUID uuidFromName(String name) {
 		for (ProxiedPlayer player : plugin.getProxy().getPlayers()) {
 			if (player.getName().equals(name)) {
 				return player.getUniqueId();
 			}
 		}
-		throw new PlayerNotFoundException(name);
+		return null;
 	}
 	
 	@Override
-	public String nameFromUUID(UUID uuid) throws PlayerNotFoundException {
+	public String nameFromUUID(UUID uuid) {
 		for (ProxiedPlayer player : plugin.getProxy().getPlayers()) {
 			if (player.getUniqueId().equals(uuid)) {
 				return player.getName();
 			}
 		}
-		throw new PlayerNotFoundException(uuid);
+		return null;
 	}
 	
 	public Plugin plugin() {
@@ -234,11 +218,6 @@ public class BungeeEnv implements Environment {
 	@Override
 	public String getVersion() {
 		return plugin.getDescription().getVersion();
-	}
-	
-	@Override
-	public boolean isLibrarySupported(EnvLibrary type) {
-		return libraries.contains(type);
 	}
 	
 	@Override

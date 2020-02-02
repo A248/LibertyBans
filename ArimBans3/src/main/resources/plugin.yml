@@ -4,6 +4,7 @@ version: ${project.version}
 author: A248
 description: ${project.description}
 depend: [ArimAPI]
+softdepend: [Vault]
 
 commands:
   arimbans:

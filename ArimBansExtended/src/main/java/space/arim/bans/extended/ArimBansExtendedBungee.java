@@ -73,7 +73,7 @@ public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPl
 	}
 	
 	public Iterable<String> getTabComplete(String[] args) {
-		return BungeeUtil.getPlayerNameTabComplete(args, getProxy().getPlayers());
+		return BungeeUtil.getPlayerNameTabComplete(args, getProxy());
 	}
 	
 }
