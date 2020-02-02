@@ -27,7 +27,6 @@ import space.arim.bans.api.exception.MissingPunishmentException;
 
 import space.arim.universal.registry.Registrable;
 import space.arim.universal.registry.Registry;
-import space.arim.universal.registry.UniversalRegistry;
 
 /**
  * A generic punishment plugin for developers who wish to use the {@link Punishment}
@@ -44,9 +43,7 @@ public interface PunishmentPlugin extends Registrable {
 	 * 
 	 * @return a Registry instance
 	 */
-	default Registry getRegistry() {
-		return UniversalRegistry.get();
-	}
+	Registry getRegistry();
 	
 	/**
 	 * The next available punishment ID. <br>

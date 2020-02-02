@@ -34,10 +34,13 @@ import space.arim.bans.internal.logging.Logs;
 import space.arim.bans.internal.sql.Sql;
 import space.arim.bans.internal.sql.SqlQuery;
 
+import space.arim.universal.registry.Registry;
+
 import space.arim.api.concurrent.AsyncExecution;
 
 public class ArimBansPlugin implements ArimBans {
 	
+	private final Registry registry;
 	private final File folder;
 	private final Environment environment;
 	private final Logs logs;
@@ -52,7 +55,8 @@ public class ArimBansPlugin implements ArimBans {
 	
 	private boolean started = false;
 	
-	ArimBansPlugin(File folder, Environment environment) {
+	ArimBansPlugin(Registry registry, File folder, Environment environment) {
+		this.registry = registry;
 		this.folder = folder;
 		this.environment = environment;
 		config = new Config(this);
@@ -64,6 +68,11 @@ public class ArimBansPlugin implements ArimBans {
 		commands = new Commands(this);
 		formats = new Formats(this);
 		corresponder = new Corresponder(this);
+	}
+	
+	@Override
+	public Registry getRegistry() {
+		return registry;
 	}
 	
 	@Override
