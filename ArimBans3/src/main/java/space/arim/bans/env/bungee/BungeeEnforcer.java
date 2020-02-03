@@ -18,6 +18,8 @@
  */
 package space.arim.bans.env.bungee;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -65,11 +67,15 @@ public class BungeeEnforcer implements Configurable {
 		if (evt.isCancelled() || priority != ban_priority) {
 			return;
 		}
-		PunishmentResult result = environment.center().corresponder().getApplicablePunishment(evt.getConnection().getUniqueId(), evt.getConnection().getAddress().getAddress().getHostAddress(), PunishmentType.BAN);
-		if (result.hasPunishment()) {
-			evt.setCancelReason(BungeeUtil.colour(result.getApplicableMessage()));
-			evt.setCancelled(true);
+		SocketAddress address = evt.getConnection().getSocketAddress();
+		if (address instanceof InetSocketAddress) {
+			PunishmentResult result = environment.center().corresponder().getApplicablePunishment(evt.getConnection().getUniqueId(), ((InetSocketAddress) address).getAddress().getHostAddress(), PunishmentType.BAN);
+			if (result.hasPunishment()) {
+				evt.setCancelReason(BungeeUtil.colour(result.getApplicableMessage()));
+				evt.setCancelled(true);
+			}
 		}
+		
 	}
 	
 	void enforceMutes(ChatEvent evt, byte priority) {
@@ -81,10 +87,13 @@ public class BungeeEnforcer implements Configurable {
 			enforceFailed(player.getName(), PunishmentType.MUTE);
 			return;
 		}
-		PunishmentResult result = environment.center().corresponder().getApplicablePunishment(player.getUniqueId(), player.getAddress().getAddress().getHostAddress(), PunishmentType.MUTE);
-		if (result.hasPunishment()) {
-			evt.setCancelled(true);
-			environment.sendMessage(player, result.getApplicableMessage(), environment.center().formats().useJson());
+		SocketAddress address = player.getSocketAddress();
+		if (address instanceof InetSocketAddress) {
+			PunishmentResult result = environment.center().corresponder().getApplicablePunishment(player.getUniqueId(), ((InetSocketAddress) address).getAddress().getHostAddress(), PunishmentType.MUTE);
+			if (result.hasPunishment()) {
+				evt.setCancelled(true);
+				environment.sendMessage(player, result.getApplicableMessage(), environment.center().formats().useJson());
+			}
 		}
 	}
 	
@@ -93,7 +102,10 @@ public class BungeeEnforcer implements Configurable {
 			 cacheFailed(evt.getConnection().getName());
 			 return;
 		}
-		environment.center().resolver().update(evt.getConnection().getUniqueId(), evt.getConnection().getName(), evt.getConnection().getAddress().getAddress().getHostAddress());
+		SocketAddress address = evt.getConnection().getSocketAddress();
+		if (address instanceof InetSocketAddress) {
+			environment.center().resolver().update(evt.getConnection().getUniqueId(), evt.getConnection().getName(), ((InetSocketAddress) address).getAddress().getHostAddress());
+		}
 	}
 	
 	void enforce(Punishment punishment, boolean useJson) {

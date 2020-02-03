@@ -24,6 +24,9 @@ import de.exceptionflug.protocolize.api.protocol.ProtocolAPI;
 import de.exceptionflug.protocolize.api.protocol.Stream;
 import de.exceptionflug.protocolize.world.packet.SignUpdate;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+
 import space.arim.bans.api.PunishmentResult;
 import space.arim.bans.extended.ArimBansExtendedPlugin;
 
@@ -40,10 +43,13 @@ public class SignInterceptorProtocolize extends PacketAdapter<SignUpdate> {
 	public void receive(PacketReceiveEvent<SignUpdate> evt) {
 		if (!evt.isCancelled() && plugin.enabled() && plugin.extension().antiSignEnabled()) {
 			if (evt.isSentByPlayer()) {
-				PunishmentResult result = plugin.extension().getLib().getApplicableMute(evt.getPlayer().getUniqueId(), evt.getPlayer().getAddress().getAddress().getHostAddress());
-				if (result.hasPunishment()) {
-					evt.setCancelled(true);
-					plugin.extension().getLib().sendMessage(evt.getPlayer().getUniqueId(), result.getApplicableMessage());
+				SocketAddress address = evt.getPlayer().getSocketAddress();
+				if (address instanceof InetSocketAddress) {
+					PunishmentResult result = plugin.extension().getLib().getApplicableMute(evt.getPlayer().getUniqueId(), ((InetSocketAddress) address).getAddress().getHostAddress());
+					if (result.hasPunishment()) {
+						evt.setCancelled(true);
+						plugin.extension().getLib().sendMessage(evt.getPlayer().getUniqueId(), result.getApplicableMessage());
+					}
 				}
 			}
 		}
