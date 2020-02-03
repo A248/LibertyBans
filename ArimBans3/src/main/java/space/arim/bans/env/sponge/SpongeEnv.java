@@ -18,8 +18,6 @@
  */
 package space.arim.bans.env.sponge;
 
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -40,10 +38,10 @@ import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.env.Environment;
 
-import space.arim.api.config.YmlLoader;
+import space.arim.api.server.PluginInformation;
 import space.arim.api.server.sponge.SpongeUtil;
 
-public class SpongeEnv implements Environment, YmlLoader {
+public class SpongeEnv implements Environment {
 
 	private final PluginContainer plugin;
 	private final Logger logger;
@@ -59,10 +57,10 @@ public class SpongeEnv implements Environment, YmlLoader {
 	
 	public SpongeEnv(PluginContainer plugin) {
 		this.plugin = plugin;
-		Map<String, Object> spongeInfo = loadResource("sponge.yml");
-		name = Objects.requireNonNull(spongeInfo.get("name"), "sponge.yml invalid!").toString();
-		author = Objects.requireNonNull(spongeInfo.get("author"), "sponge.yml invalid!").toString();
-		version = Objects.requireNonNull(spongeInfo.get("version"), "sponge.yml invalid!").toString();
+		PluginInformation information = PluginInformation.getFor(plugin);
+		name = information.getName();
+		author = information.getAuthors()[0];
+		version = information.getVersion();
 		logger = Logger.getLogger(name);
 		logger.setParent(Logger.getLogger(""));
 		enforcer = new SpongeEnforcer(this);
@@ -74,9 +72,9 @@ public class SpongeEnv implements Environment, YmlLoader {
 	public void loadFor(ArimBans center) {
 		this.center = center;
 		if (!registered) {
+			registered = true;
 			Sponge.getEventManager().registerListeners(plugin.getInstance().get(), listener);
 			Sponge.getCommandManager().register(plugin.getInstance().get(), commands, "arimbans");
-			registered = true;
 		}
 	}
 	
