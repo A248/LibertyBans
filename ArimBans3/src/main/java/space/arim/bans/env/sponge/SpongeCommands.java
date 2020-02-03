@@ -24,9 +24,9 @@ import org.spongepowered.api.entity.living.player.Player;
 
 import space.arim.bans.api.Subject;
 
-import space.arim.api.server.sponge.DecoupledCommandCallable;
+import space.arim.api.server.sponge.DecoupledCommand;
 
-public class SpongeCommands extends DecoupledCommandCallable {
+public class SpongeCommands extends DecoupledCommand {
 
 	private final SpongeEnv environment;
 	
