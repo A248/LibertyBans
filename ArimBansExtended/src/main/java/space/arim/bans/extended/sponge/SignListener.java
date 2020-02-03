@@ -35,7 +35,7 @@ public class SignListener {
 	}
 	
 	@Listener
-	private void onSignEdit(ChangeSignEvent evt, @First Player player) {
+	public void onSignEdit(ChangeSignEvent evt, @First Player player) {
 		if (!evt.isCancelled() && plugin.enabled() && plugin.extension().antiSignEnabled()) {
 			PunishmentResult result = plugin.extension().getLib().getApplicableMute(player.getUniqueId(), player.getConnection().getAddress().getAddress().getHostAddress());
 			if (result.hasPunishment()) {

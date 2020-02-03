@@ -35,82 +35,82 @@ public class SpongeListener {
 	}
 	
 	@Listener(order = Order.POST)
-	private void cacheData(ClientConnectionEvent.Auth evt) {
+	public void cacheData(ClientConnectionEvent.Auth evt) {
 		environment.enforcer().updateCache(evt);
 	}
 	
 	@Listener(order = Order.LAST)
-	private void enforceBansHighest(ClientConnectionEvent.Auth evt) {
+	public void enforceBansHighest(ClientConnectionEvent.Auth evt) {
 		environment.enforcer().enforceBans(evt, Order.LAST);
 	}
 	
 	@Listener(order = Order.LATE)
-	private void enforceBansHigh(ClientConnectionEvent.Auth evt) {
+	public void enforceBansHigh(ClientConnectionEvent.Auth evt) {
 		environment.enforcer().enforceBans(evt, Order.LATE);
 	}
 	
 	@Listener(order = Order.DEFAULT)
-	private void enforceBansNormal(ClientConnectionEvent.Auth evt) {
+	public void enforceBansNormal(ClientConnectionEvent.Auth evt) {
 		environment.enforcer().enforceBans(evt, Order.DEFAULT);
 	}
 	
 	@Listener(order = Order.EARLY)
-	private void enforceBansLow(ClientConnectionEvent.Auth evt) {
+	public void enforceBansLow(ClientConnectionEvent.Auth evt) {
 		environment.enforcer().enforceBans(evt, Order.EARLY);
 	}
 	
 	@Listener(order = Order.FIRST)
-	private void enforceBansLowest(ClientConnectionEvent.Auth evt) {
+	public void enforceBansLowest(ClientConnectionEvent.Auth evt) {
 		environment.enforcer().enforceBans(evt, Order.FIRST);
 	}
 	
 	@Listener(order = Order.LAST)
-	private void enforceMutesHighest(MessageChannelEvent.Chat evt, @First Player player) {
+	public void enforceMutesHighest(MessageChannelEvent.Chat evt, @First Player player) {
 		environment.enforcer().enforceMutes(evt, Order.LAST, player);
 	}
 	
 	@Listener(order = Order.LATE)
-	private void enforceMutesHigh(MessageChannelEvent.Chat evt, @First Player player) {
+	public void enforceMutesHigh(MessageChannelEvent.Chat evt, @First Player player) {
 		environment.enforcer().enforceMutes(evt, Order.LATE, player);
 	}
 	
 	@Listener(order = Order.DEFAULT)
-	private void enforceMutesNormal(MessageChannelEvent.Chat evt, @First Player player) {
+	public void enforceMutesNormal(MessageChannelEvent.Chat evt, @First Player player) {
 		environment.enforcer().enforceMutes(evt, Order.DEFAULT, player);
 	}
 	
 	@Listener(order = Order.EARLY)
-	private void enforceMutesLow(MessageChannelEvent.Chat evt, @First Player player) {
+	public void enforceMutesLow(MessageChannelEvent.Chat evt, @First Player player) {
 		environment.enforcer().enforceMutes(evt, Order.EARLY, player);
 	}
 	
 	@Listener(order = Order.FIRST)
-	private void enforceMutesLowest(MessageChannelEvent.Chat evt, @First Player player) {
+	public void enforceMutesLowest(MessageChannelEvent.Chat evt, @First Player player) {
 		environment.enforcer().enforceMutes(evt, Order.FIRST, player);
 	}
 	
 	@Listener(order = Order.LAST)
-	private void enforceMutesHighest(SendCommandEvent evt, @First Player player) {
+	public void enforceMutesHighest(SendCommandEvent evt, @First Player player) {
 		environment.enforcer().enforceMutes(evt, Order.LAST, player);
 	}
 	
 	@Listener(order = Order.LATE)
-	private void enforceMutesHigh(SendCommandEvent evt, @First Player player) {
+	public void enforceMutesHigh(SendCommandEvent evt, @First Player player) {
 		environment.enforcer().enforceMutes(evt, Order.LATE, player);
 	}
 	
 	@Listener(order = Order.DEFAULT)
-	private void enforceMutesNormal(SendCommandEvent evt, @First Player player) {
+	public void enforceMutesNormal(SendCommandEvent evt, @First Player player) {
 		environment.enforcer().enforceMutes(evt, Order.DEFAULT, player);
 	}
 	
 	@Listener(order = Order.EARLY)
-	private void enforceMutesLow(SendCommandEvent evt, @First Player player) {
+	public void enforceMutesLow(SendCommandEvent evt, @First Player player) {
 		environment.enforcer().enforceMutes(evt, Order.EARLY, player);
 	}
 	
 	@Listener(order = Order.FIRST)
-	private void enforceMutesLowest(SendCommandEvent evt, @First Player player) {
+	public void enforceMutesLowest(SendCommandEvent evt, @First Player player) {
 		environment.enforcer().enforceMutes(evt, Order.FIRST, player);
 	}
 	

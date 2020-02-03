@@ -52,7 +52,7 @@ public class ArimBansExtendedSponge implements ArimBansExtendedPlugin {
 	private SignListener listener;
 	
 	@Listener
-	private void onEnable(@SuppressWarnings("unused") GamePreInitializationEvent evt) {
+	public void onEnable(@SuppressWarnings("unused") GamePreInitializationEvent evt) {
 		extended = new ArimBansExtended(UniversalRegistry.get(), folder);
 		loadCmds();
 		loadAntiSign();
@@ -77,7 +77,7 @@ public class ArimBansExtendedSponge implements ArimBansExtendedPlugin {
 	}
 	
 	@Listener
-	private void onDisable(@SuppressWarnings("unused") GameStoppingServerEvent evt) {
+	public void onDisable(@SuppressWarnings("unused") GameStoppingServerEvent evt) {
 		close();
 	}
 	
