@@ -16,8 +16,7 @@
 		<plugin.name>${project.name}</plugin.name>
 		<plugin.version>${core.version}</plugin.version>
 		<plugin.author>${core.author}</plugin.author>
-		<!-- Corresponds with the @Plugin annotation in ArimBansSponge -->
-		<plugin.spongeid>arimbans3</plugin.spongeid>
+		<plugin.spongeid>arimbans3</plugin.spongeid> <!-- Corresponds with the @Plugin annotation -->
 		<plugin.url>${project.url}</plugin.url>
 		<plugin.description>${project.description}</plugin.description>
 	</properties>
