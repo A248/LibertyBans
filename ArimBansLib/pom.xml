@@ -14,7 +14,22 @@
 	<description>Contains all API classes for ArimBans.</description>
 
 	<build>
+		<sourceDirectory>src/main/java</sourceDirectory>
 		<finalName>${project.name}_v${core.version}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>generate-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 
 	<dependencies>
