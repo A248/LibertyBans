@@ -100,6 +100,7 @@
 									<include>space.arim:bans-api</include>
 									<include>org.bstats:bstats-bukkit</include>
 									<include>org.bstats:bstats-bungeecord</include>
+									<include>org.bstats:bstats-sponge</include>
 								</includes>
 							</artifactSet>
 							<minimizeJar>true</minimizeJar>
@@ -111,6 +112,10 @@
 								<relocation>
 									<pattern>org.bstats.bungeecord</pattern>
 									<shadedPattern>space.arim.bans.env.bungee.metrics</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.bstats.sponge</pattern>
+									<shadedPattern>space.arim.bans.env.sponge.metrics</shadedPattern>
 								</relocation>
 							</relocations>
 						</configuration>
