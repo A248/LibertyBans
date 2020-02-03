@@ -18,7 +18,9 @@
  */
 package space.arim.bans.extended;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import net.md_5.bungee.api.plugin.Plugin;
@@ -26,9 +28,11 @@ import net.md_5.bungee.api.plugin.Plugin;
 import space.arim.bans.extended.bungee.CommandSkeleton;
 import space.arim.bans.extended.bungee.SignInterceptorProtocolize;
 
+import space.arim.universal.registry.UniversalRegistry;
+
 import space.arim.api.server.bungee.BungeeUtil;
 
-public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPluginBase {
+public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPlugin {
 
 	private ArimBansExtended extended;
 	private Set<CommandSkeleton> cmds = new HashSet<CommandSkeleton>();
@@ -36,7 +40,7 @@ public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPl
 	
 	@Override
 	public void onEnable() {
-		extended = new ArimBansExtended(getDataFolder(), getLogger());
+		extended = new ArimBansExtended(UniversalRegistry.get(), getDataFolder());
 		loadCmds();
 		loadAntiSign();
 	}
@@ -57,6 +61,13 @@ public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPl
 	}
 	
 	@Override
+	public List<String> getTabComplete(String[] args) {
+		List<String> completions = new ArrayList<String>();
+		BungeeUtil.getPlayerNameTabComplete(args, getProxy()).forEach(completions::add);
+		return completions;
+	}
+	
+	@Override
 	public void onDisable() {
 		close();
 	}
@@ -68,12 +79,9 @@ public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPl
 	
 	@Override
 	public void close() {
+		getProxy().getPluginManager().unregisterListeners(this);
 		getProxy().getPluginManager().unregisterCommands(this);
-		ArimBansExtendedPluginBase.super.close();
-	}
-	
-	public Iterable<String> getTabComplete(String[] args) {
-		return BungeeUtil.getPlayerNameTabComplete(args, getProxy());
+		ArimBansExtendedPlugin.super.close();
 	}
 	
 }

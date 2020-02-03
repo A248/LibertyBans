@@ -25,20 +25,20 @@ import de.exceptionflug.protocolize.api.protocol.Stream;
 import de.exceptionflug.protocolize.world.packet.SignUpdate;
 
 import space.arim.bans.api.PunishmentResult;
-import space.arim.bans.extended.ArimBansExtendedPluginBase;
+import space.arim.bans.extended.ArimBansExtendedPlugin;
 
 public class SignInterceptorProtocolize extends PacketAdapter<SignUpdate> {
 	
-	private final ArimBansExtendedPluginBase plugin;
+	private final ArimBansExtendedPlugin plugin;
 	
-	public SignInterceptorProtocolize(ArimBansExtendedPluginBase plugin) {
+	public SignInterceptorProtocolize(ArimBansExtendedPlugin plugin) {
 		super(Stream.UPSTREAM, SignUpdate.class);
 		this.plugin = plugin;
 	}
 	
 	@Override
 	public void receive(PacketReceiveEvent<SignUpdate> evt) {
-		if (plugin.enabled() && plugin.extension().antiSignEnabled() && !evt.isCancelled()) {
+		if (!evt.isCancelled() && plugin.enabled() && plugin.extension().antiSignEnabled()) {
 			if (evt.isSentByPlayer()) {
 				PunishmentResult result = plugin.extension().getLib().getApplicableMute(evt.getPlayer().getUniqueId(), evt.getPlayer().getAddress().getAddress().getHostAddress());
 				if (result.hasPunishment()) {

@@ -1,6 +1,7 @@
-name: ${project.name}
-main: ${project.groupId}.bans.ArimBansBungee
-version: ${project.version}
-author: A248
-description: ${project.description}
+name: ${plugin.name}
+main: space.arim.bans.ArimBansBungee
+version: ${plugin.version}
+author: ${plugin.author}
+website: ${plugin.url}
+description: ${plugin.description}
 depends: [ArimAPI]

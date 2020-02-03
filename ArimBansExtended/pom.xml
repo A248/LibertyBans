@@ -12,6 +12,16 @@
 	<artifactId>bans-extended</artifactId>
 	<name>ArimBansExtended</name>
 	<description>ArimBansExtended adds many more features to ArimBans.</description>
+	
+	<properties>
+		<plugin.name>${project.name}</plugin.name>
+		<plugin.version>${core.version}</plugin.version>
+		<plugin.author>${core.author}</plugin.author>
+		<!-- Corresponds with the @Plugin annotation in ArimBansExtendedSponge -->
+		<plugin.spongeid>arimbansextended</plugin.spongeid>
+		<plugin.url>${project.url}</plugin.url>
+		<plugin.description>${project.description}</plugin.description>
+	</properties>
 
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -26,6 +36,18 @@
 			</resource>
 		</resources>
 		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>templating-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>add-sponge-info</id>
+						<goals>
+							<goal>filter-sources</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
@@ -74,10 +96,17 @@
 		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>net.md-5</groupId>
 			<artifactId>bungeecord-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.spongepowered</groupId>
+			<artifactId>spongeapi</artifactId>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>de.exceptionflug</groupId>

@@ -18,9 +18,11 @@
  */
 package space.arim.bans.extended;
 
+import java.util.List;
+
 import space.arim.universal.util.lang.AutoClosable;
 
-public interface ArimBansExtendedPluginBase extends AutoClosable {
+public interface ArimBansExtendedPlugin extends AutoClosable {
 	
 	ArimBansExtended extension();
 	
@@ -30,9 +32,11 @@ public interface ArimBansExtendedPluginBase extends AutoClosable {
 	
 	@Override
 	default void close() {
-		if (enabled()) {
+		if (extension() != null) {
 			extension().close();
 		}
 	}
+	
+	List<String> getTabComplete(String[] args);
 	
 }

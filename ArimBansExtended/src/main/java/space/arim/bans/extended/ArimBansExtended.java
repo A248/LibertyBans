@@ -19,73 +19,38 @@
 package space.arim.bans.extended;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.yaml.snakeyaml.Yaml;
 
 import space.arim.bans.api.ArimBansLibrary;
 import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.api.Subject;
 
-import space.arim.universal.registry.UniversalRegistry;
+import space.arim.universal.registry.Registry;
 import space.arim.universal.util.collections.CollectionsUtil;
-import space.arim.universal.util.lang.AutoClosable;
 
-import space.arim.api.util.FilesUtil;
+import space.arim.api.annotation.RequireRegistration;
+import space.arim.api.config.SimpleConfig;
 import space.arim.api.util.StringsUtil;
 
-public class ArimBansExtended implements AutoClosable {
+public class ArimBansExtended extends SimpleConfig {
 	
 	private static final String[] COMMANDS = {"ban", "unban", "ipban", "ipunban", "mute", "unmute", "ipmute", "ipunmute", "warn", "unwarn", "ipwarn", "ipunwarn", "kick", "ipkick", "banlist", "ipbanlist", "playerbanlist", "mutelist", "ipmutelist", "playermutelist", "history", "iphistory", "warns", "ipwarns", "status", "ipstatus", "ips", "geoip", "alts", "blame", "rollback"};
 	
 	private final ArimBansLibrary lib;
 	private final File folder;
-	private final Logger logger;
 	
 	private final ConcurrentHashMap<String, Object> cfg = new ConcurrentHashMap<String, Object>();
 	
-	ArimBansExtended(File folder, Logger logger) {
-		PunishmentPlugin plugin = UniversalRegistry.get().getRegistration(PunishmentPlugin.class);
+	ArimBansExtended(@RequireRegistration(PunishmentPlugin.class) Registry registry, File folder) {
+		super(folder, "do-not-touch-version");
+		PunishmentPlugin plugin = registry.getRegistration(PunishmentPlugin.class);
 		if (plugin instanceof ArimBansLibrary) {
-			this.lib = (ArimBansLibrary) plugin;
+			lib = (ArimBansLibrary) plugin;
 		} else {
-			throw new IllegalStateException("Registered PunishmentPlugin does not implement ArimBansLibrary!");
+			throw new IllegalStateException("No PunishmentPlugin/ArimBansLibrary registration found!");
 		}
 		this.folder = Objects.requireNonNull(folder, "Folder must not be null!");
-		this.logger = Objects.requireNonNull(logger, "Logger must not be null!");
-		loadConfig(folder, cfg);
-	}
-	
-	private Logger logger() {
-		return logger;
-	}
-	
-	@SuppressWarnings("unchecked")
-	private void loadConfig(File folder, Map<String, Object> cfgMap) {
-		File cfgFile = new File(folder, "config.yml");
-		if (!cfgFile.exists()) {
-			try (InputStream input = ArimBansExtended.class.getResourceAsStream(File.separator + "config.yml")){
-				if (FilesUtil.saveFromStream(cfgFile, input)) {
-					logger().log(Level.WARNING, "Config saved successfully!");
-				} else {
-					throw new IllegalStateException("Config copying failed!");
-				}
-			} catch (IOException ex) {
-				throw new IllegalStateException("Config copying failed!", ex);
-			}
-		}
-		try (FileReader reader = new FileReader(cfgFile)) {
-			cfgMap.putAll((Map<String, Object>) (new Yaml()).load(reader));
-		} catch (IOException ex) {
-			throw new IllegalStateException("Config could not be loaded!", ex);
-		}
 	}
 	
 	public ArimBansLibrary getLib() {
@@ -96,13 +61,13 @@ public class ArimBansExtended implements AutoClosable {
 		return folder;
 	}
 	
-	private <T> T getCfgObject(Class<T> type, String key, T defaultObj) {
+	private <T> T getObject(Class<T> type, String key, T defaultObj) {
 		T obj = CollectionsUtil.getFromMapRecursive(cfg, key, type);
 		return (obj != null) ? obj : defaultObj;
 	}
 	
 	public boolean antiSignEnabled() {
-		return getCfgObject(Boolean.class, "options.anti-sign", true);
+		return getObject(Boolean.class, "options.anti-sign", true);
 	}
 	
 	public void fireCommand(Subject subject, String command, String[] args) {

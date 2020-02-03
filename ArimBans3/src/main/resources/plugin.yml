@@ -1,8 +1,9 @@
-name: ${project.name}
-main: ${project.groupId}.bans.ArimBansBukkit
-version: ${project.version}
-author: A248
-description: ${project.description}
+name: ${plugin.name}
+main: space.arim.bans.ArimBansBukkit
+version: ${plugin.version}
+author: ${plugin.author}
+website: ${plugin.url}
+description: ${plugin.description}
 depend: [ArimAPI]
 softdepend: [Vault]
 

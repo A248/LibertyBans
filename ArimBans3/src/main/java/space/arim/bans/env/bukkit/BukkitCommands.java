@@ -18,16 +18,21 @@
  */
 package space.arim.bans.env.bukkit;
 
+import java.util.List;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import space.arim.bans.api.Subject;
 import space.arim.bans.internal.Configurable;
 
-public class BukkitCommands implements Configurable, CommandExecutor {
+import space.arim.api.server.bukkit.SpigotUtil;
+
+public class BukkitCommands implements Configurable, CommandExecutor, TabCompleter {
 	
 	private final BukkitEnv environment;
 
@@ -48,5 +53,10 @@ public class BukkitCommands implements Configurable, CommandExecutor {
 		environment.center().commands().execute(subject, args);
 		return true;
 	}
-
+	
+	@Override
+	public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+		return SpigotUtil.getPlayerNameTabComplete(args, environment.plugin().getServer());
+	}
+	
 }

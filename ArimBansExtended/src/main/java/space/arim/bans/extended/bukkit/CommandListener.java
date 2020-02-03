@@ -18,21 +18,24 @@
  */
 package space.arim.bans.extended.bukkit;
 
+import java.util.List;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import space.arim.bans.api.Subject;
-import space.arim.bans.extended.ArimBansExtendedBukkit;
+import space.arim.bans.extended.ArimBansExtendedPlugin;
 
-public class CommandListener implements CommandExecutor {
+public class CommandListener implements CommandExecutor, TabCompleter {
 
-	private final ArimBansExtendedBukkit plugin;
+	private final ArimBansExtendedPlugin plugin;
 	
-	public CommandListener(ArimBansExtendedBukkit main) {
-		this.plugin = main;
+	public CommandListener(ArimBansExtendedPlugin plugin) {
+		this.plugin = plugin;
 	}
 	
 	@Override
@@ -44,12 +47,17 @@ public class CommandListener implements CommandExecutor {
 			} else if (sender instanceof ConsoleCommandSender) {
 				subject = Subject.console();
 			} else {
-				return true;
+				return false;
 			}
 			plugin.extension().fireCommand(subject, command.getName(), args);
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+		return plugin.getTabComplete(args);
 	}
 	
 }

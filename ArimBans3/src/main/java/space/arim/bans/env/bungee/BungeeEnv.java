@@ -60,12 +60,12 @@ public class BungeeEnv implements Environment {
 	public void loadFor(ArimBans center) {
 		this.center = center;
 		if (!registered) {
+			registered = true;
 			plugin.getProxy().getPluginManager().registerListener(plugin, listener);
 			plugin.getProxy().getPluginManager().registerCommand(plugin, commands);
 			Metrics metrics = new Metrics(plugin, 5991);
 			metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().getStorageModeName()));
 			metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
-			registered = true;
 		}
 	}
 	

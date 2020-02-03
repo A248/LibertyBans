@@ -120,9 +120,9 @@ public class Resolver implements ResolverMaster {
 	}
 	
 	private void directUpdate(UUID uuid, String name, String address) {
-		final CacheElement element = cache.get(uuid);
-		final boolean updateName = !element.getName().equalsIgnoreCase(name);
-		final boolean updateIplist = !element.hasIp(address);
+		CacheElement element = cache.get(uuid);
+		boolean updateName = !element.hasName(name);
+		boolean updateIplist = !element.hasIp(address);
 		if (updateName && updateIplist) {
 			center.sql().executeQuery(element.setNameAndAddIp(uuid, name, address));
 		} else if (updateName) {
@@ -140,9 +140,10 @@ public class Resolver implements ResolverMaster {
 	
 	private void directUpdateCache(UUID uuid, String name, String address) {
 		synchronized (lock) {
-			if (!cache.containsKey(uuid)) {
+			CacheElement element = cache.get(uuid);
+			if (element == null) {
 				directAdd(uuid, name, address);
-			} else if (!cache.get(uuid).hasName(name) || !cache.get(uuid).hasIp(address)) {
+			} else if (!element.hasName(name) || !element.hasIp(address)) {
 				directUpdate(uuid, name, address);
 			}
 		}
@@ -150,13 +151,12 @@ public class Resolver implements ResolverMaster {
 	
 	@Override
 	public void update(UUID uuid, String name, String address) {
-		if (!cache.containsKey(uuid) || cache.containsKey(uuid) && (!cache.get(uuid).hasName(name) || !cache.get(uuid).hasIp(address))) {
+		CacheElement element = cache.get(uuid);
+		if (element == null || !element.hasName(name) || !element.hasIp(address)) {
 			if (center.getRegistry().getEvents().getUtil().isAsynchronous()) {
 				directUpdateCache(uuid, name, address);
 			} else {
-				center.async(() -> {
-					directUpdateCache(uuid, name, address);
-				});
+				center.async(() -> directUpdateCache(uuid, name, address));
 			}
 		}
 	}
@@ -178,9 +178,7 @@ public class Resolver implements ResolverMaster {
 		if (center.getRegistry().getEvents().getUtil().isAsynchronous()) {
 			directClearCachedIp(address);
 		} else {
-			center.async(() -> {
-				directClearCachedIp(address);
-			});
+			center.async(() -> directClearCachedIp(address));
 		}
 	}
 	
@@ -188,10 +186,11 @@ public class Resolver implements ResolverMaster {
 	public boolean uuidExists(UUID uuid) {
 		return cache.containsKey(uuid);
 	}
-
+	
 	@Override
 	public boolean hasIp(UUID playeruuid, String address) {
-		return cache.containsKey(playeruuid) && cache.get(playeruuid).hasIp(address);
+		CacheElement element = cache.get(playeruuid);
+		return element != null && element.hasIp(address);
 	}
 	
 	@Override

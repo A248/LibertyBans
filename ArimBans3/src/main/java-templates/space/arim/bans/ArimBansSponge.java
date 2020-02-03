@@ -21,6 +21,7 @@ package space.arim.bans;
 import java.io.File;
 
 import org.bstats.sponge.Metrics2;
+
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
@@ -43,13 +44,14 @@ import space.arim.universal.registry.UniversalRegistry;
 import space.arim.universal.util.lang.AutoClosable;
 
 import space.arim.api.concurrent.AsyncExecution;
+import space.arim.api.concurrent.Shutdownable;
 import space.arim.api.concurrent.SyncExecution;
 import space.arim.api.server.sponge.DefaultAsyncExecution;
 import space.arim.api.server.sponge.DefaultSyncExecution;
 import space.arim.api.server.sponge.DefaultUUIDResolver;
 import space.arim.api.uuid.UUIDResolver;
 
-@Plugin(id = "arimbans3")
+@Plugin(id = "${plugin.spongeid}", name = "${plugin.name}", version = "${plugin.version}", authors = {"${plugin.author}"}, description = "${plugin.description}", url = "${plugin.url}")
 public class ArimBansSponge implements AutoClosable {
 
 	private ArimBans center;
@@ -87,7 +89,7 @@ public class ArimBansSponge implements AutoClosable {
 	@Inject
 	public ArimBansSponge(Metrics2.Factory factory, @AsynchronousExecutor SpongeExecutorService async, @SynchronousExecutor SpongeExecutorService sync) {
 		metrics = factory.make(6395);
-		async.execute(() -> {
+		sync.execute(() -> {
 			PluginContainer plugin = getPlugin();
 			getRegistry().computeIfAbsent(AsyncExecution.class, () -> new DefaultAsyncExecution(plugin, async));
 			getRegistry().computeIfAbsent(SyncExecution.class, () -> new DefaultSyncExecution(plugin, sync));
@@ -109,8 +111,8 @@ public class ArimBansSponge implements AutoClosable {
 	@Listener
 	public void onDisable(GameStoppingEvent evt) {
 		AsyncExecution async = getRegistry().getRegistration(AsyncExecution.class);
-		if (async instanceof DefaultAsyncExecution) {
-			((DefaultAsyncExecution) async).gracefulShutdown();
+		if (async instanceof Shutdownable) {
+			((Shutdownable) async).shutdownAndWait();
 		}
 		close();
 	}

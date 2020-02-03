@@ -1,22 +1,22 @@
 /*
- * ArimBans3, a punishment plugin for minecraft servers
+ * ArimBansExtended, an extension for the ArimBans core
  * Copyright © 2020 Anand Beh <https://www.arim.space>
  * 
- * ArimBans3 is free software: you can redistribute it and/or modify
+ * ArimBansExtended is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * ArimBans3 is distributed in the hope that it will be useful,
+ * ArimBansExtended is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with ArimBans3. If not, see <https://www.gnu.org/licenses/>
+ * along with ArimBansExtended. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.bans.env.sponge;
+package space.arim.bans.extended.sponge;
 
 import java.util.List;
 
@@ -25,35 +25,39 @@ import org.spongepowered.api.command.source.ConsoleSource;
 import org.spongepowered.api.entity.living.player.Player;
 
 import space.arim.bans.api.Subject;
+import space.arim.bans.extended.ArimBansExtendedPlugin;
 
 import space.arim.api.server.sponge.DecoupledCommand;
-import space.arim.api.server.sponge.SpongeUtil;
 
-public class SpongeCommands extends DecoupledCommand {
-
-	private final SpongeEnv environment;
+public class CommandSkeleton extends DecoupledCommand {
 	
-	public SpongeCommands(SpongeEnv environment) {
-		this.environment = environment;
+	private final ArimBansExtendedPlugin plugin;
+	private final String cmd;
+	
+	public CommandSkeleton(ArimBansExtendedPlugin plugin, String cmd) {
+		this.plugin = plugin;
+		this.cmd = cmd;
 	}
 	
 	@Override
 	protected boolean execute(CommandSource sender, String[] args) {
-		Subject subject;
-		if (sender instanceof Player) {
-			subject = environment.center().subjects().parseSubject(((Player) sender).getUniqueId());
-		} else if (sender instanceof ConsoleSource) {
-			subject = Subject.console();
-		} else {
-			return false;
+		if (plugin.enabled()) {
+			Subject subject;
+			if (sender instanceof Player) {
+				subject = plugin.extension().getLib().fromUUID(((Player) sender).getUniqueId());
+			} else if (sender instanceof ConsoleSource) {
+				subject = Subject.console();
+			} else {
+				return false;
+			}
+			plugin.extension().fireCommand(subject, cmd, args);
 		}
-		environment.center().commands().execute(subject, args);
-		return true;
+		return false;
 	}
 	
 	@Override
 	protected List<String> getTabComplete(CommandSource sender, String[] args) {
-		return SpongeUtil.getPlayerNameTabComplete(args, environment.server());
+		return plugin.getTabComplete(args);
 	}
 	
 }

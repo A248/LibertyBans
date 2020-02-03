@@ -33,5 +33,6 @@
 			<attribute name="test" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="src" path="src/main/java-templates"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

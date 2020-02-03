@@ -24,13 +24,13 @@ import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
 
 import space.arim.bans.api.Subject;
-import space.arim.bans.extended.ArimBansExtendedBungee;
+import space.arim.bans.extended.ArimBansExtendedPlugin;
 
 public class CommandSkeleton extends Command implements TabExecutor {
 
-	private final ArimBansExtendedBungee plugin;
+	private final ArimBansExtendedPlugin plugin;
 	
-	public CommandSkeleton(ArimBansExtendedBungee plugin, String cmd) {
+	public CommandSkeleton(ArimBansExtendedPlugin plugin, String cmd) {
 		super(cmd);
 		this.plugin = plugin;
 	}

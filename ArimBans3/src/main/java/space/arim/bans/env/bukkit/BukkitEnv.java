@@ -20,6 +20,7 @@ package space.arim.bans.env.bukkit;
 
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
@@ -64,12 +65,15 @@ public class BukkitEnv implements Environment {
 	public void loadFor(ArimBans center) {
 		this.center = center;
 		if (!registered) {
+			registered = true;
+			if (permissions == null) {
+				center.logs().logBoth(Level.WARNING, "No Vault compatible permissions plugin installed. >> ArimBans will still work! << However, punishment exemptions are not possible for offline players.");
+			}
 			plugin.getServer().getPluginManager().registerEvents(listener, plugin);
 			plugin.getServer().getPluginCommand("arimbans").setExecutor(commands);
 			Metrics metrics = new Metrics(plugin, 5990);
 			metrics.addCustomChart(new Metrics.SimplePie("storage_mode", () -> center.sql().getStorageModeName()));
 			metrics.addCustomChart(new Metrics.SimplePie("json_messages", () -> Boolean.toString(center.formats().useJson())));
-			registered = true;
 		}
 	}
 	

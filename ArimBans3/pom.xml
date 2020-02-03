@@ -11,7 +11,17 @@
 
 	<artifactId>bans-core</artifactId>
 	<name>ArimBans3</name>
-
+	
+	<properties>
+		<plugin.name>${project.name}</plugin.name>
+		<plugin.version>${core.version}</plugin.version>
+		<plugin.author>${core.author}</plugin.author>
+		<!-- Corresponds with the @Plugin annotation in ArimBansSponge -->
+		<plugin.spongeid>arimbans3</plugin.spongeid>
+		<plugin.url>${project.url}</plugin.url>
+		<plugin.description>${project.description}</plugin.description>
+	</properties>
+	
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<finalName>${project.name}_v${core.version}_unshaded</finalName>
@@ -26,6 +36,18 @@
 			</resource>
 		</resources>
 		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>templating-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>add-sponge-info</id>
+						<goals>
+							<goal>filter-sources</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
