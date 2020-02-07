@@ -4,4 +4,5 @@ version: ${plugin.version}
 author: ${plugin.author}
 website: ${plugin.url}
 description: ${plugin.description}
+depends: [ArimAPI]
 softDepends: [ArimBans3]

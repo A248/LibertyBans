@@ -29,6 +29,7 @@ import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
+import org.spongepowered.api.plugin.Dependency;
 import org.spongepowered.api.plugin.Plugin;
 
 import com.google.inject.Inject;
@@ -40,7 +41,7 @@ import space.arim.universal.registry.UniversalRegistry;
 
 import space.arim.api.server.sponge.SpongeUtil;
 
-@Plugin(id = "${plugin.spongeid}", name = "${plugin.name}", version = "${plugin.version}", authors = {"${plugin.author}"}, description = "${plugin.description}", url = "${plugin.url}")
+@Plugin(id = "${plugin.spongeid}", name = "${plugin.name}", version = "${plugin.version}", authors = {"${plugin.author}"}, description = "${plugin.description}", url = "${plugin.url}", dependencies = {@Dependency(id = "arimbans3", optional = true), @Dependency(id = "arimapiplugin")})
 public class ArimBansExtendedSponge implements ArimBansExtendedPlugin {
 
 	@Inject
