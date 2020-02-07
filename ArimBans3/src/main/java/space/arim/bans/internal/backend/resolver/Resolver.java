@@ -35,7 +35,7 @@ import space.arim.bans.api.exception.NoGeoIpException;
 import space.arim.bans.internal.sql.SqlQuery;
 
 import space.arim.universal.registry.RegistryPriority;
-import space.arim.universal.util.exception.HttpStatusException;
+import space.arim.universal.util.web.HttpStatusException;
 
 import space.arim.api.uuid.PlayerNotFoundException;
 import space.arim.api.uuid.UUIDUtil;
