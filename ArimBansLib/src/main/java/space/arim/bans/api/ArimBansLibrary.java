@@ -22,7 +22,7 @@ import java.util.UUID;
 
 import space.arim.bans.api.exception.MissingPunishmentException;
 
-import space.arim.universal.util.lang.AutoClosable;
+import space.arim.universal.util.AutoClosable;
 
 import space.arim.api.sql.SQLExecution;
 import space.arim.api.util.StringsUtil;

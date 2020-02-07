@@ -20,7 +20,7 @@ package space.arim.bans.extended;
 
 import java.util.List;
 
-import space.arim.universal.util.lang.AutoClosable;
+import space.arim.universal.util.AutoClosable;
 
 public interface ArimBansExtendedPlugin extends AutoClosable {
 	

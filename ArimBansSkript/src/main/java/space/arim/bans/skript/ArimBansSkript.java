@@ -31,7 +31,7 @@ import space.arim.bans.skript.syntax.expr.ExprLastError;
 import space.arim.bans.skript.syntax.expr.ExprLastPunishment;
 import space.arim.bans.skript.syntax.expr.ExprTypeOfPunishment;
 
-import space.arim.universal.util.lang.AutoClosable;
+import space.arim.universal.util.AutoClosable;
 
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.ClassInfo;

@@ -25,7 +25,7 @@ import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.env.bukkit.BukkitEnv;
 
 import space.arim.universal.registry.UniversalRegistry;
-import space.arim.universal.util.lang.AutoClosable;
+import space.arim.universal.util.AutoClosable;
 
 import space.arim.api.uuid.UUIDResolver;
 

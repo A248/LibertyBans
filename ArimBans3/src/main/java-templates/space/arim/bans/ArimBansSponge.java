@@ -42,7 +42,7 @@ import space.arim.bans.env.sponge.SpongeEnv;
 
 import space.arim.universal.registry.Registry;
 import space.arim.universal.registry.UniversalRegistry;
-import space.arim.universal.util.lang.AutoClosable;
+import space.arim.universal.util.AutoClosable;
 
 import space.arim.api.concurrent.AsyncExecution;
 import space.arim.api.concurrent.Shutdownable;

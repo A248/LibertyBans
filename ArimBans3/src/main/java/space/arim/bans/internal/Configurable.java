@@ -18,7 +18,7 @@
  */
 package space.arim.bans.internal;
 
-import space.arim.universal.util.lang.AutoClosable;
+import space.arim.universal.util.AutoClosable;
 
 public interface Configurable extends AutoClosable {
 	
