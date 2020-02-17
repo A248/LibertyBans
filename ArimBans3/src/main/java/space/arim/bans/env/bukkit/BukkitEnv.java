@@ -67,7 +67,7 @@ public class BukkitEnv implements Environment {
 		if (!registered) {
 			registered = true;
 			if (permissions == null) {
-				center.logs().logBoth(Level.WARNING, "No Vault compatible permissions plugin installed. >> ArimBans will still work! << However, punishment exemptions are not possible for offline players.");
+				center.logs().logBoth(Level.WARNING, "No Vault compatible permissions plugin installed. Punishment exemptions will not work for offline players.");
 			}
 			plugin.getServer().getPluginManager().registerEvents(listener, plugin);
 			plugin.getServer().getPluginCommand("arimbans").setExecutor(commands);
