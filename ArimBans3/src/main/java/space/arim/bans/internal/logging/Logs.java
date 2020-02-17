@@ -92,7 +92,7 @@ public class Logs implements LogsMaster {
 		}
 		for (File dir : logDirs) {
 			if (dir.isDirectory() && current - dir.lastModified() > keepAlive) {
-				if (dir.delete()) {
+				if (FilesUtil.delete(dir)) {
 					log(Level.FINER, "Successfully cleaned & deleted old log folder " + dir.getPath());
 				} else {
 					log(Level.WARNING, "Could not clean & delete old log folder " + dir.getPath());
