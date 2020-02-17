@@ -45,6 +45,7 @@ public class SpongeEnv implements Environment {
 
 	private final PluginContainer plugin;
 	private final Logger logger;
+	private final String id;
 	private final String name;
 	private final String author;
 	private final String version;
@@ -57,7 +58,8 @@ public class SpongeEnv implements Environment {
 	
 	public SpongeEnv(PluginContainer plugin) {
 		this.plugin = plugin;
-		PluginInformation information = PluginInformation.getFor(plugin);
+		PluginInformation information = PluginInformation.getForSponge(plugin);
+		id = plugin.getId();
 		name = information.getName();
 		author = information.getAuthors()[0];
 		version = information.getVersion();
@@ -74,7 +76,7 @@ public class SpongeEnv implements Environment {
 		if (!registered) {
 			registered = true;
 			Sponge.getEventManager().registerListeners(plugin.getInstance().get(), listener);
-			Sponge.getCommandManager().register(plugin.getInstance().get(), commands, "arimbans");
+			Sponge.getCommandManager().register(plugin.getInstance().get(), commands, id);
 		}
 	}
 	

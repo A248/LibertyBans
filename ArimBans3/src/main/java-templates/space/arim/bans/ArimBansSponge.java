@@ -27,7 +27,7 @@ import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
-import org.spongepowered.api.event.game.state.GameStoppingEvent;
+import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.plugin.Dependency;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
@@ -110,7 +110,7 @@ public class ArimBansSponge implements AutoClosable {
 	}
 	
 	@Listener
-	public void onDisable(GameStoppingEvent evt) {
+	public void onDisable(GameStoppingServerEvent evt) {
 		AsyncExecution async = getRegistry().getRegistration(AsyncExecution.class);
 		if (async instanceof Shutdownable) {
 			((Shutdownable) async).shutdownAndWait();
