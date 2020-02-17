@@ -111,7 +111,7 @@ public class BungeeEnforcer implements Configurable {
 	void enforce(Punishment punishment, boolean useJson) {
 		Stream<ProxiedPlayer> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
-		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
+		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.KICK)) {
 			targets.forEach((target) -> target.disconnect(BungeeUtil.colour(message)));
 		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
 			targets.forEach((target) -> environment.sendMessage(target, message, useJson));

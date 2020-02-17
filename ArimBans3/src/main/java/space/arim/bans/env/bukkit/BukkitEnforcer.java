@@ -115,7 +115,7 @@ public class BukkitEnforcer implements Configurable {
 	void enforce(Punishment punishment, boolean useJson) {
 		Stream<? extends Player> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
-		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.MUTE)) {
+		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.KICK)) {
 			environment.center().getRegistry().getRegistration(SyncExecution.class).execute(() -> targets.forEach((target) -> target.kickPlayer(SpigotUtil.colour(message))));
 		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
 			targets.forEach((target) -> environment.sendMessage(target, message, useJson));
