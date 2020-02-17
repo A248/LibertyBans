@@ -122,7 +122,7 @@ public class Logs implements LogsMaster {
 				verboseLog.setLevel(Level.ALL);
 				infoLog.setLevel(Level.CONFIG);
 				errorLog.setLevel(Level.WARNING);
-				logger = Logger.getLogger(center.getName() + "-Core");
+				logger = Logger.getLogger(center.getName());
 				logger.setParent(center.environment().logger());
 				logger.setUseParentHandlers(false);
 				logger.addHandler(verboseLog);
