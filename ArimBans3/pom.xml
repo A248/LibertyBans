@@ -17,7 +17,7 @@
 		<plugin.version>${core.version}</plugin.version>
 		<plugin.author>${core.author}</plugin.author>
 		<plugin.spongeid>arimbans</plugin.spongeid> <!-- Corresponds with the @Plugin annotation -->
-		<plugin.url>${project.url}</plugin.url>
+		<plugin.url>${project.parent.url}</plugin.url>
 		<plugin.description>${project.description}</plugin.description>
 	</properties>
 	
