@@ -46,8 +46,8 @@ import space.arim.bans.internal.sql.SqlMaster;
 
 import space.arim.universal.registry.Registry;
 import space.arim.universal.registry.RegistryPriority;
+import space.arim.universal.registry.RequireRegistration;
 
-import space.arim.api.annotation.RequireRegistration;
 import space.arim.api.concurrent.AsyncExecution;
 import space.arim.api.concurrent.SyncExecution;
 import space.arim.api.sql.ExecutableQuery;

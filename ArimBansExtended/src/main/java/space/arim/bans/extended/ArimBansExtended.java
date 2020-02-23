@@ -27,9 +27,9 @@ import space.arim.bans.api.PunishmentPlugin;
 import space.arim.bans.api.Subject;
 
 import space.arim.universal.registry.Registry;
+import space.arim.universal.registry.RequireRegistration;
 import space.arim.universal.util.collections.CollectionsUtil;
 
-import space.arim.api.annotation.RequireRegistration;
 import space.arim.api.config.SimpleConfig;
 import space.arim.api.util.StringsUtil;
 
