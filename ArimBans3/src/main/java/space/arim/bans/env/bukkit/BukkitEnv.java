@@ -30,6 +30,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.RegisteredServiceProvider;
 
 import space.arim.bans.ArimBans;
 import space.arim.bans.api.Punishment;
@@ -45,7 +46,7 @@ import net.milkbowl.vault.permission.Permission;
 public class BukkitEnv implements Environment {
 	
 	private final Plugin plugin;
-	private final Permission permissions;
+	private Permission permissions;
 	private ArimBans center;
 	private final BukkitEnforcer enforcer;
 	private final BukkitListener listener;
@@ -53,9 +54,8 @@ public class BukkitEnv implements Environment {
 	
 	private boolean registered = false;
 	
-	public BukkitEnv(Plugin plugin, Permission permissions) {
+	public BukkitEnv(Plugin plugin) {
 		this.plugin = plugin;
-		this.permissions = permissions;
 		this.enforcer = new BukkitEnforcer(this);
 		this.listener = new BukkitListener(this);
 		this.commands = new BukkitCommands(this);
@@ -66,6 +66,12 @@ public class BukkitEnv implements Environment {
 		this.center = center;
 		if (!registered) {
 			registered = true;
+			if (plugin.getServer().getPluginManager().isPluginEnabled("Vault")) {
+				RegisteredServiceProvider<Permission> registration = plugin.getServer().getServicesManager().getRegistration(Permission.class);
+				if (registration != null) {
+					permissions = registration.getProvider();
+				}
+	        }
 			if (permissions == null) {
 				center.logs().logBoth(Level.WARNING, "No Vault compatible permissions plugin installed. Punishment exemptions will not work for offline players.");
 			}
