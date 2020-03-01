@@ -34,7 +34,7 @@ import space.arim.bans.api.PunishmentType;
 import space.arim.bans.api.exception.ConfigSectionException;
 import space.arim.bans.internal.Configurable;
 
-import space.arim.api.server.bungee.BungeeUtil;
+import space.arim.api.platform.bungee.BungeeMessages;
 
 public class BungeeEnforcer implements Configurable {
 
@@ -71,7 +71,7 @@ public class BungeeEnforcer implements Configurable {
 		if (address instanceof InetSocketAddress) {
 			PunishmentResult result = environment.center().corresponder().getApplicablePunishment(evt.getConnection().getUniqueId(), ((InetSocketAddress) address).getAddress().getHostAddress(), PunishmentType.BAN);
 			if (result.hasPunishment()) {
-				evt.setCancelReason(BungeeUtil.colour(result.getApplicableMessage()));
+				evt.setCancelReason(BungeeMessages.get().colour(result.getApplicableMessage()));
 				evt.setCancelled(true);
 			}
 		}
@@ -112,7 +112,7 @@ public class BungeeEnforcer implements Configurable {
 		Stream<ProxiedPlayer> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.KICK)) {
-			targets.forEach((target) -> target.disconnect(BungeeUtil.colour(message)));
+			targets.forEach((target) -> target.disconnect(BungeeMessages.get().colour(message)));
 		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
 			targets.forEach((target) -> environment.sendMessage(target, message, useJson));
 		}

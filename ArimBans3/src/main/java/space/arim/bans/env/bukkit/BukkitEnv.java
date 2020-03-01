@@ -39,7 +39,8 @@ import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.env.Environment;
 
-import space.arim.api.server.bukkit.SpigotUtil;
+import space.arim.api.chat.FormattingCodePattern;
+import space.arim.api.platform.spigot.SpigotMessages;
 
 import net.milkbowl.vault.permission.Permission;
 
@@ -90,14 +91,14 @@ public class BukkitEnv implements Environment {
 	
 	void sendMessage(Player target, String jsonable, boolean useJson) {
 		if (useJson) {
-			target.spigot().sendMessage(SpigotUtil.parseJson(jsonable));
+			target.spigot().sendMessage(SpigotMessages.get().parseJson(jsonable));
 		} else {
-			target.sendMessage(SpigotUtil.colour(jsonable));
+			target.spigot().sendMessage(SpigotMessages.get().colour(jsonable));
 		}
 	}
 	
 	void sendConsoleMessage(String jsonable) {
-		plugin.getServer().getConsoleSender().sendMessage(SpigotUtil.colour(SpigotUtil.stripJson(jsonable)));
+		plugin.getServer().getConsoleSender().sendMessage(SpigotMessages.get().transformColourCodes(SpigotMessages.get().stripJson(jsonable), FormattingCodePattern.get(), '§'));
 	}
 	
 	@Override

@@ -26,8 +26,8 @@ import org.spongepowered.api.entity.living.player.Player;
 
 import space.arim.bans.api.Subject;
 
-import space.arim.api.server.sponge.DecoupledCommand;
-import space.arim.api.server.sponge.SpongeUtil;
+import space.arim.api.platform.sponge.DecoupledCommand;
+import space.arim.api.platform.sponge.SpongePlatform;
 
 public class SpongeCommands extends DecoupledCommand {
 
@@ -53,7 +53,7 @@ public class SpongeCommands extends DecoupledCommand {
 	
 	@Override
 	protected List<String> getTabComplete(CommandSource sender, String[] args) {
-		return SpongeUtil.getPlayerNameTabComplete(args, environment.server());
+		return SpongePlatform.get().commands().getPlayerNamesTabComplete(environment.server().getOnlinePlayers().stream(), args);
 	}
 	
 }

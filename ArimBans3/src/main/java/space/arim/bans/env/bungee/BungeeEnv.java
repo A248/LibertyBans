@@ -37,7 +37,7 @@ import space.arim.bans.env.Environment;
 
 import space.arim.universal.util.collections.CollectionsUtil;
 
-import space.arim.api.server.bungee.BungeeUtil;
+import space.arim.api.platform.bungee.BungeeMessages;
 
 public class BungeeEnv implements Environment {
 
@@ -77,14 +77,14 @@ public class BungeeEnv implements Environment {
 	
 	void sendMessage(ProxiedPlayer target, String jsonable, boolean useJson) {
 		if (useJson) {
-			target.sendMessage(BungeeUtil.parseJson(jsonable));
+			target.sendMessage(BungeeMessages.get().parseJson(jsonable));
 		} else {
-			target.sendMessage(BungeeUtil.colour(jsonable));
+			target.sendMessage(BungeeMessages.get().colour(jsonable));
 		}
 	}
 	
 	void sendConsoleMessage(String jsonable) {
-		plugin.getProxy().getConsole().sendMessage(BungeeUtil.colour(BungeeUtil.stripJson(jsonable)));
+		plugin.getProxy().getConsole().sendMessage(BungeeMessages.get().colour(BungeeMessages.get().stripJson(jsonable)));
 	}
 	
 	@Override

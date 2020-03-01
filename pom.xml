@@ -23,7 +23,7 @@
     	<maven.compiler.target>1.8</maven.compiler.target>
 		<core.version>0.6.1</core.version>
 		<core.author>A248</core.author>
-    	<arimapi.version>0.6.1-SNAPSHOT</arimapi.version>
+    	<arimapi.version>0.7.0-SNAPSHOT</arimapi.version>
     	<universal.version>0.6.8-SNAPSHOT</universal.version>
     	<spigot.version>1.8.8-R0.1-SNAPSHOT</spigot.version>
     	<bungeecord.version>1.15-SNAPSHOT</bungeecord.version>
@@ -87,11 +87,11 @@
 	<distributionManagement>
 		<repository>
 			<id>arim-repo</id>
-			<url>https://www.arim.space/repo/repository/maven-releases/</url>
+			<url>https://maven.cloudsmith.io/anand-beh/arim-repo/</url>
 		</repository>
 		<snapshotRepository>
 			<id>arim-repo</id>
-			<url>https://www.arim.space/repo/repository/maven-snapshots/</url>
+			<url>https://maven.cloudsmith.io/anand-beh/arim-repo/</url>
 		</snapshotRepository>
 	</distributionManagement>
 
@@ -182,7 +182,7 @@
 	<repositories>
 		<repository>
 			<id>arim-repo</id>
-			<url>https://www.arim.space/repo/repository/maven-snapshots/</url>
+			<url>https://dl.cloudsmith.io/public/anand-beh/arim-repo/maven/</url>
 		</repository>
 		<repository>
 			<id>spigot-repo</id>

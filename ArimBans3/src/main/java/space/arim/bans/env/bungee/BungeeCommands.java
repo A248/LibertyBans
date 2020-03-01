@@ -25,7 +25,7 @@ import net.md_5.bungee.api.plugin.TabExecutor;
 import space.arim.bans.api.Subject;
 import space.arim.bans.internal.Configurable;
 
-import space.arim.api.server.bungee.BungeeUtil;
+import space.arim.api.platform.bungee.BungeePlatform;
 
 public class BungeeCommands extends Command implements Configurable, TabExecutor {
 
@@ -49,7 +49,7 @@ public class BungeeCommands extends Command implements Configurable, TabExecutor
 	
 	@Override
 	public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
-		return BungeeUtil.getPlayerNameTabComplete(args, environment.plugin().getProxy());
+		return BungeePlatform.get().commands().getPlayerNamesTabComplete(environment.plugin().getProxy().getPlayers().stream(), args);
 	}
 	
 }

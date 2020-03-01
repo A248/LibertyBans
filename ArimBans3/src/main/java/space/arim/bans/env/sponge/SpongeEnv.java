@@ -38,8 +38,9 @@ import space.arim.bans.api.Subject.SubjectType;
 import space.arim.bans.api.exception.InvalidSubjectException;
 import space.arim.bans.env.Environment;
 
-import space.arim.api.server.PluginInformation;
-import space.arim.api.server.sponge.SpongeUtil;
+import space.arim.api.platform.PluginInformation;
+import space.arim.api.platform.sponge.SpongeMessages;
+import space.arim.api.platform.sponge.SpongePlatform;
 
 public class SpongeEnv implements Environment {
 
@@ -58,7 +59,7 @@ public class SpongeEnv implements Environment {
 	
 	public SpongeEnv(PluginContainer plugin) {
 		this.plugin = plugin;
-		PluginInformation information = PluginInformation.getForSponge(plugin);
+		PluginInformation information = SpongePlatform.get().convertPluginInfo(plugin);
 		id = plugin.getId();
 		name = information.getName();
 		author = information.getAuthors()[0];
@@ -87,14 +88,14 @@ public class SpongeEnv implements Environment {
 	
 	void sendMessage(Player target, String jsonable, boolean useJson) {
 		if (useJson) {
-			target.sendMessage(SpongeUtil.parseJson(jsonable));
+			target.sendMessage(SpongeMessages.get().parseJson(jsonable));
 		} else {
-			target.sendMessage(SpongeUtil.colour(jsonable));
+			target.sendMessage(SpongeMessages.get().colour(jsonable));
 		}
 	}
 	
 	void sendConsoleMessage(String jsonable) {
-		server().getConsole().sendMessage(SpongeUtil.colour(SpongeUtil.stripJson(jsonable)));
+		server().getConsole().sendMessage(SpongeMessages.get().colour(SpongeMessages.get().stripJson(jsonable)));
 	}
 	
 	@Override

@@ -39,7 +39,7 @@ import space.arim.bans.extended.sponge.SignListener;
 
 import space.arim.universal.registry.UniversalRegistry;
 
-import space.arim.api.server.sponge.SpongeUtil;
+import space.arim.api.platform.sponge.SpongeCommands;
 
 @Plugin(id = "${plugin.spongeid}", name = "${plugin.name}", version = "${plugin.version}", authors = {"${plugin.author}"}, description = "${plugin.description}", url = "${plugin.url}", dependencies = {@Dependency(id = "arimbans3", optional = true), @Dependency(id = "arimapiplugin")})
 public class ArimBansExtendedSponge implements ArimBansExtendedPlugin {
@@ -74,7 +74,7 @@ public class ArimBansExtendedSponge implements ArimBansExtendedPlugin {
 	
 	@Override
 	public List<String> getTabComplete(String[] args) {
-		return SpongeUtil.getPlayerNameTabComplete(args, Sponge.getServer());
+		return SpongeCommands.get().getPlayerNamesTabComplete(Sponge.getServer().getOnlinePlayers().stream(), args);
 	}
 	
 	@Listener

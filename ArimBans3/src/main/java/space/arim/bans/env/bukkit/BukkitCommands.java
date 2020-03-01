@@ -30,7 +30,7 @@ import org.bukkit.entity.Player;
 import space.arim.bans.api.Subject;
 import space.arim.bans.internal.Configurable;
 
-import space.arim.api.server.bukkit.SpigotUtil;
+import space.arim.api.platform.spigot.SpigotPlatform;
 
 public class BukkitCommands implements Configurable, CommandExecutor, TabCompleter {
 	
@@ -56,7 +56,7 @@ public class BukkitCommands implements Configurable, CommandExecutor, TabComplet
 	
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
-		return SpigotUtil.getPlayerNameTabComplete(args, environment.plugin().getServer());
+		return SpigotPlatform.get().commands().getPlayerNamesTabComplete(environment.plugin().getServer().getOnlinePlayers().stream(), args);
 	}
 	
 }

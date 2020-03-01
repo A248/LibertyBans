@@ -36,7 +36,7 @@ import space.arim.bans.api.exception.MissingCenterException;
 import space.arim.bans.internal.Configurable;
 
 import space.arim.api.concurrent.SyncExecution;
-import space.arim.api.server.sponge.SpongeUtil;
+import space.arim.api.platform.sponge.SpongeMessages;
 
 public class SpongeEnforcer implements Configurable {
 
@@ -72,7 +72,7 @@ public class SpongeEnforcer implements Configurable {
 		}
 		PunishmentResult result = environment.center().corresponder().getApplicablePunishment(evt.getProfile().getUniqueId(), evt.getConnection().getAddress().getAddress().getHostAddress(), PunishmentType.BAN);
 		if (result.hasPunishment()) {
-			evt.setMessage(SpongeUtil.colour(result.getApplicableMessage()));
+			evt.setMessage(SpongeMessages.get().colour(result.getApplicableMessage()));
 			evt.setCancelled(true);
 		}
 	}
@@ -122,7 +122,7 @@ public class SpongeEnforcer implements Configurable {
 		Stream<Player> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.KICK)) {
-			environment.center().getRegistry().getRegistration(SyncExecution.class).execute(() -> targets.forEach((target) -> target.kick(SpongeUtil.colour(message))));
+			environment.center().getRegistry().getRegistration(SyncExecution.class).execute(() -> targets.forEach((target) -> target.kick(SpongeMessages.get().colour(message))));
 		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
 			targets.forEach((target) -> environment.sendMessage(target, message, useJson));
 		}

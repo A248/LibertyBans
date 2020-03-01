@@ -27,7 +27,7 @@ import org.spongepowered.api.entity.living.player.Player;
 import space.arim.bans.api.Subject;
 import space.arim.bans.extended.ArimBansExtendedPlugin;
 
-import space.arim.api.server.sponge.DecoupledCommand;
+import space.arim.api.platform.sponge.DecoupledCommand;
 
 public class CommandSkeleton extends DecoupledCommand {
 	

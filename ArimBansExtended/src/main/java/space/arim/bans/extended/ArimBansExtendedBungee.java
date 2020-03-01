@@ -30,7 +30,7 @@ import space.arim.bans.extended.bungee.SignInterceptorProtocolize;
 
 import space.arim.universal.registry.UniversalRegistry;
 
-import space.arim.api.server.bungee.BungeeUtil;
+import space.arim.api.platform.bungee.BungeeCommands;
 
 public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPlugin {
 
@@ -63,7 +63,7 @@ public class ArimBansExtendedBungee extends Plugin implements ArimBansExtendedPl
 	@Override
 	public List<String> getTabComplete(String[] args) {
 		List<String> completions = new ArrayList<String>();
-		BungeeUtil.getPlayerNameTabComplete(args, getProxy()).forEach(completions::add);
+		BungeeCommands.get().getPlayerNamesTabCompleteSorted(getProxy().getPlayers().stream(), args).forEach(completions::add);
 		return completions;
 	}
 	

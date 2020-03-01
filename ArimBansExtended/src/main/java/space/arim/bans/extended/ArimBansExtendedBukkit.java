@@ -28,7 +28,7 @@ import space.arim.bans.extended.bukkit.SignListener;
 
 import space.arim.universal.registry.UniversalRegistry;
 
-import space.arim.api.server.bukkit.SpigotUtil;
+import space.arim.api.platform.spigot.SpigotCommands;
 
 public class ArimBansExtendedBukkit extends JavaPlugin implements ArimBansExtendedPlugin {
 
@@ -58,7 +58,7 @@ public class ArimBansExtendedBukkit extends JavaPlugin implements ArimBansExtend
 	
 	@Override
 	public List<String> getTabComplete(String[] args) {
-		return SpigotUtil.getPlayerNameTabComplete(args, getServer());
+		return SpigotCommands.get().getPlayerNamesTabCompleteSorted(getServer().getOnlinePlayers().stream(), args);
 	}
 	
 	@Override

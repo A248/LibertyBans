@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 
 import space.arim.bans.ArimBans;
 
-import space.arim.api.server.LogFormatter;
+import space.arim.api.util.ConciseLogFormatter;
 import space.arim.api.util.FilesUtil;
 
 public class Logs implements LogsMaster {
@@ -115,7 +115,7 @@ public class Logs implements LogsMaster {
 				verboseLog = new FileHandler(path + File.separator + "verbose.log");
 				infoLog = new FileHandler(path + File.separator + "info.log");
 				errorLog = new FileHandler(path + File.separator + "error.log");
-				Formatter universalFormatter = new LogFormatter();
+				Formatter universalFormatter = new ConciseLogFormatter();
 				verboseLog.setFormatter(universalFormatter);
 				infoLog.setFormatter(universalFormatter);
 				errorLog.setFormatter(universalFormatter);
