@@ -34,7 +34,6 @@ import space.arim.bans.api.exception.ConfigSectionException;
 import space.arim.bans.api.exception.MissingCenterException;
 import space.arim.bans.internal.Configurable;
 
-import space.arim.api.chat.FormattingCodePattern;
 import space.arim.api.concurrent.SyncExecution;
 import space.arim.api.platform.spigot.SpigotMessages;
 
@@ -117,7 +116,7 @@ public class BukkitEnforcer implements Configurable {
 		Stream<? extends Player> targets = environment.applicable(punishment.subject());
 		String message = environment.center().formats().formatPunishment(punishment);
 		if (punishment.type().equals(PunishmentType.BAN) || punishment.type().equals(PunishmentType.KICK)) {
-			environment.center().getRegistry().getRegistration(SyncExecution.class).execute(() -> targets.forEach((target) -> target.kickPlayer(SpigotMessages.get().transformColourCodes(message, FormattingCodePattern.get(), '§'))));
+			environment.center().getRegistry().getRegistration(SyncExecution.class).execute(() -> targets.forEach((target) -> target.kickPlayer(SpigotMessages.get().transformFormattingCodes(message))));
 		} else if (punishment.type().equals(PunishmentType.MUTE) || punishment.type().equals(PunishmentType.WARN)) {
 			targets.forEach((target) -> environment.sendMessage(target, message, useJson));
 		}
