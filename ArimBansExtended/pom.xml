@@ -54,14 +54,6 @@
 				<configuration>
 					<outputDirectory>${project.build.directory}/shared-resources</outputDirectory>
 					<excludeTransitive>true</excludeTransitive>
-					<artifactItems>
-						<artifactItem>
-							<groupId>space.arim</groupId>
-							<artifactId>universal-gpl</artifactId>
-							<version>${universal.version}</version>
-							<classifier>resources</classifier>
-						</artifactItem>
-					</artifactItems>
 				</configuration>
 				<executions>
 					<execution>
@@ -72,7 +64,10 @@
 						<phase>generate-resources</phase>
 						<configuration>
 							<includes>LICENSE.txt</includes>
-							<classifier>resources</classifier>
+							<includeGroupIds>space.arim</includeGroupIds>
+							<includeArtifactIds>universal-gpl</includeArtifactIds>
+							<includeScope>provided</includeScope>
+							<includeTypes>zip</includeTypes>
 						</configuration>
 					</execution>
 				</executions>
@@ -88,7 +83,6 @@
 		<dependency>
 			<groupId>space.arim</groupId>
 			<artifactId>universal-gpl</artifactId>
-			<classifier>resources</classifier>
 			<type>zip</type>
 			<optional>true</optional>
 			<scope>provided</scope>
