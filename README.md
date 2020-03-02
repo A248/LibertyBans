@@ -16,6 +16,27 @@ Please see the [installation instructions](https://github.com/A248/ArimBans/wiki
 
 See [the wiki](https://github.com/A248/ArimBans/wiki) for API documentation and examples.
 
+The javadoc may be found [here](https://git.arim.space/javadoc/ArimBans).
+
+Maven dependency:
+
+```xml
+<dependency>
+	<groupId>space.arim</groupId>
+	<artifactId>bans-api</artifactId>
+	<version>{INSERT_LATEST_VERSION}</version>
+</dependency>
+```
+
+Maven repository:
+
+``` xml
+<repository>
+  <id>arim-repo</id>
+  <url>https://dl.cloudsmith.io/public/anand-beh/arim-repo/maven/</url>
+</repository>
+```
+
 ### Why ArimBans is Free ###
 
 *Put simply, software may be copied at no cost to the developer. It is the logical that it be sold at no price.*
@@ -25,10 +46,6 @@ The basic economics of software are as follows:
 For any unit of software, there is a fixed initial cost to develop it, but beyond that, the marginal cost of production is zero. Thus software is said to be non-rival in consumption. No matter how many times it is copied or distributed, the cost remains only that which was originally input. The consumers of software, inasmuch as they download and use it, receive some positive benefit. Therefore it is efficient that no price be charged for software, since the net marginal benefit on each unit distributed is positive.
 
 The good of man is to be in accordance with reason. Where costs and benefits, the substance of economics, are concerned, efficiency is most reasonable. Accordingly, it is proper that software be developed, then provided, simply.
-
-### About Me ###
-
-My objective is to liberate the SpigotMC community from several premium plugins and especially annihilate those of low-quality but high-cost. Tell me if you are interested in helping and I will add you to the [FreeSpigotFoundation](https://github.com/FreeSpigotFoundation).
 
 ### Credits ###
 
