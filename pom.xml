@@ -23,7 +23,7 @@
     	<maven.compiler.target>1.8</maven.compiler.target>
 		<core.version>0.6.1</core.version>
 		<core.author>A248</core.author>
-    	<arimapi.version>0.7.0-SNAPSHOT</arimapi.version>
+    	<arimapi.version>0.7.1-SNAPSHOT</arimapi.version>
     	<universal.version>0.6.9-SNAPSHOT</universal.version>
     	<spigot.version>1.8.8-R0.1-SNAPSHOT</spigot.version>
     	<bungeecord.version>1.15-SNAPSHOT</bungeecord.version>
@@ -32,7 +32,7 @@
     	<bstats.version>1.7</bstats.version>
 		<protocolize.version>1.5.2-SNAPSHOT</protocolize.version>
 	</properties>
-
+	
 	<licenses>
 		<license>
 			<name>GNU General Public License, Version 3</name>
