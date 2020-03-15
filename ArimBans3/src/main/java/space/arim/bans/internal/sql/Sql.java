@@ -28,8 +28,6 @@ import space.arim.bans.ArimBans;
 import space.arim.bans.api.exception.InternalStateException;
 import space.arim.bans.internal.sql.SqlQuery.Query;
 
-import space.arim.universal.util.collections.CollectionsUtil;
-
 import space.arim.api.sql.ExecutableQuery;
 import space.arim.api.sql.PooledLoggingSql;
 
@@ -99,7 +97,11 @@ public class Sql extends PooledLoggingSql implements SqlMaster {
 	}
 	
 	private ExecutableQuery[] convertAllToExecutable(SqlQuery[] queries) {
-		return CollectionsUtil.convertAll(queries, (query) -> query.convertToExecutable(settings));
+		ExecutableQuery[] result = new ExecutableQuery[queries.length];
+		for (int n = 0; n < queries.length; n++) {
+			result[n] = queries[n].convertToExecutable(settings);
+		}
+		return result;
 	}
 	
 	@Override
