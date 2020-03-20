@@ -19,12 +19,13 @@
 package space.arim.bans.internal.backend.resolver;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 import space.arim.bans.internal.sql.SqlQuery;
+
+import space.arim.universal.util.proxy.DynamicUnmodifiableSet;
 
 import space.arim.api.util.StringsUtil;
 
@@ -32,10 +33,11 @@ public class CacheElement {
 	
 	static final String EMPTY_IPLIST_STRING = "<empty_iplist>";
 	
-	private String name;
-	private Set<String> iplist;
-	private long updateName;
-	private long updateIplist;
+	private volatile String name;
+	private volatile Set<String> iplist;
+	private volatile long updateName;
+	private volatile long updateIplist;
+	private volatile Set<String> ipListView;
 	
 	CacheElement(String name, String iplist, long updateName, long updateIplist) {
 		this.name = name;
@@ -71,7 +73,7 @@ public class CacheElement {
 	}
 	
 	Set<String> getIps() {
-		return iplist != null ? Collections.unmodifiableSet(iplist) : Collections.emptySet();
+		return (ipListView != null) ? ipListView : (ipListView = new DynamicUnmodifiableSet<String>(() -> iplist));
 	}
 	
 	long getNameUpdate() {
