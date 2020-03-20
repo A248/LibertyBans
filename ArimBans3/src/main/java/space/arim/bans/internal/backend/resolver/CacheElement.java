@@ -92,10 +92,9 @@ public class CacheElement {
 	
 	SqlQuery addIp(UUID uuid, String address) {
 		if (iplist == null) {
-			iplist = new HashSet<String>(Arrays.asList(address));
-		} else {
-			iplist.add(address);
+			iplist = new HashSet<String>();
 		}
+		iplist.add(address);
 		updateIplist = System.currentTimeMillis();
 		return new SqlQuery(SqlQuery.Query.UPDATE_IPS_FOR_UUID, externaliseIpList(iplist), updateIplist, uuid.toString().replace("-", ""));
 	}
@@ -139,7 +138,7 @@ public class CacheElement {
 	 * @return a SqlQuery
 	 */
 	SqlQuery removeIp(UUID uuid, String address) {
-		if (iplist.remove(address)) {
+		if (iplist != null && iplist.remove(address)) {
 			if (iplist.isEmpty()) {
 				iplist = null;
 			}
