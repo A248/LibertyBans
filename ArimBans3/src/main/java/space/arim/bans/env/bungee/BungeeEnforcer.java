@@ -104,7 +104,7 @@ public class BungeeEnforcer implements Configurable {
 		}
 		SocketAddress address = evt.getConnection().getSocketAddress();
 		if (address instanceof InetSocketAddress) {
-			environment.center().resolver().update(evt.getConnection().getUniqueId(), evt.getConnection().getName(), ((InetSocketAddress) address).getAddress().getHostAddress());
+			environment.center().async(() ->  environment.center().resolver().update(evt.getConnection().getUniqueId(), evt.getConnection().getName(), ((InetSocketAddress) address).getAddress().getHostAddress()));
 		}
 	}
 	

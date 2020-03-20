@@ -109,7 +109,7 @@ public class BukkitEnforcer implements Configurable {
 			 cacheFailed(evt.getName());
 			 return;
 		}
-		environment.center().resolver().update(evt.getUniqueId(), evt.getName(), evt.getAddress().getHostAddress());
+		environment.center().async(() ->  environment.center().resolver().update(evt.getUniqueId(), evt.getName(), evt.getAddress().getHostAddress()));
 	}
 	
 	void enforce(Punishment punishment, boolean useJson) {

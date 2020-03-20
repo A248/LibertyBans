@@ -112,7 +112,7 @@ public class SpongeEnforcer implements Configurable {
 			 return;
 		}
 		if (evt.getProfile().getName().isPresent()) {
-			environment.center().resolver().update(evt.getProfile().getUniqueId(), evt.getProfile().getName().get(), evt.getConnection().getAddress().getAddress().getHostAddress());
+			environment.center().async(() ->  environment.center().resolver().update(evt.getProfile().getUniqueId(), evt.getProfile().getName().get(), evt.getConnection().getAddress().getAddress().getHostAddress()));
 		} else {
 			environment.center().logs().log(Level.CONFIG, "Profile " + evt.getProfile().getUniqueId() + " has no corresponding name!");
 		}
