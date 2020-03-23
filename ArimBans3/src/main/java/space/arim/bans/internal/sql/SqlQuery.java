@@ -108,13 +108,13 @@ public class SqlQuery {
 				"UPDATE `%PREFIX%history` SET `reason` = ? WHERE `id` = ?"),
 		
 		UPDATE_CACHE_FOR_UUID(
-				"UPDATE `%PREFIX%cache` SET `name` = ?, `iplist` = ?, `update-name` = ?, `update-iplist` = ? WHERE `uuid` = ?"),
+				"UPDATE `%PREFIX%cache` SET `name` = ?, `iplist` = ?, `update_name` = ?, `update_iplist` = ? WHERE `uuid` = ?"),
 		
 		UPDATE_NAME_FOR_UUID(
-				"UPDATE `%PREFIX%cache` SET `name` = ?, `update-name` = ? WHERE `uuid` = ?"),
+				"UPDATE `%PREFIX%cache` SET `name` = ?, `update_name` = ? WHERE `uuid` = ?"),
 		
 		UPDATE_IPS_FOR_UUID(
-				"UPDATE `%PREFIX%cache` SET `iplist` = ?, `update-iplist` = ? WHERE `uuid` = ?"),
+				"UPDATE `%PREFIX%cache` SET `iplist` = ?, `update_iplist` = ? WHERE `uuid` = ?"),
 		
 		SELECT_ALL_ACTIVE("SELECT * FROM `%PREFIX%active`"),
 		
