@@ -165,4 +165,15 @@
 			<optional>true</optional>
 		</dependency>
 	</dependencies>
+	
+	<repositories>
+		<repository>
+			<id>CodeMC</id>
+			<url>https://repo.codemc.org/repository/maven-public</url>
+		</repository>
+		<repository>
+			<id>vault-repo</id>
+			<url>http://nexus.hc.to/content/repositories/pub_releases</url>
+		</repository>
+	</repositories>
 </project>
