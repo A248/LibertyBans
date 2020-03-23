@@ -19,6 +19,7 @@
 package space.arim.bans.internal.frontend.commands;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -455,7 +456,7 @@ public class Commands implements CommandsMaster {
 				String arg = args[n];
 				if (arg.startsWith("-")) {
 					if (arg.contains("s")) {
-						if (!center.subjects().hasPermission(operator, "arimbans." + type.name().toLowerCase() + ".passive")) {
+						if (!center.subjects().hasPermission(operator, "arimbans." + type.name().toLowerCase() + ".silent")) {
 							center.subjects().sendMessage(operator, noSilent.get(type));
 							return;
 						}
@@ -475,11 +476,12 @@ public class Commands implements CommandsMaster {
 			}
 			reason = StringsUtil.concat(args, ' ');
 		}
-		if (reason.isEmpty() && permit_blank_reason) {
+		if (reason.isEmpty()) {
+			if (!permit_blank_reason) {
+				usage(operator, command);
+				return;
+			}
 			reason = default_reason;
-		} else if (reason.isEmpty()) {
-			usage(operator, command);
-			return;
 		}
 		Punishment punishment = new Punishment(center.getNextAvailablePunishmentId(), type, target, operator, reason, (span == -1L) ? span : span + System.currentTimeMillis(), silent, passive);
 		try {
@@ -577,7 +579,7 @@ public class Commands implements CommandsMaster {
 		if (args.length > 1) {
 			try {
 				Punishment punishment = center.corresponder().getPunishmentById(Integer.parseInt(args[0]));
-				String reason = StringsUtil.concatRange(args, ' ', 1, args.length);
+				String reason = StringsUtil.concat(Arrays.copyOfRange(args, 1, args.length), ' ');
 				center.punishments().changeReason(punishment, reason);
 				center.subjects().sendMessage(operator, successful.get(SubCategory.EDITREASON).replace("%ID%", args[0]).replace("%REASON%", reason));
 				return;
