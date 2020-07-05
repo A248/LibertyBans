@@ -116,7 +116,7 @@ public class LibertyBansLauncher {
 		 * We set the driver class name and use the context class loader w/ HikariCP to
 		 * ensure only our own HSQLDB is used, even if there is another on the classpath.
 		 */
-		loader.addPair(Dependency.of("org.hsqldb", "hsqldb", "3.4.5",
+		loader.addPair(Dependency.of("org.hsqldb", "hsqldb", "2.5.1",
 					"5539ef60987d6bd801c4ced80ede3138578307122be92dedbf2c6a48ea58db6e5e6c064d36de6f1fc0ccb6991213eb801ec036957edde48a358657e0cb8d4e62"),
 					CENTRAL_REPO);
 		/*
