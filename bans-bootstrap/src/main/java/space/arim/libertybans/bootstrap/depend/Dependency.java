@@ -41,7 +41,7 @@ public class Dependency {
 	}
 	
 	public static Dependency of(String groupId, String artifactId, String version, String hexHash) {
-		return new Dependency(groupId, artifactId, version, hexStringToByteArray(hexHash));
+		return new Dependency(groupId, artifactId, version, hexStringToByteArray(hexHash.toLowerCase()));
 	}
 	
 	// https://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java

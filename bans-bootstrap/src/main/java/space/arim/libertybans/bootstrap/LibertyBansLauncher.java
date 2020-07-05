@@ -51,7 +51,7 @@ public class LibertyBansLauncher {
 		addApiDeps(apiDepLoader);
 		addInternalDeps(internalDepLoader);
 
-		launcher = new BootstrapLauncher("LibertyBans", (URLClassLoader) ownClassLoader, apiDepLoader, internalDepLoader);
+		launcher = new BootstrapLauncher("Liberty@" + hashCode(), (URLClassLoader) ownClassLoader, apiDepLoader, internalDepLoader);
 	}
 	
 	private static Class<?> forName(String clazzname) {
@@ -127,8 +127,8 @@ public class LibertyBansLauncher {
 					"3b401adb0bf63aa8f8ec2884c7cc093fe78cd525425af2a60588f2459b756d9e037bd26280df8271a1b43dc4b16a4c7ca269adcfcdd1c0eef013860931e355dd"),
 					ARIM_REPO);
 		}
-		loader.addPair(Dependency.of("space.arim.libertybans", "bans-dl", "0.1.1-SNAPSHOT",
-				"5e055bba92459265fbceede344e8f53030d7ee389220bf48c5ffad1741002e8be6fc7f7d41b996a301b62dede0c472e2dd9eac7cde08ca301f9c1da43f85826b"),
+		loader.addPair(Dependency.of("space.arim.libertybans", "bans-dl", "0.1.4-SNAPSHOT",
+				"9D220F45F6AB11EDB2CC41A1E7420A4A88A3CCDFD6B6101F037E64E6C021B5FD4E2E72AF81B3E95976B5D5A443D5EE52ADACF8299A4D66AF95419615A4DCF447"),
 				ARIM_REPO);
 	}
 	

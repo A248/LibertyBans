@@ -19,7 +19,7 @@
 package space.arim.libertybans.bootstrap.depend;
 
 import java.io.File;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -33,6 +33,6 @@ public interface DependencyLoader {
 	
 	File getOutputDirectory();
 	
-	CompletableFuture<Set<DownloadResult>> execute();
+	CompletableFuture<Map<Dependency, DownloadResult>> execute();
 	
 }

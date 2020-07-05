@@ -18,12 +18,12 @@
  */
 package space.arim.libertybans.bootstrap.depend;
 
-import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -83,14 +83,14 @@ public class BootstrapLauncher {
 	    return new String(hexChars);
 	}
 	
-	private boolean informErrorOrReturnTrue(DownloadResult result) {
+	private boolean informErrorOrReturnTrue(Dependency dependency, DownloadResult result) {
 		switch (result.getResultType()) {
 		case HASH_MISMATCH:
-			errorMessage("Failed to download dependency: " + result.getDependency() + " . Reason: Hash mismatch, "
+			errorMessage("Failed to download dependency: " + dependency + " . Reason: Hash mismatch, "
 					+ "expected " + bytesToHex(result.getExpectedHash()) + " but got " + bytesToHex(result.getActualHash()));
 			return false;
 		case ERROR:
-			errorMessage("Failed to download dependency: " + result.getDependency() + " . Reason: Exception");
+			errorMessage("Failed to download dependency: " + dependency + " . Reason: Exception");
 			result.getException().printStackTrace(System.err);
 			return false;
 		default:
@@ -99,28 +99,35 @@ public class BootstrapLauncher {
 		return true;
 	}
 	
-	private static URL[] toURLs(File file) throws MalformedURLException {
-		File[] input = file.listFiles();
-		URL[] urls = new URL[input.length];
-		for (int n = 0; n < input.length; n++) {
-			urls[n] = input[n].toURI().toURL();
-		}
-		return urls;
+	private CompletableFuture<URL[]> loadURLs(DependencyLoader loader) {
+		return loader.execute().thenApply((results) -> {
+			URL[] urls = new URL[results.size()];
+			int n = 0;
+			try {
+				for (Map.Entry<Dependency, DownloadResult> entry : results.entrySet()) {
+					if (!informErrorOrReturnTrue(entry.getKey(), entry.getValue())) {
+						return null;
+					}
+					urls[n++] = entry.getValue().getJarFile().toURI().toURL();
+				}
+			} catch (MalformedURLException ex) {
+				ex.printStackTrace(System.err);
+				return null;
+			}
+			return urls;
+		});
 	}
 	
 	private CompletableFuture<Boolean> loadApi() {
-		return apiDepLoader.execute().thenApply((results) -> {
-			for (DownloadResult result : results) {
-				if (!informErrorOrReturnTrue(result)) {
-					return false;
-				}
+		return loadURLs(apiDepLoader).thenApply((urls) -> {
+			if (urls == null) {
+				return false;
 			}
 			try {
-				for (URL url : toURLs(apiDepLoader.getOutputDirectory())) {
+				for (URL url : urls) {
 					ADD_URL_METHOD.invoke(apiClassLoader, url);
 				}
-			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
-					| MalformedURLException ex) {
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
 				errorMessage("Failed to attach dependencies to API ClassLoader");
 				ex.printStackTrace(System.err);
 				return false;
@@ -130,20 +137,12 @@ public class BootstrapLauncher {
 	}
 	
 	private CompletableFuture<Boolean> loadInternal() {
-		return internalDepLoader.execute().thenApply((results) -> {
-			for (DownloadResult result : results) {
-				if (!informErrorOrReturnTrue(result)) {
-					return false;
-				}
-			}
-			try {
-				for (URL url : toURLs(internalDepLoader.getOutputDirectory())) {
-					internalClassLoader.addURL(url);
-				}
-			} catch (MalformedURLException ex) {
-				errorMessage("Failed to attach dependencies to internal ClassLoader");
-				ex.printStackTrace(System.err);
+		return loadURLs(internalDepLoader).thenApply((urls) -> {
+			if (urls == null) {
 				return false;
+			}
+			for (URL url : urls) {
+				internalClassLoader.addURL(url);
 			}
 			return true;
 		});

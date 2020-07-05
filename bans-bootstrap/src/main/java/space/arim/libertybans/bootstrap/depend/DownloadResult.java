@@ -18,24 +18,26 @@
  */
 package space.arim.libertybans.bootstrap.depend;
 
+import java.io.File;
+
 public class DownloadResult {
 
 	private final ResultType resultType;
-	private final Dependency dependency;
+	private final File jarFile;
 	private final byte[] expectedHash;
 	private final byte[] actualHash;
 	private final Exception ex;
 	
-	private DownloadResult(ResultType resultType, Dependency dependency, byte[] expectedHash, byte[] actualHash, Exception ex) {
+	private DownloadResult(ResultType resultType, File jarFile, byte[] expectedHash, byte[] actualHash, Exception ex) {
 		this.resultType = resultType;
-		this.dependency = dependency;
+		this.jarFile = jarFile;
 		this.expectedHash = expectedHash;
 		this.actualHash = actualHash;
 		this.ex = ex;
 	}
 	
-	private DownloadResult(ResultType resultType, Dependency dependency, Exception ex) {
-		this(resultType, dependency, null, null, ex);
+	private DownloadResult(ResultType resultType, File jarFile, Exception ex) {
+		this(resultType, jarFile, null, null, ex);
 	}
 	
 	/**
@@ -48,12 +50,13 @@ public class DownloadResult {
 	}
 	
 	/**
-	 * Gets the dependency which was downloaded or attempted to be downloaded
+	 * Gets the jar file which the download is saved to,
+	 * or null if the download failed.
 	 * 
-	 * @return the dependency
+	 * @return the jar file
 	 */
-	public Dependency getDependency() {
-		return dependency;
+	public File getJarFile() {
+		return jarFile;
 	}
 	
 	public byte[] getExpectedHash() {
@@ -73,16 +76,16 @@ public class DownloadResult {
 		return ex;
 	}
 	
-	public static DownloadResult success(Dependency dependency) {
-		return new DownloadResult(ResultType.SUCCESS, dependency, null);
+	public static DownloadResult success(File jarFile) {
+		return new DownloadResult(ResultType.SUCCESS, jarFile, null);
 	}
 	
-	public static DownloadResult hashMismatch(Dependency dependency, byte[] expected, byte[] actual) {
-		return new DownloadResult(ResultType.HASH_MISMATCH, dependency, expected, actual, null);
+	public static DownloadResult hashMismatch(byte[] expected, byte[] actual) {
+		return new DownloadResult(ResultType.HASH_MISMATCH, null, expected, actual, null);
 	}
 	
-	public static DownloadResult exception(Dependency dependency, Exception ex) {
-		return new DownloadResult(ResultType.ERROR, dependency, ex);
+	public static DownloadResult exception(Exception ex) {
+		return new DownloadResult(ResultType.ERROR, null, ex);
 	}
 	
 	public enum ResultType {
