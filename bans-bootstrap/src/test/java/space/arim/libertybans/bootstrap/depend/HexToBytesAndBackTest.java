@@ -38,10 +38,10 @@ public class HexToBytesAndBackTest {
 	
 	@RepeatedTest(5)
 	public void testConversions() {
-		String asHex = BootstrapLauncher.bytesToHex(bytes);
+		String asHex = Dependency.bytesToHex(bytes);
 		byte[] backToBytes = Dependency.hexStringToByteArray(asHex);
 		assertArrayEquals(bytes, backToBytes);
-		assertEquals(asHex, BootstrapLauncher.bytesToHex(backToBytes));
+		assertEquals(asHex, Dependency.bytesToHex(backToBytes));
 	}
 	
 }

@@ -72,22 +72,12 @@ public class BootstrapLauncher {
 		return internalClassLoader;
 	}
 	
-	private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
-	static String bytesToHex(byte[] bytes) {
-	    char[] hexChars = new char[bytes.length * 2];
-	    for (int j = 0; j < bytes.length; j++) {
-	        int v = bytes[j] & 0xFF;
-	        hexChars[j * 2] = HEX_ARRAY[v >>> 4];
-	        hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
-	    }
-	    return new String(hexChars);
-	}
-	
 	private boolean informErrorOrReturnTrue(Dependency dependency, DownloadResult result) {
 		switch (result.getResultType()) {
 		case HASH_MISMATCH:
-			errorMessage("Failed to download dependency: " + dependency + " . Reason: Hash mismatch, "
-					+ "expected " + bytesToHex(result.getExpectedHash()) + " but got " + bytesToHex(result.getActualHash()));
+			errorMessage("Failed to download dependency: " + dependency + " . Reason: Hash mismatch, " + "expected "
+					+ Dependency.bytesToHex(result.getExpectedHash()) + " but got "
+					+ Dependency.bytesToHex(result.getActualHash()));
 			return false;
 		case ERROR:
 			errorMessage("Failed to download dependency: " + dependency + " . Reason: Exception");

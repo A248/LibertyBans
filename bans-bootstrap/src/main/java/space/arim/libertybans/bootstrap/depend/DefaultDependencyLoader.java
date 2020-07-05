@@ -91,6 +91,7 @@ public class DefaultDependencyLoader implements DependencyLoader {
 			} catch (IOException ex) {
 				return DownloadResult.exception(ex);
 			}
+			byte[] expectedHash = dependency.getSha512Hash();
 			MessageDigest md;
 			try {
 				md = MessageDigest.getInstance("SHA-512");
@@ -98,8 +99,16 @@ public class DefaultDependencyLoader implements DependencyLoader {
 				return DownloadResult.exception(ex);
 			}
 			byte[] actualHash = md.digest(jarBytes);
-			if (!Arrays.equals(actualHash, dependency.getSha512Hash())) {
-				return DownloadResult.hashMismatch(dependency.getSha512Hash(), actualHash);
+			if (!Arrays.equals(expectedHash, actualHash)) {
+				if (expectedHash != null) {
+					return DownloadResult.hashMismatch(expectedHash, actualHash);
+				}
+				System.out.println("Warning: Disabled hash comparison. Actual hash is " + Arrays.toString(actualHash));
+			}
+			if (expectedHash == null) {
+
+			} else {
+				
 			}
 			try (FileOutputStream fos = new FileOutputStream(outputJar)) {
 				fos.write(jarBytes);

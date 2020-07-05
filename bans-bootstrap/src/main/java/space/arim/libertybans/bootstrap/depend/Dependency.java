@@ -33,11 +33,19 @@ public class Dependency {
 	private final String version;
 	private transient final byte[] sha512hash;
 	
+	/**
+	 * Creates a dependency
+	 * 
+	 * @param groupId the group ID
+	 * @param artifactId the artifact ID
+	 * @param version the version
+	 * @param sha512hash the SHA 512 hash, null to disable hash checking
+	 */
 	public Dependency(String groupId, String artifactId, String version, byte[] sha512hash) {
 		this.groupId = Objects.requireNonNull(groupId);
 		this.artifactId = Objects.requireNonNull(artifactId);
 		this.version = Objects.requireNonNull(version);
-		this.sha512hash = Objects.requireNonNull(sha512hash);
+		this.sha512hash = sha512hash;
 	}
 	
 	public static Dependency of(String groupId, String artifactId, String version, String hexHash) {
@@ -52,6 +60,17 @@ public class Dependency {
 			data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i + 1), 16));
 		}
 		return data;
+	}
+	
+	private static final char[] HEX_ARRAY = "0123456789ABCDEF".toLowerCase().toCharArray();
+	static String bytesToHex(byte[] bytes) {
+	    char[] hexChars = new char[bytes.length * 2];
+	    for (int j = 0; j < bytes.length; j++) {
+	        int v = bytes[j] & 0xFF;
+	        hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+	        hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+	    }
+	    return new String(hexChars);
 	}
 	
 	public String getFullName() {
