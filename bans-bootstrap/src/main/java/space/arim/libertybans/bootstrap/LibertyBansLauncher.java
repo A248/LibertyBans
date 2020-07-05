@@ -72,10 +72,14 @@ public class LibertyBansLauncher {
 	
 	private void addApiDeps(DependencyLoader loader) {
 		if (!classExists("space.arim.universal.registry.UniversalRegistry")) {
-			loader.addPair(Dependency.of("space.arim.universal", "universal-all-shaded", null, null), ARIM_REPO);
+			loader.addPair(Dependency.of("space.arim.universal", "universal-all-shaded", "0.13.4-SNAPSHOT",
+					"7542196eb4ad373758f8d75659f0986556b9656190ea69210bfe87b631c6d61b16a1cd871d79628f242920819862b93e081db9493a11164a0a0d53ab8e8e41a4"),
+					ARIM_REPO);
 		}
 		if (!classExists("space.arim.uuidvault.api.UUIDVault")) {
-			loader.addPair(Dependency.of("space.arim.uuidvault", "api", null, null), ARIM_REPO);
+			loader.addPair(Dependency.of("space.arim.uuidvault", "assemble", "0.4.5-SNAPSHOT",
+					"843d3c3ade4aee537418f4f8abe6f186a3bb0197c3bf857b6585eecd8d78d611d325058217c1ee5bfd617f6cb9a734bdd6f241ae5fb23c31a7559e00a8638e52"),
+					ARIM_REPO);
 		}
 	}
 	
@@ -124,7 +128,7 @@ public class LibertyBansLauncher {
 					ARIM_REPO);
 		}
 		loader.addPair(Dependency.of("space.arim.libertybans", "bans-dl", "0.1.0-SNAPSHOT",
-				""),
+				"a1e9e4420eb776e328febd29c4ab9accd4405b03432d7d09a79c8a949fd20d824f6c0b95c3ae3c71b205eb6278ccda369777a5133f7dd01b1100b26faa9b6eec"),
 				ARIM_REPO);
 	}
 	
