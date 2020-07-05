@@ -55,7 +55,7 @@ public class Dependency {
 	}
 	
 	public String getFullName() {
-		return artifactId + '.' + groupId + '_' + version;
+		return groupId + '.' + artifactId + '_' + version;
 	}
 	
 	public String groupId() {
