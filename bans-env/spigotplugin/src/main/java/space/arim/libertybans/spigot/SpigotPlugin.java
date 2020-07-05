@@ -20,7 +20,8 @@ package space.arim.libertybans.spigot;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -34,7 +35,7 @@ public class SpigotPlugin extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		File folder = getDataFolder();
-		Executor executor = (cmd) -> getServer().getScheduler().runTaskAsynchronously(this, cmd);
+		ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 		LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
 			try {
 				JavaPlugin potential = JavaPlugin.getProvidingPlugin(clazz);
@@ -43,6 +44,7 @@ public class SpigotPlugin extends JavaPlugin {
 			return null;
 		});
 		ClassLoader launchLoader = launcher.attemptLaunch().join();
+		executor.shutdown();
 		if (launchLoader == null) {
 			// Already printed the error message
 			setEnabled(false);

@@ -21,7 +21,8 @@ package space.arim.libertybans.bungee;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginDescription;
@@ -36,7 +37,7 @@ public class BungeePlugin extends Plugin {
 	@Override
 	public void onEnable() {
 		File folder = getDataFolder();
-		Executor executor = (cmd) -> getProxy().getScheduler().runAsync(this, cmd);
+		ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 		LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
 			try {
 				ClassLoader pluginClassLoader = clazz.getClassLoader();
@@ -50,6 +51,7 @@ public class BungeePlugin extends Plugin {
 			return null;
 		});
 		ClassLoader launchLoader = launcher.attemptLaunch().join();
+		executor.shutdown();
 		if (launchLoader == null) {
 			// Already printed the error message
 			return;
