@@ -1,0 +1,154 @@
+all:
+  prefix:
+    use: true
+    value: '&6&lLibertyBans &r&8»&7 '
+  base-permission-message: '&cYou may not use this.'
+  not-found:
+    uuid: '&c&o%TARGET%&r&7 was not found online or offline.'
+    ip: '&c&o%TARGET%&r&7 is not a valid IP.'
+    either: '&c&o%TARGET%&r&7 is not a valid player or IP.'
+  reloaded: '&aReloaded!'
+  restarted: '&aRestarted!'
+additions:
+  bans:
+    usage: '&cUsage: /ban &e<player> [time] <reason>&c.'
+    permission:
+      command: '&7You may not ban other players.'
+    error:
+      conflicting: '&c&o%TARGET%&r&7is already banned!'
+    successful:
+      message: '&aBanned &c&o%TARGET%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%'
+      notification: '&c&o%OPERATOR%&r&7 banned &c&o%TARGET%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
+    layout:
+      - '&7&lBanned'
+      - '&cDuration: &e%DURATION%'
+      - '&7'
+      - '&c&lReason'
+      - '&7%REASON%'
+      - ''
+      - '&3&lAppeal Your Punishment'
+      - '&cWebsite: &7website'
+      - '&cDiscord: &7discord'
+removals:
+  bans:
+    usage: '&cUsage: /unban &e<player>&c.'
+    permission:
+      command: '&7You may not unban other players.'
+    not-found: '&c&o%TARGET%&r&7is not banned.'
+    successful:
+      message: '&7Unbanned &c&o%TARGET%&r&7.'
+      notification: '&c&o%UNOPERATOR%&r&7 unbanned &c&o%TARGET%&r&7.'
+list:
+  banlist:
+    usage: '&cUsage: /banlist [page].'
+    per-page: 10
+    no-pages: '&7There are no active bans.'
+    max-pages: '&e%PAGE%&7 does not exist. Max pages: &e%MAXPAGE%&7.'
+    permission:
+      command: '&7You may not view the banlist.'
+      no-ip: '&7You may not view the ip banlist.'
+    layout:
+      header:
+        - '&7[&eID&7] &e&oSubject'
+        - '&7Operator &8/ &7Reason &8/ &7Time Remaining'
+        - '&7'
+      body:
+        - '&7[&e%ID%&7] &e&o%TARGET%'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME%'
+        - '&7'
+      footer:
+        - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
+  mutelist:
+    usage: '/mutelist [page]'
+    per-page: 10
+    no-pages: '&7There are no active mutes.'
+    max-pages: '&e%PAGE%&7 does not exist. Max pages: &e%MAXPAGE%&7.'
+    permission:
+      command: '&7You may not view the mutelist.'
+      no-ip: '&7You may not view the ip mutelist.'
+    layout:
+      header:
+        - '&7[&eID&7] Subject'
+        - '&7Operator &8/ &7Reason &8/ &7Time Remaining'
+        - '&7'
+      body:
+        - '&7[&e%ID%&7] &e&o%TARGET%'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME%'
+        - '&7'
+      footer:
+        - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
+  history:
+    usage: '/history <player> [page]'
+    per-page: 10
+    no-pages: '&c&o%TARGET%&r&7 has no history.'
+    max-pages: '&e%PAGE%&7 does not exist. Max pages: &e%MAXPAGE%&7.'
+    permission:
+      command: '&7You may not view history.'
+      no-ip: '&7You may not view history for an ip address.'
+    layout:
+      header:
+        - '&7[&eID&7] &e&oSubject &r&8/ &7Punishment Type'
+        - '&7Operator &8/ &7Reason &8/ &7Time Remaining'
+        - '&7'
+      body:
+        - '&7[&e%ID%&7] &e&o%TARGET% &r&7/ &7%TYPE%'
+        - '&7%OPERATOR% &8/ &7REASON% &8/ &7%TIME%'
+        - '&7'
+      footer:
+        - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
+  warns:
+    usage: '/warns <player> [page]'
+    per-page: 10
+    no-pages: '&c&o%TARGET%&r&7 has no warns.'
+    max-pages: '&e%PAGE%&7 does not exist. Max pages: &e%MAXPAGE%&7.'
+    permission:
+      command: '&7You may not view warns.'
+      no-ip: '&7You may not view warns for an ip address.'
+    layout:
+      header:
+        - '&7[&eID&7] Operator &8/ &7Reason &8/ &7Time Remaining'
+        - '&7'
+      body:
+        - '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME%'
+        - '&7'
+      footer:
+        - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
+  blame:
+    usage: '/blame <player> [page]'
+    per-page: 10
+    no-pages: '&c&o%TARGET%&r&7 has not punished any players.'
+    max-pages: '&e%PAGE%&7 does not exist. Max pages: &e%MAXPAGE%&7.'
+    permission:
+      command: '&7You may not use blame.'
+    layout:
+      header:
+        - '&7[&eID&7] &e&oSubject &r&8/ &7Punishment Type'
+        - '&7Reason &8/ &7Time Remaining'
+        - '&7'
+      body:
+        - '&7[&e%ID%&7] &e&o%SUBJECT% &r&8 / &7%TYPE%'
+        - '&7%REASON% &8/ &7%TIME%'
+        - '&7'
+      footer:
+        - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
+time:
+  years:
+    enable: true
+    message: '%YEARS% years'
+  months:
+    enable: true
+    message: '%MONTHS% months'
+  weeks:
+    enable: true
+    message: '%WEEKS% weeks'
+  days:
+    enable: true
+    message: '%DAYS% days'
+  hours:
+    enable: true
+    message: '%HOURS% hours'
+  minutes:
+    enable: true
+    message: '%MINUTES% minutes'
+  and: 'and '
+config-version: 1
