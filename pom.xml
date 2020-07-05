@@ -1,0 +1,251 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<groupId>space.arim.libertybans</groupId>
+	<artifactId>bans-parent</artifactId>
+	<version>0.1.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	
+	<name>LibertyBans</name>
+	<description>The be-all, end-all of discipline.</description>
+	<url>https://github.com/A248/LibertyBans</url>
+	<inceptionYear>2019</inceptionYear>
+	
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>11</maven.compiler.source>
+    	<maven.compiler.target>11</maven.compiler.target>
+		
+		<!-- Testing dependencies -->
+		<junit.version>5.6.2</junit.version>
+		
+		<!-- Bumping dependency versions requires modification of LibertyBansLauncher versions and hashes -->
+		
+		<!-- API dependencies -->
+		<universal.version>0.13.4-SNAPSHOT</universal.version>
+		<uuidvault.version>0.4.5-SNAPSHOT</uuidvault.version>
+
+		<!-- Internal dependencies -->
+		<arimapi.version>0.16.0-SNAPSHOT</arimapi.version>
+		<slf4j.version>1.7.25</slf4j.version>
+		<hikari.version>3.4.5</hikari.version>
+		<hsqldb.version>2.5.1</hsqldb.version>
+		<caffeine.version>2.8.5</caffeine.version>
+	</properties>
+	
+	<licenses>
+		<license>
+			<name>GNU Affero General Public License, Version 3</name>
+			<url>https://www.gnu.org/licenses/agpl-3.0-standalone.html</url>
+			<distribution>repo</distribution>
+			<comments>Strong copyleft license, commonly known as the GNU AGPL v3</comments>
+		</license>
+	</licenses>
+	
+	<developers>
+		<developer>
+			<id>anandbeh</id>
+			<name>Anand Beh</name>
+			<url>https://www.arim.space</url>
+			<roles>
+				<role>creator</role>
+				<role>developer</role>
+			</roles>
+			<timezone>America/New_York</timezone>
+		</developer>
+	</developers>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>aggregate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>aggregate</goal>
+							<goal>aggregate-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.8.1</version>
+					<configuration>
+						<source>11</source>
+						<target>11</target>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-shade-plugin</artifactId>
+					<version>3.2.3</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>3.2.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>3.0.0-M5</version>
+					<configuration>
+						<trimStackTrace>false</trimStackTrace>
+					</configuration>
+					<dependencies>
+						<dependency>
+							<groupId>org.junit.jupiter</groupId>
+							<artifactId>junit-jupiter-engine</artifactId>
+							<version>${junit.version}</version>
+							<scope>runtime</scope>
+						</dependency>
+					</dependencies>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+	
+	<modules>
+		<module>bans-api</module>
+		<module>bans-bootstrap</module>
+		<module>bans-core</module>
+		<module>bans-env</module>
+		<module>bans-all</module>
+	</modules>
+	
+	<distributionManagement>
+		<repository>
+			<id>arim-repo</id>
+			<url>https://maven.cloudsmith.io/anand-beh/arim-repo/</url>
+		</repository>
+		<snapshotRepository>
+			<id>arim-repo</id>
+			<url>https://maven.cloudsmith.io/anand-beh/arim-repo/</url>
+		</snapshotRepository>
+	</distributionManagement>
+	
+	<dependencyManagement>
+		<dependencies>
+			<!-- Internal dependencies -->
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-bootstrap</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-env-spigot</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-env-bungee</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-env-sponge</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-env-velocity</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			
+			<!-- Testing Dependencies -->
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter-api</artifactId>
+				<version>${junit.version}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<!-- API dependencies -->
+			<dependency>
+				<groupId>space.arim.universal</groupId>
+				<artifactId>universal-registry</artifactId>
+				<version>${universal.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.uuidvault</groupId>
+				<artifactId>api</artifactId>
+				<version>${uuidvault.version}</version>
+			</dependency>
+			
+			<!-- Internal dependencies -->
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.api</groupId>
+				<artifactId>arimapi-all</artifactId>
+				<version>${arimapi.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.zaxxer</groupId>
+				<artifactId>HikariCP</artifactId>
+				<version>${hikari.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hsqldb</groupId>
+				<artifactId>hsqldb</artifactId>
+				<version>${hsqldb.version}</version>
+				<scope>runtime</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.github.ben-manes.caffeine</groupId>
+				<artifactId>caffeine</artifactId>
+				<version>${caffeine.version}</version>
+			</dependency>
+			
+			<!-- License dependency -->
+			<dependency>
+				<groupId>space.arim.universal</groupId>
+				<artifactId>universal-agpl</artifactId>
+				<version>${universal.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	
+	<repositories>
+		<repository>
+			<id>arim-repo</id>
+			<url>https://www.arim.space/maven/</url>
+		</repository>
+	</repositories>
+</project>
