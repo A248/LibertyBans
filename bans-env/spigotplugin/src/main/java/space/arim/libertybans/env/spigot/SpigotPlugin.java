@@ -71,9 +71,11 @@ public class SpigotPlugin extends JavaPlugin {
 	
 	@Override
 	public void onDisable() {
-		if (base != null) {
-			base.shutdown();
+		if (base == null) {
+			getLogger().warning("LibertyBans wasn't launched; check your log for a startup error");
+			return;
 		}
+		base.shutdown();
 	}
 	
 }
