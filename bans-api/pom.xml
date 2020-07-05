@@ -26,5 +26,9 @@
 			<groupId>space.arim.uuidvault</groupId>
 			<artifactId>api</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>space.arim.api</groupId>
+			<artifactId>arimapi-all</artifactId>
+		</dependency>
 	</dependencies>
 </project>
