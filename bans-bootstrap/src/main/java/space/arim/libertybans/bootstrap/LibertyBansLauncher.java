@@ -81,6 +81,14 @@ public class LibertyBansLauncher {
 					"843d3c3ade4aee537418f4f8abe6f186a3bb0197c3bf857b6585eecd8d78d611d325058217c1ee5bfd617f6cb9a734bdd6f241ae5fb23c31a7559e00a8638e52"),
 					ARIM_REPO);
 		}
+		/*
+		 * Since ArimAPI is also a plugin, it may already be present
+		 */
+		if (!classExists("space.arim.api.util.sql.HikariPoolSqlBackend")) {
+			loader.addPair(Dependency.of("space.arim.api", "arimapi-all", "0.16.0-SNAPSHOT",
+					"3b401adb0bf63aa8f8ec2884c7cc093fe78cd525425af2a60588f2459b756d9e037bd26280df8271a1b43dc4b16a4c7ca269adcfcdd1c0eef013860931e355dd"),
+					ARIM_REPO);
+		}
 	}
 	
 	private void addInternalDeps(DependencyLoader loader) {
@@ -119,14 +127,6 @@ public class LibertyBansLauncher {
 		loader.addPair(Dependency.of("org.hsqldb", "hsqldb", "2.5.1",
 					"5539ef60987d6bd801c4ced80ede3138578307122be92dedbf2c6a48ea58db6e5e6c064d36de6f1fc0ccb6991213eb801ec036957edde48a358657e0cb8d4e62"),
 					CENTRAL_REPO);
-		/*
-		 * Since ArimAPI is also a plugin, it may already be present
-		 */
-		if (!classExists("space.arim.api.util.sql.HikariPoolSqlBackend")) {
-			loader.addPair(Dependency.of("space.arim.api", "arimapi-all", "0.16.0-SNAPSHOT",
-					"3b401adb0bf63aa8f8ec2884c7cc093fe78cd525425af2a60588f2459b756d9e037bd26280df8271a1b43dc4b16a4c7ca269adcfcdd1c0eef013860931e355dd"),
-					ARIM_REPO);
-		}
 		loader.addPair(Dependency.of("space.arim.libertybans", "bans-dl", "0.1.4-SNAPSHOT",
 				"9D220F45F6AB11EDB2CC41A1E7420A4A88A3CCDFD6B6101F037E64E6C021B5FD4E2E72AF81B3E95976B5D5A443D5EE52ADACF8299A4D66AF95419615A4DCF447"),
 				ARIM_REPO);
