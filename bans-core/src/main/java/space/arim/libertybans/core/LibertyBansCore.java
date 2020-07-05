@@ -27,6 +27,7 @@ import space.arim.universal.registry.RequireServices;
 import space.arim.universal.registry.ServiceChangeEvent;
 import space.arim.universal.util.concurrent.FactoryOfTheFuture;
 
+import space.arim.api.env.DetectingPlatformHandle;
 import space.arim.api.env.PlatformPluginInfo;
 
 import space.arim.libertybans.api.LibertyBans;
@@ -50,7 +51,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 	
 	private Listener unregistrationListener;
 	
-	public LibertyBansCore(@RequireServices({ FactoryOfTheFuture.class, PlatformPluginInfo.class }) Registry registry,
+	public LibertyBansCore(@RequireServices(PlatformPluginInfo.class) Registry registry,
 			File folder, AbstractEnv environment) {
 		this.folder = folder;
 		this.registry = registry;
@@ -67,6 +68,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 	
 	@Override
 	public void startup() {
+		new DetectingPlatformHandle(registry).registerDefaultServiceIfAbsent(FactoryOfTheFuture.class);
 		unregistrationListener = registry.getEvents().registerListener(ServiceChangeEvent.class, EventPriority.NORMAL, (evt) -> {
 			if (evt.getService() == FactoryOfTheFuture.class && evt.getUpdated() == null) {
 				environment.shutdown();

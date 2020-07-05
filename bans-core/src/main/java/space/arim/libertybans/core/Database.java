@@ -20,6 +20,8 @@ package space.arim.libertybans.core;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -152,13 +154,17 @@ class Database implements PunishmentDatabase, Part {
 		return executeAsync(() -> {
 			String punishmentTypeInfo = javaToSqlEnum(PunishmentType.class);
 			String victimTypeInfo = javaToSqlEnum(Victim.VictimType.class);
-			try (CloseMe cm = getBackend().execute(
-					SqlQuery.of("CREATE TABLE IF NOT EXISTS `libertybans_names` "
-							+ "(`uuid` BINARY(16) NOT NULL, "
+			List<SqlQuery> queries = new ArrayList<>();
+			if (isHsqlDb()) {
+				queries.add(SqlQuery.of("SET DATABASE SQL SYNTAX MYS TRUE"));
+			}
+			queries.addAll(List.of(
+					SqlQuery.of("CREATE TABLE IF NOT EXISTS `libertybans_names` ("
+							+ "`uuid` BINARY(16) NOT NULL, "
 							+ "`name` VARCHAR(16), "
 							+ "`updated` BIGINT NOT NULL, "
 							+ "PRIMARY KEY(`uuid`, `name`))"),
-					SqlQuery.of("CREATE TABLE IF NOT EXISTS `libertybans_addresses`("
+					SqlQuery.of("CREATE TABLE IF NOT EXISTS `libertybans_addresses` ("
 							+ "`uuid` BINARY(16) NOT NULL, "
 							+ "`address` VARBINARY(16) NOT NULL, "
 							+ "`updated` BIGINT NOT NULL, "
@@ -227,7 +233,9 @@ class Database implements PunishmentDatabase, Part {
 							+ "FROM `libertybans_singular` `puns` "
 							+ "INNER JOIN `libertybans_addresses` `addrs` "
 							+ "ON (`puns`.`victim_type` = 'ADDRESS' AND `puns`.`victim` = `addrs`.`address`)")*/
-					)) {
+					));
+
+			try (CloseMe cm = getBackend().execute(queries.toArray(new SqlQuery[] {}))) {
 				
 			} catch (SQLException ex) {
 				logger.error("Failed to create tables", ex);
