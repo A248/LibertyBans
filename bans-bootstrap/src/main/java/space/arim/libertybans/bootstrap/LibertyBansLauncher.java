@@ -127,8 +127,8 @@ public class LibertyBansLauncher {
 					"3b401adb0bf63aa8f8ec2884c7cc093fe78cd525425af2a60588f2459b756d9e037bd26280df8271a1b43dc4b16a4c7ca269adcfcdd1c0eef013860931e355dd"),
 					ARIM_REPO);
 		}
-		loader.addPair(Dependency.of("space.arim.libertybans", "bans-dl", "0.1.1-SNAPSHOT",
-				"5e055bba92459265fbceede344e8f53030d7ee389220bf48c5ffad1741002e8be6fc7f7d41b996a301b62dede0c472e2dd9eac7cde08ca301f9c1da43f85826b"),
+		loader.addPair(Dependency.of("space.arim.libertybans", "bans-dl", "0.1.2-SNAPSHOT",
+				"E44B3B17DD68E6574FB7A140814B322F28E84521616AEFE367E4C936F9394D2FDB966EBC4A050C7A50BCBE2F437A1A173F494D068BBBB342C2ED2E7FFCA7CFAA"),
 				ARIM_REPO);
 	}
 	
