@@ -73,6 +73,11 @@ public class Dependency {
 	public byte[] getSha512Hash() {
 		return sha512hash;
 	}
+	
+	@Override
+	public String toString() {
+		return "Dependency [groupId=" + groupId + ", artifactId=" + artifactId + ", version=" + version + "]";
+	}
 
 	@Override
 	public int hashCode() {
