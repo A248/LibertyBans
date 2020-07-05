@@ -55,7 +55,7 @@ public abstract class BaseEnvironment {
 		long startTime = System.nanoTime();
 		startup0();
 		long endTime = System.nanoTime();
-		double millis = TimeUnit.MILLISECONDS.convert(startTime - endTime, TimeUnit.NANOSECONDS);
+		double millis = (TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS)) / 1_000D;
 		infoMessage(String.format("Started up in %.3f seconds", millis));
 	}
 
@@ -103,7 +103,7 @@ public abstract class BaseEnvironment {
 		long startTime = System.nanoTime();
 		shutdown0();
 		long endTime = System.nanoTime();
-		double millis = TimeUnit.MILLISECONDS.convert(startTime - endTime, TimeUnit.NANOSECONDS);
+		double millis = TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS) / 1_000D;
 		infoMessage(String.format("Shut down in %.3f seconds", millis));
 	}
 	
