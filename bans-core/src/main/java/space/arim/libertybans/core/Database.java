@@ -72,7 +72,7 @@ class Database implements PunishmentDatabase, Part {
 
 		HikariConfig hikariConf = new HikariConfig();
 		boolean useMySql = config.getBoolean("storage-backend-mysql");
-		String username = config.getString("mysql-details.username");
+		String username = config.getString("mysql-details.user");
 		String password = config.getString("mysql-details.password");
 		if (useMySql && (username.equals("username") || password.equals("defaultpass"))) {
 			logger.warn("Not using MySQL because authentication details are still default");
