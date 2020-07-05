@@ -171,7 +171,7 @@ class Database implements PunishmentDatabase, Part {
 							+ "`updated` BIGINT NOT NULL, "
 							+ "PRIMARY KEY (`uuid`, `address`))"),
 					SqlQuery.of("CREATE TABLE IF NOT EXISTS `libertybans_punishments_singular` ("
-							+ "`id` INT AUTO_INCREMENT NOT NULL"
+							+ "`id` INT AUTO_INCREMENT NOT NULL "
 							+ "`type` " + punishmentTypeInfo + ", "
 							+ "`victim` VARBINARY(16) NOT NULL, "
 							+ "`victim_type` " + victimTypeInfo + ", "
@@ -183,7 +183,7 @@ class Database implements PunishmentDatabase, Part {
 							+ "`undone` BOOLEAN NOT NULL, "
 							+ "PRIMARY KEY(`type`, `victim`, `victim_type`)"),
 					SqlQuery.of("CREATE TABLE IF NOT EXISTS `libertybans_punishments_multiple` ("
-							+ "`id` INT AUTO_INCREMENT PRIMARY KEY"
+							+ "`id` INT AUTO_INCREMENT PRIMARY KEY "
 							+ "`type` " + punishmentTypeInfo + ", "
 							+ "`victim` VARBINARY(16) NOT NULL, "
 							+ "`victim_type` " + victimTypeInfo + ", "
