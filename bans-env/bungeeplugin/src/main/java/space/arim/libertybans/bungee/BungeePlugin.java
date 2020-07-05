@@ -58,7 +58,7 @@ public class BungeePlugin extends Plugin {
 		}
 		Class<?> envClazz;
 		try {
-			envClazz = Class.forName("space.arim.libertybans.bungee.BungeeEnv", true, launchLoader);
+			envClazz = Class.forName("space.arim.libertybans.env.bungee.BungeeEnv", true, launchLoader);
 		} catch (ClassNotFoundException ex) {
 			ex.printStackTrace();
 			return;
@@ -70,6 +70,7 @@ public class BungeePlugin extends Plugin {
 			ex.printStackTrace();
 			return;
 		}
+		base.startup();
 	}
 	
 	@Override
