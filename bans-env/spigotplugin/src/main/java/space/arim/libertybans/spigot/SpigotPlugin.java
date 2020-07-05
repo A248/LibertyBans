@@ -66,6 +66,7 @@ public class SpigotPlugin extends JavaPlugin {
 			setEnabled(false);
 			return;
 		}
+		base.startup();
 	}
 	
 	@Override
