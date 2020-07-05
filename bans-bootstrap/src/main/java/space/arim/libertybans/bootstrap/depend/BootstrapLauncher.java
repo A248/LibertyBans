@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.bootstrap.depend;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -98,6 +99,15 @@ public class BootstrapLauncher {
 		return true;
 	}
 	
+	private static URL[] toURLs(File file) throws MalformedURLException {
+		File[] input = file.listFiles();
+		URL[] urls = new URL[input.length];
+		for (int n = 0; n < input.length; n++) {
+			urls[n] = input[n].toURI().toURL();
+		}
+		return urls;
+	}
+	
 	private CompletableFuture<Boolean> loadApi() {
 		return apiDepLoader.execute().thenApply((results) -> {
 			for (DownloadResult result : results) {
@@ -106,7 +116,9 @@ public class BootstrapLauncher {
 				}
 			}
 			try {
-				ADD_URL_METHOD.invoke(apiClassLoader, apiDepLoader.getOutputDirectory().toURI().toURL());
+				for (URL url : toURLs(apiDepLoader.getOutputDirectory())) {
+					ADD_URL_METHOD.invoke(apiClassLoader, url);
+				}
 			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 					| MalformedURLException ex) {
 				errorMessage("Failed to attach dependencies to API ClassLoader");
@@ -125,7 +137,9 @@ public class BootstrapLauncher {
 				}
 			}
 			try {
-				internalClassLoader.addURL(internalDepLoader.getOutputDirectory().toURI().toURL());
+				for (URL url : toURLs(internalDepLoader.getOutputDirectory())) {
+					internalClassLoader.addURL(url);
+				}
 			} catch (MalformedURLException ex) {
 				errorMessage("Failed to attach dependencies to internal ClassLoader");
 				ex.printStackTrace(System.err);
