@@ -16,7 +16,7 @@
  * along with LibertyBans-env-spigotplugin. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.libertybans.spigot;
+package space.arim.libertybans.env.spigot;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
@@ -52,7 +52,7 @@ public class SpigotPlugin extends JavaPlugin {
 		}
 		Class<?> envClazz;
 		try {
-			envClazz = Class.forName("space.arim.libertybans.spigot.SpigotEnv", true, launchLoader);
+			envClazz = Class.forName("space.arim.libertybans.env.spigot.SpigotEnv", true, launchLoader);
 		} catch (ClassNotFoundException ex) {
 			ex.printStackTrace();
 			setEnabled(false);

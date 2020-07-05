@@ -16,7 +16,7 @@
  * along with LibertyBans-env-spigot. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.spigot;
+package space.arim.libertybans.env.spigot;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

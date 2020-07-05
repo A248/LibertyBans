@@ -1,5 +1,5 @@
 name: ${plugin.name}
-main: ${project.groupId}.spigot.SpigotPlugin
+main: ${project.groupId}.env.spigot.SpigotPlugin
 version: ${plugin.version}
 author: ${plugin.author}
 website: ${plugin.url}

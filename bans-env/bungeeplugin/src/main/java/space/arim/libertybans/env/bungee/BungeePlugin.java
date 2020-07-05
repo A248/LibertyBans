@@ -16,7 +16,7 @@
  * along with LibertyBans-env-bungeeplugin. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU General Public License.
  */
-package space.arim.libertybans.bungee;
+package space.arim.libertybans.env.bungee;
 
 import java.io.File;
 import java.lang.reflect.Field;
