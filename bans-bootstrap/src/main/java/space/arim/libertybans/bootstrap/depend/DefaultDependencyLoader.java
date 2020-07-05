@@ -26,20 +26,17 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 public class DefaultDependencyLoader implements DependencyLoader {
 
 	private Executor executor;
-	private List<Entry<Dependency, Repository>> pairs = new ArrayList<>();
+	private Map<Dependency, Repository> pairs = new HashMap<>();
 	private File outputDir;
 	
 	public DefaultDependencyLoader() {
@@ -54,7 +51,7 @@ public class DefaultDependencyLoader implements DependencyLoader {
 
 	@Override
 	public DependencyLoader addPair(Dependency dependency, Repository repository) {
-		pairs.add(new AbstractMap.SimpleImmutableEntry<>(dependency, repository));
+		pairs.put(dependency, repository);
 		return this;
 	}
 
@@ -76,7 +73,7 @@ public class DefaultDependencyLoader implements DependencyLoader {
 		return CompletableFuture.supplyAsync(() -> {
 			File outputJar = new File(outputDir, dependency.getFullName() + ".jar");
 			if (outputJar.exists()) {
-				return DownloadResult.success(dependency);
+				return DownloadResult.success(outputJar);
 			}
 			String urlPath = repository.getBaseUrl() + '/' + dependency.groupId().replace('.', '/') + '/'
 					+ dependency.artifactId() + '/' + dependency.version() + '/' + dependency.artifactId() + '-'
@@ -85,49 +82,49 @@ public class DefaultDependencyLoader implements DependencyLoader {
 			try {
 				url = new URL(urlPath);
 			} catch (MalformedURLException ex) {
-				return DownloadResult.exception(dependency, ex);
+				return DownloadResult.exception(ex);
 			}
 			byte[] jarBytes;
 			try (InputStream is = url.openStream()) {
 				jarBytes = is.readAllBytes();
 
 			} catch (IOException ex) {
-				return DownloadResult.exception(dependency, ex);
+				return DownloadResult.exception(ex);
 			}
 			MessageDigest md;
 			try {
 				md = MessageDigest.getInstance("SHA-512");
 			} catch (NoSuchAlgorithmException ex) {
-				return DownloadResult.exception(dependency, ex);
+				return DownloadResult.exception(ex);
 			}
 			byte[] actualHash = md.digest(jarBytes);
 			if (!Arrays.equals(actualHash, dependency.getSha512Hash())) {
-				return DownloadResult.hashMismatch(dependency, dependency.getSha512Hash(), actualHash);
+				return DownloadResult.hashMismatch(dependency.getSha512Hash(), actualHash);
 			}
 			try (FileOutputStream fos = new FileOutputStream(outputJar)) {
 				fos.write(jarBytes);
 			} catch (IOException ex) {
-				return DownloadResult.exception(dependency, ex);
+				return DownloadResult.exception(ex);
 			}
-			return DownloadResult.success(dependency);
+			return DownloadResult.success(outputJar);
 		}, executor);
 	}
 
 	@Override
-	public CompletableFuture<Set<DownloadResult>> execute() {
-		Set<CompletableFuture<DownloadResult>> futures = new HashSet<>(pairs.size());
-		for (Entry<Dependency, Repository> pair : pairs) {
-			futures.add(downloadDependency(pair.getKey(), pair.getValue()));
+	public CompletableFuture<Map<Dependency, DownloadResult>> execute() {
+		Map<Dependency, CompletableFuture<DownloadResult>> futures = new HashMap<>(pairs.size());
+		for (Entry<Dependency, Repository> pair : pairs.entrySet()) {
+			futures.put(pair.getKey(), downloadDependency(pair.getKey(), pair.getValue()));
 		}
 		/*
-		 * Now, all we have to do is convert Set<CompletableFuture> to CompletableFuture<Set>
+		 * Now, all we have to do is convert a map with futures to a future of a map
 		 */
-		return CompletableFuture.allOf(futures.toArray(new CompletableFuture[] {})).thenApply((ignore) -> {
+		return CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[] {})).thenApply((ignore) -> {
 
-			Set<DownloadResult> result = new HashSet<>();
-			for (CompletableFuture<DownloadResult> future : futures) {
+			Map<Dependency, DownloadResult> result = new HashMap<>();
+			for (Entry<Dependency, CompletableFuture<DownloadResult>> entry : futures.entrySet()) {
 				// Will not block, because the future must already be complete
-				result.add(future.join());
+				result.put(entry.getKey(), entry.getValue().join());
 			}
 			return result;
 		});
