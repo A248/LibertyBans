@@ -58,6 +58,28 @@ public enum PunishmentType {
 		return (isSingular()) ? "singular" : "multiple";
 	}
 	
+	/**
+	 * Gets a PunishmentType from an ordinal, or {@code null} if no such
+	 * ordinal exists in the enum
+	 * 
+	 * @param ordinal the ordinal, 0, 1, 2, 3
+	 * @return the corresponding punishment type, or {@code null}
+	 */
+	public static PunishmentType fromOrdinal(int ordinal) {
+		switch (ordinal) {
+		case 0:
+			return BAN;
+		case 1:
+			return MUTE;
+		case 2:
+			return WARN;
+		case 3:
+			return KICK;
+		default:
+			return null;
+		}
+	}
+	
 	@Override
 	public String toString() {
 		String name = name();

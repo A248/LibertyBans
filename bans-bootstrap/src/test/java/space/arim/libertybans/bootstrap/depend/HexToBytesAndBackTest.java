@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 
 public class HexToBytesAndBackTest {
 
@@ -36,7 +36,7 @@ public class HexToBytesAndBackTest {
 		return array;
 	}
 	
-	@RepeatedTest(5)
+	@Test
 	public void testConversions() {
 		String asHex = Dependency.bytesToHex(bytes);
 		byte[] backToBytes = Dependency.hexStringToByteArray(asHex);
