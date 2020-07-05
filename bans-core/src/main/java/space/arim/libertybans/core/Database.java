@@ -144,7 +144,7 @@ class Database implements PunishmentDatabase, Part {
 			String val = property.substring(index + 1, property.length());
 			hikariConf.addDataSourceProperty(prop, val);
 		}
-		hikariConf.setPoolName("LibertyBans @ " + core.getEnvironment().hashCode());
+		hikariConf.setPoolName("LibertyBans@" + core.getEnvironment().hashCode());
 		executor = Executors.newFixedThreadPool(threadPoolSize);
 		backend = new HikariPoolSqlBackend(hikariConf);
 
@@ -169,7 +169,7 @@ class Database implements PunishmentDatabase, Part {
 							+ "`uuid` BINARY(16) NOT NULL, "
 							+ "`address` VARBINARY(16) NOT NULL, "
 							+ "`updated` BIGINT NOT NULL, "
-							+ "PRIMARY KEY (`uuid`, `name`))"),
+							+ "PRIMARY KEY (`uuid`, `address`))"),
 					SqlQuery.of("CREATE TABLE IF NOT EXISTS `libertybans_punishments_singular` ("
 							+ "`id` INT AUTO_INCREMENT NOT NULL"
 							+ "`type` " + punishmentTypeInfo + ", "
