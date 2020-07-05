@@ -1,0 +1,17 @@
+storage-backend-mysql: false
+connection-pool:
+  min: 6
+  max: 6
+  threads: 6
+timeouts:
+  connection-timeout-seconds: 20
+  max-lifetime-minutes: 25
+mysql-details:
+  host: localhost
+  port: 3306
+  database: bans
+  user: username
+  password: defaultpass
+connection-properties:
+  - 'serverTimezone=UTC'
+config-version: 1

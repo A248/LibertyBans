@@ -1,0 +1,79 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>space.arim.libertybans</groupId>
+		<artifactId>bans-parent</artifactId>
+		<version>0.1.2-SNAPSHOT</version>
+	</parent>
+	
+	<name>LibertyBans</name>
+	<artifactId>bans-all</artifactId>
+	<description>Shaded combination of LibertyBans API, main plugin classes, and launcher.</description>
+	
+	<build>
+		<sourceDirectory>src/main/java</sourceDirectory>
+		<finalName>${project.name}_v${project.version}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<createDependencyReducedPom>false</createDependencyReducedPom>
+							<artifactSet>
+								<includes>
+									<include>space.arim.libertybans:*</include>
+								</includes>
+							</artifactSet>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<Automatic-Module-Name>space.arim.libertybans</Automatic-Module-Name>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	
+	<dependencies>
+		<dependency>
+			<groupId>space.arim.universal</groupId>
+			<artifactId>universal-agpl</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-bootstrap</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-env-spigotplugin</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-env-bungeeplugin</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+	</dependencies>
+</project>

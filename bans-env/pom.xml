@@ -1,0 +1,62 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>space.arim.libertybans</groupId>
+		<artifactId>bans-parent</artifactId>
+		<version>0.1.1-SNAPSHOT</version>
+	</parent>
+	
+	<artifactId>bans-env</artifactId>
+	<packaging>pom</packaging>
+	
+	<properties>
+		<spigot.version>1.8.8-R0.1-SNAPSHOT</spigot.version>
+		<bungeecord.version>1.15-SNAPSHOT</bungeecord.version>
+		<sponge.version>7.2.0</sponge.version>
+		<velocity.version>1.1.0-SNAPSHOT</velocity.version>
+		
+		<plugin.name>LibertyBans</plugin.name>
+		<plugin.annotationId>libertybans</plugin.annotationId> <!-- Used for @Plugin annotation on Sponge and Velocity -->
+		<plugin.version>${project.version}</plugin.version>
+		<plugin.author>A248</plugin.author>
+		<plugin.url>${project.parent.url}</plugin.url>
+		<plugin.description>${project.description}</plugin.description>
+	</properties>
+	
+	<modules>
+		<module>spigot</module>
+		<module>spigotplugin</module>
+		<module>bungee</module>
+		<module>bungeeplugin</module>
+		<module>sponge</module>
+		<module>velocity</module>
+	</modules>
+	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.spigotmc</groupId>
+				<artifactId>spigot-api</artifactId>
+				<version>${spigot.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.md-5</groupId>
+				<artifactId>bungeecord-api</artifactId>
+				<version>${bungeecord.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.spongepowered</groupId>
+				<artifactId>spongeapi</artifactId>
+				<version>${sponge.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.velocitypowered</groupId>
+				<artifactId>velocity-api</artifactId>
+				<version>${velocity.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+</project>

@@ -1,0 +1,11 @@
+name: ${plugin.name}
+main: ${project.groupId}.env.spigot.SpigotPlugin
+version: ${plugin.version}
+author: ${plugin.author}
+website: ${plugin.url}
+description: ${plugin.description}
+
+commands:
+  libertybans:
+    usage: /libertybans
+    description: LibertyBans main command

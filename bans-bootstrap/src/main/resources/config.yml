@@ -1,0 +1,17 @@
+formatting:
+  permanent-arguments:
+    - 'perm'
+    - 'permanent'
+    - 'permanently'
+  permanent-display: 'Permanently'
+  console-display: 'Console'
+  dates: 'dd/MM/yyyy kk:mm'
+json:
+  enable: true
+  illegal-char: '&cYou may not use this character in commands: |'
+reasons:
+  permit-blank: false
+  default-reason: 'No reason stated.'
+enforcement:
+  address-strictness: 'NORMAL'
+config-version: 1
