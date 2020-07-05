@@ -27,7 +27,7 @@ import static space.arim.libertybans.api.RunState.*;
 
 public abstract class BaseEnvironment {
 
-	private volatile RunState runState;
+	private volatile RunState runState = IDLE;
 	private final Lock runStateLock = new ReentrantLock();
 
 	public RunState getRunState() {
