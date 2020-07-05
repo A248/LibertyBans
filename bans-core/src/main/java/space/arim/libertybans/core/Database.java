@@ -144,7 +144,7 @@ class Database implements PunishmentDatabase, Part {
 			String val = property.substring(index + 1, property.length());
 			hikariConf.addDataSourceProperty(prop, val);
 		}
-		hikariConf.setPoolName("LibertyBans@" + core.getEnvironment().hashCode());
+		hikariConf.setPoolName("Liberty@" + core.getEnvironment().hashCode());
 		executor = Executors.newFixedThreadPool(threadPoolSize);
 		backend = new HikariPoolSqlBackend(hikariConf);
 

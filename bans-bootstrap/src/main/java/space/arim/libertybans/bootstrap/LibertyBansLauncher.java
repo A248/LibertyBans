@@ -51,7 +51,7 @@ public class LibertyBansLauncher {
 		addApiDeps(apiDepLoader);
 		addInternalDeps(internalDepLoader);
 
-		launcher = new BootstrapLauncher("LibertyBans", (URLClassLoader) ownClassLoader, apiDepLoader, internalDepLoader);
+		launcher = new BootstrapLauncher("Liberty@" + hashCode(), (URLClassLoader) ownClassLoader, apiDepLoader, internalDepLoader);
 	}
 	
 	private static Class<?> forName(String clazzname) {
