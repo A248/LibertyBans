@@ -34,7 +34,7 @@ public class Commands {
 
 	private final LibertyBansCore core;
 	
-	// Here for convenience
+	// Cached for convenience
 	private final Config config;
 	private final Config messages;
 	
@@ -122,10 +122,10 @@ public class Commands {
 			if (punishment == null) {
 				return;
 			}
-			sender.sendMessage(core.getConfigs()
+			sender.sendMessage(core.getFormatter()
 					.formatWithPunishment(messages.getString("additions.bans.successful.message"), punishment));
 			core.getEnvironment().enforcePunishment(punishment);
-			core.getEnvironment().sendToThoseWithPermission("libertybans.ban.notify", core.getConfigs()
+			core.getEnvironment().sendToThoseWithPermission("libertybans.ban.notify", core.getFormatter()
 					.formatWithPunishment(messages.getString("addition.bans.successful.notification"), punishment));
 		});
 	}
@@ -157,9 +157,9 @@ public class Commands {
 			if (punishment == null) {
 				return;
 			}
-			sender.sendMessage(core.getConfigs()
+			sender.sendMessage(core.getFormatter()
 					.formatWithPunishment(messages.getString("removals.bans.successful.message"), punishment));
-			core.getEnvironment().sendToThoseWithPermission("libertybans.ban.unnotify", core.getConfigs()
+			core.getEnvironment().sendToThoseWithPermission("libertybans.ban.unnotify", core.getFormatter()
 					.formatWithPunishment(messages.getString("removals.bans.successful.notification"), punishment));
 		});
 	}
