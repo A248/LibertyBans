@@ -48,7 +48,7 @@ public class ConnectionListener implements Listener {
 				return;
 			}
 			evt.setCancelled(true);
-			evt.setCancelReason(TextComponent.fromLegacyText(env.core.getConfigs().getPunishmentMessage(punishment)));
+			evt.setCancelReason(TextComponent.fromLegacyText(env.core.getFormatter().getPunishmentMessage(punishment)));
 			evt.completeIntent(env.plugin);
 		});
 	}
