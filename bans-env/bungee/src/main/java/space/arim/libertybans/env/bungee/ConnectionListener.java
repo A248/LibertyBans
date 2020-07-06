@@ -44,11 +44,10 @@ public class ConnectionListener implements Listener {
 		byte[] address = ((InetSocketAddress) conn.getSocketAddress()).getAddress().getAddress();
 		env.core.getUUIDMaster().addCache(uuid, name);
 		env.core.getSelector().executeAndCheckConnection(uuid, name, address).thenAccept((punishment) -> {
-			if (punishment == null) {
-				return;
+			if (punishment != null) {
+				evt.setCancelled(true);
+				evt.setCancelReason(TextComponent.fromLegacyText(env.core.getFormatter().getPunishmentMessage(punishment)));
 			}
-			evt.setCancelled(true);
-			evt.setCancelReason(TextComponent.fromLegacyText(env.core.getFormatter().getPunishmentMessage(punishment)));
 			evt.completeIntent(env.plugin);
 		});
 	}
