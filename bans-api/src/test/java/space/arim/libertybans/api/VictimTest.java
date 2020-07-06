@@ -18,41 +18,19 @@
  */
 package space.arim.libertybans.api;
 
-public class Victim {
-	
-	private final VictimType type;
-	
-	Victim(VictimType type) {
-		this.type = type;
-	}
-	
-	public VictimType getType() {
-		return type;
-	}
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-	public enum VictimType {
-		
-		PLAYER,
-		ADDRESS;
-		
-		/**
-		 * Gets a VictimType from an ordinal, or {@code null} if no such
-		 * ordinal exists in the enum
-		 * 
-		 * @param ordinal the ordinal, 0 or 1
-		 * @return the corresponding victim type, or {@code null}
-		 */
-		public static VictimType fromOrdinal(int ordinal) {
-			switch (ordinal) {
-			case 0:
-				return PLAYER;
-			case 1:
-				return ADDRESS;
-			default:
-				return null;
-			}
+import org.junit.jupiter.api.Test;
+
+import space.arim.libertybans.api.Victim.VictimType;
+
+public class VictimTest {
+
+	@Test
+	public void testVictimTypeOrdinals() {
+		for (VictimType type : VictimType.values()) {
+			assertEquals(type, VictimType.fromOrdinal(type.ordinal()));
 		}
-		
 	}
 	
 }
