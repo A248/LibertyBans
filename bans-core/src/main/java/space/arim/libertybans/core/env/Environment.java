@@ -18,13 +18,19 @@
  */
 package space.arim.libertybans.core.env;
 
-import space.arim.libertybans.api.Punishment;
+import java.util.Set;
+import java.util.UUID;
+
+import space.arim.universal.util.concurrent.CentralisedFuture;
+
 import space.arim.libertybans.core.Part;
 
 public interface Environment extends Part {
 	
 	void sendToThoseWithPermission(String permission, String message);
 	
-	void enforcePunishment(Punishment punishment);
+	void kickByUUID(UUID uuid, String message);
+	
+	CentralisedFuture<Set<OnlineTarget>> getOnlineTargets();
 	
 }

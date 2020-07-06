@@ -19,9 +19,9 @@
 package space.arim.libertybans.env.bungee;
 
 import java.io.File;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -30,7 +30,7 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.Plugin;
 
-import space.arim.universal.util.ThisClass;
+import space.arim.universal.util.concurrent.CentralisedFuture;
 
 import space.arim.uuidvault.api.UUIDVault;
 import space.arim.uuidvault.plugin.bungee.UUIDVaultBungee;
@@ -39,13 +39,11 @@ import space.arim.api.chat.MessageParserUtil;
 import space.arim.api.env.BungeeComponentParser;
 import space.arim.api.env.convention.BungeePlatformConvention;
 
-import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.Punishment;
-import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
 import space.arim.libertybans.core.env.AbstractEnv;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.env.OnlineTarget;
 
 public class BungeeEnv extends AbstractEnv {
 
@@ -54,8 +52,6 @@ public class BungeeEnv extends AbstractEnv {
 	
 	private final Command command;
 	private final ConnectionListener listener;
-	
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
 	public BungeeEnv(Plugin plugin, File folder) {
 		this.plugin = plugin;
@@ -86,7 +82,7 @@ public class BungeeEnv extends AbstractEnv {
 	public void sendToThoseWithPermission(String permission, String jsonable) {
 		BaseComponent[] comps;
 		BungeeComponentParser parser = new BungeeComponentParser();
-		if (useJson()) {
+		if (core.getFormatter().isUseJson()) {
 			comps = parser.parseJson(jsonable);
 		} else {
 			comps = parser.colour(jsonable);
@@ -97,38 +93,29 @@ public class BungeeEnv extends AbstractEnv {
 			}
 		}
 	}
-
+	
 	@Override
-	public void enforcePunishment(Punishment punishment) {
-		logger.debug("Enforcing {}", punishment);
-		String message = core.getFormatter().getPunishmentMessage(punishment);
-		PunishmentType type = punishment.getType();
-		switch (type) {
-		case BAN:
-		case KICK:
-			ProxiedPlayer player = plugin.getProxy().getPlayer(((PlayerVictim) punishment.getVictim()).getUUID());
-			if (player != null) {
-				player.disconnect(TextComponent.fromLegacyText(message));
-			}
-			break;
-		case MUTE:
-			break;
-		case WARN:
-			break;
-		default:
-			throw new IllegalStateException("Unknown punishment type " + type);
+	public void kickByUUID(UUID uuid, String message) {
+		ProxiedPlayer player = plugin.getProxy().getPlayer(uuid);
+		if (player != null) {
+			player.disconnect(TextComponent.fromLegacyText(message));
 		}
 	}
-	
-	private boolean useJson() {
-		return core.getConfigs().getMessages().getBoolean("json.enable");
+
+	@Override
+	public CentralisedFuture<Set<OnlineTarget>> getOnlineTargets() {
+		Set<OnlineTarget> result = new HashSet<>();
+		for (ProxiedPlayer player : plugin.getProxy().getPlayers()) {
+			result.add(new BungeeOnlineTarget(player));
+		}
+		return core.getFuturesFactory().completedFuture(result);
 	}
 	
 	void sendJson(CommandSender sender, String jsonable) {
 		BungeeComponentParser parser = new BungeeComponentParser();
 		if (sender instanceof ProxiedPlayer) {
 			ProxiedPlayer player = (ProxiedPlayer) sender;
-			if (useJson()) {
+			if (core.getFormatter().isUseJson()) {
 				player.sendMessage(parser.parseJson(jsonable));
 			} else {
 				player.sendMessage(parser.colour(jsonable));

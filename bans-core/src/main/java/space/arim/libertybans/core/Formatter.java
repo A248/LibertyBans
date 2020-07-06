@@ -48,6 +48,10 @@ public class Formatter {
 		this.core = core;
 	}
 	
+	public boolean isUseJson() {
+		return core.getConfigs().getMessages().getBoolean("json.enable");
+	}
+	
 	public String getPunishmentMessage(Punishment punishment) {
 		String path;
 		switch (punishment.getType()) {

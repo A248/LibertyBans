@@ -18,12 +18,16 @@
  */
 package space.arim.libertybans.core.env;
 
-import space.arim.libertybans.api.Victim;
+import java.util.UUID;
 
-public interface PotentialTarget {
-
-	Victim getPotentialVictim();
+public interface OnlineTarget {
 	
 	boolean hasPermission(String permission);
+	
+	UUID getUniqueId();
+	
+	byte[] getAddress();
+	
+	void kick(String message);
 	
 }
