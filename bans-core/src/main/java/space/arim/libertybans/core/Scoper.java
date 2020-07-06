@@ -59,8 +59,8 @@ public class Scoper implements ScopeManager {
 		 * @return a scope applying to the server
 		 */
 		static Scope of(String server) {
-			if (server.length() > 16) {
-				throw new IllegalArgumentException("Server must be 16 or less chars");
+			if (server.length() > 32) {
+				throw new IllegalArgumentException("Server must be 32 or less chars");
 			}
 			return new ScopeImpl(Objects.requireNonNull(server, "Server must not be null"));
 		}

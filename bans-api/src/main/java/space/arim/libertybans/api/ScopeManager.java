@@ -27,10 +27,12 @@ package space.arim.libertybans.api;
 public interface ScopeManager {
 
 	/**
-	 * Gets a scope applying to a specific server
+	 * Gets a scope applying to a specific server. The input must not be longer than
+	 * 32 characters.
 	 * 
 	 * @param server the server
 	 * @return a scope applying to the server
+	 * @throws IllegalArgumentException if <code>server.length()</code> > 32
 	 */
 	Scope specificScope(String server);
 	
