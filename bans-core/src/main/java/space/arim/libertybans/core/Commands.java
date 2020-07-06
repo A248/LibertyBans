@@ -124,7 +124,7 @@ public class Commands {
 			}
 			sender.sendMessage(core.getFormatter()
 					.formatWithPunishment(messages.getString("additions.bans.successful.message"), punishment));
-			core.getEnvironment().enforcePunishment(punishment);
+			core.getEnforcer().enforce(punishment);
 			core.getEnvironment().sendToThoseWithPermission("libertybans.ban.notify", core.getFormatter()
 					.formatWithPunishment(messages.getString("addition.bans.successful.notification"), punishment));
 		});

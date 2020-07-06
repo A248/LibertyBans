@@ -35,6 +35,8 @@ public interface LibertyBans {
 	
 	PunishmentEnactor getEnactor();
 	
+	PunishmentEnforcer getEnforcer();
+	
 	ScopeManager getScopeManager();
 	
 }

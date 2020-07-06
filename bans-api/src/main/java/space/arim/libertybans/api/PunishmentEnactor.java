@@ -20,12 +20,22 @@ package space.arim.libertybans.api;
 
 import space.arim.universal.util.concurrent.CentralisedFuture;
 
+/**
+ * Guardkeeper of adding punishments while enforcing constraints and reporting such enforcement.
+ * For example, one victim cannot have more than 1 ban.
+ * 
+ * @author A248
+ *
+ */
 public interface PunishmentEnactor {
 	
 	/**
 	 * Enacts a punishment, adding it to the database. <br>
 	 * If the punishment type is a ban or mute, and there is already a ban or mute for the user,
-	 * the future will yield {@code null}.
+	 * the future will yield {@code null}. <br>
+	 * <br>
+	 * Assuming the caller wants the punishment to be enforced, {@link PunishmentEnforcer#enforce(Punishment)}
+	 * should be called after enaction.
 	 * 
 	 * @param draftPunishment the draft punishment to enact
 	 * @return a centralised future which yields the punishment or {@code null} if there was a conflict
@@ -40,14 +50,5 @@ public interface PunishmentEnactor {
 	 * @return a centralised future which yields {@code true} if the punishment existing and was removed, {@code false} otherwise
 	 */
 	CentralisedFuture<Boolean> undoPunishment(Punishment punishment);
-	
-	/**
-	 * Enforces a punishment. For example, a kick will kick the player. A mute will prevent the player from further chatting. <br>
-	 * This should be called after {@link #enactPunishment(DraftPunishment)} assuming the caller wants the punishment to be
-	 * enforced.
-	 * 
-	 * @param punishment the punishment to begin enforcing
-	 */
-	void enforcePunishment(Punishment punishment);
 	
 }

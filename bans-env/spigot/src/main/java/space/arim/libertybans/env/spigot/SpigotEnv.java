@@ -19,14 +19,20 @@
 package space.arim.libertybans.env.spigot;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import net.md_5.bungee.api.chat.BaseComponent;
+
+import space.arim.universal.util.concurrent.CentralisedFuture;
 
 import space.arim.uuidvault.api.UUIDVault;
 import space.arim.uuidvault.plugin.spigot.UUIDVaultSpigot;
@@ -35,11 +41,11 @@ import space.arim.api.chat.MessageParserUtil;
 import space.arim.api.env.BungeeComponentParser;
 import space.arim.api.env.convention.SpigotPlatformConvention;
 
-import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
 import space.arim.libertybans.core.env.AbstractEnv;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.env.OnlineTarget;
 
 public class SpigotEnv extends AbstractEnv {
 
@@ -64,9 +70,8 @@ public class SpigotEnv extends AbstractEnv {
 	@Override
 	public void sendToThoseWithPermission(String permission, String message) {
 		Consumer<Player> forEach;
-		if (useJson()) {
-			BungeeComponentParser parser = new BungeeComponentParser();
-			BaseComponent[] parsed = parser.parseJson(message);
+		if (core.getFormatter().isUseJson()) {
+			BaseComponent[] parsed = new BungeeComponentParser().parseJson(message);
 			forEach = (player) -> player.spigot().sendMessage(parsed);
 		} else {
 			forEach = (player) -> player.sendMessage(message);
@@ -78,15 +83,11 @@ public class SpigotEnv extends AbstractEnv {
 		}
 	}
 	
-	private boolean useJson() {
-		return core.getConfigs().getMessages().getBoolean("json.enable");
-	}
-	
 	void sendJson(CommandSender sender, String jsonable) {
 		BungeeComponentParser parser = new BungeeComponentParser();
 		if (sender instanceof Player) {
 			Player player = (Player) sender;
-			if (useJson()) {
+			if (core.getFormatter().isUseJson()) {
 				player.spigot().sendMessage(parser.parseJson(jsonable));
 			} else {
 				player.sendMessage(jsonable);
@@ -94,10 +95,6 @@ public class SpigotEnv extends AbstractEnv {
 		} else {
 			sender.sendMessage(new MessageParserUtil().removeRawJson(jsonable));
 		}
-	}
-
-	@Override
-	public void enforcePunishment(Punishment punishment) {
 	}
 
 	@Override
@@ -126,6 +123,32 @@ public class SpigotEnv extends AbstractEnv {
 	@Override
 	protected void infoMessage(String message) {
 		plugin.getLogger().info(message);
+	}
+
+	@Override
+	public void kickByUUID(UUID uuid, String message) {
+		core.getFuturesFactory().executeSync(() -> {
+			Player player = plugin.getServer().getPlayer(uuid);
+			if (player != null) {
+				player.kickPlayer(ChatColor.translateAlternateColorCodes('&', message));
+			}
+		});
+	}
+	
+	boolean hasPermissionSafe(Player player, String permission) {
+		// TODO: Account for non-thread safe permission plugins
+		return player.hasPermission(permission);
+	}
+
+	@Override
+	public CentralisedFuture<Set<OnlineTarget>> getOnlineTargets() {
+		return core.getFuturesFactory().supplySync(() -> {
+			Set<OnlineTarget> result = new HashSet<>();
+			for (Player player : plugin.getServer().getOnlinePlayers()) {
+				result.add(new SpigotOnlineTarget(this, player));
+			}
+			return result;
+		});
 	}
 	
 }

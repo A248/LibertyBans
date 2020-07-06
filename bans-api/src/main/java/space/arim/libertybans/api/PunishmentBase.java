@@ -62,14 +62,15 @@ public interface PunishmentBase {
 	Scope getScope();
 	
 	/**
-	 * Gets the start time, in unix milliseconds, of the punishment
+	 * Gets the start time, in unix seconds, of the punishment
 	 * 
 	 * @return the start time
 	 */
 	long getStart();
 	
 	/**
-	 * Gets the end time, in unix milliseconds, of the punishment
+	 * Gets the end time, in unix seconds, of the punishment. <br>
+	 * 0 represents a permanent punishment.
 	 * 
 	 * @return the end time
 	 */

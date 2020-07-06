@@ -181,10 +181,5 @@ class Enactor implements PunishmentEnactor {
 	long getEndFromResult(ResultSet rs) throws SQLException {
 		return rs.getLong("end");
 	}
-	
-	@Override
-	public void enforcePunishment(Punishment punishment) {
-		core.getEnvironment().enforcePunishment(punishment);
-	}
 
 }

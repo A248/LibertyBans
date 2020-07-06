@@ -34,13 +34,6 @@ public interface Punishment extends PunishmentBase {
 	int getID();
 	
 	/**
-	 * Whether this punishment has been overturned before it expired
-	 * 
-	 * @return true if undone, false otherwise
-	 */
-	boolean isUndone();
-	
-	/**
 	 * Whether this punishment is equal to another. Implementations
 	 * need only check {@link #getID()} since IDs must always be unique.
 	 * 

@@ -43,6 +43,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 	private final Database database;
 	private final Selector selector;
 	private final Enactor enactor;
+	private final Enforcer enforcer;
 	private final Scoper scoper;
 	
 	private final UUIDMaster uuidMaster;
@@ -61,11 +62,13 @@ public class LibertyBansCore implements LibertyBans, Part {
 		database = new Database(this);
 		selector = new Selector(this);
 		enactor = new Enactor(this);
+		enforcer = new Enforcer(this);
+		scoper = new Scoper();
+
 		uuidMaster = new UUIDMaster(this);
 		configs = new Configs(this);
 		formatter = new Formatter(this);
 		commands = new Commands(this);
-		scoper = new Scoper();
 	}
 	
 	@Override
@@ -118,6 +121,11 @@ public class LibertyBansCore implements LibertyBans, Part {
 	@Override
 	public Enactor getEnactor() {
 		return enactor;
+	}
+	
+	@Override
+	public Enforcer getEnforcer() {
+		return enforcer;
 	}
 	
 	@Override
