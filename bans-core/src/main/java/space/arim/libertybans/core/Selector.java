@@ -154,7 +154,7 @@ public class Selector implements PunishmentSelector, Part {
 			builder.append("`undone` = FALSE AND (`end` = -1 OR `end` > ?)");
 			params.add(System.currentTimeMillis());
 		}
-		return new AbstractMap.SimpleImmutableEntry<>(builder, params.toArray(new Object[] {}));
+		return new AbstractMap.SimpleImmutableEntry<>(builder, params.toArray());
 	}
 	
 	private SecurePunishment fromResultSetAndSelection(ResultSet rs, PunishmentSelection selection) throws SQLException {
