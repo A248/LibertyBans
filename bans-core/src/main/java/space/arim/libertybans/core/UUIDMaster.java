@@ -152,7 +152,7 @@ public class UUIDMaster implements Part {
 			for (Map.Entry<UUID, String> entry : fastCache.asMap().entrySet()) {
 				if (entry.getValue().equalsIgnoreCase(name)) {
 					UUID uuid = entry.getKey();
-					fastCache.getIfPresent(uuid); // manual cache refresh
+					// No need for manual cache refresh, because we do so in #fullXXXLookup
 					return uuid;
 				}
 			}
