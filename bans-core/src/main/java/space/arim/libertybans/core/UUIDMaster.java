@@ -20,6 +20,7 @@ package space.arim.libertybans.core;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -40,11 +41,12 @@ import space.arim.uuidvault.api.UUIDVaultRegistration;
 
 import space.arim.api.env.PlatformPluginInfo;
 
-public class UUIDMaster implements UUIDResolver, Part {
+public class UUIDMaster implements Part {
 
 	private final LibertyBansCore core;
 	
 	private final Cache<UUID, String> fastCache = Caffeine.newBuilder().expireAfterAccess(20L, TimeUnit.SECONDS).build();
+	private final UUIDResolver resolver;
 	
 	private volatile UUIDVaultRegistration uvr;
 	
@@ -52,13 +54,13 @@ public class UUIDMaster implements UUIDResolver, Part {
 	
 	UUIDMaster(LibertyBansCore core) {
 		this.core = core;
+		resolver = new ResolverImpl(core, fastCache);
 	}
 	
 	@Override
 	public void startup() {
-		uvr = UUIDVault.get().register(this,
-				core.getRegistry().getProvider(PlatformPluginInfo.class).getPlugin().getClass(), (byte) 0,
-				"LibertyBans");
+		Class<?> pluginClass = core.getRegistry().getProvider(PlatformPluginInfo.class).getPlugin().getClass();
+		uvr = UUIDVault.get().register(resolver, pluginClass, (byte) 0, "LibertyBans");
 	}
 	
 	@Override
@@ -77,7 +79,9 @@ public class UUIDMaster implements UUIDResolver, Part {
 			}
 			return UUIDVault.get().resolve(name);
 		}).thenApply((uuid) -> {
-			fastCache.put(uuid, name);
+			if (uuid != null) {
+				fastCache.put(uuid, name);
+			}
 			return uuid;
 		});
 	}
@@ -89,7 +93,9 @@ public class UUIDMaster implements UUIDResolver, Part {
 			}
 			return UUIDVault.get().resolve(uuid);
 		}).thenApply((name) -> {
-			fastCache.put(uuid, name);
+			if (name != null) {
+				fastCache.put(uuid, name);
+			}
 			return name;
 		});
 	}
@@ -100,44 +106,64 @@ public class UUIDMaster implements UUIDResolver, Part {
 	 * 
 	 */
 	
-	@Override
-	public CentralisedFuture<UUID> resolve(String name) {
-		return core.getDatabase().selectAsync(() -> {
-			try (ResultSet rs = core.getDatabase().getBackend().select(
-					"SELECT `uuid` FROM `libertybans_names` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
-				if (rs.next()) {
-					return UUIDUtil.fromByteArray(rs.getBytes("uuid"));
+	private static class ResolverImpl implements UUIDResolver {
+		
+		private final LibertyBansCore core;
+		private final Cache<UUID, String> fastCache;
+		
+		ResolverImpl(LibertyBansCore core, Cache<UUID, String> fastCache) {
+			this.core = core;
+			this.fastCache = fastCache;
+		}
+		
+		@Override
+		public CentralisedFuture<UUID> resolve(String name) {
+			return core.getDatabase().selectAsync(() -> {
+				try (ResultSet rs = core.getDatabase().getBackend().select(
+						"SELECT `uuid` FROM `libertybans_names` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
+					if (rs.next()) {
+						return UUIDUtil.fromByteArray(rs.getBytes("uuid"));
+					}
+				} catch (SQLException ex) {
+					logger.warn("Could not resolve name {}", name, ex);
 				}
-			} catch (SQLException ex) {
-				logger.warn("Could not resolve name {}", name, ex);
+				return null;
+			});
+		}
+
+		@Override
+		public CentralisedFuture<String> resolve(UUID uuid) {
+			return core.getDatabase().selectAsync(() -> {
+				try (ResultSet rs = core.getDatabase().getBackend().select(
+						"SELECT `name` FROM `libertybans_names` WHERE `uuid` = ? ORDER BY `updated` DESC LIMIT 1", UUIDUtil.toByteArray(uuid))) {
+					if (rs.next()) {
+						return rs.getString("name");
+					}
+				} catch (SQLException ex) {
+					logger.warn("Could not resolve uuid {}", uuid, ex);
+				}
+				return null;
+			});
+		}
+
+		@Override
+		public UUID resolveImmediately(String name) {
+			// Caffeine specifies that operations on the entry set do not refresh the expiration timer
+			for (Map.Entry<UUID, String> entry : fastCache.asMap().entrySet()) {
+				if (entry.getValue().equalsIgnoreCase(name)) {
+					UUID uuid = entry.getKey();
+					// No need for manual cache refresh, because we do so in #fullXXXLookup
+					return uuid;
+				}
 			}
 			return null;
-		});
-	}
+		}
 
-	@Override
-	public CentralisedFuture<String> resolve(UUID uuid) {
-		return core.getDatabase().selectAsync(() -> {
-			try (ResultSet rs = core.getDatabase().getBackend().select(
-					"SELECT `name` FROM `libertybans_names` WHERE `uuid` = ? ORDER BY `updated` DESC LIMIT 1", UUIDUtil.toByteArray(uuid))) {
-				if (rs.next()) {
-					return rs.getString("name");
-				}
-			} catch (SQLException ex) {
-				logger.warn("Could not resolve uuid {}", uuid, ex);
-			}
-			return null;
-		});
-	}
-
-	@Override
-	public UUID resolveImmediately(String name) { 
-		return null;
-	}
-
-	@Override
-	public String resolveImmediately(UUID uuid) {
-		return fastCache.getIfPresent(uuid);
+		@Override
+		public String resolveImmediately(UUID uuid) {
+			return fastCache.getIfPresent(uuid);
+		}
+		
 	}
 	
 }

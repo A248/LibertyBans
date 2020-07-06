@@ -43,7 +43,7 @@ public class ConnectionListener implements Listener {
 		if (punishment == null) {
 			return;
 		}
-		String message = env.core.getConfigs().getPunishmentMessage(punishment);
+		String message = env.core.getFormatter().getPunishmentMessage(punishment);
 		evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, message);
 	}
 	

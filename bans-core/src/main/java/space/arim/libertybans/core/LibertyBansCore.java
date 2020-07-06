@@ -47,6 +47,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 	
 	private final UUIDMaster uuidMaster;
 	private final Configs configs;
+	private final Formatter formatter;
 	private final Commands commands;
 	
 	private Listener unregistrationListener;
@@ -62,6 +63,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 		enactor = new Enactor(this);
 		uuidMaster = new UUIDMaster(this);
 		configs = new Configs(this);
+		formatter = new Formatter(this);
 		commands = new Commands(this);
 		scoper = new Scoper();
 	}
@@ -129,6 +131,10 @@ public class LibertyBansCore implements LibertyBans, Part {
 	
 	public Configs getConfigs() {
 		return configs;
+	}
+	
+	public Formatter getFormatter() {
+		return formatter;
 	}
 	
 	public Commands getCommands() {

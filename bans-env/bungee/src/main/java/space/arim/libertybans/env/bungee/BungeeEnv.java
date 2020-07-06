@@ -101,7 +101,7 @@ public class BungeeEnv extends AbstractEnv {
 	@Override
 	public void enforcePunishment(Punishment punishment) {
 		logger.debug("Enforcing {}", punishment);
-		String message = core.getConfigs().getPunishmentMessage(punishment);
+		String message = core.getFormatter().getPunishmentMessage(punishment);
 		PunishmentType type = punishment.getType();
 		switch (type) {
 		case BAN:
