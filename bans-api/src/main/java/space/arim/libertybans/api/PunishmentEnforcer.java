@@ -18,25 +18,24 @@
  */
 package space.arim.libertybans.api;
 
-import space.arim.universal.registry.Registry;
-import space.arim.universal.util.concurrent.FactoryOfTheFuture;
+/**
+ * Enforcer of punishments
+ * 
+ * @author A248
+ *
+ */
+public interface PunishmentEnforcer {
 
-public interface LibertyBans {
-
-	RunState getRunState();
-	
-	Registry getRegistry();
-	
-	FactoryOfTheFuture getFuturesFactory();
-	
-	PunishmentDatabase getDatabase();
-	
-	PunishmentSelector getSelector();
-	
-	PunishmentEnactor getEnactor();
-	
-	PunishmentEnforcer getEnforcer();
-	
-	ScopeManager getScopeManager();
+	/**
+	 * Enforces a punishment. <br>
+	 * <br>
+	 * For bans and mutes, this will kick players matching the punishment's
+	 * victim. For mutes and warn, the players will be sent a warning message. <br>
+	 * Additionally for mutes, the player will be unable to chat (depending on the implementation)
+	 * until the mute cache expires, at which point the database is re-queried for a mute.
+	 * 
+	 * @param punishment the punishment to enforce
+	 */
+	void enforce(Punishment punishment);
 	
 }
