@@ -41,17 +41,7 @@
 	<repositories>
 		<repository>
 			<id>velocity</id>
-			<url>https://repo.velocitypowered.com/snapshots/</url>
-		</repository>
-		<!-- Velocity has transitive repository requirements on minecraft-libraries AND sponge-repo -->
-		<!-- See https://github.com/VelocityPowered/Velocity/issues/257 -->
-		<repository>
-			<id>minecraft-libraries</id>
-			<url>https://libraries.minecraft.net/</url>
-		</repository>
-		<repository>
-			<id>sponge-repo</id>
-			<url>https://repo.spongepowered.org/maven</url>
+			<url>https://nexus.velocitypowered.com/repository/maven-public/</url>
 		</repository>
 	</repositories>
 </project>
