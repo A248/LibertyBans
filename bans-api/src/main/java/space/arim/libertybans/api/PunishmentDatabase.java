@@ -22,10 +22,39 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.Executor;
 
+/**
+ * Access to the raw database. <b>Use of this should be avoided at great cost. Executing SQL queries
+ * is not considered API. </b> <br>
+ * <br>
+ * The majority of users should never touch this directly. Instead, {@link PunishmentSelector} provides
+ * predicate, error-free specifications using stable API. {@code PunishmentSelector} may be used to retrieve
+ * punishments with all sorts of details from the database.
+ * 
+ * @author A248
+ *
+ */
 public interface PunishmentDatabase {
 
+	/**
+	 * Gets a connection from the LibertyBans connection pool. <b>Use of this should be avoided at great cost.
+	 * Executing SQL queries is not considered API. </b> <br>
+	 * <br>
+	 * The only API guarantee with respect to executing API queries is that the table {@code libertybans_revision}
+	 * will contain a single row whose {@code revision} column indicates the data format LibertyBans maintains.
+	 * It is guaranteed that whenever the table definitions change, this {@code revision} will be incremented.
+	 * 
+	 * @return a connection from the plugin pool
+	 * @throws SQLException as relayed from JDBC
+	 */
 	Connection getConnection() throws SQLException;
 	
+	/**
+	 * Gets the executor used by LibertyBans to execute queries. Typically, this executor
+	 * has the same amount of threads as there are connections in the pool, making it
+	 * a fine complement to executing queries.
+	 * 
+	 * @return
+	 */
 	Executor getExecutor();
 	
 }
