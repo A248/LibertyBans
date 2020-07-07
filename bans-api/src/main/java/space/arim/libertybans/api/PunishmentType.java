@@ -49,16 +49,6 @@ public enum PunishmentType {
 	}
 	
 	/**
-	 * Returns "singular" if {@link #isSingular()} is true,
-	 * else "multiple"
-	 * 
-	 * @return "singular" if this type is singular, "multiple" otherwise
-	 */
-	public String getSingularity() {
-		return (isSingular()) ? "singular" : "multiple";
-	}
-	
-	/**
 	 * Gets a PunishmentType from an ordinal, or {@code null} if no such
 	 * ordinal exists in the enum
 	 * 
