@@ -24,14 +24,12 @@ public final class PunishmentSelection {
 	private final Victim victim;
 	private final Operator operator;
 	private final Scope scope;
-	private final boolean selectOnlyActive;
 	
-	public PunishmentSelection(PunishmentType type, Victim victim, Operator operator, Scope scope, boolean selectOnlyActive) {
+	public PunishmentSelection(PunishmentType type, Victim victim, Operator operator, Scope scope) {
 		this.type = type;
 		this.victim = victim;
 		this.operator = operator;
 		this.scope = scope;
-		this.selectOnlyActive = selectOnlyActive;
 	}
 	
 	public PunishmentType getType() {
@@ -50,17 +48,12 @@ public final class PunishmentSelection {
 		return scope;
 	}
 	
-	public boolean isSelectOnlyActive() {
-		return selectOnlyActive;
-	}
-	
 	public static class Builder {
 		
 		private PunishmentType type;
 		private Victim victim;
 		private Operator operator;
 		private Scope scope;
-		private boolean selectOnlyActive;
 		
 		public Builder type(PunishmentType type) {
 			this.type = type;
@@ -82,18 +75,8 @@ public final class PunishmentSelection {
 			return this;
 		}
 		
-		public Builder selectOnlyActive() {
-			selectOnlyActive = true;
-			return this;
-		}
-		
-		public Builder selectAll() {
-			selectOnlyActive = false;
-			return this;
-		}
-		
 		public PunishmentSelection build() {
-			return new PunishmentSelection(type, victim, operator, scope, selectOnlyActive);
+			return new PunishmentSelection(type, victim, operator, scope);
 		}
 		
 	}
