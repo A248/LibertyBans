@@ -18,6 +18,8 @@
  */
 package space.arim.libertybans.api;
 
+import java.util.Locale;
+
 /**
  * The type of a punishment
  * 
@@ -46,6 +48,24 @@ public enum PunishmentType {
 	 */
 	public boolean isSingular() {
 		return singular;
+	}
+	
+	/**
+	 * Shortcut for {@link #name()} lowercased using the english locale
+	 * 
+	 * @return the lowercased name
+	 */
+	public String getLowercaseName() {
+		return name().toLowerCase(Locale.ENGLISH);
+	}
+	
+	/**
+	 * Shortcut for <code>getLowercaseName() + 's'</code>
+	 * 
+	 * @return the lowercased name with 's' appended
+	 */
+	public String getLowercaseNamePlural() {
+		return getLowercaseName() + 's';
 	}
 	
 	/**

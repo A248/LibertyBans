@@ -53,7 +53,17 @@ public abstract class BaseEnvironment {
 	private void timedStartup() {
 		infoMessage("Starting...");
 		long startTime = System.nanoTime();
-		startup0();
+		try {
+			startup0();
+		} catch (StartupException failure) {
+			infoMessage("Startup failed: " + failure.getMessage());
+			Throwable cause = failure.getCause();
+			if (cause != null) {
+				infoMessage("Extended failure cause:");
+				cause.printStackTrace(System.err);
+			}
+			return;
+		}
 		long endTime = System.nanoTime();
 		double millis = (TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS)) / 1_000D;
 		infoMessage(String.format("Started up in %.3f seconds", millis));
@@ -101,7 +111,17 @@ public abstract class BaseEnvironment {
 	private void timedStop() {
 		infoMessage("Stopping...");
 		long startTime = System.nanoTime();
-		shutdown0();
+		try {
+			shutdown0();
+		} catch (ShutdownException failure) {
+			infoMessage("Shutdown failed: " + failure.getMessage());
+			Throwable cause = failure.getCause();
+			if (cause != null) {
+				infoMessage("Extended failure cause:");
+				cause.printStackTrace(System.err);
+			}
+			return;
+		}
 		long endTime = System.nanoTime();
 		double millis = TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS) / 1_000D;
 		infoMessage(String.format("Shut down in %.3f seconds", millis));
