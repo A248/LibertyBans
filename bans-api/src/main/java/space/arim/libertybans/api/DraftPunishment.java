@@ -43,7 +43,7 @@ public final class DraftPunishment extends AbstractPunishment {
 		private Operator operator;
 		private String reason;
 		private Scope scope;
-		private long start;
+		private Long start;
 		private long end = -1L;
 		
 		/**
@@ -110,9 +110,13 @@ public final class DraftPunishment extends AbstractPunishment {
 		}
 		
 		/**
-		 * Sets the start time of this builder to the given one
+		 * Sets the start time of this builder to the given one. The time is in unix seconds,
+		 * NOT miliseconds. <br>
+		 * <br>
+		 * <b>To use the current time as the start time, don't call this method!</b>
+		 * The API will fill in the current time automatically.
 		 * 
-		 * @param start the start time in unix milliseconds
+		 * @param start the start time in unix seconds
 		 * @return this builder
 		 */
 		public Builder start(long start) {
@@ -130,9 +134,13 @@ public final class DraftPunishment extends AbstractPunishment {
 		}
 		
 		/**
-		 * Sets the end time of this builder to the given one
+		 * Sets the end time of this builder to the given one. The time is in unix seconds,
+		 * NOT milliseconds. <br>
+		 * <br>
+		 * For a permanent punishment, don't call this method. The API will make the punishment
+		 * permanent unless specified otherwise.
 		 * 
-		 * @param end the end time in unix milliseconds, or {@literal -}1 for permanent
+		 * @param end the end time in unix iseconds, or {@literal -}1 for permanent
 		 * @return this builder
 		 */
 		public Builder end(long end) {
@@ -146,7 +154,9 @@ public final class DraftPunishment extends AbstractPunishment {
 		 * @return the draft punishment
 		 */
 		public DraftPunishment build() {
-			return new DraftPunishment(type, victim, operator, reason, scope, start, end);
+			Long start = this.start;
+			return new DraftPunishment(type, victim, operator, reason, scope,
+					(start != null) ? start : System.currentTimeMillis() / 1_000L, end);
 		}
 		
 	}
