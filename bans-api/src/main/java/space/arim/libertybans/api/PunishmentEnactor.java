@@ -20,6 +20,13 @@ package space.arim.libertybans.api;
 
 import space.arim.universal.util.concurrent.CentralisedFuture;
 
+/**
+ * Guardkeeper of adding punishments while enforcing constraints and reporting such enforcement.
+ * For example, one victim cannot have more than 1 ban.
+ * 
+ * @author A248
+ *
+ */
 public interface PunishmentEnactor {
 	
 	/**
