@@ -28,23 +28,16 @@ import space.arim.libertybans.api.Victim;
 class SecurePunishment extends AbstractPunishment implements Punishment {
 
 	private final int id;
-	private final boolean undone;
 	
 	SecurePunishment(int id, PunishmentType type, Victim victim, Operator operator, String reason, Scope scope,
-			long start, long end, boolean undone) {
+			long start, long end) {
 		super(type, victim, operator, reason, scope, start, end);
 		this.id = id;
-		this.undone = undone;
 	}
 
 	@Override
 	public int getID() {
 		return id;
-	}
-	
-	@Override
-	public boolean isUndone() {
-		return undone;
 	}
 
 	@Override
