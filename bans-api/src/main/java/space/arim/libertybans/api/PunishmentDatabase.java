@@ -53,7 +53,7 @@ public interface PunishmentDatabase {
 	 * has the same amount of threads as there are connections in the pool, making it
 	 * a fine complement to executing queries.
 	 * 
-	 * @return
+	 * @return the executor
 	 */
 	Executor getExecutor();
 	
