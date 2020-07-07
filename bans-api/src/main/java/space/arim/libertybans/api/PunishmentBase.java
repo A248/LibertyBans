@@ -69,7 +69,8 @@ public interface PunishmentBase {
 	long getStart();
 	
 	/**
-	 * Gets the end time, in unix seconds, of the punishment
+	 * Gets the end time, in unix seconds, of the punishment. <br>
+	 * 0 represents a permanent punishment.
 	 * 
 	 * @return the end time
 	 */

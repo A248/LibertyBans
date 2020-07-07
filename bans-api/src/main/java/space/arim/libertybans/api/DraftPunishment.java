@@ -44,7 +44,7 @@ public final class DraftPunishment extends AbstractPunishment {
 		private String reason;
 		private Scope scope;
 		private Long start;
-		private long end = -1L;
+		private long end = 0L;
 		
 		/**
 		 * Creates the builder
@@ -130,7 +130,7 @@ public final class DraftPunishment extends AbstractPunishment {
 		 * @return this builder
 		 */
 		public Builder permanent() {
-			return end(-1L);
+			return end(0L);
 		}
 		
 		/**
@@ -140,7 +140,7 @@ public final class DraftPunishment extends AbstractPunishment {
 		 * For a permanent punishment, don't call this method. The API will make the punishment
 		 * permanent unless specified otherwise.
 		 * 
-		 * @param end the end time in unix iseconds, or {@literal -}1 for permanent
+		 * @param end the end time in unix iseconds, or 0 for permanent
 		 * @return this builder
 		 */
 		public Builder end(long end) {
