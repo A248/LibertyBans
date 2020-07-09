@@ -62,6 +62,7 @@ public abstract class BaseEnvironment {
 				infoMessage("Extended failure cause:");
 				cause.printStackTrace(System.err);
 			}
+			return;
 		}
 		long endTime = System.nanoTime();
 		double millis = (TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS)) / 1_000D;
@@ -119,6 +120,7 @@ public abstract class BaseEnvironment {
 				infoMessage("Extended failure cause:");
 				cause.printStackTrace(System.err);
 			}
+			return;
 		}
 		long endTime = System.nanoTime();
 		double millis = TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS) / 1_000D;
