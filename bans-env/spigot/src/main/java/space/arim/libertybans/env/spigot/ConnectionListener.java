@@ -39,7 +39,6 @@ public class ConnectionListener implements Listener {
 		UUID uuid = evt.getUniqueId();
 		String name = evt.getName();
 		byte[] address = evt.getAddress().getAddress();
-		env.core.getUUIDMaster().addCache(uuid, name);
 		Punishment punishment = env.core.getSelector().executeAndCheckConnection(uuid, name, address).join();
 		if (punishment == null) {
 			return;

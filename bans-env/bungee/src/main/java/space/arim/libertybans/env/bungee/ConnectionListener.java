@@ -42,7 +42,6 @@ public class ConnectionListener implements Listener {
 		UUID uuid = conn.getUniqueId();
 		String name = conn.getName();
 		byte[] address = ((InetSocketAddress) conn.getSocketAddress()).getAddress().getAddress();
-		env.core.getUUIDMaster().addCache(uuid, name);
 		env.core.getSelector().executeAndCheckConnection(uuid, name, address).thenAccept((punishment) -> {
 			if (punishment != null) {
 				evt.setCancelled(true);
