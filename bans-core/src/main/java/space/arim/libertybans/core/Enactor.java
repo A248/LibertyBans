@@ -111,7 +111,7 @@ class Enactor implements PunishmentEnactor {
 				return qr.toUpdateResult().getUpdateCount() == 1;
 
 			} catch (SQLException ex) {
-				logger.warn("Failed to undo punishment {}", punishment);
+				logger.warn("Failed to undo punishment {}", punishment, ex);
 			}
 			return false;
 		});
@@ -137,7 +137,7 @@ class Enactor implements PunishmentEnactor {
 					}
 				}
 			} catch (SQLException ex) {
-				logger.warn("Failed to undo punishment by ID {}", id);
+				logger.warn("Failed to undo punishment by ID {}", id, ex);
 			}
 			return false;
 		});
@@ -157,7 +157,7 @@ class Enactor implements PunishmentEnactor {
 
 				return qr.toUpdateResult().getUpdateCount() == 1;
 			} catch (SQLException ex) {
-				logger.warn("Failed to undo punishment by type {} and victim {}", type, victim);
+				logger.warn("Failed to undo punishment by type {} and victim {}", type, victim, ex);
 			}
 			return false;
 		});
