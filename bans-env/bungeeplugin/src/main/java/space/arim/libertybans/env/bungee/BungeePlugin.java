@@ -20,14 +20,15 @@ package space.arim.libertybans.env.bungee;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
 
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginDescription;
 
 import space.arim.libertybans.bootstrap.BaseEnvironment;
+import space.arim.libertybans.bootstrap.Instantiator;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
 
 public class BungeePlugin extends Plugin {
@@ -38,36 +39,33 @@ public class BungeePlugin extends Plugin {
 	public void onEnable() {
 		File folder = getDataFolder();
 		ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-		LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
-			try {
-				ClassLoader pluginClassLoader = clazz.getClassLoader();
-				Field descField = pluginClassLoader.getClass().getDeclaredField("desc");
-				Object descObj = descField.get(pluginClassLoader);
-				if (descObj instanceof PluginDescription) {
-					PluginDescription desc = (PluginDescription) descObj;
-					return desc.getName() + " v" + desc.getVersion();
-				}
-			} catch (IllegalArgumentException | NoSuchFieldException | SecurityException | IllegalAccessException ignored) {}
-			return null;
-		});
-		ClassLoader launchLoader = launcher.attemptLaunch().join();
-		executor.shutdown();
+		ClassLoader launchLoader;
+		try {
+			LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
+				try {
+					ClassLoader pluginClassLoader = clazz.getClassLoader();
+					Field descField = pluginClassLoader.getClass().getDeclaredField("desc");
+					Object descObj = descField.get(pluginClassLoader);
+					if (descObj instanceof PluginDescription) {
+						PluginDescription desc = (PluginDescription) descObj;
+						return desc.getName() + " v" + desc.getVersion();
+					}
+				} catch (IllegalArgumentException | NoSuchFieldException | SecurityException | IllegalAccessException ignored) {}
+				return null;
+			});
+			launchLoader = launcher.attemptLaunch().join();
+		} finally {
+			executor.shutdown();
+			assert executor.isTerminated();
+		}
 		if (launchLoader == null) {
-			// Already printed the error message
-			return;
-		}
-		Class<?> envClazz;
-		try {
-			envClazz = Class.forName("space.arim.libertybans.env.bungee.BungeeEnv", true, launchLoader);
-		} catch (ClassNotFoundException ex) {
-			ex.printStackTrace();
+			getLogger().warning("Failed to launch LibertyBans");
 			return;
 		}
 		try {
-			base = (BaseEnvironment) envClazz.getDeclaredConstructor(Plugin.class).newInstance(this);
-		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-				| NoSuchMethodException | SecurityException ex) {
-			ex.printStackTrace();
+			base = new Instantiator("space.arim.libertybans.env.bungee.BungeeEnv", launchLoader).invoke(Plugin.class, this);
+		} catch (IllegalArgumentException | SecurityException | ReflectiveOperationException ex) {
+			getLogger().log(Level.WARNING, "Failed to launch LibertyBans", ex);
 			return;
 		}
 		base.startup();

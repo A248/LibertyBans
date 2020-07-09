@@ -19,13 +19,14 @@
 package space.arim.libertybans.env.spigot;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
 import space.arim.libertybans.bootstrap.BaseEnvironment;
+import space.arim.libertybans.bootstrap.Instantiator;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
 
 public class SpigotPlugin extends JavaPlugin {
@@ -36,34 +37,28 @@ public class SpigotPlugin extends JavaPlugin {
 	public void onEnable() {
 		File folder = getDataFolder();
 		ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-		LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
-			try {
-				JavaPlugin potential = JavaPlugin.getProvidingPlugin(clazz);
-				return potential.getDescription().getFullName();
-			} catch (IllegalArgumentException ignored) {}
-			return null;
-		});
-		ClassLoader launchLoader = launcher.attemptLaunch().join();
-		executor.shutdown();
+		ClassLoader launchLoader;
+		try {
+			LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
+				try {
+					JavaPlugin potential = JavaPlugin.getProvidingPlugin(clazz);
+					return potential.getDescription().getFullName();
+				} catch (IllegalArgumentException ignored) {}
+				return null;
+			});
+			launchLoader = launcher.attemptLaunch().join();
+		} finally {
+			executor.shutdown();
+			assert executor.isTerminated();
+		}
 		if (launchLoader == null) {
-			// Already printed the error message
-			setEnabled(false);
-			return;
-		}
-		Class<?> envClazz;
-		try {
-			envClazz = Class.forName("space.arim.libertybans.env.spigot.SpigotEnv", true, launchLoader);
-		} catch (ClassNotFoundException ex) {
-			ex.printStackTrace();
-			setEnabled(false);
+			getLogger().warning("Failed to launch LibertyBans");
 			return;
 		}
 		try {
-			base = (BaseEnvironment) envClazz.getDeclaredConstructor(JavaPlugin.class).newInstance(this);
-		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-				| NoSuchMethodException | SecurityException ex) {
-			ex.printStackTrace();
-			setEnabled(false);
+			base = new Instantiator("space.arim.libertybans.env.spigot.SpigotEnv", launchLoader).invoke(JavaPlugin.class, this);
+		} catch (IllegalArgumentException | SecurityException | ReflectiveOperationException ex) {
+			getLogger().log(Level.WARNING, "Failed to launch LibertyBans", ex);
 			return;
 		}
 		base.startup();
@@ -72,7 +67,7 @@ public class SpigotPlugin extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		if (base == null) {
-			getLogger().warning("LibertyBans wasn't launched; check your log for a startup error");
+			getLogger().warning("LibertyBans never launched; nothing to shutdown");
 			return;
 		}
 		base.shutdown();
