@@ -53,23 +53,7 @@ public class Formatter {
 	}
 	
 	public String getPunishmentMessage(Punishment punishment) {
-		String path;
-		switch (punishment.getType()) {
-		case BAN:
-			path = "additions.bans.layout";
-			break;
-		case MUTE:
-			path = "additions.mutes.layout";
-			break;
-		case WARN:
-			path = "additions.warns.layout";
-			break;
-		case KICK:
-			path = "additions.kicks.layout";
-			break;
-		default:
-			throw new IllegalStateException("Unknown punishment type " + punishment.getType());
-		}
+		String path = "additions." + punishment.getType().getLowercaseNamePlural() + ".layout";
 		return formatAll(core.getConfigs().getMessages().getStringList(path), punishment);
 	}
 	
