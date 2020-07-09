@@ -21,7 +21,6 @@ package space.arim.libertybans.env.bungee;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 
 import net.md_5.bungee.api.plugin.Plugin;
@@ -38,7 +37,7 @@ public class BungeePlugin extends Plugin {
 	@Override
 	public void onEnable() {
 		File folder = getDataFolder();
-		ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		ExecutorService executor = Instantiator.createReasonableExecutor(null);
 		ClassLoader launchLoader;
 		try {
 			LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
@@ -62,6 +61,7 @@ public class BungeePlugin extends Plugin {
 			getLogger().warning("Failed to launch LibertyBans");
 			return;
 		}
+		BaseEnvironment base;
 		try {
 			base = new Instantiator("space.arim.libertybans.env.bungee.BungeeEnv", launchLoader).invoke(Plugin.class, this);
 		} catch (IllegalArgumentException | SecurityException | ReflectiveOperationException ex) {
@@ -69,10 +69,12 @@ public class BungeePlugin extends Plugin {
 			return;
 		}
 		base.startup();
+		this.base = base;
 	}
 	
 	@Override
 	public void onDisable() {
+		BaseEnvironment base = this.base;
 		if (base == null) {
 			getLogger().warning("LibertyBans wasn't launched; check your log for a startup error");
 			return;

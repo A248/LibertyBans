@@ -18,6 +18,10 @@
  */
 package space.arim.libertybans.bootstrap;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+
 public class Instantiator {
 
 	private final Class<?> clazz;
@@ -28,6 +32,24 @@ public class Instantiator {
 	
 	public <T> BaseEnvironment invoke(Class<T> parameterType, T parameter) throws ReflectiveOperationException, IllegalArgumentException, SecurityException {
 		return (BaseEnvironment) clazz.getDeclaredConstructor(parameterType).newInstance(parameter);
+	}
+	
+	/**
+	 * Creates a reasonable thread pool for downloading dependencies, using either
+	 * the specified thread factory or {@code null} for the default factory
+	 * 
+	 * @param factory the thread factory to use, or null for the default
+	 * @return a thread pool for downloading dependencies
+	 */
+	public static ExecutorService createReasonableExecutor(ThreadFactory factory) {
+		/*
+		 * 4 is a reasonable amount - not too much, not too little
+		 */
+		int amount = 4;
+		if (factory != null) {
+			return Executors.newFixedThreadPool(amount, factory);
+		}
+		return Executors.newFixedThreadPool(amount);
 	}
 	
 }

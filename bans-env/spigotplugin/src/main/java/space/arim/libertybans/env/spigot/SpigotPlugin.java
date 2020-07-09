@@ -20,7 +20,6 @@ package space.arim.libertybans.env.spigot;
 
 import java.io.File;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 
 import org.bukkit.plugin.java.JavaPlugin;
@@ -36,7 +35,7 @@ public class SpigotPlugin extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		File folder = getDataFolder();
-		ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		ExecutorService executor = Instantiator.createReasonableExecutor(null);
 		ClassLoader launchLoader;
 		try {
 			LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
@@ -55,6 +54,7 @@ public class SpigotPlugin extends JavaPlugin {
 			getLogger().warning("Failed to launch LibertyBans");
 			return;
 		}
+		BaseEnvironment base;
 		try {
 			base = new Instantiator("space.arim.libertybans.env.spigot.SpigotEnv", launchLoader).invoke(JavaPlugin.class, this);
 		} catch (IllegalArgumentException | SecurityException | ReflectiveOperationException ex) {
@@ -62,10 +62,12 @@ public class SpigotPlugin extends JavaPlugin {
 			return;
 		}
 		base.startup();
+		this.base = base;
 	}
 	
 	@Override
 	public void onDisable() {
+		BaseEnvironment base = this.base;
 		if (base == null) {
 			getLogger().warning("LibertyBans never launched; nothing to shutdown");
 			return;
