@@ -29,7 +29,7 @@ public interface Punishment extends PunishmentBase {
 	/**
 	 * Gets the unique ID of this punishment
 	 * 
-	 * @return
+	 * @return the ID of the punishment
 	 */
 	int getID();
 	
