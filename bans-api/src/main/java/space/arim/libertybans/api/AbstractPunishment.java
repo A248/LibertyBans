@@ -92,8 +92,14 @@ public abstract class AbstractPunishment implements PunishmentBase {
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + " [type=" + type + ", victim=" + victim + ", operator=" + operator
-				+ ", reason=" + reason + ", scope=" + scope + ", start=" + start + ", end=" + end + "]";
+		if (this instanceof Punishment) {
+			return getClass().getSimpleName() + " [id=" + ((Punishment) this).getID() + ", type=" + type + ", victim="
+					+ victim + ", operator=" + operator + ", reason=" + reason + ", scope=" + scope + ", start=" + start
+					+ ", end=" + end + "]";
+		} else {
+			return getClass().getSimpleName() + " [type=" + type + ", victim=" + victim + ", operator=" + operator
+					+ ", reason=" + reason + ", scope=" + scope + ", start=" + start + ", end=" + end + "]";
+		}
 	}
 
 	@Override
