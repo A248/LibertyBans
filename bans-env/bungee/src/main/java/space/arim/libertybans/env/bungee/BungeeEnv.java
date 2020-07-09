@@ -82,7 +82,7 @@ public class BungeeEnv extends AbstractEnv {
 	public void sendToThoseWithPermission(String permission, String jsonable) {
 		BaseComponent[] comps;
 		BungeeComponentParser parser = new BungeeComponentParser();
-		if (core.getFormatter().isUseJson()) {
+		if (core.getFormatter().useJson()) {
 			comps = parser.parseJson(jsonable);
 		} else {
 			comps = parser.colour(jsonable);
@@ -115,7 +115,7 @@ public class BungeeEnv extends AbstractEnv {
 		BungeeComponentParser parser = new BungeeComponentParser();
 		if (sender instanceof ProxiedPlayer) {
 			ProxiedPlayer player = (ProxiedPlayer) sender;
-			if (core.getFormatter().isUseJson()) {
+			if (core.getFormatter().useJson()) {
 				player.sendMessage(parser.parseJson(jsonable));
 			} else {
 				player.sendMessage(parser.colour(jsonable));

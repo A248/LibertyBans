@@ -25,11 +25,13 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import space.arim.universal.util.ThisClass;
+import space.arim.universal.util.concurrent.CentralisedFuture;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.PlayerVictim;
@@ -50,10 +52,11 @@ public class Enforcer implements PunishmentEnforcer {
 	@Override
 	public void enforce(Punishment punishment) {
 		MiscUtil.validate(punishment);
-		String message = core.getFormatter().getPunishmentMessage(punishment);
+		CentralisedFuture<String> message = core.getFormatter().getPunishmentMessage(punishment);
 		switch (punishment.getVictim().getType()) {
 		case PLAYER:
-			core.getEnvironment().kickByUUID(((PlayerVictim) punishment.getVictim()).getUUID(), message);
+			UUID uuid = ((PlayerVictim) punishment.getVictim()).getUUID();
+			message.thenAccept((msg) -> core.getEnvironment().kickByUUID(uuid, msg));
 			break;
 		case ADDRESS:
 			enforceAddressPunishment(punishment, message);
@@ -73,8 +76,11 @@ public class Enforcer implements PunishmentEnforcer {
 		}
 	}
 	
-	private void enforceAddressPunishment(Punishment punishment, String message) {
-		core.getEnvironment().getOnlineTargets().thenAcceptAsync((targets) -> {
+	private void enforceAddressPunishment(Punishment punishment, CentralisedFuture<String> futureMsg) {
+		core.getEnvironment().getOnlineTargets().thenCombine(futureMsg, (targets, ignore) -> targets)
+				.thenAcceptAsync((targets) -> {
+
+			String message = futureMsg.join(); // will be done by now, due to thenCombine
 			byte[] address = ((AddressVictim) punishment.getVictim()).getAddress();
 
 			removeAndKickIfMatching(targets, address, message);

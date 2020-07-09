@@ -22,6 +22,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginDescription;
@@ -36,6 +37,11 @@ public class BungeePlugin extends Plugin {
 	
 	@Override
 	public void onEnable() {
+		/*
+		 * It's only BungeeCord which has this problem
+		 */
+		informAboutSecurityManagerIfNeeded();
+
 		File folder = getDataFolder();
 		ExecutorService executor = Instantiator.createReasonableExecutor(null);
 		ClassLoader launchLoader;
@@ -72,6 +78,19 @@ public class BungeePlugin extends Plugin {
 		this.base = base;
 	}
 	
+	private void informAboutSecurityManagerIfNeeded() {
+		Logger logger = getLogger();
+		SecurityManager sm = System.getSecurityManager();
+		if (sm == null) {
+			logger.info("Thank you for using Waterfall and not BungeeCord. Waterfall helps us and you.");
+
+		} else {
+			logger.warning(
+					"You are using BungeeCord and its 'BungeeSecurityManager' is enabled. LibertyBans requires permissions "
+					+ "to create reasonable thread pools per efficient connecting pooling. You may encounter some console spam.");
+		}
+	}
+
 	@Override
 	public void onDisable() {
 		BaseEnvironment base = this.base;

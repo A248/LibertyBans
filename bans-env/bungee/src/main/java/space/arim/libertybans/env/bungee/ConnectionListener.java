@@ -21,32 +21,50 @@ package space.arim.libertybans.env.bungee;
 import java.net.InetSocketAddress;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
+import net.md_5.bungee.event.EventPriority;
+
+import space.arim.universal.util.ThisClass;
+import space.arim.universal.util.concurrent.CentralisedFuture;
 
 public class ConnectionListener implements Listener {
 
 	private final BungeeEnv env;
 	
+	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+	
 	ConnectionListener(BungeeEnv env) {
 		this.env = env;
 	}
 	
-	@EventHandler
+	@EventHandler(priority = EventPriority.LOW)
 	public void onConnect(LoginEvent evt) {
+		if (evt.isCancelled()) {
+			logger.debug("Player '{}' is already blocked by the server or another plugin", evt.getConnection().getName());
+			return;
+		}
 		evt.registerIntent(env.plugin);
 		PendingConnection conn = evt.getConnection();
 		UUID uuid = conn.getUniqueId();
 		String name = conn.getName();
 		byte[] address = ((InetSocketAddress) conn.getSocketAddress()).getAddress().getAddress();
-		env.core.getUUIDMaster().addCache(uuid, name);
 		env.core.getSelector().executeAndCheckConnection(uuid, name, address).thenAccept((punishment) -> {
-			if (punishment != null) {
+			if (punishment == null) {
+				logger.trace("Letting '{}' through the gates", name);
+
+			} else {
+				CentralisedFuture<String> message = env.core.getFormatter().getPunishmentMessage(punishment);
+				assert message.isDone() : punishment;
+
 				evt.setCancelled(true);
-				evt.setCancelReason(TextComponent.fromLegacyText(env.core.getFormatter().getPunishmentMessage(punishment)));
+				evt.setCancelReason(TextComponent.fromLegacyText(message.join()));
 			}
 			evt.completeIntent(env.plugin);
 		});
