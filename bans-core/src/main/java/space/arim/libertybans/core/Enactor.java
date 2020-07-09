@@ -143,6 +143,26 @@ class Enactor implements PunishmentEnactor {
 		});
 	}
 	
+	@Override
+	public CentralisedFuture<Boolean> undoPunishmentByTypeAndVictim(final PunishmentType type, final Victim victim) {
+		if (type != PunishmentType.BAN && type != PunishmentType.MUTE) {
+			throw new IllegalArgumentException("undoPunishmentByTypeAndVictim may only be used for bans and mutes, not " + type);
+		}
+		DbHelper helper = core.getDbHelper();
+		return helper.selectAsync(() -> {
+			byte[] victimBytes = getVictimBytes(victim);
+			try (QueryResult qr = helper.getBackend().query(
+					"DELETE FROM `libertybans_" + type.getLowercaseNamePlural()
+					+ "` WHERE `victim` = ? AND `victim_type` = ?", victimBytes, victim.getType().name())) {
+
+				return qr.toUpdateResult().getUpdateCount() == 1;
+			} catch (SQLException ex) {
+				logger.warn("Failed to undo punishment by type {} and victim {}", type, victim);
+			}
+			return false;
+		});
+	}
+	
 	byte[] getVictimBytes(Victim victim) {
 		VictimType vType = victim.getType();
 		switch (vType) {
