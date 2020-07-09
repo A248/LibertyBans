@@ -57,6 +57,11 @@ public abstract class BaseEnvironment {
 			startup0();
 		} catch (StartupException failure) {
 			infoMessage("Startup failed: " + failure.getMessage());
+			Throwable cause = failure.getCause();
+			if (cause != null) {
+				infoMessage("Extended failure cause:");
+				cause.printStackTrace(System.err);
+			}
 		}
 		long endTime = System.nanoTime();
 		double millis = (TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS)) / 1_000D;
@@ -109,6 +114,11 @@ public abstract class BaseEnvironment {
 			shutdown0();
 		} catch (ShutdownException failure) {
 			infoMessage("Shutdown failed: " + failure.getMessage());
+			Throwable cause = failure.getCause();
+			if (cause != null) {
+				infoMessage("Extended failure cause:");
+				cause.printStackTrace(System.err);
+			}
 		}
 		long endTime = System.nanoTime();
 		double millis = TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS) / 1_000D;
