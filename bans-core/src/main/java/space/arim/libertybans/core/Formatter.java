@@ -48,7 +48,7 @@ public class Formatter {
 		this.core = core;
 	}
 	
-	public boolean isUseJson() {
+	public boolean useJson() {
 		return core.getConfigs().getMessages().getBoolean("json.enable");
 	}
 	
@@ -86,7 +86,7 @@ public class Formatter {
 	}
 	
 	String formatWithPunishment(String message, Punishment punishment) {
-		long now = System.currentTimeMillis();
+		long now = MiscUtil.currentTime();
 		long start = punishment.getStart();
 		long end = punishment.getEnd();
 		return message.replace("%ID%", Integer.toString(punishment.getID())).replace("%TYPE%", formatType(punishment.getType())).replace("%VICTIM%", formatVictim(punishment.getVictim()))
@@ -133,7 +133,7 @@ public class Formatter {
 	}
 	
 	private String formatAbsolute(long time) {
-		return core.getConfigs().getTimeFormatter().format(Instant.ofEpochMilli(time));
+		return core.getConfigs().getTimeFormatter().format(Instant.ofEpochSecond(time));
 	}
 	
 	static {
@@ -151,7 +151,7 @@ public class Formatter {
 	
 	private String formatRelative(long time, long current) {
 		if (time < current) {
-			return "-" + formatRelative(current, time);
+			return '-' + formatRelative(current, time);
 		}
 		long diff = time - current;
 		List<String> result = new ArrayList<>();

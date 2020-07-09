@@ -21,13 +21,13 @@ package space.arim.libertybans.core;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +37,9 @@ import com.zaxxer.hikari.HikariConfig;
 import space.arim.universal.util.ThisClass;
 import space.arim.universal.util.concurrent.CentralisedFuture;
 
+import space.arim.api.env.DetectingPlatformHandle;
+import space.arim.api.env.PlatformScheduler;
+import space.arim.api.env.PlatformScheduler.ScheduledTask;
 import space.arim.api.util.config.Config;
 import space.arim.api.util.config.SimpleConfig;
 import space.arim.api.util.sql.CloseMe;
@@ -47,6 +50,7 @@ import space.arim.api.util.sql.SqlQuery;
 import space.arim.libertybans.api.PunishmentDatabase;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.bootstrap.StartupException;
 
 class Database implements PunishmentDatabase, Part {
 
@@ -56,7 +60,22 @@ class Database implements PunishmentDatabase, Part {
 	private volatile HikariPoolSqlBackend backend;
 	private volatile ExecutorService executor;
 	
+	private volatile ScheduledTask hsqldbCleaner;
+	
+	private static final int REVISION_MAJOR = 1;
+	private static final int REVISION_MINOR = 0;
+	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+	
+	private static final boolean TRACE_FOREIGN_CONNECTIONS;
+	
+	static {
+		boolean traceForeign = false;
+		try {
+			traceForeign = Boolean.getBoolean("space.arim.libertybans.traceForeignConnections");
+		} catch (SecurityException ignored) {}
+		TRACE_FOREIGN_CONNECTIONS = traceForeign;
+	}
 	
 	Database(LibertyBansCore core) {
 		this.core = core;
@@ -110,17 +129,19 @@ class Database implements PunishmentDatabase, Part {
 			hikariConf.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database);
 			hikariConf.setUsername(username);
 			hikariConf.setPassword(password);
+			/*
 			hikariConf.addDataSourceProperty("cachePrepStmts", "true");
-			//hikariConf.addDataSourceProperty("prepStmtCacheSize", "25");
-			//hikariConf.addDataSourceProperty("prepStmtCacheSqlLimit", "256");
+			hikariConf.addDataSourceProperty("prepStmtCacheSize", "25");
+			hikariConf.addDataSourceProperty("prepStmtCacheSqlLimit", "256");
 			hikariConf.addDataSourceProperty("useServerPrepStmts", "true");
+			*/
 
 		} else {
-			hikariConf.setJdbcUrl("jdbc:hsqldb:file:" + core.getFolder() + "/data/storage;hsqldb.lock_file=false");
+			hikariConf.setJdbcUrl("jdbc:hsqldb:file:" + core.getFolder() + "/data/database;hsqldb.lock_file=false");
 			hikariConf.setUsername("SA");
 			hikariConf.setPassword("");
 			/*
-			 * Because HikariCP checks the context ClassLoader first, we set
+			 * Because HikariCP checks the context ClassLoader first, set
 			 * the context ClassLoader to ensure we use our own HSQLDB classes
 			 */
 			Thread current = Thread.currentThread();
@@ -132,6 +153,7 @@ class Database implements PunishmentDatabase, Part {
 				current.setContextClassLoader(original);
 			}
 		}
+		hikariConf.setAutoCommit(false);
 		hikariConf.addDataSourceProperty("allowMultiQueries", "true");
 
 		for (String property : config.getStringList("connection-properties")) {
@@ -144,131 +166,243 @@ class Database implements PunishmentDatabase, Part {
 			String val = property.substring(index + 1, property.length());
 			hikariConf.addDataSourceProperty(prop, val);
 		}
-		hikariConf.setPoolName("Liberty@" + core.getEnvironment().hashCode());
-		executor = Executors.newFixedThreadPool(threadPoolSize);
+		hikariConf.setPoolName("Liberty-HikariCP@" + hikariConf.hashCode());
+		executor = Executors.newFixedThreadPool(threadPoolSize, new DbHelper.ThreadFactoryImpl("LibertyBans-pool-thread-"));
 		backend = new HikariPoolSqlBackend(hikariConf);
 
-		createTablesAndViews();
+		boolean success = createTablesAndViews(!useMySql).join();
+		if (!success) {
+			throw new StartupException("Database table and views creation failed");
+		}
 	}
 	
-	private CentralisedFuture<?> createTablesAndViews() {
-		return executeAsync(() -> {
-			String punishmentTypeInfo = javaToSqlEnum(PunishmentType.class);
-			String victimTypeInfo = javaToSqlEnum(Victim.VictimType.class);
+	private CentralisedFuture<String> readResource(String resourceName) {
+		return core.getDbHelper().readResource(resourceName);
+	}
+	
+	private CentralisedFuture<Boolean> createTablesAndViews(final boolean useHsqldb) {
+		EnumMap<PunishmentType, CentralisedFuture<String>> enactmentProcedures = new EnumMap<>(PunishmentType.class);
+		for (PunishmentType type : MiscUtil.punishmentTypes()) {
+			String resourceName = "procedure_" + MiscUtil.getEnactmentProcedure(type) + ".sql";
+			enactmentProcedures.put(type, readResource(resourceName));
+		}
+		CentralisedFuture<String> refreshProcedure = readResource("procedure_refresh.sql");
+		CentralisedFuture<String> refresherEventFuture = (useHsqldb) ? null : readResource("event_refresher.sql");
+
+		return core.getDbHelper().selectAsync(() -> {
+			String punishmentTypeInfo = MiscUtil.javaToSqlEnum(PunishmentType.class);
+			String victimTypeInfo = MiscUtil.javaToSqlEnum(Victim.VictimType.class);
 			List<SqlQuery> queries = new ArrayList<>();
-			if (isHsqlDb()) {
+
+			if (useHsqldb) {
+				// HSQLDB compatibility with MySQL non-standard syntax
+				// http://hsqldb.org/doc/2.0/guide/compatibility-chapt.html#coc_compatibility_mysql
 				queries.add(SqlQuery.of("SET DATABASE SQL SYNTAX MYS TRUE"));
 			}
 			queries.addAll(List.of(
-					SqlQuery.of("CREATE TABLE IF NOT EXISTS `libertybans_names` ("
+
+					/*
+					 * Revision schema
+					 */
+					SqlQuery.of(
+							"CREATE TABLE IF NOT EXISTS `libertybans_revision` ("
+							+ "`constant` INT NOT NULL UNIQUE DEFAULT 0 "
+							+ "COMMENT 'This column is unique and can only have 1 value to ensure this table has only 1 row', "
+							+ "`major` INT NOT NULL, "
+							+ "`minor` INT NOT NULL)"),
+					SqlQuery.of(
+							"INSERT INTO `libertybans_major` (`major`, `minor`) "
+							+ "VALUES (?, ?) ON DUPLICATE KEY UPDATE `major` = ?, `minor` = ?",
+							REVISION_MAJOR, REVISION_MINOR),
+
+					/*
+					 * UUIDs, names, and address
+					 */
+					/*
+					 * The reason these are not the same table is that some servers
+					 * may need to periodically clear the addresses table per GDPR
+					 * regulations. However, using a single table with a null address
+					 * would be unwise, since unique constraints don't work nicely
+					 * with null values.
+					 */
+					SqlQuery.of(
+							"CREATE TABLE IF NOT EXISTS `libertybans_names` ("
 							+ "`uuid` BINARY(16) NOT NULL, "
-							+ "`name` VARCHAR(16), "
-							+ "`updated` BIGINT NOT NULL, "
-							+ "PRIMARY KEY(`uuid`, `name`))"),
-					SqlQuery.of("CREATE TABLE IF NOT EXISTS `libertybans_addresses` ("
+							+ "`name` VARCHAR(16) NOT NULL, "
+							+ "`updated` INT UNSIGNED NOT NULL, "
+							+ "PRIMARY KEY (`uuid`),"
+							+ "UNIQUE (`uuid`, `name`))"),
+					SqlQuery.of(
+							"CREATE TABLE IF NOT EXISTS `libertybans_addresses` ("
 							+ "`uuid` BINARY(16) NOT NULL, "
 							+ "`address` VARBINARY(16) NOT NULL, "
-							+ "`updated` BIGINT NOT NULL, "
-							+ "PRIMARY KEY (`uuid`, `address`))"),
-					SqlQuery.of("CREATE TABLE IF NOT EXISTS `libertybans_punishments_singular` ("
-							+ "`id` INT AUTO_INCREMENT NOT NULL, "
-							+ "`type` " + punishmentTypeInfo + ", "
-							+ "`victim` VARBINARY(16) NOT NULL, "
-							+ "`victim_type` " + victimTypeInfo + ", "
-							+ "`operator` BINARY(16) NOT NULL, "
-							+ "`reason` VARCHAR(256) NOT NULL, "
-							+ "`scope` VARCHAR(16) NULL DEFAULT NULL, "
-							+ "`start` INT NOT NULL, "
-							+ "`end` INT NOT NULL, "
-							+ "`undone` BOOLEAN NOT NULL, "
-							+ "PRIMARY KEY(`type`, `victim`, `victim_type`)"),
-					SqlQuery.of("CREATE TABLE IF NOT EXISTS `libertybans_punishments_multiple` ("
+							+ "`updated` INT UNSIGNED NOT NULL, "
+							+ "PRIMARY KEY (`uuid`), "
+							+ "UNIQUE (`uuid`, `address`))"),
+
+					/*
+					 * Core punishments tables
+					 */
+					SqlQuery.of(
+							"CREATE TABLE IF NOT EXISTS `libertybans_punishments` ("
 							+ "`id` INT AUTO_INCREMENT PRIMARY KEY, "
 							+ "`type` " + punishmentTypeInfo + ", "
-							+ "`victim` VARBINARY(16) NOT NULL, "
-							+ "`victim_type` " + victimTypeInfo + ", "
 							+ "`operator` BINARY(16) NOT NULL, "
 							+ "`reason` VARCHAR(256) NOT NULL, "
-							+ "`scope` VARCHAR(16) NULL DEFAULT NULL, "
-							+ "`start` INT NOT NULL, "
-							+ "`end` INT NOT NULL, "
-							+ "`undone` BOOLEAN NOT NULL)"),
-					SqlQuery.of("CREATE OR REPLACE VIEW `libertybans_punishments_all` AS "
-							+ "SELECT * FROM `libertybans_punishments_singular` UNION "
-							+ "SELECT * FROM `libertybans_punishments_multiple`"),
-					SqlQuery.of("CREATE OR REPLACE VIEW `libertybans_applicable_singular` AS "
-							+ "SELECT `puns`.`id`, `puns`.`type`, `puns`.`victim`, `puns`.`victim_type`, `puns`.`operator`, "
-							+ "`puns`.`reason`, `puns`.`scope`, `puns`.`start`, `puns`.`end`, `addrs`.`uuid`, `addrs`.`address` "
-							+ "FROM `libertybans_singular` `puns` INNER JOIN `libertybans_addresses` `addrs` "
-							+ "ON (`puns`.`victim_type` = 'PLAYER' AND `puns`.`victim` = `addrs`.`uuid` "
-							+ "OR `puns`.`victim_type` = 'ADDRESS' AND `puns`.`victim` = `addrs`.`address`) "
-							+ "WHERE `undone` = FALSE"),
-					SqlQuery.of("CREATE OR REPLACE VIEW `libertybans_applicable_multiple` AS "
-							+ "SELECT `puns`.`id`, `puns`.`type`, `puns`.`victim`, `puns`.`victim_type`, `puns`.`operator`, "
-							+ "`puns`.`reason`, `puns`.`scope`, `puns`.`start`, `puns`.`end`, `addrs`.`uuid`, `addrs`.`address` "
-							+ "FROM `libertybans_singular` `puns` INNER JOIN `libertybans_addresses` `addrs` "
-							+ "ON (`puns`.`victim_type` = 'PLAYER' AND `puns`.`victim` = `addrs`.`uuid` "
-							+ "OR `puns`.`victim_type` = 'ADDRESS' AND `puns`.`victim` = `addrs`.`address`) "
-							+ "WHERE `undone` = FALSE")/*,
-					SqlQuery.of("CREATE OR REPLACE VIEW `libertybans_singular_byname` AS "
-							+ "SELECT `puns`.`id`, `puns`.`type`, `puns`.`operator`, `puns`.`reason`, "
-							+ "`puns`.`scope`, `puns`.`start`, `puns.end` "
-							+ "FROM `libertybans_singular` `puns` "
-							+ "INNER JOIN `libertybans_names` `names` "
-							+ "ON (`puns`.`victim_type` = 'PLAYER' AND `puns`.`victim` = `names`.`uuid`)"),
-					SqlQuery.of("CREATE OR REPLACE VIEW `libertybans_singular_byaddr` AS "
-							+ "SELECT `puns`.`id`, `puns`.`type`, `puns`.`operator`, `puns`.`reason`, "
-							+ "`puns`.`scope`, `puns`.`start`, `puns.end` "
-							+ "FROM `libertybans_singular` `puns` "
-							+ "INNER JOIN `libertybans_addresses` `addrs` "
-							+ "ON (`puns`.`victim_type` = 'ADDRESS' AND `puns`.`victim` = `addrs`.`address`)"),
-					SqlQuery.of("CREATE OR REPLACE VIEW `libertybans_multiple_byname` AS "
-							+ "SELECT `puns`.`id`, `puns`.`type`, `puns`.`operator`, `puns`.`reason`, "
-							+ "`puns`.`scope`, `puns`.`start`, `puns.end` "
-							+ "FROM `libertybans_singular` `puns` "
-							+ "INNER JOIN `libertybans_names` `names` "
-							+ "ON (`puns`.`victim_type` = 'PLAYER' AND `puns`.`victim` = `names`.`uuid`)"),
-					SqlQuery.of("CREATE OR REPLACE VIEW `libertybans_multiple_byaddr` AS "
-							+ "SELECT `puns`.`id`, `puns`.`type`, `puns`.`operator`, `puns`.`reason`, "
-							+ "`puns`.`scope`, `puns`.`start`, `puns.end` "
-							+ "FROM `libertybans_singular` `puns` "
-							+ "INNER JOIN `libertybans_addresses` `addrs` "
-							+ "ON (`puns`.`victim_type` = 'ADDRESS' AND `puns`.`victim` = `addrs`.`address`)")*/
+							+ "`scope` VARCHAR(32) NULL DEFAULT NULL, "
+							+ "`start` INT UNSIGNED NOT NULL, "
+							+ "`end` INT UNSIGNED NOT NULL)"),
+					SqlQuery.of(
+							"CREATE TABLE IF NOT EXISTS `libertybans_bans` ("
+							+ "`id` INT PRIMARY KEY, "
+							+ "`victim` VARBINARY(16) NOT NULL, "
+							+ "`victim_type` " + victimTypeInfo + ", "
+							+ "FOREIGN KEY (`id`) REFERENCES `libertybans_punishments` (`id`) ON DELETE CASCADE, "
+							+ "UNIQUE (`victim`, `victim_type`))"),
+					SqlQuery.of(
+							"CREATE TABLE IF NOT EXISTS `libertybans_mutes` ("
+							+ "`id` INT PRIMARY KEY, "
+							+ "`victim` VARBINARY(16) NOT NULL, "
+							+ "`victim_type` " + victimTypeInfo + ", "
+							+ "FOREIGN KEY (`id`) REFERENCES `libertybans_punishments` (`id`) ON DELETE CASCADE, "
+							+ "UNIQUE (`victim`, `victim_type`))"),
+					SqlQuery.of(
+							"CREATE TABLE IF NOT EXISTS `libertybans_warns` ("
+							+ "`id` INT PRIMARY KEY, "
+							+ "`victim` VARBINARY(16) NOT NULL, "
+							+ "`victim_type` " + victimTypeInfo + ", "
+							+ "FOREIGN KEY (`id`) REFERENCES `libertybans_punishments` (`id`) ON DELETE CASCADE)"),
+					SqlQuery.of(
+							"CREATE TABLE IF NOT EXISTS `libertybans_history` ("
+							+ "`id` INT NOT NULL, "
+							+ "`victim` VARBINARY(16) NOT NULL, "
+							+ "`victim_type` " + victimTypeInfo + ", "
+							+ "FOREIGN KEY (`id`) REFERENCES `libertybans_punishments` (`id`) ON DELETE CASCADE)")
 					));
 
-			try (CloseMe cm = getBackend().execute(queries.toArray(new SqlQuery[] {}))) {
-				
+			/*
+			 * Procedures read from internal resources
+			 */
+			for (PunishmentType type : MiscUtil.punishmentTypes()) {
+				CentralisedFuture<String> procedureFuture = enactmentProcedures.get(type);
+				String procedure = procedureFuture.join();
+				if (procedure == null) {
+					String procedureName = MiscUtil.getEnactmentProcedure(type);
+					logger.error("Halting startup having failed to read procedure {}", procedureName);
+					return false;
+				}
+				queries.add(SqlQuery.of(procedure));
+			}
+
+			for (PunishmentType type : MiscUtil.punishmentTypes()) {
+				if (type == PunishmentType.KICK) {
+					// There is no table for kicks, they go straight to history
+					continue;
+				}
+				String lowerNamePlural = type.getLowercaseNamePlural(); // 'ban'
+				queries.add(SqlQuery.of(
+							"CREATE VIEW IF NOT EXISTS `libertybans_simple_" + lowerNamePlural + "` AS "
+							+ "SELECT `puns`.`id`, `puns`.`type`, `thetype`.`victim`, `thetype`.`victim_type`, "
+							+ "`puns`.`operator`, `puns`.`reason`, `puns`.`scope`, `puns`.`start`, `puns`.`end` "
+							+ "FROM `libertybans_" + lowerNamePlural + "` `thetype` INNER JOIN `libertybans_punishments` `puns` "
+							+ "ON `puns`.`id` = `thetype`.`id`"));
+				queries.add(SqlQuery.of(
+					"CREATE VIEW IF NOT EXISTS `libertybans_applicable_" + lowerNamePlural + "` AS "
+					+ "SELECT `puns`.`id`, `puns`.`type`, `puns`.`victim`, `puns`.`victim_type`, `puns`.`operator`, "
+					+ "`puns`.`reason`, `puns`.`scope`, `puns`.`start`, `puns`.`end`, `addrs`.`uuid`, `addrs`.`address` "
+					+ "FROM `libertybans_simple_" + lowerNamePlural + "` `puns` INNER JOIN `libertybans_addresses` `addrs` "
+					+ "ON (`puns`.`victim_type` = 'PLAYER' AND `puns`.`victim` = `addrs`.`uuid` "
+					+ "OR `puns`.`victim_type` = 'ADDRESS' AND `puns`.`victim` = `addrs`.`address`)"));
+			}
+			queries.add(SqlQuery.of(
+					"CREATE VIEW IF NOT EXISTS `libertybans_simple_active` AS "
+					+ "SELECT * FROM `libertybans_simple_bans` UNION ALL "
+					+ "SELECT * FROM `libertybans_simple_mutes` UNION ALL "
+					+ "SELECT * FROM `libertybans_simple_warns`"));
+
+			/*
+			 * MySQL has the capabilitiy to run periodic refresh on the database-side using events
+			 * For HSQLDB the procedure will be added but a periodic task server-side will be used
+			 */
+			String refreshProc = refreshProcedure.join();
+			if (refreshProc == null) {
+				logger.error("Halting startup having failed to read the refresh procedure");
+				return false;
+			}
+			queries.add(SqlQuery.of(refreshProc));
+
+			if (useHsqldb) {
+				// Using HSQLDB
+				// Periodic task will be started below, after table creation
+				assert refresherEventFuture == null;
+			} else {
+				// Using MySQL
+				assert refresherEventFuture != null;
+
+				@SuppressWarnings("null")
+				String refresherEvent = refresherEventFuture.join();
+				if (refresherEvent == null) {
+					logger.error("Halting startup having failed to read the refresher event");
+					return false;
+				}
+				queries.add(SqlQuery.of(refresherEvent));
+			}
+
+			try (CloseMe cm = getBackend().execute(queries.toArray(SqlQuery.EMPTY_QUERY_ARRAY))) {
+
 			} catch (SQLException ex) {
 				logger.error("Failed to create tables", ex);
+				return false;
 			}
+			// Initialise cleaner task if using HSQLDB
+			if (useHsqldb) {
+				PlatformScheduler scheduler = new DetectingPlatformHandle(core.getRegistry())
+						.registerDefaultServiceIfAbsent(PlatformScheduler.class);
+
+				ScheduledTask task = scheduler.runRepeatingTask(new DbHelper.HsqldbCleanerRunnable(core.getDbHelper()),
+						1L, 1L, TimeUnit.HOURS);
+				hsqldbCleaner = Objects.requireNonNull(task);
+			}
+			return true;
 		});
 	}
 	
-	private static <E extends Enum<E>> String javaToSqlEnum(Class<E> enumClass) {
-		StringBuilder builder = new StringBuilder("ENUM (");
-		E[] elements = enumClass.getEnumConstants();
-		for (int n = 0; n < elements.length; n++) {
-			if (n != 0) {
-				builder.append(", ");
-			}
-			String name = elements[n].name();
-			builder.append('\'').append(name).append('\'');
-		}
-		return builder.append(')').toString();
+	private boolean isHsqlDb() {
+		return "org.hsqldb.jdbc.JDBCDriver".equals(backend.getDataSource().getDriverClassName());
 	}
 	
-	private boolean isHsqlDb() {
-		return backend.getDataSource().getDriverClassName().equals("org.hsqldb.jdbc.JDBCDriver");
+	@Override
+	public int getMajorRevision() {
+		return REVISION_MAJOR;
+	}
+	
+	@Override
+	public int getMinorRevision() {
+		return REVISION_MINOR;
 	}
 
 	@Override
 	public void shutdown() {
+		List<SqlQuery> queries = new ArrayList<>();
+		for (PunishmentType type : MiscUtil.punishmentTypes()) {
+			queries.add(SqlQuery.of("DROP PROCEDURE IF EXISTS `" + MiscUtil.getEnactmentProcedure(type) + '`'));
+		}
+		queries.add(SqlQuery.of("DROP PROCEDURE IF EXISTS `libertybans_refresh`"));
 		if (isHsqlDb()) {
-			try (CloseMe cm = backend.execute("SHUTDOWN")) {
-				
-			} catch (SQLException ex) {
-				logger.warn("Failed shutting down database", ex);
+			ScheduledTask hsqldbCleaner = this.hsqldbCleaner;
+			if (hsqldbCleaner == null) {
+				logger.debug("No cleaner task for HSQLDB backend");
+			} else {
+				hsqldbCleaner.cancel();
 			}
+			queries.add(SqlQuery.of("SHUTDOWN"));
+		} else {
+			queries.add(SqlQuery.of("DROP EVENT IF EXISTS `libertybans_refresher`"));
+		}
+		try (CloseMe cm = backend.execute(queries.toArray(SqlQuery.EMPTY_QUERY_ARRAY))) {
+			
+		} catch (SQLException ex) {
+			logger.warn("Failed shutting down database", ex);
 		}
 		executor.shutdown();
 		backend.getDataSource().close();
@@ -278,37 +412,35 @@ class Database implements PunishmentDatabase, Part {
 				logger.warn("ExecutorService did not complete termination");
 			}
 		} catch (InterruptedException ex) {
-			logger.warn("Interrupted while awaiting thread pool termination", ex);
 			Thread.currentThread().interrupt();
+			logger.warn("Interrupted while awaiting thread pool termination", ex);
 		}
+		backend = null;
+		executor = null;
 	}
 
 	SqlBackend getBackend() {
-		return Objects.requireNonNull(backend, "Database not yet initialized");
-	}
-	
-	CentralisedFuture<?> executeAsync(Runnable command) {
-		return core.getFuturesFactory().runAsync(command, executor);
-	}
-	
-	<T> CentralisedFuture<T> selectAsync(Supplier<T> supplier) {
-		return core.getFuturesFactory().supplyAsync(supplier, executor);
+		if (logger.isDebugEnabled()) {
+			logger.debug("Getting backend on thread {}", Thread.currentThread());
+		}
+		return backend;
 	}
 	
 	@Override
 	public Connection getConnection() throws SQLException {
-		if (backend == null) {
-			throw new IllegalStateException("Database not yet initialized");
+		if (logger.isDebugEnabled()) {
+			logger.debug("Foreign caller acquiring connection on thread  {}", Thread.currentThread());
+			if (TRACE_FOREIGN_CONNECTIONS) {
+				logger.trace("Call trace as requested by space.arim.libertybans.traceForeignConnections=true", new Exception());
+			}
 		}
+		HikariPoolSqlBackend backend = Objects.requireNonNull(this.backend, "Database not yet started");
 		return backend.getDataSource().getConnection();
 	}
 
 	@Override
 	public Executor getExecutor() {
-		if (executor == null) {
-			throw new IllegalStateException("Database not yet initialized");
-		}
-		return executor;
+		return Objects.requireNonNull(executor, "Database not yet started");
 	}
 
 }
