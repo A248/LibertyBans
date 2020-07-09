@@ -31,7 +31,9 @@ import space.arim.universal.util.concurrent.CentralisedFuture;
 
 import space.arim.uuidvault.api.UUIDUtil;
 
+import space.arim.api.util.sql.MultiQueryResult;
 import space.arim.api.util.sql.QueryResult;
+import space.arim.api.util.sql.SqlQuery;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.ConsoleOperator;
@@ -97,7 +99,8 @@ class Enactor implements PunishmentEnactor {
 		MiscUtil.validate(punishment);
 		PunishmentType type = punishment.getType();
 		if (type == PunishmentType.KICK) {
-			throw new IllegalArgumentException("Cannot undo kicks");
+			// Kicks are never active, they're pure history, so they can never be undone
+			return core.getFuturesFactory().completedFuture(false);
 		}
 		DbHelper helper = core.getDbHelper();
 		return helper.selectAsync(() -> {
@@ -109,6 +112,32 @@ class Enactor implements PunishmentEnactor {
 
 			} catch (SQLException ex) {
 				logger.warn("Failed to undo punishment {}", punishment);
+			}
+			return false;
+		});
+	}
+	
+	@Override
+	public CentralisedFuture<Boolean> undoPunishmentById(final int id) {
+		DbHelper helper = core.getDbHelper();
+		return helper.selectAsync(() -> {
+
+			final long currentTime = MiscUtil.currentTime();
+			try (MultiQueryResult mqr = helper.getBackend().query(
+					SqlQuery.of("DELETE FROM `libertybans_bans` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)",
+							id, currentTime),
+					SqlQuery.of("DELETE FROM `libertybans_mutes` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)",
+							id, currentTime),
+					SqlQuery.of("DELETE FROM `libertybans_warns` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)",
+							id, currentTime))) {
+
+				for (int m = 0; m < 3; m++) {
+					if (mqr.get(m).toUpdateResult().getUpdateCount() == 1) {
+						return true;
+					}
+				}
+			} catch (SQLException ex) {
+				logger.warn("Failed to undo punishment by ID {}", id);
 			}
 			return false;
 		});

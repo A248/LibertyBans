@@ -51,4 +51,16 @@ public interface PunishmentEnactor {
 	 */
 	CentralisedFuture<Boolean> undoPunishment(Punishment punishment);
 	
+	/**
+	 * Undoes a punishment according to its ID. <br>
+	 * If the punishment with the ID existed and was removed, the future yields {@code true}, else {@code false}. <br>
+	 * <br>
+	 * <b>This operation may be less efficient than {@link #undoPunishment(Punishment)}. When a full {@code Punishment}
+	 * is known, the former method should be used instead.</b>
+	 * 
+	 * @param id the id of the punishment to undo
+	 * @return a centralised future which yields {@code true} if the punishment existing and was removed, {@code false} otherwise
+	 */
+	CentralisedFuture<Boolean> undoPunishmentById(int id);
+
 }
