@@ -31,7 +31,9 @@ import space.arim.universal.util.concurrent.CentralisedFuture;
 
 import space.arim.uuidvault.api.UUIDUtil;
 
+import space.arim.api.util.sql.MultiQueryResult;
 import space.arim.api.util.sql.QueryResult;
+import space.arim.api.util.sql.SqlQuery;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.ConsoleOperator;
@@ -45,7 +47,6 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Scope;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.Victim.VictimType;
-import space.arim.libertybans.core.Scoper.ScopeImpl;
 
 class Enactor implements PunishmentEnactor {
 	
@@ -59,8 +60,11 @@ class Enactor implements PunishmentEnactor {
 		this.core = core;
 	}
 
-	CentralisedFuture<Punishment> enactPunishment(DraftPunishment draftPunishment, boolean insertIgnore) {
-		return core.getDatabase().selectAsync(() -> {
+	@Override
+	public CentralisedFuture<Punishment> enactPunishment(DraftPunishment draftPunishment) {
+		MiscUtil.validate(draftPunishment);
+		DbHelper helper = core.getDbHelper();
+		return helper.selectAsync(() -> {
 
 			Victim victim = draftPunishment.getVictim();
 			byte[] victimBytes = getVictimBytes(victim);
@@ -68,47 +72,92 @@ class Enactor implements PunishmentEnactor {
 			Operator operator = draftPunishment.getOperator();
 			byte[] operatorBytes = getOperatorBytes(operator);
 
-			if (!(draftPunishment.getScope() instanceof ScopeImpl)) {
-				throw new IllegalStateException("Foreign implementation of Scope: " + draftPunishment.getScope());
-			}
 			String server = core.getScopeManager().getServer(draftPunishment.getScope());
 
-			try (QueryResult qr = core.getDatabase().getBackend().query(
-					"INSERT " + ((insertIgnore) ? "IGNORE " : "") + "INTO `libertybans_punishments` "
-					+ "(`type`, `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end`, `undone`) "
-					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-					draftPunishment.getType().name(), victimBytes, victim.getType().name(), operatorBytes,
-					draftPunishment.getReason(), server, draftPunishment.getStart(), draftPunishment.getEnd(), false)) {
+			String enactmentProcedure = MiscUtil.getEnactmentProcedure(draftPunishment.getType());
 
-				ResultSet genKeys = qr.toUpdateResult().getGeneratedKeys();
-				if (genKeys.next()) {
-					int id = genKeys.getInt("id");
+			try (ResultSet rs = helper.getBackend().select(
+					"CALL `libertybans_" + enactmentProcedure + "` (?, ?, ?, ?, ?, ?, ?)",
+					victimBytes, victim.getType().name(), operatorBytes,
+					draftPunishment.getReason(), server, draftPunishment.getStart(), draftPunishment.getEnd())) {
+
+				if (rs.next()) {
+					int id = rs.getInt("id");
 					return new SecurePunishment(id, draftPunishment.getType(), victim, operator,
 							draftPunishment.getReason(), draftPunishment.getScope(), draftPunishment.getStart(),
-							draftPunishment.getEnd(), false);
+							draftPunishment.getEnd());
 				}
-
 			} catch (SQLException ex) {
-				logger.error("Failed enacting punishment {}", draftPunishment);
+				logger.error("Failed enacting punishment {}", draftPunishment, ex);
 			}
 			return null;
 		});
 	}
 	
 	@Override
-	public CentralisedFuture<Punishment> enactPunishment(DraftPunishment draftPunishment) {
-		return enactPunishment(draftPunishment, false);
+	public CentralisedFuture<Boolean> undoPunishment(Punishment punishment) {
+		MiscUtil.validate(punishment);
+		PunishmentType type = punishment.getType();
+		if (type == PunishmentType.KICK) {
+			// Kicks are never active, they're pure history, so they can never be undone
+			return core.getFuturesFactory().completedFuture(false);
+		}
+		DbHelper helper = core.getDbHelper();
+		return helper.selectAsync(() -> {
+			try (QueryResult qr = helper.getBackend().query(
+					"DELETE FROM `libertybans_" + type.getLowercaseNamePlural() + "` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)",
+					punishment.getID(), MiscUtil.currentTime())) {
+
+				return qr.toUpdateResult().getUpdateCount() == 1;
+
+			} catch (SQLException ex) {
+				logger.warn("Failed to undo punishment {}", punishment);
+			}
+			return false;
+		});
 	}
 	
 	@Override
-	public CentralisedFuture<Boolean> undoPunishment(Punishment punishment) {
-		return core.getDatabase().selectAsync(() -> {
-			String table = "`libertybans_punishments_" + ((punishment.getType().isSingular()) ? "singular" : "multiple") + '`';
-			try (QueryResult qr = core.getDatabase().getBackend().query(
-					"UPDATE " + table + " SET `undone` = 'TRUE' WHERE `id` = ?", punishment.getID())) {
+	public CentralisedFuture<Boolean> undoPunishmentById(final int id) {
+		DbHelper helper = core.getDbHelper();
+		return helper.selectAsync(() -> {
+
+			final long currentTime = MiscUtil.currentTime();
+			try (MultiQueryResult mqr = helper.getBackend().query(
+					SqlQuery.of("DELETE FROM `libertybans_bans` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)",
+							id, currentTime),
+					SqlQuery.of("DELETE FROM `libertybans_mutes` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)",
+							id, currentTime),
+					SqlQuery.of("DELETE FROM `libertybans_warns` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)",
+							id, currentTime))) {
+
+				for (int m = 0; m < 3; m++) {
+					if (mqr.get(m).toUpdateResult().getUpdateCount() == 1) {
+						return true;
+					}
+				}
+			} catch (SQLException ex) {
+				logger.warn("Failed to undo punishment by ID {}", id);
+			}
+			return false;
+		});
+	}
+	
+	@Override
+	public CentralisedFuture<Boolean> undoPunishmentByTypeAndVictim(final PunishmentType type, final Victim victim) {
+		if (type != PunishmentType.BAN && type != PunishmentType.MUTE) {
+			throw new IllegalArgumentException("undoPunishmentByTypeAndVictim may only be used for bans and mutes, not " + type);
+		}
+		DbHelper helper = core.getDbHelper();
+		return helper.selectAsync(() -> {
+			byte[] victimBytes = getVictimBytes(victim);
+			try (QueryResult qr = helper.getBackend().query(
+					"DELETE FROM `libertybans_" + type.getLowercaseNamePlural()
+					+ "` WHERE `victim` = ? AND `victim_type` = ?", victimBytes, victim.getType().name())) {
+
 				return qr.toUpdateResult().getUpdateCount() == 1;
 			} catch (SQLException ex) {
-				logger.warn("Failed to undo punishment {}", punishment);
+				logger.warn("Failed to undo punishment by type {} and victim {}", type, victim);
 			}
 			return false;
 		});
@@ -133,7 +182,7 @@ class Enactor implements PunishmentEnactor {
 		case CONSOLE:
 			return consoleUUIDBytes;
 		default:
-			throw new IllegalStateException("Unknown OperatorType " + operator.getType());
+			throw new IllegalStateException("Unknown operator type " + operator.getType());
 		}
 	}
 	
@@ -150,7 +199,7 @@ class Enactor implements PunishmentEnactor {
 		case ADDRESS:
 			return AddressVictim.of(bytes);
 		default:
-			throw new IllegalStateException("Unknown VictimType: " + vType);
+			throw new IllegalStateException("Unknown victim type " + vType);
 		}
 	}
 	

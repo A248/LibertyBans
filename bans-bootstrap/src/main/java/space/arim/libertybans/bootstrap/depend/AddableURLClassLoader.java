@@ -23,6 +23,10 @@ import java.net.URLClassLoader;
 
 public class AddableURLClassLoader extends URLClassLoader {
 	
+	static {
+		ClassLoader.registerAsParallelCapable();
+	}
+	
 	public AddableURLClassLoader(String programName, ClassLoader parent) {
 		super(programName + "-ClassLoader", new URL[] {}, parent);
 	}

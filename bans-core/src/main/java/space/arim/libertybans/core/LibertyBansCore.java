@@ -29,9 +29,11 @@ import space.arim.universal.util.concurrent.FactoryOfTheFuture;
 
 import space.arim.api.env.DetectingPlatformHandle;
 import space.arim.api.env.PlatformPluginInfo;
+import space.arim.api.util.config.ConfigLoadValuesFromFileException;
 
 import space.arim.libertybans.api.LibertyBans;
 import space.arim.libertybans.api.RunState;
+import space.arim.libertybans.bootstrap.StartupException;
 import space.arim.libertybans.core.env.AbstractEnv;
 
 public class LibertyBansCore implements LibertyBans, Part {
@@ -41,6 +43,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 	private final AbstractEnv environment;
 	
 	private final Database database;
+	private final DbHelper dbHelper;
 	private final Selector selector;
 	private final Enactor enactor;
 	private final Enforcer enforcer;
@@ -60,6 +63,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 		this.environment = environment;
 
 		database = new Database(this);
+		dbHelper = new DbHelper(this);
 		selector = new Selector(this);
 		enactor = new Enactor(this);
 		enforcer = new Enforcer(this);
@@ -79,8 +83,14 @@ public class LibertyBansCore implements LibertyBans, Part {
 				environment.shutdown();
 			}
 		});
-		database.startup();
-		configs.startup();
+		try {
+			database.startup();
+			configs.startup();
+		} catch (ConfigLoadValuesFromFileException configEx) {
+			throw new StartupException("One or more of your YML files has invalid syntax. "
+					+ "Please use a YAML validator such as https://yaml-online-parser.appspot.com/ "
+					+ "and paste your config files there to check them.", configEx);
+		}
 		selector.startup();
 		uuidMaster.startup();
 	}
@@ -111,6 +121,10 @@ public class LibertyBansCore implements LibertyBans, Part {
 	@Override
 	public Database getDatabase() {
 		return database;
+	}
+	
+	DbHelper getDbHelper() {
+		return dbHelper;
 	}
 	
 	@Override

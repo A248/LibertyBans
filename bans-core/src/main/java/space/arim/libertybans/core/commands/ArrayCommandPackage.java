@@ -35,6 +35,11 @@ public class ArrayCommandPackage extends CommandPackage {
 	}
 	
 	@Override
+	public String peek() {
+		return args[position];
+	}
+	
+	@Override
 	public boolean hasNext() {
 		return args.length > position;
 	}

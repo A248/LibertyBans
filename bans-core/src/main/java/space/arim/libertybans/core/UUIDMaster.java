@@ -118,8 +118,9 @@ public class UUIDMaster implements Part {
 		
 		@Override
 		public CentralisedFuture<UUID> resolve(String name) {
-			return core.getDatabase().selectAsync(() -> {
-				try (ResultSet rs = core.getDatabase().getBackend().select(
+			DbHelper helper = core.getDbHelper();
+			return helper.selectAsync(() -> {
+				try (ResultSet rs = helper.getBackend().select(
 						"SELECT `uuid` FROM `libertybans_names` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
 					if (rs.next()) {
 						return UUIDUtil.fromByteArray(rs.getBytes("uuid"));
@@ -133,8 +134,9 @@ public class UUIDMaster implements Part {
 
 		@Override
 		public CentralisedFuture<String> resolve(UUID uuid) {
-			return core.getDatabase().selectAsync(() -> {
-				try (ResultSet rs = core.getDatabase().getBackend().select(
+			DbHelper helper = core.getDbHelper();
+			return helper.selectAsync(() -> {
+				try (ResultSet rs = helper.getBackend().select(
 						"SELECT `name` FROM `libertybans_names` WHERE `uuid` = ? ORDER BY `updated` DESC LIMIT 1", UUIDUtil.toByteArray(uuid))) {
 					if (rs.next()) {
 						return rs.getString("name");

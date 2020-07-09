@@ -51,4 +51,27 @@ public interface PunishmentEnactor {
 	 */
 	CentralisedFuture<Boolean> undoPunishment(Punishment punishment);
 	
+	/**
+	 * Undoes a punishment according to its ID. <br>
+	 * If the punishment with the ID existed and was removed, the future yields {@code true}, else {@code false}. <br>
+	 * <br>
+	 * <b>This operation may be less efficient than {@link #undoPunishment(Punishment)}. When a full {@code Punishment}
+	 * is known, the former method should be used instead.</b>
+	 * 
+	 * @param id the id of the punishment to undo
+	 * @return a centralised future which yields {@code true} if the punishment existing and was removed, {@code false} otherwise
+	 */
+	CentralisedFuture<Boolean> undoPunishmentById(int id);
+	
+	/**
+	 * Undoes a single punishment by its type and victim. <b>This may only be used for bans and mutes,</b>
+	 * since it relies on the fact that a single victim cannot have more than 1 ban or mute.
+	 * 
+	 * @param type the punishment type, must be either BAN or MUTE
+	 * @param victim the victim whose punishment to undo
+	 * @return a centralised future which yields {@code true} if the punishment existing and was removed, {@code false} otherwise
+	 * @throws IllegalArgumentException if {@code type} is not BAN or MUTE
+	 */
+	CentralisedFuture<Boolean> undoPunishmentByTypeAndVictim(PunishmentType type, Victim victim);
+
 }

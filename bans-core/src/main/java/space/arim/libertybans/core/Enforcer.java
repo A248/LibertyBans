@@ -49,6 +49,7 @@ public class Enforcer implements PunishmentEnforcer {
 	
 	@Override
 	public void enforce(Punishment punishment) {
+		MiscUtil.validate(punishment);
 		String message = core.getFormatter().getPunishmentMessage(punishment);
 		switch (punishment.getVictim().getType()) {
 		case PLAYER:
@@ -101,14 +102,14 @@ public class Enforcer implements PunishmentEnforcer {
 				queryBuilder.append(')');
 			}
 
-			try (ResultSet rs = core.getDatabase().getBackend().select(queryBuilder.toString(), args.toArray())) {
+			try (ResultSet rs = core.getDbHelper().getBackend().select(queryBuilder.toString(), args.toArray())) {
 				while (rs.next()) {
 					removeAndKickIfMatching(targets, rs.getBytes("address"), message);
 				}
 			} catch (SQLException ex) {
 				logger.error("Failed IP lookups for enforcing address-based punishment", ex);
 			}
-		});
+		}, core.getDbHelper().getExecutor());
 	}
 	
 }

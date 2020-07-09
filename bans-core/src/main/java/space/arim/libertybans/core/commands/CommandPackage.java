@@ -45,9 +45,17 @@ public abstract class CommandPackage implements Iterator<String>, Cloneable {
 	/**
 	 * Gets the current argument and advances to the next argument
 	 * 
+	 * @return the current argument
 	 */
 	@Override
 	public abstract String next();
+	
+	/**
+	 * Gets the current argument without advancing to the next one
+	 * 
+	 * @return the current argument
+	 */
+	public abstract String peek();
 	
 	/**
 	 * Indicates whether there are more arguments.

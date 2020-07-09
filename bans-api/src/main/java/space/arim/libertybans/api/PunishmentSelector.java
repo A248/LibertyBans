@@ -67,7 +67,7 @@ public interface PunishmentSelector {
 	 * @param victim the victim
 	 * @return a future which yields all punishments applying to the victim, or an empty set
 	 */
-	CentralisedFuture<Set<Punishment>> getAllPunishmentsForVictim(Victim victim);
+	CentralisedFuture<Set<Punishment>> getHistoryForVictim(Victim victim);
 	
 	/**
 	 * Gets all active punishments of a certain punishment type. <br>
@@ -76,7 +76,7 @@ public interface PunishmentSelector {
 	 * @param type the punishment type
 	 * @return a future which yields all applicable punishments matching the type, or an empty set
 	 */
-	CentralisedFuture<Set<Punishment>> getPunishmentsForType(PunishmentType type);
+	CentralisedFuture<Set<Punishment>> getActivePunishmentsForType(PunishmentType type);
 
 	/**
 	 * Gets the first punishment, of a certain type, which is <i>applicable</i> to a UUID and IP address,
