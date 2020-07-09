@@ -70,6 +70,11 @@ public class LibertyBansLauncher {
 	private static final Repository ARIM_REPO = new Repository("https://www.arim.space/maven");
 	private static final Repository CENTRAL_REPO = new Repository("https://repo.maven.apache.org/maven2");
 	
+	/*
+	 * Dependencies here are publicly exposed, but cannot be relocated, because
+	 * they are part of the API.
+	 * 
+	 */
 	private void addApiDeps(DependencyLoader loader) {
 		if (!classExists("space.arim.universal.registry.UniversalRegistry")) {
 			loader.addPair(Dependency.of("space.arim.universal", "universal-all-shaded", "0.13.4-SNAPSHOT",
@@ -91,6 +96,11 @@ public class LibertyBansLauncher {
 		}
 	}
 	
+	/*
+	 * Dependencies here are added to the isolated ClassLoader used by
+	 * the core implementation. They do not need to be relocated.
+	 * 
+	 */
 	private void addInternalDeps(DependencyLoader loader) {
 		/*
 		 * Since Paper, Waterfall, Sponge, and Velocity include slf4j,
