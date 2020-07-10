@@ -28,6 +28,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 
+import space.arim.universal.util.concurrent.CentralisedFuture;
+
+import space.arim.uuidvault.api.UUIDUtil;
 import space.arim.uuidvault.api.UUIDVault;
 
 import space.arim.libertybans.api.AddressVictim;
@@ -52,45 +55,72 @@ public class Formatter {
 		return core.getConfigs().getMessages().getBoolean("json.enable");
 	}
 	
-	public String getPunishmentMessage(Punishment punishment) {
+	/**
+	 * Gets the punishment message for a punishment. The only reason
+	 * 
+	 * @param punishment
+	 * @return
+	 */
+	public CentralisedFuture<String> getPunishmentMessage(Punishment punishment) {
 		String path = "additions." + punishment.getType().getLowercaseNamePlural() + ".layout";
 		return formatAll(core.getConfigs().getMessages().getStringList(path), punishment);
 	}
 	
-	private String formatAll(List<String> messages, Punishment punishment) {
+	private CentralisedFuture<String> formatAll(List<String> messages, Punishment punishment) {
 		StringBuilder result = new StringBuilder();
 		String[] msgArray = messages.toArray(new String[] {});
 		for (int n = 0; n < msgArray.length; n++) {
 			if (n != 0) {
 				result.append('\n');
 			}
-			result.append(formatWithPunishment(msgArray[n], punishment));
+			result.append(msgArray[n]);
 		}
-		return result.toString();
+		return formatWithPunishment(result.toString(), punishment);
 	}
 	
-	String formatWithPunishment(String message, Punishment punishment) {
-		long now = MiscUtil.currentTime();
-		long start = punishment.getStart();
-		long end = punishment.getEnd();
-		return message.replace("%ID%", Integer.toString(punishment.getID())).replace("%TYPE%", formatType(punishment.getType())).replace("%VICTIM%", formatVictim(punishment.getVictim()))
-				.replace("%OPERATOR%", formatOperator(punishment.getOperator())).replace("%REASON%", punishment.getReason())
-				.replace("%SCOPE%", ((Scoper.ScopeImpl) punishment.getScope()).server).replace("%TIME_START_ABS%", formatAbsolute(start))
-				.replace("%TIME_START_REL%", formatRelative(start, now)).replace("%TIME_END_ABS%", formatAbsolute(end))
-				.replace("%TIME_END_REL%", formatRelative(end, now)).replace("%DURATION%", formatRelative(end, start));
+	CentralisedFuture<String> formatWithPunishment(String message, Punishment punishment) {
+		return formatVictim(punishment.getVictim()).thenApply((victim) -> {
+			long now = MiscUtil.currentTime();
+			long start = punishment.getStart();
+			long end = punishment.getEnd();
+			return message.replace("%ID%", Integer.toString(punishment.getID()))
+					.replace("%TYPE%", formatType(punishment.getType())).replace("%VICTIM%", victim)
+					.replace("%VICTIM_ID%", formatVictimId(punishment.getVictim()))
+					.replace("%OPERATOR%", formatOperator(punishment.getOperator()))
+					.replace("%REASON%", punishment.getReason())
+					.replace("%SCOPE%", core.getScopeManager().getServer(punishment.getScope()))
+					.replace("%TIME_START_ABS%", formatAbsolute(start))
+					.replace("%TIME_START_REL%", formatRelative(start, now))
+					.replace("%TIME_END_ABS%", formatAbsolute(end)).replace("%TIME_END_REL%", formatRelative(end, now))
+					.replace("%DURATION%", formatRelative(end, start));
+		});
 	}
 
-	String formatType(PunishmentType type) {
+	private String formatType(PunishmentType type) {
 		return type.toString();
 	}
 	
-	String formatVictim(Victim victim) {
+	private String formatVictimId(Victim victim) {
 		switch (victim.getType()) {
 		case PLAYER:
-			// This should never be null, because of UUIDMaster's fastCache
-			return Objects.requireNonNull(UUIDVault.get().resolveImmediately(((PlayerVictim) victim).getUUID()));
+			return UUIDUtil.toShortString(((PlayerVictim) victim).getUUID());
 		case ADDRESS:
 			return formatAddress(((AddressVictim) victim).getAddress());
+		default:
+			throw new IllegalStateException("Unknown victim type " + victim.getType());
+		}
+	}
+	
+	CentralisedFuture<String> formatVictim(Victim victim) {
+		switch (victim.getType()) {
+		case PLAYER:
+			/*
+			 * This should be a complete future every time we call this ourselves, because of UUIDMaster's fastCache.
+			 * However, for API calls, the UUID/name might not be added to the cache.
+			 */
+			return core.getFuturesFactory().copyFuture(UUIDVault.get().resolve(((PlayerVictim) victim).getUUID()));
+		case ADDRESS:
+			return core.getFuturesFactory().completedFuture(formatAddress(((AddressVictim) victim).getAddress()));
 		default:
 			throw new IllegalStateException("Unknown victim type " + victim.getType());
 		}
