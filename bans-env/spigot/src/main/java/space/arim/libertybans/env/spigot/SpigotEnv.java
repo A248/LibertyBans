@@ -70,7 +70,7 @@ public class SpigotEnv extends AbstractEnv {
 	@Override
 	public void sendToThoseWithPermission(String permission, String message) {
 		Consumer<Player> forEach;
-		if (core.getFormatter().isUseJson()) {
+		if (core.getFormatter().useJson()) {
 			BaseComponent[] parsed = new BungeeComponentParser().parseJson(message);
 			forEach = (player) -> player.spigot().sendMessage(parsed);
 		} else {
@@ -87,7 +87,7 @@ public class SpigotEnv extends AbstractEnv {
 		BungeeComponentParser parser = new BungeeComponentParser();
 		if (sender instanceof Player) {
 			Player player = (Player) sender;
-			if (core.getFormatter().isUseJson()) {
+			if (core.getFormatter().useJson()) {
 				player.spigot().sendMessage(parser.parseJson(jsonable));
 			} else {
 				player.sendMessage(jsonable);
