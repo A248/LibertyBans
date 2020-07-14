@@ -18,6 +18,8 @@
  */
 package space.arim.libertybans.core;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -169,7 +171,7 @@ class Enactor implements PunishmentEnactor {
 		case PLAYER:
 			return UUIDUtil.toByteArray(((PlayerVictim) victim).getUUID());
 		case ADDRESS:
-			return ((AddressVictim) victim).getAddress();
+			return ((AddressVictim) victim).getAddress().getAddress();
 		default:
 			throw new IllegalStateException("Unknown VictimType " + vType);
 		}
@@ -197,7 +199,11 @@ class Enactor implements PunishmentEnactor {
 		case PLAYER:
 			return PlayerVictim.of(UUIDUtil.fromByteArray(bytes));
 		case ADDRESS:
-			return AddressVictim.of(bytes);
+			try {
+				return AddressVictim.of(InetAddress.getByAddress(bytes));
+			} catch (UnknownHostException ex) {
+				throw new CorruptDbException("Cannot parse internal IP address " + Arrays.toString(bytes), ex);
+			}
 		default:
 			throw new IllegalStateException("Unknown victim type " + vType);
 		}

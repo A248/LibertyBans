@@ -28,21 +28,11 @@ import java.net.InetAddress;
  */
 public class AddressVictim extends Victim {
 
-	private final byte[] address;
+	private final InetAddress address;
 	
-	private AddressVictim(byte[] address) {
+	private AddressVictim(InetAddress address) {
 		super(VictimType.ADDRESS);
 		this.address = address;
-	}
-	
-	/**
-	 * Gets a victim for the specified address
-	 * 
-	 * @param address the address, in network byte order
-	 * @return a victim representing the address
-	 */
-	public static AddressVictim of(byte[] address) {
-		return new AddressVictim(address);
 	}
 	
 	/**
@@ -52,15 +42,15 @@ public class AddressVictim extends Victim {
 	 * @return a victim representing the address
 	 */
 	public static AddressVictim of(InetAddress address) {
-		return of(address.getAddress());
+		return of(address);
 	}
 	
 	/**
-	 * Gets the raw bytes of this victim's IP address
+	 * Gets the IP address represented by this victim
 	 * 
-	 * @return the raw address in network byte order
+	 * @return the IP address this victim represents
 	 */
-	public byte[] getAddress() {
+	public InetAddress getAddress() {
 		return address;
 	}
 
