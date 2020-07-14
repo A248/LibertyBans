@@ -81,7 +81,7 @@ public class Enforcer implements PunishmentEnforcer {
 				.thenAcceptAsync((targets) -> {
 
 			String message = futureMsg.join(); // will be done by now, due to thenCombine
-			byte[] address = ((AddressVictim) punishment.getVictim()).getAddress();
+			byte[] address = ((AddressVictim) punishment.getVictim()).getAddress().getAddress();
 
 			removeAndKickIfMatching(targets, address, message);
 			if (targets.isEmpty()) {

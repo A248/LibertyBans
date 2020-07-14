@@ -19,7 +19,6 @@
 package space.arim.libertybans.core;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.Instant;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -56,10 +55,11 @@ public class Formatter {
 	}
 	
 	/**
-	 * Gets the punishment message for a punishment. The only reason
+	 * Gets the punishment message for a punishment. The only reason the future may not be completed
+	 * is that a UUID/name lookup is required and the mapping is not in the fast cache.
 	 * 
-	 * @param punishment
-	 * @return
+	 * @param punishment the punishment
+	 * @return the punishment message future
 	 */
 	public CentralisedFuture<String> getPunishmentMessage(Punishment punishment) {
 		String path = "additions." + punishment.getType().getLowercaseNamePlural() + ".layout";
@@ -111,7 +111,7 @@ public class Formatter {
 		}
 	}
 	
-	CentralisedFuture<String> formatVictim(Victim victim) {
+	private CentralisedFuture<String> formatVictim(Victim victim) {
 		switch (victim.getType()) {
 		case PLAYER:
 			/*
@@ -126,7 +126,7 @@ public class Formatter {
 		}
 	}
 	
-	String formatOperator(Operator operator) {
+	private String formatOperator(Operator operator) {
 		switch (operator.getType()) {
 		case CONSOLE:
 			return core.getConfigs().getConfig().getString("formatting.console-display");
@@ -138,12 +138,8 @@ public class Formatter {
 		}
 	}
 	
-	String formatAddress(byte[] address) {
-		try {
-			return InetAddress.getByAddress(address).getHostAddress();
-		} catch (UnknownHostException ex) {
-			throw new IllegalStateException(ex);
-		}
+	private String formatAddress(InetAddress address) {
+		return address.getHostAddress();
 	}
 	
 	private String formatAbsolute(long time) {

@@ -18,9 +18,14 @@
  */
 package space.arim.libertybans.core;
 
-import java.util.concurrent.CompletableFuture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import space.arim.universal.util.ThisClass;
+import space.arim.universal.util.concurrent.CentralisedFuture;
 
 import space.arim.api.util.config.Config;
+import space.arim.api.util.config.ConfigLoadValuesFromFileException;
 
 import space.arim.libertybans.api.DraftPunishment;
 import space.arim.libertybans.api.PlayerVictim;
@@ -38,6 +43,8 @@ public class Commands {
 	private final Config config;
 	private final Config messages;
 	
+	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+	
 	Commands(LibertyBansCore core) {
 		this.core = core;
 		config = core.getConfigs().getConfig();
@@ -48,7 +55,7 @@ public class Commands {
 		if (messages.getBoolean("all.prefix.use")) {
 			sender = new PrefixedCmdSender(sender, messages.getString("all.prefix.value"));
 		}
-		if (!sender.hasPermission("libertybans.command.use")) {
+		if (!sender.hasPermission("libertybans.commands")) {
 			sender.sendMessage("No permission!");
 			return;
 		}
@@ -64,40 +71,55 @@ public class Commands {
 			sender.sendMessage(messages.getString("all.usage"));
 			return;
 		}
-		switch (command.next()) {
+		String firstArg = command.next();
+		switch (firstArg) {
 		case "restart":
-			core.getEnvironment().restart();
-			sender.sendMessage(config.getString("all.restarted"));
-			break;
+			boolean restarted = core.getEnvironment().restart();
+			sender.sendMessage((restarted) ? config.getString("all.restarted") : "Not restarting because loading already in process");
+			return;
 		case "reload":
-			core.getConfigs().reload();
-			sender.sendMessage(config.getString("all.reloaded"));
-			break;
-		case "ban":
-			banCmd(sender, command);
-			break;
-		case "unban":
-			unbanCmd(sender, command);
-			break;
+			try {
+				core.getConfigs().reload();
+				sender.sendMessage(config.getString("all.reloaded"));
+			} catch (ConfigLoadValuesFromFileException ex) {
+				sender.sendMessage("Failed to reload config files: Please check your server console for the full error.");
+				logger.warn("Failed to reload config files", ex);
+			}
+			return;
 		default:
 			break;
 		}
+		for (PunishmentType type : MiscUtil.punishmentTypes()) {
+			if (type.name().equalsIgnoreCase(firstArg)) {
+				punishCommand(sender, type, command);
+			}
+		}
+		for (PunishmentType type : MiscUtil.punishmentTypes()) {
+			if (type == PunishmentType.KICK) {
+				// Cannot undo kicks
+				continue;
+			}
+			if (("un" + type.getLowercaseName()).equalsIgnoreCase(firstArg)) {
+				unbanCmd(sender, type, command);
+			}
+		}
 	}
-	
-	private void banCmd(CmdSender sender, CommandPackage command) {
-		if (!sender.hasPermission("libertybans.ban.do")) {
-			sender.sendMessage(messages.getString("additions.bans.permission.command"));
+
+	private void punishCommand(CmdSender sender, PunishmentType type, CommandPackage command) {
+		if (!sender.hasPermission("libertybans." + type.getLowercaseName() + ".do")) { // libertybans.ban.do
+			sender.sendMessage(
+					messages.getString("additions." + type.getLowercaseNamePlural() + ".permission.command")); // additions.bans.permission.command
 			return;
 		}
 		if (!command.hasNext()) {
-			sender.sendMessage(messages.getString("additions.bans.usage"));
+			sender.sendMessage(messages.getString("additions." + type.getLowercaseNamePlural() + ".usage")); // additions.bans.usage
 			return;
 		}
-		String name = command.next();
-		core.getUUIDMaster().fullLookupUUID(name).thenCompose((uuid) -> {
+		String targetArg = command.next();
+		core.getUUIDMaster().fullLookupUUID(targetArg).thenCompose((uuid) -> {
 			if (uuid == null) {
-				sender.sendMessage(messages.getString("all.not-found.uuid").replace("%TARGET%", name));
-				return CompletableFuture.completedFuture(null);
+				sender.sendMessage(messages.getString("all.not-found.uuid").replace("%TARGET%", targetArg));
+				return core.getFuturesFactory().completedFuture(null);
 			}
 			String reason;
 			if (command.hasNext()) {
@@ -108,48 +130,61 @@ public class Commands {
 				reason = config.getString("reasons.default-reason");
 			}
 			DraftPunishment draftBan = new DraftPunishment.Builder().victim(PlayerVictim.of(uuid))
-					.operator(sender.getOperator()).type(PunishmentType.BAN).start(System.currentTimeMillis())
-					.permanent().reason(reason).scope(core.getScopeManager().globalScope()).build();
+					.operator(sender.getOperator()).type(type).reason(reason)
+					.scope(core.getScopeManager().globalScope()).build();
 
-			return core.getEnactor().enactPunishment(draftBan, true).thenApply((nullIfConflict) -> {
+			return core.getEnactor().enactPunishment(draftBan).thenApply((nullIfConflict) -> {
+				assert type == PunishmentType.BAN || type == PunishmentType.MUTE : type;
 				if (nullIfConflict == null) {
-					sender.sendMessage(messages.getString("additions.bans.error.conflicting"));
+					String configPath = "additions." + type.getLowercaseNamePlural() + ".error.conflicting"; // additions.bans.error.conflicting
+					sender.sendMessage(messages.getString(configPath).replace("%TARGET%", targetArg));
 				}
 				return nullIfConflict;
 			});
-
 		}).thenAccept((punishment) -> {
 			if (punishment == null) {
 				return;
 			}
-			sender.sendMessage(core.getFormatter()
-					.formatWithPunishment(messages.getString("additions.bans.successful.message"), punishment));
+			// Success message
+			String rawMsg = messages.getString("additions." + type.getLowercaseNamePlural() + ".successful.message"); // additions.bans.successful.message
+			CentralisedFuture<String> futureMsg = core.getFormatter().formatWithPunishment(rawMsg, punishment);
+			assert futureMsg.isDone();
+			sender.sendMessage(futureMsg.join());
+
+			// Enforcement
 			core.getEnforcer().enforce(punishment);
-			core.getEnvironment().sendToThoseWithPermission("libertybans.ban.notify", core.getFormatter()
-					.formatWithPunishment(messages.getString("addition.bans.successful.notification"), punishment));
+
+			// Notification
+			String notifyPerm = "libertybans." + type.getLowercaseName() + ".notify"; // libertybans.ban.notify
+			String configMsgPath = "addition." + type.getLowercaseNamePlural() + ".successful.notification"; // addition.bans.successful.notification
+			String rawNotify = messages.getString(configMsgPath);
+			CentralisedFuture<String> futureNotify = core.getFormatter().formatWithPunishment(rawNotify, punishment);
+			assert futureNotify.isDone();
+			core.getEnvironment().sendToThoseWithPermission(notifyPerm, futureNotify.join());
 		});
 	}
 	
-	private void unbanCmd(CmdSender sender, CommandPackage command) {
-		if (!sender.hasPermission("libertybans.ban.undo")) {
-			sender.sendMessage(messages.getString("removals.bans.permission.command"));
+	private void unbanCmd(CmdSender sender, PunishmentType type, CommandPackage command) {
+		if (!sender.hasPermission("libertybans." + type.getLowercaseName() + ".undo")) { // libertybans.ban.undo
+			sender.sendMessage(messages.getString("removals." + type.getLowercaseNamePlural() + ".permission.command")); // removals.bans.permission.command
 			return;
 		}
 		if (!command.hasNext()) {
-			sender.sendMessage(messages.getString("removals.bans.usage"));
+			sender.sendMessage(messages.getString("removals." + type.getLowercaseNamePlural() + ".usage")); // removals.bans.usage
 			return;
 		}
 		String name = command.next();
 		core.getUUIDMaster().fullLookupUUID(name).thenCompose((uuid) -> {
 			if (uuid == null) {
 				sender.sendMessage(messages.getString("all.not-found.uuid").replace("%TARGET%", name));
-				return CompletableFuture.completedFuture(null);
+				return core.getFuturesFactory().completedFuture(null);
 			}
-			PunishmentSelection selection = new PunishmentSelection.Builder().type(PunishmentType.BAN)
+			PunishmentSelection selection = new PunishmentSelection.Builder().type(type)
 					.victim(PlayerVictim.of(uuid)).build();
 			return core.getSelector().getFirstSpecificPunishment(selection).thenApply((nullIfNotFound) -> {
 				if (nullIfNotFound == null) {
-					sender.sendMessage(messages.getString("removals.bans.not-found").replace("%TARGET%", name));
+					String configPath = "removals." + type.getLowercaseNamePlural() + ".not-found"; // removals.bans.not-found
+					sender.sendMessage(messages.getString(configPath).replace("%TARGET%", name));
 				}
 				return nullIfNotFound;
 			});
@@ -157,10 +192,17 @@ public class Commands {
 			if (punishment == null) {
 				return;
 			}
-			sender.sendMessage(core.getFormatter()
-					.formatWithPunishment(messages.getString("removals.bans.successful.message"), punishment));
-			core.getEnvironment().sendToThoseWithPermission("libertybans.ban.unnotify", core.getFormatter()
-					.formatWithPunishment(messages.getString("removals.bans.successful.notification"), punishment));
+			// Success message
+			String rawMsg = messages.getString("removals." + type.getLowercaseNamePlural() + ".successful.message"); // removals.bans.successful.message
+			CentralisedFuture<String> futureMsg = core.getFormatter().formatWithPunishment(rawMsg, punishment);
+			assert futureMsg.isDone();
+			sender.sendMessage(futureMsg.join());
+
+			// Notification
+			String rawNotify = messages.getString("removals." + type.getLowercaseNamePlural() + ".successful.notification"); // removals.bans.successful.notification
+			CentralisedFuture<String> futureNotify = core.getFormatter().formatWithPunishment(rawNotify, punishment);
+			assert futureNotify.isDone();
+			core.getEnvironment().sendToThoseWithPermission("libertybans." + type.getLowercaseName() + ".unnotify", futureNotify.join()); // libertybans.ban.unnotify
 		});
 	}
 	
