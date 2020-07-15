@@ -20,7 +20,7 @@ package space.arim.libertybans.bootstrap;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ForkJoinPool;
 
 public class Instantiator {
 
@@ -35,21 +35,20 @@ public class Instantiator {
 	}
 	
 	/**
-	 * Creates a reasonable thread pool for downloading dependencies, using either
-	 * the specified thread factory or {@code null} for the default factory
+	 * Creates a reasonable thread pool for downloading dependencies. <br>
+	 * <br>
+	 * If there are enough threads in the ForkJoinPool's commonPool it is used, else a typical thread pool
+	 * is returned, which must be shutdown.
 	 * 
-	 * @param factory the thread factory to use, or null for the default
 	 * @return a thread pool for downloading dependencies
 	 */
-	public static ExecutorService createReasonableExecutor(ThreadFactory factory) {
-		/*
-		 * 4 is a reasonable amount - not too much, not too little
-		 */
-		int amount = 4;
-		if (factory != null) {
-			return Executors.newFixedThreadPool(amount, factory);
+	public static ExecutorService createReasonableExecutor() {
+		int minParallelism = 5;
+		int commonParallelism = ForkJoinPool.getCommonPoolParallelism();
+		if (commonParallelism >= minParallelism) {
+			return ForkJoinPool.commonPool();
 		}
-		return Executors.newFixedThreadPool(amount);
+		return Executors.newFixedThreadPool(minParallelism);
 	}
 	
 }

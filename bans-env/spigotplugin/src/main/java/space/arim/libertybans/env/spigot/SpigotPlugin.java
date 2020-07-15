@@ -35,7 +35,7 @@ public class SpigotPlugin extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		File folder = getDataFolder();
-		ExecutorService executor = Instantiator.createReasonableExecutor(null);
+		ExecutorService executor = Instantiator.createReasonableExecutor();
 		ClassLoader launchLoader;
 		try {
 			LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {

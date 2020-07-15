@@ -43,7 +43,7 @@ public class BungeePlugin extends Plugin {
 		informAboutSecurityManagerIfNeeded();
 
 		File folder = getDataFolder();
-		ExecutorService executor = Instantiator.createReasonableExecutor(null);
+		ExecutorService executor = Instantiator.createReasonableExecutor();
 		ClassLoader launchLoader;
 		try {
 			LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
