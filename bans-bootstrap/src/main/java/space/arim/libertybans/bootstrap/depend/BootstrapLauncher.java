@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.bootstrap.depend;
 
+import java.lang.reflect.InaccessibleObjectException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -27,7 +28,9 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Must use System.err in this class because we do not know whether the platform uses slf4j or JUL
+ * Composition of 2 {@link DependencyLoader}s used to add dependencies to an external URLClassLoader and
+ * internal AddableURLClassLoader. The external URLClassLoader may require reflection to access its {@code addURL}
+ * method. {@code addUrlsToExternalClassLoader} may be overriden to change this behaviour.
  * 
  * @author A248
  *
@@ -41,19 +44,6 @@ public class BootstrapLauncher {
 	
 	private final DependencyLoader apiDepLoader;
 	private final DependencyLoader internalDepLoader;
-	
-	private static final Method ADD_URL_METHOD;
-	
-	static {
-		Method addUrlMethod;
-		try {
-			addUrlMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-			addUrlMethod.setAccessible(true);
-		} catch (NoSuchMethodException | SecurityException ex) {
-			throw new ExceptionInInitializerError(ex);
-		}
-		ADD_URL_METHOD = addUrlMethod;
-	}
 	
 	public BootstrapLauncher(String programName, URLClassLoader apiClassLoader, DependencyLoader apiDepLoader, DependencyLoader internalDepLoader) {
 		this.programName = programName;
@@ -108,21 +98,34 @@ public class BootstrapLauncher {
 		});
 	}
 	
+	protected boolean addUrlsToExternalClassLoader(URL[] urls) {
+		Method addUrlMethod;
+		try {
+			addUrlMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+			addUrlMethod.setAccessible(true);
+		} catch (NoSuchMethodException | SecurityException | InaccessibleObjectException ex) {
+			errorMessage("Failed to attach dependencies to API ClassLoader");
+			ex.printStackTrace();
+			return false;
+		}
+		try {
+			for (URL url : urls) {
+				addUrlMethod.invoke(apiClassLoader, url);
+			}
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+			errorMessage("Failed to attach dependencies to API ClassLoader");
+			ex.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+	
 	private CompletableFuture<Boolean> loadApi() {
 		return loadURLs(apiDepLoader).thenApply((urls) -> {
 			if (urls == null) {
 				return false;
 			}
-			try {
-				for (URL url : urls) {
-					ADD_URL_METHOD.invoke(apiClassLoader, url);
-				}
-			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-				errorMessage("Failed to attach dependencies to API ClassLoader");
-				ex.printStackTrace(System.err);
-				return false;
-			}
-			return true;
+			return addUrlsToExternalClassLoader(urls);
 		});
 	}
 	
