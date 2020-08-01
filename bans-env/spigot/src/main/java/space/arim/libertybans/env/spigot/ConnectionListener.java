@@ -25,14 +25,17 @@ import java.util.concurrent.ConcurrentMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 
-import space.arim.universal.util.ThisClass;
-import space.arim.universal.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+
+import space.arim.api.chat.SendableMessage;
 
 import space.arim.libertybans.api.Punishment;
 
@@ -80,10 +83,10 @@ public class ConnectionListener implements Listener {
 			logger.trace("Letting '{}' through the gates", evt.getName());
 			return;
 		}
-		CentralisedFuture<String> message = env.core.getFormatter().getPunishmentMessage(punishment);
+		CentralisedFuture<SendableMessage> message = env.core.getFormatter().getPunishmentMessage(punishment);
 		assert message.isDone() : punishment;
 
-		evt.disallow(Result.KICK_BANNED, message.join());
+		evt.disallow(Result.KICK_BANNED, message.join().toLegacyMessageString(ChatColor.COLOR_CHAR));
 	}
 	
 }

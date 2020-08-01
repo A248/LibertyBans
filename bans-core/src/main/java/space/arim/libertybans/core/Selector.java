@@ -36,8 +36,8 @@ import org.slf4j.LoggerFactory;
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
-import space.arim.universal.util.ThisClass;
-import space.arim.universal.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.uuidvault.api.UUIDUtil;
 
@@ -51,8 +51,9 @@ import space.arim.libertybans.api.PunishmentSelector;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Scope;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.core.database.Database;
 
-public class Selector implements PunishmentSelector, Part {
+public class Selector implements PunishmentSelector {
 
 	private final LibertyBansCore core;
 	
@@ -66,11 +67,6 @@ public class Selector implements PunishmentSelector, Part {
 			byte[][] targetInfo = (byte[][]) target;
 			return getApplicablePunishment0(targetInfo[0], targetInfo[1], PunishmentType.MUTE);
 		});
-	}
-	
-	@Override
-	public void startup() {
-		//muteCache.synchronous().invalidateAll();
 	}
 
 	private static StringBuilder getColumns(PunishmentSelection selection) {
@@ -195,7 +191,7 @@ public class Selector implements PunishmentSelector, Part {
 			// Kicks cannot possibly be active. They are all history
 			return core.getFuturesFactory().completedFuture(null);
 		}
-		DbHelper helper = core.getDbHelper();
+		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
 			SqlQuery query = getSelectionQuery(selection);
 			try (ResultSet rs = helper.getBackend().select(query.getStatement(), query.getArgs())) {
@@ -215,7 +211,7 @@ public class Selector implements PunishmentSelector, Part {
 			// Kicks cannot possibly be active. They are all history
 			return core.getFuturesFactory().completedFuture(Set.of());
 		}
-		DbHelper helper = core.getDbHelper();
+		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
 			Set<Punishment> result = new HashSet<>();
 			SqlQuery query = getSelectionQuery(selection);
@@ -258,7 +254,7 @@ public class Selector implements PunishmentSelector, Part {
 	public CentralisedFuture<Punishment> executeAndCheckConnection(UUID uuid, String name, byte[] address) {
 		core.getUUIDMaster().addCache(uuid, name);
 
-		DbHelper helper = core.getDbHelper();
+		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
 			Enactor enactor = core.getEnactor();
 
@@ -286,7 +282,7 @@ public class Selector implements PunishmentSelector, Part {
 	}
 	
 	private CentralisedFuture<Punishment> getApplicablePunishment0(byte[] rawUUID, byte[] address, PunishmentType type) {
-		DbHelper helper = core.getDbHelper();
+		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
 			Enactor enactor = core.getEnactor();
 
@@ -316,7 +312,7 @@ public class Selector implements PunishmentSelector, Part {
 
 	@Override
 	public CentralisedFuture<Set<Punishment>> getHistoryForVictim(Victim victim) {
-		DbHelper helper = core.getDbHelper();
+		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
 			Enactor enactor = core.getEnactor();
 			byte[] victimBytes = enactor.getVictimBytes(victim);
@@ -343,7 +339,7 @@ public class Selector implements PunishmentSelector, Part {
 		if (type == PunishmentType.KICK) {
 			return core.getFuturesFactory().completedFuture(Set.of());
 		}
-		DbHelper helper = core.getDbHelper();
+		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
 			Enactor enactor = core.getEnactor();
 			String table = "`libertybans_" + type.getLowercaseNamePlural() + '`';
@@ -363,10 +359,6 @@ public class Selector implements PunishmentSelector, Part {
 			}
 			return Collections.unmodifiableSet(result);
 		});
-	}
-
-	@Override
-	public void shutdown() {
 	}
 
 	@Override

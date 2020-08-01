@@ -22,7 +22,7 @@ import space.arim.libertybans.api.DraftPunishment;
 import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.api.PunishmentType;
 
-final class MiscUtil {
+public final class MiscUtil {
 	
 	/**
 	 * The maximum amount of which can be stored in an INT UNSIGNED data type
@@ -34,11 +34,12 @@ final class MiscUtil {
 	private MiscUtil() {}
 	
 	/**
-	 * Gets a cached PunishmentType array based on {@link PunishmentType#values()}
+	 * Gets a cached PunishmentType array based on {@link PunishmentType#values()}. <br>
+	 * <b>DO NOT MUTATE the result</b>
 	 * 
 	 * @return the cached result of {@link PunishmentType#values()}
 	 */
-	static PunishmentType[] punishmentTypes() {
+	public static PunishmentType[] punishmentTypes() {
 		return PUNISHMENT_TYPES;
 	}
 	
@@ -49,7 +50,7 @@ final class MiscUtil {
 	 * @param enumClass the enum class
 	 * @return the enum data type with a NOT NULL constraint
 	 */
-	static <E extends Enum<E>> String javaToSqlEnum(Class<E> enumClass) {
+	public static <E extends Enum<E>> String javaToSqlEnum(Class<E> enumClass) {
 		StringBuilder builder = new StringBuilder("ENUM (");
 		E[] elements = enumClass.getEnumConstants();
 		for (int n = 0; n < elements.length; n++) {
@@ -68,7 +69,7 @@ final class MiscUtil {
 	 * 
 	 * @return the current unix timestamp
 	 */
-	static long currentTime() {
+	public static long currentTime() {
 		return System.currentTimeMillis() / 1_000L;
 	}
 	
@@ -105,7 +106,7 @@ final class MiscUtil {
 	 * @param type the punishment type
 	 * @return the enactment procedure name
 	 */
-	static String getEnactmentProcedure(PunishmentType type) {
+	public static String getEnactmentProcedure(PunishmentType type) {
 		return type.getLowercaseName() + ((type.isSingular()) ? "hammer" : "tallier");
 	}
 	

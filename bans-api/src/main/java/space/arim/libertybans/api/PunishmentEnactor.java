@@ -18,7 +18,7 @@
  */
 package space.arim.libertybans.api;
 
-import space.arim.universal.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 /**
  * Guardkeeper of adding punishments while enforcing constraints and reporting such enforcement.

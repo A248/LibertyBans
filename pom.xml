@@ -24,11 +24,11 @@
 		<!-- Bumping dependency versions requires modification of LibertyBansLauncher versions and hashes -->
 		
 		<!-- API dependencies -->
-		<universal.version>0.13.4-SNAPSHOT</universal.version>
-		<uuidvault.version>0.4.5-SNAPSHOT</uuidvault.version>
+		<omnibus.version>0.15.3-SNAPSHOT</omnibus.version>
+		<uuidvault.version>0.5.1-SNAPSHOT</uuidvault.version>
 
 		<!-- Internal dependencies -->
-		<arimapi.version>0.17.0-SNAPSHOT</arimapi.version>
+		<arimapi.version>0.19.4-SNAPSHOT</arimapi.version>
 		<slf4j.version>1.7.25</slf4j.version>
 		<hikari.version>3.4.5</hikari.version>
 		<hsqldb.version>2.5.1</hsqldb.version>
@@ -196,14 +196,19 @@
 
 			<!-- API dependencies -->
 			<dependency>
-				<groupId>space.arim.universal</groupId>
-				<artifactId>universal-registry</artifactId>
-				<version>${universal.version}</version>
+				<groupId>space.arim.omnibus</groupId>
+				<artifactId>omnibus-core</artifactId>
+				<version>${omnibus.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>space.arim.uuidvault</groupId>
 				<artifactId>api</artifactId>
 				<version>${uuidvault.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.api</groupId>
+				<artifactId>arimapi-all</artifactId>
+				<version>${arimapi.version}</version>
 			</dependency>
 			
 			<!-- Internal dependencies -->
@@ -211,11 +216,6 @@
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
 				<version>${slf4j.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>space.arim.api</groupId>
-				<artifactId>arimapi-all</artifactId>
-				<version>${arimapi.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.zaxxer</groupId>
@@ -236,9 +236,9 @@
 			
 			<!-- License dependency -->
 			<dependency>
-				<groupId>space.arim.universal</groupId>
-				<artifactId>universal-agpl</artifactId>
-				<version>${universal.version}</version>
+				<groupId>space.arim.licenser</groupId>
+				<artifactId>licenser-agpl3</artifactId>
+				<version>0.1.0-SNAPSHOT</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

@@ -21,15 +21,22 @@ package space.arim.libertybans.core.env;
 import java.util.Set;
 import java.util.UUID;
 
-import space.arim.universal.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+
+import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.PlatformHandle;
 
 import space.arim.libertybans.core.Part;
 
 public interface Environment extends Part {
 	
-	void sendToThoseWithPermission(String permission, String message);
+	Class<?> getPluginClass();
 	
-	void kickByUUID(UUID uuid, String message);
+	PlatformHandle getPlatformHandle();
+	
+	void sendToThoseWithPermission(String permission, SendableMessage message);
+	
+	void kickByUUID(UUID uuid, SendableMessage message);
 	
 	CentralisedFuture<Set<OnlineTarget>> getOnlineTargets();
 	

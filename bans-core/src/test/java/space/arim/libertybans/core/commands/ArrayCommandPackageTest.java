@@ -16,29 +16,13 @@
  * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.bootstrap;
+package space.arim.libertybans.core.commands;
 
-public class StartupException extends LoadingException {
+public class ArrayCommandPackageTest extends CommandPackageTest {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -442174740832379722L;
-	
-	public StartupException() {
-		
-	}
-	
-	public StartupException(String message) {
-		super(message);
-	}
-	
-	public StartupException(Throwable cause) {
-		super(cause);
-	}
-	
-	public StartupException(String message, Throwable cause) {
-		super(message, cause);
+	@Override
+	protected CommandPackage getPackage(String command, String... args) {
+		return new ArrayCommandPackage(command, args);
 	}
 
 }

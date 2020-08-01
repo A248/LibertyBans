@@ -16,29 +16,33 @@
  * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.bootstrap;
+package space.arim.libertybans.core.env;
 
-public class StartupException extends LoadingException {
+import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.PlatformHandle;
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -442174740832379722L;
+public abstract class AbstractOnlineTarget implements OnlineTarget {
+
+	private final PlatformHandle handle;
+	private final Object rawPlayer;
 	
-	public StartupException() {
-		
+	protected AbstractOnlineTarget(PlatformHandle handle, Object rawPlayer) {
+		this.handle = handle;
+		this.rawPlayer = rawPlayer;
 	}
 	
-	public StartupException(String message) {
-		super(message);
+	protected AbstractOnlineTarget(Environment env, Object rawPlayer) {
+		this(env.getPlatformHandle(), rawPlayer);
 	}
-	
-	public StartupException(Throwable cause) {
-		super(cause);
+
+	@Override
+	public void kick(SendableMessage message) {
+		handle.disconnectUser(getRawPlayer(), message);
 	}
-	
-	public StartupException(String message, Throwable cause) {
-		super(message, cause);
+
+	@Override
+	public Object getRawPlayer() {
+		return rawPlayer;
 	}
 
 }

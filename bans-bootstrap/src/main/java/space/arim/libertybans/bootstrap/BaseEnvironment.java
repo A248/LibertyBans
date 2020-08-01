@@ -42,36 +42,15 @@ public abstract class BaseEnvironment {
 		try {
 			if (runState == IDLE) {
 				runState = LOADING;
-				timedStartup();
+				timedEvent(LoadPoint.START);
 				runState = RUNNING;
 			}
 		} finally {
 			runStateLock.unlock();
 		}
 	}
-	
-	private void timedStartup() {
-		infoMessage("Starting...");
-		long startTime = System.nanoTime();
-		try {
-			startup0();
-		} catch (StartupException failure) {
-			infoMessage("Startup failed: " + failure.getMessage());
-			Throwable cause = failure.getCause();
-			if (cause != null) {
-				infoMessage("Extended failure cause:");
-				cause.printStackTrace(System.err);
-			}
-			return;
-		}
-		long endTime = System.nanoTime();
-		double seconds = (TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS)) / 1_000D;
-		infoMessage(String.format("Started up in %.3f seconds", seconds));
-	}
 
-	protected abstract void startup0();
-
-	public boolean restart() {
+	public boolean fullRestart() {
 		if (runState != RUNNING) {
 			return false;
 		}
@@ -83,8 +62,7 @@ public abstract class BaseEnvironment {
 				return false;
 			}
 			runState = LOADING;
-			timedStartup();
-			timedStop();
+			timedEvent(LoadPoint.RESTART);
 			runState = RUNNING;
 		} finally {
 			runStateLock.unlock();
@@ -100,7 +78,7 @@ public abstract class BaseEnvironment {
 		try {
 			if (runState == RUNNING) {
 				runState = LOADING;
-				timedStop();
+				timedEvent(LoadPoint.STOP);
 				runState = IDLE;
 			}
 		} finally {
@@ -108,13 +86,25 @@ public abstract class BaseEnvironment {
 		}
 	}
 	
-	private void timedStop() {
-		infoMessage("Stopping...");
+	private void timedEvent(LoadPoint point) {
+		infoMessage("Conducting " + point + "...");
 		long startTime = System.nanoTime();
 		try {
-			shutdown0();
-		} catch (ShutdownException failure) {
-			infoMessage("Shutdown failed: " + failure.getMessage());
+			switch (point) {
+			case START:
+				startup0();
+				break;
+			case RESTART:
+				restart0();
+				break;
+			case STOP:
+				shutdown0();
+				break;
+			default:
+				throw new IllegalArgumentException("Unknown load point " + point);
+			}
+		} catch (LoadingException failure) {
+			infoMessage("Conducting " + point + " failed: " + failure.getMessage());
 			Throwable cause = failure.getCause();
 			if (cause != null) {
 				infoMessage("Extended failure cause:");
@@ -124,11 +114,21 @@ public abstract class BaseEnvironment {
 		}
 		long endTime = System.nanoTime();
 		double seconds = TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS) / 1_000D;
-		infoMessage(String.format("Shut down in %.3f seconds", seconds));
+		infoMessage(String.format("Finished " + point + " in %.3f seconds", seconds));
 	}
+	
+	protected abstract void startup0();
+	
+	protected abstract void restart0();
 	
 	protected abstract void shutdown0();
 	
 	protected abstract void infoMessage(String message);
+	
+	private enum LoadPoint {
+		START,
+		RESTART,
+		STOP
+	}
 	
 }

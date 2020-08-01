@@ -18,14 +18,14 @@
  */
 package space.arim.libertybans.api;
 
-import space.arim.universal.registry.Registry;
-import space.arim.universal.util.concurrent.FactoryOfTheFuture;
+import space.arim.omnibus.Omnibus;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 public interface LibertyBans {
 
 	RunState getRunState();
 	
-	Registry getRegistry();
+	Omnibus getOmnibus();
 	
 	FactoryOfTheFuture getFuturesFactory();
 	

@@ -28,8 +28,8 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import space.arim.universal.util.ThisClass;
-import space.arim.universal.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.uuidvault.api.UUIDUtil;
 
@@ -49,8 +49,10 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Scope;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.Victim.VictimType;
+import space.arim.libertybans.core.database.CorruptDbException;
+import space.arim.libertybans.core.database.Database;
 
-class Enactor implements PunishmentEnactor {
+public class Enactor implements PunishmentEnactor {
 	
 	private final LibertyBansCore core;
 	
@@ -65,7 +67,7 @@ class Enactor implements PunishmentEnactor {
 	@Override
 	public CentralisedFuture<Punishment> enactPunishment(DraftPunishment draftPunishment) {
 		MiscUtil.validate(draftPunishment);
-		DbHelper helper = core.getDbHelper();
+		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
 
 			Victim victim = draftPunishment.getVictim();
@@ -104,7 +106,7 @@ class Enactor implements PunishmentEnactor {
 			// Kicks are never active, they're pure history, so they can never be undone
 			return core.getFuturesFactory().completedFuture(false);
 		}
-		DbHelper helper = core.getDbHelper();
+		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
 			try (QueryResult qr = helper.getBackend().query(
 					"DELETE FROM `libertybans_" + type.getLowercaseNamePlural() + "` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)",
@@ -121,7 +123,7 @@ class Enactor implements PunishmentEnactor {
 	
 	@Override
 	public CentralisedFuture<Boolean> undoPunishmentById(final int id) {
-		DbHelper helper = core.getDbHelper();
+		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
 
 			final long currentTime = MiscUtil.currentTime();
@@ -150,7 +152,7 @@ class Enactor implements PunishmentEnactor {
 		if (type != PunishmentType.BAN && type != PunishmentType.MUTE) {
 			throw new IllegalArgumentException("undoPunishmentByTypeAndVictim may only be used for bans and mutes, not " + type);
 		}
-		DbHelper helper = core.getDbHelper();
+		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
 			byte[] victimBytes = getVictimBytes(victim);
 			try (QueryResult qr = helper.getBackend().query(

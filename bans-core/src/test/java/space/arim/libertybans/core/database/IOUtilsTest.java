@@ -16,29 +16,18 @@
  * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.bootstrap;
+package space.arim.libertybans.core.database;
 
-public class StartupException extends LoadingException {
+import static org.junit.jupiter.api.Assertions.*;
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -442174740832379722L;
-	
-	public StartupException() {
-		
-	}
-	
-	public StartupException(String message) {
-		super(message);
-	}
-	
-	public StartupException(Throwable cause) {
-		super(cause);
-	}
-	
-	public StartupException(String message, Throwable cause) {
-		super(message, cause);
-	}
+import org.junit.jupiter.api.Test;
 
+public class IOUtilsTest {
+
+	@Test
+	public void testReadResource() {
+		assertEquals("i do not care", IOUtils.readResourceBlocking("whatever.yml"));
+		assertFalse(IOUtils.readSqlResourceBlocking("procedure_refresh.sql").isBlank());
+	}
+	
 }

@@ -24,15 +24,17 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.md_5.bungee.api.chat.TextComponent;
+import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+
+import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.chat.BungeeComponentConverter;
+
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
-
-import space.arim.universal.util.ThisClass;
-import space.arim.universal.util.concurrent.CentralisedFuture;
 
 public class ConnectionListener implements Listener {
 
@@ -50,7 +52,7 @@ public class ConnectionListener implements Listener {
 			logger.debug("Player '{}' is already blocked by the server or another plugin", evt.getConnection().getName());
 			return;
 		}
-		evt.registerIntent(env.plugin);
+		evt.registerIntent(env.getPlugin());
 		PendingConnection conn = evt.getConnection();
 		UUID uuid = conn.getUniqueId();
 		String name = conn.getName();
@@ -60,13 +62,13 @@ public class ConnectionListener implements Listener {
 				logger.trace("Letting '{}' through the gates", name);
 
 			} else {
-				CentralisedFuture<String> message = env.core.getFormatter().getPunishmentMessage(punishment);
+				CentralisedFuture<SendableMessage> message = env.core.getFormatter().getPunishmentMessage(punishment);
 				assert message.isDone() : punishment;
 
 				evt.setCancelled(true);
-				evt.setCancelReason(TextComponent.fromLegacyText(message.join()));
+				evt.setCancelReason(new BungeeComponentConverter().convertFrom(message.join()));
 			}
-			evt.completeIntent(env.plugin);
+			evt.completeIntent(env.getPlugin());
 		});
 	}
 	

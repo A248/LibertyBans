@@ -22,6 +22,11 @@ public interface Part {
 
 	void startup();
 	
+	default void restart() {
+		startup();
+		shutdown();
+	}
+	
 	void shutdown();
 	
 }

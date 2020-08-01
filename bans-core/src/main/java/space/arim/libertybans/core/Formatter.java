@@ -27,10 +27,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 
-import space.arim.universal.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.uuidvault.api.UUIDUtil;
 import space.arim.uuidvault.api.UUIDVault;
+
+import space.arim.api.chat.SendableMessage;
+import space.arim.api.chat.parser.SendableMessageParser;
+import space.arim.api.chat.parser.SendableMessageParser.ColourMode;
+import space.arim.api.chat.parser.SendableMessageParser.JsonMode;
+import space.arim.api.chat.parser.StandardSendableMessageParser;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.Operator;
@@ -45,12 +51,18 @@ public class Formatter {
 	private final LibertyBansCore core;
 	
 	private static final Entry<String, Long>[] timeUnits;
+	private static final SendableMessageParser parser = new StandardSendableMessageParser();
 	
 	Formatter(LibertyBansCore core) {
 		this.core = core;
 	}
 	
-	public boolean useJson() {
+	public SendableMessage parseMessage(String rawMessage) {
+		JsonMode jsonMode = (isJsonEnabled()) ? JsonMode.JSON_SK : JsonMode.NONE;
+		return parser.parseMessage(rawMessage, ColourMode.ALL_COLOURS, jsonMode);
+	}
+	
+	public boolean isJsonEnabled() {
 		return core.getConfigs().getMessages().getBoolean("json.enable");
 	}
 	
@@ -61,12 +73,12 @@ public class Formatter {
 	 * @param punishment the punishment
 	 * @return the punishment message future
 	 */
-	public CentralisedFuture<String> getPunishmentMessage(Punishment punishment) {
+	public CentralisedFuture<SendableMessage> getPunishmentMessage(Punishment punishment) {
 		String path = "additions." + punishment.getType().getLowercaseNamePlural() + ".layout";
 		return formatAll(core.getConfigs().getMessages().getStringList(path), punishment);
 	}
 	
-	private CentralisedFuture<String> formatAll(List<String> messages, Punishment punishment) {
+	private CentralisedFuture<SendableMessage> formatAll(List<String> messages, Punishment punishment) {
 		StringBuilder result = new StringBuilder();
 		String[] msgArray = messages.toArray(new String[] {});
 		for (int n = 0; n < msgArray.length; n++) {
@@ -78,7 +90,7 @@ public class Formatter {
 		return formatWithPunishment(result.toString(), punishment);
 	}
 	
-	CentralisedFuture<String> formatWithPunishment(String message, Punishment punishment) {
+	public CentralisedFuture<SendableMessage> formatWithPunishment(String message, Punishment punishment) {
 		return formatVictim(punishment.getVictim()).thenApply((victim) -> {
 			long now = MiscUtil.currentTime();
 			long start = punishment.getStart();
@@ -93,7 +105,7 @@ public class Formatter {
 					.replace("%TIME_START_REL%", formatRelative(start, now))
 					.replace("%TIME_END_ABS%", formatAbsolute(end)).replace("%TIME_END_REL%", formatRelative(end, now))
 					.replace("%DURATION%", formatRelative(end, start));
-		});
+		}).thenApply(this::parseMessage);
 	}
 
 	private String formatType(PunishmentType type) {

@@ -20,16 +20,15 @@ package space.arim.libertybans.env.spigot;
 
 import java.util.UUID;
 
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
-import space.arim.libertybans.core.env.OnlineTarget;
+import space.arim.api.chat.SendableMessage;
 
-class SpigotOnlineTarget implements OnlineTarget {
+import space.arim.libertybans.core.env.AbstractOnlineTarget;
+
+class SpigotOnlineTarget extends AbstractOnlineTarget {
 
 	private final SpigotEnv env;
-	private final Player player;
-
 	/*
 	 * Construction happens on main thread in SpigotEnv, but calls to interface methods
 	 * need to be thread safe. So these values must be cached
@@ -38,15 +37,15 @@ class SpigotOnlineTarget implements OnlineTarget {
 	private final byte[] address;
 	
 	SpigotOnlineTarget(SpigotEnv env, Player player) {
+		super(env, player);
 		this.env = env;
-		this.player = player;
 		uuid = player.getUniqueId();
 		address = player.getAddress().getAddress().getAddress();
 	}
 	
 	@Override
 	public boolean hasPermission(String permission) {
-		return env.hasPermissionSafe(player, permission);
+		return env.hasPermissionSafe(getRawPlayer(), permission);
 	}
 
 	@Override
@@ -60,8 +59,13 @@ class SpigotOnlineTarget implements OnlineTarget {
 	}
 
 	@Override
-	public void kick(String message) {
-		env.core.getFuturesFactory().executeSync(() -> player.kickPlayer(ChatColor.translateAlternateColorCodes('&', message)));
+	public void kick(SendableMessage message) {
+		env.core.getFuturesFactory().executeSync(() -> super.kick(message));
+	}
+	
+	@Override
+	public Player getRawPlayer() {
+		return (Player) super.getRawPlayer();
 	}
 
 }
