@@ -9,13 +9,33 @@
 		<version>0.1.4-SNAPSHOT</version>
 	</parent>
 	
-	<artifactId>bans-env-velocity</artifactId>
+	<artifactId>bans-env-velocityplugin</artifactId>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<finalName>${project.name}_${project.version}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>templating-maven-plugin</artifactId>
+				<version>1.0.0</version>
+				<executions>
+					<execution>
+						<id>add-velocity-info</id>
+						<goals>
+							<goal>filter-sources</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 	
 	<dependencies>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-bootstrap</artifactId>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>com.velocitypowered</groupId>
 			<artifactId>velocity-api</artifactId>
