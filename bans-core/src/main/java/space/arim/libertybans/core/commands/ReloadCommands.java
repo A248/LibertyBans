@@ -19,35 +19,38 @@
 package space.arim.libertybans.core.commands;
 
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.chat.TextualComponent;
 
-import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.core.LibertyBansCore;
-import space.arim.libertybans.core.env.AbstractCmdSender;
 import space.arim.libertybans.core.env.CmdSender;
 
-public class PrefixedCmdSender extends AbstractCmdSender {
+public class ReloadCommands extends SubCommandGroup {
+
+	private static final SendableMessage ELLIPSES = new SendableMessage(new TextualComponent.Builder().text("...").build());
 	
-	private final CmdSender sender;
-	private final SendableMessage prefix;
-
-	public PrefixedCmdSender(LibertyBansCore core, CmdSender sender, SendableMessage prefix) {
-		super(core, sender.getRawSender());
-		this.sender = sender;
-		this.prefix = prefix;
+	ReloadCommands(Commands commands) {
+		super(commands, "reload", "restart");
 	}
 
 	@Override
-	public Operator getOperator() {
-		return sender.getOperator();
+	void execute(CmdSender sender, CommandPackage command, String arg) {
+		switch (arg) {
+		case "restart":
+			sender.sendMessage(ELLIPSES);
+			boolean restarted = commands.core.getEnvironment().fullRestart();
+			sender.parseThenSend((restarted) ? commands.config.getString("all.restarted") : "Not restarting because loading already in process");
+			break;
+		case "reload":
+			var finalSender = sender;
+			sender.sendMessage(ELLIPSES);
+			commands.core.getConfigs().reloadConfigs().thenAccept((result) -> {
+				if (result) {
+					finalSender.parseThenSend(commands.config.getString("all.reloaded"));
+				}
+			});
+			break;
+		default:
+			throw new IllegalStateException("Command mismatch");
+		}
 	}
 
-	@Override
-	public boolean hasPermission(String permission) {
-		return sender.hasPermission(permission);
-	}
-
-	@Override
-	public void sendMessage(SendableMessage message) {
-		sender.sendMessage(new SendableMessage.Builder(prefix).add(message.getComponents()).build());
-	}
 }

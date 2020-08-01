@@ -18,14 +18,6 @@
  */
 package space.arim.libertybans.bootstrap;
 
-/**
- * Exception signalling a shutdown failure. Stacktrace of this exception need not be printed. <br>
- * It is intended to stop processing a startup in which an actual error has already been identified;
- * only the exception message, and possibly the cause, are meaningful.
- * 
- * @author A248
- *
- */
 public class ShutdownException extends RuntimeException {
 
 	/**

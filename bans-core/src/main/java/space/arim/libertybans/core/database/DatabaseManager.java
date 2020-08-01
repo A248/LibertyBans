@@ -16,17 +16,12 @@
  * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core;
+package space.arim.libertybans.core.database;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -34,63 +29,71 @@ import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
 
-import space.arim.universal.util.ThisClass;
-import space.arim.universal.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-import space.arim.api.env.DetectingPlatformHandle;
-import space.arim.api.env.PlatformScheduler;
-import space.arim.api.env.PlatformScheduler.ScheduledTask;
-import space.arim.api.util.config.Config;
-import space.arim.api.util.config.SimpleConfig;
+import space.arim.api.configure.ConfigAccessor;
+import space.arim.api.configure.SingleKeyValueTransformer;
+import space.arim.api.configure.ValueTransformer;
 import space.arim.api.util.sql.CloseMe;
-import space.arim.api.util.sql.HikariPoolSqlBackend;
-import space.arim.api.util.sql.SqlBackend;
 import space.arim.api.util.sql.SqlQuery;
 
-import space.arim.libertybans.api.PunishmentDatabase;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.bootstrap.StartupException;
+import space.arim.libertybans.core.LibertyBansCore;
+import space.arim.libertybans.core.MiscUtil;
+import space.arim.libertybans.core.Part;
 
-class Database implements PunishmentDatabase, Part {
+public class DatabaseManager implements Part {
 
 	private final LibertyBansCore core;
-	private final Config config;
 	
-	private volatile HikariPoolSqlBackend backend;
-	private volatile ExecutorService executor;
+	private volatile Database database;
 	
-	private volatile ScheduledTask hsqldbCleaner;
-	
-	private static final int REVISION_MAJOR = 1;
-	private static final int REVISION_MINOR = 0;
+	private static final int REVISION_MAJOR = Database.REVISION_MAJOR;
+	private static final int REVISION_MINOR = Database.REVISION_MINOR;
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
-	private static final boolean TRACE_FOREIGN_CONNECTIONS;
-	
-	static {
-		boolean traceForeign = false;
-		try {
-			traceForeign = Boolean.getBoolean("space.arim.libertybans.traceForeignConnections");
-		} catch (SecurityException ignored) {}
-		TRACE_FOREIGN_CONNECTIONS = traceForeign;
-	}
-	
-	Database(LibertyBansCore core) {
+	public DatabaseManager(LibertyBansCore core) {
 		this.core = core;
-		config = new SimpleConfig(core.getFolder(), "sql.yml");
 	}
 	
-	public Config getConfig() {
-		return config;
+	public Database getCurrentDatabase() {
+		return database;
 	}
-
-	@Override
-	public void startup() {
-		config.saveDefaultConfig();
-		config.reloadConfig();
-
+	
+	private static boolean isAtLeast(Object value, int amount) {
+		return value instanceof Integer && ((Integer) value) >= amount;
+	}
+	
+	public static List<ValueTransformer> createConfigTransformers() {
+		var poolSizeTransformer = SingleKeyValueTransformer.createPredicate("connection-pool.size", (value) -> {
+			if (!isAtLeast(value, 0)) {
+				logger.warn("Bad connection pool size {}", value);
+				return true;
+			}
+			return false;
+		});
+		var timeoutTransformer = SingleKeyValueTransformer.createPredicate("timeouts.connection-timeout-seconds", (value) -> {
+			if (!isAtLeast(value, 1)) {
+				logger.warn("Bad connection timeout setting {}", value);
+				return false;
+			}
+			return true;
+		});
+		var lifetimeTransformer = SingleKeyValueTransformer.createPredicate("timeouts.max-lifetime-minutes", (value) -> {
+			if (!isAtLeast(value, 1)) {
+				logger.warn("Bad lifetime timeout setting {}", value);
+				return false;
+			}
+			return true;
+		});
+		return List.of(poolSizeTransformer, timeoutTransformer, lifetimeTransformer);
+	}
+	
+	private HikariConfig getHikariConfig(ConfigAccessor config) {
 		HikariConfig hikariConf = new HikariConfig();
 		boolean useMySql = config.getBoolean("storage-backend-mysql");
 		String username = config.getString("mysql-details.user");
@@ -99,26 +102,12 @@ class Database implements PunishmentDatabase, Part {
 			logger.warn("Not using MySQL because authentication details are still default");
 			useMySql = false;
 		}
-
-		int minPoolSize = config.getInteger("connection-pool.min");
-		int maxPoolSize = config.getInteger("connection-pool.max");
-		int threadPoolSize = config.getInteger("connection-pool.threads");
-		if (minPoolSize < 0 || maxPoolSize < 1 || threadPoolSize < 2) {
-			logger.warn("Bad connection pool settings: {}, {}, {}", minPoolSize, maxPoolSize, threadPoolSize);
-			minPoolSize = config.getDefaultObject("connection-pool.min", Integer.class);
-			maxPoolSize = config.getDefaultObject("connection-pool.max", Integer.class);
-			threadPoolSize = config.getDefaultObject("connection-pool.threads", Integer.class);
-		}
-		hikariConf.setMinimumIdle(minPoolSize);
-		hikariConf.setMaximumPoolSize(maxPoolSize);
+		int poolSize = config.getInteger("connection-pool.size");
+		hikariConf.setMinimumIdle(poolSize);
+		hikariConf.setMaximumPoolSize(poolSize);
 
 		int connectionTimeout = config.getInteger("timeouts.connection-timeout-seconds");
 		int maxLifetime = config.getInteger("timeouts.max-lifetime-minutes");
-		if (connectionTimeout < 1 || maxLifetime < 1) {
-			logger.warn("Bad timeout settings: {}, {}", connectionTimeout, maxLifetime);
-			connectionTimeout = config.getDefaultObject("timeouts.connection-timeout-seconds", Integer.class);
-			maxLifetime = config.getDefaultObject("timeouts.max-lifetime-minutes", Integer.class);
-		}
 		hikariConf.setConnectionTimeout(TimeUnit.MILLISECONDS.convert(connectionTimeout, TimeUnit.SECONDS));
 		hikariConf.setMaxLifetime(TimeUnit.MILLISECONDS.convert(maxLifetime, TimeUnit.MINUTES));
 
@@ -166,10 +155,15 @@ class Database implements PunishmentDatabase, Part {
 			String val = property.substring(index + 1, property.length());
 			hikariConf.addDataSourceProperty(prop, val);
 		}
-		hikariConf.setPoolName("Liberty-HikariCP@" + hikariConf.hashCode());
-		executor = Executors.newFixedThreadPool(threadPoolSize, new DbHelper.ThreadFactoryImpl("LibertyBans-pool-thread-"));
-		backend = new HikariPoolSqlBackend(hikariConf);
+		String mode = (useMySql) ? "MySQL" : "HSQLDB"; // This is relied on in #startup
+		hikariConf.setPoolName("Liberty-HikariCP-" + mode + '@' + hikariConf.hashCode());
+		return hikariConf;
+	}
 
+	@Override
+	public void startup() {
+		HikariConfig hikariConf = getHikariConfig(core.getConfigs().getSql());
+		boolean useMySql = hikariConf.getPoolName().contains("MySQL"); // see end of #getHikariConfg
 		boolean success = createTablesAndViews(!useMySql).join();
 		if (!success) {
 			throw new StartupException("Database table and views creation failed");
@@ -177,7 +171,7 @@ class Database implements PunishmentDatabase, Part {
 	}
 	
 	private CentralisedFuture<String> readResource(String resourceName) {
-		return core.getDbHelper().readResource(resourceName);
+		return database.selectAsync(() -> IOUtils.readSqlResourceBlocking(resourceName));
 	}
 	
 	private CentralisedFuture<Boolean> createTablesAndViews(final boolean useHsqldb) {
@@ -189,7 +183,7 @@ class Database implements PunishmentDatabase, Part {
 		CentralisedFuture<String> refreshProcedure = readResource("procedure_refresh.sql");
 		CentralisedFuture<String> refresherEventFuture = (useHsqldb) ? null : readResource("event_refresher.sql");
 
-		return core.getDbHelper().selectAsync(() -> {
+		return database.selectAsync(() -> {
 			String punishmentTypeInfo = MiscUtil.javaToSqlEnum(PunishmentType.class);
 			String victimTypeInfo = MiscUtil.javaToSqlEnum(Victim.VictimType.class);
 			List<SqlQuery> queries = new ArrayList<>();
@@ -348,99 +342,27 @@ class Database implements PunishmentDatabase, Part {
 				queries.add(SqlQuery.of(refresherEvent));
 			}
 
-			try (CloseMe cm = getBackend().execute(queries.toArray(SqlQuery.EMPTY_QUERY_ARRAY))) {
+			try (CloseMe cm = database.getBackend().execute(queries.toArray(SqlQuery.EMPTY_QUERY_ARRAY))) {
 
 			} catch (SQLException ex) {
 				logger.error("Failed to create tables", ex);
 				return false;
 			}
 			// Initialise cleaner task if using HSQLDB
-			if (useHsqldb) {
+			/*if (useHsqldb) {
 				PlatformScheduler scheduler = new DetectingPlatformHandle(core.getRegistry())
 						.registerDefaultServiceIfAbsent(PlatformScheduler.class);
 
 				ScheduledTask task = scheduler.runRepeatingTask(new DbHelper.HsqldbCleanerRunnable(core.getDbHelper()),
 						1L, 1L, TimeUnit.HOURS);
 				hsqldbCleaner = Objects.requireNonNull(task);
-			}
+			}*/
 			return true;
 		});
-	}
-	
-	private boolean isHsqlDb() {
-		return "org.hsqldb.jdbc.JDBCDriver".equals(backend.getDataSource().getDriverClassName());
-	}
-	
-	@Override
-	public int getMajorRevision() {
-		return REVISION_MAJOR;
-	}
-	
-	@Override
-	public int getMinorRevision() {
-		return REVISION_MINOR;
 	}
 
 	@Override
 	public void shutdown() {
-		List<SqlQuery> queries = new ArrayList<>();
-		for (PunishmentType type : MiscUtil.punishmentTypes()) {
-			queries.add(SqlQuery.of("DROP PROCEDURE IF EXISTS `" + MiscUtil.getEnactmentProcedure(type) + '`'));
-		}
-		queries.add(SqlQuery.of("DROP PROCEDURE IF EXISTS `libertybans_refresh`"));
-		if (isHsqlDb()) {
-			ScheduledTask hsqldbCleaner = this.hsqldbCleaner;
-			if (hsqldbCleaner == null) {
-				logger.debug("No cleaner task for HSQLDB backend");
-			} else {
-				hsqldbCleaner.cancel();
-			}
-			queries.add(SqlQuery.of("SHUTDOWN"));
-		} else {
-			queries.add(SqlQuery.of("DROP EVENT IF EXISTS `libertybans_refresher`"));
-		}
-		try (CloseMe cm = backend.execute(queries.toArray(SqlQuery.EMPTY_QUERY_ARRAY))) {
-			
-		} catch (SQLException ex) {
-			logger.warn("Failed shutting down database", ex);
-		}
-		executor.shutdown();
-		backend.getDataSource().close();
-		try {
-			boolean finished = executor.awaitTermination(10L, TimeUnit.SECONDS);
-			if (!finished) {
-				logger.warn("ExecutorService did not complete termination");
-			}
-		} catch (InterruptedException ex) {
-			Thread.currentThread().interrupt();
-			logger.warn("Interrupted while awaiting thread pool termination", ex);
-		}
-		backend = null;
-		executor = null;
-	}
-
-	SqlBackend getBackend() {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Getting backend on thread {}", Thread.currentThread());
-		}
-		return backend;
 	}
 	
-	@Override
-	public Connection getConnection() throws SQLException {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Foreign caller acquiring connection on thread  {}", Thread.currentThread());
-			if (TRACE_FOREIGN_CONNECTIONS) {
-				logger.trace("Call trace as requested by space.arim.libertybans.traceForeignConnections=true", new Exception());
-			}
-		}
-		HikariPoolSqlBackend backend = Objects.requireNonNull(this.backend, "Database not yet started");
-		return backend.getDataSource().getConnection();
-	}
-
-	@Override
-	public Executor getExecutor() {
-		return Objects.requireNonNull(executor, "Database not yet started");
-	}
-
 }

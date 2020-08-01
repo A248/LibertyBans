@@ -16,90 +16,65 @@
  * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core;
+package space.arim.libertybans.core.database;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
-import java.util.Objects;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
-import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import space.arim.universal.util.ThisClass;
-import space.arim.universal.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.ThisClass;
 
 import space.arim.api.util.sql.CloseMe;
 import space.arim.api.util.sql.SqlBackend;
 
-class DbHelper {
+public class IOUtils {
 	
-	private final LibertyBansCore core;
-	
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-	
-	DbHelper(LibertyBansCore core) {
-		this.core = core;
-	}
+	private static final Class<?> THIS_CLASS = ThisClass.get();
+	private static final Logger logger = LoggerFactory.getLogger(THIS_CLASS);
 
-	SqlBackend getBackend() {
-		return Objects.requireNonNull(getNullableBackend(), "Database not yet started");
-	}
-	
-	SqlBackend getNullableBackend() {
-		return core.getDatabase().getBackend();
-	}
-	
-	Executor getExecutor() {
-		return core.getDatabase().getExecutor();
-	}
-	
-	CentralisedFuture<?> executeAsync(Runnable command) {
-		return core.getFuturesFactory().runAsync(command, core.getDatabase().getExecutor());
-	}
-	
-	<T> CentralisedFuture<T> selectAsync(Supplier<T> supplier) {
-		return core.getFuturesFactory().supplyAsync(supplier, core.getDatabase().getExecutor());
-	}
-	
-	CentralisedFuture<String> readResource(String resourceName) {
-		return core.getFuturesFactory().supplyAsync(() -> {
-			try (InputStream inputStream = getClass().getResourceAsStream("/sql/" + resourceName);
-					ByteArrayOutputStream buf = new ByteArrayOutputStream()) {
+	static String readResourceBlocking(String resourceName) {
+		try (InputStream inputStream = THIS_CLASS.getClassLoader().getResourceAsStream(resourceName);
+				ByteArrayOutputStream buf = new ByteArrayOutputStream()) {
 
-				inputStream.transferTo(buf);
-				return buf.toString(StandardCharsets.UTF_8);
+			inputStream.transferTo(buf);
+			return buf.toString(StandardCharsets.UTF_8);
 
-			} catch (IOException ex) {
-				logger.error("Failed to read internal resource {}", resourceName, ex);
-			}
-			return null;
-		});
+		} catch (IOException ex) {
+			logger.error("Failed to read internal resource {}", resourceName, ex);
+		}
+		return null;
+	}
+	
+	static String readSqlResourceBlocking(String resourceName) {
+		return readResourceBlocking("sql/" + resourceName);
 	}
 	
 	static class HsqldbCleanerRunnable implements Runnable {
 
-		private final DbHelper helper;
+		private final DatabaseManager manager;
+		private final Database database;
 		
 		private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 		
-		HsqldbCleanerRunnable(DbHelper helper) {
-			this.helper = helper;
+		HsqldbCleanerRunnable(DatabaseManager manager, Database database) {
+			this.manager = manager;
+			this.database = database;
 		}
 		
 		@Override
 		public void run() {
-			SqlBackend backend = helper.getNullableBackend();
-			if (backend == null) {
+			if (manager.getCurrentDatabase() != database) {
 				// cancelled but not stopped yet, or failed to stop
 				logger.debug("HSQLDB cleaning task continues after shutdown");
 				return;
 			}
+			SqlBackend backend = database.getBackend();
 			try (CloseMe cm = backend.execute("CALL `libertybans_refresh`()")) {
 				
 			} catch (SQLException ex) {
@@ -108,14 +83,14 @@ class DbHelper {
 		}
 	}
 	
-	static class ThreadFactoryImpl implements ThreadFactory {
+	public static class ThreadFactoryImpl implements ThreadFactory {
 		
 		private final String prefix;
 		private int threadId = 1;
 		
 		private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 		
-		ThreadFactoryImpl(String prefix) {
+		public ThreadFactoryImpl(String prefix) {
 			this.prefix = prefix;
 		}
 		

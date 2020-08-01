@@ -18,88 +18,86 @@
  */
 package space.arim.libertybans.core;
 
-import java.io.File;
+import java.nio.file.Path;
 
-import space.arim.universal.events.EventPriority;
-import space.arim.universal.events.Listener;
-import space.arim.universal.registry.Registry;
-import space.arim.universal.registry.RequireServices;
-import space.arim.universal.registry.ServiceChangeEvent;
-import space.arim.universal.util.concurrent.FactoryOfTheFuture;
-
-import space.arim.api.env.DetectingPlatformHandle;
-import space.arim.api.env.PlatformPluginInfo;
-import space.arim.api.util.config.ConfigLoadValuesFromFileException;
+import space.arim.omnibus.Omnibus;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import space.arim.libertybans.api.LibertyBans;
 import space.arim.libertybans.api.RunState;
-import space.arim.libertybans.bootstrap.StartupException;
+import space.arim.libertybans.core.commands.Commands;
+import space.arim.libertybans.core.database.DatabaseManager;
+import space.arim.libertybans.core.database.Database;
 import space.arim.libertybans.core.env.AbstractEnv;
 
 public class LibertyBansCore implements LibertyBans, Part {
 
-	private final File folder;
-	private final Registry registry;
+	private final Path folder;
+	private final Omnibus omnibus;
 	private final AbstractEnv environment;
 	
-	private final Database database;
-	private final DbHelper dbHelper;
+	private final Resources resources;
+	private final Configs configs;
+	private final DatabaseManager databaseManager;
+	private final UUIDMaster uuidMaster;
+	
 	private final Selector selector;
 	private final Enactor enactor;
 	private final Enforcer enforcer;
 	private final Scoper scoper;
 	
-	private final UUIDMaster uuidMaster;
-	private final Configs configs;
 	private final Formatter formatter;
 	private final Commands commands;
 	
-	private Listener unregistrationListener;
-	
-	public LibertyBansCore(@RequireServices(PlatformPluginInfo.class) Registry registry,
-			File folder, AbstractEnv environment) {
+	public LibertyBansCore(Omnibus omnibus,
+			Path folder, AbstractEnv environment) {
+		this.omnibus = omnibus;
 		this.folder = folder;
-		this.registry = registry;
 		this.environment = environment;
 
-		database = new Database(this);
-		dbHelper = new DbHelper(this);
+		resources = new Resources(this);
+		configs = new Configs(folder);
+		databaseManager = new DatabaseManager(this);
+		uuidMaster = new UUIDMaster(this);
+
 		selector = new Selector(this);
 		enactor = new Enactor(this);
 		enforcer = new Enforcer(this);
 		scoper = new Scoper();
 
-		uuidMaster = new UUIDMaster(this);
-		configs = new Configs(this);
 		formatter = new Formatter(this);
 		commands = new Commands(this);
 	}
 	
 	@Override
 	public void startup() {
-		new DetectingPlatformHandle(registry).registerDefaultServiceIfAbsent(FactoryOfTheFuture.class);
-		unregistrationListener = registry.getEvents().registerListener(ServiceChangeEvent.class, EventPriority.NORMAL, (evt) -> {
-			if (evt.getService() == FactoryOfTheFuture.class && evt.getUpdated() == null) {
-				environment.shutdown();
-			}
-		});
-		try {
-			database.startup();
-			configs.startup();
-		} catch (ConfigLoadValuesFromFileException configEx) {
-			throw new StartupException("One or more of your YML files has invalid syntax. "
-					+ "Please use a YAML validator such as https://yaml-online-parser.appspot.com/ "
-					+ "and paste your config files there to check them.", configEx);
-		}
-		selector.startup();
+		resources.restart();
+		configs.startup();
+		databaseManager.startup();
 		uuidMaster.startup();
 	}
 	
-	File getFolder() {
+	@Override
+	public void restart() {
+		resources.restart();
+		uuidMaster.restart();
+		configs.restart();
+		databaseManager.restart();
+	}
+	
+	@Override
+	public void shutdown() {
+		resources.restart();
+		uuidMaster.shutdown();
+		configs.shutdown();
+		databaseManager.shutdown();
+	}
+	
+	public Path getFolder() {
 		return folder;
 	}
 	
-	AbstractEnv getEnvironment() {
+	public AbstractEnv getEnvironment() {
 		return environment;
 	}
 	
@@ -109,22 +107,34 @@ public class LibertyBansCore implements LibertyBans, Part {
 	}
 	
 	@Override
-	public Registry getRegistry() {
-		return registry;
+	public Omnibus getOmnibus() {
+		return omnibus;
 	}
 	
 	@Override
 	public FactoryOfTheFuture getFuturesFactory() {
-		return registry.getRegistration(FactoryOfTheFuture.class).getProvider();
-	}
-
-	@Override
-	public Database getDatabase() {
-		return database;
+		return resources.getFuturesFactory();
 	}
 	
-	DbHelper getDbHelper() {
-		return dbHelper;
+	public Resources getResources() {
+		return resources;
+	}
+	
+	public Configs getConfigs() {
+		return configs;
+	}
+	
+	@Override
+	public Database getDatabase() {
+		return databaseManager.getCurrentDatabase();
+	}
+	
+	public DatabaseManager getDatabaseManager() {
+		return databaseManager;
+	}
+	
+	public UUIDMaster getUUIDMaster() {
+		return uuidMaster;
 	}
 	
 	@Override
@@ -147,29 +157,12 @@ public class LibertyBansCore implements LibertyBans, Part {
 		return scoper;
 	}
 	
-	public UUIDMaster getUUIDMaster() {
-		return uuidMaster;
-	}
-	
-	public Configs getConfigs() {
-		return configs;
-	}
-	
 	public Formatter getFormatter() {
 		return formatter;
 	}
 	
 	public Commands getCommands() {
 		return commands;
-	}
-
-	@Override
-	public void shutdown() {
-		registry.getEvents().unregisterListener(unregistrationListener);
-		uuidMaster.shutdown();
-		selector.shutdown();
-		configs.shutdown();
-		database.shutdown();
 	}
 	
 }

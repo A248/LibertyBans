@@ -21,7 +21,7 @@ package space.arim.libertybans.api;
 import java.util.Set;
 import java.util.UUID;
 
-import space.arim.universal.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 /**
  * A manager for selecting punishments with specific details from the database. This,

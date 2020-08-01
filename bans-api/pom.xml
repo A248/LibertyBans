@@ -34,16 +34,12 @@
 	
 	<dependencies>
 		<dependency>
-			<groupId>space.arim.universal</groupId>
-			<artifactId>universal-registry</artifactId>
+			<groupId>space.arim.omnibus</groupId>
+			<artifactId>omnibus-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.uuidvault</groupId>
 			<artifactId>api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>space.arim.api</groupId>
-			<artifactId>arimapi-all</artifactId>
 		</dependency>
 		
 		<dependency>

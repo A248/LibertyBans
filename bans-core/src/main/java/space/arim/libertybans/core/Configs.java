@@ -18,90 +18,232 @@
  */
 package space.arim.libertybans.core;
 
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import space.arim.universal.util.ThisClass;
+import space.arim.omnibus.util.ThisClass;
 
-import space.arim.api.util.config.Config;
-import space.arim.api.util.config.SimpleConfig;
+import space.arim.api.configure.ConfigAccessor;
+import space.arim.api.configure.ConfigResult;
+import space.arim.api.configure.ConfigSerialiser;
+import space.arim.api.configure.Configuration;
+import space.arim.api.configure.JarResources;
+import space.arim.api.configure.ValueTransformer;
+import space.arim.api.configure.configs.ConfigurationBuilder;
+import space.arim.api.configure.configs.SingularConfig;
+import space.arim.api.configure.yaml.YamlConfigSerialiser;
+import space.arim.api.configure.yaml.YamlSyntaxException;
+
+import space.arim.libertybans.bootstrap.StartupException;
+import space.arim.libertybans.core.database.DatabaseManager;
+import space.arim.libertybans.core.database.IOUtils;
 
 public class Configs implements Part {
-
-	private final LibertyBansCore core;
 	
-	private final Config config;
-	private final Config messages;
+	private final Path langFolder;
 	
-	private volatile DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy kk:mm");
-	private volatile AddressStrictness addrStrictness = AddressStrictness.NORMAL;
+	private final ExecutorService readWriteService;
 	
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+	private final SingularConfig sql;
+	private final SingularConfig config;
+	private final Configuration messages;
 	
-	Configs(LibertyBansCore core) {
-		this.core = core;
-		config = new SimpleConfig(core.getFolder(), "config.yml");
-		messages = new SimpleConfig(core.getFolder(), "messages.yml");
+	private static final List<ValueTransformer> transformers;
+	
+	private static final Class<?> THIS_CLASS = ThisClass.get();
+	private static final Logger logger = LoggerFactory.getLogger(THIS_CLASS);
+	
+	Configs(Path folder) {
+		langFolder = folder.resolve("lang");
+		readWriteService = Executors.newFixedThreadPool(1, new IOUtils.ThreadFactoryImpl("LibertyBans-Config-"));
+		try {
+			Files.createDirectories(langFolder);
+		} catch (IOException ex) {
+			throw new IllegalStateException("Unable to create plugin directories", ex);
+		}
+		ConfigSerialiser serialiser = new YamlConfigSerialiser();
+		var futureSql = getFor(serialiser, "sql.yml", DatabaseManager.createConfigTransformers());
+		var futureConfig = getFor(serialiser, "config.yml", transformers);
+		var futureMessages = getFor(serialiser, "lang/messages_en.yml", List.of());
+		sql = new SingularConfig(futureSql.join(), folder.resolve("sql.yml"));
+		config = new SingularConfig(futureConfig.join(), folder.resolve("config.yml"));
+		messages = futureMessages.join();
+	}
+	
+	static {
+		ValueTransformer timeTransformer = (key, value) -> {
+			if (key.equals("formatting.dates")) {
+				DateTimeFormatter result = null;
+				if (value instanceof String) {
+					String timeF = (String) value;
+					try {
+						result = DateTimeFormatter.ofPattern(timeF);
+					} catch (IllegalArgumentException ignored) {}
+				}
+				if (result == null) {
+					//result = DateTimeFormatter.ofPattern("dd/MM/yyyy kk:mm");
+					logger.info("Config option formatting.dates invalid: {}", value);
+				}
+				return result;
+			}
+			return value;
+		};
+		ValueTransformer strictnessTransformer = (key, value) -> {
+			if (key.equals("enforcement.address-strictness")) {
+				AddressStrictness result = null;
+				if (value instanceof String) {
+					String addrS = (String) value;
+					try {
+						result = AddressStrictness.valueOf(addrS);
+					} catch (IllegalArgumentException ignored) {}
+				}
+				if (result == null) {
+					//result = AddressStrictness.NORMAL;
+					logger.info("Config option enforcement.address-strictness invalid: {}", value);
+				}
+				return result;
+			}
+			return value;
+		};
+		transformers = List.of(timeTransformer, strictnessTransformer);
+	}
+	
+	private CompletableFuture<? extends Configuration> getFor(ConfigSerialiser serialiser, String resourceName,
+			List<ValueTransformer> transformers) {
+		return new ConfigurationBuilder()
+				.defaultResource(JarResources.forClassLoader(THIS_CLASS.getClassLoader(), resourceName))
+				.executor(readWriteService).serialiser(serialiser)
+				.addTransformers(transformers).buildMergingConfig();
 	}
 	
 	@Override
 	public void startup() {
-		config.saveDefaultConfig();
-		config.reloadConfig();
-		messages.saveDefaultConfig();
-		messages.reloadConfig();
-		reparseCached();
+		reloadConfigsOrInform();
 	}
 	
-	public Config getConfig() {
-		return config;
+	@Override
+	public void restart() {
+		reloadConfigsOrInform();
 	}
 	
-	public Config getMessages() {
-		return messages;
+	@Override
+	public void shutdown() {
+		readWriteService.shutdown();
 	}
 	
-	public void reload() {
-		config.reloadConfig();
-		messages.reloadConfig();
-		reparseCached();
-	}
-	
-	private void reparseCached() {
-		String addrS = config.getString("enforcement.address-strictness").toUpperCase();
-		try {
-			AddressStrictness newValue = AddressStrictness.valueOf(addrS);
-			addrStrictness = newValue;
-		} catch (IllegalArgumentException userMistake) {
-			logger.info("Config option enforcement.address-strictness invalid: {}", addrS);
+	private void reloadConfigsOrInform() {
+		if (!reloadConfigs().join()) {
+			throw new StartupException("Issue while reloading configuration");
 		}
-		String timeF = config.getString("formatting.dates");
-		try {
-			DateTimeFormatter newValue = DateTimeFormatter.ofPattern(timeF);
-			timeFormatter = newValue;
-		} catch (IllegalArgumentException userMistake) {
-			logger.info("Config option formatting.dates invalid: {}", timeF);
+	}
+	
+	public CompletableFuture<Boolean> reloadConfigs() {
+		Set<CompletableFuture<?>> futureLangFiles = new HashSet<>();
+		for (Translation translation : Translation.values()) {
+			String name = translation.name().toLowerCase(Locale.ENGLISH);
+			Path messagesPath = langFolder.resolve("messages_" + name + ".yml");
+			if (!Files.exists(messagesPath)) {
+				futureLangFiles.add(CompletableFuture.runAsync(() -> {
+					Path defaultResourcePath = JarResources.forClassLoader(THIS_CLASS.getClassLoader(), "lang/" + name);
+					try (ReadableByteChannel source = FileChannel.open(defaultResourcePath, StandardOpenOption.READ);
+							FileChannel dest = FileChannel.open(messagesPath, StandardOpenOption.WRITE,
+									StandardOpenOption.CREATE_NEW)) {
+						dest.transferFrom(source, 0, Long.MAX_VALUE);
+					} catch (IOException ex) {
+						logger.warn("Unable to copy language file for language {}", name, ex);
+					}
+				}, readWriteService));
+			}
 		}
+		var langFilesFuture = CompletableFuture.allOf(futureLangFiles.toArray(CompletableFuture[]::new));
+		var readSqlFuture = throwIfFailed(sql.saveDefaultConfig()).thenCompose((copyResult) -> throwIfFailed(sql.readConfig()));
+		var readConfFuture = throwIfFailed(config.saveDefaultConfig()).thenCompose((copyResult) -> throwIfFailed(config.readConfig()));
+		var readMsgsFuture = readConfFuture.thenCompose((readConfResult) -> {
+			String langFileOption = readConfResult.getReadData().getString("lang-file");
+			if (langFileOption == null) {
+				logger.warn("Unspecified language file, using default (en)");
+				langFileOption = "en";
+			}
+			Path messagesPath = langFolder.resolve("messages_" + langFileOption + ".yml");
+			return langFilesFuture.thenCompose((ignore) -> throwIfFailed(messages.readConfig(messagesPath)));
+		});
+		return CompletableFuture.allOf(readSqlFuture, readConfFuture, readMsgsFuture).handle((ignore, ex) -> {
+			if (ex != null) {
+				Throwable cause = ex.getCause();
+				if (cause instanceof YamlSyntaxException) {
+					logger.warn("One or more of your YML files has invalid syntax. "
+							+ "Please use a YAML validator such as https://yaml-online-parser.appspot.com/ "
+							+ "and paste your config files there to check them.", cause);
+				} else {
+					logger.warn("An unexpected issue occurred while reloading the configuration.", ex);
+				}
+				return false;
+			}
+			return true;
+		});
+	}
+	
+	private <T extends ConfigResult> CompletableFuture<T> throwIfFailed(CompletableFuture<T> futureResult) {
+		return futureResult.thenApply((result) -> {
+			if (!result.getResultDefinition().isSuccess()) {
+				Exception ex = result.getException();
+				if (ex instanceof RuntimeException) {
+					throw (RuntimeException) ex;
+				}
+				throw new CompletionException(ex);
+			}
+			return result;
+		});
+	}
+	
+	public ConfigAccessor getSql() {
+		return sql.getAccessor();
+	}
+	
+	public ConfigAccessor getConfig() {
+		return config.getAccessor();
+	}
+	
+	public ConfigAccessor getMessages() {
+		return messages.getAccessor();
 	}
 	
 	DateTimeFormatter getTimeFormatter() {
-		return timeFormatter;
+		return getConfig().getObject("formatting.dates", DateTimeFormatter.class);
 	}
 
 	public boolean strictAddressQueries() {
-		return addrStrictness != AddressStrictness.LENIENT;
+		return getAddressStrictness() != AddressStrictness.LENIENT;
 	}
 	
+	AddressStrictness getAddressStrictness() {
+		return getConfig().getObject("enforcement.address-strictness", AddressStrictness.class);
+	}
+
 	public enum AddressStrictness {
 		LENIENT,
 		NORMAL,
 		STRICT
 	}
-
-	@Override
-	public void shutdown() {
+	
+	private enum Translation {
+		EN
 	}
 	
 }

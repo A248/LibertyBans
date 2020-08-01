@@ -53,8 +53,8 @@
 	
 	<dependencies>
 		<dependency>
-			<groupId>space.arim.universal</groupId>
-			<artifactId>universal-agpl</artifactId>
+			<groupId>space.arim.licenser</groupId>
+			<artifactId>licenser-agpl3</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>

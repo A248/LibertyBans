@@ -30,8 +30,10 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import space.arim.universal.util.ThisClass;
-import space.arim.universal.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+
+import space.arim.api.chat.SendableMessage;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.PlayerVictim;
@@ -52,7 +54,7 @@ public class Enforcer implements PunishmentEnforcer {
 	@Override
 	public void enforce(Punishment punishment) {
 		MiscUtil.validate(punishment);
-		CentralisedFuture<String> message = core.getFormatter().getPunishmentMessage(punishment);
+		CentralisedFuture<SendableMessage> message = core.getFormatter().getPunishmentMessage(punishment);
 		switch (punishment.getVictim().getType()) {
 		case PLAYER:
 			UUID uuid = ((PlayerVictim) punishment.getVictim()).getUUID();
@@ -66,7 +68,7 @@ public class Enforcer implements PunishmentEnforcer {
 		}
 	}
 	
-	private void removeAndKickIfMatching(Set<OnlineTarget> targets, byte[] address, String message) {
+	private void removeAndKickIfMatching(Set<OnlineTarget> targets, byte[] address, SendableMessage message) {
 		for (Iterator<OnlineTarget> it = targets.iterator(); it.hasNext(); ) {
 			OnlineTarget target = it.next();
 			if (Arrays.equals(target.getAddress(), address)) {
@@ -76,11 +78,11 @@ public class Enforcer implements PunishmentEnforcer {
 		}
 	}
 	
-	private void enforceAddressPunishment(Punishment punishment, CentralisedFuture<String> futureMsg) {
+	private void enforceAddressPunishment(Punishment punishment, CentralisedFuture<SendableMessage> futureMsg) {
 		core.getEnvironment().getOnlineTargets().thenCombine(futureMsg, (targets, ignore) -> targets)
 				.thenAcceptAsync((targets) -> {
 
-			String message = futureMsg.join(); // will be done by now, due to thenCombine
+			SendableMessage message = futureMsg.join(); // will be done by now, due to thenCombine
 			byte[] address = ((AddressVictim) punishment.getVictim()).getAddress().getAddress();
 
 			removeAndKickIfMatching(targets, address, message);
@@ -108,14 +110,14 @@ public class Enforcer implements PunishmentEnforcer {
 				queryBuilder.append(')');
 			}
 
-			try (ResultSet rs = core.getDbHelper().getBackend().select(queryBuilder.toString(), args.toArray())) {
+			try (ResultSet rs = core.getDatabase().getBackend().select(queryBuilder.toString(), args.toArray())) {
 				while (rs.next()) {
 					removeAndKickIfMatching(targets, rs.getBytes("address"), message);
 				}
 			} catch (SQLException ex) {
 				logger.error("Failed IP lookups for enforcing address-based punishment", ex);
 			}
-		}, core.getDbHelper().getExecutor());
+		}, core.getDatabase().getExecutor());
 	}
 	
 }

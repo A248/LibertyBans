@@ -24,17 +24,14 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
-import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.env.AbstractCmdSender;
 
-abstract class BungeeCmdSender implements CmdSender {
+abstract class BungeeCmdSender extends AbstractCmdSender {
 
-	final BungeeEnv env;
-	final CommandSender sender;
 	private final Operator operator;
 	
 	BungeeCmdSender(BungeeEnv env, CommandSender sender, Operator operator) {
-		this.env = env;
-		this.sender = sender;
+		super(env.core, sender);
 		this.operator = operator;
 	}
 	
@@ -45,17 +42,12 @@ abstract class BungeeCmdSender implements CmdSender {
 
 	@Override
 	public boolean hasPermission(String permission) {
-		return sender.hasPermission(permission);
+		return getRawSender().hasPermission(permission);
 	}
 
 	@Override
 	public CommandSender getRawSender() {
-		return sender;
-	}
-	
-	@Override
-	public void sendMessage(String jsonable) {
-		env.sendJson(sender, jsonable);
+		return (CommandSender) super.getRawSender();
 	}
 	
 }
@@ -65,7 +57,6 @@ class PlayerCmdSender extends BungeeCmdSender {
 	PlayerCmdSender(BungeeEnv env, ProxiedPlayer player) {
 		super(env, player, PlayerOperator.of(player.getUniqueId()));
 	}
-	
 	
 }
 

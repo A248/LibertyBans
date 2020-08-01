@@ -31,15 +31,15 @@ import org.slf4j.LoggerFactory;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
-import space.arim.universal.util.ThisClass;
-import space.arim.universal.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.uuidvault.api.UUIDResolver;
 import space.arim.uuidvault.api.UUIDUtil;
 import space.arim.uuidvault.api.UUIDVault;
 import space.arim.uuidvault.api.UUIDVaultRegistration;
 
-import space.arim.api.env.PlatformPluginInfo;
+import space.arim.libertybans.core.database.Database;
 
 public class UUIDMaster implements Part {
 
@@ -59,9 +59,12 @@ public class UUIDMaster implements Part {
 	
 	@Override
 	public void startup() {
-		Class<?> pluginClass = core.getRegistry().getProvider(PlatformPluginInfo.class).getPlugin().getClass();
+		Class<?> pluginClass = core.getEnvironment().getPluginClass();
 		uvr = UUIDVault.get().register(resolver, pluginClass, (byte) 0, "LibertyBans");
 	}
+	
+	@Override
+	public void restart() {}
 	
 	@Override
 	public void shutdown() {
@@ -118,7 +121,7 @@ public class UUIDMaster implements Part {
 		
 		@Override
 		public CentralisedFuture<UUID> resolve(String name) {
-			DbHelper helper = core.getDbHelper();
+			Database helper = core.getDatabase();
 			return helper.selectAsync(() -> {
 				try (ResultSet rs = helper.getBackend().select(
 						"SELECT `uuid` FROM `libertybans_names` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
@@ -134,7 +137,7 @@ public class UUIDMaster implements Part {
 
 		@Override
 		public CentralisedFuture<String> resolve(UUID uuid) {
-			DbHelper helper = core.getDbHelper();
+			Database helper = core.getDatabase();
 			return helper.selectAsync(() -> {
 				try (ResultSet rs = helper.getBackend().select(
 						"SELECT `name` FROM `libertybans_names` WHERE `uuid` = ? ORDER BY `updated` DESC LIMIT 1", UUIDUtil.toByteArray(uuid))) {
@@ -154,7 +157,8 @@ public class UUIDMaster implements Part {
 			for (Map.Entry<UUID, String> entry : fastCache.asMap().entrySet()) {
 				if (entry.getValue().equalsIgnoreCase(name)) {
 					UUID uuid = entry.getKey();
-					// No need for manual cache refresh, because we do so in #fullXXXLookup
+					// Manual cache refresh
+					fastCache.getIfPresent(uuid);
 					return uuid;
 				}
 			}

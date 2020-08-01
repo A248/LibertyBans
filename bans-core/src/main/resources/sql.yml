@@ -1,8 +1,5 @@
 storage-backend-mysql: false
-connection-pool:
-  min: 6
-  max: 6
-  threads: 6
+connection-pool-size: 6
 timeouts:
   connection-timeout-seconds: 20
   max-lifetime-minutes: 25

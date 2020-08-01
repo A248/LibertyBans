@@ -21,38 +21,34 @@ package space.arim.libertybans.env.bungee;
 import java.net.InetSocketAddress;
 import java.util.UUID;
 
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
-import space.arim.libertybans.core.env.OnlineTarget;
+import space.arim.libertybans.core.env.AbstractOnlineTarget;
 
-class BungeeOnlineTarget implements OnlineTarget {
-
-	private final ProxiedPlayer player;
+class BungeeOnlineTarget extends AbstractOnlineTarget {
 	
-	BungeeOnlineTarget(ProxiedPlayer player) {
-		this.player = player;
+	BungeeOnlineTarget(BungeeEnv env, ProxiedPlayer player) {
+		super(env, player);
 	}
 
 	@Override
 	public boolean hasPermission(String permission) {
-		return player.hasPermission(permission);
+		return getRawPlayer().hasPermission(permission);
 	}
 
 	@Override
 	public UUID getUniqueId() {
-		return player.getUniqueId();
+		return getRawPlayer().getUniqueId();
 	}
 
 	@Override
 	public byte[] getAddress() {
-		return ((InetSocketAddress) player.getSocketAddress()).getAddress().getAddress();
+		return ((InetSocketAddress) getRawPlayer().getSocketAddress()).getAddress().getAddress();
 	}
-
+	
 	@Override
-	public void kick(String message) {
-		player.disconnect(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', message)));
+	public ProxiedPlayer getRawPlayer() {
+		return (ProxiedPlayer) super.getRawPlayer();
 	}
 
 }

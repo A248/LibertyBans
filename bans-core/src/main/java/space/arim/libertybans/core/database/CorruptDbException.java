@@ -16,7 +16,7 @@
  * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core;
+package space.arim.libertybans.core.database;
 
 public class CorruptDbException extends RuntimeException {
 
@@ -25,7 +25,7 @@ public class CorruptDbException extends RuntimeException {
 	 */
 	private static final long serialVersionUID = 3344068726657007501L;
 	
-	CorruptDbException(String message, Throwable cause) {
+	public CorruptDbException(String message, Throwable cause) {
 		super(message, cause);
 	}
 	

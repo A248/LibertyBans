@@ -18,28 +18,17 @@
  */
 package space.arim.libertybans.env.spigot;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Consumer;
 
-import org.bukkit.ChatColor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.event.HandlerList;
-import org.bukkit.plugin.java.JavaPlugin;
+import space.arim.omnibus.OmnibusProvider;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-import net.md_5.bungee.api.chat.BaseComponent;
-
-import space.arim.universal.util.concurrent.CentralisedFuture;
-
-import space.arim.uuidvault.api.UUIDVault;
-import space.arim.uuidvault.plugin.spigot.UUIDVaultSpigot;
-
-import space.arim.api.chat.MessageParserUtil;
-import space.arim.api.env.BungeeComponentParser;
-import space.arim.api.env.convention.SpigotPlatformConvention;
+import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.BukkitPlatformHandle;
+import space.arim.api.env.PlatformHandle;
 
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
@@ -47,59 +36,54 @@ import space.arim.libertybans.core.env.AbstractEnv;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.OnlineTarget;
 
+import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
+import org.bukkit.plugin.java.JavaPlugin;
+
 public class SpigotEnv extends AbstractEnv {
 
-	final JavaPlugin plugin;
 	final LibertyBansCore core;
+	final BukkitPlatformHandle handle;
 	
 	private final ConnectionListener listener;
 	
-	public SpigotEnv(JavaPlugin plugin, File folder) {
-		this.plugin = plugin;
-		core = new LibertyBansCore(new SpigotPlatformConvention(plugin).getRegistry(), folder, this);
+	public SpigotEnv(JavaPlugin plugin, Path folder) {
+		core = new LibertyBansCore(OmnibusProvider.getOmnibus(), folder, this);
 		listener = new ConnectionListener(this);
-		if (UUIDVault.get() == null) {
-			new UUIDVaultSpigot(plugin).setInstancePassive();
-		}
+		handle = new BukkitPlatformHandle(plugin);
 	}
 	
 	public SpigotEnv(JavaPlugin plugin) {
-		this(plugin, plugin.getDataFolder());
+		this(plugin, plugin.getDataFolder().toPath());
+	}
+	
+	JavaPlugin getPlugin() {
+		return handle.getPlugin();
+	}
+	
+	@Override
+	public Class<?> getPluginClass() {
+		return getPlugin().getClass();
 	}
 
 	@Override
-	public void sendToThoseWithPermission(String permission, String message) {
-		Consumer<Player> forEach;
-		if (core.getFormatter().useJson()) {
-			BaseComponent[] parsed = new BungeeComponentParser().parseJson(message);
-			forEach = (player) -> player.spigot().sendMessage(parsed);
-		} else {
-			forEach = (player) -> player.sendMessage(message);
-		}
-		for (Player player : plugin.getServer().getOnlinePlayers()) {
-			if (player.hasPermission(permission)) {
-				forEach.accept(player);
-			}
-		}
+	public PlatformHandle getPlatformHandle() {
+		return handle;
 	}
-	
-	void sendJson(CommandSender sender, String jsonable) {
-		BungeeComponentParser parser = new BungeeComponentParser();
-		if (sender instanceof Player) {
-			Player player = (Player) sender;
-			if (core.getFormatter().useJson()) {
-				player.spigot().sendMessage(parser.parseJson(jsonable));
-			} else {
-				player.sendMessage(jsonable);
+
+	@Override
+	public void sendToThoseWithPermission(String permission, SendableMessage message) {
+		for (Player player : getPlugin().getServer().getOnlinePlayers()) {
+			if (player.hasPermission(permission)) {
+				handle.sendMessage(player, message);
 			}
-		} else {
-			sender.sendMessage(new MessageParserUtil().removeRawJson(jsonable));
 		}
 	}
 
 	@Override
 	protected void startup0() {
 		core.startup();
+		JavaPlugin plugin = getPlugin();
 		plugin.getCommand("libertybans").setExecutor((sender, cmd, label, args) -> {
 			CmdSender iSender;
 			if (sender instanceof Player) {
@@ -112,9 +96,15 @@ public class SpigotEnv extends AbstractEnv {
 		});
 		plugin.getServer().getPluginManager().registerEvents(listener, plugin);
 	}
+	
+	@Override
+	protected void restart0() {
+		core.restart();
+	}
 
 	@Override
 	protected void shutdown0() {
+		JavaPlugin plugin = getPlugin();
 		plugin.getCommand("libertybans").setExecutor(plugin);
 		HandlerList.unregisterAll(listener);
 		core.shutdown();
@@ -122,15 +112,15 @@ public class SpigotEnv extends AbstractEnv {
 
 	@Override
 	protected void infoMessage(String message) {
-		plugin.getLogger().info(message);
+		getPlugin().getLogger().info(message);
 	}
 
 	@Override
-	public void kickByUUID(UUID uuid, String message) {
+	public void kickByUUID(UUID uuid, SendableMessage message) {
 		core.getFuturesFactory().executeSync(() -> {
-			Player player = plugin.getServer().getPlayer(uuid);
+			Player player = getPlugin().getServer().getPlayer(uuid);
 			if (player != null) {
-				player.kickPlayer(ChatColor.translateAlternateColorCodes('&', message));
+				handle.disconnectUser(player, message);
 			}
 		});
 	}
@@ -144,7 +134,7 @@ public class SpigotEnv extends AbstractEnv {
 	public CentralisedFuture<Set<OnlineTarget>> getOnlineTargets() {
 		return core.getFuturesFactory().supplySync(() -> {
 			Set<OnlineTarget> result = new HashSet<>();
-			for (Player player : plugin.getServer().getOnlinePlayers()) {
+			for (Player player : getPlugin().getServer().getOnlinePlayers()) {
 				result.add(new SpigotOnlineTarget(this, player));
 			}
 			return result;

@@ -18,20 +18,35 @@
  */
 package space.arim.libertybans.core.env;
 
-import java.util.UUID;
-
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.annote.PlatformCommandSender;
 
-public interface OnlineTarget {
+import space.arim.libertybans.core.LibertyBansCore;
+
+public abstract class AbstractCmdSender implements CmdSender {
 	
-	boolean hasPermission(String permission);
+	private final LibertyBansCore core;
+	private final Object rawSender;
 	
-	UUID getUniqueId();
+	protected AbstractCmdSender(LibertyBansCore core, Object rawSender) {
+		this.core = core;
+		this.rawSender = rawSender;
+	}
 	
-	byte[] getAddress();
+	@Override
+	public void sendMessage(SendableMessage message) {
+		core.getEnvironment().getPlatformHandle().sendMessage(rawSender, message);
+	}
 	
-	void kick(SendableMessage message);
+	@Override
+	public void parseThenSend(String message) {
+		sendMessage(core.getFormatter().parseMessage(message));
+	}
 	
-	Object getRawPlayer();
+	@Override
+	@PlatformCommandSender
+	public Object getRawSender() {
+		return rawSender;
+	}
 	
 }

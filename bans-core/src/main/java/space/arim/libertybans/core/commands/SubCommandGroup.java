@@ -16,29 +16,22 @@
  * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.bootstrap;
+package space.arim.libertybans.core.commands;
 
-public class StartupException extends LoadingException {
+import java.util.Set;
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -442174740832379722L;
-	
-	public StartupException() {
-		
-	}
-	
-	public StartupException(String message) {
-		super(message);
-	}
-	
-	public StartupException(Throwable cause) {
-		super(cause);
-	}
-	
-	public StartupException(String message, Throwable cause) {
-		super(message, cause);
-	}
+import space.arim.libertybans.core.env.CmdSender;
 
+public abstract class SubCommandGroup {
+
+	final Commands commands;
+	final Set<String> matches;
+	
+	SubCommandGroup(Commands commands, String...matches) {
+		this.commands = commands;
+		this.matches = Set.of(matches);
+	}
+	
+	abstract void execute(CmdSender sender, CommandPackage command, String arg);
+	
 }
