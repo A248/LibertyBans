@@ -75,6 +75,7 @@ public class DefaultDependencyLoader implements DependencyLoader {
 	
 	private CompletableFuture<DownloadResult> downloadDependency(Dependency dependency, Repository repository) {
 		return CompletableFuture.supplyAsync(() -> {
+
 			Path outputJar = outputDir.resolve(dependency.getFullName() + ".jar");
 			if (Files.exists(outputJar)) {
 				return DownloadResult.success(outputJar);
@@ -88,6 +89,8 @@ public class DefaultDependencyLoader implements DependencyLoader {
 			} catch (MalformedURLException ex) {
 				return DownloadResult.exception(ex);
 			}
+
+			// Read all bytes from download stream
 			byte[] jarBytes;
 			try (InputStream is = url.openStream()) {
 				jarBytes = is.readAllBytes();
@@ -95,6 +98,8 @@ public class DefaultDependencyLoader implements DependencyLoader {
 			} catch (IOException ex) {
 				return DownloadResult.exception(ex);
 			}
+
+			// Compare hash to expected hash
 			byte[] expectedHash = dependency.getSha512Hash();
 			MessageDigest md;
 			try {
@@ -109,6 +114,8 @@ public class DefaultDependencyLoader implements DependencyLoader {
 				}
 				System.out.println("Warning: Disabled hash comparison. Actual hash is " + Arrays.toString(actualHash));
 			}
+
+			// Write to file
 			try (FileChannel fc = FileChannel.open(outputJar)) {
 				fc.write(ByteBuffer.wrap(jarBytes));
 			} catch (IOException ex) {
@@ -127,7 +134,7 @@ public class DefaultDependencyLoader implements DependencyLoader {
 		/*
 		 * Now, all we have to do is convert a map with futures to a future of a map
 		 */
-		return CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[] {})).thenApply((ignore) -> {
+		return CompletableFuture.allOf(futures.values().toArray(CompletableFuture[]::new)).thenApply((ignore) -> {
 
 			Map<Dependency, DownloadResult> result = new HashMap<>();
 			for (Entry<Dependency, CompletableFuture<DownloadResult>> entry : futures.entrySet()) {

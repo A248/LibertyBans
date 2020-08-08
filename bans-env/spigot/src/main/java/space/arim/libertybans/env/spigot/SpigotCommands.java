@@ -18,44 +18,32 @@
  */
 package space.arim.libertybans.env.spigot;
 
+import space.arim.libertybans.core.commands.ArrayCommandPackage;
+import space.arim.libertybans.core.env.CmdSender;
+
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import space.arim.libertybans.api.ConsoleOperator;
-import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.PlayerOperator;
-import space.arim.libertybans.core.env.AbstractCmdSender;
+class SpigotCommands implements CommandExecutor {
 
-abstract class SpigotCmdSender extends AbstractCmdSender {
-
-	SpigotCmdSender(SpigotEnv env, CommandSender sender, Operator operator) {
-		super(env.core, sender, operator);
+	private final SpigotEnv env;
+	
+	SpigotCommands(SpigotEnv env) {
+		this.env = env;
 	}
-
+	
 	@Override
-	public boolean hasPermission(String permission) {
-		return getRawSender().hasPermission(permission);
+	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+		CmdSender iSender;
+		if (sender instanceof Player) {
+			iSender = new PlayerCmdSender(env, (Player) sender);
+		} else {
+			iSender = new ConsoleCmdSender(env, sender);
+		}
+		env.core.getCommands().execute(iSender, new ArrayCommandPackage(command.getName(), args));
+		return true;
 	}
 
-	@Override
-	public CommandSender getRawSender() {
-		return (CommandSender) super.getRawSender();
-	}
-	
-}
-
-class PlayerCmdSender extends SpigotCmdSender {
-
-	PlayerCmdSender(SpigotEnv env, Player player) {
-		super(env, player, PlayerOperator.of(player.getUniqueId()));
-	}
-	
-}
-
-class ConsoleCmdSender extends SpigotCmdSender {
-
-	ConsoleCmdSender(SpigotEnv env, CommandSender sender) {
-		super(env, sender, ConsoleOperator.INST);
-	}
-	
 }

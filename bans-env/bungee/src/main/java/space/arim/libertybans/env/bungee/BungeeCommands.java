@@ -18,44 +18,32 @@
  */
 package space.arim.libertybans.env.bungee;
 
+import space.arim.libertybans.core.commands.ArrayCommandPackage;
+import space.arim.libertybans.core.commands.Commands;
+import space.arim.libertybans.core.env.CmdSender;
+
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.api.plugin.Command;
 
-import space.arim.libertybans.api.ConsoleOperator;
-import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.PlayerOperator;
-import space.arim.libertybans.core.env.AbstractCmdSender;
+class BungeeCommands extends Command {
 
-abstract class BungeeCmdSender extends AbstractCmdSender {
-
-	BungeeCmdSender(BungeeEnv env, CommandSender sender, Operator operator) {
-		super(env.core, sender, operator);
+	private final BungeeEnv env;
+	
+	BungeeCommands(BungeeEnv env) {
+		super(Commands.BASE_COMMAND_NAME);
+		this.env = env;
 	}
 
 	@Override
-	public boolean hasPermission(String permission) {
-		return getRawSender().hasPermission(permission);
+	public void execute(CommandSender sender, String[] args) {
+		CmdSender iSender;
+		if (sender instanceof ProxiedPlayer) {
+			iSender = new PlayerCmdSender(env, (ProxiedPlayer) sender);
+		} else {
+			iSender = new ConsoleCmdSender(env, sender);
+		}
+		env.core.getCommands().execute(iSender, new ArrayCommandPackage(Commands.BASE_COMMAND_NAME, args));
 	}
 
-	@Override
-	public CommandSender getRawSender() {
-		return (CommandSender) super.getRawSender();
-	}
-	
-}
-
-class PlayerCmdSender extends BungeeCmdSender {
-
-	PlayerCmdSender(BungeeEnv env, ProxiedPlayer player) {
-		super(env, player, PlayerOperator.of(player.getUniqueId()));
-	}
-	
-}
-
-class ConsoleCmdSender extends BungeeCmdSender {
-
-	ConsoleCmdSender(BungeeEnv env, CommandSender sender) {
-		super(env, sender, ConsoleOperator.INST);
-	}
-	
 }

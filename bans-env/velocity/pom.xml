@@ -17,6 +17,15 @@
 	
 	<dependencies>
 		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.uuidvault</groupId>
+			<artifactId>velocity</artifactId>
+			<version>${uuidvault.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.velocitypowered</groupId>
 			<artifactId>velocity-api</artifactId>
 			<scope>provided</scope>

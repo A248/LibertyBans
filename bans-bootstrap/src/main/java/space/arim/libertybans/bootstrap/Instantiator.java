@@ -28,11 +28,6 @@ public class Instantiator {
 	public Instantiator(String clazzName, ClassLoader loader) throws ClassNotFoundException {
 		clazz = Class.forName(clazzName, true, loader);
 	}
-	
-	public <T> BaseEnvironment invoke(Class<T> parameterType, T parameter)
-			throws ReflectiveOperationException, IllegalArgumentException, SecurityException {
-		return (BaseEnvironment) clazz.getDeclaredConstructor(parameterType).newInstance(parameter);
-	}
 
 	public <T, U> BaseEnvironment invoke(Class<T> parameter1Type, T parameter1, Class<U> parameter2Type, U parameter2)
 			throws ReflectiveOperationException, IllegalArgumentException, SecurityException {
