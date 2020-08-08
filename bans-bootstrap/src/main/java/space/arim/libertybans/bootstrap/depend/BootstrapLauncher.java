@@ -88,7 +88,7 @@ public class BootstrapLauncher {
 					if (!informErrorOrReturnTrue(entry.getKey(), entry.getValue())) {
 						return null;
 					}
-					urls[n++] = entry.getValue().getJarFile().toURI().toURL();
+					urls[n++] = entry.getValue().getJarFile().toUri().toURL();
 				}
 			} catch (MalformedURLException ex) {
 				ex.printStackTrace(System.err);

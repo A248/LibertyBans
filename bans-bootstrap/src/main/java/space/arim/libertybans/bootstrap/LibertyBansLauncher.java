@@ -18,8 +18,8 @@
  */
 package space.arim.libertybans.bootstrap;
 
-import java.io.File;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -35,18 +35,17 @@ public class LibertyBansLauncher {
 	private final BootstrapLauncher launcher;
 	private final Function<Class<?>, String> getPluginFor;
 	
-	public LibertyBansLauncher(File folder, Executor executor, Function<Class<?>, String> getPluginFor) {
+	public LibertyBansLauncher(Path libsFolder, Executor executor, Function<Class<?>, String> getPluginFor) {
 		ClassLoader ownClassLoader = getClass().getClassLoader();
 		if (!(ownClassLoader instanceof URLClassLoader)) {
 			throw new IllegalStateException("LibertyBans must be loaded through a URLClassLoader");
 		}
 		this.getPluginFor = getPluginFor;
 
-		File depsFolder = new File(folder, "libs");
 		DependencyLoader apiDepLoader = new DefaultDependencyLoader();
 		DependencyLoader internalDepLoader = new DefaultDependencyLoader();
-		apiDepLoader.setExecutor(executor).setOutputDirectory(new File(depsFolder, "api-deps"));
-		internalDepLoader.setExecutor(executor).setOutputDirectory(new File(depsFolder, "internal-deps"));
+		apiDepLoader.setExecutor(executor).setOutputDirectory(libsFolder.resolve("api-deps"));
+		internalDepLoader.setExecutor(executor).setOutputDirectory(libsFolder.resolve("internal-deps"));
 		
 		addApiDeps(apiDepLoader);
 		addInternalDeps(internalDepLoader);

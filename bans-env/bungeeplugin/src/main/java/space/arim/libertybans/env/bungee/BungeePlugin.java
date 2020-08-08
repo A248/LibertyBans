@@ -18,8 +18,8 @@
  */
 package space.arim.libertybans.env.bungee;
 
-import java.io.File;
 import java.lang.reflect.Field;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,11 +42,11 @@ public class BungeePlugin extends Plugin {
 		 */
 		informAboutSecurityManagerIfNeeded();
 
-		File folder = getDataFolder();
+		Path libsFolder = getDataFolder().toPath().resolve("libs");
 		ExecutorService executor = Instantiator.createReasonableExecutor();
 		ClassLoader launchLoader;
 		try {
-			LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
+			LibertyBansLauncher launcher = new LibertyBansLauncher(libsFolder, executor, (clazz) -> {
 				try {
 					ClassLoader pluginClassLoader = clazz.getClassLoader();
 					Field descField = pluginClassLoader.getClass().getDeclaredField("desc");

@@ -18,7 +18,7 @@
  */
 package space.arim.libertybans.env.spigot;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 
@@ -34,11 +34,11 @@ public class SpigotPlugin extends JavaPlugin {
 	
 	@Override
 	public void onEnable() {
-		File folder = getDataFolder();
+		Path libsFolder = getDataFolder().toPath().resolve("libs");
 		ExecutorService executor = Instantiator.createReasonableExecutor();
 		ClassLoader launchLoader;
 		try {
-			LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
+			LibertyBansLauncher launcher = new LibertyBansLauncher(libsFolder, executor, (clazz) -> {
 				try {
 					JavaPlugin potential = JavaPlugin.getProvidingPlugin(clazz);
 					return potential.getDescription().getFullName();
