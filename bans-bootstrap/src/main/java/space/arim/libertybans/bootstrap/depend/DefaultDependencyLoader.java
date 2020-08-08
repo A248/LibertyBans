@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -90,24 +91,26 @@ public class DefaultDependencyLoader implements DependencyLoader {
 				return DownloadResult.exception(ex);
 			}
 
-			// Read all bytes from download stream
-			byte[] jarBytes;
-			try (InputStream is = url.openStream()) {
-				jarBytes = is.readAllBytes();
-
-			} catch (IOException ex) {
-				return DownloadResult.exception(ex);
-			}
-
-			// Compare hash to expected hash
-			byte[] expectedHash = dependency.getSha512Hash();
+			// Get MessageDigest instance
 			MessageDigest md;
 			try {
 				md = MessageDigest.getInstance("SHA-512");
 			} catch (NoSuchAlgorithmException ex) {
 				return DownloadResult.exception(ex);
 			}
-			byte[] actualHash = md.digest(jarBytes);
+			// Read all bytes from download stream
+			byte[] jarBytes;
+			try (InputStream is = url.openStream();
+					DigestInputStream dis = new DigestInputStream(is, md)) {
+				jarBytes = dis.readAllBytes();
+
+			} catch (IOException ex) {
+				return DownloadResult.exception(ex);
+			}
+
+			// Compare hash to expected hash
+			byte[] actualHash = md.digest();
+			byte[] expectedHash = dependency.getSha512Hash();
 			if (!Arrays.equals(expectedHash, actualHash)) {
 				if (expectedHash != null) {
 					return DownloadResult.hashMismatch(expectedHash, actualHash);
