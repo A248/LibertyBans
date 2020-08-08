@@ -18,9 +18,10 @@
  */
 package space.arim.libertybans.env.spigot;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,12 +44,13 @@ public class ConnectionListener implements Listener {
 
 	private final SpigotEnv env;
 	
-	private final ConcurrentMap<UUID, CentralisedFuture<Punishment>> apples = new ConcurrentHashMap<>();
+	private final Map<AsyncPlayerPreLoginEvent, CentralisedFuture<Punishment>> apples;
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
 	public ConnectionListener(SpigotEnv env) {
 		this.env = env;
+		apples = Collections.synchronizedMap(new IdentityHashMap<>());
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
@@ -60,14 +62,14 @@ public class ConnectionListener implements Listener {
 		UUID uuid = evt.getUniqueId();
 		String name = evt.getName();
 		byte[] address = evt.getAddress().getAddress();
-		CentralisedFuture<Punishment> previous = apples.put(uuid,
+		CentralisedFuture<Punishment> previous = apples.put(evt,
 				env.core.getSelector().executeAndCheckConnection(uuid, name, address));
 		assert previous == null : previous.join();
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
 	public void onConnectHigh(AsyncPlayerPreLoginEvent evt) {
-		CentralisedFuture<Punishment> future = apples.remove(evt.getUniqueId());
+		CentralisedFuture<Punishment> future = apples.remove(evt);
 		if (future == null) {
 			if (evt.getLoginResult() == Result.ALLOWED) {
 				logger.error(
