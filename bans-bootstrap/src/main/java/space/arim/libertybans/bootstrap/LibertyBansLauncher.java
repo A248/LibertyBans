@@ -18,6 +18,11 @@
  */
 package space.arim.libertybans.bootstrap;
 
+import java.lang.reflect.InaccessibleObjectException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
@@ -51,7 +56,31 @@ public class LibertyBansLauncher {
 		addApiDeps(apiDepLoader);
 		addInternalDeps(internalDepLoader);
 
-		launcher = new BootstrapLauncher("Liberty@" + hashCode(), (URLClassLoader) ownClassLoader, apiDepLoader, internalDepLoader);
+		launcher = new BootstrapLauncher("Liberty@" + hashCode(), (URLClassLoader) ownClassLoader, apiDepLoader,
+				internalDepLoader, this::addUrlsToExternalClassLoader);
+	}
+	
+	protected boolean addUrlsToExternalClassLoader(ClassLoader apiClassLoader, Path[] paths) {
+		Method addUrlMethod;
+		try {
+			addUrlMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+			addUrlMethod.setAccessible(true);
+		} catch (NoSuchMethodException | SecurityException | InaccessibleObjectException ex) {
+			warn("Failed to attach dependencies to API ClassLoader");
+			ex.printStackTrace();
+			return false;
+		}
+		try {
+			for (Path path : paths) {
+				URL url = path.toUri().toURL();
+				addUrlMethod.invoke(apiClassLoader, url);
+			}
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | MalformedURLException ex) {
+			warn("Failed to attach dependencies to API ClassLoader");
+			ex.printStackTrace();
+			return false;
+		}
+		return true;
 	}
 	
 	private static Class<?> forName(String clazzname) {

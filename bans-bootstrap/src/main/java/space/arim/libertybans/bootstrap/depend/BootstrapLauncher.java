@@ -18,14 +18,12 @@
  */
 package space.arim.libertybans.bootstrap.depend;
 
-import java.lang.reflect.InaccessibleObjectException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiFunction;
 
 /**
  * Composition of 2 {@link DependencyLoader}s used to add dependencies to an external URLClassLoader and
@@ -45,13 +43,18 @@ public class BootstrapLauncher {
 	private final DependencyLoader apiDepLoader;
 	private final DependencyLoader internalDepLoader;
 	
-	public BootstrapLauncher(String programName, URLClassLoader apiClassLoader, DependencyLoader apiDepLoader, DependencyLoader internalDepLoader) {
+	private final BiFunction<ClassLoader, Path[], Boolean> addUrlsToExternal;
+	
+	public BootstrapLauncher(String programName, URLClassLoader apiClassLoader, DependencyLoader apiDepLoader,
+			DependencyLoader internalDepLoader, BiFunction<ClassLoader, Path[], Boolean> addUrlsToExternal) {
 		this.programName = programName;
 		this.apiClassLoader = apiClassLoader;
 		internalClassLoader = new AddableURLClassLoader(programName, apiClassLoader);
 
 		this.apiDepLoader = apiDepLoader;
 		this.internalDepLoader = internalDepLoader;
+
+		this.addUrlsToExternal = addUrlsToExternal;
 	}
 	
 	public URLClassLoader getApiClassLoader() {
@@ -79,63 +82,41 @@ public class BootstrapLauncher {
 		return true;
 	}
 	
-	private CompletableFuture<URL[]> loadURLs(DependencyLoader loader) {
+	private CompletableFuture<Path[]> loadPaths(DependencyLoader loader) {
 		return loader.execute().thenApply((results) -> {
-			URL[] urls = new URL[results.size()];
+			Path[] paths = new Path[results.size()];
 			int n = 0;
-			try {
-				for (Map.Entry<Dependency, DownloadResult> entry : results.entrySet()) {
-					if (!informErrorOrReturnTrue(entry.getKey(), entry.getValue())) {
-						return null;
-					}
-					urls[n++] = entry.getValue().getJarFile().toUri().toURL();
+			for (Map.Entry<Dependency, DownloadResult> entry : results.entrySet()) {
+				if (!informErrorOrReturnTrue(entry.getKey(), entry.getValue())) {
+					return null;
 				}
-			} catch (MalformedURLException ex) {
-				ex.printStackTrace(System.err);
-				return null;
+				paths[n++] = entry.getValue().getJarFile();
 			}
-			return urls;
+			return paths;
 		});
 	}
 	
-	protected boolean addUrlsToExternalClassLoader(URL[] urls) {
-		Method addUrlMethod;
-		try {
-			addUrlMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-			addUrlMethod.setAccessible(true);
-		} catch (NoSuchMethodException | SecurityException | InaccessibleObjectException ex) {
-			errorMessage("Failed to attach dependencies to API ClassLoader");
-			ex.printStackTrace();
-			return false;
-		}
-		try {
-			for (URL url : urls) {
-				addUrlMethod.invoke(apiClassLoader, url);
-			}
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-			errorMessage("Failed to attach dependencies to API ClassLoader");
-			ex.printStackTrace();
-			return false;
-		}
-		return true;
-	}
-	
 	private CompletableFuture<Boolean> loadApi() {
-		return loadURLs(apiDepLoader).thenApply((urls) -> {
-			if (urls == null) {
+		return loadPaths(apiDepLoader).thenApply((paths) -> {
+			if (paths == null) {
 				return false;
 			}
-			return addUrlsToExternalClassLoader(urls);
+			return addUrlsToExternal.apply(apiClassLoader, paths);
 		});
 	}
 	
 	private CompletableFuture<Boolean> loadInternal() {
-		return loadURLs(internalDepLoader).thenApply((urls) -> {
-			if (urls == null) {
+		return loadPaths(internalDepLoader).thenApply((paths) -> {
+			if (paths == null) {
 				return false;
 			}
-			for (URL url : urls) {
-				internalClassLoader.addURL(url);
+			try {
+				for (Path path : paths) {
+					internalClassLoader.addURL(path.toUri().toURL());
+				}
+			} catch (MalformedURLException ex) {
+				ex.printStackTrace();
+				return false;
 			}
 			return true;
 		});
