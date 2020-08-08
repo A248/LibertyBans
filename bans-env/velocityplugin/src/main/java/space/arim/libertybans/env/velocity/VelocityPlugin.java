@@ -43,8 +43,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 		"A248" }, description = PluginInfo.DESCRIPTION, url = PluginInfo.URL)
 public class VelocityPlugin {
 
-	private final ProxyServer server;
-	private final Path folder;
+	final ProxyServer server;
+	final Path folder;
 	private final Logger logger;
 	
 	private BaseEnvironment base;
@@ -62,7 +62,7 @@ public class VelocityPlugin {
 		ExecutorService executor = Instantiator.createReasonableExecutor();
 		ClassLoader launchLoader;
 		try {
-			LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> null);
+			LibertyBansLauncher launcher = new LibertyBansLauncherVelocity(this, executor);
 			launchLoader = launcher.attemptLaunch().join();
 		} finally {
 			executor.shutdown();
