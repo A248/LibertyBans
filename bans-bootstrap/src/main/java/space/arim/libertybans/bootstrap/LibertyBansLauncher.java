@@ -35,13 +35,14 @@ public class LibertyBansLauncher {
 	private final BootstrapLauncher launcher;
 	private final Function<Class<?>, String> getPluginFor;
 	
-	public LibertyBansLauncher(Path libsFolder, Executor executor, Function<Class<?>, String> getPluginFor) {
+	public LibertyBansLauncher(Path folder, Executor executor, Function<Class<?>, String> getPluginFor) {
 		ClassLoader ownClassLoader = getClass().getClassLoader();
 		if (!(ownClassLoader instanceof URLClassLoader)) {
 			throw new IllegalStateException("LibertyBans must be loaded through a URLClassLoader");
 		}
 		this.getPluginFor = getPluginFor;
 
+		Path libsFolder = folder.resolve("libs");
 		DependencyLoader apiDepLoader = new DefaultDependencyLoader();
 		DependencyLoader internalDepLoader = new DefaultDependencyLoader();
 		apiDepLoader.setExecutor(executor).setOutputDirectory(libsFolder.resolve("api-deps"));

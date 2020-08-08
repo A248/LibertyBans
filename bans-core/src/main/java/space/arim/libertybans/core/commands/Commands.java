@@ -36,6 +36,8 @@ public class Commands {
 	
 	private final List<SubCommandGroup> subCommands;
 	
+	public static final String BASE_COMMAND_NAME = "libertybans";
+	
 	public Commands(LibertyBansCore core) {
 		this.core = core;
 		config = core.getConfigs().getConfig();

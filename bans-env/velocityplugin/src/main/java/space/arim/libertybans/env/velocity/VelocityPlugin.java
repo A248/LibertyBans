@@ -18,12 +18,80 @@
  */
 package space.arim.libertybans.env.velocity;
 
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+
+import org.slf4j.Logger;
+
+import com.google.inject.Inject;
+
+import space.arim.libertybans.bootstrap.BaseEnvironment;
+import space.arim.libertybans.bootstrap.Instantiator;
+import space.arim.libertybans.bootstrap.LibertyBansLauncher;
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
+import com.velocitypowered.api.plugin.PluginContainer;
+import com.velocitypowered.api.plugin.annotation.DataDirectory;
+import com.velocitypowered.api.proxy.ProxyServer;
 
 @Plugin(id = PluginInfo.ANNOTE_ID, name = PluginInfo.NAME, version = PluginInfo.VERSION, authors = {
 		"A248" }, description = PluginInfo.DESCRIPTION, url = PluginInfo.URL)
 public class VelocityPlugin {
 
+	private final ProxyServer server;
+	private final Path folder;
+	private final Logger logger;
+	
+	private BaseEnvironment base;
+	
+	@Inject
+	public VelocityPlugin(ProxyServer server, @DataDirectory Path folder, Logger logger) {
+		this.server = server;
+		this.folder = folder;
+		this.logger = logger;
+	}
+	
+	@Subscribe
+	public void onProxyInitialize(@SuppressWarnings("unused") ProxyInitializeEvent evt) {
+		PluginContainer plugin = server.getPluginManager().fromInstance(this).get();
+		ExecutorService executor = Instantiator.createReasonableExecutor();
+		ClassLoader launchLoader;
+		try {
+			LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> null);
+			launchLoader = launcher.attemptLaunch().join();
+		} finally {
+			executor.shutdown();
+			assert executor.isTerminated();
+		}
+		if (launchLoader == null) {
+			logger.warn("Failed to launch LibertyBans");
+			return;
+		}
+		BaseEnvironment base;
+		try {
+			base = new Instantiator("space.arim.libertybans.env.velocity.VelocityEnv", launchLoader)
+					.invoke(Map.Entry.class, Map.entry(plugin, server), Path.class, folder);
+		} catch (IllegalArgumentException | SecurityException | ReflectiveOperationException ex) {
+			logger.warn("Failed to launch LibertyBans", ex);
+			return;
+		}
+		base.startup();
+		this.base = base;
+	}
+	
+	@Subscribe
+	public void onProxyShutdown(@SuppressWarnings("unused") ProxyShutdownEvent evt) {
+		BaseEnvironment base = this.base;
+		if (base == null) {
+			logger.warn("LibertyBans never launched; nothing to shutdown");
+			return;
+		}
+		base.shutdown();
+	}
+	
 }

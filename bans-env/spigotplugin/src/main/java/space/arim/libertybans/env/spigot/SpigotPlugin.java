@@ -34,11 +34,11 @@ public class SpigotPlugin extends JavaPlugin {
 	
 	@Override
 	public void onEnable() {
-		Path libsFolder = getDataFolder().toPath().resolve("libs");
+		Path folder = getDataFolder().toPath();
 		ExecutorService executor = Instantiator.createReasonableExecutor();
 		ClassLoader launchLoader;
 		try {
-			LibertyBansLauncher launcher = new LibertyBansLauncher(libsFolder, executor, (clazz) -> {
+			LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
 				try {
 					JavaPlugin potential = JavaPlugin.getProvidingPlugin(clazz);
 					return potential.getDescription().getFullName();
@@ -56,7 +56,8 @@ public class SpigotPlugin extends JavaPlugin {
 		}
 		BaseEnvironment base;
 		try {
-			base = new Instantiator("space.arim.libertybans.env.spigot.SpigotEnv", launchLoader).invoke(JavaPlugin.class, this);
+			base = new Instantiator("space.arim.libertybans.env.spigot.SpigotEnv", launchLoader)
+					.invoke(JavaPlugin.class, this, Path.class, folder);
 		} catch (IllegalArgumentException | SecurityException | ReflectiveOperationException ex) {
 			getLogger().log(Level.WARNING, "Failed to launch LibertyBans", ex);
 			return;

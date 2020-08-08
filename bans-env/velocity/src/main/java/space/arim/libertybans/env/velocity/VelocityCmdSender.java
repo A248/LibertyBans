@@ -1,60 +1,60 @@
 /* 
- * LibertyBans-env-bungee
+ * LibertyBans-env-velocity
  * Copyright © 2020 Anand Beh <https://www.arim.space>
  * 
- * LibertyBans-env-bungee is free software: you can redistribute it and/or modify
+ * LibertyBans-env-velocity is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  * 
- * LibertyBans-env-bungee is distributed in the hope that it will be useful,
+ * LibertyBans-env-velocity is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  * 
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-env-bungee. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans-env-velocity. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.env.bungee;
-
-import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
+package space.arim.libertybans.env.velocity;
 
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.core.env.AbstractCmdSender;
 
-abstract class BungeeCmdSender extends AbstractCmdSender {
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.proxy.Player;
 
-	BungeeCmdSender(BungeeEnv env, CommandSender sender, Operator operator) {
+abstract class VelocityCmdSender extends AbstractCmdSender {
+	
+	VelocityCmdSender(VelocityEnv env, CommandSource sender, Operator operator) {
 		super(env.core, sender, operator);
 	}
-
+	
 	@Override
 	public boolean hasPermission(String permission) {
 		return getRawSender().hasPermission(permission);
 	}
 
 	@Override
-	public CommandSender getRawSender() {
-		return (CommandSender) super.getRawSender();
+	public CommandSource getRawSender() {
+		return (CommandSource) super.getRawSender();
 	}
-	
+
 }
 
-class PlayerCmdSender extends BungeeCmdSender {
+class PlayerCmdSender extends VelocityCmdSender {
 
-	PlayerCmdSender(BungeeEnv env, ProxiedPlayer player) {
+	PlayerCmdSender(VelocityEnv env, Player player) {
 		super(env, player, PlayerOperator.of(player.getUniqueId()));
 	}
 	
 }
 
-class ConsoleCmdSender extends BungeeCmdSender {
+class ConsoleCmdSender extends VelocityCmdSender {
 
-	ConsoleCmdSender(BungeeEnv env, CommandSender sender) {
+	ConsoleCmdSender(VelocityEnv env, CommandSource sender) {
 		super(env, sender, ConsoleOperator.INST);
 	}
 	

@@ -22,16 +22,16 @@ import space.arim.api.chat.SendableMessage;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.core.LibertyBansCore;
-import space.arim.libertybans.core.env.AbstractCmdSender;
 import space.arim.libertybans.core.env.CmdSender;
 
-public class PrefixedCmdSender extends AbstractCmdSender {
+public class PrefixedCmdSender implements CmdSender {
 	
+	private final LibertyBansCore core;
 	private final CmdSender sender;
 	private final SendableMessage prefix;
 
 	public PrefixedCmdSender(LibertyBansCore core, CmdSender sender, SendableMessage prefix) {
-		super(core, sender.getRawSender());
+		this.core = core;
 		this.sender = sender;
 		this.prefix = prefix;
 	}
@@ -48,6 +48,17 @@ public class PrefixedCmdSender extends AbstractCmdSender {
 
 	@Override
 	public void sendMessage(SendableMessage message) {
-		sender.sendMessage(new SendableMessage.Builder(prefix).add(message.getComponents()).build());
+		sender.sendMessage(prefix.concatenate(message));
+	}
+
+	@Override
+	public void parseThenSend(String message) {
+		SendableMessage parsed = core.getFormatter().parseMessage(message);
+		sender.sendMessage(prefix.concatenate(parsed));
+	}
+
+	@Override
+	public Object getRawSender() {
+		return sender.getRawSender();
 	}
 }

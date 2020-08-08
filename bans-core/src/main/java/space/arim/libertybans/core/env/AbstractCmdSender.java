@@ -21,16 +21,24 @@ package space.arim.libertybans.core.env;
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.env.annote.PlatformCommandSender;
 
+import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.core.LibertyBansCore;
 
 public abstract class AbstractCmdSender implements CmdSender {
 	
 	private final LibertyBansCore core;
 	private final Object rawSender;
+	private final Operator operator;
 	
-	protected AbstractCmdSender(LibertyBansCore core, Object rawSender) {
+	protected AbstractCmdSender(LibertyBansCore core, Object rawSender, Operator operator) {
 		this.core = core;
 		this.rawSender = rawSender;
+		this.operator = operator;
+	}
+	
+	@Override
+	public Operator getOperator() {
+		return operator;
 	}
 	
 	@Override

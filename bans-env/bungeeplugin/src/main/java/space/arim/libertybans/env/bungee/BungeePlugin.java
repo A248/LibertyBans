@@ -42,11 +42,11 @@ public class BungeePlugin extends Plugin {
 		 */
 		informAboutSecurityManagerIfNeeded();
 
-		Path libsFolder = getDataFolder().toPath().resolve("libs");
+		Path folder = getDataFolder().toPath();
 		ExecutorService executor = Instantiator.createReasonableExecutor();
 		ClassLoader launchLoader;
 		try {
-			LibertyBansLauncher launcher = new LibertyBansLauncher(libsFolder, executor, (clazz) -> {
+			LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
 				try {
 					ClassLoader pluginClassLoader = clazz.getClassLoader();
 					Field descField = pluginClassLoader.getClass().getDeclaredField("desc");
@@ -69,7 +69,8 @@ public class BungeePlugin extends Plugin {
 		}
 		BaseEnvironment base;
 		try {
-			base = new Instantiator("space.arim.libertybans.env.bungee.BungeeEnv", launchLoader).invoke(Plugin.class, this);
+			base = new Instantiator("space.arim.libertybans.env.bungee.BungeeEnv", launchLoader)
+					.invoke(Plugin.class, this, Path.class, folder);
 		} catch (IllegalArgumentException | SecurityException | ReflectiveOperationException ex) {
 			getLogger().log(Level.WARNING, "Failed to launch LibertyBans", ex);
 			return;
