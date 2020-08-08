@@ -20,7 +20,6 @@ package space.arim.libertybans.bootstrap;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
 
 public class Instantiator {
 
@@ -30,25 +29,25 @@ public class Instantiator {
 		clazz = Class.forName(clazzName, true, loader);
 	}
 	
-	public <T> BaseEnvironment invoke(Class<T> parameterType, T parameter) throws ReflectiveOperationException, IllegalArgumentException, SecurityException {
+	public <T> BaseEnvironment invoke(Class<T> parameterType, T parameter)
+			throws ReflectiveOperationException, IllegalArgumentException, SecurityException {
 		return (BaseEnvironment) clazz.getDeclaredConstructor(parameterType).newInstance(parameter);
+	}
+
+	public <T, U> BaseEnvironment invoke(Class<T> parameter1Type, T parameter1, Class<U> parameter2Type, U parameter2)
+			throws ReflectiveOperationException, IllegalArgumentException, SecurityException {
+		return (BaseEnvironment) clazz.getDeclaredConstructor(parameter1Type, parameter2Type).newInstance(parameter1,
+				parameter2);
 	}
 	
 	/**
-	 * Creates a reasonable thread pool for downloading dependencies. <br>
-	 * <br>
-	 * If there are enough threads in the ForkJoinPool's commonPool it is used, else a typical thread pool
-	 * is returned, which must be shutdown.
+	 * Creates a reasonable thread pool for downloading dependencies.
 	 * 
 	 * @return a thread pool for downloading dependencies
 	 */
 	public static ExecutorService createReasonableExecutor() {
-		int minParallelism = 5;
-		int commonParallelism = ForkJoinPool.getCommonPoolParallelism();
-		if (commonParallelism >= minParallelism) {
-			return ForkJoinPool.commonPool();
-		}
-		return Executors.newFixedThreadPool(minParallelism);
+		int threads = 5;
+		return Executors.newFixedThreadPool(threads);
 	}
 	
 }

@@ -18,12 +18,14 @@
  */
 package space.arim.libertybans.bootstrap.depend;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -37,7 +39,7 @@ public class DefaultDependencyLoader implements DependencyLoader {
 
 	private Executor executor;
 	private Map<Dependency, Repository> pairs = new HashMap<>();
-	private File outputDir;
+	private Path outputDir;
 	
 	public DefaultDependencyLoader() {
 
@@ -56,23 +58,25 @@ public class DefaultDependencyLoader implements DependencyLoader {
 	}
 
 	@Override
-	public DependencyLoader setOutputDirectory(File outputDir) {
-		if (!outputDir.isDirectory() && !outputDir.mkdirs()) {
-			throw new IllegalStateException("Cannot create output directory " + outputDir);
+	public DependencyLoader setOutputDirectory(Path outputDir) {
+		try {
+			Files.createDirectories(outputDir);
+		} catch (IOException ex) {
+			throw new IllegalStateException("Cannot create directory " + outputDir, ex);
 		}
 		this.outputDir = outputDir;
 		return this;
 	}
 	
 	@Override
-	public File getOutputDirectory() {
+	public Path getOutputDirectory() {
 		return outputDir;
 	}
 	
 	private CompletableFuture<DownloadResult> downloadDependency(Dependency dependency, Repository repository) {
 		return CompletableFuture.supplyAsync(() -> {
-			File outputJar = new File(outputDir, dependency.getFullName() + ".jar");
-			if (outputJar.exists()) {
+			Path outputJar = outputDir.resolve(dependency.getFullName() + ".jar");
+			if (Files.exists(outputJar)) {
 				return DownloadResult.success(outputJar);
 			}
 			String urlPath = repository.getBaseUrl() + '/' + dependency.groupId().replace('.', '/') + '/'
@@ -105,13 +109,8 @@ public class DefaultDependencyLoader implements DependencyLoader {
 				}
 				System.out.println("Warning: Disabled hash comparison. Actual hash is " + Arrays.toString(actualHash));
 			}
-			if (expectedHash == null) {
-
-			} else {
-				
-			}
-			try (FileOutputStream fos = new FileOutputStream(outputJar)) {
-				fos.write(jarBytes);
+			try (FileChannel fc = FileChannel.open(outputJar)) {
+				fc.write(ByteBuffer.wrap(jarBytes));
 			} catch (IOException ex) {
 				return DownloadResult.exception(ex);
 			}

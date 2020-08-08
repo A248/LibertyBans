@@ -18,17 +18,17 @@
  */
 package space.arim.libertybans.bootstrap.depend;
 
-import java.io.File;
+import java.nio.file.Path;
 
 public class DownloadResult {
 
 	private final ResultType resultType;
-	private final File jarFile;
+	private final Path jarFile;
 	private final byte[] expectedHash;
 	private final byte[] actualHash;
 	private final Exception ex;
 	
-	private DownloadResult(ResultType resultType, File jarFile, byte[] expectedHash, byte[] actualHash, Exception ex) {
+	private DownloadResult(ResultType resultType, Path jarFile, byte[] expectedHash, byte[] actualHash, Exception ex) {
 		this.resultType = resultType;
 		this.jarFile = jarFile;
 		this.expectedHash = expectedHash;
@@ -36,7 +36,7 @@ public class DownloadResult {
 		this.ex = ex;
 	}
 	
-	private DownloadResult(ResultType resultType, File jarFile, Exception ex) {
+	private DownloadResult(ResultType resultType, Path jarFile, Exception ex) {
 		this(resultType, jarFile, null, null, ex);
 	}
 	
@@ -55,7 +55,7 @@ public class DownloadResult {
 	 * 
 	 * @return the jar file
 	 */
-	public File getJarFile() {
+	public Path getJarFile() {
 		return jarFile;
 	}
 	
@@ -76,8 +76,8 @@ public class DownloadResult {
 		return ex;
 	}
 	
-	public static DownloadResult success(File jarFile) {
-		return new DownloadResult(ResultType.SUCCESS, jarFile, null);
+	public static DownloadResult success(Path outputJar) {
+		return new DownloadResult(ResultType.SUCCESS, outputJar, null);
 	}
 	
 	public static DownloadResult hashMismatch(byte[] expected, byte[] actual) {
