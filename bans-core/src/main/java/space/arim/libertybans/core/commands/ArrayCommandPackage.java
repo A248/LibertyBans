@@ -18,6 +18,8 @@
  */
 package space.arim.libertybans.core.commands;
 
+import java.util.NoSuchElementException;
+
 public class ArrayCommandPackage extends CommandPackage {
 
 	private final String[] args;
@@ -31,6 +33,9 @@ public class ArrayCommandPackage extends CommandPackage {
 	
 	@Override
 	public String next() {
+		if (!hasNext()) {
+			throw new NoSuchElementException();
+		}
 		return args[position++];
 	}
 	
