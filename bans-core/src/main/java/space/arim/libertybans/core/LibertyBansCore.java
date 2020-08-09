@@ -29,6 +29,7 @@ import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.database.DatabaseManager;
 import space.arim.libertybans.core.database.Database;
 import space.arim.libertybans.core.env.AbstractEnv;
+import space.arim.libertybans.core.uuid.UUIDMaster;
 
 public class LibertyBansCore implements LibertyBans, Part {
 
