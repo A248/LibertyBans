@@ -16,7 +16,7 @@
  * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core;
+package space.arim.libertybans.core.uuid;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,72 +34,81 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
+import space.arim.uuidvault.api.CollectiveUUIDResolver;
 import space.arim.uuidvault.api.UUIDResolver;
 import space.arim.uuidvault.api.UUIDUtil;
 import space.arim.uuidvault.api.UUIDVault;
 import space.arim.uuidvault.api.UUIDVaultRegistration;
 
+import space.arim.libertybans.core.LibertyBansCore;
+import space.arim.libertybans.core.Part;
 import space.arim.libertybans.core.database.Database;
 
 public class UUIDMaster implements Part {
 
-	private final LibertyBansCore core;
+	final LibertyBansCore core;
 	
-	private final Cache<UUID, String> fastCache = Caffeine.newBuilder().expireAfterAccess(20L, TimeUnit.SECONDS).build();
+	final Cache<UUID, String> fastCache = Caffeine.newBuilder().expireAfterAccess(20L, TimeUnit.SECONDS).build();
 	private final UUIDResolver resolver;
 	
-	private volatile UUIDVaultRegistration uvr;
+	private volatile UUIDVaultStuff uuidStuff;
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
-	UUIDMaster(LibertyBansCore core) {
+	public UUIDMaster(LibertyBansCore core) {
 		this.core = core;
-		resolver = new ResolverImpl(core, fastCache);
+		resolver = new ResolverImpl();
 	}
 	
 	@Override
 	public void startup() {
 		Class<?> pluginClass = core.getEnvironment().getPluginClass();
-		uvr = UUIDVault.get().register(resolver, pluginClass, (byte) 0, "LibertyBans");
+		UUIDVault uuidVault = UUIDVault.get();
+		UUIDVaultRegistration registration = uuidVault.register(resolver, pluginClass, (byte) 0, "LibertyBans");
+		CollectiveUUIDResolver resolver = uuidVault.createCollectiveResolverIgnoring(registration);
+		uuidStuff = new UUIDVaultStuff(registration, resolver);
 	}
 	
 	@Override
-	public void restart() {}
+	public void restart() {
+		
+	}
 	
 	@Override
 	public void shutdown() {
-		UUIDVault.get().unregister(uvr);
+		UUIDVaultStuff uuidStuff = this.uuidStuff;
+		UUIDVault.get().unregister(uuidStuff.registration);
 	}
 	
 	public void addCache(UUID uuid, String name) {
 		fastCache.put(uuid, name);
 	}
 	
-	public CentralisedFuture<UUID> fullLookupUUID(String name) {
-		return core.getFuturesFactory().supplySync(() -> UUIDVault.get().resolveNatively(name)).thenCompose((uuid) -> {
-			if (uuid != null) {
-				return CompletableFuture.completedFuture(uuid);
+	public CentralisedFuture<UUID> fullLookupUUID(final String name) {
+		return core.getFuturesFactory().supplySync(() -> UUIDVault.get().resolveNatively(name)).thenCompose((uuid1) -> {
+			if (uuid1 != null) {
+				return CompletableFuture.completedFuture(uuid1);
 			}
-			return UUIDVault.get().resolve(name);
-		}).thenApply((uuid) -> {
-			if (uuid != null) {
-				fastCache.put(uuid, name);
-			}
-			return uuid;
+			return uuidStuff.resolver.resolve(name).thenApply((uuid2) -> {
+				if (uuid2 != null) {
+					fastCache.put(uuid2, name);
+				}
+				return uuid2;
+			});
 		});
 	}
 	
-	public CentralisedFuture<String> fullLookupName(UUID uuid) {
-		return core.getFuturesFactory().supplySync(() -> UUIDVault.get().resolveNatively(uuid)).thenCompose((name) -> {
-			if (name != null) {
-				return CompletableFuture.completedFuture(name);
+	public CentralisedFuture<String> fullLookupName(final UUID uuid) {
+		return core.getFuturesFactory().supplySync(() -> UUIDVault.get().resolveNatively(uuid)).thenCompose((name1) -> {
+			if (name1 != null) {
+				return CompletableFuture.completedFuture(name1);
 			}
-			return UUIDVault.get().resolve(uuid);
-		}).thenApply((name) -> {
-			if (name != null) {
-				fastCache.put(uuid, name);
-			}
-			return name;
+			return uuidStuff.resolver.resolve(uuid).thenApply((name2) -> {
+				if (name2 != null) {
+					fastCache.put(uuid, name2);
+				}
+				return name2;
+			});
 		});
 	}
 	
@@ -109,14 +118,10 @@ public class UUIDMaster implements Part {
 	 * 
 	 */
 	
-	private static class ResolverImpl implements UUIDResolver {
+	private class ResolverImpl implements UUIDResolver {
 		
-		private final LibertyBansCore core;
-		private final Cache<UUID, String> fastCache;
-		
-		ResolverImpl(LibertyBansCore core, Cache<UUID, String> fastCache) {
-			this.core = core;
-			this.fastCache = fastCache;
+		ResolverImpl() {
+
 		}
 		
 		@Override
