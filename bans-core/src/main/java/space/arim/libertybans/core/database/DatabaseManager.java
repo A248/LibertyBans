@@ -22,6 +22,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -64,6 +66,30 @@ public class DatabaseManager implements Part {
 		return database;
 	}
 	
+	@Override
+	public void startup() {
+		this.database = getDatabase(core.getConfigs().getSql());
+	}
+	
+	@Override
+	public void restart() {
+		Database database = this.database;
+		getShutdownExecutor().execute(database::close);
+		this.database = getDatabase(core.getConfigs().getSql());
+	}
+
+	@Override
+	public void shutdown() {
+		Database database = this.database;
+		CompletableFuture.runAsync(() -> {
+			database.close();
+		}, getShutdownExecutor()).join();
+	}
+	
+	private static Executor getShutdownExecutor() {
+		return CompletableFuture.delayedExecutor(4, TimeUnit.SECONDS);
+	}
+	
 	private static boolean isAtLeast(Object value, int amount) {
 		return value instanceof Integer && ((Integer) value) >= amount;
 	}
@@ -91,6 +117,17 @@ public class DatabaseManager implements Part {
 			return true;
 		});
 		return List.of(poolSizeTransformer, timeoutTransformer, lifetimeTransformer);
+	}
+	
+	private Database getDatabase(ConfigAccessor config) {
+		HikariConfig hikariConf = getHikariConfig(config);
+		boolean useMySql = hikariConf.getPoolName().contains("MySQL"); // see end of #getHikariConfg
+		Database database = new Database(core, hikariConf, hikariConf.getMaximumPoolSize());
+		boolean success = createTablesAndViews(database, !useMySql).join();
+		if (!success) {
+			throw new StartupException("Database table and views creation failed");
+		}
+		return database;
 	}
 	
 	private HikariConfig getHikariConfig(ConfigAccessor config) {
@@ -159,29 +196,19 @@ public class DatabaseManager implements Part {
 		hikariConf.setPoolName("Liberty-HikariCP-" + mode + '@' + hikariConf.hashCode());
 		return hikariConf;
 	}
-
-	@Override
-	public void startup() {
-		HikariConfig hikariConf = getHikariConfig(core.getConfigs().getSql());
-		boolean useMySql = hikariConf.getPoolName().contains("MySQL"); // see end of #getHikariConfg
-		boolean success = createTablesAndViews(!useMySql).join();
-		if (!success) {
-			throw new StartupException("Database table and views creation failed");
-		}
-	}
 	
-	private CentralisedFuture<String> readResource(String resourceName) {
+	private static CentralisedFuture<String> readResource(Database database, String resourceName) {
 		return database.selectAsync(() -> IOUtils.readSqlResourceBlocking(resourceName));
 	}
 	
-	private CentralisedFuture<Boolean> createTablesAndViews(final boolean useHsqldb) {
+	private static CentralisedFuture<Boolean> createTablesAndViews(final Database database, final boolean useHsqldb) {
 		EnumMap<PunishmentType, CentralisedFuture<String>> enactmentProcedures = new EnumMap<>(PunishmentType.class);
 		for (PunishmentType type : MiscUtil.punishmentTypes()) {
 			String resourceName = "procedure_" + MiscUtil.getEnactmentProcedure(type) + ".sql";
-			enactmentProcedures.put(type, readResource(resourceName));
+			enactmentProcedures.put(type, readResource(database, resourceName));
 		}
-		CentralisedFuture<String> refreshProcedure = readResource("procedure_refresh.sql");
-		CentralisedFuture<String> refresherEventFuture = (useHsqldb) ? null : readResource("event_refresher.sql");
+		CentralisedFuture<String> refreshProcedure = readResource(database, "procedure_refresh.sql");
+		CentralisedFuture<String> refresherEventFuture = (useHsqldb) ? null : readResource(database, "event_refresher.sql");
 
 		return database.selectAsync(() -> {
 			String punishmentTypeInfo = MiscUtil.javaToSqlEnum(PunishmentType.class);
@@ -359,10 +386,6 @@ public class DatabaseManager implements Part {
 			}*/
 			return true;
 		});
-	}
-
-	@Override
-	public void shutdown() {
 	}
 	
 }

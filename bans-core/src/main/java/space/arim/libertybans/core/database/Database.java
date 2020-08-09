@@ -65,6 +65,11 @@ public class Database implements PunishmentDatabase {
 		backend = new HikariPoolSqlBackend(hikariConf);
 	}
 	
+	void close() {
+		backend.getDataSource().close();
+		executor.shutdown();
+	}
+	
 	@Override
 	public Connection getConnection() throws SQLException {
 		if (logger.isDebugEnabled()) {
