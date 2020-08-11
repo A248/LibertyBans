@@ -27,6 +27,10 @@
 			<artifactId>bans-bootstrap</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-database</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>space.arim.api</groupId>
 			<artifactId>arimapi-all</artifactId>
 		</dependency>

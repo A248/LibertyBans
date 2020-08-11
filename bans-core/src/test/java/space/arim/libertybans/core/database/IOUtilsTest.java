@@ -26,8 +26,10 @@ public class IOUtilsTest {
 
 	@Test
 	public void testReadResource() {
-		assertEquals("i do not care", IOUtils.readResourceBlocking("whatever.yml"));
-		assertFalse(IOUtils.readSqlResourceBlocking("procedure_refresh.sql").isBlank());
+		assertEquals("random content", IOUtils.readResourceBlocking("whatever.yml"));
+		String refreshProcedure = IOUtils.readSqlResourceBlocking("procedure_refresh.sql");
+		System.out.println(refreshProcedure);
+		assertFalse(refreshProcedure.isBlank());
 	}
 	
 }

@@ -18,10 +18,9 @@
  */
 package space.arim.libertybans.core.database;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.concurrent.ThreadFactory;
 
@@ -30,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import space.arim.omnibus.util.ThisClass;
 
+import space.arim.api.configure.JarResources;
 import space.arim.api.util.sql.CloseMe;
 import space.arim.api.util.sql.SqlBackend;
 
@@ -39,12 +39,8 @@ public class IOUtils {
 	private static final Logger logger = LoggerFactory.getLogger(THIS_CLASS);
 
 	static String readResourceBlocking(String resourceName) {
-		try (InputStream inputStream = THIS_CLASS.getClassLoader().getResourceAsStream(resourceName);
-				ByteArrayOutputStream buf = new ByteArrayOutputStream()) {
-
-			inputStream.transferTo(buf);
-			return buf.toString(StandardCharsets.UTF_8);
-
+		try {
+			return Files.readString(JarResources.forClass(THIS_CLASS, resourceName), StandardCharsets.UTF_8);
 		} catch (IOException ex) {
 			logger.error("Failed to read internal resource {}", resourceName, ex);
 		}
