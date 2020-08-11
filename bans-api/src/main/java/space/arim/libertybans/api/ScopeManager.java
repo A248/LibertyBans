@@ -32,7 +32,7 @@ public interface ScopeManager {
 	 * 
 	 * @param server the server
 	 * @return a scope applying to the server
-	 * @throws IllegalArgumentException if <code>server.length()</code> > 32
+	 * @throws IllegalArgumentException if <code>server.length()</code> {@literal >} 32
 	 */
 	Scope specificScope(String server);
 	

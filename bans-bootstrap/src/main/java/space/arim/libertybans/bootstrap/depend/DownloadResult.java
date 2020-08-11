@@ -70,7 +70,7 @@ public class DownloadResult {
 	/**
 	 * Gets the exception associated with this result, or {@code null} for none
 	 * 
-	 * @return
+	 * @return the exception or {@code null}
 	 */
 	public Exception getException() {
 		return ex;

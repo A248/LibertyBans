@@ -30,7 +30,7 @@ import java.util.concurrent.Executor;
  * predicate, error-free specifications using stable API. {@code PunishmentSelector} may be used to retrieve
  * punishments with all sorts of details from the database. <br>
  * <br>
- * <a>API Status</b> <br>
+ * <b>API Status</b> <br>
  * Use of the SQL backend directly is not considered traditional API. Although attempts will be made to limit
  * the number of breaking changes, LibertyBans's major version will not necessarily change to match the SQL backend.
  * Unlike other plugins, LibertyBans makes use of a wide swath of queries. <br>
