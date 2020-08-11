@@ -75,5 +75,10 @@
 			<artifactId>bans-env-bungeeplugin</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-env-velocityplugin</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 </project>

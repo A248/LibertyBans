@@ -3,12 +3,14 @@ connection-pool-size: 6
 timeouts:
   connection-timeout-seconds: 20
   max-lifetime-minutes: 25
-mysql-details:
+mariadb-details:
   host: localhost
   port: 3306
   database: bans
   user: username
   password: defaultpass
 connection-properties:
-  - 'serverTimezone=UTC'
+  useUnicode: 'true'
+  characterEncoding: 'UTF-8'
+use-traditional-jdbc-url: false
 config-version: 1
