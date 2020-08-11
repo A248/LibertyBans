@@ -47,7 +47,7 @@ public interface PunishmentEnactor {
 	 * If the punishment existed and was removed, the future yields {@code true}, else {@code false}.
 	 * 
 	 * @param punishment the punishment to undo
-	 * @return a centralised future which yields {@code true} if the punishment existing and was removed, {@code false} otherwise
+	 * @return a centralised future which yields {@code true} if the punishment existed and was removed, {@code false} otherwise
 	 */
 	CentralisedFuture<Boolean> undoPunishment(Punishment punishment);
 	
@@ -59,7 +59,7 @@ public interface PunishmentEnactor {
 	 * is known, the former method should be used instead.</b>
 	 * 
 	 * @param id the id of the punishment to undo
-	 * @return a centralised future which yields {@code true} if the punishment existing and was removed, {@code false} otherwise
+	 * @return a centralised future which yields {@code true} if the punishment existed and was removed, {@code false} otherwise
 	 */
 	CentralisedFuture<Boolean> undoPunishmentById(int id);
 	
@@ -69,7 +69,7 @@ public interface PunishmentEnactor {
 	 * 
 	 * @param type the punishment type, must be either BAN or MUTE
 	 * @param victim the victim whose punishment to undo
-	 * @return a centralised future which yields {@code true} if the punishment existing and was removed, {@code false} otherwise
+	 * @return a centralised future which yields {@code true} if the punishment existed and was removed, {@code false} otherwise
 	 * @throws IllegalArgumentException if {@code type} is not BAN or MUTE
 	 */
 	CentralisedFuture<Boolean> undoPunishmentByTypeAndVictim(PunishmentType type, Victim victim);
