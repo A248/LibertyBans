@@ -19,6 +19,8 @@
 package space.arim.libertybans.core;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
@@ -156,14 +158,16 @@ public class Configs implements Part {
 	public CompletableFuture<Boolean> reloadConfigs() {
 		Set<CompletableFuture<?>> futureLangFiles = new HashSet<>();
 		for (Translation translation : Translation.values()) {
-			String name = translation.name().toLowerCase(Locale.ENGLISH);
-			Path messagesPath = langFolder.resolve("messages_" + name + ".yml");
+			final String name = "messages_" + translation.name().toLowerCase(Locale.ENGLISH) + ".yml";
+			Path messagesPath = langFolder.resolve(name);
 			if (!Files.exists(messagesPath)) {
 				futureLangFiles.add(CompletableFuture.runAsync(() -> {
-					Path defaultResourcePath = JarResources.forClassLoader(THIS_CLASS.getClassLoader(), "lang/" + name);
-					try (ReadableByteChannel source = FileChannel.open(defaultResourcePath, StandardOpenOption.READ);
+
+					try (InputStream inputStream = getClass().getResource("/lang/" + name).openStream();
+							ReadableByteChannel source = Channels.newChannel(inputStream);
 							FileChannel dest = FileChannel.open(messagesPath, StandardOpenOption.WRITE,
 									StandardOpenOption.CREATE_NEW)) {
+
 						dest.transferFrom(source, 0, Long.MAX_VALUE);
 					} catch (IOException ex) {
 						logger.warn("Unable to copy language file for language {}", name, ex);
