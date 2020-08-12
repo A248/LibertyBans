@@ -19,21 +19,15 @@
 package space.arim.libertybans.env.spigot;
 
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 
 import space.arim.omnibus.OmnibusProvider;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-import space.arim.api.chat.SendableMessage;
 import space.arim.api.env.BukkitPlatformHandle;
 import space.arim.api.env.PlatformHandle;
 
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.env.AbstractEnv;
-import space.arim.libertybans.core.env.OnlineTarget;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
@@ -47,35 +41,30 @@ public class SpigotEnv extends AbstractEnv {
 	private final ConnectionListener joinListener;
 	private final SpigotCommands commands;
 	
+	private final SpigotEnforcer enforcer;
+	
 	public SpigotEnv(JavaPlugin plugin, Path folder) {
 		core = new LibertyBansCore(OmnibusProvider.getOmnibus(), folder, this);
 		handle = new BukkitPlatformHandle(plugin);
 
 		commands = new SpigotCommands(this);
 		joinListener = new ConnectionListener(this);
+
+		enforcer = new SpigotEnforcer(this);
 	}
 	
 	JavaPlugin getPlugin() {
 		return handle.getPlugin();
-	}
-	
-	@Override
-	public Class<?> getPluginClass() {
-		return getPlugin().getClass();
 	}
 
 	@Override
 	public PlatformHandle getPlatformHandle() {
 		return handle;
 	}
-
+	
 	@Override
-	public void sendToThoseWithPermission(String permission, SendableMessage message) {
-		for (Player player : getPlugin().getServer().getOnlinePlayers()) {
-			if (player.hasPermission(permission)) {
-				handle.sendMessage(player, message);
-			}
-		}
+	public SpigotEnforcer getEnforcer() {
+		return enforcer;
 	}
 
 	@Override
@@ -103,31 +92,10 @@ public class SpigotEnv extends AbstractEnv {
 	protected void infoMessage(String message) {
 		getPlugin().getLogger().info(message);
 	}
-
-	@Override
-	public void kickByUUID(UUID uuid, SendableMessage message) {
-		core.getFuturesFactory().executeSync(() -> {
-			Player player = getPlugin().getServer().getPlayer(uuid);
-			if (player != null) {
-				handle.disconnectUser(player, message);
-			}
-		});
-	}
 	
 	boolean hasPermissionSafe(Player player, String permission) {
 		// TODO: Account for non-thread safe permission plugins
 		return player.hasPermission(permission);
-	}
-
-	@Override
-	public CentralisedFuture<Set<OnlineTarget>> getOnlineTargets() {
-		return core.getFuturesFactory().supplySync(() -> {
-			Set<OnlineTarget> result = new HashSet<>();
-			for (Player player : getPlugin().getServer().getOnlinePlayers()) {
-				result.add(new SpigotOnlineTarget(this, player));
-			}
-			return result;
-		});
 	}
 	
 }

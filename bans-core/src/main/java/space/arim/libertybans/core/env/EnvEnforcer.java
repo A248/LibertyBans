@@ -18,14 +18,16 @@
  */
 package space.arim.libertybans.core.env;
 
-import space.arim.api.env.PlatformHandle;
+import java.util.UUID;
 
-import space.arim.libertybans.core.Part;
+import space.arim.api.chat.SendableMessage;
 
-public interface Environment extends Part {
+public interface EnvEnforcer {
 	
-	PlatformHandle getPlatformHandle();
+	void sendToThoseWithPermission(String permission, SendableMessage message);
+
+	void kickByUUID(UUID uuid, SendableMessage message);
 	
-	EnvEnforcer getEnforcer();
+	void enforceMatcher(TargetMatcher matcher);
 	
 }

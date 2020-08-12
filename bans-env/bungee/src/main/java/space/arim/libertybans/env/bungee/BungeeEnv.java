@@ -19,22 +19,15 @@
 package space.arim.libertybans.env.bungee;
 
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 
 import space.arim.omnibus.OmnibusProvider;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-import space.arim.api.chat.SendableMessage;
 import space.arim.api.env.BungeePlatformHandle;
 import space.arim.api.env.PlatformHandle;
 
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.env.AbstractEnv;
-import space.arim.libertybans.core.env.OnlineTarget;
 
-import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 
@@ -46,21 +39,20 @@ public class BungeeEnv extends AbstractEnv {
 	private final ConnectionListener joinListener;
 	private final BungeeCommands commands;
 	
+	private final BungeeEnforcer enforcer;
+	
 	public BungeeEnv(Plugin plugin, Path folder) {
 		core = new LibertyBansCore(OmnibusProvider.getOmnibus(), folder, this);
 		handle = new BungeePlatformHandle(plugin);
 
 		commands = new BungeeCommands(this);
 		joinListener = new ConnectionListener(this);
+
+		enforcer = new BungeeEnforcer(this);
 	}
 	
 	Plugin getPlugin() {
 		return handle.getPlugin();
-	}
-	
-	@Override
-	public Class<?> getPluginClass() {
-		return getPlugin().getClass();
 	}
 
 	@Override
@@ -69,22 +61,10 @@ public class BungeeEnv extends AbstractEnv {
 	}
 	
 	@Override
-	public void sendToThoseWithPermission(String permission, SendableMessage message) {
-		for (ProxiedPlayer player : getPlugin().getProxy().getPlayers()) {
-			if (player.hasPermission(permission)) {
-				handle.sendMessage(player, message);
-			}
-		}
+	public BungeeEnforcer getEnforcer() {
+		return enforcer;
 	}
 	
-	@Override
-	public void kickByUUID(UUID uuid, SendableMessage message) {
-		ProxiedPlayer player = getPlugin().getProxy().getPlayer(uuid);
-		if (player != null) {
-			handle.disconnectUser(player, message);
-		}
-	}
-
 	@Override
 	protected void startup0() {
 		core.startup();
@@ -106,19 +86,10 @@ public class BungeeEnv extends AbstractEnv {
 		pm.unregisterListener(joinListener);
 		core.shutdown();
 	}
-
+	
 	@Override
 	protected void infoMessage(String message) {
 		getPlugin().getLogger().info(message);
-	}
-	
-	@Override
-	public CentralisedFuture<Set<OnlineTarget>> getOnlineTargets() {
-		Set<OnlineTarget> result = new HashSet<>();
-		for (ProxiedPlayer player : getPlugin().getProxy().getPlayers()) {
-			result.add(new BungeeOnlineTarget(this, player));
-		}
-		return core.getFuturesFactory().completedFuture(result);
 	}
 
 }

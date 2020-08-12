@@ -18,222 +18,209 @@
  */
 package space.arim.libertybans.core.database;
 
-import java.sql.SQLException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.api.util.sql.CloseMe;
-import space.arim.api.util.sql.SqlQuery;
+import space.arim.omnibus.util.concurrent.DelayCalculators;
 
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.MiscUtil;
+
+import space.arim.jdbcaesar.transact.TransactionQuerySource;
 
 public class TableDefinitions {
 	
 	private static final int REVISION_MAJOR = Database.REVISION_MAJOR;
 	private static final int REVISION_MINOR = Database.REVISION_MINOR;
+	private static final Revision REVISION = Revision.of(REVISION_MAJOR, REVISION_MINOR);
 	
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+	private final LibertyBansCore core;
+	private final Database database;
+	
+	TableDefinitions(LibertyBansCore core, Database database) {
+		this.core = core;
+		this.database = database;
+	}
 
-	private static CentralisedFuture<String> readResource(Database database, String resourceName) {
-		return database.selectAsync(() -> IOUtils.readSqlResourceBlocking(resourceName));
+	private CentralisedFuture<String> readResource(String resourceName) {
+		return database.selectAsync(() -> IOUtils.readResource("sql/" + resourceName + ".sql"));
 	}
 	
-	static CentralisedFuture<Boolean> createTablesAndViews(final Database database, final boolean useMySql) {
-		final boolean useHsqldb = !useMySql;
+	private CentralisedFuture<List<String>> readAllQueries(String resourceName) {
+		return database.selectAsync(() -> IOUtils.readSqlQueries("sql/" + resourceName + ".sql"));
+	}
+	
+	CentralisedFuture<Boolean> createTablesAndViews(final boolean useMariaDb) {
+		final boolean useHsqldb = !useMariaDb;
+
+		Set<CentralisedFuture<?>> futures = new HashSet<>();
+
+		CentralisedFuture<List<String>> futureCreateTables = readAllQueries("create_tables").thenApply((createTables) -> {
+			String punishmentTypeInfo = MiscUtil.javaToSqlEnum(PunishmentType.class);
+			String victimInfo = "VARBINARY(16) NOT NULL";
+			String victimTypeInfo = MiscUtil.javaToSqlEnum(Victim.VictimType.class);
+
+			for (ListIterator<String> it = createTables.listIterator(); it.hasNext();) {
+				String sqlQuery = it.next();
+				it.set(sqlQuery
+						.replace("<punishmentTypeInfo>", punishmentTypeInfo)
+						.replace("<victimInfo>", victimInfo)
+						.replace("<victimTypeInfo>", victimTypeInfo));
+			}
+			return createTables;
+		});
+		futures.add(futureCreateTables);
+
+		CentralisedFuture<List<String>> futureCreateViews = readAllQueries("create_views").thenApply((rawCreateViews) -> {
+			if (rawCreateViews.size() != 3) {
+				throw new IllegalStateException("Unexpected raw create views size " + rawCreateViews.size());
+			}
+			List<String> createViews = new ArrayList<>();
+			for (PunishmentType type : MiscUtil.punishmentTypes()) {
+				if (type == PunishmentType.KICK) {
+					continue;
+				}
+				String lowerNamePlural = type.getLowercaseNamePlural();
+				String simpleForThisType = rawCreateViews.get(0);
+				String applicableForThisType = rawCreateViews.get(1);
+				createViews.add(simpleForThisType.replace("<lowerNamePlural>", lowerNamePlural));
+				createViews.add(applicableForThisType.replace("<lowerNamePlural>", lowerNamePlural));
+			}
+			createViews.add(rawCreateViews.get(2));
+			return createViews;
+		});
+		futures.add(futureCreateViews);
 
 		EnumMap<PunishmentType, CentralisedFuture<String>> enactmentProcedures = new EnumMap<>(PunishmentType.class);
 		for (PunishmentType type : MiscUtil.punishmentTypes()) {
-			String resourceName = "procedure_" + MiscUtil.getEnactmentProcedure(type) + ".sql";
-			enactmentProcedures.put(type, readResource(database, resourceName));
+			String resourceName = "procedure_" + MiscUtil.getEnactmentProcedure(type);
+			CentralisedFuture<String> enactmentProcedureFuture = readResource(resourceName);
+			enactmentProcedures.put(type, enactmentProcedureFuture);
+			futures.add(enactmentProcedureFuture);
 		}
-		CentralisedFuture<String> refreshProcedure = readResource(database, "procedure_refresh.sql");
-		CentralisedFuture<String> refresherEventFuture = (useHsqldb) ? null : readResource(database, "event_refresher.sql");
 
-		return database.selectAsync(() -> {
-			String punishmentTypeInfo = MiscUtil.javaToSqlEnum(PunishmentType.class);
-			String victimTypeInfo = MiscUtil.javaToSqlEnum(Victim.VictimType.class);
-			List<SqlQuery> queries = new ArrayList<>();
+		CentralisedFuture<String> refreshProcedure = readResource("procedure_refresh");
+		futures.add(refreshProcedure);
+		CentralisedFuture<String> refresherEventFuture;
+		if (useHsqldb) {
+			refresherEventFuture = null;
+		} else {
+			refresherEventFuture = readResource("event_refresher");
+			futures.add(refresherEventFuture);
+		}
+		CentralisedFuture<?> resourcesFuture = core.getFuturesFactory().copyFuture(
+				CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)));
 
-			if (useHsqldb) {
-				// HSQLDB compatibility with MySQL non-standard syntax
-				// http://hsqldb.org/doc/2.0/guide/compatibility-chapt.html#coc_compatibility_mysql
-				queries.add(SqlQuery.of("SET DATABASE SQL SYNTAX MYS TRUE"));
-			}
-			queries.addAll(List.of(
+		return resourcesFuture.thenCompose((ignore) -> {
+			return database.selectAsync(() -> {
+				return database.jdbCaesar().transaction().transactor((querySource) -> {
 
+					// HSQLDB MySQL syntax compatibility
+					if (useHsqldb) {
+						querySource.query("SET DATABASE SQL SYNTAX MYS TRUE").voidResult().execute();
+					}
 					/*
-					 * Revision schema
+					 * Check for existing database revision
 					 */
-					SqlQuery.of(
-							"CREATE TABLE IF NOT EXISTS `libertybans_revision` ("
-							+ "`constant` INT NOT NULL UNIQUE DEFAULT 0 "
-							+ "COMMENT 'This column is unique and can only have 1 value to ensure this table has only 1 row', "
-							+ "`major` INT NOT NULL, "
-							+ "`minor` INT NOT NULL)"),
-					SqlQuery.of(
-							"INSERT INTO `libertybans_major` (`major`, `minor`) "
-							+ "VALUES (?, ?) ON DUPLICATE KEY UPDATE `major` = ?, `minor` = ?",
-							REVISION_MAJOR, REVISION_MINOR),
+					Object nullForNonexistentTable = querySource.query("SHOW TABLES LIKE `libertybans_revision`")
+								.singleResult((rs) -> new Object()).execute();
+					if (nullForNonexistentTable != null) {
+						Revision revision = querySource.query("SELECT `major`, `minor` FROM `libertybans_revision`")
+								.singleResult((resultSet) -> Revision.of(resultSet.getInt("major"), resultSet.getInt("minor")))
+								.execute();
 
+						migrateFrom(querySource, revision);
+						return true;
+					}
 					/*
-					 * UUIDs, names, and address
+					 * Execute create tables
 					 */
+					for (String createTable : futureCreateTables.join()) {
+						querySource.query(createTable).voidResult().execute();
+					}
 					/*
-					 * The reason these are not the same table is that some servers
-					 * may need to periodically clear the addresses table per GDPR
-					 * regulations. However, using a single table with a null address
-					 * would be unwise, since unique constraints don't work nicely
-					 * with null values.
+					 * Execute create views
 					 */
-					SqlQuery.of(
-							"CREATE TABLE IF NOT EXISTS `libertybans_names` ("
-							+ "`uuid` BINARY(16) NOT NULL, "
-							+ "`name` VARCHAR(16) NOT NULL, "
-							+ "`updated` INT UNSIGNED NOT NULL, "
-							+ "PRIMARY KEY (`uuid`),"
-							+ "UNIQUE (`uuid`, `name`))"),
-					SqlQuery.of(
-							"CREATE TABLE IF NOT EXISTS `libertybans_addresses` ("
-							+ "`uuid` BINARY(16) NOT NULL, "
-							+ "`address` VARBINARY(16) NOT NULL, "
-							+ "`updated` INT UNSIGNED NOT NULL, "
-							+ "PRIMARY KEY (`uuid`), "
-							+ "UNIQUE (`uuid`, `address`))"),
+					for (String createView : futureCreateViews.join()) {
+						querySource.query(createView).voidResult().execute();
+					}
+					/*
+					 * Add enactment procedures
+					 */
+					for (PunishmentType type : MiscUtil.punishmentTypes()) {
+						String procedure = enactmentProcedures.get(type).join();
+						querySource.query(procedure).voidResult().execute();
+					}
+					/*
+					 * Add refresher procedure
+					 */
+					querySource.query(refreshProcedure.join()).voidResult().execute();
 
-					/*
-					 * Core punishments tables
-					 */
-					SqlQuery.of(
-							"CREATE TABLE IF NOT EXISTS `libertybans_punishments` ("
-							+ "`id` INT AUTO_INCREMENT PRIMARY KEY, "
-							+ "`type` " + punishmentTypeInfo + ", "
-							+ "`operator` BINARY(16) NOT NULL, "
-							+ "`reason` VARCHAR(256) NOT NULL, "
-							+ "`scope` VARCHAR(32) NULL DEFAULT NULL, "
-							+ "`start` INT UNSIGNED NOT NULL, "
-							+ "`end` INT UNSIGNED NOT NULL)"),
-					SqlQuery.of(
-							"CREATE TABLE IF NOT EXISTS `libertybans_bans` ("
-							+ "`id` INT PRIMARY KEY, "
-							+ "`victim` VARBINARY(16) NOT NULL, "
-							+ "`victim_type` " + victimTypeInfo + ", "
-							+ "FOREIGN KEY (`id`) REFERENCES `libertybans_punishments` (`id`) ON DELETE CASCADE, "
-							+ "UNIQUE (`victim`, `victim_type`))"),
-					SqlQuery.of(
-							"CREATE TABLE IF NOT EXISTS `libertybans_mutes` ("
-							+ "`id` INT PRIMARY KEY, "
-							+ "`victim` VARBINARY(16) NOT NULL, "
-							+ "`victim_type` " + victimTypeInfo + ", "
-							+ "FOREIGN KEY (`id`) REFERENCES `libertybans_punishments` (`id`) ON DELETE CASCADE, "
-							+ "UNIQUE (`victim`, `victim_type`))"),
-					SqlQuery.of(
-							"CREATE TABLE IF NOT EXISTS `libertybans_warns` ("
-							+ "`id` INT PRIMARY KEY, "
-							+ "`victim` VARBINARY(16) NOT NULL, "
-							+ "`victim_type` " + victimTypeInfo + ", "
-							+ "FOREIGN KEY (`id`) REFERENCES `libertybans_punishments` (`id`) ON DELETE CASCADE)"),
-					SqlQuery.of(
-							"CREATE TABLE IF NOT EXISTS `libertybans_history` ("
-							+ "`id` INT NOT NULL, "
-							+ "`victim` VARBINARY(16) NOT NULL, "
-							+ "`victim_type` " + victimTypeInfo + ", "
-							+ "FOREIGN KEY (`id`) REFERENCES `libertybans_punishments` (`id`) ON DELETE CASCADE)")
-					));
+					int realUpdateCount = querySource.query(
+							"INSERT INTO `libertybans_major` (`major`, `minor`) VALUES (?, ?)")
+							.params(REVISION_MAJOR, REVISION_MINOR)
+							.updateCount((updateCount) -> updateCount).execute();
+					if (realUpdateCount != 1) {
+						throw new IllegalStateException(
+								"Expected to update database revision number, but updateCount was " + realUpdateCount);
+					}
+					return true;
 
-			/*
-			 * Procedures read from internal resources
-			 */
-			for (PunishmentType type : MiscUtil.punishmentTypes()) {
-				CentralisedFuture<String> procedureFuture = enactmentProcedures.get(type);
-				String procedure = procedureFuture.join();
-				if (procedure == null) {
-					String procedureName = MiscUtil.getEnactmentProcedure(type);
-					logger.error("Halting startup having failed to read procedure {}", procedureName);
-					return false;
+				}).onRollback(() -> false).execute();
+			}).thenApply((createdTablesAndViews) -> {
+				if (createdTablesAndViews) {
+					if (useHsqldb) {
+						// Using HSQLDB
+						// Periodic task will be started for refreshing
+						assert refresherEventFuture == null;
+
+						core.getResources().getEnhancedExecutor().scheduleRepeating(
+								new IOUtils.HsqldbCleanerRunnable(core.getDatabaseManager(), database),
+								Duration.ofHours(1L), DelayCalculators.fixedDelay());
+					} else {
+						// Using MariaDB
+						// Database-side event will be used
+						@SuppressWarnings("null")
+						String refresherEvent = refresherEventFuture.join();
+						database.jdbCaesar().query(refresherEvent).voidResult().execute();
+					}
 				}
-				queries.add(SqlQuery.of(procedure));
-			}
-
-			for (PunishmentType type : MiscUtil.punishmentTypes()) {
-				if (type == PunishmentType.KICK) {
-					// There is no table for kicks, they go straight to history
-					continue;
-				}
-				String lowerNamePlural = type.getLowercaseNamePlural(); // 'ban'
-				queries.add(SqlQuery.of(
-							"CREATE VIEW IF NOT EXISTS `libertybans_simple_" + lowerNamePlural + "` AS "
-							+ "SELECT `puns`.`id`, `puns`.`type`, `thetype`.`victim`, `thetype`.`victim_type`, "
-							+ "`puns`.`operator`, `puns`.`reason`, `puns`.`scope`, `puns`.`start`, `puns`.`end` "
-							+ "FROM `libertybans_" + lowerNamePlural + "` `thetype` INNER JOIN `libertybans_punishments` `puns` "
-							+ "ON `puns`.`id` = `thetype`.`id`"));
-				queries.add(SqlQuery.of(
-					"CREATE VIEW IF NOT EXISTS `libertybans_applicable_" + lowerNamePlural + "` AS "
-					+ "SELECT `puns`.`id`, `puns`.`type`, `puns`.`victim`, `puns`.`victim_type`, `puns`.`operator`, "
-					+ "`puns`.`reason`, `puns`.`scope`, `puns`.`start`, `puns`.`end`, `addrs`.`uuid`, `addrs`.`address` "
-					+ "FROM `libertybans_simple_" + lowerNamePlural + "` `puns` INNER JOIN `libertybans_addresses` `addrs` "
-					+ "ON (`puns`.`victim_type` = 'PLAYER' AND `puns`.`victim` = `addrs`.`uuid` "
-					+ "OR `puns`.`victim_type` = 'ADDRESS' AND `puns`.`victim` = `addrs`.`address`)"));
-			}
-			queries.add(SqlQuery.of(
-					"CREATE VIEW IF NOT EXISTS `libertybans_simple_active` AS "
-					+ "SELECT * FROM `libertybans_simple_bans` UNION ALL "
-					+ "SELECT * FROM `libertybans_simple_mutes` UNION ALL "
-					+ "SELECT * FROM `libertybans_simple_warns`"));
-
-			/*
-			 * MySQL has the capabilitiy to run periodic refresh on the database-side using events
-			 * For HSQLDB the procedure will be added but a periodic task server-side will be used
-			 */
-			String refreshProc = refreshProcedure.join();
-			if (refreshProc == null) {
-				logger.error("Halting startup having failed to read the refresh procedure");
-				return false;
-			}
-			queries.add(SqlQuery.of(refreshProc));
-
-			if (useHsqldb) {
-				// Using HSQLDB
-				// Periodic task will be started below, after table creation
-				assert refresherEventFuture == null;
-			} else {
-				// Using MySQL
-				assert refresherEventFuture != null;
-
-				@SuppressWarnings("null")
-				String refresherEvent = refresherEventFuture.join();
-				if (refresherEvent == null) {
-					logger.error("Halting startup having failed to read the refresher event");
-					return false;
-				}
-				queries.add(SqlQuery.of(refresherEvent));
-			}
-
-			try (CloseMe cm = database.getBackend().execute(queries.toArray(SqlQuery.EMPTY_QUERY_ARRAY))) {
-
-			} catch (SQLException ex) {
-				logger.error("Failed to create tables", ex);
-				return false;
-			}
-			// Initialise cleaner task if using HSQLDB
-			/*if (useHsqldb) {
-				PlatformScheduler scheduler = new DetectingPlatformHandle(core.getRegistry())
-						.registerDefaultServiceIfAbsent(PlatformScheduler.class);
-
-				ScheduledTask task = scheduler.runRepeatingTask(new DbHelper.HsqldbCleanerRunnable(core.getDbHelper()),
-						1L, 1L, TimeUnit.HOURS);
-				hsqldbCleaner = Objects.requireNonNull(task);
-			}*/
-			return true;
+				return createdTablesAndViews;
+			});
 		});
+	}
+	
+	/**
+	 * Migrates from a previous database revision if necessary. If the revision is already up to date,
+	 * this is a no-op.
+	 * 
+	 * @param querySource the transaction query sources
+	 * @param revision the actual database revision
+	 * @throws IllegalStateException if {@code revision} is in the future or is not recognised as a past version
+	 */
+	private static void migrateFrom(TransactionQuerySource querySource, Revision revision) {
+		int comparison = REVISION.compareTo(revision);
+		if (comparison == 0) {
+			// Same version
+			return;
+		}
+		if (comparison < 0) {
+			throw new IllegalStateException("Database revision number is in the future! "
+					+ "Please upgrade this version of LibertyBans");
+		}
+		// Schema migrator here
+
+		// Currently there is no older version to migrate from
+		throw new IllegalStateException("Unknown database revision " + revision.major + '.' + revision.minor);
 	}
 	
 }

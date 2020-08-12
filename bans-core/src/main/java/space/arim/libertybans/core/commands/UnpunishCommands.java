@@ -47,11 +47,13 @@ public class UnpunishCommands extends SubCommandGroup {
 	
 	private void execute(LibertyBansCore core, ConfigAccessor messages, CmdSender sender, CommandPackage command, PunishmentType type) {
 		if (!sender.hasPermission("libertybans." + type.getLowercaseName() + ".undo")) { // libertybans.ban.undo
-			sender.parseThenSend(messages.getString("removals." + type.getLowercaseNamePlural() + ".permission.command")); // removals.bans.permission.command
+			sender.parseThenSend(messages.getString(
+					"removals." + type.getLowercaseNamePlural() + ".permission.command")); // removals.bans.permission.command
 			return;
 		}
 		if (!command.hasNext()) {
-			sender.parseThenSend(messages.getString("removals." + type.getLowercaseNamePlural() + ".usage")); // removals.bans.usage
+			sender.parseThenSend(messages.getString(
+					"removals." + type.getLowercaseNamePlural() + ".usage")); // removals.bans.usage
 			return;
 		}
 		String name = command.next();
@@ -74,16 +76,19 @@ public class UnpunishCommands extends SubCommandGroup {
 				return;
 			}
 			// Success message
-			String rawMsg = messages.getString("removals." + type.getLowercaseNamePlural() + ".successful.message"); // removals.bans.successful.message
+			String rawMsg = messages.getString(
+					"removals." + type.getLowercaseNamePlural() + ".successful.message"); // removals.bans.successful.message
 			CentralisedFuture<SendableMessage> futureMsg = core.getFormatter().formatWithPunishment(rawMsg, punishment);
 			assert futureMsg.isDone();
 			sender.sendMessage(futureMsg.join());
 
 			// Notification
-			String rawNotify = messages.getString("removals." + type.getLowercaseNamePlural() + ".successful.notification"); // removals.bans.successful.notification
+			String rawNotify = messages.getString(
+					"removals." + type.getLowercaseNamePlural() + ".successful.notification"); // removals.bans.successful.notification
 			CentralisedFuture<SendableMessage> futureNotify = core.getFormatter().formatWithPunishment(rawNotify, punishment);
 			assert futureNotify.isDone();
-			core.getEnvironment().sendToThoseWithPermission("libertybans." + type.getLowercaseName() + ".unnotify", futureNotify.join()); // libertybans.ban.unnotify
+			core.getEnvironment().getEnforcer().sendToThoseWithPermission(
+					"libertybans." + type.getLowercaseName() + ".unnotify", futureNotify.join()); // libertybans.ban.unnotify
 		});
 	}
 

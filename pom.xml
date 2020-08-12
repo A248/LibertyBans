@@ -28,6 +28,7 @@
 		<uuidvault.version>0.5.2-SNAPSHOT</uuidvault.version>
 
 		<!-- Internal dependencies -->
+		<jdbcaesar.version>0.3.2-SNAPSHOT</jdbcaesar.version>
 		<arimapi.version>0.19.6-SNAPSHOT</arimapi.version>
 		<slf4j.version>1.7.25</slf4j.version>
 		<hikari.version>3.4.5</hikari.version>
@@ -188,13 +189,18 @@
 				<artifactId>api</artifactId>
 				<version>${uuidvault.version}</version>
 			</dependency>
+			
+			<!-- Internal dependencies -->
+			<dependency>
+				<groupId>space.arim.jdbcaesar</groupId>
+				<artifactId>jdbcaesar</artifactId>
+				<version>${jdbcaesar.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>space.arim.api</groupId>
 				<artifactId>arimapi-all</artifactId>
 				<version>${arimapi.version}</version>
 			</dependency>
-			
-			<!-- Internal dependencies -->
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>

@@ -18,20 +18,13 @@
  */
 package space.arim.libertybans.core;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.net.InetAddress;
 import java.util.Set;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
+
+import space.arim.uuidvault.api.UUIDUtil;
 
 import space.arim.api.chat.SendableMessage;
 
@@ -39,85 +32,93 @@ import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.api.PunishmentEnforcer;
-import space.arim.libertybans.core.env.OnlineTarget;
+import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.core.Configs.AddressStrictness;
+import space.arim.libertybans.core.database.Database;
+import space.arim.libertybans.core.env.TargetMatcher;
 
 public class Enforcer implements PunishmentEnforcer {
 
 	private final LibertyBansCore core;
-	
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
 	Enforcer(LibertyBansCore core) {
 		this.core = core;
 	}
 	
 	@Override
-	public void enforce(Punishment punishment) {
+	public CentralisedFuture<?> enforce(Punishment punishment) {
 		MiscUtil.validate(punishment);
-		CentralisedFuture<SendableMessage> message = core.getFormatter().getPunishmentMessage(punishment);
+		CentralisedFuture<SendableMessage> futureMessage = core.getFormatter().getPunishmentMessage(punishment);
 		switch (punishment.getVictim().getType()) {
 		case PLAYER:
 			UUID uuid = ((PlayerVictim) punishment.getVictim()).getUUID();
-			message.thenAccept((msg) -> core.getEnvironment().kickByUUID(uuid, msg));
-			break;
+			return futureMessage.thenAccept((msg) -> core.getEnvironment().getEnforcer().kickByUUID(uuid, msg));
 		case ADDRESS:
-			enforceAddressPunishment(punishment, message);
-			break;
+			return futureMessage.thenCompose((message) -> enforceAddressPunishment(punishment, message));
 		default:
 			throw new IllegalStateException("Unknown victim type " + punishment.getVictim().getType());
 		}
 	}
 	
-	private void removeAndKickIfMatching(Set<OnlineTarget> targets, byte[] address, SendableMessage message) {
-		for (Iterator<OnlineTarget> it = targets.iterator(); it.hasNext(); ) {
-			OnlineTarget target = it.next();
-			if (Arrays.equals(target.getAddress(), address)) {
-				target.kick(message);
-				it.remove();
-			}
+	private CentralisedFuture<?> enforceAddressPunishment(Punishment punishment, SendableMessage message) {
+		InetAddress address = ((AddressVictim) punishment.getVictim()).getAddress();
+		CentralisedFuture<TargetMatcher> futureMatcher;
+		AddressStrictness strictness = core.getConfigs().getAddressStrictness();
+		switch (strictness) {
+		case LENIENT:
+			TargetMatcher matcher = new TargetMatcher(Set.of(), Set.of(address), message, shouldKick(punishment));
+			futureMatcher = core.getFuturesFactory().completedFuture(matcher);
+			break;
+		case NORMAL:
+			futureMatcher = matchAddressPunishmentNormal(address, punishment, message);
+			break;
+		case STRICT:
+			futureMatcher = matchAddressPunishmentStrict(address, punishment, message);
+			break;
+		default:
+			throw new IllegalStateException("Unknown address strictness " + strictness);
 		}
+		return futureMatcher.thenAccept(core.getEnvironment().getEnforcer()::enforceMatcher);
 	}
 	
-	private void enforceAddressPunishment(Punishment punishment, CentralisedFuture<SendableMessage> futureMsg) {
-		core.getEnvironment().getOnlineTargets().thenCombine(futureMsg, (targets, ignore) -> targets)
-				.thenAcceptAsync((targets) -> {
+	private static boolean shouldKick(Punishment punishment) {
+		PunishmentType type = punishment.getType();
+		switch (type) {
+		case BAN:
+		case KICK:
+			return true;
+		case MUTE:
+		case WARN:
+			return false;
+		default:
+			throw new IllegalStateException("Unknown punishment type " + type);
+		}
+	}
 
-			SendableMessage message = futureMsg.join(); // will be done by now, due to thenCombine
-			byte[] address = ((AddressVictim) punishment.getVictim()).getAddress().getAddress();
-
-			removeAndKickIfMatching(targets, address, message);
-			if (targets.isEmpty()) {
-				return;
-			}
-
-			StringBuilder queryBuilder = new StringBuilder(
-					"SELECT `uuid`, `address` FROM `libertybans_addresses` WHERE `address` = ?");
-			List<Object> args = new ArrayList<>();
-			args.add(address);
-
-			boolean foundFirst = false;
-			for (OnlineTarget target : targets) {
-				if (foundFirst) {
-					queryBuilder.append(" OR ");
-				} else {
-					queryBuilder.append(" AND (");
-					foundFirst = true;
-				}
-				queryBuilder.append("`uuid` = ?");
-				args.add(target.getUniqueId());
-			}
-			if (foundFirst) {
-				queryBuilder.append(')');
-			}
-
-			try (ResultSet rs = core.getDatabase().getBackend().select(queryBuilder.toString(), args.toArray())) {
-				while (rs.next()) {
-					removeAndKickIfMatching(targets, rs.getBytes("address"), message);
-				}
-			} catch (SQLException ex) {
-				logger.error("Failed IP lookups for enforcing address-based punishment", ex);
-			}
-		}, core.getDatabase().getExecutor());
+	private CentralisedFuture<TargetMatcher> matchAddressPunishmentNormal(InetAddress address, Punishment punishment,
+			SendableMessage message) {
+		Database helper = core.getDatabase();
+		return helper.selectAsync(() -> {
+			Set<UUID> uuids = helper.jdbCaesar().query(
+					"SELECT `uuid` FROM `libertybans_addresses` WHERE `address` = ?")
+					.params(address)
+					.setResult((resultSet) -> UUIDUtil.fromByteArray(resultSet.getBytes("uuid")))
+					.onError(Set::of).execute();
+			return new TargetMatcher(uuids, Set.of(), message, shouldKick(punishment));
+		});
+	}
+	
+	private CentralisedFuture<TargetMatcher> matchAddressPunishmentStrict(InetAddress address, Punishment punishment, SendableMessage message) {
+		Database helper = core.getDatabase();
+		return helper.selectAsync(() -> {
+			Set<UUID> uuids = helper.jdbCaesar().query(
+					"SELECT `addrs`.`uuid` FROM `libertybans_addresses` `addrs` INNER JOIN `libertybans_address` `addrsAlso` "
+					+ "ON `addrs`.`address` = `addrsAlso`.`address` WHERE `addrsAlso`.`uuid` = ?")
+					.params(address)
+					.setResult((resultSet) -> UUIDUtil.fromByteArray(resultSet.getBytes("uuid")))
+					.onError(Set::of).execute();
+			return new TargetMatcher(uuids, Set.of(), message, shouldKick(punishment));
+		});
 	}
 	
 }

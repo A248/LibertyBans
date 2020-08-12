@@ -18,20 +18,14 @@
  */
 package space.arim.libertybans.core.uuid;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
-import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.uuidvault.api.CollectiveUUIDResolver;
@@ -53,8 +47,6 @@ public class UUIDMaster implements Part {
 	
 	private volatile UUIDVaultStuff uuidStuff;
 	
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-	
 	public UUIDMaster(LibertyBansCore core) {
 		this.core = core;
 		resolver = new ResolverImpl();
@@ -62,7 +54,7 @@ public class UUIDMaster implements Part {
 	
 	@Override
 	public void startup() {
-		Class<?> pluginClass = core.getEnvironment().getPluginClass();
+		Class<?> pluginClass = core.getEnvironment().getPlatformHandle().getImplementingPluginInfo().getPlugin().getClass();
 		UUIDVault uuidVault = UUIDVault.get();
 		UUIDVaultRegistration registration = uuidVault.register(resolver, pluginClass, (byte) 0, "LibertyBans");
 		CollectiveUUIDResolver resolver = uuidVault.createCollectiveResolverIgnoring(registration);
@@ -128,15 +120,12 @@ public class UUIDMaster implements Part {
 		public CentralisedFuture<UUID> resolve(String name) {
 			Database helper = core.getDatabase();
 			return helper.selectAsync(() -> {
-				try (ResultSet rs = helper.getBackend().select(
-						"SELECT `uuid` FROM `libertybans_names` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
-					if (rs.next()) {
-						return UUIDUtil.fromByteArray(rs.getBytes("uuid"));
-					}
-				} catch (SQLException ex) {
-					logger.warn("Could not resolve name {}", name, ex);
-				}
-				return null;
+				return helper.jdbCaesar().query(
+						"SELECT `uuid` FROM `libertybans_names` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1")
+						.params(name)
+						.singleResult((resultSet) -> {
+							return UUIDUtil.fromByteArray(resultSet.getBytes("uuid"));
+						}).onError(() -> null).execute();
 			});
 		}
 
@@ -144,15 +133,12 @@ public class UUIDMaster implements Part {
 		public CentralisedFuture<String> resolve(UUID uuid) {
 			Database helper = core.getDatabase();
 			return helper.selectAsync(() -> {
-				try (ResultSet rs = helper.getBackend().select(
-						"SELECT `name` FROM `libertybans_names` WHERE `uuid` = ? ORDER BY `updated` DESC LIMIT 1", UUIDUtil.toByteArray(uuid))) {
-					if (rs.next()) {
-						return rs.getString("name");
-					}
-				} catch (SQLException ex) {
-					logger.warn("Could not resolve uuid {}", uuid, ex);
-				}
-				return null;
+				return helper.jdbCaesar().query(
+						"SELECT `name` FROM `libertybans_names` WHERE `uuid` = ? ORDER BY `updated` DESC LIMIT 1")
+						.params(uuid)
+						.singleResult((resultSet) -> {
+							return resultSet.getString("name");
+						}).onError(() -> null).execute();
 			});
 		}
 

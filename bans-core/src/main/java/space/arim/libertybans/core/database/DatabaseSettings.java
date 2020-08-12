@@ -69,7 +69,7 @@ class DatabaseSettings {
 		HikariConfig hikariConf = getHikariConfig(config);
 		boolean useMariaDb = hikariConf.getPoolName().contains("MariaDB"); // see end of #getHikariConfg
 		Database database = new Database(core, hikariConf, hikariConf.getMaximumPoolSize());
-		boolean success = TableDefinitions.createTablesAndViews(database, useMariaDb).join();
+		boolean success = new TableDefinitions(core, database).createTablesAndViews(useMariaDb).join();
 		if (!success) {
 			throw new StartupException("Database table and views creation failed");
 		}
@@ -111,7 +111,6 @@ class DatabaseSettings {
 		setConfiguredDriver(config, hikariConf, useMariaDb);
 
 		hikariConf.setAutoCommit(false);
-		hikariConf.addDataSourceProperty("allowMultiQueries", "true");
 
 		@SuppressWarnings("unchecked")
 		Map<String, Object> connectProps = config.getObject("connection-properties", Map.class);

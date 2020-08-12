@@ -19,30 +19,23 @@
 package space.arim.libertybans.env.velocity;
 
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import space.arim.omnibus.OmnibusProvider;
 import space.arim.omnibus.util.ThisClass;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-import space.arim.api.chat.SendableMessage;
 import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.VelocityPlatformHandle;
 
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.env.AbstractEnv;
-import space.arim.libertybans.core.env.OnlineTarget;
 
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.plugin.PluginContainer;
-import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 
 public class VelocityEnv extends AbstractEnv {
@@ -52,6 +45,8 @@ public class VelocityEnv extends AbstractEnv {
 	
 	private final ConnectionListener joinListener;
 	private final VelocityCommands commands;
+	
+	private final VelocityEnforcer enforcer;
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
@@ -64,6 +59,8 @@ public class VelocityEnv extends AbstractEnv {
 
 		joinListener = new ConnectionListener(this);
 		commands = new VelocityCommands(this);
+
+		enforcer = new VelocityEnforcer(this);
 	}
 	
 	PluginContainer getPlugin() {
@@ -75,22 +72,13 @@ public class VelocityEnv extends AbstractEnv {
 	}
 	
 	@Override
-	public Class<?> getPluginClass() {
-		return getPlugin().getClass();
-	}
-	
-	@Override
 	public PlatformHandle getPlatformHandle() {
 		return handle;
 	}
 	
 	@Override
-	public void sendToThoseWithPermission(String permission, SendableMessage message) {
-		for (Player player : getServer().getAllPlayers()) {
-			if (player.hasPermission(permission)) {
-				handle.sendMessage(player, message);
-			}
-		}
+	public VelocityEnforcer getEnforcer() {
+		return enforcer;
 	}
 	
 	@Override
@@ -117,23 +105,6 @@ public class VelocityEnv extends AbstractEnv {
 	@Override
 	protected void infoMessage(String message) {
 		logger.info(message);
-	}
-	
-	@Override
-	public void kickByUUID(UUID uuid, SendableMessage message) {
-		Player player = getServer().getPlayer(uuid).orElse(null);
-		if (player != null) {
-			handle.disconnectUser(player, message);
-		}
-	}
-	
-	@Override
-	public CentralisedFuture<Set<OnlineTarget>> getOnlineTargets() {
-		Set<OnlineTarget> result = new HashSet<>();
-		for (Player player : getServer().getAllPlayers()) {
-			result.add(new VelocityOnlineTarget(this, player));
-		}
-		return core.getFuturesFactory().completedFuture(result);
 	}
 	
 }

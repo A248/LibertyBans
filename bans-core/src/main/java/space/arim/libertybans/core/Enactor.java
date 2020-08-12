@@ -23,25 +23,14 @@ import java.net.UnknownHostException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.uuidvault.api.UUIDUtil;
 
-import space.arim.api.util.sql.MultiQueryResult;
-import space.arim.api.util.sql.QueryResult;
-import space.arim.api.util.sql.SqlQuery;
-
 import space.arim.libertybans.api.AddressVictim;
-import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.DraftPunishment;
 import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.api.PunishmentEnactor;
@@ -51,14 +40,11 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.Victim.VictimType;
 import space.arim.libertybans.core.database.CorruptDbException;
 import space.arim.libertybans.core.database.Database;
+import space.arim.libertybans.core.database.JdbCaesarHelper;
 
 public class Enactor implements PunishmentEnactor {
 	
 	private final LibertyBansCore core;
-	
-	private static final byte[] consoleUUIDBytes = UUIDUtil.toByteArray(new UUID(0, 0));
-	
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
 	Enactor(LibertyBansCore core) {
 		this.core = core;
@@ -71,30 +57,22 @@ public class Enactor implements PunishmentEnactor {
 		return helper.selectAsync(() -> {
 
 			Victim victim = draftPunishment.getVictim();
-			byte[] victimBytes = getVictimBytes(victim);
-
 			Operator operator = draftPunishment.getOperator();
-			byte[] operatorBytes = getOperatorBytes(operator);
 
 			String server = core.getScopeManager().getServer(draftPunishment.getScope());
 
 			String enactmentProcedure = MiscUtil.getEnactmentProcedure(draftPunishment.getType());
 
-			try (ResultSet rs = helper.getBackend().select(
-					"CALL `libertybans_" + enactmentProcedure + "` (?, ?, ?, ?, ?, ?, ?)",
-					victimBytes, victim.getType().name(), operatorBytes,
-					draftPunishment.getReason(), server, draftPunishment.getStart(), draftPunishment.getEnd())) {
-
-				if (rs.next()) {
-					int id = rs.getInt("id");
-					return new SecurePunishment(id, draftPunishment.getType(), victim, operator,
-							draftPunishment.getReason(), draftPunishment.getScope(), draftPunishment.getStart(),
-							draftPunishment.getEnd());
-				}
-			} catch (SQLException ex) {
-				logger.error("Failed enacting punishment {}", draftPunishment, ex);
-			}
-			return null;
+			return helper.jdbCaesar().query(
+					"{CALL `libertybans_" + enactmentProcedure + "` (?, ?, ?, ?, ?, ?, ?)}")
+					.params(victim, victim.getType(), operator, draftPunishment.getReason(),
+							server, draftPunishment.getStart(), draftPunishment.getEnd())
+					.singleResult((resultSet) -> {
+						int id = resultSet.getInt("id");
+						return new SecurePunishment(id, draftPunishment.getType(), victim, operator,
+								draftPunishment.getReason(), draftPunishment.getScope(), draftPunishment.getStart(),
+								draftPunishment.getEnd());
+					}).onError(() -> null).execute();
 		});
 	}
 	
@@ -108,16 +86,13 @@ public class Enactor implements PunishmentEnactor {
 		}
 		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
-			try (QueryResult qr = helper.getBackend().query(
-					"DELETE FROM `libertybans_" + type.getLowercaseNamePlural() + "` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)",
-					punishment.getID(), MiscUtil.currentTime())) {
-
-				return qr.toUpdateResult().getUpdateCount() == 1;
-
-			} catch (SQLException ex) {
-				logger.warn("Failed to undo punishment {}", punishment, ex);
-			}
-			return false;
+			return helper.jdbCaesar().query(
+					"DELETE FROM `libertybans_" + type.getLowercaseNamePlural()
+							+ "` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
+					.params(punishment.getID(), MiscUtil.currentTime())
+					.updateCount((updateCount) -> updateCount == 1)
+					.onError(() -> false)
+					.execute();
 		});
 	}
 	
@@ -125,25 +100,24 @@ public class Enactor implements PunishmentEnactor {
 	public CentralisedFuture<Boolean> undoPunishmentById(final int id) {
 		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
-
-			final long currentTime = MiscUtil.currentTime();
-			try (MultiQueryResult mqr = helper.getBackend().query(
-					SqlQuery.of("DELETE FROM `libertybans_bans` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)",
-							id, currentTime),
-					SqlQuery.of("DELETE FROM `libertybans_mutes` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)",
-							id, currentTime),
-					SqlQuery.of("DELETE FROM `libertybans_warns` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)",
-							id, currentTime))) {
-
-				for (int m = 0; m < 3; m++) {
-					if (mqr.get(m).toUpdateResult().getUpdateCount() == 1) {
+			return helper.jdbCaesar().transaction().transactor((querySource) -> {
+				final long currentTime = MiscUtil.currentTime();
+				for (PunishmentType type : MiscUtil.punishmentTypes()) {
+					if (type == PunishmentType.KICK) {
+						continue;
+					}
+					boolean deleted = querySource.query(
+							"DELETE FROM `libertybans_" + type.getLowercaseNamePlural()
+									+ "` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
+							.params(id, currentTime)
+							.updateCount((updateCount) -> updateCount == 1)
+							.execute();
+					if (deleted) {
 						return true;
 					}
 				}
-			} catch (SQLException ex) {
-				logger.warn("Failed to undo punishment by ID {}", id, ex);
-			}
-			return false;
+				return false;
+			}).onRollback(() -> false).execute();
 		});
 	}
 	
@@ -154,49 +128,22 @@ public class Enactor implements PunishmentEnactor {
 		}
 		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
-			byte[] victimBytes = getVictimBytes(victim);
-			try (QueryResult qr = helper.getBackend().query(
+			return helper.jdbCaesar().query(
 					"DELETE FROM `libertybans_" + type.getLowercaseNamePlural()
-					+ "` WHERE `victim` = ? AND `victim_type` = ?", victimBytes, victim.getType().name())) {
-
-				return qr.toUpdateResult().getUpdateCount() == 1;
-			} catch (SQLException ex) {
-				logger.warn("Failed to undo punishment by type {} and victim {}", type, victim, ex);
-			}
-			return false;
+					+ "` WHERE `victim` = ? AND `victim_type` = ?")
+					.params(victim, victim.getType())
+					.updateCount((updateCount) -> updateCount == 1)
+					.execute();
 		});
 	}
 	
-	byte[] getVictimBytes(Victim victim) {
-		VictimType vType = victim.getType();
-		switch (vType) {
-		case PLAYER:
-			return UUIDUtil.toByteArray(((PlayerVictim) victim).getUUID());
-		case ADDRESS:
-			return ((AddressVictim) victim).getAddress().getAddress();
-		default:
-			throw new IllegalStateException("Unknown VictimType " + vType);
-		}
+	PunishmentType getTypeFromResult(ResultSet resultSet) throws SQLException {
+		return PunishmentType.valueOf(resultSet.getString("type"));
 	}
 	
-	byte[] getOperatorBytes(Operator operator) {
-		switch (operator.getType()) {
-		case PLAYER:
-			return UUIDUtil.toByteArray(((PlayerOperator) operator).getUUID());
-		case CONSOLE:
-			return consoleUUIDBytes;
-		default:
-			throw new IllegalStateException("Unknown operator type " + operator.getType());
-		}
-	}
-	
-	PunishmentType getTypeFromResult(ResultSet rs) throws SQLException {
-		return PunishmentType.valueOf(rs.getString("type"));
-	}
-	
-	Victim getVictimFromResult(ResultSet rs) throws SQLException {
-		VictimType vType = VictimType.valueOf(rs.getString("victim_type"));
-		byte[] bytes = rs.getBytes("victim");
+	Victim getVictimFromResult(ResultSet resultSet) throws SQLException {
+		VictimType vType = VictimType.valueOf(resultSet.getString("victim_type"));
+		byte[] bytes = resultSet.getBytes("victim");
 		switch (vType) {
 		case PLAYER:
 			return PlayerVictim.of(UUIDUtil.fromByteArray(bytes));
@@ -211,32 +158,28 @@ public class Enactor implements PunishmentEnactor {
 		}
 	}
 	
-	Operator getOperatorFromResult(ResultSet rs) throws SQLException {
-		byte[] operatorBytes = rs.getBytes("operator");
-		if (Arrays.equals(operatorBytes, consoleUUIDBytes)) {
-			return ConsoleOperator.INST;
-		}
-		return PlayerOperator.of(UUIDUtil.fromByteArray(operatorBytes));
+	Operator getOperatorFromResult(ResultSet resultSet) throws SQLException {
+		return JdbCaesarHelper.getOperatorFromResult(resultSet);
 	}
 	
-	String getReasonFromResult(ResultSet rs) throws SQLException {
-		return rs.getString("reason");
+	String getReasonFromResult(ResultSet resultSet) throws SQLException {
+		return resultSet.getString("reason");
 	}
 
-	Scope getScopeFromResult(ResultSet rs) throws SQLException {
-		String server = rs.getString("scope");
+	Scope getScopeFromResult(ResultSet resultSet) throws SQLException {
+		String server = resultSet.getString("scope");
 		if (server != null) {
 			return core.getScopeManager().specificScope(server);
 		}
 		return core.getScopeManager().globalScope();
 	}
 	
-	long getStartFromResult(ResultSet rs) throws SQLException {
-		return rs.getLong("start");
+	long getStartFromResult(ResultSet resultSet) throws SQLException {
+		return resultSet.getLong("start");
 	}
 	
-	long getEndFromResult(ResultSet rs) throws SQLException {
-		return rs.getLong("end");
+	long getEndFromResult(ResultSet resultSet) throws SQLException {
+		return resultSet.getLong("end");
 	}
 
 }

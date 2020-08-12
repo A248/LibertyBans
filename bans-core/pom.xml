@@ -31,6 +31,10 @@
 			<artifactId>bans-database</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>space.arim.jdbcaesar</groupId>
+			<artifactId>jdbcaesar</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>space.arim.api</groupId>
 			<artifactId>arimapi-all</artifactId>
 		</dependency>
