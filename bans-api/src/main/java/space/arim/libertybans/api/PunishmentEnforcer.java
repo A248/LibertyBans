@@ -18,6 +18,8 @@
  */
 package space.arim.libertybans.api;
 
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+
 /**
  * Enforcer of punishments
  * 
@@ -35,7 +37,8 @@ public interface PunishmentEnforcer {
 	 * until the mute cache expires, at which point the database is re-queried for a mute.
 	 * 
 	 * @param punishment the punishment to enforce
+	 * @return a future completed when enforcement has been conducted
 	 */
-	void enforce(Punishment punishment);
+	CentralisedFuture<?> enforce(Punishment punishment);
 	
 }

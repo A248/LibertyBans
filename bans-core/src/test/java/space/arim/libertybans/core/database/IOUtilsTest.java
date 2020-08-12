@@ -20,16 +20,30 @@ package space.arim.libertybans.core.database;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 public class IOUtilsTest {
 
 	@Test
 	public void testReadResource() {
-		assertEquals("random content", IOUtils.readResourceBlocking("whatever.yml"));
-		String refreshProcedure = IOUtils.readSqlResourceBlocking("procedure_refresh.sql");
+		assertEquals("random content", IOUtils.readResource("whatever.yml"));
+		String refreshProcedure = IOUtils.readResource("sql/procedure_refresh.sql");
 		System.out.println(refreshProcedure);
 		assertFalse(refreshProcedure.isBlank());
+	}
+	
+	@Test
+	public void testReadQueries() {
+		assertEquals(List.of(
+				"CREATE TABLE myTable (\n" + 
+				"myKey INT AUTO_INCREMENT PRIMARY KEY,\n" + 
+				"value VARCHAR(20) NOT NULL)",
+				"INSERT INTO myTable (value) VALUES ('another query')",
+				"CREATE VIEW idkView AS SELECT * FROM myTable WHERE value = 'idk'"
+				), IOUtils.readSqlQueries("queries.sql"));
+		assertEquals(3, IOUtils.readSqlQueries("sql/create_views.sql").size());
 	}
 	
 }

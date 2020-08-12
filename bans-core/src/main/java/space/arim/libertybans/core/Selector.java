@@ -20,29 +20,18 @@ package space.arim.libertybans.core;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
-import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.uuidvault.api.UUIDUtil;
-
-import space.arim.api.util.sql.MultiQueryResult;
-import space.arim.api.util.sql.SqlQuery;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.Punishment;
@@ -57,15 +46,12 @@ public class Selector implements PunishmentSelector {
 
 	private final LibertyBansCore core;
 	
-	private final AsyncLoadingCache<Object, Punishment> muteCache;
-	
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+	private final AsyncLoadingCache<MuteCacheKey, Punishment> muteCache;
 	
 	Selector(LibertyBansCore core) {
 		this.core = core;
 		muteCache = Caffeine.newBuilder().expireAfterWrite(3L, TimeUnit.MINUTES).buildAsync((target, executor) -> {
-			byte[][] targetInfo = (byte[][]) target;
-			return getApplicablePunishment0(targetInfo[0], targetInfo[1], PunishmentType.MUTE);
+			return getApplicablePunishment0(target.uuid, target.address, PunishmentType.MUTE);
 		});
 	}
 
@@ -99,13 +85,13 @@ public class Selector implements PunishmentSelector {
 		return builder;
 	}
 	
-	private Entry<StringBuilder, Object[]> getPredication(PunishmentSelection selection) {
+	private Map.Entry<StringBuilder, Object[]> getPredication(PunishmentSelection selection) {
 		boolean foundAny = false;
 		List<Object> params = new ArrayList<>();
 		StringBuilder builder = new StringBuilder();
 		if (selection.getType() != null) {
 			builder.append("`type` = ?");
-			params.add(selection.getType().name());
+			params.add(selection.getType());
 			if (!foundAny) {
 				foundAny = true;
 			}
@@ -118,8 +104,8 @@ public class Selector implements PunishmentSelector {
 			}
 			builder.append("`victim` = ? AND `victim_type` = ?");
 			Victim victim = selection.getVictim();
-			params.add(core.getEnactor().getVictimBytes(victim));
-			params.add(victim.getType().name());
+			params.add(victim);
+			params.add(victim.getType());
 		}
 		if (selection.getOperator() != null) {
 			if (foundAny) {
@@ -128,7 +114,7 @@ public class Selector implements PunishmentSelector {
 				foundAny = true;
 			}
 			builder.append("`operator` = ?");
-			params.add(core.getEnactor().getOperatorBytes(selection.getOperator()));
+			params.add(selection.getOperator());
 		}
 		if (selection.getScope() != null) {
 			if (foundAny) {
@@ -137,7 +123,7 @@ public class Selector implements PunishmentSelector {
 				foundAny = true;
 			}
 			builder.append("`scope` = ?");
-			params.add(core.getScopeManager().getServer(selection.getScope()));
+			params.add(selection.getScope());
 		}
 		if (selection.selectActiveOnly()) {
 			if (foundAny) {
@@ -146,7 +132,7 @@ public class Selector implements PunishmentSelector {
 			builder.append("(`end` = -1 OR `end` > ?)");
 			params.add(MiscUtil.currentTime());
 		}
-		return new AbstractMap.SimpleImmutableEntry<>(builder, params.toArray());
+		return Map.entry(builder, params.toArray());
 	}
 	
 	private SecurePunishment fromResultSetAndSelection(ResultSet rs, PunishmentSelection selection) throws SQLException {
@@ -162,9 +148,9 @@ public class Selector implements PunishmentSelector {
 				enactor.getEndFromResult(rs));
 	}
 	
-	private SqlQuery getSelectionQuery(PunishmentSelection selection) {
+	private Map.Entry<String, Object[]> getSelectionQuery(PunishmentSelection selection) {
 		StringBuilder columns = getColumns(selection);
-		Entry<StringBuilder, Object[]> predication = getPredication(selection);
+		Map.Entry<StringBuilder, Object[]> predication = getPredication(selection);
 
 		StringBuilder statementBuilder = new StringBuilder("SELECT ");
 		statementBuilder.append(columns).append(" FROM `libertybans_");
@@ -182,7 +168,7 @@ public class Selector implements PunishmentSelector {
 		if (!predicates.isEmpty()) {
 			statementBuilder.append(" WHERE ").append(predicates);
 		}
-		return SqlQuery.of(statementBuilder.toString(), predication.getValue());
+		return Map.entry(statementBuilder.toString(), predication.getValue());
 	}
 	
 	@Override
@@ -193,15 +179,14 @@ public class Selector implements PunishmentSelector {
 		}
 		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
-			SqlQuery query = getSelectionQuery(selection);
-			try (ResultSet rs = helper.getBackend().select(query.getStatement(), query.getArgs())) {
-				if (rs.next()) {
-					return fromResultSetAndSelection(rs, selection);
-				}
-			} catch (SQLException ex) {
-				logger.warn("Error selecting generic punishment selection {}", selection, ex);
-			}
-			return null;
+			Map.Entry<String, Object[]> query = getSelectionQuery(selection);
+			return helper.jdbCaesar().query(
+					query.getKey())
+					.params(query.getValue())
+					.singleResult((resultSet) -> {
+						return fromResultSetAndSelection(resultSet, selection);
+					}).onError(() -> null)
+					.execute();
 		});
 	}
 	
@@ -213,33 +198,31 @@ public class Selector implements PunishmentSelector {
 		}
 		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
-			Set<Punishment> result = new HashSet<>();
-			SqlQuery query = getSelectionQuery(selection);
-			try (ResultSet rs = helper.getBackend().select(query.getStatement(), query.getArgs())) {
-				while (rs.next()) {
-					result.add(fromResultSetAndSelection(rs, selection));
-				}
-			} catch (SQLException ex) {
-				logger.warn("Error selecting generic punishment selection {}", selection, ex);
-			}
-			return Collections.unmodifiableSet(result);
+			Map.Entry<String, Object[]> query = getSelectionQuery(selection);
+			Set<Punishment> result = helper.jdbCaesar().query(
+					query.getKey())
+					.params(query.getValue())
+					.setResult((resultSet) -> {
+						return (Punishment) fromResultSetAndSelection(resultSet, selection);
+					}).onError(Set::of).execute();
+			return Set.copyOf(result);
 		});
 	}
 	
-	private SqlQuery getApplicabilityQuery(byte[] rawUUID, byte[] address, PunishmentType type) {
+	private Map.Entry<String, Object[]> getApplicabilityQuery(UUID uuid, byte[] address, PunishmentType type) {
 		String tableView = "`libertybans_applicable_" + type.getLowercaseNamePlural() + '`';
 		String statement;
 		Object[] args;
 		if (core.getConfigs().strictAddressQueries()) {
 			statement = "SELECT `id`, `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end`, `uuid` "
 					+ "FROM " + tableView + " WHERE `type` = ? AND `uuid` = ?";
-			args = new Object[] {type, rawUUID};
+			args = new Object[] {type, uuid};
 		} else {
 			statement = "SELECT `id`, `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end`, `uuid` "
 					+ "FROM " + tableView + " WHERE `type` = ? AND `uuid` = ? AND `address` = ?";
-			args = new Object[] {type, rawUUID, address};
+			args = new Object[] {type, uuid, address};
 		}
-		return SqlQuery.of(statement, args);
+		return Map.entry(statement, args);
 	}
 	
 	/**
@@ -258,46 +241,49 @@ public class Selector implements PunishmentSelector {
 		return helper.selectAsync(() -> {
 			Enactor enactor = core.getEnactor();
 
-			byte[] rawUUID = UUIDUtil.toByteArray(uuid);
-			SqlQuery query = getApplicabilityQuery(rawUUID, address, PunishmentType.BAN);
+			Map.Entry<String, Object[]> query = getApplicabilityQuery(uuid, address, PunishmentType.BAN);
 			long currentTime = MiscUtil.currentTime();
-			try (MultiQueryResult mqr = helper.getBackend().query(
-					SqlQuery.of("INSERT INTO `libertybans_addresses` (`uuid`, `address`) VALUES (?, ?) "
-							+ "ON DUPLICATE KEY UPDATE `updated` = ?", rawUUID, address, currentTime),
-					SqlQuery.of("INSERT INTO `libertybans_names` (`uuid`, `name`) VALUES (?, ?) "
-							+ "ON DUPLICATE KEY UPDATE `updated` = ?", rawUUID, name, currentTime),
-					query)) {
-				ResultSet rs = mqr.get(2).toResultSet();
-				if (rs.next()) {
-					return new SecurePunishment(rs.getInt("id"), PunishmentType.BAN, enactor.getVictimFromResult(rs), enactor.getOperatorFromResult(rs),
-							enactor.getReasonFromResult(rs), enactor.getScopeFromResult(rs), enactor.getStartFromResult(rs),
-							enactor.getEndFromResult(rs));
-				}
-			} catch (SQLException ex) {
-				logger.warn("Unable to execute connection query for UUID {} and address {}",
-						UUIDUtil.fromByteArray(rawUUID), address, ex);
-			}
-			return null;
+
+			return helper.jdbCaesar().transaction().transactor((querySource) -> {
+				querySource.query(
+						"INSERT INTO `libertybans_addresses` (`uuid`, `address`) VALUES (?, ?) "
+								+ "ON DUPLICATE KEY UPDATE `updated` = ?")
+						.params(uuid, address, currentTime)
+						.voidResult().execute();
+				querySource.query(
+						"INSERT INTO `libertybans_names` (`uuid`, `name`) VALUES (?, ?) "
+						+ "ON DUPLICATE KEY UPDATE `updated` = ?")
+						.params(uuid, name, currentTime)
+						.voidResult().execute();
+				Punishment potentialBan = querySource.query(
+						query.getKey())
+						.params(query.getValue())
+						.singleResult((resultSet) -> {
+							return new SecurePunishment(resultSet.getInt("id"), PunishmentType.BAN,
+									enactor.getVictimFromResult(resultSet), enactor.getOperatorFromResult(resultSet),
+									enactor.getReasonFromResult(resultSet), enactor.getScopeFromResult(resultSet),
+									enactor.getStartFromResult(resultSet), enactor.getEndFromResult(resultSet));
+						}).execute();
+				return potentialBan;
+			}).onRollback(() -> null).execute();
 		});
 	}
 	
-	private CentralisedFuture<Punishment> getApplicablePunishment0(byte[] rawUUID, byte[] address, PunishmentType type) {
+	private CentralisedFuture<Punishment> getApplicablePunishment0(UUID uuid, byte[] address, PunishmentType type) {
 		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
 			Enactor enactor = core.getEnactor();
 
-			SqlQuery query = getApplicabilityQuery(rawUUID, address, type);
-			try (ResultSet rs = helper.getBackend().select(query.getStatement(), query.getArgs())) {
-				if (rs.next()) {
-					return new SecurePunishment(rs.getInt("id"), type, enactor.getVictimFromResult(rs), enactor.getOperatorFromResult(rs),
-							enactor.getReasonFromResult(rs), enactor.getScopeFromResult(rs), enactor.getStartFromResult(rs),
-							enactor.getEndFromResult(rs));
-				}
-			} catch (SQLException ex) {
-				logger.warn("Unable to determine punishment {} for UUID {} and address {}",
-						type, UUIDUtil.fromByteArray(rawUUID), address, ex);
-			}
-			return null;
+			Map.Entry<String, Object[]> query = getApplicabilityQuery(uuid, address, type);
+			return helper.jdbCaesar().query(
+					query.getKey())
+					.params(query.getValue())
+					.singleResult((resultSet) -> {
+						return new SecurePunishment(resultSet.getInt("id"), type,
+								enactor.getVictimFromResult(resultSet), enactor.getOperatorFromResult(resultSet),
+								enactor.getReasonFromResult(resultSet), enactor.getScopeFromResult(resultSet),
+								enactor.getStartFromResult(resultSet), enactor.getEndFromResult(resultSet));
+					}).onError(() -> null).execute();
 		});
 	}
 
@@ -307,7 +293,7 @@ public class Selector implements PunishmentSelector {
 			// Kicks cannot possibly be active. They are all history
 			return core.getFuturesFactory().completedFuture(null);
 		}
-		return getApplicablePunishment0(UUIDUtil.toByteArray(uuid), address, type);
+		return getApplicablePunishment0(uuid, address, type);
 	}
 
 	@Override
@@ -315,22 +301,17 @@ public class Selector implements PunishmentSelector {
 		Database helper = core.getDatabase();
 		return helper.selectAsync(() -> {
 			Enactor enactor = core.getEnactor();
-			byte[] victimBytes = enactor.getVictimBytes(victim);
-			Set<Punishment> result = new HashSet<>();
-			try (ResultSet rs = helper.getBackend().select(
-					"SELECT `id`, `type`, `operator`, `reason`, `scope`, `start`, `end`, `undone` FROM "
-							+ "`libertybans_history` WHERE `victim` = ? AND `victim_type` = ?",
-							victimBytes, victim.getType().name())) {
-				while (rs.next()) {
-					result.add(new SecurePunishment(rs.getInt("id"), enactor.getTypeFromResult(rs), victim,
-							enactor.getOperatorFromResult(rs), enactor.getReasonFromResult(rs),
-							enactor.getScopeFromResult(rs), enactor.getStartFromResult(rs),
-							enactor.getEndFromResult(rs)));
-				}
-			} catch (SQLException ex) {
-				logger.warn("Failed getting punishments for victim {}", victim, ex);
-			}
-			return Collections.unmodifiableSet(result);
+			Set<Punishment> result = helper.jdbCaesar().query(
+						"SELECT `id`, `type`, `operator`, `reason`, `scope`, `start`, `end`, `undone` FROM "
+						+ "`libertybans_history` WHERE `victim` = ? AND `victim_type` = ?")
+					.params(victim, victim.getType())
+					.setResult((resultSet) -> {
+						return (Punishment) new SecurePunishment(resultSet.getInt("id"),
+								enactor.getTypeFromResult(resultSet), victim, enactor.getOperatorFromResult(resultSet),
+								enactor.getReasonFromResult(resultSet), enactor.getScopeFromResult(resultSet),
+								enactor.getStartFromResult(resultSet), enactor.getEndFromResult(resultSet));
+					}).onError(Set::of).execute();
+			return Set.copyOf(result);
 		});
 	}
 
@@ -343,30 +324,61 @@ public class Selector implements PunishmentSelector {
 		return helper.selectAsync(() -> {
 			Enactor enactor = core.getEnactor();
 			String table = "`libertybans_" + type.getLowercaseNamePlural() + '`';
-			Set<Punishment> result = new HashSet<>();
-			try (ResultSet rs = helper.getBackend().select(
+			Set<Punishment> result = helper.jdbCaesar().query(
 					"SELECT `id`, `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end` FROM "
-							+ table + " WHERE `end` = -1 OR `end` > ?", MiscUtil.currentTime())) {
-
-				while (rs.next()) {
-					result.add(new SecurePunishment(rs.getInt("id"), type, enactor.getVictimFromResult(rs),
-							enactor.getOperatorFromResult(rs), enactor.getReasonFromResult(rs),
-							enactor.getScopeFromResult(rs), enactor.getStartFromResult(rs),
-							enactor.getEndFromResult(rs)));
-				}
-			} catch (SQLException ex) {
-				logger.warn("Failed getting active punishments for type {}", type, ex);
-			}
-			return Collections.unmodifiableSet(result);
+					+ table + " WHERE `end` = -1 OR `end` > ?")
+					.params(MiscUtil.currentTime())
+					.setResult((resultSet) -> {
+						return (Punishment) new SecurePunishment(resultSet.getInt("id"), type,
+								enactor.getVictimFromResult(resultSet), enactor.getOperatorFromResult(resultSet),
+								enactor.getReasonFromResult(resultSet), enactor.getScopeFromResult(resultSet),
+								enactor.getStartFromResult(resultSet), enactor.getEndFromResult(resultSet));
+					}).onError(Set::of).execute();
+			return Set.copyOf(result);
 		});
 	}
 
 	@Override
 	public CentralisedFuture<Punishment> getCachedMute(UUID uuid, byte[] address) {
-		byte[][] targetInfo = new byte[2][];
-		targetInfo[0] = UUIDUtil.toByteArray(uuid);
-		targetInfo[1] = address;
-		return (CentralisedFuture<Punishment>) muteCache.get(targetInfo);
+		return (CentralisedFuture<Punishment>) muteCache.get(new MuteCacheKey(uuid, address));
+	}
+	
+	private static class MuteCacheKey {
+		
+		final UUID uuid;
+		final byte[] address;
+		
+		MuteCacheKey(UUID uuid, byte[] address) {
+			this.uuid = uuid;
+			this.address = address;
+		}
+
+		@Override
+		public String toString() {
+			return "MuteCacheKey [uuid=" + uuid + ", address=" + Arrays.toString(address) + "]";
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + uuid.hashCode();
+			result = prime * result + Arrays.hashCode(address);
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object object) {
+			if (this == object) {
+				return true;
+			}
+			if (!(object instanceof MuteCacheKey)) {
+				return false;
+			}
+			MuteCacheKey other = (MuteCacheKey) object;
+			return uuid.equals(other.uuid) && Arrays.equals(address, other.address);
+		}
+		
 	}
 
 }

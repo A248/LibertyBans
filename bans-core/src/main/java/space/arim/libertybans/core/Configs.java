@@ -236,9 +236,28 @@ public class Configs implements Part {
 		return getConfig().getObject("enforcement.address-strictness", AddressStrictness.class);
 	}
 
+	/**
+	 * When an address based punishment is enforced, how should it be?
+	 * 
+	 * @author A248
+	 *
+	 */
 	public enum AddressStrictness {
+		/**
+		 * Player's current address must match target address
+		 * 
+		 */
 		LENIENT,
+		/**
+		 * Any of player's past addresses may match target address
+		 * 
+		 */
 		NORMAL,
+		/**
+		 * Any of player's past addresses may match any address related to the target address
+		 * by a common player
+		 * 
+		 */
 		STRICT
 	}
 	

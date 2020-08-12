@@ -35,7 +35,7 @@ public class Scoper implements ScopeManager {
 		return ScopeImpl.GLOBAL;
 	}
 	
-	String getServer(Scope scope) {
+	public String getServer(Scope scope) {
 		if (!(scope instanceof ScopeImpl)) {
 			throw new IllegalStateException("Foreign implementation of Scope: " + scope.getClass());
 		}

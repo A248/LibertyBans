@@ -18,10 +18,12 @@
  */
 package space.arim.libertybans.core.database;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadFactory;
 
 import org.slf4j.Logger;
@@ -30,25 +32,59 @@ import org.slf4j.LoggerFactory;
 import space.arim.omnibus.util.ThisClass;
 
 import space.arim.api.configure.JarResources;
-import space.arim.api.util.sql.CloseMe;
-import space.arim.api.util.sql.SqlBackend;
 
 public class IOUtils {
 	
 	private static final Class<?> THIS_CLASS = ThisClass.get();
-	private static final Logger logger = LoggerFactory.getLogger(THIS_CLASS);
 
-	static String readResourceBlocking(String resourceName) {
+	/**
+	 * Blocking operation which reads all the content of a resource
+	 * 
+	 * @param resourceName the resource name
+	 * @return the resource content
+	 * @throws IllegalStateException if an IO error occurred
+	 */
+	static String readResource(String resourceName) {
 		try {
 			return Files.readString(JarResources.forClass(THIS_CLASS, resourceName), StandardCharsets.UTF_8);
 		} catch (IOException ex) {
-			logger.error("Failed to read internal resource {}", resourceName, ex);
+			throw new IllegalStateException("Failed to read internal resource " + resourceName, ex);
 		}
-		return null;
 	}
 	
-	static String readSqlResourceBlocking(String resourceName) {
-		return readResourceBlocking("sql/" + resourceName);
+	/**
+	 * Blocking operation which reads all SQL queries from the specified resource name. <br>
+	 * This is otherwise equivalent to reading a resource file, excluding lines starting with
+	 * {@literal "--"} and blank lines, and splitting the result by ";".
+	 * 
+	 * @param resourceName the resource name
+	 * @return a list of SQL queries
+	 * @throws IllegalStateException if an IO error occurred
+	 */
+	static List<String> readSqlQueries(String resourceName) {
+		try (BufferedReader reader = Files.newBufferedReader(JarResources.forClass(THIS_CLASS, resourceName), StandardCharsets.UTF_8)) {
+
+			List<String> result = new ArrayList<>();
+			StringBuilder currentBuilder = new StringBuilder();
+			String line;
+			while ((line = reader.readLine()) != null) {
+				if (line.startsWith("--") || line.isBlank()) {
+					continue;
+				}
+				currentBuilder.append(line);
+
+				if (line.endsWith(";")) {
+					result.add(currentBuilder.substring(0, currentBuilder.length() - 1));
+					currentBuilder = new StringBuilder();
+					continue;
+				} else {
+					currentBuilder.append('\n');
+				}
+			}
+			return result;
+		} catch (IOException ex) {
+			throw new IllegalStateException("Failed to read internal resource " + resourceName, ex);
+		}
 	}
 	
 	static class HsqldbCleanerRunnable implements Runnable {
@@ -70,12 +106,7 @@ public class IOUtils {
 				logger.debug("HSQLDB cleaning task continues after shutdown");
 				return;
 			}
-			SqlBackend backend = database.getBackend();
-			try (CloseMe cm = backend.execute("CALL `libertybans_refresh`()")) {
-				
-			} catch (SQLException ex) {
-				logger.warn("Punishments refresh task failed", ex);
-			}
+			database.jdbCaesar().query("{CALL `libertybans_refresh`()}").voidResult().execute();
 		}
 	}
 	

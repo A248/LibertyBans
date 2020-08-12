@@ -47,11 +47,13 @@ public class PunishCommands extends SubCommandGroup {
 	private void execute(LibertyBansCore core, ConfigAccessor messages, CmdSender sender, CommandPackage command, PunishmentType type) {
 		if (!sender.hasPermission("libertybans." + type.getLowercaseName() + ".do")) { // libertybans.ban.do
 			sender.parseThenSend(
-					messages.getString("additions." + type.getLowercaseNamePlural() + ".permission.command")); // additions.bans.permission.command
+					messages.getString(
+							"additions." + type.getLowercaseNamePlural() + ".permission.command")); // additions.bans.permission.command
 			return;
 		}
 		if (!command.hasNext()) {
-			sender.parseThenSend(messages.getString("additions." + type.getLowercaseNamePlural() + ".usage")); // additions.bans.usage
+			sender.parseThenSend(messages.getString(
+					"additions." + type.getLowercaseNamePlural() + ".usage")); // additions.bans.usage
 			return;
 		}
 		String targetArg = command.next();
@@ -85,7 +87,8 @@ public class PunishCommands extends SubCommandGroup {
 				return;
 			}
 			// Success message
-			String rawMsg = messages.getString("additions." + type.getLowercaseNamePlural() + ".successful.message"); // additions.bans.successful.message
+			String rawMsg = messages.getString(
+					"additions." + type.getLowercaseNamePlural() + ".successful.message"); // additions.bans.successful.message
 			CentralisedFuture<SendableMessage> futureMsg = core.getFormatter().formatWithPunishment(rawMsg, punishment);
 			assert futureMsg.isDone();
 			sender.sendMessage(futureMsg.join());
@@ -99,7 +102,7 @@ public class PunishCommands extends SubCommandGroup {
 			String rawNotify = messages.getString(configMsgPath);
 			CentralisedFuture<SendableMessage> futureNotify = core.getFormatter().formatWithPunishment(rawNotify, punishment);
 			assert futureNotify.isDone();
-			core.getEnvironment().sendToThoseWithPermission(notifyPerm, futureNotify.join());
+			core.getEnvironment().getEnforcer().sendToThoseWithPermission(notifyPerm, futureNotify.join());
 		});
 	}
 

@@ -18,7 +18,6 @@
  */
 package space.arim.libertybans.env.bungee;
 
-import java.net.InetSocketAddress;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -56,7 +55,7 @@ public class ConnectionListener implements Listener {
 		PendingConnection conn = evt.getConnection();
 		UUID uuid = conn.getUniqueId();
 		String name = conn.getName();
-		byte[] address = ((InetSocketAddress) conn.getSocketAddress()).getAddress().getAddress();
+		byte[] address = env.getEnforcer().getAddress(conn).getAddress();
 		env.core.getSelector().executeAndCheckConnection(uuid, name, address).thenAccept((punishment) -> {
 			if (punishment == null) {
 				logger.trace("Letting '{}' through the gates", name);
