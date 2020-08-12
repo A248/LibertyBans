@@ -19,9 +19,11 @@
 package space.arim.libertybans.core.database;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadFactory;
@@ -31,12 +33,14 @@ import org.slf4j.LoggerFactory;
 
 import space.arim.omnibus.util.ThisClass;
 
-import space.arim.api.configure.JarResources;
-
 public class IOUtils {
 	
 	private static final Class<?> THIS_CLASS = ThisClass.get();
 
+	private static InputStream getResource(String resourceName) throws IOException {
+		return THIS_CLASS.getResource('/' + resourceName).openStream();
+	}
+	
 	/**
 	 * Blocking operation which reads all the content of a resource
 	 * 
@@ -45,8 +49,11 @@ public class IOUtils {
 	 * @throws IllegalStateException if an IO error occurred
 	 */
 	static String readResource(String resourceName) {
-		try {
-			return Files.readString(JarResources.forClass(THIS_CLASS, resourceName), StandardCharsets.UTF_8);
+		try (InputStream is = getResource(resourceName);
+				ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+
+			is.transferTo(bos);
+			return bos.toString(StandardCharsets.UTF_8);
 		} catch (IOException ex) {
 			throw new IllegalStateException("Failed to read internal resource " + resourceName, ex);
 		}
@@ -62,7 +69,9 @@ public class IOUtils {
 	 * @throws IllegalStateException if an IO error occurred
 	 */
 	static List<String> readSqlQueries(String resourceName) {
-		try (BufferedReader reader = Files.newBufferedReader(JarResources.forClass(THIS_CLASS, resourceName), StandardCharsets.UTF_8)) {
+		try (InputStream inputStream = getResource(resourceName);
+				InputStreamReader inputReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+				BufferedReader reader = new BufferedReader(inputReader)) {
 
 			List<String> result = new ArrayList<>();
 			StringBuilder currentBuilder = new StringBuilder();

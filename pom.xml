@@ -24,12 +24,12 @@
 		<!-- Bumping dependency versions requires modification of LibertyBansLauncher versions and hashes -->
 		
 		<!-- API dependencies -->
-		<omnibus.version>0.15.4-SNAPSHOT</omnibus.version>
+		<omnibus.version>0.15.5-SNAPSHOT</omnibus.version>
 		<uuidvault.version>0.5.2-SNAPSHOT</uuidvault.version>
 
 		<!-- Internal dependencies -->
 		<jdbcaesar.version>0.3.2-SNAPSHOT</jdbcaesar.version>
-		<arimapi.version>0.19.6-SNAPSHOT</arimapi.version>
+		<arimapi.version>0.19.7-SNAPSHOT</arimapi.version>
 		<slf4j.version>1.7.25</slf4j.version>
 		<hikari.version>3.4.5</hikari.version>
 		<hsqldb.version>2.5.1</hsqldb.version>
