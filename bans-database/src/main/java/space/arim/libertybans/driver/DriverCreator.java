@@ -36,7 +36,7 @@ public class DriverCreator {
 	public void createMariaDb(String host, int port, String database) {
 		if (jdbcUrl) {
 			hikariConf.setJdbcUrl("jdbc:mariadb://" + host + ":" + port + "/" + database);
-			hikariConf.setDriverClassName("org.mariadb.jdbc.Driver");
+			setDriverClassName("org.mariadb.jdbc.Driver");
 		} else {
 			MariaDbDataSource mariaDbDs = new MariaDbDataSource(host, port, database);
 			hikariConf.setDataSource(mariaDbDs);
@@ -52,11 +52,22 @@ public class DriverCreator {
 	public void createHsqldb(String file) {
 		if (jdbcUrl) {
 			hikariConf.setJdbcUrl("jdbc:hsqldb:file:" + file);
-			hikariConf.setDriverClassName("org.hsqldb.jdbc.JDBCDriver");
+			setDriverClassName("org.hsqldb.jdbc.JDBCDriver");
 		} else {
 			JDBCDataSource hsqldbDs = new JDBCDataSource();
 			hsqldbDs.setUrl("jdbc:hsqldb:file:" + file);
 			hikariConf.setDataSource(hsqldbDs);
+		}
+	}
+	
+	private void setDriverClassName(String driverClassName) {
+		Thread currentThread = Thread.currentThread();
+		ClassLoader initialContextLoader = currentThread.getContextClassLoader();
+		try {
+			currentThread.setContextClassLoader(getClass().getClassLoader());
+			hikariConf.setDriverClassName(driverClassName);
+		} finally {
+			currentThread.setContextClassLoader(initialContextLoader);
 		}
 	}
 	
