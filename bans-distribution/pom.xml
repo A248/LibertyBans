@@ -9,8 +9,7 @@
 		<version>0.1.4-SNAPSHOT</version>
 	</parent>
 	
-	<name>LibertyBans-All</name>
-	<artifactId>bans-all</artifactId>
+	<artifactId>bans-distribution</artifactId>
 	<description>Shaded combination of LibertyBans API, main plugin classes, and launcher.</description>
 	
 	<build>

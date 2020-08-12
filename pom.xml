@@ -35,6 +35,15 @@
 		<hsqldb.version>2.5.1</hsqldb.version>
 		<mariadb-connector.version>2.6.2</mariadb-connector.version>
 		<caffeine.version>2.8.5</caffeine.version>
+		
+		
+		<!-- Plugin variables -->
+		<plugin.name>LibertyBans</plugin.name>
+		<plugin.annotationId>libertybans</plugin.annotationId> <!-- Used for @Plugin annotation on Sponge and Velocity -->
+		<plugin.version>${project.version}</plugin.version>
+		<plugin.author>A248</plugin.author>
+		<plugin.url>${project.parent.url}</plugin.url>
+		<plugin.description>${project.description}</plugin.description>
 	</properties>
 	
 	<licenses>
@@ -107,7 +116,7 @@
 		<module>bans-core</module>
 		<module>bans-env</module>
 		<module>bans-dl</module>
-		<module>bans-all</module>
+		<module>bans-distribution</module>
 	</modules>
 	
 	<distributionManagement>
