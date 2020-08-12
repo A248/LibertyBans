@@ -17,13 +17,6 @@
 		<bungeecord.version>1.15-SNAPSHOT</bungeecord.version>
 		<sponge.version>7.2.0</sponge.version>
 		<velocity.version>1.1.0-SNAPSHOT</velocity.version>
-		
-		<plugin.name>LibertyBans</plugin.name>
-		<plugin.annotationId>libertybans</plugin.annotationId> <!-- Used for @Plugin annotation on Sponge and Velocity -->
-		<plugin.version>${project.version}</plugin.version>
-		<plugin.author>A248</plugin.author>
-		<plugin.url>${project.parent.url}</plugin.url>
-		<plugin.description>${project.description}</plugin.description>
 	</properties>
 	
 	<modules>
@@ -33,6 +26,7 @@
 		<module>bungeeplugin</module>
 		<module>sponge</module>
 		<module>velocity</module>
+		<module>velocityplugin</module>
 	</modules>
 	
 	<dependencyManagement>
