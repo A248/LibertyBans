@@ -14,7 +14,7 @@
 	
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
-		<finalName>${project.name}_v${project.version}</finalName>
+		<finalName>LibertyBans_${project.version}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

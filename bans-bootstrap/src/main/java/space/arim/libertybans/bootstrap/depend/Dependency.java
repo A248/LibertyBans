@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.bootstrap.depend;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -89,8 +90,12 @@ public class Dependency {
 		return version;
 	}
 	
+	public boolean matchesHash(byte[] otherSha512Hash) {
+		return Arrays.equals(sha512hash, otherSha512Hash);
+	}
+	
 	public byte[] getSha512Hash() {
-		return sha512hash;
+		return sha512hash.clone();
 	}
 	
 	@Override

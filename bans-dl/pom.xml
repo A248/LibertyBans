@@ -14,7 +14,11 @@
 	
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
-		<finalName>${project.name}_v${project.version}</finalName>
+		
+		<!-- This is the same name format used by the dependency downloader -->
+		<!-- For quick testing, drag and drop the output jar to LibertyBans/libs/internal/ -->
+		<finalName>${project.groupId}.${project.name}_${project.version}</finalName>
+		
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -58,6 +62,16 @@
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-database</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-core</artifactId>
 			<exclusions>
 				<exclusion>
@@ -79,6 +93,16 @@
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-env-bungee</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-env-velocity</artifactId>
 			<exclusions>
 				<exclusion>
 					<groupId>*</groupId>

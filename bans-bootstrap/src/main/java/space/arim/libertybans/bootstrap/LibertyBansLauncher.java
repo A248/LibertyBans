@@ -18,21 +18,23 @@
  */
 package space.arim.libertybans.bootstrap;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InaccessibleObjectException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import space.arim.libertybans.bootstrap.depend.BootstrapLauncher;
-import space.arim.libertybans.bootstrap.depend.DefaultDependencyLoader;
 import space.arim.libertybans.bootstrap.depend.Dependency;
-import space.arim.libertybans.bootstrap.depend.DependencyLoader;
+import space.arim.libertybans.bootstrap.depend.DependencyLoaderBuilder;
 import space.arim.libertybans.bootstrap.depend.Repository;
 
 public class LibertyBansLauncher {
@@ -40,27 +42,33 @@ public class LibertyBansLauncher {
 	private final BootstrapLauncher launcher;
 	private final Function<Class<?>, String> getPluginFor;
 	
+	private final Repository ARIM_LESSER_GPL3 = new Repository("https://mvn-repo.arim.space/lesser-gpl3");
+	private final Repository ARIM_GPL3 = new Repository("https://mvn-repo.arim.space/gpl3");
+	private final Repository ARIM_AFFERO_GPL3 = new Repository("https://mvn-repo.arim.space/affero-gpl3");
+	
+	private final Repository CENTRAL_REPO = new Repository("https://repo.maven.apache.org/maven2");
+	
 	public LibertyBansLauncher(Path folder, Executor executor, Function<Class<?>, String> getPluginFor) {
-		ClassLoader ownClassLoader = getClass().getClassLoader();
-		if (!(ownClassLoader instanceof URLClassLoader)) {
-			throw new IllegalStateException("LibertyBans must be loaded through a URLClassLoader");
-		}
 		this.getPluginFor = getPluginFor;
 
 		Path libsFolder = folder.resolve("libs");
-		DependencyLoader apiDepLoader = new DefaultDependencyLoader();
-		DependencyLoader internalDepLoader = new DefaultDependencyLoader();
-		apiDepLoader.setExecutor(executor).setOutputDirectory(libsFolder.resolve("api-deps"));
-		internalDepLoader.setExecutor(executor).setOutputDirectory(libsFolder.resolve("internal-deps"));
+		DependencyLoaderBuilder apiDepLoader = new DependencyLoaderBuilder()
+				.setExecutor(executor).setOutputDirectory(libsFolder.resolve("api"));
+		DependencyLoaderBuilder internalDepLoader = new DependencyLoaderBuilder()
+				.setExecutor(executor).setOutputDirectory(libsFolder.resolve("internal"));
 		
 		addApiDeps(apiDepLoader);
 		addInternalDeps(internalDepLoader);
 
-		launcher = new BootstrapLauncher("Liberty@" + hashCode(), (URLClassLoader) ownClassLoader, apiDepLoader,
-				internalDepLoader, this::addUrlsToExternalClassLoader);
+		launcher = new BootstrapLauncher("LibertyBans@" + hashCode(), getClass().getClassLoader(),
+				apiDepLoader.build(), internalDepLoader.build(), this::addUrlsToExternalClassLoader);
 	}
 	
 	protected boolean addUrlsToExternalClassLoader(ClassLoader apiClassLoader, Path[] paths) {
+		if (!(apiClassLoader instanceof URLClassLoader)) {
+			throw new IllegalStateException(
+					"To use the default LibertyBansLauncher, the plugin must be loaded through a URLClassLoader");
+		}
 		Method addUrlMethod;
 		try {
 			addUrlMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
@@ -83,37 +91,52 @@ public class LibertyBansLauncher {
 		return true;
 	}
 	
-	private static Class<?> forName(String clazzname) {
+	private static Class<?> forName(String clazzName) {
 		try {
-			Class<?> result = Class.forName(clazzname);
+			Class<?> result = Class.forName(clazzName);
 			return result;
 		} catch (ClassNotFoundException ignored) {
 			return null;
 		}
 	}
 	
-	private static boolean classExists(String clazzname) {
-		return forName(clazzname) != null;
+	private static boolean classExists(String clazzName) {
+		return forName(clazzName) != null;
 	}
 	
-	private static final Repository ARIM_REPO = new Repository("https://www.arim.space/maven");
-	private static final Repository CENTRAL_REPO = new Repository("https://repo.maven.apache.org/maven2");
+	private void warnRelocation(String libName, String clazzName) {
+		Class<?> libClass = forName(clazzName);
+		if (libClass != null) {
+			String plugin = getPluginFor.apply(libClass);
+			warn("Plugin '" + ((plugin == null) ? "Unknown" : plugin) + "' has shaded the library '" + libName
+					+ "' but did not relocate it. This may or may not pose any problems. "
+					+ "Contact the author of this plugin and tell them to relocate their dependencies.");
+		}
+	}
+	
+	private Dependency readDependency(String simpleDependencyName) {
+		URL url = getClass().getClassLoader().getResource("dependencies/" + simpleDependencyName);
+		try (InputStream is = url.openStream()) {
+
+			String[] value = new String(is.readAllBytes(), StandardCharsets.US_ASCII).split("\n");
+			return Dependency.of(value[0], value[1], value[2], value[3]);
+
+		} catch (IOException ex) {
+			throw new IllegalStateException(ex);
+		}
+	}
 	
 	/*
 	 * Dependencies here are publicly exposed, but cannot be relocated, because
 	 * they are part of the API.
 	 * 
 	 */
-	private void addApiDeps(DependencyLoader loader) {
-		if (!classExists("space.arim.universal.registry.UniversalRegistry")) {
-			loader.addPair(Dependency.of("space.arim.universal", "universal-all-shaded", "0.13.4-SNAPSHOT",
-					"7542196eb4ad373758f8d75659f0986556b9656190ea69210bfe87b631c6d61b16a1cd871d79628f242920819862b93e081db9493a11164a0a0d53ab8e8e41a4"),
-					ARIM_REPO);
+	private void addApiDeps(DependencyLoaderBuilder loader) {
+		if (!classExists("space.arim.omnibus.Omnibus")) {
+			loader.addPair(readDependency("omnibus"), ARIM_GPL3);
 		}
 		if (!classExists("space.arim.uuidvault.api.UUIDVault")) {
-			loader.addPair(Dependency.of("space.arim.uuidvault", "assemble", "0.4.5-SNAPSHOT",
-					"843d3c3ade4aee537418f4f8abe6f186a3bb0197c3bf857b6585eecd8d78d611d325058217c1ee5bfd617f6cb9a734bdd6f241ae5fb23c31a7559e00a8638e52"),
-					ARIM_REPO);
+			loader.addPair(readDependency("uuidvault"), ARIM_LESSER_GPL3);
 		}
 	}
 	
@@ -122,60 +145,36 @@ public class LibertyBansLauncher {
 	 * the core implementation. They do not need to be relocated.
 	 * 
 	 */
-	private void addInternalDeps(DependencyLoader loader) {
+	private void addInternalDeps(DependencyLoaderBuilder loader) {
 		/*
-		 * Since Paper, Waterfall, Sponge, and Velocity include slf4j,
-		 * it may already be present
+		 * Since Paper, Waterfall, Sponge, and Velocity include slf4j, it may already be present
 		 */
 		if (!classExists("org.slf4j.Logger")) {
-			loader.addPair(Dependency.of("org.slf4j", "slf4j-api", "1.7.25",
-					"5dd6271fd5b34579d8e66271bab75c89baca8b2ebeaa9966de391284bd08f2d720083c6e0e1edda106ecf8a04e9a32116de6873f0f88c19c049c0fe27e5d820b"),
-					CENTRAL_REPO);
-			loader.addPair(Dependency.of("org.slf4j", "slf4j-jdk14", "1.7.25",
-					"cf73d92dbc6d1963dfc9d842f7c4043b897d21cbafaa2b2f84d52aa4277845cb230aa4987919d86aea888f8005c2263759cbeb14c80c6fe83b22e9a47b7565f4"),
-					CENTRAL_REPO);
+			loader.addPair(readDependency("slf4j-api"), CENTRAL_REPO);
+			loader.addPair(readDependency("slf4j-jdk14"), CENTRAL_REPO);
 		}
-		Class<?> hikariClass = forName("com.zaxxer.hikari.HikariConfig");
-		if (hikariClass == null) {
-			loader.addPair(Dependency.of("com.zaxxer", "HikariCP", "3.4.5",
-					"4e70e08544e199eed09f5f3681ab5a39681d8d6eb6c9ca2cb6a78535aedbcc66b4292330bbcb40bfb8bf8a6f284d013e55a039542ffc85222d6ac26f816eafd3"),
-					CENTRAL_REPO);
-		} else {
-			warnRelocation("HikariCP", hikariClass);
-		}
-		Class<?> caffeineClass = forName("com.github.benmanes.caffeine.cache.Caffeine");
-		if (caffeineClass == null) {
-			loader.addPair(Dependency.of("com.github.ben-manes.caffeine", "caffeine", "2.8.5",
-					"9351c0e57aefd58f468ad5eced9c828254e7d19692654eac81cfeba0d72d4d91f5021eaaad533d6c292553f0487a31f92d73b0ee711296ab76ba6d168056a5c6"),
-					CENTRAL_REPO);
-		} else {
-			warnRelocation("Caffeine", caffeineClass);
-		}
-		/*
-		 * We set the driver class name and use the context class loader w/ HikariCP to
-		 * ensure only our own HSQLDB is used, even if there is another on the classpath.
-		 */
-		loader.addPair(Dependency.of("org.hsqldb", "hsqldb", "2.5.1",
-					"5539ef60987d6bd801c4ced80ede3138578307122be92dedbf2c6a48ea58db6e5e6c064d36de6f1fc0ccb6991213eb801ec036957edde48a358657e0cb8d4e62"),
-					CENTRAL_REPO);
-		/*
-		 * Since ArimAPI is also a plugin, it may already be present
-		 */
-		if (!classExists("space.arim.api.util.sql.HikariPoolSqlBackend")) {
-			loader.addPair(Dependency.of("space.arim.api", "arimapi-all", "0.16.0-SNAPSHOT",
-					"3b401adb0bf63aa8f8ec2884c7cc093fe78cd525425af2a60588f2459b756d9e037bd26280df8271a1b43dc4b16a4c7ca269adcfcdd1c0eef013860931e355dd"),
-					ARIM_REPO);
-		}
-		loader.addPair(Dependency.of("space.arim.libertybans", "bans-dl", "0.1.4-SNAPSHOT",
-				"9D220F45F6AB11EDB2CC41A1E7420A4A88A3CCDFD6B6101F037E64E6C021B5FD4E2E72AF81B3E95976B5D5A443D5EE52ADACF8299A4D66AF95419615A4DCF447"),
-				ARIM_REPO);
-	}
-	
-	private void warnRelocation(String libName, Class<?> libClass) {
-		String plugin = getPluginFor.apply(libClass);
-		warn("Plugin '" + ((plugin == null) ? "Unknown" : plugin) + "' has shaded the library '" + libName
-				+ "' but failed to relocate it! "
-				+ "This may or may not pose any problems. Contact the author of this plugin and tell them to relocate their dependencies.");
+
+		// HikariCP
+		warnRelocation("HikariCP", "com.zaxxer.hikari.HikariConfig");
+		loader.addPair(readDependency("hikaricp"), CENTRAL_REPO);
+
+		// HSQLDB
+		warnRelocation("HSQLDB", "org.hsqldb.jdbc.JDBCDriver");
+		loader.addPair(readDependency("hsqldb"), CENTRAL_REPO);
+
+		// MariaDB-Connector
+		warnRelocation("MariaDB-Connector", "org.mariadb.jdbc.Driver");
+		loader.addPair(readDependency("mariadb-connector"), CENTRAL_REPO);
+
+		// Caffeine
+		warnRelocation("Caffeine", "com.github.benmanes.caffeine.cache.Caffeine");
+		loader.addPair(readDependency("caffeine"), CENTRAL_REPO);
+
+		// ArimAPI
+		loader.addPair(readDependency("arimapi"), ARIM_GPL3);
+
+		// Self
+		loader.addPair(readDependency("self"), ARIM_AFFERO_GPL3);
 	}
 	
 	// Must use System.err because we do not know whether the platform uses slf4j or JUL

@@ -42,8 +42,8 @@ public class BungeeEnv extends AbstractEnv {
 	private final BungeeEnforcer enforcer;
 	
 	public BungeeEnv(Plugin plugin, Path folder) {
-		core = new LibertyBansCore(OmnibusProvider.getOmnibus(), folder, this);
 		handle = new BungeePlatformHandle(plugin);
+		core = new LibertyBansCore(OmnibusProvider.getOmnibus(), folder, this);
 
 		commands = new BungeeCommands(this);
 		joinListener = new ConnectionListener(this);

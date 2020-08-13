@@ -19,7 +19,6 @@
 package space.arim.libertybans.bootstrap.depend;
 
 import java.net.MalformedURLException;
-import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -37,7 +36,7 @@ public class BootstrapLauncher {
 	
 	private final String programName;
 	
-	private final URLClassLoader apiClassLoader;
+	private final ClassLoader apiClassLoader;
 	private final AddableURLClassLoader internalClassLoader;
 	
 	private final DependencyLoader apiDepLoader;
@@ -45,7 +44,7 @@ public class BootstrapLauncher {
 	
 	private final BiFunction<ClassLoader, Path[], Boolean> addUrlsToExternal;
 	
-	public BootstrapLauncher(String programName, URLClassLoader apiClassLoader, DependencyLoader apiDepLoader,
+	public BootstrapLauncher(String programName, ClassLoader apiClassLoader, DependencyLoader apiDepLoader,
 			DependencyLoader internalDepLoader, BiFunction<ClassLoader, Path[], Boolean> addUrlsToExternal) {
 		this.programName = programName;
 		this.apiClassLoader = apiClassLoader;
@@ -57,11 +56,19 @@ public class BootstrapLauncher {
 		this.addUrlsToExternal = addUrlsToExternal;
 	}
 	
-	public URLClassLoader getApiClassLoader() {
+	public DependencyLoader getApiDepLoader() {
+		return apiDepLoader;
+	}
+	
+	public DependencyLoader getInternalDepLoader() {
+		return internalDepLoader;
+	}
+	
+	public ClassLoader getApiClassLoader() {
 		return apiClassLoader;
 	}
 	
-	public URLClassLoader getInternalClassLoader() {
+	public AddableURLClassLoader getInternalClassLoader() {
 		return internalClassLoader;
 	}
 	
