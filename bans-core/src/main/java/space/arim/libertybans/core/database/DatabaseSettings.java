@@ -36,7 +36,6 @@ import space.arim.api.configure.ConfigAccessor;
 
 import space.arim.libertybans.bootstrap.StartupException;
 import space.arim.libertybans.core.LibertyBansCore;
-import space.arim.libertybans.core.MiscUtil;
 import space.arim.libertybans.driver.DriverCreator;
 
 class DatabaseSettings {
@@ -122,7 +121,7 @@ class DatabaseSettings {
 			hikariConf.addDataSourceProperty(propName, propValue);
 		}
 		String mode = (useMariaDb) ? "MariaDB" : "HSQLDB"; // This is relied on in #create
-		hikariConf.setPoolName("LibertyBans-HikariCP-" + mode + '@' + MiscUtil.currentTime());
+		hikariConf.setPoolName("LibertyBans-HikariCP-" + mode);
 		return hikariConf;
 	}
 	
