@@ -30,39 +30,45 @@ public class Commands {
 
 	final LibertyBansCore core;
 	
-	// Cached for convenience
-	final ConfigAccessor config;
-	final ConfigAccessor messages;
-	
 	private final List<SubCommandGroup> subCommands;
 	
 	public static final String BASE_COMMAND_NAME = "libertybans";
 	
 	public Commands(LibertyBansCore core) {
 		this.core = core;
-		config = core.getConfigs().getConfig();
-		messages = core.getConfigs().getMessages();
-		subCommands = List.of(new PunishCommands(this), new UnpunishCommands(this));
+		subCommands = List.of(new PunishCommands(this), new UnpunishCommands(this), new ReloadCommands(this));
 	}
 	
+	// Shortcut access for convenience
+	
+	ConfigAccessor config() {
+		return core.getConfigs().getConfig();
+	}
+	
+	ConfigAccessor messages() {
+		return core.getConfigs().getMessages();
+	}
+	
+	// Main command handler
+	
 	public void execute(CmdSender sender, CommandPackage command) {
-		if (messages.getBoolean("all.prefix.use")) {
-			sender = new PrefixedCmdSender(core, sender, core.getFormatter().parseMessage(messages.getString("all.prefix.value")));
+		if (messages().getBoolean("all.prefix.use")) {
+			sender = new PrefixedCmdSender(core, sender, core.getFormatter().parseMessage(messages().getString("all.prefix.value")));
 		}
 		if (!sender.hasPermission("libertybans.commands")) {
-			sender.parseThenSend(messages.getString("all.base-permission-message"));
+			sender.parseThenSend(messages().getString("all.base-permission-message"));
 			return;
 		}
 		if (core.getFormatter().isJsonEnabled()) {
 			// Prevent JSON injection
 			String args = command.clone().allRemaining();
 			if (args.indexOf('|') != -1) {
-				sender.parseThenSend(config.getString("json.illegal-char"));
+				sender.parseThenSend(config().getString("json.illegal-char"));
 				return;
 			}
 		}
 		if (!command.hasNext()) {
-			sender.parseThenSend(messages.getString("all.usage"));
+			sender.parseThenSend(messages().getString("all.usage"));
 			return;
 		}
 		String firstArg = command.next().toLowerCase(Locale.ENGLISH);
