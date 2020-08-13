@@ -24,11 +24,11 @@ import space.arim.uuidvault.api.UUIDVaultRegistration;
 class UUIDVaultStuff {
 
 	final UUIDVaultRegistration registration;
-	final CollectiveUUIDResolver resolver;
+	final CollectiveUUIDResolver collectiveResolver;
 	
-	UUIDVaultStuff(UUIDVaultRegistration registration, CollectiveUUIDResolver resolver) {
+	UUIDVaultStuff(UUIDVaultRegistration registration, CollectiveUUIDResolver collectiveResolver) {
 		this.registration = registration;
-		this.resolver = resolver;
+		this.collectiveResolver = collectiveResolver;
 	}
 	
 }

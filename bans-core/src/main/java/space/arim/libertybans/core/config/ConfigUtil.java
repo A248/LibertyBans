@@ -19,6 +19,7 @@
 package space.arim.libertybans.core.config;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -26,9 +27,11 @@ import org.slf4j.LoggerFactory;
 
 import space.arim.omnibus.util.ThisClass;
 
+import space.arim.api.configure.SingleKeyValueTransformer;
 import space.arim.api.configure.ValueTransformer;
 
 import space.arim.libertybans.core.config.Configs.AddressStrictness;
+import space.arim.libertybans.core.uuid.UUIDMaster;
 
 final class ConfigUtil {
 
@@ -36,42 +39,46 @@ final class ConfigUtil {
 	
 	private ConfigUtil() {}
 	
+	private static ValueTransformer timeTransformer() {
+		return SingleKeyValueTransformer.create("formatting.dates", (value) -> {
+			DateTimeFormatter result = null;
+			if (value instanceof String) {
+				String timeF = (String) value;
+				try {
+					result = DateTimeFormatter.ofPattern(timeF);
+				} catch (IllegalArgumentException ignored) {}
+			}
+			if (result == null) {
+				//result = DateTimeFormatter.ofPattern("dd/MM/yyyy kk:mm");
+				logger.info("Config option formatting.dates invalid: {}", value);
+			}
+			return result;
+		});
+	}
+	
+	private static ValueTransformer strictnessTransformer() {
+		return SingleKeyValueTransformer.create("enforcement.address-strictness", (value) -> {
+			AddressStrictness result = null;
+			if (value instanceof String) {
+				String addrS = (String) value;
+				try {
+					result = AddressStrictness.valueOf(addrS);
+				} catch (IllegalArgumentException ignored) {}
+			}
+			if (result == null) {
+				//result = AddressStrictness.NORMAL;
+				logger.info("Config option enforcement.address-strictness invalid: {}", value);
+			}
+			return result;
+		});
+	}
+	
 	static List<ValueTransformer> configTransformers() {
-		ValueTransformer timeTransformer = (key, value) -> {
-			if (key.equals("formatting.dates")) {
-				DateTimeFormatter result = null;
-				if (value instanceof String) {
-					String timeF = (String) value;
-					try {
-						result = DateTimeFormatter.ofPattern(timeF);
-					} catch (IllegalArgumentException ignored) {}
-				}
-				if (result == null) {
-					//result = DateTimeFormatter.ofPattern("dd/MM/yyyy kk:mm");
-					logger.info("Config option formatting.dates invalid: {}", value);
-				}
-				return result;
-			}
-			return value;
-		};
-		ValueTransformer strictnessTransformer = (key, value) -> {
-			if (key.equals("enforcement.address-strictness")) {
-				AddressStrictness result = null;
-				if (value instanceof String) {
-					String addrS = (String) value;
-					try {
-						result = AddressStrictness.valueOf(addrS);
-					} catch (IllegalArgumentException ignored) {}
-				}
-				if (result == null) {
-					//result = AddressStrictness.NORMAL;
-					logger.info("Config option enforcement.address-strictness invalid: {}", value);
-				}
-				return result;
-			}
-			return value;
-		};
-		return List.of(timeTransformer, strictnessTransformer);
+		List<ValueTransformer> result = new ArrayList<>();
+		result.add(timeTransformer());
+		result.add(strictnessTransformer());
+		result.addAll(UUIDMaster.createValueTransformers());
+		return result;
 	}
 	
 }
