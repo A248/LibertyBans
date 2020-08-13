@@ -26,6 +26,7 @@ import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.libertybans.api.LibertyBans;
 import space.arim.libertybans.api.RunState;
 import space.arim.libertybans.core.commands.Commands;
+import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.database.DatabaseManager;
 import space.arim.libertybans.core.database.Database;
 import space.arim.libertybans.core.env.AbstractEnv;
@@ -57,7 +58,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 		this.environment = environment;
 
 		resources = new Resources(this);
-		configs = new Configs(folder);
+		configs = new Configs(this);
 		databaseManager = new DatabaseManager(this);
 		uuidMaster = new UUIDMaster(this);
 
@@ -72,7 +73,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 	
 	@Override
 	public void startup() {
-		resources.restart();
+		resources.startup();
 		configs.startup();
 		databaseManager.startup();
 		uuidMaster.startup();
@@ -88,7 +89,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 	
 	@Override
 	public void shutdown() {
-		resources.restart();
+		resources.shutdown();
 		uuidMaster.shutdown();
 		configs.shutdown();
 		databaseManager.shutdown();
