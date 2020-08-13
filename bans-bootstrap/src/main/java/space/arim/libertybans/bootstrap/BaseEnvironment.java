@@ -35,15 +35,18 @@ public abstract class BaseEnvironment {
 	}
 	
 	public void startup() {
-		if (runState != IDLE) {
+		RunState initialRunState = runState;
+		if (initialRunState != IDLE) {
+			System.out.println("[LibertyBans] Not conducting startup because run state is " + initialRunState);
 			return;
 		}
 		runStateLock.lock();
 		try {
 			if (runState == IDLE) {
 				runState = LOADING;
-				timedEvent(LoadPoint.START);
-				runState = RUNNING;
+				if (timedEvent(LoadPoint.START)) {
+					runState = RUNNING;
+				}
 			}
 		} finally {
 			runStateLock.unlock();
@@ -62,8 +65,9 @@ public abstract class BaseEnvironment {
 				return false;
 			}
 			runState = LOADING;
-			timedEvent(LoadPoint.RESTART);
-			runState = RUNNING;
+			if (timedEvent(LoadPoint.RESTART)) {
+				runState = RUNNING;
+			}
 		} finally {
 			runStateLock.unlock();
 		}
@@ -71,22 +75,25 @@ public abstract class BaseEnvironment {
 	}
 	
 	public void shutdown() {
-		if (runState != RUNNING) {
+		RunState initialRunState = runState;
+		if (initialRunState != RUNNING) {
+			System.out.println("[LibertyBans] Not conducting shutdown because run state is " + initialRunState);
 			return;
 		}
 		runStateLock.lock();
 		try {
 			if (runState == RUNNING) {
 				runState = LOADING;
-				timedEvent(LoadPoint.STOP);
-				runState = IDLE;
+				if (timedEvent(LoadPoint.STOP)) {
+					runState = IDLE;
+				}
 			}
 		} finally {
 			runStateLock.unlock();
 		}
 	}
 	
-	private void timedEvent(LoadPoint point) {
+	private boolean timedEvent(LoadPoint point) {
 		infoMessage("Conducting " + point + "...");
 		long startTime = System.nanoTime();
 		try {
@@ -110,11 +117,12 @@ public abstract class BaseEnvironment {
 				infoMessage("Extended failure cause:");
 				cause.printStackTrace(System.err);
 			}
-			return;
+			return false;
 		}
 		long endTime = System.nanoTime();
 		double seconds = TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS) / 1_000D;
 		infoMessage(String.format("Finished " + point + " in %.3f seconds", seconds));
+		return true;
 	}
 	
 	protected abstract void startup0();
