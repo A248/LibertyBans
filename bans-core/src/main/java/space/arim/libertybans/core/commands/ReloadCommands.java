@@ -37,14 +37,14 @@ public class ReloadCommands extends SubCommandGroup {
 		case "restart":
 			sender.sendMessage(ELLIPSES);
 			boolean restarted = commands.core.getEnvironment().fullRestart();
-			sender.parseThenSend((restarted) ? commands.config.getString("all.restarted") : "Not restarting because loading already in process");
+			sender.parseThenSend((restarted) ? commands.config().getString("all.restarted") : "Not restarting because loading already in process");
 			break;
 		case "reload":
 			var finalSender = sender;
 			sender.sendMessage(ELLIPSES);
 			commands.core.getConfigs().reloadConfigs().thenAccept((result) -> {
 				if (result) {
-					finalSender.parseThenSend(commands.config.getString("all.reloaded"));
+					finalSender.parseThenSend(commands.config().getString("all.reloaded"));
 				}
 			});
 			break;

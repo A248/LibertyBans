@@ -42,7 +42,7 @@ public class UnpunishCommands extends SubCommandGroup {
 
 	@Override
 	void execute(CmdSender sender, CommandPackage command, String arg) {
-		execute(commands.core, commands.messages, sender, command, PunishmentType.valueOf(arg.substring(2)));
+		execute(commands.core, commands.messages(), sender, command, PunishmentType.valueOf(arg.substring(2)));
 	}
 	
 	private void execute(LibertyBansCore core, ConfigAccessor messages, CmdSender sender, CommandPackage command, PunishmentType type) {
