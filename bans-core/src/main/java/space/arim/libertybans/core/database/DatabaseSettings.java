@@ -120,7 +120,7 @@ class DatabaseSettings {
 			logger.trace("Setting data source property {} to {}", propName, propValue);
 			hikariConf.addDataSourceProperty(propName, propValue);
 		}
-		String mode = (useMariaDb) ? "MariaDB" : "HSQLDB"; // This is relied on in #startup
+		String mode = (useMariaDb) ? "MariaDB" : "HSQLDB"; // This is relied on in #create
 		hikariConf.setPoolName("LibertyBans-HikariCP-" + mode + '@' + MiscUtil.currentTime());
 		return hikariConf;
 	}

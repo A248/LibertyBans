@@ -95,16 +95,16 @@ public class DatabaseManager implements Part {
 		var timeoutTransformer = SingleKeyValueTransformer.createPredicate("timeouts.connection-timeout-seconds", (value) -> {
 			if (!isAtLeast(value, 1)) {
 				logger.warn("Bad connection timeout setting {}", value);
-				return false;
+				return true;
 			}
-			return true;
+			return false;
 		});
 		var lifetimeTransformer = SingleKeyValueTransformer.createPredicate("timeouts.max-lifetime-minutes", (value) -> {
 			if (!isAtLeast(value, 1)) {
 				logger.warn("Bad lifetime timeout setting {}", value);
-				return false;
+				return true;
 			}
-			return true;
+			return false;
 		});
 		return List.of(poolSizeTransformer, timeoutTransformer, lifetimeTransformer);
 	}
