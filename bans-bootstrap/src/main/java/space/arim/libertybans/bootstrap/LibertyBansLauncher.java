@@ -170,6 +170,9 @@ public class LibertyBansLauncher {
 		warnRelocation("Caffeine", "com.github.benmanes.caffeine.cache.Caffeine");
 		loader.addPair(readDependency("caffeine"), CENTRAL_REPO);
 
+		// JdbCaesar
+		loader.addPair(readDependency("jdbcaesar"), ARIM_LESSER_GPL3);
+
 		// ArimAPI
 		loader.addPair(readDependency("arimapi"), ARIM_GPL3);
 
