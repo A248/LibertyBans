@@ -19,6 +19,7 @@
 package space.arim.libertybans.core.database;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -99,7 +100,7 @@ class DatabaseSettings {
 
 		useMariaDb = setUsernameAndPassword(config, useMariaDb, hikariConf);
 
-		int poolSize = config.getInteger("connection-pool.size");
+		int poolSize = config.getInteger("connection-pool-size");
 		hikariConf.setMinimumIdle(poolSize);
 		hikariConf.setMaximumPoolSize(poolSize);
 
@@ -120,7 +121,7 @@ class DatabaseSettings {
 			logger.trace("Setting data source property {} to {}", propName, propValue);
 			hikariConf.addDataSourceProperty(propName, propValue);
 		}
-		String mode = (useMariaDb) ? "MariaDB" : "HSQLDB"; // This is relied on in #startup
+		String mode = (useMariaDb) ? "MariaDB" : "HSQLDB"; // This is relied on in #create
 		hikariConf.setPoolName("LibertyBans-HikariCP-" + mode + '@' + MiscUtil.currentTime());
 		return hikariConf;
 	}
@@ -136,10 +137,14 @@ class DatabaseSettings {
 
 		} else {
 			Path databaseFolder = core.getFolder().resolve("database");
-			try {
-				Files.createDirectory(databaseFolder);
-			} catch (IOException ex) {
-				throw new StartupException("Cannot create database folder", ex);
+			if (!Files.isDirectory(databaseFolder)) {
+				try {
+					Files.createDirectory(databaseFolder);
+				} catch (FileAlreadyExistsException benignRaceCondition) {
+					
+				} catch (IOException ex) {
+					throw new StartupException("Cannot create database folder", ex);
+				}
 			}
 			driverCreator.createHsqldb(databaseFolder + "/data");
 		}
