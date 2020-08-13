@@ -26,47 +26,36 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-public class DefaultDependencyLoader implements DependencyLoader {
+class DefaultDependencyLoader implements DependencyLoader {
 
-	private Executor executor;
-	private Map<Dependency, Repository> pairs = new HashMap<>();
-	private Path outputDir;
+	private final Executor executor;
+	private final Map<Dependency, Repository> pairs;
+	private final Path outputDir;
 	
-	public DefaultDependencyLoader() {
-
-	}
-	
-	@Override
-	public DependencyLoader setExecutor(Executor executor) {
+	DefaultDependencyLoader(Executor executor, Map<Dependency, Repository> pairs, Path outputDir) {
 		this.executor = executor;
-		return this;
-	}
-
-	@Override
-	public DependencyLoader addPair(Dependency dependency, Repository repository) {
-		pairs.put(dependency, repository);
-		return this;
-	}
-
-	@Override
-	public DependencyLoader setOutputDirectory(Path outputDir) {
-		try {
-			Files.createDirectories(outputDir);
-		} catch (IOException ex) {
-			throw new IllegalStateException("Cannot create directory " + outputDir, ex);
-		}
+		this.pairs = Map.copyOf(pairs);
 		this.outputDir = outputDir;
-		return this;
+	}
+	
+	@Override
+	public Executor getExecutor() {
+		return executor;
+	}
+
+	@Override
+	public Map<Dependency, Repository> getDependencyPairs() {
+		return pairs;
 	}
 	
 	@Override
@@ -110,16 +99,12 @@ public class DefaultDependencyLoader implements DependencyLoader {
 
 			// Compare hash to expected hash
 			byte[] actualHash = md.digest();
-			byte[] expectedHash = dependency.getSha512Hash();
-			if (!Arrays.equals(expectedHash, actualHash)) {
-				if (expectedHash != null) {
-					return DownloadResult.hashMismatch(expectedHash, actualHash);
-				}
-				System.out.println("Warning: Disabled hash comparison. Actual hash is " + Arrays.toString(actualHash));
+			if (!dependency.matchesHash(actualHash)) {
+				return DownloadResult.hashMismatch(dependency.getSha512Hash(), actualHash);
 			}
 
 			// Write to file
-			try (FileChannel fc = FileChannel.open(outputJar)) {
+			try (FileChannel fc = FileChannel.open(outputJar, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)) {
 				fc.write(ByteBuffer.wrap(jarBytes));
 			} catch (IOException ex) {
 				return DownloadResult.exception(ex);
@@ -130,6 +115,11 @@ public class DefaultDependencyLoader implements DependencyLoader {
 
 	@Override
 	public CompletableFuture<Map<Dependency, DownloadResult>> execute() {
+		try {
+			Files.createDirectories(outputDir);
+		} catch (IOException ex) {
+			throw new IllegalStateException("Cannot create directory " + outputDir, ex);
+		}
 		Map<Dependency, CompletableFuture<DownloadResult>> futures = new HashMap<>(pairs.size());
 		for (Entry<Dependency, Repository> pair : pairs.entrySet()) {
 			futures.put(pair.getKey(), downloadDependency(pair.getKey(), pair.getValue()));

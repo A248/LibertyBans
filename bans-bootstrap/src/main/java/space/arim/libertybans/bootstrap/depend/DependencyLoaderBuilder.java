@@ -19,18 +19,33 @@
 package space.arim.libertybans.bootstrap.depend;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-public interface DependencyLoader {
+public class DependencyLoaderBuilder {
+
+	private Executor executor;
+	private Map<Dependency, Repository> pairs = new HashMap<>();
+	private Path outputDir;
 	
-	Executor getExecutor();
+	public DependencyLoaderBuilder setExecutor(Executor executor) {
+		this.executor = executor;
+		return this;
+	}
+
+	public DependencyLoaderBuilder addPair(Dependency dependency, Repository repository) {
+		pairs.put(dependency, repository);
+		return this;
+	}
+
+	public DependencyLoaderBuilder setOutputDirectory(Path outputDir) {
+		this.outputDir = outputDir;
+		return this;
+	}
 	
-	Map<Dependency, Repository> getDependencyPairs();
-	
-	Path getOutputDirectory();
-	
-	CompletableFuture<Map<Dependency, DownloadResult>> execute();
+	public DependencyLoader build() {
+		return new DefaultDependencyLoader(executor, pairs, outputDir);
+	}
 	
 }
