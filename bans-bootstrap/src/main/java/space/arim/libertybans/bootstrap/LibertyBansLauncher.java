@@ -60,7 +60,7 @@ public class LibertyBansLauncher {
 		addApiDeps(apiDepLoader);
 		addInternalDeps(internalDepLoader);
 
-		launcher = new BootstrapLauncher("LibertyBans@" + hashCode(), getClass().getClassLoader(),
+		launcher = new BootstrapLauncher("LibertyBans", getClass().getClassLoader(),
 				apiDepLoader.build(), internalDepLoader.build(), this::addUrlsToExternalClassLoader);
 	}
 	
