@@ -85,7 +85,7 @@ public class DatabaseManager implements Part {
 	}
 	
 	public static List<ValueTransformer> createConfigTransformers() {
-		var poolSizeTransformer = SingleKeyValueTransformer.createPredicate("connection-pool.size", (value) -> {
+		var poolSizeTransformer = SingleKeyValueTransformer.createPredicate("connection-pool-size", (value) -> {
 			if (!isAtLeast(value, 0)) {
 				logger.warn("Bad connection pool size {}", value);
 				return true;

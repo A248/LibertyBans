@@ -99,7 +99,7 @@ class DatabaseSettings {
 
 		useMariaDb = setUsernameAndPassword(config, useMariaDb, hikariConf);
 
-		int poolSize = config.getInteger("connection-pool.size");
+		int poolSize = config.getInteger("connection-pool-size");
 		hikariConf.setMinimumIdle(poolSize);
 		hikariConf.setMaximumPoolSize(poolSize);
 
