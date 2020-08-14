@@ -124,14 +124,18 @@ public class TableDefinitions {
 			return database.selectAsync(() -> {
 				return database.jdbCaesar().transaction().transactor((querySource) -> {
 
-					// HSQLDB MySQL syntax compatibility
 					if (useHsqldb) {
+						// MySQL syntax compatibility
 						querySource.query("SET DATABASE SQL SYNTAX MYS TRUE").voidResult().execute();
+						// Ensure HSQLDB is case-insensitive by default
+						querySource.query("SET IGNORECASE TRUE").voidResult().execute();
 					}
 					/*
 					 * Check for existing database revision
 					 */
-					Object nullForNonexistentTable = querySource.query("SHOW TABLES LIKE `libertybans_revision`")
+					Object nullForNonexistentTable = querySource.query(
+							// Information schema is supported by both HSQLDB and MariaDB
+							"SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE `table_name` = 'libertybans_revision'")
 								.singleResult((rs) -> new Object()).execute();
 					if (nullForNonexistentTable != null) {
 						Revision revision = querySource.query("SELECT `major`, `minor` FROM `libertybans_revision`")
