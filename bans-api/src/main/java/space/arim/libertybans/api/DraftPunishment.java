@@ -18,6 +18,8 @@
  */
 package space.arim.libertybans.api;
 
+import java.util.Objects;
+
 /**
  * A punishment ready to be created, which does not yet have an ID
  * 
@@ -26,7 +28,7 @@ package space.arim.libertybans.api;
  */
 public final class DraftPunishment extends AbstractPunishment {
 	
-	public DraftPunishment(PunishmentType type, Victim victim, Operator operator, String reason, Scope scope, long start, long end) {
+	private DraftPunishment(PunishmentType type, Victim victim, Operator operator, String reason, Scope scope, long start, long end) {
 		super(type, victim, operator, reason, scope, start, end);
 	}
 	
@@ -59,9 +61,10 @@ public final class DraftPunishment extends AbstractPunishment {
 		 * 
 		 * @param type the punishment type
 		 * @return this builder
+		 * @throws NullPointerException if {@code type} is null
 		 */
 		public Builder type(PunishmentType type) {
-			this.type = type;
+			this.type = Objects.requireNonNull(type, "type");
 			return this;
 		}
 		
@@ -70,9 +73,10 @@ public final class DraftPunishment extends AbstractPunishment {
 		 * 
 		 * @param victim the victim
 		 * @return this builder
+		 * @throws NullPointerException if {@code victim} is null
 		 */
 		public Builder victim(Victim victim) {
-			this.victim = victim;
+			this.victim = Objects.requireNonNull(victim, "victim");
 			return this;
 		}
 		
@@ -81,9 +85,10 @@ public final class DraftPunishment extends AbstractPunishment {
 		 * 
 		 * @param operator the operator
 		 * @return this builder
+		 * @throws NullPointerException if {@code operator} is null
 		 */
 		public Builder operator(Operator operator) {
-			this.operator = operator;
+			this.operator = Objects.requireNonNull(operator, "operator");
 			return this;
 		}
 		
@@ -92,9 +97,10 @@ public final class DraftPunishment extends AbstractPunishment {
 		 * 
 		 * @param reason the reason
 		 * @return this builder
+		 * @throws NullPointerException if {@code reason} is null
 		 */
 		public Builder reason(String reason) {
-			this.reason = reason;
+			this.reason = Objects.requireNonNull(reason, "reason");
 			return this;
 		}
 		
@@ -103,9 +109,10 @@ public final class DraftPunishment extends AbstractPunishment {
 		 * 
 		 * @param scope the scope
 		 * @return this builder
+		 * @throws NullPointerException if {@code scope} is null
 		 */
 		public Builder scope(Scope scope) {
-			this.scope = scope;
+			this.scope = Objects.requireNonNull(scope, "scope");
 			return this;
 		}
 		
@@ -120,6 +127,9 @@ public final class DraftPunishment extends AbstractPunishment {
 		 * @return this builder
 		 */
 		public Builder start(long start) {
+			if (start < 0L) {
+				throw new IllegalArgumentException("Start time must be greater than or equal to 0");
+			}
 			this.start = start;
 			return this;
 		}
@@ -140,21 +150,30 @@ public final class DraftPunishment extends AbstractPunishment {
 		 * For a permanent punishment, don't call this method. The API will make the punishment
 		 * permanent unless specified otherwise.
 		 * 
-		 * @param end the end time in unix iseconds, or 0 for permanent
+		 * @param end the end time in unix seconds, or 0 for permanent
 		 * @return this builder
 		 */
 		public Builder end(long end) {
+			if (end < -1L) {
+				throw new IllegalArgumentException("End time must be greater than or equal to 0, or -1 for permanent");
+			}
 			this.end = end;
 			return this;
 		}
 		
 		/**
-		 * Builds into a {@link DraftPunishment}
+		 * Builds into a {@link DraftPunishment}. <br>
+		 * <br>
+		 * Requires that this builder's type, victim, operator, reason, and scope are set. If any are unset,
+		 * {@code IllegalArgumentException} is thrown
 		 * 
 		 * @return the draft punishment
+		 * @throws IllegalArgumentException if any detail has not been set
 		 */
 		public DraftPunishment build() {
-			Long start = this.start;
+			if (type == null || victim == null || operator == null || reason == null || scope == null) {
+				throw new IllegalArgumentException("Punishment details have not been set");
+			}
 			return new DraftPunishment(type, victim, operator, reason, scope,
 					(start != null) ? start : System.currentTimeMillis() / 1_000L, end);
 		}
