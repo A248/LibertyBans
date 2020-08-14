@@ -67,12 +67,13 @@ class DatabaseSettings {
 	 */
 	Database create(ConfigAccessor config) {
 		HikariConfig hikariConf = getHikariConfig(config);
-		boolean useMariaDb = hikariConf.getPoolName().contains("MariaDB"); // see end of #getHikariConfg
+		boolean usesMariaDb = hikariConf.getPoolName().contains("MariaDB"); // See end of #getHikariConfg
 		Database database = new Database(core, hikariConf, hikariConf.getMaximumPoolSize());
-		boolean success = new TableDefinitions(core, database).createTablesAndViews(useMariaDb).join();
+		boolean success = new TableDefinitions(core, database).createTablesAndViews(usesMariaDb).join();
 		if (!success) {
 			throw new StartupException("Database table and views creation failed");
 		}
+		database.startHyperSQLRefreshTaskIfNecessary();
 		return database;
 	}
 	
@@ -120,7 +121,12 @@ class DatabaseSettings {
 			logger.trace("Setting data source property {} to {}", propName, propValue);
 			hikariConf.addDataSourceProperty(propName, propValue);
 		}
-		String mode = (useMariaDb) ? "MariaDB" : "HSQLDB"; // This is relied on in #create
+		/*
+		 * The presence of "MariaDB" in the pool name is relied on elsewhere:
+		 * 1. DatabaseSettings#create(ConfigAccessor)
+		 * 2. Database#usesHyperSQL()
+		 */
+		String mode = (useMariaDb) ? "MariaDB" : "HyperSQL";
 		hikariConf.setPoolName("LibertyBans-HikariCP-" + mode);
 		return hikariConf;
 	}

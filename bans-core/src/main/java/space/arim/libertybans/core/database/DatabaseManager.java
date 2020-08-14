@@ -58,6 +58,7 @@ public class DatabaseManager implements Part {
 	@Override
 	public void restart() {
 		Database database = this.database;
+		database.closeHyperSQLRefreshTaskIfNecessary();
 		getShutdownExecutor().execute(database::close);
 		this.database = new DatabaseSettings(core).create();
 	}
@@ -65,9 +66,8 @@ public class DatabaseManager implements Part {
 	@Override
 	public void shutdown() {
 		Database database = this.database;
-		CompletableFuture.runAsync(() -> {
-			database.close();
-		}, getShutdownExecutor()).join();
+		database.closeHyperSQLRefreshTaskIfNecessary();
+		CompletableFuture.runAsync(database::closeIncludingHyperSQL, getShutdownExecutor()).join();
 	}
 	
 	private static Executor getShutdownExecutor() {
