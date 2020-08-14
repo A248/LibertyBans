@@ -20,7 +20,6 @@ package space.arim.libertybans.core.database;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -59,7 +58,7 @@ public class DatabaseManager implements Part {
 	public void restart() {
 		Database database = this.database;
 		database.closeHyperSQLRefreshTaskIfNecessary();
-		getShutdownExecutor().execute(database::close);
+		CompletableFuture.delayedExecutor(8, TimeUnit.SECONDS).execute(database::close);
 		this.database = new DatabaseSettings(core).create();
 	}
 
@@ -67,11 +66,7 @@ public class DatabaseManager implements Part {
 	public void shutdown() {
 		Database database = this.database;
 		database.closeHyperSQLRefreshTaskIfNecessary();
-		CompletableFuture.runAsync(database::closeIncludingHyperSQL, getShutdownExecutor()).join();
-	}
-	
-	private static Executor getShutdownExecutor() {
-		return CompletableFuture.delayedExecutor(4, TimeUnit.SECONDS);
+		core.addDelayedShutdownHook(database::closeIncludingHyperSQL);
 	}
 	
 	/*

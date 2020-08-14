@@ -19,6 +19,10 @@
 package space.arim.libertybans.core;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -50,6 +54,8 @@ public class LibertyBansCore implements LibertyBans, Part {
 	
 	private final Formatter formatter;
 	private final Commands commands;
+	
+	private final List<Runnable> delayedShutdownHooks = new ArrayList<>();
 	
 	public LibertyBansCore(Omnibus omnibus,
 			Path folder, AbstractEnv environment) {
@@ -93,6 +99,13 @@ public class LibertyBansCore implements LibertyBans, Part {
 		uuidMaster.shutdown();
 		configs.shutdown();
 		databaseManager.shutdown();
+
+		// 6 seconds should be sufficient
+		CompletableFuture.runAsync(() -> {
+			for (Runnable hook : delayedShutdownHooks) {
+				hook.run();
+			}
+		}, CompletableFuture.delayedExecutor(6, TimeUnit.SECONDS)).join();
 	}
 	
 	public Path getFolder() {
@@ -165,6 +178,12 @@ public class LibertyBansCore implements LibertyBans, Part {
 	
 	public Commands getCommands() {
 		return commands;
+	}
+	
+	public void addDelayedShutdownHook(Runnable hook) {
+		synchronized (delayedShutdownHooks) {
+			delayedShutdownHooks.add(hook);
+		}
 	}
 	
 }

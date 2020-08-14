@@ -18,8 +18,6 @@
  */
 package space.arim.libertybans.core;
 
-import java.time.Duration;
-
 import space.arim.omnibus.resourcer.ResourceHook;
 import space.arim.omnibus.resourcer.Resourcer;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
@@ -74,20 +72,12 @@ public class Resources implements Part {
 	@Override
 	public void shutdown() {
 		final HookBundle bundle = this.bundle;
-		unhookLater(bundle);
-		this.bundle = null;
-	}
-	
-	private void unhookLater(HookBundle bundle) {
 		Resourcer resourcer = getResourcer();
-		/*
-		 * 5 seconds should be enough time
-		 */
-		Duration unhookTime = Duration.ofSeconds(5L);
-		bundle.enhancedExecutor.getResource().scheduleOnce(() -> {
+		core.addDelayedShutdownHook(() -> {
 			resourcer.unhookUsage(bundle.futuresFactory);
 			resourcer.unhookUsage(bundle.enhancedExecutor);
-		}, unhookTime);
+		});
+		this.bundle = null;
 	}
 	
 }
