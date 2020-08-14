@@ -147,6 +147,10 @@ public class JdbCaesarHelper {
 		HikariWrapper(HikariDataSource hikariDataSource) {
 			this.hikariDataSource = hikariDataSource;
 		}
+		
+		HikariDataSource getHikariDataSource() {
+			return hikariDataSource;
+		}
 
 		@Override
 		public Connection getConnection() throws SQLException {
@@ -154,7 +158,7 @@ public class JdbCaesarHelper {
 		}
 
 		@Override
-		public void close() throws SQLException {
+		public void close() {
 			hikariDataSource.close();
 		}
 		

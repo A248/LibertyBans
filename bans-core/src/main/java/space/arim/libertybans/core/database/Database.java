@@ -20,6 +20,7 @@ package space.arim.libertybans.core.database;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,6 +34,8 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.DelayCalculators;
+import space.arim.omnibus.util.concurrent.ScheduledWork;
 
 import space.arim.libertybans.api.PunishmentDatabase;
 import space.arim.libertybans.api.PunishmentType;
@@ -50,6 +53,8 @@ public class Database implements PunishmentDatabase {
 	private final LibertyBansCore core;
 	private final JdbCaesar jdbCaesar;
 	private final ExecutorService executor;
+	
+	private ScheduledWork<?> hyperSqlRefreshTask;
 	
 	static final int REVISION_MAJOR = 1;
 	static final int REVISION_MINOR = 0;
@@ -87,6 +92,31 @@ public class Database implements PunishmentDatabase {
 				.build();
 	}
 	
+	void startHyperSQLRefreshTaskIfNecessary() {
+		if (usesHyperSQL()) {
+			synchronized (this) {
+				hyperSqlRefreshTask = core.getResources().getEnhancedExecutor().scheduleRepeating(
+						new IOUtils.HsqldbCleanerRunnable(core.getDatabaseManager(), this),
+						Duration.ofHours(1L), DelayCalculators.fixedDelay());
+			}
+		}
+	}
+	
+	void closeHyperSQLRefreshTaskIfNecessary() {
+		if (usesHyperSQL()) {
+			synchronized (this) {
+				hyperSqlRefreshTask.cancel();
+			}
+		}
+	}
+	
+	private boolean usesHyperSQL() {
+		 // See end of DatabaseSettings#getHikariConfg
+		boolean usesMariaDb = ((JdbCaesarHelper.HikariWrapper) jdbCaesar().getDatabaseSource())
+				.getHikariDataSource().getPoolName().contains("MariaDB");
+		return !usesMariaDb;
+	}
+	
 	void close() {
 		try {
 			jdbCaesar.getDatabaseSource().close();
@@ -94,6 +124,13 @@ public class Database implements PunishmentDatabase {
 			throw new AssertionError(ex);
 		}
 		executor.shutdown();
+	}
+	
+	void closeIncludingHyperSQL() {
+		if (usesHyperSQL()) {
+			jdbCaesar().query("SHUTDOWN").voidResult().execute();
+		}
+		close();
 	}
 	
 	@Override

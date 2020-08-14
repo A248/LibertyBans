@@ -18,7 +18,6 @@
  */
 package space.arim.libertybans.core.database;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
@@ -28,7 +27,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
-import space.arim.omnibus.util.concurrent.DelayCalculators;
 
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
@@ -185,11 +183,9 @@ public class TableDefinitions {
 					if (useHsqldb) {
 						// Using HSQLDB
 						// Periodic task will be started for refreshing
+						// Handled by Database#setHyperSQLRefreshTask
 						assert refresherEventFuture == null;
 
-						core.getResources().getEnhancedExecutor().scheduleRepeating(
-								new IOUtils.HsqldbCleanerRunnable(core.getDatabaseManager(), database),
-								Duration.ofHours(1L), DelayCalculators.fixedDelay());
 					} else {
 						// Using MariaDB
 						// Database-side event will be used
