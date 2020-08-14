@@ -5,7 +5,7 @@ The be-all, end-all of discipline.
 
 ### Features
 
-* Option to use MySQL. Local file database (using HSQLDB) is available for those who do not need MySQL.
+* Option to use local file-based HyperSQL database, or remote MariaDB/MySQL database.
 * No complicated installation. All dependencies are automatically downloaded with hard-coded secure SHA-512 hashes used to validate the downloads.
 * Enhanced database-oriented performance emphasising database-side calculations through stored procedures. Further optimisation on MySQL using MySQL events.
 * Compact database storage setup. UUIDs are stored in minimal form as raw bytes instead of strings. Same for IP addresses.
@@ -36,29 +36,11 @@ Yes, that's right. This plugin strives to be better at a lower price.
 
 There have been several major improvements to Java for developers and server owners. Newer Java versions are faster for server owners and easier to develop with for developers. I would strongly recommend updating to Java 11 or 14.
 
-Here is just a snapshot of the advantages:
+[Read more here](https://github.com/A248/LibertyBans/wiki/Why-Java-11%3F)
 
-* Jigsaw modularisation
-* CompletableFuture enhancements
-* StackWalker API
-* Low-level concurrency APIs as safe and supported alternatives to sun.misc.Unsafe
-* Ahead of time compilation
-* Prebuild minimized runtime images
-* Compact strings
-* IO-related constructors accept Charset instead of a String.
-* try-with-resources improvements
-* File IO additions
-* var keyword
-* HttpClient API
-* Immutable collection factory methods
-* Additions to streams
-* Experimental JIT compiler from GraalVM
-* Improvements to the G1 garbage collector, as well as more modern, state-of-the-art garbage collectors (ZGC and Shenandoah)
-* TLS 1.3 support
+## Developer API
 
-Of the many performance improvements, hastening of reflection, more compact Strings, and improved hash structure performance are especially relevant for Minecraft servers.
-
-The many new tools available to developers further allow them to create faster, higher-quality programs with less code.
+The developer API is extensive. Unlike other plugins, LibertyBans does NOT recommend developers mess with the database as a first recourse. [More information here](https://github.com/A248/LibertyBans/wiki/Developer-API)
 
 ## Other Information
 
