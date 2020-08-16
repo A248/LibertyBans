@@ -51,10 +51,9 @@ class DatabaseSettings {
 	/**
 	 * Shortcut for <code>create(core.getConfigs().getSql())</code>
 	 * 
-	 * @return a {@link Database}
-	 * @throws StartupException if database or config somehow invalid
+	 * @return a database result, which should be checked for success or failure
 	 */
-	Database create() {
+	DatabaseResult create() {
 		return create(core.getConfigs().getSql());
 	}
 	
@@ -62,19 +61,16 @@ class DatabaseSettings {
 	 * Creates an accessible database
 	 * 
 	 * @param config the config accessor
-	 * @return a {@link Database}
-	 * @throws StartupException if database or config somehow invalid
+	 * @return a database result, which should be checked for success or failure
 	 */
-	Database create(ConfigAccessor config) {
+	DatabaseResult create(ConfigAccessor config) {
 		HikariConfig hikariConf = getHikariConfig(config);
 		boolean usesMariaDb = hikariConf.getPoolName().contains("MariaDB"); // See end of #getHikariConfg
+
 		Database database = new Database(core, hikariConf, hikariConf.getMaximumPoolSize());
 		boolean success = new TableDefinitions(core, database).createTablesAndViews(usesMariaDb).join();
-		if (!success) {
-			throw new StartupException("Database table and views creation failed");
-		}
-		database.startHyperSQLRefreshTaskIfNecessary();
-		return database;
+
+		return new DatabaseResult(database, success);
 	}
 	
 	// Returns true if authentication details still allow MariaDB usage

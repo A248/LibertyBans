@@ -55,7 +55,7 @@ final class Revision implements Comparable<Revision> {
 
 	@Override
 	public String toString() {
-		return "Revision [major=" + major + ", minor=" + minor + "]";
+		return "Revision " + major + '.' + minor;
 	}
 
 	@Override

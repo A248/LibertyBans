@@ -92,7 +92,7 @@ public class Database implements PunishmentDatabase {
 				.build();
 	}
 	
-	void startHyperSQLRefreshTaskIfNecessary() {
+	void startRefreshTaskIfNecessary() {
 		if (usesHyperSQL()) {
 			synchronized (this) {
 				hyperSqlRefreshTask = core.getResources().getEnhancedExecutor().scheduleRepeating(
@@ -102,7 +102,7 @@ public class Database implements PunishmentDatabase {
 		}
 	}
 	
-	void closeHyperSQLRefreshTaskIfNecessary() {
+	void cancelRefreshTaskIfNecessary() {
 		if (usesHyperSQL()) {
 			synchronized (this) {
 				hyperSqlRefreshTask.cancel();
@@ -126,7 +126,7 @@ public class Database implements PunishmentDatabase {
 		executor.shutdown();
 	}
 	
-	void closeIncludingHyperSQL() {
+	void closeCompletely() {
 		if (usesHyperSQL()) {
 			jdbCaesar().query("SHUTDOWN").voidResult().execute();
 		}

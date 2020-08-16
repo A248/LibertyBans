@@ -26,6 +26,10 @@ import java.util.ListIterator;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.libertybans.api.PunishmentType;
@@ -43,6 +47,8 @@ public class TableDefinitions {
 	
 	private final LibertyBansCore core;
 	private final Database database;
+	
+	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
 	TableDefinitions(LibertyBansCore core, Database database) {
 		this.core = core;
@@ -140,8 +146,7 @@ public class TableDefinitions {
 								.singleResult((resultSet) -> Revision.of(resultSet.getInt("major"), resultSet.getInt("minor")))
 								.execute();
 
-						migrateFrom(querySource, revision);
-						return true;
+						return migrateFrom(querySource, revision);
 					}
 					/*
 					 * Execute create tables
@@ -172,8 +177,8 @@ public class TableDefinitions {
 							.params(REVISION_MAJOR, REVISION_MINOR)
 							.updateCount((updateCount) -> updateCount).execute();
 					if (realUpdateCount != 1) {
-						throw new IllegalStateException(
-								"Expected to update database revision number, but updateCount was " + realUpdateCount);
+						logger.error("Unable to update database revision number. updateCount = {}", realUpdateCount);
+						return false;
 					}
 					return true;
 
@@ -206,21 +211,23 @@ public class TableDefinitions {
 	 * @param querySource the transaction query sources
 	 * @param revision the actual database revision
 	 * @throws IllegalStateException if {@code revision} is in the future or is not recognised as a past version
+	 * @return true if successful, false otherwise
 	 */
-	private static void migrateFrom(TransactionQuerySource querySource, Revision revision) {
+	private static boolean migrateFrom(TransactionQuerySource querySource, Revision revision) {
 		int comparison = REVISION.compareTo(revision);
 		if (comparison == 0) {
 			// Same version
-			return;
+			return true;
 		}
 		if (comparison < 0) {
-			throw new IllegalStateException("Database revision number is in the future! "
-					+ "Please upgrade this version of LibertyBans");
+			logger.error("Your database revision ({}) is in the future! Please upgrade LibertyBans", revision);
+			return false;
 		}
 		// Schema migrator here
 
 		// Currently there is no older version to migrate from
-		throw new IllegalStateException("Unknown database revision " + revision.major + '.' + revision.minor);
+		logger.error("Unknown database revision {}", revision);
+		return false;
 	}
 	
 }
