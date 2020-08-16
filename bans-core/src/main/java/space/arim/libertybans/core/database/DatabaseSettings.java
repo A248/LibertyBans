@@ -19,7 +19,6 @@
 package space.arim.libertybans.core.database;
 
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -137,17 +136,15 @@ class DatabaseSettings {
 			driverCreator.createMariaDb(host, port, database);
 
 		} else {
-			Path databaseFolder = core.getFolder().resolve("database");
+			Path databaseFolder = core.getFolder().resolve("hypersql");
 			if (!Files.isDirectory(databaseFolder)) {
 				try {
 					Files.createDirectory(databaseFolder);
-				} catch (FileAlreadyExistsException benignRaceCondition) {
-					
 				} catch (IOException ex) {
 					throw new StartupException("Cannot create database folder", ex);
 				}
 			}
-			driverCreator.createHsqldb(databaseFolder + "/data");
+			driverCreator.createHsqldb(databaseFolder + "/punishments-database");
 		}
 	}
 	
