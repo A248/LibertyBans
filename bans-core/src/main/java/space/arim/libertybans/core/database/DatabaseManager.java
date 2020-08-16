@@ -30,6 +30,7 @@ import space.arim.omnibus.util.ThisClass;
 import space.arim.api.configure.SingleKeyValueTransformer;
 import space.arim.api.configure.ValueTransformer;
 
+import space.arim.libertybans.bootstrap.StartupException;
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.Part;
 
@@ -51,22 +52,38 @@ public class DatabaseManager implements Part {
 	
 	@Override
 	public void startup() {
-		this.database = new DatabaseSettings(core).create();
+		DatabaseResult dbResult = new DatabaseSettings(core).create();
+		Database database = dbResult.database;
+		if (!dbResult.success) {
+			database.closeCompletely();
+			throw new StartupException("Database initialisation failed");
+		}
+		database.startRefreshTaskIfNecessary();
+		this.database = database;
 	}
 	
 	@Override
 	public void restart() {
-		Database database = this.database;
-		database.closeHyperSQLRefreshTaskIfNecessary();
-		CompletableFuture.delayedExecutor(8, TimeUnit.SECONDS).execute(database::close);
-		this.database = new DatabaseSettings(core).create();
+		Database currentDatabase = this.database;
+
+		DatabaseResult dbResult = new DatabaseSettings(core).create();
+		Database database = dbResult.database;
+		if (!dbResult.success) {
+			database.close();
+			throw new StartupException("Database restart failed");
+		}
+		currentDatabase.cancelRefreshTaskIfNecessary();
+		CompletableFuture.delayedExecutor(8, TimeUnit.SECONDS).execute(currentDatabase::close);
+
+		database.startRefreshTaskIfNecessary();
+		this.database = database;
 	}
 
 	@Override
 	public void shutdown() {
 		Database database = this.database;
-		database.closeHyperSQLRefreshTaskIfNecessary();
-		core.addDelayedShutdownHook(database::closeIncludingHyperSQL);
+		database.cancelRefreshTaskIfNecessary();
+		core.addDelayedShutdownHook(database::closeCompletely);
 	}
 	
 	/*
