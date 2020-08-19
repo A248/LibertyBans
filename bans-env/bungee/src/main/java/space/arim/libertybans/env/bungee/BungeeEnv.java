@@ -22,6 +22,9 @@ import java.nio.file.Path;
 
 import space.arim.omnibus.OmnibusProvider;
 
+import space.arim.uuidvault.api.UUIDVault;
+import space.arim.uuidvault.plugin.UUIDVaultBungee;
+
 import space.arim.api.env.BungeePlatformHandle;
 import space.arim.api.env.PlatformHandle;
 
@@ -67,6 +70,14 @@ public class BungeeEnv extends AbstractEnv {
 	
 	@Override
 	protected void startup0() {
+		if (UUIDVault.get() == null) {
+			new UUIDVaultBungee(getPlugin()) {
+				@Override
+				protected boolean setInstancePassive() {
+					return super.setInstancePassive();
+				}
+			}.setInstancePassive();
+		}
 		core.startup();
 		Plugin plugin = getPlugin();
 		PluginManager pm = plugin.getProxy().getPluginManager();

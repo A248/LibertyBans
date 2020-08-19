@@ -27,6 +27,9 @@ import org.slf4j.LoggerFactory;
 import space.arim.omnibus.OmnibusProvider;
 import space.arim.omnibus.util.ThisClass;
 
+import space.arim.uuidvault.api.UUIDVault;
+import space.arim.uuidvault.plugin.UUIDVaultVelocity;
+
 import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.VelocityPlatformHandle;
 
@@ -83,6 +86,14 @@ public class VelocityEnv extends AbstractEnv {
 	
 	@Override
 	protected void startup0() {
+		if (UUIDVault.get() == null) {
+			new UUIDVaultVelocity(getServer(), logger) {
+				@Override
+				protected boolean setInstancePassive() {
+					return super.setInstancePassive();
+				}
+			}.setInstancePassive();
+		}
 		core.startup();
 		joinListener.register();
 		CommandManager cmdManager = getServer().getCommandManager();

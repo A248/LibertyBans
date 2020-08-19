@@ -22,6 +22,9 @@ import java.nio.file.Path;
 
 import space.arim.omnibus.OmnibusProvider;
 
+import space.arim.uuidvault.api.UUIDVault;
+import space.arim.uuidvault.plugin.UUIDVaultSpigot;
+
 import space.arim.api.env.BukkitPlatformHandle;
 import space.arim.api.env.PlatformHandle;
 
@@ -69,6 +72,14 @@ public class SpigotEnv extends AbstractEnv {
 
 	@Override
 	protected void startup0() {
+		if (UUIDVault.get() == null) {
+			new UUIDVaultSpigot(getPlugin()) {
+				@Override
+				protected boolean setInstancePassive() {
+					return super.setInstancePassive();
+				}
+			}.setInstancePassive();
+		}
 		core.startup();
 		JavaPlugin plugin = getPlugin();
 		plugin.getServer().getPluginManager().registerEvents(joinListener, plugin);
