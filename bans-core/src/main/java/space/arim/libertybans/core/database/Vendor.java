@@ -34,7 +34,11 @@ public enum Vendor {
 	}
 	
 	public boolean noUnsignedNumerics() {
-		return !unsignedNumerics;
+		return !unsignedNumerics();
+	}
+	
+	public boolean useEnactmentProcedures() {
+		return this != HSQLDB;
 	}
 	
 }

@@ -124,19 +124,18 @@ public class TableDefinitions {
 		/*
 		 * Enactment procedures
 		 */
-		EnumMap<PunishmentType, CentralisedFuture<String>> enactmentProcedures = new EnumMap<>(PunishmentType.class);
-		for (PunishmentType type : MiscUtil.punishmentTypes()) {
-			String resourceName = "procedure_" + MiscUtil.getEnactmentProcedure(type);
-			CentralisedFuture<String> enactmentProcedureFuture = readResource(resourceName);
-			enactmentProcedures.put(type, enactmentProcedureFuture);
-			futures.add(enactmentProcedureFuture);
+		final EnumMap<PunishmentType, CentralisedFuture<String>> enactmentProcedures;
+		if (vendor.useEnactmentProcedures()) {
+			enactmentProcedures = new EnumMap<>(PunishmentType.class);
+			for (PunishmentType type : MiscUtil.punishmentTypes()) {
+				String resourceName = "procedure_" + MiscUtil.getEnactmentProcedure(type);
+				CentralisedFuture<String> enactmentProcedureFuture = readResource(resourceName);
+				enactmentProcedures.put(type, enactmentProcedureFuture);
+				futures.add(enactmentProcedureFuture);
+			}
+		} else {
+			enactmentProcedures = null;
 		}
-
-		/*
-		 * Refresh procedure
-		 */
-		CentralisedFuture<String> refreshProcedure = readResource("procedure_refresh");
-		futures.add(refreshProcedure);
 
 		/*
 		 * Refresher event, using MariaDB/MySQL database-side events
@@ -155,7 +154,6 @@ public class TableDefinitions {
 			return database.selectAsync(() -> {
 				return database.jdbCaesar().transaction().transactor((querySource) -> {
 
-					logger.debug("Creating tables transactionally");
 					if (vendor == Vendor.HSQLDB) {
 						executeHyperSqlSettings(querySource);
 					}
@@ -177,6 +175,7 @@ public class TableDefinitions {
 
 						return migrateFrom(querySource, revision);
 					}
+					logger.debug("Creating tables transactionally");
 					/*
 					 * Execute create tables
 					 */
@@ -189,20 +188,18 @@ public class TableDefinitions {
 					for (String createView : futureCreateViews.join()) {
 						querySource.query(createView).voidResult().execute();
 					}
-					/*
-					 * Add enactment procedures
-					 */
-					for (PunishmentType type : MiscUtil.punishmentTypes()) {
-						String procedure = enactmentProcedures.get(type).join();
-						querySource.query(procedure).voidResult().execute();
+					if (enactmentProcedures != null) {
+						/*
+						 * Add enactment procedures
+						 */
+						for (PunishmentType type : MiscUtil.punishmentTypes()) {
+							String procedure = enactmentProcedures.get(type).join();
+							querySource.query(procedure).voidResult().execute();
+						}
 					}
-					/*
-					 * Add refresher procedure
-					 */
-					querySource.query(refreshProcedure.join()).voidResult().execute();
 
 					int realUpdateCount = querySource.query(
-							"INSERT INTO `libertybans_major` (`constant`, `major`, `minor`) VALUES (?, ?, ?)")
+							"INSERT INTO `libertybans_revision` (`constant`, `major`, `minor`) VALUES (?, ?, ?)")
 							.params("Constant", REVISION_MAJOR, REVISION_MINOR)
 							.updateCount((updateCount) -> updateCount).execute();
 					if (realUpdateCount != 1) {

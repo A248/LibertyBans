@@ -27,8 +27,12 @@ import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.api.PunishmentEnactor;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.Scope;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.database.Database;
+
+import space.arim.jdbcaesar.mapper.UpdateCountMapper;
+import space.arim.jdbcaesar.transact.RollMeBackException;
 
 public class Enactor implements PunishmentEnactor {
 	
@@ -44,23 +48,57 @@ public class Enactor implements PunishmentEnactor {
 		Database database = core.getDatabase();
 		return database.selectAsync(() -> {
 
+			PunishmentType type = draftPunishment.getType();
 			Victim victim = draftPunishment.getVictim();
 			Operator operator = draftPunishment.getOperator();
+			String reason = draftPunishment.getReason();
+			Scope scope = draftPunishment.getScope();
 
-			String server = core.getScopeManager().getServer(draftPunishment.getScope());
+			if (database.getVendor().useEnactmentProcedures()) {
+				String enactmentProcedure = MiscUtil.getEnactmentProcedure(type);
 
-			String enactmentProcedure = MiscUtil.getEnactmentProcedure(draftPunishment.getType());
+				return database.jdbCaesar().query(
+						"{CALL `libertybans_" + enactmentProcedure + "` (?, ?, ?, ?, ?, ?, ?)}")
+						.params(victim, victim.getType(), operator, reason,
+								scope, draftPunishment.getStart(), draftPunishment.getEnd())
 
-			return database.jdbCaesar().query(
-					"{CALL `libertybans_" + enactmentProcedure + "` (?, ?, ?, ?, ?, ?, ?)}")
-					.params(victim, victim.getType(), operator, draftPunishment.getReason(),
-							server, draftPunishment.getStart(), draftPunishment.getEnd())
-					.singleResult((resultSet) -> {
-						int id = resultSet.getInt("id");
-						return new SecurePunishment(id, draftPunishment.getType(), victim, operator,
-								draftPunishment.getReason(), draftPunishment.getScope(), draftPunishment.getStart(),
-								draftPunishment.getEnd());
-					}).onError(() -> null).execute();
+						.singleResult((resultSet) -> {
+							int id = resultSet.getInt("id");
+							return new SecurePunishment(id, type, victim, operator, reason,
+									scope, draftPunishment.getStart(), draftPunishment.getEnd());
+						}).onError(() -> null).execute();
+			} else {
+				return database.jdbCaesar().transaction().transactor((querySource) -> {
+
+					int id = querySource.query(
+							"INSERT INTO `libertybans_punishments` (`type`, `operator`, `reason`, `scope`, `start`, `end`) "
+							+ "VALUES (?, ?, ?, ?, ?, ?)")
+							.params(type, operator, draftPunishment.getReason(), scope,
+									draftPunishment.getStart(), draftPunishment.getEnd())
+							.updateGenKeys((updateCount, genKeys) ->  {
+								if (!genKeys.next()) {
+									throw new IllegalStateException("No punishment ID generated for insertion query");
+								}
+								return genKeys.getInt("id");
+							}).execute();
+
+					int updateCount = querySource.query(
+							"INSERT IGNORE INTO `libertybans_" + type.getLowercaseNamePlural() + "` (`id`, `victim`, `victim_type`) "
+									+ "VALUES (?, ?, ?)")
+							.params(id, victim, victim.getType())
+							.updateCount(UpdateCountMapper.identity()).execute();
+
+					if (type.isSingular() && updateCount == 0) {
+						throw new RollMeBackException();
+					}
+					querySource.query(
+							"INSERT INTO `libertybans_history` (`id`, `victim`, `victim_type`) VALUES (?, ?, ?")
+							.params(id, victim, victim.getType())
+							.voidResult().execute();
+					return new SecurePunishment(id, type, victim, operator, reason,
+							scope, draftPunishment.getStart(), draftPunishment.getEnd());
+				}).onRollback(() -> null).execute();
+			}
 		});
 	}
 	
