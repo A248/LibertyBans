@@ -33,7 +33,7 @@ import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.api.PunishmentEnforcer;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.core.config.Configs.AddressStrictness;
+import space.arim.libertybans.core.config.AddressStrictness;
 import space.arim.libertybans.core.database.Database;
 import space.arim.libertybans.core.env.TargetMatcher;
 

@@ -30,7 +30,6 @@ import space.arim.omnibus.util.ThisClass;
 import space.arim.api.configure.SingleKeyValueTransformer;
 import space.arim.api.configure.ValueTransformer;
 
-import space.arim.libertybans.core.config.Configs.AddressStrictness;
 import space.arim.libertybans.core.uuid.UUIDMaster;
 
 final class ConfigUtil {
