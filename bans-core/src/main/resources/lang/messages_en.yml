@@ -7,6 +7,8 @@ all:
     uuid: '&c&o%TARGET%&r&7 was not found online or offline.'
     ip: '&c&o%TARGET%&r&7 is not a valid IP.'
     either: '&c&o%TARGET%&r&7 is not a valid player or IP.'
+admin:
+  ellipses: '&a...'
   reloaded: '&aReloaded!'
   restarted: '&aRestarted!'
 json:

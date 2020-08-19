@@ -71,7 +71,7 @@ public class Configs implements Part {
 				executor = new IOUtils.SafeExecutorWrapper(executor);
 
 			} else if (executor == null) {
-				executor = Executors.newFixedThreadPool(1, new IOUtils.ThreadFactoryImpl("LibertyBans-Config-"));
+				executor = Executors.newCachedThreadPool(new IOUtils.ThreadFactoryImpl("LibertyBans-Config-"));
 			}
 		} else {
 			executor = existingReadWriteService;
@@ -82,7 +82,7 @@ public class Configs implements Part {
 		try {
 			Files.createDirectories(langFolder);
 		} catch (IOException ex) {
-			throw new IllegalStateException("Unable to create plugin directories", ex);
+			throw new StartupException("Unable to create plugin directories", ex);
 		}
 		ConfigSerialiser serialiser = new YamlConfigSerialiser();
 		var futureSql = getFor(serialiser, "sql.yml", DatabaseManager.createConfigTransformers(), executor);

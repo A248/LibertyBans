@@ -18,33 +18,38 @@
  */
 package space.arim.libertybans.core.commands;
 
+import java.util.concurrent.ForkJoinPool;
+
 import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.TextualComponent;
 
 import space.arim.libertybans.core.env.CmdSender;
 
 public class ReloadCommands extends SubCommandGroup {
 
-	private static final SendableMessage ELLIPSES = new SendableMessage(new TextualComponent.Builder().text("...").build());
-	
 	ReloadCommands(Commands commands) {
 		super(commands, "reload", "restart");
+	}
+	
+	private SendableMessage ellipses() {
+		return commands.core.getFormatter().parseMessage(commands.messages().getString("admin.ellipses"));
 	}
 
 	@Override
 	void execute(CmdSender sender, CommandPackage command, String arg) {
 		switch (arg) {
 		case "restart":
-			sender.sendMessage(ELLIPSES);
-			boolean restarted = commands.core.getEnvironment().fullRestart();
-			sender.parseThenSend((restarted) ? commands.config().getString("all.restarted") : "Not restarting because loading already in process");
+			ForkJoinPool.commonPool().execute(() -> {
+				sender.sendMessage(ellipses());
+				boolean restarted = commands.core.getEnvironment().fullRestart();
+				sender.parseThenSend((restarted) ? commands.messages().getString("admin.restarted")
+						: "Not restarting because loading already in process");
+			});
 			break;
 		case "reload":
-			var finalSender = sender;
-			sender.sendMessage(ELLIPSES);
+			sender.sendMessage(ellipses());
 			commands.core.getConfigs().reloadConfigs().thenAccept((result) -> {
 				if (result) {
-					finalSender.parseThenSend(commands.config().getString("all.reloaded"));
+					sender.parseThenSend(commands.messages().getString("admin.reloaded"));
 				}
 			});
 			break;
