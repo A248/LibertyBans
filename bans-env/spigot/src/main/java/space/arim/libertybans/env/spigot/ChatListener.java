@@ -18,7 +18,11 @@
  */
 package space.arim.libertybans.env.spigot;
 
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+
 import space.arim.api.chat.SendableMessage;
+
+import space.arim.libertybans.core.config.SyncEnforcement;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -62,7 +66,26 @@ public class ChatListener extends SpigotParallelisedListener<PlayerEvent, Sendab
 	}
 	
 	private void combinedWithdraw(PlayerEvent evt) {
-		SendableMessage message = withdraw(evt);
+		CentralisedFuture<SendableMessage> futureMessage = withdrawRaw(evt);
+		SendableMessage message;
+		if (futureMessage.isDone() || evt.isAsynchronous()) {
+			message = futureMessage.join();
+		} else {
+			SyncEnforcement strategy = env.core.getConfigs().getConfig().getObject(
+					"enforcement.sync-events-strategy", SyncEnforcement.class);
+			switch (strategy) {
+			case WAIT:
+				message = futureMessage.join();
+				break;
+			case ALLOW:
+				return;
+			case DENY:
+				message = env.core.getFormatter().parseMessage(env.core.getConfigs().getMessages().getString("misc.sync-denial-message"));
+				break;
+			default:
+				throw new IllegalStateException("Unknown SyncEnforcement strategy " + strategy);
+			}
+		}
 		if (message == null) {
 			return;
 		}
