@@ -18,7 +18,6 @@
  */
 package space.arim.libertybans.core;
 
-import java.net.InetAddress;
 import java.time.Instant;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -117,7 +116,7 @@ public class Formatter {
 		case PLAYER:
 			return UUIDUtil.toShortString(((PlayerVictim) victim).getUUID());
 		case ADDRESS:
-			return formatAddress(((AddressVictim) victim).getAddress());
+			return formatAddressVictim((AddressVictim) victim);
 		default:
 			throw new IllegalStateException("Unknown victim type " + victim.getType());
 		}
@@ -132,7 +131,7 @@ public class Formatter {
 			 */
 			return core.getFuturesFactory().copyFuture(UUIDVault.get().resolve(((PlayerVictim) victim).getUUID()));
 		case ADDRESS:
-			return core.getFuturesFactory().completedFuture(formatAddress(((AddressVictim) victim).getAddress()));
+			return core.getFuturesFactory().completedFuture(formatAddressVictim((AddressVictim) victim));
 		default:
 			throw new IllegalStateException("Unknown victim type " + victim.getType());
 		}
@@ -150,8 +149,8 @@ public class Formatter {
 		}
 	}
 	
-	private String formatAddress(InetAddress address) {
-		return address.getHostAddress();
+	private String formatAddressVictim(AddressVictim addressVictim) {
+		return addressVictim.getAddress().toString();
 	}
 	
 	private String formatAbsolute(long time) {
