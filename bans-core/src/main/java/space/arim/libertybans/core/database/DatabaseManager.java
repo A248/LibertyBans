@@ -52,7 +52,7 @@ public class DatabaseManager implements Part {
 	
 	@Override
 	public void startup() {
-		DatabaseResult dbResult = new DatabaseSettings(core).create();
+		DatabaseResult dbResult = new DatabaseSettings(core).create().join();
 		Database database = dbResult.database;
 		if (!dbResult.success) {
 			database.closeCompletely();
@@ -66,14 +66,16 @@ public class DatabaseManager implements Part {
 	public void restart() {
 		Database currentDatabase = this.database;
 
-		DatabaseResult dbResult = new DatabaseSettings(core).create();
+		DatabaseResult dbResult = new DatabaseSettings(core).create().join();
 		Database database = dbResult.database;
 		if (!dbResult.success) {
 			database.close();
 			throw new StartupException("Database restart failed");
 		}
 		currentDatabase.cancelRefreshTaskIfNecessary();
-		CompletableFuture.delayedExecutor(8, TimeUnit.SECONDS).execute(currentDatabase::close);
+		CompletableFuture.delayedExecutor(8, TimeUnit.SECONDS).execute(
+				(currentDatabase.getVendor() == database.getVendor()) ?
+				currentDatabase::close : currentDatabase::closeCompletely);
 
 		database.startRefreshTaskIfNecessary();
 		this.database = database;

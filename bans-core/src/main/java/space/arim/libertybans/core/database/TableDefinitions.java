@@ -23,6 +23,7 @@ import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -63,27 +64,43 @@ public class TableDefinitions {
 		return database.selectAsync(() -> IOUtils.readSqlQueries("sql/" + resourceName + ".sql"));
 	}
 	
-	CentralisedFuture<Boolean> createTablesAndViews(final boolean useMariaDb) {
-		final boolean useHsqldb = !useMariaDb;
-
+	CentralisedFuture<Boolean> createTablesAndViews() {
+		final Vendor vendor = database.getVendor();
+		logger.debug("Initialising for database vendor {}", vendor);
 		Set<CentralisedFuture<?>> futures = new HashSet<>();
 
+		/*
+		 * Create tables
+		 */
 		CentralisedFuture<List<String>> futureCreateTables = readAllQueries("create_tables").thenApply((createTables) -> {
+
 			String punishmentTypeInfo = MiscUtil.javaToSqlEnum(PunishmentType.class);
 			String victimInfo = "VARBINARY(16) NOT NULL";
 			String victimTypeInfo = MiscUtil.javaToSqlEnum(Victim.VictimType.class);
 
 			for (ListIterator<String> it = createTables.listIterator(); it.hasNext();) {
 				String sqlQuery = it.next();
-				it.set(sqlQuery
+				sqlQuery = sqlQuery
 						.replace("<punishmentTypeInfo>", punishmentTypeInfo)
 						.replace("<victimInfo>", victimInfo)
-						.replace("<victimTypeInfo>", victimTypeInfo));
+						.replace("<victimTypeInfo>", victimTypeInfo);
+
+				if (vendor == Vendor.MARIADB) {
+					// Ensure InnoDB
+					sqlQuery = sqlQuery.concat(" ENGINE = INNODB");
+				}
+				if (vendor.noUnsignedNumerics()) {
+					sqlQuery = sqlQuery.replace("INT UNSIGNED", "INT");
+				}
+				it.set(sqlQuery);
 			}
 			return createTables;
 		});
 		futures.add(futureCreateTables);
 
+		/*
+		 * Create views
+		 */
 		CentralisedFuture<List<String>> futureCreateViews = readAllQueries("create_views").thenApply((rawCreateViews) -> {
 			if (rawCreateViews.size() != 3) {
 				throw new IllegalStateException("Unexpected raw create views size " + rawCreateViews.size());
@@ -104,6 +121,9 @@ public class TableDefinitions {
 		});
 		futures.add(futureCreateViews);
 
+		/*
+		 * Enactment procedures
+		 */
 		EnumMap<PunishmentType, CentralisedFuture<String>> enactmentProcedures = new EnumMap<>(PunishmentType.class);
 		for (PunishmentType type : MiscUtil.punishmentTypes()) {
 			String resourceName = "procedure_" + MiscUtil.getEnactmentProcedure(type);
@@ -112,14 +132,21 @@ public class TableDefinitions {
 			futures.add(enactmentProcedureFuture);
 		}
 
+		/*
+		 * Refresh procedure
+		 */
 		CentralisedFuture<String> refreshProcedure = readResource("procedure_refresh");
 		futures.add(refreshProcedure);
+
+		/*
+		 * Refresher event, using MariaDB/MySQL database-side events
+		 */
 		CentralisedFuture<String> refresherEventFuture;
-		if (useHsqldb) {
-			refresherEventFuture = null;
-		} else {
+		if (vendor == Vendor.MARIADB) {
 			refresherEventFuture = readResource("event_refresher");
 			futures.add(refresherEventFuture);
+		} else {
+			refresherEventFuture = null;
 		}
 		CentralisedFuture<?> resourcesFuture = core.getFuturesFactory().copyFuture(
 				CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)));
@@ -128,23 +155,25 @@ public class TableDefinitions {
 			return database.selectAsync(() -> {
 				return database.jdbCaesar().transaction().transactor((querySource) -> {
 
-					if (useHsqldb) {
-						// MySQL syntax compatibility
-						querySource.query("SET DATABASE SQL SYNTAX MYS TRUE").voidResult().execute();
-						// Ensure HSQLDB is case-insensitive by default
-						querySource.query("SET IGNORECASE TRUE").voidResult().execute();
+					logger.debug("Creating tables transactionally");
+					if (vendor == Vendor.HSQLDB) {
+						executeHyperSqlSettings(querySource);
 					}
 					/*
 					 * Check for existing database revision
 					 */
-					Object nullForNonexistentTable = querySource.query(
-							// Information schema is supported by both HSQLDB and MariaDB
-							"SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE `table_name` = 'libertybans_revision'")
-								.singleResult((rs) -> new Object()).execute();
-					if (nullForNonexistentTable != null) {
+					int tableExistenceCount = querySource.query(
+							// Information schema is supported per the SQL standard
+							"SELECT COUNT(*) AS `found` FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_NAME` = 'libertybans_revision'")
+								.combinedResult((resultSet) -> (resultSet.next()) ? resultSet.getInt("found") : 0).execute();
+					if (tableExistenceCount != 0) {
 						Revision revision = querySource.query("SELECT `major`, `minor` FROM `libertybans_revision`")
 								.singleResult((resultSet) -> Revision.of(resultSet.getInt("major"), resultSet.getInt("minor")))
 								.execute();
+						if (revision == null) {
+							logger.error("Revision table exists but has no information!");
+							return false;
+						}
 
 						return migrateFrom(querySource, revision);
 					}
@@ -173,8 +202,8 @@ public class TableDefinitions {
 					querySource.query(refreshProcedure.join()).voidResult().execute();
 
 					int realUpdateCount = querySource.query(
-							"INSERT INTO `libertybans_major` (`major`, `minor`) VALUES (?, ?)")
-							.params(REVISION_MAJOR, REVISION_MINOR)
+							"INSERT INTO `libertybans_major` (`constant`, `major`, `minor`) VALUES (?, ?, ?)")
+							.params("Constant", REVISION_MAJOR, REVISION_MINOR)
 							.updateCount((updateCount) -> updateCount).execute();
 					if (realUpdateCount != 1) {
 						logger.error("Unable to update database revision number. updateCount = {}", realUpdateCount);
@@ -183,25 +212,50 @@ public class TableDefinitions {
 					return true;
 
 				}).onRollback(() -> false).execute();
-			}).thenApply((createdTablesAndViews) -> {
-				if (createdTablesAndViews) {
-					if (useHsqldb) {
-						// Using HSQLDB
-						// Periodic task will be started for refreshing
-						// Handled by Database#setHyperSQLRefreshTask
-						assert refresherEventFuture == null;
 
-					} else {
-						// Using MariaDB
-						// Database-side event will be used
-						@SuppressWarnings("null")
-						String refresherEvent = refresherEventFuture.join();
-						database.jdbCaesar().query(refresherEvent).voidResult().execute();
-					}
+			}).thenApply((successOrFailure) -> {
+				if (successOrFailure && vendor == Vendor.MARIADB) {
+					// Database-side event periodically invokes the refresh procedure
+					@SuppressWarnings("null")
+					String refresherEvent = refresherEventFuture.join();
+					database.jdbCaesar().query(refresherEvent).voidResult().execute();
 				}
-				return createdTablesAndViews;
+				return successOrFailure;
 			});
 		});
+	}
+	
+	/**
+	 * Sets settings specific to HyperSQL
+	 * 
+	 * @param querySource the transaction query source
+	 */
+	private static void executeHyperSqlSettings(TransactionQuerySource querySource) {
+		Map<String, String> properties = Map.of(
+				// MySQL syntax compatibility
+				"SQL SYNTAX MYS", "TRUE",
+				// Ensure HSQLDB is case-insensitive for all comparisons
+				"SQL IGNORECASE", "TRUE",
+
+				/*
+				 * Enforce SQL standards on
+				 * 1.) table and column names
+				 * 2.) ambiguous column references
+				 * 3.) illegal type conversions
+				 */
+				"SQL NAMES", "TRUE",
+				"SQL REFERENCES", "TRUE",
+				"SQL TYPES", "TRUE",
+
+				// Use CACHED  tables
+				"DEFAULT TABLE TYPE", "CACHED",
+				// Use MVLOCKS concurrency control
+				"TRANSACTION CONTROL", "MVLOCKS"
+				);
+		for (Map.Entry<String, String> property : properties.entrySet()) {
+			querySource.query("SET DATABASE " + property.getKey() + ' ' + property.getValue())
+					.voidResult().execute();
+		}
 	}
 	
 	/**

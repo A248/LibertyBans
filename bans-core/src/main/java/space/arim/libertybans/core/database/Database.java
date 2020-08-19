@@ -51,8 +51,9 @@ import space.arim.jdbcaesar.transact.IsolationLevel;
 public class Database implements PunishmentDatabase {
 
 	private final LibertyBansCore core;
-	private final JdbCaesar jdbCaesar;
+	private final Vendor vendor;
 	private final ExecutorService executor;
+	private final JdbCaesar jdbCaesar;
 	
 	private ScheduledWork<?> hyperSqlRefreshTask;
 	
@@ -71,8 +72,10 @@ public class Database implements PunishmentDatabase {
 		TRACE_FOREIGN_CONNECTIONS = traceForeign;
 	}
 	
-	Database(LibertyBansCore core, HikariConfig hikariConf, int poolSize) {
+	Database(LibertyBansCore core, Vendor vendor, HikariConfig hikariConf, int poolSize) {
 		this.core = core;
+		this.vendor = vendor;
+
 		executor = Executors.newFixedThreadPool(poolSize, new IOUtils.ThreadFactoryImpl("LibertyBans-Database-"));
 		HikariDataSource hikariDataSource = new HikariDataSource(hikariConf);
 
@@ -81,19 +84,23 @@ public class Database implements PunishmentDatabase {
 				new JdbCaesarHelper.VictimAdapter(),
 				new EnumNameAdapter<>(Victim.VictimType.class),
 				new JdbCaesarHelper.OperatorAdapter(),
-				new JdbCaesarHelper.ScopeAdapter(core.getScopeManager())};
-		jdbCaesar = new JdbCaesarBuilder()
+				new JdbCaesarHelper.ScopeAdapter(core.getScopeManager()),
+				new JdbCaesarHelper.InetAddressAdapter()};
+		JdbCaesarBuilder jdbCaesarBuilder = new JdbCaesarBuilder()
 				.databaseSource(new JdbCaesarHelper.HikariWrapper(hikariDataSource))
 				.exceptionHandler((ex) -> {
 					logger.error("Error while executing a database query", ex);
 				})
 				.defaultIsolation(IsolationLevel.REPEATABLE_READ)
-				.addAdapters(adapters)
-				.build();
+				.addAdapters(adapters);
+		if (vendor.noUnsignedNumerics()) {
+			jdbCaesarBuilder.addAdapter(new JdbCaesarHelper.UnsigningTimestampAdapter());
+		}
+		jdbCaesar = jdbCaesarBuilder.build();
 	}
 	
 	void startRefreshTaskIfNecessary() {
-		if (usesHyperSQL()) {
+		if (getVendor() != Vendor.MARIADB) {
 			synchronized (this) {
 				hyperSqlRefreshTask = core.getResources().getEnhancedExecutor().scheduleRepeating(
 						new IOUtils.HsqldbCleanerRunnable(core.getDatabaseManager(), this),
@@ -103,18 +110,15 @@ public class Database implements PunishmentDatabase {
 	}
 	
 	void cancelRefreshTaskIfNecessary() {
-		if (usesHyperSQL()) {
+		if (getVendor() != Vendor.MARIADB) {
 			synchronized (this) {
 				hyperSqlRefreshTask.cancel();
 			}
 		}
 	}
 	
-	private boolean usesHyperSQL() {
-		 // See end of DatabaseSettings#getHikariConfg
-		boolean usesMariaDb = ((JdbCaesarHelper.HikariWrapper) jdbCaesar().getDatabaseSource())
-				.getHikariDataSource().getPoolName().contains("MariaDB");
-		return !usesMariaDb;
+	public Vendor getVendor() {
+		return vendor;
 	}
 	
 	void close() {
@@ -127,7 +131,7 @@ public class Database implements PunishmentDatabase {
 	}
 	
 	void closeCompletely() {
-		if (usesHyperSQL()) {
+		if (getVendor() == Vendor.HSQLDB) {
 			jdbCaesar().query("SHUTDOWN").voidResult().execute();
 		}
 		close();

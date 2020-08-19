@@ -140,6 +140,18 @@ public class JdbCaesarHelper {
 		
 	}
 	
+	static class UnsigningTimestampAdapter implements DataTypeAdapter {
+		
+		@Override
+		public Object adaptObject(Object parameter) {
+			if (parameter instanceof Long) {
+				return ((Long) parameter).longValue() + Long.MIN_VALUE;
+			}
+			return parameter;
+		}
+		
+	}
+	
 	static class HikariWrapper implements DatabaseSource {
 
 		private final HikariDataSource hikariDataSource;

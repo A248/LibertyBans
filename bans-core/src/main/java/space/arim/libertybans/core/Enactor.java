@@ -41,6 +41,7 @@ import space.arim.libertybans.api.Victim.VictimType;
 import space.arim.libertybans.core.database.CorruptDbException;
 import space.arim.libertybans.core.database.Database;
 import space.arim.libertybans.core.database.JdbCaesarHelper;
+import space.arim.libertybans.core.database.Vendor;
 
 public class Enactor implements PunishmentEnactor {
 	
@@ -53,8 +54,8 @@ public class Enactor implements PunishmentEnactor {
 	@Override
 	public CentralisedFuture<Punishment> enactPunishment(DraftPunishment draftPunishment) {
 		MiscUtil.validate(draftPunishment);
-		Database helper = core.getDatabase();
-		return helper.selectAsync(() -> {
+		Database database = core.getDatabase();
+		return database.selectAsync(() -> {
 
 			Victim victim = draftPunishment.getVictim();
 			Operator operator = draftPunishment.getOperator();
@@ -63,7 +64,7 @@ public class Enactor implements PunishmentEnactor {
 
 			String enactmentProcedure = MiscUtil.getEnactmentProcedure(draftPunishment.getType());
 
-			return helper.jdbCaesar().query(
+			return database.jdbCaesar().query(
 					"{CALL `libertybans_" + enactmentProcedure + "` (?, ?, ?, ?, ?, ?, ?)}")
 					.params(victim, victim.getType(), operator, draftPunishment.getReason(),
 							server, draftPunishment.getStart(), draftPunishment.getEnd())
@@ -84,11 +85,11 @@ public class Enactor implements PunishmentEnactor {
 			// Kicks are never active, they're pure history, so they can never be undone
 			return core.getFuturesFactory().completedFuture(false);
 		}
-		Database helper = core.getDatabase();
-		return helper.selectAsync(() -> {
-			return helper.jdbCaesar().query(
+		Database database = core.getDatabase();
+		return database.selectAsync(() -> {
+			return database.jdbCaesar().query(
 					"DELETE FROM `libertybans_" + type.getLowercaseNamePlural()
-							+ "` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
+					+ "` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
 					.params(punishment.getID(), MiscUtil.currentTime())
 					.updateCount((updateCount) -> updateCount == 1)
 					.onError(() -> false)
@@ -98,9 +99,9 @@ public class Enactor implements PunishmentEnactor {
 	
 	@Override
 	public CentralisedFuture<Boolean> undoPunishmentById(final int id) {
-		Database helper = core.getDatabase();
-		return helper.selectAsync(() -> {
-			return helper.jdbCaesar().transaction().transactor((querySource) -> {
+		Database database = core.getDatabase();
+		return database.selectAsync(() -> {
+			return database.jdbCaesar().transaction().transactor((querySource) -> {
 				final long currentTime = MiscUtil.currentTime();
 				for (PunishmentType type : MiscUtil.punishmentTypes()) {
 					if (type == PunishmentType.KICK) {
@@ -126,9 +127,9 @@ public class Enactor implements PunishmentEnactor {
 		if (type != PunishmentType.BAN && type != PunishmentType.MUTE) {
 			throw new IllegalArgumentException("undoPunishmentByTypeAndVictim may only be used for bans and mutes, not " + type);
 		}
-		Database helper = core.getDatabase();
-		return helper.selectAsync(() -> {
-			return helper.jdbCaesar().query(
+		Database database = core.getDatabase();
+		return database.selectAsync(() -> {
+			return database.jdbCaesar().query(
 					"DELETE FROM `libertybans_" + type.getLowercaseNamePlural()
 					+ "` WHERE `victim` = ? AND `victim_type` = ?")
 					.params(victim, victim.getType())
@@ -174,12 +175,20 @@ public class Enactor implements PunishmentEnactor {
 		return core.getScopeManager().globalScope();
 	}
 	
-	long getStartFromResult(ResultSet resultSet) throws SQLException {
-		return resultSet.getLong("start");
+	long getStartFromResult(Vendor vendor, ResultSet resultSet) throws SQLException {
+		long directValue = resultSet.getLong("start");
+		if (vendor.noUnsignedNumerics()) {
+			directValue -= Long.MIN_VALUE;
+		}
+		return directValue;
 	}
 	
-	long getEndFromResult(ResultSet resultSet) throws SQLException {
-		return resultSet.getLong("end");
+	long getEndFromResult(Vendor vendor, ResultSet resultSet) throws SQLException {
+		long directValue = resultSet.getLong("end");
+		if (vendor.noUnsignedNumerics()) {
+			directValue -= Long.MIN_VALUE;
+		}
+		return directValue;
 	}
 
 }

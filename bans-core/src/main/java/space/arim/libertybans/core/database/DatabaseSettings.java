@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.HikariConfig;
 
 import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.api.configure.ConfigAccessor;
 
@@ -52,7 +53,7 @@ class DatabaseSettings {
 	 * 
 	 * @return a database result, which should be checked for success or failure
 	 */
-	DatabaseResult create() {
+	CentralisedFuture<DatabaseResult> create() {
 		return create(core.getConfigs().getSql());
 	}
 	
@@ -62,14 +63,18 @@ class DatabaseSettings {
 	 * @param config the config accessor
 	 * @return a database result, which should be checked for success or failure
 	 */
-	DatabaseResult create(ConfigAccessor config) {
+	CentralisedFuture<DatabaseResult> create(ConfigAccessor config) {
 		HikariConfig hikariConf = getHikariConfig(config);
-		boolean usesMariaDb = hikariConf.getPoolName().contains("MariaDB"); // See end of #getHikariConfg
+		Vendor vendor;
+		if (hikariConf.getPoolName().contains("MariaDB")) { // See end of #getHikariConfg
+			vendor = Vendor.MARIADB;
+		} else {
+			vendor = Vendor.HSQLDB;
+		}
+		Database database = new Database(core, vendor, hikariConf, hikariConf.getMaximumPoolSize());
 
-		Database database = new Database(core, hikariConf, hikariConf.getMaximumPoolSize());
-		boolean success = new TableDefinitions(core, database).createTablesAndViews(usesMariaDb).join();
-
-		return new DatabaseResult(database, success);
+		CentralisedFuture<Boolean> tablesAndViewsCreation = new TableDefinitions(core, database).createTablesAndViews();
+		return tablesAndViewsCreation.thenApply((success) -> new DatabaseResult(database, success));
 	}
 	
 	// Returns true if authentication details still allow MariaDB usage
@@ -77,7 +82,7 @@ class DatabaseSettings {
 		String username = config.getString("mariadb-details.user");
 		String password = config.getString("mariadb-details.password");
 		if (useMariaDb && (username.equals("username") || password.equals("defaultpass"))) {
-			logger.warn("Not using MySQL because authentication details are still default");
+			logger.warn("Not using MariaDB/MySQL because authentication details are still default");
 			useMariaDb = false;
 		}
 		if (!useMariaDb) {
@@ -117,9 +122,7 @@ class DatabaseSettings {
 			hikariConf.addDataSourceProperty(propName, propValue);
 		}
 		/*
-		 * The presence of "MariaDB" in the pool name is relied on elsewhere:
-		 * 1. DatabaseSettings#create(ConfigAccessor)
-		 * 2. Database#usesHyperSQL()
+		 * The presence of "MariaDB" in the pool name is relied on in #create
 		 */
 		String mode = (useMariaDb) ? "MariaDB" : "HyperSQL";
 		hikariConf.setPoolName("LibertyBans-HikariCP-" + mode);

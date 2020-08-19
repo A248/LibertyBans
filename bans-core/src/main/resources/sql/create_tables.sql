@@ -1,6 +1,12 @@
+-- Here are all table definitions used by LibertyBans
+-- These queries are also dynamically shaped by the database vendor.
+-- Some data type arguments are also defined at runtime.
+
+-- The database revision table, which contains the unique "constant" column
+-- with only one possible value to ensure there is only one row
+
 CREATE TABLE `libertybans_revision` (
-`constant` INT NOT NULL UNIQUE DEFAULT 0 
-COMMENT 'This column is unique to ensure this table has only 1 row', 
+`constant` ENUM('Constant') NOT NULL UNIQUE, 
 `major` INT NOT NULL, 
 `minor` INT NOT NULL);
 

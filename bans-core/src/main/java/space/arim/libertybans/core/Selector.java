@@ -41,6 +41,7 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Scope;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.database.Database;
+import space.arim.libertybans.core.database.Vendor;
 
 public class Selector implements PunishmentSelector {
 
@@ -135,17 +136,20 @@ public class Selector implements PunishmentSelector {
 		return Map.entry(builder, params.toArray());
 	}
 	
-	private SecurePunishment fromResultSetAndSelection(ResultSet rs, PunishmentSelection selection) throws SQLException {
+	private SecurePunishment fromResultSetAndSelection(Vendor vendor, ResultSet resultSet, PunishmentSelection selection) throws SQLException {
 		Enactor enactor = core.getEnactor();
 		PunishmentType type = selection.getType();
 		Victim victim = selection.getVictim();
 		Operator operator = selection.getOperator();
 		Scope scope = selection.getScope();
-		return new SecurePunishment(rs.getInt("id"), (type == null) ? enactor.getTypeFromResult(rs) : type,
-				(victim == null) ? enactor.getVictimFromResult(rs) : victim,
-				(operator == null) ? enactor.getOperatorFromResult(rs) : operator, enactor.getReasonFromResult(rs),
-				(scope == null) ? enactor.getScopeFromResult(rs) : scope, enactor.getStartFromResult(rs),
-				enactor.getEndFromResult(rs));
+		return new SecurePunishment(resultSet.getInt("id"),
+				(type == null) ? enactor.getTypeFromResult(resultSet) : type,
+				(victim == null) ? enactor.getVictimFromResult(resultSet) : victim,
+				(operator == null) ? enactor.getOperatorFromResult(resultSet) : operator,
+				enactor.getReasonFromResult(resultSet),
+				(scope == null) ? enactor.getScopeFromResult(resultSet) : scope,
+				enactor.getStartFromResult(vendor, resultSet),
+				enactor.getEndFromResult(vendor, resultSet));
 	}
 	
 	private Map.Entry<String, Object[]> getSelectionQuery(PunishmentSelection selection) {
@@ -184,7 +188,7 @@ public class Selector implements PunishmentSelector {
 					query.getKey())
 					.params(query.getValue())
 					.singleResult((resultSet) -> {
-						return fromResultSetAndSelection(resultSet, selection);
+						return fromResultSetAndSelection(helper.getVendor(), resultSet, selection);
 					}).onError(() -> null)
 					.execute();
 		});
@@ -203,7 +207,7 @@ public class Selector implements PunishmentSelector {
 					query.getKey())
 					.params(query.getValue())
 					.setResult((resultSet) -> {
-						return (Punishment) fromResultSetAndSelection(resultSet, selection);
+						return (Punishment) fromResultSetAndSelection(helper.getVendor(), resultSet, selection);
 					}).onError(Set::of).execute();
 			return Set.copyOf(result);
 		});
@@ -238,6 +242,7 @@ public class Selector implements PunishmentSelector {
 		core.getUUIDMaster().addCache(uuid, name);
 
 		Database helper = core.getDatabase();
+		Vendor vendor = helper.getVendor();
 		return helper.selectAsync(() -> {
 			Enactor enactor = core.getEnactor();
 
@@ -262,7 +267,7 @@ public class Selector implements PunishmentSelector {
 							return new SecurePunishment(resultSet.getInt("id"), PunishmentType.BAN,
 									enactor.getVictimFromResult(resultSet), enactor.getOperatorFromResult(resultSet),
 									enactor.getReasonFromResult(resultSet), enactor.getScopeFromResult(resultSet),
-									enactor.getStartFromResult(resultSet), enactor.getEndFromResult(resultSet));
+									enactor.getStartFromResult(vendor, resultSet), enactor.getEndFromResult(vendor, resultSet));
 						}).execute();
 				return potentialBan;
 			}).onRollback(() -> null).execute();
@@ -271,6 +276,7 @@ public class Selector implements PunishmentSelector {
 	
 	private CentralisedFuture<Punishment> getApplicablePunishment0(UUID uuid, byte[] address, PunishmentType type) {
 		Database helper = core.getDatabase();
+		Vendor vendor = helper.getVendor();
 		return helper.selectAsync(() -> {
 			Enactor enactor = core.getEnactor();
 
@@ -282,7 +288,7 @@ public class Selector implements PunishmentSelector {
 						return new SecurePunishment(resultSet.getInt("id"), type,
 								enactor.getVictimFromResult(resultSet), enactor.getOperatorFromResult(resultSet),
 								enactor.getReasonFromResult(resultSet), enactor.getScopeFromResult(resultSet),
-								enactor.getStartFromResult(resultSet), enactor.getEndFromResult(resultSet));
+								enactor.getStartFromResult(vendor, resultSet), enactor.getEndFromResult(vendor, resultSet));
 					}).onError(() -> null).execute();
 		});
 	}
@@ -299,6 +305,7 @@ public class Selector implements PunishmentSelector {
 	@Override
 	public CentralisedFuture<Set<Punishment>> getHistoryForVictim(Victim victim) {
 		Database helper = core.getDatabase();
+		Vendor vendor = helper.getVendor();
 		return helper.selectAsync(() -> {
 			Enactor enactor = core.getEnactor();
 			Set<Punishment> result = helper.jdbCaesar().query(
@@ -309,7 +316,7 @@ public class Selector implements PunishmentSelector {
 						return (Punishment) new SecurePunishment(resultSet.getInt("id"),
 								enactor.getTypeFromResult(resultSet), victim, enactor.getOperatorFromResult(resultSet),
 								enactor.getReasonFromResult(resultSet), enactor.getScopeFromResult(resultSet),
-								enactor.getStartFromResult(resultSet), enactor.getEndFromResult(resultSet));
+								enactor.getStartFromResult(vendor, resultSet), enactor.getEndFromResult(vendor, resultSet));
 					}).onError(Set::of).execute();
 			return Set.copyOf(result);
 		});
@@ -321,6 +328,7 @@ public class Selector implements PunishmentSelector {
 			return core.getFuturesFactory().completedFuture(Set.of());
 		}
 		Database helper = core.getDatabase();
+		Vendor vendor = helper.getVendor();
 		return helper.selectAsync(() -> {
 			Enactor enactor = core.getEnactor();
 			String table = "`libertybans_" + type.getLowercaseNamePlural() + '`';
@@ -332,7 +340,7 @@ public class Selector implements PunishmentSelector {
 						return (Punishment) new SecurePunishment(resultSet.getInt("id"), type,
 								enactor.getVictimFromResult(resultSet), enactor.getOperatorFromResult(resultSet),
 								enactor.getReasonFromResult(resultSet), enactor.getScopeFromResult(resultSet),
-								enactor.getStartFromResult(resultSet), enactor.getEndFromResult(resultSet));
+								enactor.getStartFromResult(vendor, resultSet), enactor.getEndFromResult(vendor, resultSet));
 					}).onError(Set::of).execute();
 			return Set.copyOf(result);
 		});
