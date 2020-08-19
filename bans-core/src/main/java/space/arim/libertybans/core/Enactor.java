@@ -20,6 +20,7 @@ package space.arim.libertybans.core;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
@@ -121,7 +122,8 @@ public class Enactor implements PunishmentEnactor {
 	
 	@Override
 	public CentralisedFuture<Boolean> undoPunishmentByTypeAndVictim(final PunishmentType type, final Victim victim) {
-		if (type != PunishmentType.BAN && type != PunishmentType.MUTE) {
+		Objects.requireNonNull(victim, "victim");
+		if (!type.isSingular()) {
 			throw new IllegalArgumentException("undoPunishmentByTypeAndVictim may only be used for bans and mutes, not " + type);
 		}
 		Database database = core.getDatabase();
