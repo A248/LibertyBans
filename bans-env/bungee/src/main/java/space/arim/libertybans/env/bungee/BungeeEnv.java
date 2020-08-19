@@ -19,25 +19,28 @@
 package space.arim.libertybans.env.bungee;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import space.arim.omnibus.OmnibusProvider;
+
+import space.arim.uuidvault.api.UUIDVault;
+import space.arim.uuidvault.plugin.UUIDVaultBungee;
 
 import space.arim.api.env.BungeePlatformHandle;
 import space.arim.api.env.PlatformHandle;
 
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.env.AbstractEnv;
+import space.arim.libertybans.core.env.PlatformListener;
 
 import net.md_5.bungee.api.plugin.Plugin;
-import net.md_5.bungee.api.plugin.PluginManager;
 
 public class BungeeEnv extends AbstractEnv {
 
 	final LibertyBansCore core;
 	final BungeePlatformHandle handle;
 	
-	private final ConnectionListener joinListener;
-	private final BungeeCommands commands;
+	private final List<PlatformListener> listeners;
 	
 	private final BungeeEnforcer enforcer;
 	
@@ -45,8 +48,10 @@ public class BungeeEnv extends AbstractEnv {
 		handle = new BungeePlatformHandle(plugin);
 		core = new LibertyBansCore(OmnibusProvider.getOmnibus(), folder, this);
 
-		commands = new BungeeCommands(this);
-		joinListener = new ConnectionListener(this);
+		listeners = List.of(
+				new ConnectionListener(this),
+				new ChatListener(this),
+				new CommandHandler(this));
 
 		enforcer = new BungeeEnforcer(this);
 	}
@@ -67,11 +72,18 @@ public class BungeeEnv extends AbstractEnv {
 	
 	@Override
 	protected void startup0() {
+		if (UUIDVault.get() == null) {
+			new UUIDVaultBungee(getPlugin()) {
+				@Override
+				protected boolean setInstancePassive() {
+					return super.setInstancePassive();
+				}
+			}.setInstancePassive();
+		}
 		core.startup();
-		Plugin plugin = getPlugin();
-		PluginManager pm = plugin.getProxy().getPluginManager();
-		pm.registerListener(plugin, joinListener);
-		pm.registerCommand(plugin, commands);
+		for (PlatformListener listener : listeners) {
+			listener.register();
+		}
 	}
 	
 	@Override
@@ -81,9 +93,9 @@ public class BungeeEnv extends AbstractEnv {
 
 	@Override
 	protected void shutdown0() {
-		PluginManager pm = getPlugin().getProxy().getPluginManager();
-		pm.unregisterCommand(commands);
-		pm.unregisterListener(joinListener);
+		for (PlatformListener listener : listeners) {
+			listener.unregister();
+		}
 		core.shutdown();
 	}
 	

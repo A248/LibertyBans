@@ -18,32 +18,27 @@
  */
 package space.arim.libertybans.env.spigot;
 
-import space.arim.libertybans.core.commands.ArrayCommandPackage;
-import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.env.ParallelisedListener;
 
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
 
-class SpigotCommands implements CommandExecutor {
+class SpigotParallelisedListener<E, R> extends ParallelisedListener<E, R> implements Listener {
 
-	private final SpigotEnv env;
+	final SpigotEnv env;
 	
-	SpigotCommands(SpigotEnv env) {
+	SpigotParallelisedListener(SpigotEnv env) {
 		this.env = env;
 	}
 	
 	@Override
-	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-		CmdSender iSender;
-		if (sender instanceof Player) {
-			iSender = new PlayerCmdSender(env, (Player) sender);
-		} else {
-			iSender = new ConsoleCmdSender(env, sender);
-		}
-		env.core.getCommands().execute(iSender, new ArrayCommandPackage(command.getName(), args));
-		return true;
+	public void register() {
+		env.getPlugin().getServer().getPluginManager().registerEvents(this, env.getPlugin());
 	}
 
+	@Override
+	public void unregister() {
+		HandlerList.unregisterAll(this);
+	}
+	
 }

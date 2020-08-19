@@ -18,9 +18,6 @@
  */
 package space.arim.libertybans.env.velocity;
 
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -32,91 +29,58 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.env.chat.AdventureTextConverter;
 
-import space.arim.libertybans.api.Punishment;
-
-import com.velocitypowered.api.event.EventHandler;
-import com.velocitypowered.api.event.EventManager;
-import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.connection.LoginEvent;
-import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.Player;
 
-public class ConnectionListener {
-
-	private final VelocityEnv env;
-	
-	final Map<LoginEvent, CentralisedFuture<Punishment>> logins;
-	
-	private final EventHandler<LoginEvent> earlyHandler = new EarlyHandler();
-	private final EventHandler<LoginEvent> lateHandler = new LateHandler();
+class ConnectionListener extends VelocityParallelisedListener<LoginEvent, SendableMessage> {
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
 	ConnectionListener(VelocityEnv env) {
-		this.env = env;
-		logins = Collections.synchronizedMap(new IdentityHashMap<>());
+		super(env);
 	}
 	
-	void register() {
-		PluginContainer plugin = env.getPlugin();
-		EventManager evtManager = env.getServer().getEventManager();
-		evtManager.register(plugin, LoginEvent.class, PostOrder.EARLY, earlyHandler);
-		evtManager.register(plugin, LoginEvent.class, PostOrder.LATE, lateHandler);
+	@Override
+	public void register() {
+		register(LoginEvent.class);
 	}
 	
-	void unregister() {
-		PluginContainer plugin = env.getPlugin();
-		EventManager evtManager = env.getServer().getEventManager();
-		evtManager.unregister(plugin, earlyHandler);
-		evtManager.unregister(plugin, lateHandler);
-	}
-	
-	private class EarlyHandler implements EventHandler<LoginEvent> {
-
-		@Override
-		public void execute(LoginEvent evt) {
-			if (!evt.getResult().isAllowed()) {
-				logger.debug("Player '{}' is already blocked by the server or another plugin", evt.getPlayer().getUsername());
-				return;
-			}
-			Player player = evt.getPlayer();
-			UUID uuid = player.getUniqueId();
-			String name = player.getUsername();
-			byte[] address = player.getRemoteAddress().getAddress().getAddress();
-			logins.put(evt, env.core.getSelector().executeAndCheckConnection(uuid, name, address));
+	@Override
+	protected CentralisedFuture<SendableMessage> beginFor(LoginEvent evt) {
+		if (!evt.getResult().isAllowed()) {
+			logger.debug("Player '{}' is already blocked by the server or another plugin", evt.getPlayer().getUsername());
+			return null;
 		}
-		
+		Player player = evt.getPlayer();
+		UUID uuid = player.getUniqueId();
+		String name = player.getUsername();
+		byte[] address = player.getRemoteAddress().getAddress().getAddress();
+		return env.core.getEnforcer().executeAndCheckConnection(uuid, name, address);
 	}
 	
-	private class LateHandler implements EventHandler<LoginEvent> {
-
-		@Override
-		public void execute(LoginEvent evt) {
-			CentralisedFuture<Punishment> future = logins.remove(evt);
-			if (future == null) {
-				if (evt.getResult().isAllowed()) {
-					Player player = evt.getPlayer();
-					logger.error(
-							"Critical: Player ({}, {}, {}) was previously blocked by the server or another plugin, "
-							+ "but since then, some plugin has *uncancelled* the blocking. "
-							+ "This may lead to bans not being checked and enforced.",
-							player.getUniqueId(), player.getUsername(), player.getRemoteAddress().getAddress());
-				}
-				return;
-			}
-			Player player = evt.getPlayer();
-			Punishment punishment = future.join();
-			if (punishment == null) {
-				logger.trace("Letting '{}' through the gates", player.getUsername());
-				return;
-			}
-			CentralisedFuture<SendableMessage> message = env.core.getFormatter().getPunishmentMessage(punishment);
-			assert message.isDone() : punishment;
-
-			evt.setResult(ComponentResult.denied(new AdventureTextConverter().convertFrom(message.join())));
+	@Override
+	protected void absentFutureHandler(LoginEvent evt) {
+		Player player = evt.getPlayer();
+		if (evt.getResult().isAllowed()) {
+			logger.error(
+					"Critical: Player ({}, {}, {}) was previously blocked by the server or another plugin, "
+					+ "but since then, some plugin has *uncancelled* the blocking. "
+					+ "This may lead to bans not being checked and enforced.",
+					player.getUniqueId(), player.getUsername(), player.getRemoteAddress().getAddress());
+		} else {
+			logger.trace("Confirmation: Player '{}' is already blocked by the server or another plugin", player.getUsername());
 		}
-		
+	}
+	
+	@Override
+	protected void withdrawFor(LoginEvent evt) {
+		SendableMessage message = withdraw(evt);
+		if (message == null) {
+			logger.trace("Letting '{}' through the gates", evt.getPlayer().getUsername());
+			return;
+		}
+		evt.setResult(ComponentResult.denied(new AdventureTextConverter().convertFrom(message)));
 	}
 	
 }

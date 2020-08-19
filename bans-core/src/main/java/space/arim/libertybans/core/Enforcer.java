@@ -121,4 +121,84 @@ public class Enforcer implements PunishmentEnforcer {
 		});
 	}
 	
+	/**
+	 * Enforces an incoming connection, returning a punishment message if denied, null if allowed. <br>
+	 * <br>
+	 * Adds the UUID and name to the local fast cache, queries for an applicable ban, and formats the
+	 * ban reason as the punishment message.
+	 * 
+	 * @param uuid the player's UUID
+	 * @param name the player's name
+	 * @param address the player's network address
+	 * @return a future which yields the punishment message if denied, else null if allowed
+	 */
+	public CentralisedFuture<SendableMessage> executeAndCheckConnection(UUID uuid, String name, byte[] address) {
+		core.getUUIDMaster().addCache(uuid, name);
+		return core.getSelector().executeAndCheckConnection(uuid, name, address).thenCompose((ban) -> {
+			if (ban == null) {
+				return core.getFuturesFactory().completedFuture(null);
+			}
+			return core.getFormatter().getPunishmentMessage(ban);
+		});
+	}
+	
+	/**
+	 * Enforces a chat message or executed command, returning a punishment message if denied, null if allowed. <br>
+	 * <br>
+	 * If this corresponds to an executed command, the configured commands whose access to muted players to block
+	 * are taken into account.
+	 * 
+	 * @param uuid the player's UUID
+	 * @param address the player's network address
+	 * @param command the command executed, or {@code null} if this is a chat message
+	 * @return a future which yields the punishment message if denied, else null if allowed
+	 */
+	public CentralisedFuture<SendableMessage> checkChat(UUID uuid, byte[] address, String command) {
+		if (command != null && !blockForMuted(command)) {
+			return core.getFuturesFactory().completedFuture(null);
+		}
+		return core.getSelector().getCachedMute(uuid, address).thenCompose((mute) -> {
+			if (mute == null) {
+				return core.getFuturesFactory().completedFuture(null);
+			}
+			return core.getFormatter().getPunishmentMessage(mute);
+		});
+	}
+	
+	private boolean blockForMuted(String command) {
+        String[] words = command.split(" ");
+        // Handle commands with colons
+        if (words[0].indexOf(':') != -1) {
+            words[0] = words[0].split(":", 2)[1];
+        }
+        for (String muteCommand : core.getConfigs().getConfig().getStringList("enforcement.mute-commands")) {
+            if (muteCommandMatches(words, muteCommand)) {
+                return true;
+            }
+        }
+        return false;
+	}
+	
+	private static boolean muteCommandMatches(String[] commandWords, String muteCommand) {
+        // Basic equality check
+        if (commandWords[0].equalsIgnoreCase(muteCommand)) {
+            return true;
+        }
+        // Advanced equality check
+        // Essentially a case-insensitive "startsWith" for arrays
+        if (muteCommand.indexOf(' ') != -1) {
+            String[] muteCommandWords = muteCommand.split(" ");
+            if (muteCommandWords.length > commandWords.length) {
+                return false;
+            }
+            for (int n = 0; n < muteCommandWords.length; n++) {
+                if (!muteCommandWords[n].equalsIgnoreCase(commandWords[n])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+	
 }

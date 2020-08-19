@@ -19,18 +19,21 @@
 package space.arim.libertybans.env.spigot;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import space.arim.omnibus.OmnibusProvider;
+
+import space.arim.uuidvault.api.UUIDVault;
+import space.arim.uuidvault.plugin.UUIDVaultSpigot;
 
 import space.arim.api.env.BukkitPlatformHandle;
 import space.arim.api.env.PlatformHandle;
 
 import space.arim.libertybans.core.LibertyBansCore;
-import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.env.AbstractEnv;
+import space.arim.libertybans.core.env.PlatformListener;
 
 import org.bukkit.entity.Player;
-import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class SpigotEnv extends AbstractEnv {
@@ -38,8 +41,7 @@ public class SpigotEnv extends AbstractEnv {
 	final LibertyBansCore core;
 	final BukkitPlatformHandle handle;
 	
-	private final ConnectionListener joinListener;
-	private final SpigotCommands commands;
+	private final List<PlatformListener> listeners;
 	
 	private final SpigotEnforcer enforcer;
 	
@@ -47,8 +49,10 @@ public class SpigotEnv extends AbstractEnv {
 		core = new LibertyBansCore(OmnibusProvider.getOmnibus(), folder, this);
 		handle = new BukkitPlatformHandle(plugin);
 
-		commands = new SpigotCommands(this);
-		joinListener = new ConnectionListener(this);
+		listeners = List.of(
+				new ConnectionListener(this),
+				new ChatListener(this),
+				new CommandHandler(this));
 
 		enforcer = new SpigotEnforcer(this);
 	}
@@ -69,10 +73,18 @@ public class SpigotEnv extends AbstractEnv {
 
 	@Override
 	protected void startup0() {
+		if (UUIDVault.get() == null) {
+			new UUIDVaultSpigot(getPlugin()) {
+				@Override
+				protected boolean setInstancePassive() {
+					return super.setInstancePassive();
+				}
+			}.setInstancePassive();
+		}
 		core.startup();
-		JavaPlugin plugin = getPlugin();
-		plugin.getServer().getPluginManager().registerEvents(joinListener, plugin);
-		plugin.getCommand(Commands.BASE_COMMAND_NAME).setExecutor(commands);
+		for (PlatformListener listener : listeners) {
+			listener.register();
+		}
 	}
 	
 	@Override
@@ -82,9 +94,9 @@ public class SpigotEnv extends AbstractEnv {
 
 	@Override
 	protected void shutdown0() {
-		JavaPlugin plugin = getPlugin();
-		plugin.getCommand(Commands.BASE_COMMAND_NAME).setExecutor(plugin);
-		HandlerList.unregisterAll(joinListener);
+		for (PlatformListener listener : listeners) {
+			listener.unregister();
+		}
 		core.shutdown();
 	}
 

@@ -21,29 +21,40 @@ package space.arim.libertybans.env.bungee;
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.env.PlatformListener;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 
-class BungeeCommands extends Command {
+class CommandHandler extends Command implements PlatformListener {
 
 	private final BungeeEnv env;
 	
-	BungeeCommands(BungeeEnv env) {
+	CommandHandler(BungeeEnv env) {
 		super(Commands.BASE_COMMAND_NAME);
 		this.env = env;
 	}
+	
+	@Override
+	public void register() {
+		env.getPlugin().getProxy().getPluginManager().registerCommand(env.getPlugin(), this);
+	}
+	
+	@Override
+	public void unregister() {
+		env.getPlugin().getProxy().getPluginManager().unregisterCommand(this);
+	}
 
 	@Override
-	public void execute(CommandSender sender, String[] args) {
-		CmdSender iSender;
-		if (sender instanceof ProxiedPlayer) {
-			iSender = new PlayerCmdSender(env, (ProxiedPlayer) sender);
+	public void execute(CommandSender platformSender, String[] args) {
+		CmdSender sender;
+		if (platformSender instanceof ProxiedPlayer) {
+			sender = new PlayerCmdSender(env, (ProxiedPlayer) platformSender);
 		} else {
-			iSender = new ConsoleCmdSender(env, sender);
+			sender = new ConsoleCmdSender(env, platformSender);
 		}
-		env.core.getCommands().execute(iSender, new ArrayCommandPackage(Commands.BASE_COMMAND_NAME, args));
+		env.core.getCommands().execute(sender, new ArrayCommandPackage(Commands.BASE_COMMAND_NAME, args));
 	}
 
 }
