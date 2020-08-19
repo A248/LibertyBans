@@ -141,10 +141,6 @@ public class Configs implements Part {
 	public DateTimeFormatter getTimeFormatter() {
 		return getConfig().getObject("formatting.dates", DateTimeFormatter.class);
 	}
-
-	public boolean strictAddressQueries() {
-		return getAddressStrictness() != AddressStrictness.LENIENT;
-	}
 	
 	public AddressStrictness getAddressStrictness() {
 		return getConfig().getObject("enforcement.address-strictness", AddressStrictness.class);
