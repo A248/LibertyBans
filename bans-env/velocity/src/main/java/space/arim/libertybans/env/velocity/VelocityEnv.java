@@ -19,6 +19,7 @@
 package space.arim.libertybans.env.velocity;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.slf4j.Logger;
@@ -34,10 +35,9 @@ import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.VelocityPlatformHandle;
 
 import space.arim.libertybans.core.LibertyBansCore;
-import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.env.AbstractEnv;
+import space.arim.libertybans.core.env.PlatformListener;
 
-import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.ProxyServer;
 
@@ -46,8 +46,7 @@ public class VelocityEnv extends AbstractEnv {
 	final LibertyBansCore core;
 	final VelocityPlatformHandle handle;
 	
-	private final ConnectionListener joinListener;
-	private final VelocityCommands commands;
+	private final List<PlatformListener> listeners;
 	
 	private final VelocityEnforcer enforcer;
 	
@@ -60,8 +59,11 @@ public class VelocityEnv extends AbstractEnv {
 		core = new LibertyBansCore(OmnibusProvider.getOmnibus(), folder, this);
 		handle = new VelocityPlatformHandle(plugin, server);
 
-		joinListener = new ConnectionListener(this);
-		commands = new VelocityCommands(this);
+		listeners = List.of(
+				new ConnectionListener(this),
+				new ChatListener(this),
+				new CommandListener(this),
+				new CommandHandler(this));
 
 		enforcer = new VelocityEnforcer(this);
 	}
@@ -95,9 +97,9 @@ public class VelocityEnv extends AbstractEnv {
 			}.setInstancePassive();
 		}
 		core.startup();
-		joinListener.register();
-		CommandManager cmdManager = getServer().getCommandManager();
-		cmdManager.register(cmdManager.metaBuilder(Commands.BASE_COMMAND_NAME).build(), commands);
+		for (PlatformListener listener : listeners) {
+			listener.register();
+		}
 	}
 	
 	@Override
@@ -107,9 +109,9 @@ public class VelocityEnv extends AbstractEnv {
 	
 	@Override
 	protected void shutdown0() {
-		CommandManager cmdManager = getServer().getCommandManager();
-		cmdManager.unregister(Commands.BASE_COMMAND_NAME);
-		joinListener.unregister();
+		for (PlatformListener listener : listeners) {
+			listener.unregister();
+		}
 		core.shutdown();
 	}
 	

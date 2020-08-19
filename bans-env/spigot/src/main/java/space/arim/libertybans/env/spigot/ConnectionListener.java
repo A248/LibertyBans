@@ -18,39 +18,27 @@
  */
 package space.arim.libertybans.env.spigot;
 
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.bukkit.ChatColor;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
-
 import space.arim.omnibus.util.ThisClass;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.api.chat.SendableMessage;
 
-import space.arim.libertybans.api.Punishment;
+import org.bukkit.ChatColor;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 
-public class ConnectionListener implements Listener {
+public class ConnectionListener extends SpigotParallelisedListener<AsyncPlayerPreLoginEvent, SendableMessage> {
 
-	private final SpigotEnv env;
-	
-	private final Map<AsyncPlayerPreLoginEvent, CentralisedFuture<Punishment>> apples;
-	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
-	public ConnectionListener(SpigotEnv env) {
-		this.env = env;
-		apples = Collections.synchronizedMap(new IdentityHashMap<>());
+	ConnectionListener(SpigotEnv env) {
+		super(env);
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
@@ -62,33 +50,30 @@ public class ConnectionListener implements Listener {
 		UUID uuid = evt.getUniqueId();
 		String name = evt.getName();
 		byte[] address = evt.getAddress().getAddress();
-		CentralisedFuture<Punishment> previous = apples.put(evt,
-				env.core.getSelector().executeAndCheckConnection(uuid, name, address));
-		assert previous == null : previous.join();
+		begin(evt, env.core.getEnforcer().executeAndCheckConnection(uuid, name, address));
+	}
+	
+	@Override
+	protected void absentFutureHandler(AsyncPlayerPreLoginEvent evt) {
+		if (evt.getLoginResult() != Result.ALLOWED) {
+			logger.error(
+					"Critical: Player ({}, {}, {}) was previously blocked by the server or another plugin, "
+					+ "but since then, some plugin has *uncancelled* the blocking. "
+					+ "This may lead to bans not being checked and enforced.",
+					evt.getUniqueId(), evt.getName(), evt.getAddress());
+		} else {
+			logger.trace("Confirmation: Player '{}' is already blocked by the server or another plugin", evt.getName());
+		}
 	}
 
-	@EventHandler(priority = EventPriority.LOW)
+	@EventHandler(priority = EventPriority.HIGH)
 	public void onConnectHigh(AsyncPlayerPreLoginEvent evt) {
-		CentralisedFuture<Punishment> future = apples.remove(evt);
-		if (future == null) {
-			if (evt.getLoginResult() == Result.ALLOWED) {
-				logger.error(
-						"Critical: Player ({}, {}, {}) was previously blocked by the server or another plugin, "
-						+ "but since then, some plugin has *uncancelled* the blocking. "
-						+ "This may lead to bans not being checked and enforced.",
-						evt.getUniqueId(), evt.getName(), evt.getAddress());
-			}
-			return;
-		}
-		Punishment punishment = future.join();
-		if (punishment == null) {
+		SendableMessage message = withdraw(evt);
+		if (message == null) {
 			logger.trace("Letting '{}' through the gates", evt.getName());
 			return;
 		}
-		CentralisedFuture<SendableMessage> message = env.core.getFormatter().getPunishmentMessage(punishment);
-		assert message.isDone() : punishment;
-
-		evt.disallow(Result.KICK_BANNED, message.join().toLegacyMessageString(ChatColor.COLOR_CHAR));
+		evt.disallow(Result.KICK_BANNED, message.toLegacyMessageString(ChatColor.COLOR_CHAR));
 	}
 	
 }

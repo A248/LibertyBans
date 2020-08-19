@@ -1,0 +1,106 @@
+/* 
+ * LibertyBans-core
+ * Copyright © 2020 Anand Beh <https://www.arim.space>
+ * 
+ * LibertyBans-core is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * LibertyBans-core is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * and navigate to version 3 of the GNU Affero General Public License.
+ */
+package space.arim.libertybans.core.env;
+
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+
+/**
+ * Base class for listeners which initiate a computation at a low priority and complete at a higher priority.
+ * 
+ * @author A248
+ *
+ * @param <E> the event type
+ * @param <R> the computation result type
+ */
+public abstract class ParallelisedListener<E, R> implements PlatformListener {
+
+	private final Map<E, CentralisedFuture<R>> events;
+	
+	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+	
+	protected ParallelisedListener(boolean synchronize) {
+		if (synchronize) {
+			events = Collections.synchronizedMap(new IdentityHashMap<>());
+		} else {
+			events = new IdentityHashMap<>();
+		}
+	}
+	
+	protected ParallelisedListener() {
+		this(true);
+	}
+	
+	/**
+	 * Initiates a computation for an event
+	 * 
+	 * @param event the event
+	 * @param computation the future
+	 */
+	protected void begin(E event, CentralisedFuture<R> computation) {
+		CentralisedFuture<R> previous = events.put(event, computation);
+		if (previous != null) {
+			logger.warn("Replaced existing computation for {}; previous result is {}", event, computation.join());
+		}
+	}
+	
+	/**
+	 * Used when {@link #withdraw(Object)} is called but no future is present
+	 * 
+	 * @param event the event
+	 */
+	protected void absentFutureHandler(E event) {
+		logger.trace("Missing computation for {}", event);
+	}
+	
+	/**
+	 * Withdraws the computation
+	 * 
+	 * @param event the event
+	 * @return the future
+	 */
+	protected CentralisedFuture<R> withdrawRaw(E event) {
+		return events.remove(event);
+	}
+	
+	/**
+	 * Withdraws the result, waiting if necessary if it has not yet completed. <br>
+	 * If no computation is present, this returns {@code null}. Else it returns the result
+	 * of the future.
+	 * 
+	 * @param event the event
+	 * @return the future
+	 */
+	protected R withdraw(E event) {
+		CentralisedFuture<R> future = events.remove(event);
+		if (future == null) {
+			absentFutureHandler(event);
+			return null;
+		}
+		return future.join();
+	}
+	
+}

@@ -116,7 +116,7 @@ public class Formatter {
 					.replace("%TIME_START_REL%", formatRelative(timePassed))
 					.replace("%TIME_END_ABS%", formatAbsolute(end))
 					.replace("%TIME_END_REL%", formatRelative(timeRemaining));
-		}).thenApply(this::parseMessage);
+		}).thenApplyAsync(this::parseMessage);
 	}
 
 	private String formatType(PunishmentType type) {

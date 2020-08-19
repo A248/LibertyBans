@@ -229,17 +229,14 @@ public class Selector implements PunishmentSelector {
 	}
 	
 	/**
-	 * Checks a player connection's in a single connection query, enforcing any applicable bans. <br>
-	 * This is called by the environmental listeners.
+	 * Checks a player connection's in a single connection query, enforcing any applicable bans
 	 * 
 	 * @param uuid the player UUID
 	 * @param name the player name
 	 * @param address the player IP address
 	 * @return a future which yields the ban itself, or null if there is none
 	 */
-	public CentralisedFuture<Punishment> executeAndCheckConnection(UUID uuid, String name, byte[] address) {
-		core.getUUIDMaster().addCache(uuid, name);
-
+	CentralisedFuture<Punishment> executeAndCheckConnection(UUID uuid, String name, byte[] address) {
 		Database database = core.getDatabase();
 		return database.selectAsync(() -> {
 

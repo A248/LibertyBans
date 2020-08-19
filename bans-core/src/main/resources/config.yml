@@ -31,6 +31,19 @@ enforcement:
   # NORMAL - If any of player's past addresses matches the punished address, the punishment applies to the player
   # STRICT - If any of player's past addresses match any related address linked by a common player, the punishment applies to the player
   address-strictness: 'NORMAL'
+  #
+  # A list of commands muted players will not be able to execute
+  #
+  # This list supports subcommands, which will be enforced if the executed command starts with the list entry.
+  # Additionally, colons in commands, such as"pluginname:cmd", cannot be used to bypass this.
+  mute-commands:
+    - 'me'
+    - 'say'
+    - 'msg'
+    - 'reply'
+    - 'r'
+    - 'whisper'
+    - 'tell'
 # Options relating to finding UUIDs from names, and vice-versa
 # LibertyBans will first check its own caches before using these resources.
 player-uuid-resolution:

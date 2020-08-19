@@ -24,10 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import space.arim.omnibus.util.ThisClass;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-import space.arim.api.chat.SendableMessage;
 import space.arim.api.env.chat.BungeeComponentConverter;
+
+import space.arim.libertybans.core.env.PlatformListener;
 
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.event.LoginEvent;
@@ -35,7 +35,7 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 
-public class ConnectionListener implements Listener {
+public class ConnectionListener implements Listener, PlatformListener {
 
 	private final BungeeEnv env;
 	
@@ -43,6 +43,16 @@ public class ConnectionListener implements Listener {
 	
 	ConnectionListener(BungeeEnv env) {
 		this.env = env;
+	}
+	
+	@Override
+	public void register() {
+		env.getPlugin().getProxy().getPluginManager().registerListener(env.getPlugin(), this);
+	}
+
+	@Override
+	public void unregister() {
+		env.getPlugin().getProxy().getPluginManager().unregisterListener(this);
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
@@ -56,16 +66,17 @@ public class ConnectionListener implements Listener {
 		UUID uuid = conn.getUniqueId();
 		String name = conn.getName();
 		byte[] address = env.getEnforcer().getAddress(conn).getAddress();
-		env.core.getSelector().executeAndCheckConnection(uuid, name, address).thenAccept((punishment) -> {
-			if (punishment == null) {
+
+		env.core.getEnforcer().executeAndCheckConnection(uuid, name, address).thenAccept((message) -> {
+			if (message == null) {
 				logger.trace("Letting '{}' through the gates", name);
-
 			} else {
-				CentralisedFuture<SendableMessage> message = env.core.getFormatter().getPunishmentMessage(punishment);
-				assert message.isDone() : punishment;
-
 				evt.setCancelled(true);
-				evt.setCancelReason(new BungeeComponentConverter().convertFrom(message.join()));
+				evt.setCancelReason(new BungeeComponentConverter().convertFrom(message));
+			}
+		}).whenComplete((ignore, ex) -> {
+			if (ex != null) {
+				logger.error("Exception enforcing incoming connection", ex);
 			}
 			evt.completeIntent(env.getPlugin());
 		});
