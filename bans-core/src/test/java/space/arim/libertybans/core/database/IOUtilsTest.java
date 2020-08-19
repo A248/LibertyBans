@@ -29,9 +29,9 @@ public class IOUtilsTest {
 	@Test
 	public void testReadResource() {
 		assertEquals("random content", IOUtils.readResource("whatever.yml"));
-		String refreshProcedure = IOUtils.readResource("sql/procedure_refresh.sql");
-		System.out.println(refreshProcedure);
-		assertFalse(refreshProcedure.isBlank());
+		String enactmentProcedure = IOUtils.readResource("sql/procedure_banhammer.sql");
+		System.out.println(enactmentProcedure);
+		assertFalse(enactmentProcedure.isBlank());
 	}
 	
 	@Test

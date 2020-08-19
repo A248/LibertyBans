@@ -39,7 +39,7 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.Victim.VictimType;
 import space.arim.libertybans.core.Scoper;
 
-import space.arim.jdbcaesar.DatabaseSource;
+import space.arim.jdbcaesar.ConnectionSource;
 import space.arim.jdbcaesar.adapter.DataTypeAdapter;
 
 public class JdbCaesarHelper {
@@ -152,7 +152,7 @@ public class JdbCaesarHelper {
 		
 	}
 	
-	static class HikariWrapper implements DatabaseSource {
+	static class HikariWrapper implements ConnectionSource {
 
 		private final HikariDataSource hikariDataSource;
 		

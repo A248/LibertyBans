@@ -52,6 +52,8 @@ public class Formatter {
 	private static final Entry<String, Long>[] timeUnits;
 	private static final SendableMessageParser parser = new StandardSendableMessageParser();
 	
+	private static final long MARGIN_OF_INITIATION = 10; // seconds
+	
 	Formatter(LibertyBansCore core) {
 		this.core = core;
 	}
@@ -90,20 +92,30 @@ public class Formatter {
 	}
 	
 	public CentralisedFuture<SendableMessage> formatWithPunishment(String message, Punishment punishment) {
-		return formatVictim(punishment.getVictim()).thenApply((victim) -> {
+		return formatVictim(punishment.getVictim()).thenApply((victimFormatted) -> {
 			long now = MiscUtil.currentTime();
 			long start = punishment.getStart();
 			long end = punishment.getEnd();
+
+			long duration = end - start;
+			long timePassed = now - start;
+			long timeRemaining;
+			if (timePassed < MARGIN_OF_INITIATION) {
+				timeRemaining = duration;
+			} else {
+				timeRemaining = end - now;
+			}
 			return message.replace("%ID%", Integer.toString(punishment.getID()))
-					.replace("%TYPE%", formatType(punishment.getType())).replace("%VICTIM%", victim)
+					.replace("%TYPE%", formatType(punishment.getType())).replace("%VICTIM%", victimFormatted)
 					.replace("%VICTIM_ID%", formatVictimId(punishment.getVictim()))
 					.replace("%OPERATOR%", formatOperator(punishment.getOperator()))
 					.replace("%REASON%", punishment.getReason())
 					.replace("%SCOPE%", core.getScopeManager().getServer(punishment.getScope()))
+					.replace("%DURATION%", formatRelative(duration))
 					.replace("%TIME_START_ABS%", formatAbsolute(start))
-					.replace("%TIME_START_REL%", formatRelative(start, now))
-					.replace("%TIME_END_ABS%", formatAbsolute(end)).replace("%TIME_END_REL%", formatRelative(end, now))
-					.replace("%DURATION%", formatRelative(end, start));
+					.replace("%TIME_START_REL%", formatRelative(timePassed))
+					.replace("%TIME_END_ABS%", formatAbsolute(end))
+					.replace("%TIME_END_REL%", formatRelative(timeRemaining));
 		}).thenApply(this::parseMessage);
 	}
 
@@ -170,11 +182,10 @@ public class Formatter {
 		return new AbstractMap.SimpleImmutableEntry<>(key, value);
 	}
 	
-	private String formatRelative(long time, long current) {
-		if (time < current) {
-			return '-' + formatRelative(current, time);
+	private String formatRelative(long diff) {
+		if (diff < 0) {
+			return formatRelative(-diff);
 		}
-		long diff = time - current;
 		List<String> result = new ArrayList<>();
 		for (Entry<String, Long> unit : timeUnits) {
 			String unitName = unit.getKey();
@@ -192,7 +203,7 @@ public class Formatter {
 			if (n != 0) {
 				builder.append(", ");
 			}
-			if (n == resultArray.length) {
+			if (n == resultArray.length - 1) {
 				builder.append(core.getConfigs().getMessages().getString("time.and"));
 			}
 			builder.append(resultArray[n]);

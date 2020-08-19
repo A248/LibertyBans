@@ -96,7 +96,7 @@ public class Database implements PunishmentDatabase {
 				new JdbCaesarHelper.ScopeAdapter(core.getScopeManager()),
 				new JdbCaesarHelper.InetAddressAdapter()};
 		JdbCaesarBuilder jdbCaesarBuilder = new JdbCaesarBuilder()
-				.databaseSource(new JdbCaesarHelper.HikariWrapper(hikariDataSource))
+				.connectionSource(new JdbCaesarHelper.HikariWrapper(hikariDataSource))
 				.exceptionHandler((ex) -> {
 					logger.error("Error while executing a database query", ex);
 				})
@@ -132,7 +132,7 @@ public class Database implements PunishmentDatabase {
 	
 	void close() {
 		try {
-			jdbCaesar.getDatabaseSource().close();
+			jdbCaesar.getConnectionSource().close();
 		} catch (SQLException ex) {
 			throw new AssertionError(ex);
 		}
@@ -154,7 +154,7 @@ public class Database implements PunishmentDatabase {
 				logger.trace("Call trace as requested by space.arim.libertybans.traceForeignConnections=true", new Exception());
 			}
 		}
-		return jdbCaesar.getDatabaseSource().getConnection();
+		return jdbCaesar.getConnectionSource().getConnection();
 	}
 	
 	public JdbCaesar jdbCaesar() {
