@@ -58,7 +58,7 @@ public class AddressVictim extends Victim {
 	
 	/**
 	 * Lighter alternative to {@code InetAddress} specialised for handling the raw address,
-	 * and not anything related to hostnames &c.
+	 * and not anything related to hostnames, etc.
 	 * 
 	 * @author A248
 	 *
@@ -74,7 +74,7 @@ public class AddressVictim extends Victim {
 		 * The array follows the same specifications as {@link InetAddress#getAddress()}
 		 * 
 		 * @param address the address array
-		 * @throws IllegalArgumentException
+		 * @throws IllegalArgumentException if the array is of illegal length
 		 */
 		public NetworkAddress(byte[] address) {
 			if (address.length != 4 && address.length != 16) {
