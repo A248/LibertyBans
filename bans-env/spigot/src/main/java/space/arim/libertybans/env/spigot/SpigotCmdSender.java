@@ -55,7 +55,7 @@ class PlayerCmdSender extends SpigotCmdSender {
 class ConsoleCmdSender extends SpigotCmdSender {
 
 	ConsoleCmdSender(SpigotEnv env, CommandSender sender) {
-		super(env, sender, ConsoleOperator.INST);
+		super(env, sender, ConsoleOperator.INSTANCE);
 	}
 	
 }

@@ -58,7 +58,7 @@ public class JdbCaesarHelper {
 	static Operator getOperatorFromResult(ResultSet resultSet) throws SQLException {
 		byte[] operatorBytes = resultSet.getBytes("operator");
 		if (Arrays.equals(operatorBytes, consoleUUIDBytes)) {
-			return ConsoleOperator.INST;
+			return ConsoleOperator.INSTANCE;
 		}
 		return PlayerOperator.of(UUIDUtil.fromByteArray(operatorBytes));
 	}

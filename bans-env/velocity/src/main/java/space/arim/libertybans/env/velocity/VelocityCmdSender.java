@@ -55,7 +55,7 @@ class PlayerCmdSender extends VelocityCmdSender {
 class ConsoleCmdSender extends VelocityCmdSender {
 
 	ConsoleCmdSender(VelocityEnv env, CommandSource sender) {
-		super(env, sender, ConsoleOperator.INST);
+		super(env, sender, ConsoleOperator.INSTANCE);
 	}
 	
 }
