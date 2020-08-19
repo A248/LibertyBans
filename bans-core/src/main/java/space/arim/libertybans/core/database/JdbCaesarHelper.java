@@ -44,7 +44,7 @@ import space.arim.jdbcaesar.adapter.DataTypeAdapter;
 
 public class JdbCaesarHelper {
 	
-	static final byte[] consoleUUIDBytes = UUIDUtil.toByteArray(new UUID(0, 0));
+	private static final byte[] consoleUUIDBytes = UUIDUtil.toByteArray(new UUID(0, 0));
 
 	private JdbCaesarHelper() {}
 	
@@ -55,7 +55,7 @@ public class JdbCaesarHelper {
 	 * @return the operator
 	 * @throws SQLException per JDBC
 	 */
-	public static Operator getOperatorFromResult(ResultSet resultSet) throws SQLException {
+	static Operator getOperatorFromResult(ResultSet resultSet) throws SQLException {
 		byte[] operatorBytes = resultSet.getBytes("operator");
 		if (Arrays.equals(operatorBytes, consoleUUIDBytes)) {
 			return ConsoleOperator.INST;

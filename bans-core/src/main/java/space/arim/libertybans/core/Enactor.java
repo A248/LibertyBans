@@ -18,28 +18,17 @@
  */
 package space.arim.libertybans.core;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Objects;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-import space.arim.uuidvault.api.UUIDUtil;
-
-import space.arim.libertybans.api.AddressVictim;
-import space.arim.libertybans.api.AddressVictim.NetworkAddress;
 import space.arim.libertybans.api.DraftPunishment;
 import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.api.PunishmentEnactor;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Scope;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.api.Victim.VictimType;
 import space.arim.libertybans.core.database.Database;
-import space.arim.libertybans.core.database.JdbCaesarHelper;
-import space.arim.libertybans.core.database.Vendor;
 
 public class Enactor implements PunishmentEnactor {
 	
@@ -137,53 +126,4 @@ public class Enactor implements PunishmentEnactor {
 		});
 	}
 	
-	PunishmentType getTypeFromResult(ResultSet resultSet) throws SQLException {
-		return PunishmentType.valueOf(resultSet.getString("type"));
-	}
-	
-	Victim getVictimFromResult(ResultSet resultSet) throws SQLException {
-		VictimType vType = VictimType.valueOf(resultSet.getString("victim_type"));
-		byte[] bytes = resultSet.getBytes("victim");
-		switch (vType) {
-		case PLAYER:
-			return PlayerVictim.of(UUIDUtil.fromByteArray(bytes));
-		case ADDRESS:
-			return AddressVictim.of(new NetworkAddress(bytes));
-		default:
-			throw new IllegalStateException("Unknown victim type " + vType);
-		}
-	}
-	
-	Operator getOperatorFromResult(ResultSet resultSet) throws SQLException {
-		return JdbCaesarHelper.getOperatorFromResult(resultSet);
-	}
-	
-	String getReasonFromResult(ResultSet resultSet) throws SQLException {
-		return resultSet.getString("reason");
-	}
-
-	Scope getScopeFromResult(ResultSet resultSet) throws SQLException {
-		String server = resultSet.getString("scope");
-		if (server != null) {
-			return core.getScopeManager().specificScope(server);
-		}
-		return core.getScopeManager().globalScope();
-	}
-	
-	long getStartFromResult(Vendor vendor, ResultSet resultSet) throws SQLException {
-		long directValue = resultSet.getLong("start");
-		if (vendor.noUnsignedNumerics()) {
-			directValue -= Long.MIN_VALUE;
-		}
-		return directValue;
-	}
-	
-	long getEndFromResult(Vendor vendor, ResultSet resultSet) throws SQLException {
-		long directValue = resultSet.getLong("end");
-		if (vendor.noUnsignedNumerics()) {
-			directValue -= Long.MIN_VALUE;
-		}
-		return directValue;
-	}
-
 }
