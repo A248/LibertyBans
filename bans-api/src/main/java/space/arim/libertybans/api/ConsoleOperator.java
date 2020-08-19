@@ -30,7 +30,7 @@ public class ConsoleOperator extends Operator {
 	 * The console operator instance
 	 * 
 	 */
-	public static final ConsoleOperator INST = new ConsoleOperator();
+	public static final ConsoleOperator INSTANCE = new ConsoleOperator();
 	
 	private ConsoleOperator() {
 		super(OperatorType.CONSOLE);

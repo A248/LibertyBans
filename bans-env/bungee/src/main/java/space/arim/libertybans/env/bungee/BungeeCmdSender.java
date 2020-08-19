@@ -55,7 +55,7 @@ class PlayerCmdSender extends BungeeCmdSender {
 class ConsoleCmdSender extends BungeeCmdSender {
 
 	ConsoleCmdSender(BungeeEnv env, CommandSender sender) {
-		super(env, sender, ConsoleOperator.INST);
+		super(env, sender, ConsoleOperator.INSTANCE);
 	}
 	
 }
