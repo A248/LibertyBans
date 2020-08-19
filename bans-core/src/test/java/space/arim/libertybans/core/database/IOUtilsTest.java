@@ -20,6 +20,7 @@ package space.arim.libertybans.core.database;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,7 @@ public class IOUtilsTest {
 	@Test
 	public void testReadResource() {
 		assertEquals("random content", IOUtils.readResource("whatever.yml"));
-		String enactmentProcedure = IOUtils.readResource("sql/procedure_banhammer.sql");
+		String enactmentProcedure = IOUtils.readResource("sql/procedure_banhammer.sql").toString(StandardCharsets.UTF_8);
 		System.out.println(enactmentProcedure);
 		assertFalse(enactmentProcedure.isBlank());
 	}

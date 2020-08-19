@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.core.database;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
@@ -57,7 +58,8 @@ public class TableDefinitions {
 	}
 
 	private CentralisedFuture<String> readResource(String resourceName) {
-		return database.selectAsync(() -> IOUtils.readResource("sql/" + resourceName + ".sql"));
+		return database.selectAsync(() -> IOUtils.readResource("sql/" + resourceName + ".sql"))
+				.thenApplyAsync((bos) -> bos.toString(StandardCharsets.UTF_8));
 	}
 	
 	private CentralisedFuture<List<String>> readAllQueries(String resourceName) {

@@ -49,12 +49,12 @@ public class IOUtils {
 	 * @return the resource content
 	 * @throws IllegalStateException if an IO error occurred
 	 */
-	static String readResource(String resourceName) {
+	static ByteArrayOutputStream readResource(String resourceName) {
 		try (InputStream is = getResource(resourceName);
 				ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
 
 			is.transferTo(bos);
-			return bos.toString(StandardCharsets.UTF_8);
+			return bos;
 		} catch (IOException ex) {
 			throw new IllegalStateException("Failed to read internal resource " + resourceName, ex);
 		}
