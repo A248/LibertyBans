@@ -18,7 +18,6 @@
  */
 package space.arim.libertybans.core;
 
-import java.net.InetAddress;
 import java.util.Set;
 import java.util.UUID;
 
@@ -29,6 +28,7 @@ import space.arim.uuidvault.api.UUIDUtil;
 import space.arim.api.chat.SendableMessage;
 
 import space.arim.libertybans.api.AddressVictim;
+import space.arim.libertybans.api.AddressVictim.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.api.PunishmentEnforcer;
@@ -61,12 +61,12 @@ public class Enforcer implements PunishmentEnforcer {
 	}
 	
 	private CentralisedFuture<?> enforceAddressPunishment(Punishment punishment, SendableMessage message) {
-		InetAddress address = ((AddressVictim) punishment.getVictim()).getAddress();
+		NetworkAddress address = ((AddressVictim) punishment.getVictim()).getAddress();
 		CentralisedFuture<TargetMatcher> futureMatcher;
 		AddressStrictness strictness = core.getConfigs().getAddressStrictness();
 		switch (strictness) {
 		case LENIENT:
-			TargetMatcher matcher = new TargetMatcher(Set.of(), Set.of(address), message, shouldKick(punishment));
+			TargetMatcher matcher = new TargetMatcher(Set.of(), Set.of(address.toInetAddress()), message, shouldKick(punishment));
 			futureMatcher = core.getFuturesFactory().completedFuture(matcher);
 			break;
 		case NORMAL:
@@ -95,11 +95,11 @@ public class Enforcer implements PunishmentEnforcer {
 		}
 	}
 
-	private CentralisedFuture<TargetMatcher> matchAddressPunishmentNormal(InetAddress address, Punishment punishment,
+	private CentralisedFuture<TargetMatcher> matchAddressPunishmentNormal(NetworkAddress address, Punishment punishment,
 			SendableMessage message) {
-		Database helper = core.getDatabase();
-		return helper.selectAsync(() -> {
-			Set<UUID> uuids = helper.jdbCaesar().query(
+		Database database = core.getDatabase();
+		return database.selectAsync(() -> {
+			Set<UUID> uuids = database.jdbCaesar().query(
 					"SELECT `uuid` FROM `libertybans_addresses` WHERE `address` = ?")
 					.params(address)
 					.setResult((resultSet) -> UUIDUtil.fromByteArray(resultSet.getBytes("uuid")))
@@ -108,10 +108,10 @@ public class Enforcer implements PunishmentEnforcer {
 		});
 	}
 	
-	private CentralisedFuture<TargetMatcher> matchAddressPunishmentStrict(InetAddress address, Punishment punishment, SendableMessage message) {
-		Database helper = core.getDatabase();
-		return helper.selectAsync(() -> {
-			Set<UUID> uuids = helper.jdbCaesar().query(
+	private CentralisedFuture<TargetMatcher> matchAddressPunishmentStrict(NetworkAddress address, Punishment punishment, SendableMessage message) {
+		Database database = core.getDatabase();
+		return database.selectAsync(() -> {
+			Set<UUID> uuids = database.jdbCaesar().query(
 					"SELECT `addrs`.`uuid` FROM `libertybans_addresses` `addrs` INNER JOIN `libertybans_address` `addrsAlso` "
 					+ "ON `addrs`.`address` = `addrsAlso`.`address` WHERE `addrsAlso`.`uuid` = ?")
 					.params(address)

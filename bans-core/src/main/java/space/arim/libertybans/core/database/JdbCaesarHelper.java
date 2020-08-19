@@ -102,7 +102,7 @@ public class JdbCaesarHelper {
 			case PLAYER:
 				return UUIDUtil.toByteArray(((PlayerVictim) victim).getUUID());
 			case ADDRESS:
-				return ((AddressVictim) victim).getAddress().getAddress();
+				return ((AddressVictim) victim).getAddress().getRawAddress();
 			default:
 				throw new IllegalStateException("Unknown VictimType " + vType);
 			}
