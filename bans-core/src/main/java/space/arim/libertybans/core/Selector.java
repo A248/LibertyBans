@@ -40,6 +40,7 @@ import space.arim.libertybans.api.PunishmentSelector;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Scope;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.core.config.AddressStrictness;
 import space.arim.libertybans.core.database.Database;
 
 public class Selector implements PunishmentSelector {
@@ -213,17 +214,31 @@ public class Selector implements PunishmentSelector {
 	}
 	
 	private Map.Entry<String, Object[]> getApplicabilityQuery(UUID uuid, byte[] address, PunishmentType type) {
-		String tableView = "`libertybans_applicable_" + type.getLowercaseNamePlural() + '`';
 		String statement;
 		Object[] args;
-		if (core.getConfigs().strictAddressQueries()) {
-			statement = "SELECT `id`, `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end`, `uuid` "
-					+ "FROM " + tableView + " WHERE `type` = ? AND `uuid` = ?";
-			args = new Object[] {type, uuid};
-		} else {
-			statement = "SELECT `id`, `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end`, `uuid` "
-					+ "FROM " + tableView + " WHERE `type` = ? AND `uuid` = ? AND `address` = ?";
+
+		AddressStrictness strictness = core.getConfigs().getAddressStrictness();
+		switch (strictness) {
+		case LENIENT:
+			statement = "SELECT `id`, `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end` "
+					+ "FROM `libertybans_simple_" + type.getLowercaseNamePlural() + "` "
+					+ "WHERE (`type` = ? AND ((`victim_type` = 'PLAYER' AND `victim` = ?) OR (`victim_type` = 'ADDRESS' AND `victim` = ?))";
 			args = new Object[] {type, uuid, address};
+			break;
+		case NORMAL:
+			statement = "SELECT `id`, `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end`, `uuid` "
+					+ "FROM `libertybans_applicable_" + type.getLowercaseNamePlural() + "` WHERE `type` = ? AND `uuid` = ?";
+			args = new Object[] {type, uuid};
+			break;
+		case STRICT:
+			statement = "SELECT `appl`.`id`, `appl`.`victim`, `appl`.`victim_type`, `appl`.`operator`, `appl`.`reason`, "
+					+ "`appl`.`scope`, `appl`.`start`, `appl`.`end`, `appl`.`uuid`, `appl`.`address` FROM "
+					+ "`libertybans_applicable_" + type.getLowercaseNamePlural() + "` INNER JOIN `libertybans_addresses` `addrs` "
+					+ "ON `appl`.`address` = `addrs`.`address` WHERE `appl`.`type` = ? AND `appl`.`address` = ?";
+			args = new Object[] {type, address};
+			break;
+		default:
+			throw new IllegalStateException("Unknown AddressStrictness " + strictness);
 		}
 		return Map.entry(statement, args);
 	}
