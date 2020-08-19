@@ -112,7 +112,7 @@ public class Database implements PunishmentDatabase {
 		if (getVendor() != Vendor.MARIADB) {
 			synchronized (this) {
 				hyperSqlRefreshTask = core.getResources().getEnhancedExecutor().scheduleRepeating(
-						new IOUtils.HsqldbCleanerRunnable(core.getDatabaseManager(), this),
+						new RefreshTaskRunnable(core.getDatabaseManager(), this),
 						Duration.ofHours(1L), DelayCalculators.fixedDelay());
 			}
 		}

@@ -97,29 +97,6 @@ public class IOUtils {
 		}
 	}
 	
-	static class HsqldbCleanerRunnable implements Runnable {
-
-		private final DatabaseManager manager;
-		private final Database database;
-		
-		private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-		
-		HsqldbCleanerRunnable(DatabaseManager manager, Database database) {
-			this.manager = manager;
-			this.database = database;
-		}
-		
-		@Override
-		public void run() {
-			if (manager.getCurrentDatabase() != database) {
-				// cancelled but not stopped yet, or failed to stop
-				logger.debug("HSQLDB cleaning task continues after shutdown");
-				return;
-			}
-			database.jdbCaesar().query("{CALL `libertybans_refresh`()}").voidResult().execute();
-		}
-	}
-	
 	public static class ThreadFactoryImpl implements ThreadFactory {
 		
 		private final String prefix;
