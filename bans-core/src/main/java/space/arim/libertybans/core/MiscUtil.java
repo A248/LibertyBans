@@ -18,6 +18,8 @@
  */
 package space.arim.libertybans.core;
 
+import java.util.Objects;
+
 import space.arim.libertybans.api.DraftPunishment;
 import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.api.PunishmentType;
@@ -76,10 +78,15 @@ public final class MiscUtil {
 	/**
 	 * Validates a Punishment is an own implementation
 	 * 
-	 * @param punishment
+	 * @param punishment the punishment to validate
+	 * @throws NullPointerException if null
+	 * @throws IllegalArgumentException if a foreign implementation
 	 */
 	static void validate(Punishment punishment) {
-		if (!(punishment instanceof SecurePunishment)) {
+		if (punishment == null) {
+			throw new NullPointerException("punishment");
+
+		} else if (!(punishment instanceof SecurePunishment)) {
 			throw new IllegalArgumentException("Foreign implementation " + punishment.getClass());
 		}
 	}
@@ -88,9 +95,11 @@ public final class MiscUtil {
 	 * Validates that start and ends values are within range of SQL's INT UNSIGNED data type.
 	 * 
 	 * @param draftPunishment the draft punishment
+	 * @throws NullPointerException if {@code draftPunishment} is null
 	 * @throws IllegalArgumentException if either the start or end value would not fit into an INT UNSIGNED
 	 */
 	static void validate(DraftPunishment draftPunishment) {
+		Objects.requireNonNull(draftPunishment, "draftPunishment");
 		if (draftPunishment.getStart() > INT_UNSIGNED_MAX_VALUE) {
 			throw new IllegalArgumentException("DraftPunishment starts after 2106! start=" + draftPunishment.getStart());
 		}

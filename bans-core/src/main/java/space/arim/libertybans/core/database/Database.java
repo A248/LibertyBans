@@ -19,6 +19,7 @@
 package space.arim.libertybans.core.database;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.concurrent.Executor;
@@ -37,9 +38,17 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.DelayCalculators;
 import space.arim.omnibus.util.concurrent.ScheduledWork;
 
+import space.arim.uuidvault.api.UUIDUtil;
+
+import space.arim.libertybans.api.AddressVictim;
+import space.arim.libertybans.api.Operator;
+import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentDatabase;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.Scope;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.AddressVictim.NetworkAddress;
+import space.arim.libertybans.api.Victim.VictimType;
 import space.arim.libertybans.core.LibertyBansCore;
 
 import space.arim.jdbcaesar.JdbCaesar;
@@ -167,12 +176,73 @@ public class Database implements PunishmentDatabase {
 		return executor;
 	}
 	
+	/*
+	 * 
+	 * Helper thread pool methods
+	 * 
+	 */
+	
 	public CentralisedFuture<?> executeAsync(Runnable command) {
 		return core.getFuturesFactory().runAsync(command, executor);
 	}
 	
 	public <T> CentralisedFuture<T> selectAsync(Supplier<T> supplier) {
 		return core.getFuturesFactory().supplyAsync(supplier, executor);
+	}
+	
+	/*
+	 * 
+	 * Helper retrieval methods
+	 * 
+	 */
+	
+	public PunishmentType getTypeFromResult(ResultSet resultSet) throws SQLException {
+		return PunishmentType.valueOf(resultSet.getString("type"));
+	}
+	
+	public Victim getVictimFromResult(ResultSet resultSet) throws SQLException {
+		VictimType vType = VictimType.valueOf(resultSet.getString("victim_type"));
+		byte[] bytes = resultSet.getBytes("victim");
+		switch (vType) {
+		case PLAYER:
+			return PlayerVictim.of(UUIDUtil.fromByteArray(bytes));
+		case ADDRESS:
+			return AddressVictim.of(new NetworkAddress(bytes));
+		default:
+			throw new IllegalStateException("Unknown victim type " + vType);
+		}
+	}
+
+	public Operator getOperatorFromResult(ResultSet resultSet) throws SQLException {
+		return JdbCaesarHelper.getOperatorFromResult(resultSet);
+	}
+	
+	public String getReasonFromResult(ResultSet resultSet) throws SQLException {
+		return resultSet.getString("reason");
+	}
+
+	public Scope getScopeFromResult(ResultSet resultSet) throws SQLException {
+		String server = resultSet.getString("scope");
+		if (server != null) {
+			return core.getScopeManager().specificScope(server);
+		}
+		return core.getScopeManager().globalScope();
+	}
+	
+	public long getStartFromResult(ResultSet resultSet) throws SQLException {
+		long directValue = resultSet.getLong("start");
+		if (getVendor().noUnsignedNumerics()) {
+			directValue -= Long.MIN_VALUE;
+		}
+		return directValue;
+	}
+	
+	public long getEndFromResult(ResultSet resultSet) throws SQLException {
+		long directValue = resultSet.getLong("end");
+		if (getVendor().noUnsignedNumerics()) {
+			directValue -= Long.MIN_VALUE;
+		}
+		return directValue;
 	}
 
 }
