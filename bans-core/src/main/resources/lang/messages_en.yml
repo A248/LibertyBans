@@ -136,6 +136,8 @@ list:
         - '&7'
       footer:
         - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
+misc:
+  sync-denial-message: '&cSynchronous chat denied. &7Please try again.'
 time:
   years:
     enable: true

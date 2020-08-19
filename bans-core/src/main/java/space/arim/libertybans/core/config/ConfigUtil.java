@@ -72,10 +72,28 @@ final class ConfigUtil {
 		});
 	}
 	
+	private static ValueTransformer syncEnforcementTransformer() {
+		return SingleKeyValueTransformer.create("enforcement.sync-events-strategy", (value) -> {
+			SyncEnforcement result = null;
+			if (value instanceof String) {
+				String syncE = (String) value;
+				try {
+					result = SyncEnforcement.valueOf(syncE);
+				} catch (IllegalArgumentException ignored) {}
+			}
+			if (result == null) {
+				//result = SyncEnforcement.ALLOW;
+				logger.info("Config option enforcement.sync-events-strategy invalid: {}", value);
+			}
+			return result;
+		});
+	}
+	
 	static List<ValueTransformer> configTransformers() {
 		List<ValueTransformer> result = new ArrayList<>();
 		result.add(timeTransformer());
 		result.add(strictnessTransformer());
+		result.add(syncEnforcementTransformer());
 		result.addAll(UUIDMaster.createValueTransformers());
 		return result;
 	}
