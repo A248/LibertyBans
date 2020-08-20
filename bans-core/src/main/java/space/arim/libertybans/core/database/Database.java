@@ -232,7 +232,7 @@ public class Database implements PunishmentDatabase {
 	public long getStartFromResult(ResultSet resultSet) throws SQLException {
 		long directValue = resultSet.getLong("start");
 		if (getVendor().noUnsignedNumerics()) {
-			directValue -= Long.MIN_VALUE;
+			directValue -= Integer.MIN_VALUE;
 		}
 		return directValue;
 	}
@@ -240,7 +240,7 @@ public class Database implements PunishmentDatabase {
 	public long getEndFromResult(ResultSet resultSet) throws SQLException {
 		long directValue = resultSet.getLong("end");
 		if (getVendor().noUnsignedNumerics()) {
-			directValue -= Long.MIN_VALUE;
+			directValue -= Integer.MIN_VALUE;
 		}
 		return directValue;
 	}
