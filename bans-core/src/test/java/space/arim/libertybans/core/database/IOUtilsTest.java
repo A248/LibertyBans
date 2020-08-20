@@ -29,7 +29,8 @@ public class IOUtilsTest {
 
 	@Test
 	public void testReadResource() {
-		assertEquals("random content", IOUtils.readResource("whatever.yml"));
+		assertEquals("random content", IOUtils.readResource("whatever.yml").toString(StandardCharsets.UTF_8));
+
 		String enactmentProcedure = IOUtils.readResource("sql/procedure_banhammer.sql").toString(StandardCharsets.UTF_8);
 		System.out.println(enactmentProcedure);
 		assertFalse(enactmentProcedure.isBlank());
