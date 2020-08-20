@@ -51,9 +51,6 @@ public class Commands {
 	// Main command handler
 	
 	public void execute(CmdSender sender, CommandPackage command) {
-		if (messages().getBoolean("all.prefix.use")) {
-			sender = new PrefixedCmdSender(core, sender, core.getFormatter().parseMessage(messages().getString("all.prefix.value")));
-		}
 		if (!sender.hasPermission("libertybans.commands")) {
 			sender.parseThenSend(messages().getString("all.base-permission-message"));
 			return;

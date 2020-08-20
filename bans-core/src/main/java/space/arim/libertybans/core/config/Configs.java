@@ -87,7 +87,7 @@ public class Configs implements Part {
 		ConfigSerialiser serialiser = new YamlConfigSerialiser();
 		var futureSql = getFor(serialiser, "sql.yml", DatabaseManager.createConfigTransformers(), executor);
 		var futureConfig = getFor(serialiser, "config.yml", ConfigUtil.configTransformers(), executor);
-		var futureMessages = getFor(serialiser, "lang/messages_en.yml", List.of(), executor);
+		var futureMessages = getFor(serialiser, "lang/messages_en.yml", ConfigUtil.messagesTransformers(), executor);
 		SingularConfig sql = new SingularConfig(futureSql.join(), folder.resolve("sql.yml"));
 		SingularConfig config = new SingularConfig(futureConfig.join(), folder.resolve("config.yml"));
 		Configuration messages = futureMessages.join();

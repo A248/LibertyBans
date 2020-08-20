@@ -35,6 +35,7 @@ import space.arim.libertybans.api.LibertyBans;
 import space.arim.libertybans.api.RunState;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.config.Formatter;
 import space.arim.libertybans.core.database.DatabaseManager;
 import space.arim.libertybans.core.database.Database;
 import space.arim.libertybans.core.env.AbstractEnv;
