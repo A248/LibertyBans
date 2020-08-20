@@ -64,6 +64,18 @@ public interface PunishmentEnactor {
 	CentralisedFuture<Boolean> undoPunishmentById(int id);
 	
 	/**
+	 * Undoes and gets a punishment according to its ID. <br>
+	 * If the punishment with the ID existed and was removed, the future yields the punishment, else {@code null}. <br>
+	 * <br>
+	 * <b>This operation may be less efficient than {@link #undoPunishmentById(int)}, because it needs to retrieve
+	 * the punishment as well.</b>
+	 * 
+	 * @param id the id of the punishment to undo
+	 * @return a centralised future which yields the punishment if it existed and was removed, {@code null} otherwise
+	 */
+	CentralisedFuture<Punishment> undoAndGetPunishmentById(int id);
+	
+	/**
 	 * Undoes a single punishment by its type and victim. <b>This may only be used for bans and mutes,</b>
 	 * since it relies on the fact that a single victim cannot have more than 1 ban or mute.
 	 * 
@@ -73,5 +85,40 @@ public interface PunishmentEnactor {
 	 * @throws IllegalArgumentException if {@code type} is not BAN or MUTE
 	 */
 	CentralisedFuture<Boolean> undoPunishmentByTypeAndVictim(PunishmentType type, Victim victim);
+	
+	/**
+	 * Undoes and gets a single punishment by its type and victim. <b>This may only be used for bans and mutes,</b>
+	 * since it relies on the fact that a single victim cannot have more than 1 ban or mute. <br>
+	 * <br>
+	 * <b>This operation may be less efficient than {@link #undoPunishmentByTypeAndVictim(PunishmentType, Victim)},
+	 * because it needs to retrieve the punishment as well.</b>
+	 * 
+	 * @param type the punishment type, must be either BAN or MUTE
+	 * @param victim the victim whose punishment to undo
+	 * @return a centralised future which yields the punishment if it existed and was removed, {@code null} otherwise
+	 * @throws IllegalArgumentException if {@code type} is not BAN or MUTE
+	 */
+	CentralisedFuture<Punishment> undoAndGetPunishmentByTypeAndVictim(PunishmentType type, Victim victim);
+	
+	/**
+	 * Undoes a warn by its ID and victim.
+	 * 
+	 * @param id the id of the warn to undo
+	 * @param victim the victim whose punishment to undo
+	 * @return a centralised future which yields {@code true} if the punishment existed and was removed, {@code false} otherwise
+	 */
+	CentralisedFuture<Boolean> undoWarnByIdAndVictim(int id, Victim victim);
+	
+	/**
+	 * Undoes and gets a warn by its ID and victim. <br>
+	 * <br>
+	 * <b>This operation may be less efficient than {@link #undoWarnByIdAndVictim(int, Victim)},
+	 * because it needs to retrieve the punishment as well.</b>
+	 * 
+	 * @param id the id of the warn to undo
+	 * @param victim the victim whose punishment to undo
+	 * @return a centralised future which yields {@code true} if the punishment existed and was removed, {@code false} otherwise
+	 */
+	CentralisedFuture<Punishment> undoAndGetWarnByIdAndVictim(int id, Victim victim);
 
 }

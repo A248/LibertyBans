@@ -20,6 +20,11 @@ package space.arim.libertybans.core.commands;
 
 import java.util.Set;
 
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+
+import space.arim.api.configure.ConfigAccessor;
+
+import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.env.CmdSender;
 
 public abstract class SubCommandGroup {
@@ -37,5 +42,27 @@ public abstract class SubCommandGroup {
 	}
 	
 	abstract void execute(CmdSender sender, CommandPackage command, String arg);
+	
+	/*
+	 * 
+	 * Helper methods
+	 * 
+	 */
+	
+	<T> CentralisedFuture<T> completedFuture(T value) {
+		return commands.core.getFuturesFactory().completedFuture(value);
+	}
+	
+	LibertyBansCore core() {
+		return commands.core;
+	}
+	
+	ConfigAccessor config() {
+		return commands.core.getConfigs().getConfig();
+	}
+	
+	ConfigAccessor messages() {
+		return commands.core.getConfigs().getMessages();
+	}
 	
 }
