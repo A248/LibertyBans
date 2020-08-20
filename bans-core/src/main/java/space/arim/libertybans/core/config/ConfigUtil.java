@@ -27,14 +27,23 @@ import org.slf4j.LoggerFactory;
 
 import space.arim.omnibus.util.ThisClass;
 
+import space.arim.api.chat.SendableMessage;
+import space.arim.api.chat.parser.SendableMessageParser;
+import space.arim.api.chat.parser.StandardSendableMessageParser;
+import space.arim.api.chat.parser.SendableMessageParser.ColourMode;
+import space.arim.api.chat.parser.SendableMessageParser.JsonMode;
 import space.arim.api.configure.SingleKeyValueTransformer;
 import space.arim.api.configure.ValueTransformer;
 
+import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.core.MiscUtil;
 import space.arim.libertybans.core.uuid.UUIDMaster;
 
 final class ConfigUtil {
 
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+	
+	private static final SendableMessageParser parser = new StandardSendableMessageParser();
 	
 	private ConfigUtil() {}
 	
@@ -89,6 +98,40 @@ final class ConfigUtil {
 		});
 	}
 	
+	private static ValueTransformer prefixTransformer() {
+		return SingleKeyValueTransformer.create("all.prefix.value", (value) -> {
+			if (value instanceof String) {
+				return parseMessage(false, (String) value);
+			}
+			logger.info("Bad config value for all.prefix.value {}", value);
+			return null;
+		});
+	}
+	
+	private static ValueTransformer combinedListStringTransformer(String key) {
+		return SingleKeyValueTransformer.create(key, (value) -> {
+			if (value instanceof List) {
+				List<?> messages = (List<?>) value;
+
+				StringBuilder result = new StringBuilder();
+				for (int n = 0; n < messages.size(); n++) {
+					if (n != 0) {
+						result.append('\n');
+					}
+					Object element = messages.get(n);
+					if (!(element instanceof String)) {
+						logger.info("Bad list element for {} {}", key, element);
+						return null;
+					}
+					result.append(element);
+				}
+				return result.toString();
+			}
+			logger.info("Bad config value for {} {}", key, value);
+			return null;
+		});
+	}
+	
 	static List<ValueTransformer> configTransformers() {
 		List<ValueTransformer> result = new ArrayList<>();
 		result.add(timeTransformer());
@@ -96,6 +139,20 @@ final class ConfigUtil {
 		result.add(syncEnforcementTransformer());
 		result.addAll(UUIDMaster.createValueTransformers());
 		return result;
+	}
+	
+	static List<ValueTransformer> messagesTransformers() {
+		List<ValueTransformer> result = new ArrayList<>();
+		result.add(prefixTransformer());
+		for (PunishmentType type : MiscUtil.punishmentTypes()) {
+			result.add(combinedListStringTransformer("additions." + type.getLowercaseNamePlural() + ".layout"));
+		}
+		return result;
+	}
+	
+	static SendableMessage parseMessage(boolean useJson, String rawMessage) {
+		JsonMode jsonMode = (useJson) ? JsonMode.JSON_SK : JsonMode.NONE;
+		return parser.parseMessage(rawMessage, ColourMode.ALL_COLOURS, jsonMode);
 	}
 	
 }

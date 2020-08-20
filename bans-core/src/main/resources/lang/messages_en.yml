@@ -1,6 +1,6 @@
 all:
   prefix:
-    use: true
+    enable: true
     value: '&6&lLibertyBans &r&8»&7 '
   base-permission-message: '&cYou may not use this.'
   not-found:
@@ -40,6 +40,19 @@ additions:
       command: '&7You may not mute other players.'
     error:
       conflicting: '&c&o%TARGET%&r&7 is already muted!'
+    successful:
+      message: '&aMuted &c&o%TARGET%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%'
+      notification: '&c&o%OPERATOR%&r&7 muted &c&o%TARGET%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
+    layout:
+      - '&7&lMuted'
+      - '&cDuration: &e%DURATION%'
+      - '&7'
+      - '&c&lReason'
+      - '&7%REASON%'
+  warns:
+    usage: '&cUsage: /warn &e<player> [time] <reason>&c.'
+    permission:
+      command: '&7You may not warn other players.'
     successful:
       message: '&aMuted &c&o%TARGET%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%'
       notification: '&c&o%OPERATOR%&r&7 muted &c&o%TARGET%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
@@ -169,6 +182,7 @@ list:
       footer:
         - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
 misc:
+  unknown-error: '&cAn unknown error occurred.'
   sync-denial-message: '&cSynchronous chat denied. &7Please try again.'
   time:
     years:

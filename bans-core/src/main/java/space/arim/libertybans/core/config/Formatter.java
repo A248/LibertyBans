@@ -16,7 +16,7 @@
  * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core;
+package space.arim.libertybans.core.config;
 
 import java.time.Instant;
 import java.util.AbstractMap;
@@ -29,10 +29,7 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.uuidvault.api.UUIDUtil;
 
 import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.parser.SendableMessageParser;
-import space.arim.api.chat.parser.SendableMessageParser.ColourMode;
-import space.arim.api.chat.parser.SendableMessageParser.JsonMode;
-import space.arim.api.chat.parser.StandardSendableMessageParser;
+import space.arim.api.configure.ConfigAccessor;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.Operator;
@@ -41,23 +38,33 @@ import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.core.LibertyBansCore;
+import space.arim.libertybans.core.MiscUtil;
 
 public class Formatter {
 
 	private final LibertyBansCore core;
 	
 	private static final Entry<String, Long>[] timeUnits;
-	private static final SendableMessageParser parser = new StandardSendableMessageParser();
-	
+
 	private static final long MARGIN_OF_INITIATION = 10; // seconds
 	
-	Formatter(LibertyBansCore core) {
+	public Formatter(LibertyBansCore core) {
 		this.core = core;
 	}
 	
 	public SendableMessage parseMessage(String rawMessage) {
-		JsonMode jsonMode = (isJsonEnabled()) ? JsonMode.JSON_SK : JsonMode.NONE;
-		return parser.parseMessage(rawMessage, ColourMode.ALL_COLOURS, jsonMode);
+		SendableMessage message = parseMessageNoPrefix(rawMessage);
+		ConfigAccessor messages = core.getConfigs().getMessages();
+		if (messages.getBoolean("all.prefix.enable")) {
+			SendableMessage prefix = messages.getObject("all.prefix.value", SendableMessage.class);
+			message = prefix.concatenate(message);
+		}
+		return message;
+	}
+	
+	private SendableMessage parseMessageNoPrefix(String rawMessage) {
+		return ConfigUtil.parseMessage(isJsonEnabled(), rawMessage);
 	}
 	
 	public boolean isJsonEnabled() {
@@ -65,32 +72,21 @@ public class Formatter {
 	}
 	
 	/**
-	 * Gets the punishment message for a punishment
+	 * Gets, formats, and parses the punishment message for a punishment. Punishment messages
+	 * do not use the global prefix.
 	 * 
 	 * @param punishment the punishment
-	 * @return the punishment message future
+	 * @return a future yielding the formatted sendable message
 	 */
 	public CentralisedFuture<SendableMessage> getPunishmentMessage(Punishment punishment) {
 		return formatVictim(punishment.getVictim()).thenCompose((victimFormatted) -> {
 			return formatOperator(punishment.getOperator()).thenApplyAsync((operatorFormatted) -> {
+
 				String path = "additions." + punishment.getType().getLowercaseNamePlural() + ".layout";
-				return formatAndParseAllLines(core.getConfigs().getMessages().getStringList(path), punishment,
-						victimFormatted, operatorFormatted);
+				String message = core.getConfigs().getMessages().getString(path);
+				return parseMessageNoPrefix(formatWithPunishment0(message, punishment, victimFormatted, operatorFormatted));
 			});
 		});
-	}
-	
-	private SendableMessage formatAndParseAllLines(List<String> messages, Punishment punishment, String victimFormatted,
-			String operatorFormatted) {
-		StringBuilder result = new StringBuilder();
-		String[] msgArray = messages.toArray(new String[] {});
-		for (int n = 0; n < msgArray.length; n++) {
-			if (n != 0) {
-				result.append('\n');
-			}
-			result.append(msgArray[n]);
-		}
-		return formatWithPunishmentAsSendableMessage(result.toString(), punishment, victimFormatted, operatorFormatted);
 	}
 	
 	private String formatWithPunishment0(String message, Punishment punishment, String victimFormatted,
@@ -120,15 +116,17 @@ public class Formatter {
 				.replace("%TIME_END_REL%", formatRelative(timeRemaining));
 	}
 	
-	private SendableMessage formatWithPunishmentAsSendableMessage(String message, Punishment punishment,
-			String victimFormatted, String operatorFormatted) {
-		return parseMessage(formatWithPunishment0(message, punishment, victimFormatted, operatorFormatted));
-	}
-	
+	/**
+	 * Parses and formats a message with a punishment
+	 * 
+	 * @param message the message
+	 * @param punishment the punishment
+	 * @return a future of the resulting formatted sendable message
+	 */
 	public CentralisedFuture<SendableMessage> formatWithPunishment(String message, Punishment punishment) {
 		return formatVictim(punishment.getVictim()).thenCompose((victimFormatted) -> {
 			return formatOperator(punishment.getOperator()).thenApplyAsync((operatorFormatted) -> {
-				return formatWithPunishmentAsSendableMessage(message, punishment, victimFormatted, operatorFormatted);
+				return parseMessage(formatWithPunishment0(message, punishment, victimFormatted, operatorFormatted));
 			});
 		});
 	}

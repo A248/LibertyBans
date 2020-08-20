@@ -28,12 +28,13 @@ import space.arim.api.chat.SendableMessage;
 
 import space.arim.libertybans.api.DraftPunishment;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.core.MiscUtil;
 import space.arim.libertybans.core.env.CmdSender;
 
 public class PunishCommands extends SubCommandGroup {
 
 	PunishCommands(Commands commands) {
-		super(commands, Arrays.stream(PunishmentType.values()).map((type) -> type.name().toLowerCase(Locale.ENGLISH))
+		super(commands, Arrays.stream(MiscUtil.punishmentTypes()).map((type) -> type.name().toLowerCase(Locale.ENGLISH))
 				.toArray(String[]::new));
 	}
 
@@ -44,9 +45,8 @@ public class PunishCommands extends SubCommandGroup {
 	
 	private void execute(CmdSender sender, CommandPackage command, PunishmentType type) {
 		if (!sender.hasPermission("libertybans." + type.getLowercaseName() + ".do")) { // libertybans.ban.do
-			sender.parseThenSend(
-					messages().getString(
-							"additions." + type.getLowercaseNamePlural() + ".permission.command")); // additions.bans.permission.command
+			String path = "additions." + type.getLowercaseNamePlural() + ".permission.command"; // additions.bans.permission.command
+			sender.parseThenSend(messages().getString(path)); 
 			return;
 		}
 		if (!command.hasNext()) {
@@ -72,10 +72,13 @@ public class PunishCommands extends SubCommandGroup {
 					.scope(core().getScopeManager().globalScope()).build();
 
 			return core().getEnactor().enactPunishment(draftPunishment).thenApply((nullIfConflict) -> {
-				assert type == PunishmentType.BAN || type == PunishmentType.MUTE : type;
 				if (nullIfConflict == null) {
-					String configPath = "additions." + type.getLowercaseNamePlural() + ".error.conflicting"; // additions.bans.error.conflicting
-					sender.parseThenSend(messages().getString(configPath).replace("%TARGET%", targetArg));
+					if (type.isSingular()) {
+						String configPath = "additions." + type.getLowercaseNamePlural() + ".error.conflicting"; // additions.bans.error.conflicting
+						sender.parseThenSend(messages().getString(configPath).replace("%TARGET%", targetArg));
+					} else {
+						sender.parseThenSend(messages().getString("misc.unknown-error"));
+					}
 				}
 				return nullIfConflict;
 			});
@@ -90,7 +93,7 @@ public class PunishCommands extends SubCommandGroup {
 
 			// Enforcement
 			CentralisedFuture<?> enforcement = core().getEnforcer().enforce(punishment);
-			
+
 			// Notification
 			String configMsgPath = "addition." + type.getLowercaseNamePlural() + ".successful.notification"; // addition.bans.successful.notification
 			String rawNotify = messages().getString(configMsgPath);
