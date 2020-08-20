@@ -118,7 +118,7 @@ public class UnpunishCommands extends SubCommandGroup {
 				core().getEnvironment().getEnforcer().sendToThoseWithPermission(
 							"libertybans." + type.getLowercaseName() + ".unnotify", futureNotify.join()); // libertybans.ban.unnotify
 			});
-		});
+		}).whenComplete(core()::debugFuture);
 	}
 
 }

@@ -78,8 +78,10 @@ public class ChatListener extends SpigotParallelisedListener<PlayerEvent, Sendab
 				message = futureMessage.join();
 				break;
 			case ALLOW:
+				futureMessage.whenComplete(env.core::debugFuture);
 				return;
 			case DENY:
+				futureMessage.whenComplete(env.core::debugFuture);
 				message = env.core.getFormatter().parseMessage(env.core.getConfigs().getMessages().getString("misc.sync-denial-message"));
 				break;
 			default:
