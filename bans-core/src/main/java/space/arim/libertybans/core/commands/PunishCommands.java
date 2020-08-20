@@ -41,7 +41,7 @@ public class PunishCommands extends SubCommandGroup {
 
 	@Override
 	void execute(CmdSender sender, CommandPackage command, String arg) {
-		execute(commands.core, commands.messages(), sender, command, PunishmentType.valueOf(arg));
+		execute(commands.core, commands.messages(), sender, command, PunishmentType.valueOf(arg.toUpperCase(Locale.ENGLISH)));
 	}
 	
 	private void execute(LibertyBansCore core, ConfigAccessor messages, CmdSender sender, CommandPackage command, PunishmentType type) {
