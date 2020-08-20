@@ -26,7 +26,6 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.configure.ConfigAccessor;
 
-import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentSelection;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.LibertyBansCore;
@@ -56,18 +55,18 @@ public class UnpunishCommands extends SubCommandGroup {
 					"removals." + type.getLowercaseNamePlural() + ".usage")); // removals.bans.usage
 			return;
 		}
-		String name = command.next();
-		core.getUUIDMaster().fullLookupUUID(name).thenCompose((uuid) -> {
-			if (uuid == null) {
-				sender.parseThenSend(messages.getString("all.not-found.uuid").replace("%TARGET%", name));
-				return core.getFuturesFactory().completedFuture(null);
+		String targetArg = command.next();
+		commands.parseVictim(sender, targetArg).thenCompose((victim) -> {
+			if (victim == null) {
+				return null;
 			}
+			core.getEnactor().undoPunishmentByTypeAndVictim(type, victim);
 			PunishmentSelection selection = new PunishmentSelection.Builder().type(type)
-					.victim(PlayerVictim.of(uuid)).build();
+					.victim(victim).build();
 			return core.getSelector().getFirstSpecificPunishment(selection).thenApply((nullIfNotFound) -> {
 				if (nullIfNotFound == null) {
 					String configPath = "removals." + type.getLowercaseNamePlural() + ".not-found"; // removals.bans.not-found
-					sender.parseThenSend(messages.getString(configPath).replace("%TARGET%", name));
+					sender.parseThenSend(messages.getString(configPath).replace("%TARGET%", targetArg));
 				}
 				return nullIfNotFound;
 			});

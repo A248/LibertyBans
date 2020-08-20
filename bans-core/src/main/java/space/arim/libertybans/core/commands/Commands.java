@@ -21,8 +21,12 @@ package space.arim.libertybans.core.commands;
 import java.util.List;
 import java.util.Locale;
 
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+
 import space.arim.api.configure.ConfigAccessor;
 
+import space.arim.libertybans.api.PlayerVictim;
+import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.env.CmdSender;
 
@@ -78,6 +82,16 @@ public class Commands {
 				break;
 			}
 		}
+	}
+	
+	CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg) {
+		return core.getUUIDMaster().fullLookupUUID(targetArg).thenApply((uuid) -> {
+			if (uuid == null) {
+				sender.parseThenSend(messages().getString("all.not-found.uuid").replace("%TARGET%", targetArg));
+				return null;
+			}
+			return PlayerVictim.of(uuid);
+		});
 	}
 	
 }

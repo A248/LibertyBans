@@ -27,7 +27,6 @@ import space.arim.api.chat.SendableMessage;
 import space.arim.api.configure.ConfigAccessor;
 
 import space.arim.libertybans.api.DraftPunishment;
-import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.env.CmdSender;
@@ -57,10 +56,9 @@ public class PunishCommands extends SubCommandGroup {
 			return;
 		}
 		String targetArg = command.next();
-		core.getUUIDMaster().fullLookupUUID(targetArg).thenCompose((uuid) -> {
-			if (uuid == null) {
-				sender.parseThenSend(messages.getString("all.not-found.uuid").replace("%TARGET%", targetArg));
-				return core.getFuturesFactory().completedFuture(null);
+		commands.parseVictim(sender, targetArg).thenCompose((victim) -> {
+			if (victim == null) {
+				return null;
 			}
 			String reason;
 			if (command.hasNext()) {
@@ -70,11 +68,11 @@ public class PunishCommands extends SubCommandGroup {
 			} else {
 				reason = core.getConfigs().getConfig().getString("reasons.default-reason");
 			}
-			DraftPunishment draftBan = new DraftPunishment.Builder().victim(PlayerVictim.of(uuid))
+			DraftPunishment draftPunishment = new DraftPunishment.Builder().victim(victim)
 					.operator(sender.getOperator()).type(type).reason(reason)
 					.scope(core.getScopeManager().globalScope()).build();
 
-			return core.getEnactor().enactPunishment(draftBan).thenApply((nullIfConflict) -> {
+			return core.getEnactor().enactPunishment(draftPunishment).thenApply((nullIfConflict) -> {
 				assert type == PunishmentType.BAN || type == PunishmentType.MUTE : type;
 				if (nullIfConflict == null) {
 					String configPath = "additions." + type.getLowercaseNamePlural() + ".error.conflicting"; // additions.bans.error.conflicting
