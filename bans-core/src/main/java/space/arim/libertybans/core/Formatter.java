@@ -68,18 +68,19 @@ public class Formatter {
 	}
 	
 	/**
-	 * Gets the punishment message for a punishment. The only reason the future may not be completed
-	 * is that a UUID/name lookup is required and the mapping is not in the fast cache.
+	 * Gets the punishment message for a punishment
 	 * 
 	 * @param punishment the punishment
 	 * @return the punishment message future
 	 */
 	public CentralisedFuture<SendableMessage> getPunishmentMessage(Punishment punishment) {
-		String path = "additions." + punishment.getType().getLowercaseNamePlural() + ".layout";
-		return formatAll(core.getConfigs().getMessages().getStringList(path), punishment);
+		return formatVictim(punishment.getVictim()).thenApplyAsync((victimFormatted) -> {
+			String path = "additions." + punishment.getType().getLowercaseNamePlural() + ".layout";
+			return formatAndParseAllLines(core.getConfigs().getMessages().getStringList(path), punishment, victimFormatted);
+		});
 	}
 	
-	private CentralisedFuture<SendableMessage> formatAll(List<String> messages, Punishment punishment) {
+	private SendableMessage formatAndParseAllLines(List<String> messages, Punishment punishment, String victimFormatted) {
 		StringBuilder result = new StringBuilder();
 		String[] msgArray = messages.toArray(new String[] {});
 		for (int n = 0; n < msgArray.length; n++) {
@@ -88,35 +89,43 @@ public class Formatter {
 			}
 			result.append(msgArray[n]);
 		}
-		return formatWithPunishment(result.toString(), punishment);
+		return formatWithPunishmentAsSendableMessage(result.toString(), punishment, victimFormatted);
+	}
+	
+	private String formatWithPunishment0(String message, Punishment punishment, String victimFormatted) {
+		long now = MiscUtil.currentTime();
+		long start = punishment.getStart();
+		long end = punishment.getEnd();
+
+		long duration = end - start;
+		long timePassed = now - start;
+		long timeRemaining;
+		if (timePassed < MARGIN_OF_INITIATION) {
+			timeRemaining = duration;
+		} else {
+			timeRemaining = end - now;
+		}
+		return message.replace("%ID%", Integer.toString(punishment.getID()))
+				.replace("%TYPE%", formatType(punishment.getType())).replace("%VICTIM%", victimFormatted)
+				.replace("%VICTIM_ID%", formatVictimId(punishment.getVictim()))
+				.replace("%OPERATOR%", formatOperator(punishment.getOperator()))
+				.replace("%REASON%", punishment.getReason())
+				.replace("%SCOPE%", core.getScopeManager().getServer(punishment.getScope()))
+				.replace("%DURATION%", formatRelative(duration))
+				.replace("%TIME_START_ABS%", formatAbsolute(start))
+				.replace("%TIME_START_REL%", formatRelative(timePassed))
+				.replace("%TIME_END_ABS%", formatAbsolute(end))
+				.replace("%TIME_END_REL%", formatRelative(timeRemaining));
+	}
+	
+	private SendableMessage formatWithPunishmentAsSendableMessage(String message, Punishment punishment, String victimFormatted) {
+		return parseMessage(formatWithPunishment0(message, punishment, victimFormatted));
 	}
 	
 	public CentralisedFuture<SendableMessage> formatWithPunishment(String message, Punishment punishment) {
-		return formatVictim(punishment.getVictim()).thenApply((victimFormatted) -> {
-			long now = MiscUtil.currentTime();
-			long start = punishment.getStart();
-			long end = punishment.getEnd();
-
-			long duration = end - start;
-			long timePassed = now - start;
-			long timeRemaining;
-			if (timePassed < MARGIN_OF_INITIATION) {
-				timeRemaining = duration;
-			} else {
-				timeRemaining = end - now;
-			}
-			return message.replace("%ID%", Integer.toString(punishment.getID()))
-					.replace("%TYPE%", formatType(punishment.getType())).replace("%VICTIM%", victimFormatted)
-					.replace("%VICTIM_ID%", formatVictimId(punishment.getVictim()))
-					.replace("%OPERATOR%", formatOperator(punishment.getOperator()))
-					.replace("%REASON%", punishment.getReason())
-					.replace("%SCOPE%", core.getScopeManager().getServer(punishment.getScope()))
-					.replace("%DURATION%", formatRelative(duration))
-					.replace("%TIME_START_ABS%", formatAbsolute(start))
-					.replace("%TIME_START_REL%", formatRelative(timePassed))
-					.replace("%TIME_END_ABS%", formatAbsolute(end))
-					.replace("%TIME_END_REL%", formatRelative(timeRemaining));
-		}).thenApplyAsync(this::parseMessage);
+		return formatVictim(punishment.getVictim()).thenApplyAsync((victimFormatted) -> {
+			return formatWithPunishmentAsSendableMessage(message, punishment, victimFormatted);
+		});
 	}
 
 	private String formatType(PunishmentType type) {
@@ -190,10 +199,10 @@ public class Formatter {
 		for (Entry<String, Long> unit : timeUnits) {
 			String unitName = unit.getKey();
 			long unitLength = unit.getValue();
-			if (diff > unitLength && core.getConfigs().getMessages().getBoolean("time." + unitName + ".enable")) {
+			if (diff > unitLength && core.getConfigs().getMessages().getBoolean("misc.time." + unitName + ".enable")) {
 				long amount = (diff / unitLength);
 				diff -= (amount * unitLength);
-				result.add(core.getConfigs().getMessages().getString("time." + unitName + ".message").replace(unitName.toUpperCase(), Long.toString(amount)));
+				result.add(core.getConfigs().getMessages().getString("misc.time." + unitName + ".message").replace(unitName.toUpperCase(), Long.toString(amount)));
 			}
 		}
 		StringBuilder builder = new StringBuilder();
@@ -204,7 +213,7 @@ public class Formatter {
 				builder.append(", ");
 			}
 			if (n == resultArray.length - 1) {
-				builder.append(core.getConfigs().getMessages().getString("time.and"));
+				builder.append(core.getConfigs().getMessages().getString("misc.time.and"));
 			}
 			builder.append(resultArray[n]);
 		}
