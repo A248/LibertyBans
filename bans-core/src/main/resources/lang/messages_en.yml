@@ -138,24 +138,24 @@ list:
         - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
 misc:
   sync-denial-message: '&cSynchronous chat denied. &7Please try again.'
-time:
-  years:
-    enable: true
-    message: '%YEARS% years'
-  months:
-    enable: true
-    message: '%MONTHS% months'
-  weeks:
-    enable: true
-    message: '%WEEKS% weeks'
-  days:
-    enable: true
-    message: '%DAYS% days'
-  hours:
-    enable: true
-    message: '%HOURS% hours'
-  minutes:
-    enable: true
-    message: '%MINUTES% minutes'
-  and: 'and '
+  time:
+    years:
+      enable: true
+      message: '%YEARS% years'
+    months:
+      enable: true
+      message: '%MONTHS% months'
+    weeks:
+      enable: true
+      message: '%WEEKS% weeks'
+    days:
+      enable: true
+      message: '%DAYS% days'
+    hours:
+      enable: true
+      message: '%HOURS% hours'
+    minutes:
+      enable: true
+      message: '%MINUTES% minutes'
+    and: 'and '
 config-version: 1
