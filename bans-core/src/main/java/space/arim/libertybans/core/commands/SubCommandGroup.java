@@ -25,6 +25,10 @@ import space.arim.libertybans.core.env.CmdSender;
 public abstract class SubCommandGroup {
 
 	final Commands commands;
+	/**
+	 * Matching commands, lowercased
+	 * 
+	 */
 	final Set<String> matches;
 	
 	SubCommandGroup(Commands commands, String...matches) {
