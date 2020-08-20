@@ -52,9 +52,8 @@ class RefreshTaskRunnable implements Runnable {
 					continue;
 				}
 				querySource.query(
-						"DELETE `thetype` FROM `libertybans_" + type.getLowercaseNamePlural() + "` `thetype` "
-						+ "INNER JOIN `libertybans_punishments` `puns` "
-						+ "ON `puns`.`id` = `thetype`.`id` WHERE (`puns`.`end` != 0 AND `puns`.`end` < ?)")
+						"DELETE FROM `libertybans_" + type.getLowercaseNamePlural() + "` WHERE `id` IN "
+						+ "(SELECT `id` FROM `libertybans_punishments` `puns` WHERE (`puns`.`end` != 0 AND `puns`.`end` < ?))")
 						.params(currentTime)
 						.voidResult().execute();
 			}
