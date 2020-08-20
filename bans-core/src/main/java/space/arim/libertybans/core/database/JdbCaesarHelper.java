@@ -145,7 +145,7 @@ public class JdbCaesarHelper {
 		@Override
 		public Object adaptObject(Object parameter) {
 			if (parameter instanceof Long) {
-				return ((Long) parameter).longValue() + Long.MIN_VALUE;
+				return ((Long) parameter).longValue() + Integer.MIN_VALUE;
 			}
 			return parameter;
 		}
