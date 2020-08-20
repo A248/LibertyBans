@@ -148,6 +148,42 @@ public class Enactor implements PunishmentEnactor {
 	}
 	
 	@Override
+	public CentralisedFuture<Punishment> undoAndGetPunishmentById(final int id) {
+		Database database = core.getDatabase();
+		return database.selectAsync(() -> {
+			return database.jdbCaesar().transaction().transactor((querySource) -> {
+				final long currentTime = MiscUtil.currentTime();
+				for (PunishmentType type : MiscUtil.punishmentTypes()) {
+					if (type == PunishmentType.KICK) {
+						continue;
+					}
+					Punishment punishment = querySource.query(
+							"SELECT `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end` FROM "
+									+ "`libertybans_simple_" + type.getLowercaseNamePlural() + "` WHERE "
+									+ "`id` = ?")
+							.params(id)
+							.singleResult((resultSet) -> {
+								return new SecurePunishment(id, type,
+										database.getVictimFromResult(resultSet), database.getOperatorFromResult(resultSet),
+										database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
+										database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
+							}).execute();
+					if (punishment != null) {
+						boolean deleted = querySource.query(
+								"DELETE FROM `libertybans_" + type.getLowercaseNamePlural()
+										+ "` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
+								.params(id, currentTime)
+								.updateCount((updateCount) -> updateCount == 1).execute();
+						assert deleted : punishment;
+						return punishment;
+					}
+				}
+				return null;
+			}).onRollback(() -> null).execute();
+		});
+	}
+	
+	@Override
 	public CentralisedFuture<Boolean> undoPunishmentByTypeAndVictim(final PunishmentType type, final Victim victim) {
 		Objects.requireNonNull(victim, "victim");
 		if (!type.isSingular()) {
@@ -161,6 +197,83 @@ public class Enactor implements PunishmentEnactor {
 					.params(victim, victim.getType())
 					.updateCount((updateCount) -> updateCount == 1)
 					.execute();
+		});
+	}
+
+	@Override
+	public CentralisedFuture<Punishment> undoAndGetPunishmentByTypeAndVictim(PunishmentType type, Victim victim) {
+		Objects.requireNonNull(victim, "victim");
+		if (!type.isSingular()) {
+			throw new IllegalArgumentException("undoAndGetPunishmentByTypeAndVictim may only be used for bans and mutes, not " + type);
+		}
+		Database database = core.getDatabase();
+		return database.selectAsync(() -> {
+			return database.jdbCaesar().transaction().transactor((querySource) -> {
+				Punishment punishment = querySource.query(
+						"SELECT `id`, `operator`, `reason`, `scope`, `start`, `end` FROM "
+						+ "`libertybans_simple_" + type.getLowercaseNamePlural() + "` WHERE "
+						+ "`victim` = ? AND `victim_type` = ?")
+						.params(victim, victim.getType())
+						.singleResult((resultSet) -> {
+							return new SecurePunishment(resultSet.getInt("id"), type,
+								victim, database.getOperatorFromResult(resultSet),
+								database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
+								database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
+						}).execute();
+				if (punishment == null) {
+					return null;
+				}
+				boolean deleted = querySource.query(
+						"DELETE FROM `libertybans_" + type.getLowercaseNamePlural()
+						+ "` WHERE `victim` = ? AND `victim_type` = ?")
+						.params(victim, victim.getType())
+						.updateCount((updateCount) -> updateCount == 1)
+						.execute();
+				assert deleted : punishment;
+				return punishment;
+			}).onRollback(() -> null).execute();
+		});
+	}
+
+	@Override
+	public CentralisedFuture<Boolean> undoWarnByIdAndVictim(int id, Victim victim) {
+		Objects.requireNonNull(victim, "victim");
+		Database database = core.getDatabase();
+		return database.selectAsync(() -> {
+			return database.jdbCaesar().query(
+					"DELETE FROM `libertybans_warns` WHERE `id` = ? AND `victim` = ? AND `victim_type` = ?")
+					.params(id, victim, victim.getType())
+					.updateCount((updateCount) -> updateCount == 1)
+					.execute();
+		});
+	}
+
+	@Override
+	public CentralisedFuture<Punishment> undoAndGetWarnByIdAndVictim(int id, Victim victim) {
+		Objects.requireNonNull(victim, "victim");
+		Database database = core.getDatabase();
+		return database.selectAsync(() -> {
+			return database.jdbCaesar().transaction().transactor((querySource) -> {
+				Punishment punishment = querySource.query(
+						"SELECT `operator`, `reason`, `scope`, `start`, `end` FROM "
+						+ "`libertybans_simple_warns` WHERE `id` = ? AND `victim` = ? AND `victim_type` = ?")
+						.params(id, victim, victim.getType())
+						.singleResult((resultSet) -> {
+							return new SecurePunishment(id, PunishmentType.WARN, victim, database.getOperatorFromResult(resultSet),
+									database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
+									database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
+						}).execute();
+				if (punishment == null) {
+					return null;
+				}
+				boolean deleted = database.jdbCaesar().query(
+						"DELETE FROM `libertybans_warns` WHERE `id` = ?")
+						.params(id)
+						.updateCount((updateCount) -> updateCount == 1)
+						.execute();
+				assert deleted : punishment;
+				return punishment;
+			}).onRollback(() -> null).execute();
 		});
 	}
 	

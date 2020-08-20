@@ -20,7 +20,7 @@ additions:
     permission:
       command: '&7You may not ban other players.'
     error:
-      conflicting: '&c&o%TARGET%&r&7is already banned!'
+      conflicting: '&c&o%TARGET%&r&7 is already banned!'
     successful:
       message: '&aBanned &c&o%TARGET%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%'
       notification: '&c&o%OPERATOR%&r&7 banned &c&o%TARGET%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
@@ -34,15 +34,47 @@ additions:
       - '&3&lAppeal Your Punishment'
       - '&cWebsite: &7website'
       - '&cDiscord: &7discord'
+  mutes:
+    usage: '&cUsage: /mute &e<player> [time] <reason>&c.'
+    permission:
+      command: '&7You may not mute other players.'
+    error:
+      conflicting: '&c&o%TARGET%&r&7 is already muted!'
+    successful:
+      message: '&aMuted &c&o%TARGET%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%'
+      notification: '&c&o%OPERATOR%&r&7 muted &c&o%TARGET%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
+    layout:
+      - '&7&lMuted'
+      - '&cDuration: &e%DURATION%'
+      - '&7'
+      - '&c&lReason'
+      - '&7%REASON%'
 removals:
   bans:
     usage: '&cUsage: /unban &e<player>&c.'
     permission:
       command: '&7You may not unban other players.'
-    not-found: '&c&o%TARGET%&r&7is not banned.'
+    not-found: '&c&o%TARGET%&r&7 is not banned.'
     successful:
       message: '&7Unbanned &c&o%TARGET%&r&7.'
       notification: '&c&o%UNOPERATOR%&r&7 unbanned &c&o%TARGET%&r&7.'
+  mutes:
+    usage: '&cUsage: /unmute &e<player>&c.'
+    permission:
+      command: '&7You may not unmute other players.'
+    not-found: '&c&o%TARGET%&r&7 is not muted.'
+    successful:
+      message: '&7Unmuted &c&o%TARGET%&r&7.'
+      notification: '&c&o%UNOPERATOR%&r&7 unmuted &c&o%TARGET%&r&7.'
+  warns:
+    usage: '&cUsage: /unwarn &e<player> <id>&c.'
+    permission:
+      command: '&7You may not unwarn other players.'
+    not-found: '&c&o%TARGET%&r&7 does not have a warn by &c&o%ID%&r&7.'
+    not-a-number: '&c&o%ID_ARG%&r&7 is not a number.'
+    successful:
+      message: '&7Unmuted &c&o%TARGET%&r&7.'
+      notification: '&c&o%UNOPERATOR%&r&7 unmuted &c&o%TARGET%&r&7.'
 list:
   banlist:
     usage: '&cUsage: /banlist [page].'

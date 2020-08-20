@@ -24,12 +24,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
-
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.uuidvault.api.UUIDUtil;
-import space.arim.uuidvault.api.UUIDVault;
 
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.chat.parser.SendableMessageParser;
@@ -74,13 +71,17 @@ public class Formatter {
 	 * @return the punishment message future
 	 */
 	public CentralisedFuture<SendableMessage> getPunishmentMessage(Punishment punishment) {
-		return formatVictim(punishment.getVictim()).thenApplyAsync((victimFormatted) -> {
-			String path = "additions." + punishment.getType().getLowercaseNamePlural() + ".layout";
-			return formatAndParseAllLines(core.getConfigs().getMessages().getStringList(path), punishment, victimFormatted);
+		return formatVictim(punishment.getVictim()).thenCompose((victimFormatted) -> {
+			return formatOperator(punishment.getOperator()).thenApplyAsync((operatorFormatted) -> {
+				String path = "additions." + punishment.getType().getLowercaseNamePlural() + ".layout";
+				return formatAndParseAllLines(core.getConfigs().getMessages().getStringList(path), punishment,
+						victimFormatted, operatorFormatted);
+			});
 		});
 	}
 	
-	private SendableMessage formatAndParseAllLines(List<String> messages, Punishment punishment, String victimFormatted) {
+	private SendableMessage formatAndParseAllLines(List<String> messages, Punishment punishment, String victimFormatted,
+			String operatorFormatted) {
 		StringBuilder result = new StringBuilder();
 		String[] msgArray = messages.toArray(new String[] {});
 		for (int n = 0; n < msgArray.length; n++) {
@@ -89,10 +90,11 @@ public class Formatter {
 			}
 			result.append(msgArray[n]);
 		}
-		return formatWithPunishmentAsSendableMessage(result.toString(), punishment, victimFormatted);
+		return formatWithPunishmentAsSendableMessage(result.toString(), punishment, victimFormatted, operatorFormatted);
 	}
 	
-	private String formatWithPunishment0(String message, Punishment punishment, String victimFormatted) {
+	private String formatWithPunishment0(String message, Punishment punishment, String victimFormatted,
+			String operatorFormatted) {
 		long now = MiscUtil.currentTime();
 		long start = punishment.getStart();
 		long end = punishment.getEnd();
@@ -108,7 +110,7 @@ public class Formatter {
 		return message.replace("%ID%", Integer.toString(punishment.getID()))
 				.replace("%TYPE%", formatType(punishment.getType())).replace("%VICTIM%", victimFormatted)
 				.replace("%VICTIM_ID%", formatVictimId(punishment.getVictim()))
-				.replace("%OPERATOR%", formatOperator(punishment.getOperator()))
+				.replace("%OPERATOR%", operatorFormatted)
 				.replace("%REASON%", punishment.getReason())
 				.replace("%SCOPE%", core.getScopeManager().getServer(punishment.getScope()))
 				.replace("%DURATION%", formatRelative(duration))
@@ -118,13 +120,16 @@ public class Formatter {
 				.replace("%TIME_END_REL%", formatRelative(timeRemaining));
 	}
 	
-	private SendableMessage formatWithPunishmentAsSendableMessage(String message, Punishment punishment, String victimFormatted) {
-		return parseMessage(formatWithPunishment0(message, punishment, victimFormatted));
+	private SendableMessage formatWithPunishmentAsSendableMessage(String message, Punishment punishment,
+			String victimFormatted, String operatorFormatted) {
+		return parseMessage(formatWithPunishment0(message, punishment, victimFormatted, operatorFormatted));
 	}
 	
 	public CentralisedFuture<SendableMessage> formatWithPunishment(String message, Punishment punishment) {
-		return formatVictim(punishment.getVictim()).thenApplyAsync((victimFormatted) -> {
-			return formatWithPunishmentAsSendableMessage(message, punishment, victimFormatted);
+		return formatVictim(punishment.getVictim()).thenCompose((victimFormatted) -> {
+			return formatOperator(punishment.getOperator()).thenApplyAsync((operatorFormatted) -> {
+				return formatWithPunishmentAsSendableMessage(message, punishment, victimFormatted, operatorFormatted);
+			});
 		});
 	}
 
@@ -150,7 +155,7 @@ public class Formatter {
 			 * This should be a complete future every time we call this ourselves, because of UUIDMaster's fastCache.
 			 * However, for API calls, the UUID/name might not be added to the cache.
 			 */
-			return core.getFuturesFactory().copyFuture(UUIDVault.get().resolve(((PlayerVictim) victim).getUUID()));
+			return core.getUUIDMaster().fullLookupName(((PlayerVictim) victim).getUUID());
 		case ADDRESS:
 			return core.getFuturesFactory().completedFuture(formatAddressVictim((AddressVictim) victim));
 		default:
@@ -158,13 +163,16 @@ public class Formatter {
 		}
 	}
 	
-	private String formatOperator(Operator operator) {
+	public CentralisedFuture<String> formatOperator(Operator operator) {
 		switch (operator.getType()) {
 		case CONSOLE:
-			return core.getConfigs().getConfig().getString("formatting.console-display");
+			return core.getFuturesFactory().completedFuture(core.getConfigs().getConfig().getString("formatting.console-display"));
 		case PLAYER:
-			// This should never be null, because of UUIDMaster's fastCache
-			return Objects.requireNonNull(UUIDVault.get().resolveImmediately(((PlayerOperator) operator).getUUID()));
+			/*
+			 * Similarly in #formatVictim, this should be a complete future every time we call this ourselves,
+			 * because of UUIDMaster's fastCache.
+			 */
+			return core.getUUIDMaster().fullLookupName(((PlayerOperator) operator).getUUID());
 		default:
 			throw new IllegalStateException("Unknown operator type " + operator.getType());
 		}
@@ -195,27 +203,25 @@ public class Formatter {
 		if (diff < 0) {
 			return formatRelative(-diff);
 		}
-		List<String> result = new ArrayList<>();
+		List<String> segments = new ArrayList<>();
 		for (Entry<String, Long> unit : timeUnits) {
 			String unitName = unit.getKey();
 			long unitLength = unit.getValue();
 			if (diff > unitLength && core.getConfigs().getMessages().getBoolean("misc.time." + unitName + ".enable")) {
 				long amount = (diff / unitLength);
 				diff -= (amount * unitLength);
-				result.add(core.getConfigs().getMessages().getString("misc.time." + unitName + ".message").replace(unitName.toUpperCase(), Long.toString(amount)));
+				segments.add(core.getConfigs().getMessages().getString("misc.time." + unitName + ".message").replace(unitName.toUpperCase(), Long.toString(amount)));
 			}
 		}
 		StringBuilder builder = new StringBuilder();
-		String[] resultArray = result.toArray(new String[] {});
-	
-		for (int n = 0; n < resultArray.length; n++) {
+		for (int n = 0; n < segments.size(); n++) {
 			if (n != 0) {
 				builder.append(", ");
 			}
-			if (n == resultArray.length - 1) {
+			if (n == segments.size() - 1) {
 				builder.append(core.getConfigs().getMessages().getString("misc.time.and"));
 			}
-			builder.append(resultArray[n]);
+			builder.append(segments.get(n));
 		}
 		return builder.toString();
 	}

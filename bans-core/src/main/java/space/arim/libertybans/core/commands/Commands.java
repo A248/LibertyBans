@@ -43,13 +43,8 @@ public class Commands {
 		subCommands = List.of(new PunishCommands(this), new UnpunishCommands(this), new ReloadCommands(this));
 	}
 	
-	// Shortcut access for convenience
-	
-	ConfigAccessor config() {
-		return core.getConfigs().getConfig();
-	}
-	
-	ConfigAccessor messages() {
+	// Shortcut access for convenience	
+	private ConfigAccessor messages() {
 		return core.getConfigs().getMessages();
 	}
 	
@@ -67,7 +62,7 @@ public class Commands {
 			// Prevent JSON injection
 			String args = command.clone().allRemaining();
 			if (args.indexOf('|') != -1) {
-				sender.parseThenSend(config().getString("json.illegal-char"));
+				sender.parseThenSend(core.getConfigs().getConfig().getString("json.illegal-char"));
 				return;
 			}
 		}
