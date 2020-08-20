@@ -27,9 +27,9 @@ import space.arim.libertybans.api.PunishmentType;
 public final class MiscUtil {
 	
 	/**
-	 * The maximum amount of which can be stored in an INT UNSIGNED data type
+	 * The biggest value can be stored in a 32bit unsigned integer
 	 */
-	private static final long INT_UNSIGNED_MAX_VALUE = Integer.MAX_VALUE - Integer.MIN_VALUE;
+	private static final long INT_UNSIGNED_MAX_VALUE = ((long) Integer.MAX_VALUE) - ((long) Integer.MIN_VALUE);
 	
 	private static final PunishmentType[] PUNISHMENT_TYPES = PunishmentType.values();
 	
@@ -92,7 +92,7 @@ public final class MiscUtil {
 	}
 	
 	/**
-	 * Validates that start and ends values are within range of SQL's INT UNSIGNED data type.
+	 * Validates that start and ends values are within range of a 32bit unsigned integer.
 	 * 
 	 * @param draftPunishment the draft punishment
 	 * @throws NullPointerException if {@code draftPunishment} is null
