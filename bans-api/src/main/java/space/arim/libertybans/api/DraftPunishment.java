@@ -45,7 +45,7 @@ public final class DraftPunishment extends AbstractPunishment {
 		private Operator operator;
 		private String reason;
 		private Scope scope;
-		private Long start;
+		private long start = -1L;
 		private long end = 0L;
 		
 		/**
@@ -154,8 +154,8 @@ public final class DraftPunishment extends AbstractPunishment {
 		 * @return this builder
 		 */
 		public Builder end(long end) {
-			if (end < -1L) {
-				throw new IllegalArgumentException("End time must be greater than or equal to 0, or -1 for permanent");
+			if (end < 0L) {
+				throw new IllegalArgumentException("End time must be greater than or equal to 0");
 			}
 			this.end = end;
 			return this;
@@ -175,7 +175,7 @@ public final class DraftPunishment extends AbstractPunishment {
 				throw new IllegalArgumentException("Punishment details have not been set");
 			}
 			return new DraftPunishment(type, victim, operator, reason, scope,
-					(start != null) ? start : System.currentTimeMillis() / 1_000L, end);
+					(start == -1L) ? (System.currentTimeMillis() / 1_000L) : start, end);
 		}
 		
 	}

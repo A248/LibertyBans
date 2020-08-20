@@ -27,6 +27,7 @@ import space.arim.api.configure.ConfigAccessor;
 
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.env.CmdSender;
 
@@ -64,7 +65,7 @@ public class Commands {
 			}
 		}
 		if (!command.hasNext()) {
-			sender.parseThenSend(messages().getString("all.usage"));
+			sender.parseThenSend("&7&lLibertyBans version " +  PluginInfo.VERSION);
 			return;
 		}
 		String firstArg = command.next().toLowerCase(Locale.ENGLISH);
