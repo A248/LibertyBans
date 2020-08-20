@@ -24,7 +24,11 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import space.arim.omnibus.Omnibus;
+import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import space.arim.libertybans.api.LibertyBans;
@@ -56,6 +60,8 @@ public class LibertyBansCore implements LibertyBans, Part {
 	private final Commands commands;
 	
 	private final List<Runnable> delayedShutdownHooks = new ArrayList<>();
+	
+	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
 	public LibertyBansCore(Omnibus omnibus,
 			Path folder, AbstractEnv environment) {
@@ -184,6 +190,19 @@ public class LibertyBansCore implements LibertyBans, Part {
 		synchronized (delayedShutdownHooks) {
 			delayedShutdownHooks.add(hook);
 		}
+	}
+	
+	public <T> void debugFuture(@SuppressWarnings("unused") T value, Throwable ex) {
+		if (ex != null) {
+			logger.warn("Miscellaneous issue executing asynchronous computation", ex);
+		}
+	}
+	
+	public <T> T debugFutureHandled(T value, Throwable ex) {
+		if (ex != null) {
+			logger.warn("Miscellaneous issue executing asynchronous computation", ex);
+		}
+		return value;
 	}
 	
 }

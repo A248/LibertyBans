@@ -103,7 +103,7 @@ public class PunishCommands extends SubCommandGroup {
 				String notifyPerm = "libertybans." + type.getLowercaseName() + ".notify"; // libertybans.ban.notify
 				core().getEnvironment().getEnforcer().sendToThoseWithPermission(notifyPerm, futureNotify.join());
 			});
-		});
+		}).whenComplete(core()::debugFuture);
 	}
 
 }
