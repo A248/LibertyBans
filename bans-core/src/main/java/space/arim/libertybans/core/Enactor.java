@@ -92,7 +92,7 @@ public class Enactor implements PunishmentEnactor {
 						throw new RollMeBackException();
 					}
 					querySource.query(
-							"INSERT INTO `libertybans_history` (`id`, `victim`, `victim_type`) VALUES (?, ?, ?")
+							"INSERT INTO `libertybans_history` (`id`, `victim`, `victim_type`) VALUES (?, ?, ?)")
 							.params(id, victim, victim.getType())
 							.voidResult().execute();
 					return new SecurePunishment(id, type, victim, operator, reason,

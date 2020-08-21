@@ -95,7 +95,7 @@ public class PunishCommands extends SubCommandGroup {
 			CentralisedFuture<?> enforcement = core().getEnforcer().enforce(punishment);
 
 			// Notification
-			String configMsgPath = "addition." + type.getLowercaseNamePlural() + ".successful.notification"; // addition.bans.successful.notification
+			String configMsgPath = "additions." + type.getLowercaseNamePlural() + ".successful.notification"; // addition.bans.successful.notification
 			String rawNotify = messages().getString(configMsgPath);
 			CentralisedFuture<SendableMessage> futureNotify = core().getFormatter().formatWithPunishment(rawNotify, punishment);
 

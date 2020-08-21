@@ -37,6 +37,7 @@ import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.Scope;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.MiscUtil;
@@ -108,12 +109,20 @@ public class Formatter {
 				.replace("%VICTIM_ID%", formatVictimId(punishment.getVictim()))
 				.replace("%OPERATOR%", operatorFormatted)
 				.replace("%REASON%", punishment.getReason())
-				.replace("%SCOPE%", core.getScopeManager().getServer(punishment.getScope()))
+				.replace("%SCOPE%", formatScope(punishment.getScope()))
 				.replace("%DURATION%", formatRelative(duration))
 				.replace("%TIME_START_ABS%", formatAbsolute(start))
 				.replace("%TIME_START_REL%", formatRelative(timePassed))
 				.replace("%TIME_END_ABS%", formatAbsolute(end))
 				.replace("%TIME_END_REL%", formatRelative(timeRemaining));
+	}
+	
+	private String formatScope(Scope scope) {
+		String scopeDisplay = core.getScopeManager().getServer(scope);
+		if (scopeDisplay == null) {
+			scopeDisplay = core.getConfigs().getConfig().getString("formatting.global-scope-display");
+		}
+		return scopeDisplay;
 	}
 	
 	/**
