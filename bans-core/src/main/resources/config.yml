@@ -13,6 +13,8 @@ formatting:
   permanent-display: 'Permanently'
   # How should the console be displayed?
   console-display: 'Console'
+  # How should the global scope be displayed?
+  global-scope-display: 'Global'
   # How should dates be formatted? Follows Java's DateTimeFormatter.ofPattern
   dates: 'dd/MM/yyyy kk:mm'
 reasons:
