@@ -28,7 +28,7 @@
 		<uuidvault.version>0.5.2-SNAPSHOT</uuidvault.version>
 
 		<!-- Internal dependencies -->
-		<jdbcaesar.version>0.4.0-SNAPSHOT</jdbcaesar.version>
+		<jdbcaesar.version>0.4.1-SNAPSHOT</jdbcaesar.version>
 		<arimapi.version>0.19.11-SNAPSHOT</arimapi.version>
 		<slf4j.version>1.7.25</slf4j.version>
 		<hikari.version>3.4.5</hikari.version>

@@ -101,6 +101,7 @@ public class Database implements PunishmentDatabase {
 					logger.error("Error while executing a database query", ex);
 				})
 				.defaultIsolation(IsolationLevel.REPEATABLE_READ)
+				.rewrapExceptions(true)
 				.addAdapters(adapters);
 		if (vendor.noUnsignedNumerics()) {
 			jdbCaesarBuilder.addAdapter(new JdbCaesarHelper.UnsigningTimestampAdapter());
