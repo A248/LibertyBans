@@ -18,12 +18,12 @@ additions:
   bans:
     usage: '&cUsage: /ban &e<player> [time] <reason>&c.'
     permission:
-      command: '&7You may not ban other players.'
+      command: '&cYou may not ban other players.'
     error:
       conflicting: '&c&o%TARGET%&r&7 is already banned!'
     successful:
-      message: '&aBanned &c&o%TARGET%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%'
-      notification: '&c&o%OPERATOR%&r&7 banned &c&o%TARGET%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
+      message: '&aBanned &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.'
+      notification: '&c&o%OPERATOR%&r&7 banned &c&o%VICTIM%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
     layout:
       - '&7&lBanned'
       - '&cDuration: &e%DURATION%'
@@ -37,12 +37,12 @@ additions:
   mutes:
     usage: '&cUsage: /mute &e<player> [time] <reason>&c.'
     permission:
-      command: '&7You may not mute other players.'
+      command: '&cYou may not mute other players.'
     error:
       conflicting: '&c&o%TARGET%&r&7 is already muted!'
     successful:
-      message: '&aMuted &c&o%TARGET%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%'
-      notification: '&c&o%OPERATOR%&r&7 muted &c&o%TARGET%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
+      message: '&aMuted &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.'
+      notification: '&c&o%OPERATOR%&r&7 muted &c&o%VICTIM%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
     layout:
       - '&7&lMuted'
       - '&cDuration: &e%DURATION%'
@@ -52,10 +52,23 @@ additions:
   warns:
     usage: '&cUsage: /warn &e<player> [time] <reason>&c.'
     permission:
-      command: '&7You may not warn other players.'
+      command: '&cYou may not warn other players.'
     successful:
-      message: '&aMuted &c&o%TARGET%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%'
-      notification: '&c&o%OPERATOR%&r&7 muted &c&o%TARGET%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
+      message: '&aMuted &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.'
+      notification: '&c&o%OPERATOR%&r&7 muted &c&o%VICTIM%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
+    layout:
+      - '&7&lMuted'
+      - '&cDuration: &e%DURATION%'
+      - '&7'
+      - '&c&lReason'
+      - '&7%REASON%'
+  kicks:
+    usage: '&cUsage: /kick &e<player> <reason>&c.'
+    permission:
+      command: '&cYou may not kick other players.'
+    successful:
+      message: '&aMuted &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.'
+      notification: '&c&o%OPERATOR%&r&7 muted &c&o%VICTIM%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
     layout:
       - '&7&lMuted'
       - '&cDuration: &e%DURATION%'
@@ -66,7 +79,7 @@ removals:
   bans:
     usage: '&cUsage: /unban &e<player>&c.'
     permission:
-      command: '&7You may not unban other players.'
+      command: '&cYou may not unban other players.'
     not-found: '&c&o%TARGET%&r&7 is not banned.'
     successful:
       message: '&7Unbanned &c&o%TARGET%&r&7.'
@@ -74,7 +87,7 @@ removals:
   mutes:
     usage: '&cUsage: /unmute &e<player>&c.'
     permission:
-      command: '&7You may not unmute other players.'
+      command: '&cYou may not unmute other players.'
     not-found: '&c&o%TARGET%&r&7 is not muted.'
     successful:
       message: '&7Unmuted &c&o%TARGET%&r&7.'
@@ -82,7 +95,7 @@ removals:
   warns:
     usage: '&cUsage: /unwarn &e<player> <id>&c.'
     permission:
-      command: '&7You may not unwarn other players.'
+      command: '&cYou may not unwarn other players.'
     not-found: '&c&o%TARGET%&r&7 does not have a warn by &c&o%ID%&r&7.'
     not-a-number: '&c&o%ID_ARG%&r&7 is not a number.'
     successful:

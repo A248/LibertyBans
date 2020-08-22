@@ -21,6 +21,7 @@ package space.arim.libertybans.core.config;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -138,8 +139,12 @@ public class Configs implements Part {
 		return configPackage.messages.getAccessor();
 	}
 	
-	public DateTimeFormatter getTimeFormatter() {
-		return getConfig().getObject("formatting.dates", DateTimeFormatter.class);
+	DateTimeFormatter getTimeFormatter() {
+		return getConfig().getObject("formatting.dates.format", DateTimeFormatter.class);
+	}
+	
+	ZoneId getZoneId() {
+		return getConfig().getObject("formatting.dates.timezone", ZoneId.class);
 	}
 	
 	public AddressStrictness getAddressStrictness() {
