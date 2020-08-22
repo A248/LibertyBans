@@ -18,7 +18,10 @@
  */
 package space.arim.libertybans.core.config;
 
+import java.time.DateTimeException;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.zone.ZoneRulesException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,8 +50,8 @@ final class ConfigUtil {
 	
 	private ConfigUtil() {}
 	
-	private static ValueTransformer timeTransformer() {
-		return SingleKeyValueTransformer.create("formatting.dates", (value) -> {
+	private static ValueTransformer dateFormatTransformer() {
+		return SingleKeyValueTransformer.create("formatting.dates.format", (value) -> {
 			DateTimeFormatter result = null;
 			if (value instanceof String) {
 				String timeF = (String) value;
@@ -58,8 +61,30 @@ final class ConfigUtil {
 			}
 			if (result == null) {
 				//result = DateTimeFormatter.ofPattern("dd/MM/yyyy kk:mm");
-				logger.info("Config option formatting.dates invalid: {}", value);
+				logger.info("Config option formatting.dates.format invalid: {}", value);
 			}
+			return result;
+		});
+	}
+	
+	private static ValueTransformer dateZoneTransformer() {
+		return SingleKeyValueTransformer.create("formatting.dates.timezone", (value) -> {
+			ZoneId result = null;
+			if (value instanceof String) {
+				String timeZ = (String) value;
+				if (timeZ.equalsIgnoreCase("default")) {
+					return ZoneId.systemDefault();
+				}
+				try {
+					return ZoneId.of(timeZ);
+				} catch (ZoneRulesException ex) {
+					logger.warn("Unknown region ID {} (ZoneRulesException)", timeZ);
+				} catch (DateTimeException ex) {
+					logger.warn("Invalid timezone {} (DateTimeException)", timeZ);
+				}
+				return null;
+			}
+			logger.info("Config option formatting.dates.timezone invalid: {}", value);
 			return result;
 		});
 	}
@@ -134,7 +159,8 @@ final class ConfigUtil {
 	
 	static List<ValueTransformer> configTransformers() {
 		List<ValueTransformer> result = new ArrayList<>();
-		result.add(timeTransformer());
+		result.add(dateFormatTransformer());
+		result.add(dateZoneTransformer());
 		result.add(strictnessTransformer());
 		result.add(syncEnforcementTransformer());
 		result.addAll(UUIDMaster.createValueTransformers());

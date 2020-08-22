@@ -24,6 +24,7 @@ import java.util.ListIterator;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +54,8 @@ public class UUIDMaster implements Part {
 	private final ResolverImpl resolverImpl;
 	
 	private volatile UUIDVaultStuff uuidStuff;
+	
+	private static final Pattern VALID_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]*+");
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
@@ -87,6 +90,14 @@ public class UUIDMaster implements Part {
 	
 	private <T> CentralisedFuture<T> completedFuture(T value) {
 		return core.getFuturesFactory().completedFuture(value);
+	}
+	
+	public boolean validateNameArgument(String name) {
+		return validateNameArgument0(name);
+	}
+	
+	static boolean validateNameArgument0(String name) {
+		return name.length() <= 16 && VALID_NAME_PATTERN.matcher(name).matches();
 	}
 	
 	/*

@@ -19,11 +19,13 @@
 package space.arim.libertybans.core.config;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.uuidvault.api.UUIDUtil;
@@ -190,7 +192,8 @@ public class Formatter {
 	}
 	
 	private String formatAbsolute(long time) {
-		return core.getConfigs().getTimeFormatter().format(Instant.ofEpochSecond(time));
+		ZonedDateTime zonedDate = Instant.ofEpochSecond(time).atZone(core.getConfigs().getZoneId());
+		return core.getConfigs().getTimeFormatter().format(zonedDate);
 	}
 	
 	static {
@@ -217,7 +220,8 @@ public class Formatter {
 			if (diff > unitLength && core.getConfigs().getMessages().getBoolean("misc.time." + unitName + ".enable")) {
 				long amount = (diff / unitLength);
 				diff -= (amount * unitLength);
-				segments.add(core.getConfigs().getMessages().getString("misc.time." + unitName + ".message").replace(unitName.toUpperCase(), Long.toString(amount)));
+				segments.add(core.getConfigs().getMessages().getString("misc.time." + unitName + ".message")
+						.replace('%' + unitName.toUpperCase() + '%', Long.toString(amount)));
 			}
 		}
 		StringBuilder builder = new StringBuilder();

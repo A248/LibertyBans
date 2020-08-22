@@ -78,6 +78,9 @@ public class Commands {
 	}
 	
 	CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg) {
+		if (!core.getUUIDMaster().validateNameArgument(targetArg)) {
+			return core.getFuturesFactory().completedFuture(null);
+		}
 		return core.getUUIDMaster().fullLookupUUID(targetArg).thenApply((uuid) -> {
 			if (uuid == null) {
 				sender.parseThenSend(messages().getString("all.not-found.uuid").replace("%TARGET%", targetArg));
