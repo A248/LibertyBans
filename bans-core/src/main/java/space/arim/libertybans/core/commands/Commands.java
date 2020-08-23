@@ -60,7 +60,7 @@ public class Commands {
 			// Prevent JSON injection
 			String args = command.clone().allRemaining();
 			if (args.indexOf('|') != -1) {
-				sender.parseThenSend(core.getConfigs().getConfig().getString("json.illegal-char"));
+				sender.parseThenSend(core.getConfigs().getMessages().getString("json.illegal-char"));
 				return;
 			}
 		}
@@ -70,11 +70,12 @@ public class Commands {
 		}
 		String firstArg = command.next().toLowerCase(Locale.ENGLISH);
 		for (SubCommandGroup subCommand : subCommands) {
-			if (subCommand.matches.contains(firstArg)) {
+			if (subCommand.matches(firstArg)) {
 				subCommand.execute(sender, command, firstArg);
-				break;
+				return;
 			}
 		}
+		sender.parseThenSend(core.getConfigs().getMessages().getString(""));
 	}
 	
 	CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg) {

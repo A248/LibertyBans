@@ -31,7 +31,7 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.MiscUtil;
 import space.arim.libertybans.core.env.CmdSender;
 
-public class PunishCommands extends SubCommandGroup {
+public class PunishCommands extends AbstractSubCommandGroup {
 
 	PunishCommands(Commands commands) {
 		super(commands, Arrays.stream(MiscUtil.punishmentTypes()).map((type) -> type.name().toLowerCase(Locale.ENGLISH))
@@ -39,7 +39,7 @@ public class PunishCommands extends SubCommandGroup {
 	}
 
 	@Override
-	void execute(CmdSender sender, CommandPackage command, String arg) {
+	public void execute(CmdSender sender, CommandPackage command, String arg) {
 		execute(sender, command, PunishmentType.valueOf(arg.toUpperCase(Locale.ENGLISH)));
 	}
 	

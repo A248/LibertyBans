@@ -94,29 +94,49 @@ public class Formatter {
 	
 	private String formatWithPunishment0(String message, Punishment punishment, String victimFormatted,
 			String operatorFormatted) {
-		long now = MiscUtil.currentTime();
-		long start = punishment.getStart();
-		long end = punishment.getEnd();
 
-		long duration = end - start;
+		final long now = MiscUtil.currentTime();
+		final long start = punishment.getStart();
+		final long end = punishment.getEnd();
+
 		long timePassed = now - start;
-		long timeRemaining;
-		if (timePassed < MARGIN_OF_INITIATION) {
-			timeRemaining = duration;
+
+		String durationFormatted;
+		String timeEndRelFormatted;
+
+		if (end == 0L) {
+			// Permanent punishment
+			ConfigAccessor config = core.getConfigs().getConfig();
+			durationFormatted = config.getString("formatting.permanent-display.relative");
+			timeEndRelFormatted = config.getString("formatting.permanent-display.absolute");
 		} else {
-			timeRemaining = end - now;
+			// Temporary punishment
+			long duration = end - start;
+			durationFormatted = formatRelative(duration);
+
+			long timeRemaining;
+			// Using a margin of initiation prevents the "29 days, 23 hours, 59 minutes" issue
+			if (timePassed < MARGIN_OF_INITIATION) {
+				timeRemaining = duration;
+			} else {
+				timeRemaining = end - now;
+			}
+			timeEndRelFormatted = formatRelative(timeRemaining);
 		}
-		return message.replace("%ID%", Integer.toString(punishment.getID()))
-				.replace("%TYPE%", formatType(punishment.getType())).replace("%VICTIM%", victimFormatted)
+
+		return message
+				.replace("%ID%", Integer.toString(punishment.getID()))
+				.replace("%TYPE%", formatType(punishment.getType()))
+				.replace("%VICTIM%", victimFormatted)
 				.replace("%VICTIM_ID%", formatVictimId(punishment.getVictim()))
 				.replace("%OPERATOR%", operatorFormatted)
 				.replace("%REASON%", punishment.getReason())
 				.replace("%SCOPE%", formatScope(punishment.getScope()))
-				.replace("%DURATION%", formatRelative(duration))
+				.replace("%DURATION%", durationFormatted)
 				.replace("%TIME_START_ABS%", formatAbsolute(start))
 				.replace("%TIME_START_REL%", formatRelative(timePassed))
 				.replace("%TIME_END_ABS%", formatAbsolute(end))
-				.replace("%TIME_END_REL%", formatRelative(timeRemaining));
+				.replace("%TIME_END_REL%", timeEndRelFormatted);
 	}
 	
 	private String formatScope(Scope scope) {

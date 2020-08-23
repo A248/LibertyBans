@@ -14,7 +14,9 @@ formatting:
     - 'permanent'
     - 'permanently'
   # How should 'permanent' be displayed as a length of time?
-  permanent-display: 'Permanently'
+  permanent-display:
+    relative: 'Permanently'
+    absolute: 'Never'
   # How should the console be displayed?
   console-display: 'Console'
   # How should the global scope be displayed?
@@ -24,7 +26,7 @@ formatting:
     # How should dates be formatted? Follows Java's DateTimeFormatter.ofPattern
     format: 'dd/MM/yyyy kk:mm'
     # Do you want to override the timezone? If 'default', the system default timezone is used
-    # Otherwise, the value must be in continent/city format, such as 'America/New_York'
+    # The value must be in continent/city format, such as 'America/New_York'. Uses Java's ZoneId.of
     timezone: 'default'
 reasons:
   # Are blank reasons permitted?
