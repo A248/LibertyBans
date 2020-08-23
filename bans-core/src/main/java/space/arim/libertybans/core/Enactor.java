@@ -82,15 +82,21 @@ public class Enactor implements PunishmentEnactor {
 								return genKeys.getInt("id");
 							}).execute();
 
-					int updateCount = querySource.query(
-							"INSERT IGNORE INTO `libertybans_" + type.getLowercaseNamePlural() + "` (`id`, `victim`, `victim_type`) "
-									+ "VALUES (?, ?, ?)")
-							.params(id, victim, victim.getType())
-							.updateCount(UpdateCountMapper.identity()).execute();
+					String enactStatement = "INSERT IGNORE INTO `libertybans_" + type.getLowercaseNamePlural() + "` (`id`, `victim`, `victim_type`) "
+							+ "VALUES (?, ?, ?)";
+					Object[] enactArgs = new Object[] {id, victim, victim.getType()};
 
-					if (type.isSingular() && updateCount == 0) {
-						throw new RollMeBackException();
+					if (type.isSingular()) {
+						int updateCount = querySource.query(enactStatement).params(enactArgs)
+								.updateCount(UpdateCountMapper.identity()).execute();
+						if (updateCount == 0) {
+							throw new RollMeBackException();
+						}
+					} else {
+						enactStatement = enactStatement.replace("INSERT IGNORE", "INSERT");
+						querySource.query(enactStatement).params(enactArgs).voidResult().execute();
 					}
+
 					querySource.query(
 							"INSERT INTO `libertybans_history` (`id`, `victim`, `victim_type`) VALUES (?, ?, ?)")
 							.params(id, victim, victim.getType())
