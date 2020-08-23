@@ -22,7 +22,7 @@ import space.arim.api.chat.SendableMessage;
 
 import space.arim.libertybans.core.env.CmdSender;
 
-public class ReloadCommands extends SubCommandGroup {
+public class ReloadCommands extends AbstractSubCommandGroup {
 
 	ReloadCommands(Commands commands) {
 		super(commands, "reload", "restart");
@@ -33,7 +33,7 @@ public class ReloadCommands extends SubCommandGroup {
 	}
 
 	@Override
-	void execute(CmdSender sender, CommandPackage command, String arg) {
+	public void execute(CmdSender sender, CommandPackage command, String arg) {
 		switch (arg) {
 		case "restart":
 			sender.sendMessage(ellipses());

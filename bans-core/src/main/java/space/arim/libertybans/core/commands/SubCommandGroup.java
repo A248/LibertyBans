@@ -18,51 +18,31 @@
  */
 package space.arim.libertybans.core.commands;
 
-import java.util.Set;
-
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.api.configure.ConfigAccessor;
-
-import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.env.CmdSender;
 
-public abstract class SubCommandGroup {
-
-	final Commands commands;
+/**
+ * A subcommand
+ * 
+ * @author A248
+ *
+ */
+public interface SubCommandGroup {
+	
 	/**
-	 * Matching commands, lowercased
+	 * Whether this subcommand object matches the specified subcommand argument
 	 * 
+	 * @param arg the argument, lowercased
+	 * @return true if matches, false otherwise
 	 */
-	final Set<String> matches;
-	
-	SubCommandGroup(Commands commands, String...matches) {
-		this.commands = commands;
-		this.matches = Set.of(matches);
-	}
-	
-	abstract void execute(CmdSender sender, CommandPackage command, String arg);
-	
-	/*
+	boolean matches(String arg);
+
+	/**
+	 * Executes the subcommand, assuming it matched the subcommand argument
 	 * 
-	 * Helper methods
-	 * 
+	 * @param sender the command sender
+	 * @param command the command
+	 * @param arg the argument, lowercased
 	 */
-	
-	<T> CentralisedFuture<T> completedFuture(T value) {
-		return commands.core.getFuturesFactory().completedFuture(value);
-	}
-	
-	LibertyBansCore core() {
-		return commands.core;
-	}
-	
-	ConfigAccessor config() {
-		return commands.core.getConfigs().getConfig();
-	}
-	
-	ConfigAccessor messages() {
-		return commands.core.getConfigs().getMessages();
-	}
+	void execute(CmdSender sender, CommandPackage command, String arg);
 	
 }

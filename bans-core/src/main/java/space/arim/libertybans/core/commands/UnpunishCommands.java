@@ -31,15 +31,15 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.MiscUtil;
 import space.arim.libertybans.core.env.CmdSender;
 
-public class UnpunishCommands extends SubCommandGroup {
+public class UnpunishCommands extends AbstractSubCommandGroup {
 	
 	UnpunishCommands(Commands commands) {
 		super(commands, Arrays.stream(MiscUtil.punishmentTypes()).filter((type) -> type != PunishmentType.KICK)
-				.map((type) -> type.name().toLowerCase(Locale.ENGLISH)).toArray(String[]::new));
+				.map((type) -> "un" + type.name().toLowerCase(Locale.ENGLISH)).toArray(String[]::new));
 	}
 
 	@Override
-	void execute(CmdSender sender, CommandPackage command, String arg) {
+	public void execute(CmdSender sender, CommandPackage command, String arg) {
 		execute(sender, command, PunishmentType.valueOf(arg.substring(2).toUpperCase(Locale.ENGLISH)));
 	}
 	
