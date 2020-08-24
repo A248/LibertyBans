@@ -18,33 +18,33 @@
  */
 package space.arim.libertybans.core.database;
 
-public enum Vendor {
+import java.sql.Connection;
+import java.sql.SQLException;
 
-	MARIADB("MariaDB", true),
-	HSQLDB("HyperSQL", false);
+import com.zaxxer.hikari.HikariDataSource;
+
+import space.arim.jdbcaesar.ConnectionSource;
+
+class HikariWrapper implements ConnectionSource {
+
+	private final HikariDataSource hikariDataSource;
 	
-	private final String displayName;
-	private final boolean unsignedNumerics;
-	
-	private Vendor(String displayName, boolean unsignedNumerics) {
-		this.displayName = displayName;
-		this.unsignedNumerics = unsignedNumerics;
+	HikariWrapper(HikariDataSource hikariDataSource) {
+		this.hikariDataSource = hikariDataSource;
 	}
 	
-	String displayName() {
-		return displayName;
+	HikariDataSource getHikariDataSource() {
+		return hikariDataSource;
 	}
-	
-	public boolean unsignedNumerics() {
-		return unsignedNumerics;
+
+	@Override
+	public Connection getConnection() throws SQLException {
+		return hikariDataSource.getConnection();
 	}
-	
-	public boolean noUnsignedNumerics() {
-		return !unsignedNumerics();
-	}
-	
-	public boolean useEnactmentProcedures() {
-		return this != HSQLDB;
+
+	@Override
+	public void close() {
+		hikariDataSource.close();
 	}
 	
 }

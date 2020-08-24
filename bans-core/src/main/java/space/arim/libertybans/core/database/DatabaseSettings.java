@@ -38,9 +38,19 @@ import space.arim.libertybans.bootstrap.StartupException;
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.driver.DriverCreator;
 
+/**
+ * Database settings creator, NOT thread safe!
+ * 
+ * @author A248
+ *
+ */
 class DatabaseSettings {
 
 	private final LibertyBansCore core;
+	
+	private ConfigAccessor config;
+	private Vendor vendor;
+	private HikariConfig hikariConf;
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
@@ -64,41 +74,35 @@ class DatabaseSettings {
 	 * @return a database result, which should be checked for success or failure
 	 */
 	CentralisedFuture<DatabaseResult> create(ConfigAccessor config) {
-		HikariConfig hikariConf = getHikariConfig(config);
-		Vendor vendor;
-		if (hikariConf.getPoolName().contains("MariaDB")) { // See end of #getHikariConfg
-			vendor = Vendor.MARIADB;
-		} else {
-			vendor = Vendor.HSQLDB;
-		}
+		this.config = config;
+		vendor = config.getObject("rdms-vendor", Vendor.class);
+		hikariConf = new HikariConfig();
+
+		setHikariConfig();
+
 		Database database = new Database(core, vendor, hikariConf, hikariConf.getMaximumPoolSize());
 
 		CentralisedFuture<Boolean> tablesAndViewsCreation = new TableDefinitions(core, database).createTablesAndViews();
 		return tablesAndViewsCreation.thenApply((success) -> new DatabaseResult(database, success));
 	}
 	
-	// Returns true if authentication details still allow MariaDB usage
-	private static boolean setUsernameAndPassword(ConfigAccessor config, boolean useMariaDb, HikariConfig hikariConf) {
-		String username = config.getString("mariadb-details.user");
-		String password = config.getString("mariadb-details.password");
-		if (useMariaDb && (username.equals("username") || password.equals("defaultpass"))) {
+	private void setUsernameAndPassword() {
+		String username = config.getString("auth-details.user");
+		String password = config.getString("auth-details.password");
+		if (vendor == Vendor.MARIADB && (username.equals("username") || password.equals("defaultpass"))) {
 			logger.warn("Not using MariaDB/MySQL because authentication details are still default");
-			useMariaDb = false;
+			vendor = Vendor.HSQLDB;
 		}
-		if (!useMariaDb) {
+		if (vendor == Vendor.HSQLDB) {
 			username = "SA";
 			password = "";
 		}
 		hikariConf.setUsername(username);
 		hikariConf.setPassword(password);
-		return useMariaDb;
 	}
 	
-	private HikariConfig getHikariConfig(ConfigAccessor config) {
-		HikariConfig hikariConf = new HikariConfig();
-		boolean useMariaDb = config.getBoolean("storage-backend-mysql");
-
-		useMariaDb = setUsernameAndPassword(config, useMariaDb, hikariConf);
+	private void setHikariConfig() {
+		setUsernameAndPassword();
 
 		int poolSize = config.getInteger("connection-pool-size");
 		hikariConf.setMinimumIdle(poolSize);
@@ -109,7 +113,7 @@ class DatabaseSettings {
 		hikariConf.setConnectionTimeout(TimeUnit.MILLISECONDS.convert(connectionTimeout, TimeUnit.SECONDS));
 		hikariConf.setMaxLifetime(TimeUnit.MILLISECONDS.convert(maxLifetime, TimeUnit.MINUTES));
 
-		setConfiguredDriver(config, hikariConf, useMariaDb);
+		setConfiguredDriver();
 
 		hikariConf.setAutoCommit(false);
 
@@ -121,24 +125,24 @@ class DatabaseSettings {
 			logger.trace("Setting data source property {} to {}", propName, propValue);
 			hikariConf.addDataSourceProperty(propName, propValue);
 		}
-		/*
-		 * The presence of "MariaDB" in the pool name is relied on in #create
-		 */
-		String mode = (useMariaDb) ? "MariaDB" : "HyperSQL";
-		hikariConf.setPoolName("LibertyBans-HikariCP-" + mode);
-		return hikariConf;
+
+		hikariConf.setPoolName("LibertyBans-HikariCP-" + vendor.displayName());
 	}
 	
-	private void setConfiguredDriver(ConfigAccessor config, HikariConfig hikariConf, boolean useMariaDb) {
+	private void setConfiguredDriver() {
 		boolean jdbcUrl = config.getBoolean("use-traditional-jdbc-url");
 		DriverCreator driverCreator = new DriverCreator(hikariConf, jdbcUrl);
-		if (useMariaDb) {
-			String host = config.getString("mariadb-details.host");
-			int port = config.getInteger("mariadb-details.port");
-			String database = config.getString("mariadb-details.database");
-			driverCreator.createMariaDb(host, port, database);
 
-		} else {
+		switch (vendor) {
+
+		case MARIADB:
+			String host = config.getString("auth-details.host");
+			int port = config.getInteger("auth-details.port");
+			String database = config.getString("auth-details.database");
+			driverCreator.createMariaDb(host, port, database);
+			break;
+
+		case HSQLDB:
 			Path databaseFolder = core.getFolder().resolve("hypersql");
 			if (!Files.isDirectory(databaseFolder)) {
 				try {
@@ -148,7 +152,11 @@ class DatabaseSettings {
 				}
 			}
 			driverCreator.createHsqldb(databaseFolder + "/punishments-database");
-		}
+			break;
+
+		default:
+			throw new IllegalStateException("Unknown database vendor " + vendor);
+		}			
 	}
 	
 }

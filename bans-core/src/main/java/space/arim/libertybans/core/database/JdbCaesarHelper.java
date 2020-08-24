@@ -19,13 +19,10 @@
 package space.arim.libertybans.core.database;
 
 import java.net.InetAddress;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.UUID;
-
-import com.zaxxer.hikari.HikariDataSource;
 
 import space.arim.uuidvault.api.UUIDUtil;
 
@@ -39,7 +36,6 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.Victim.VictimType;
 import space.arim.libertybans.core.Scoper;
 
-import space.arim.jdbcaesar.ConnectionSource;
 import space.arim.jdbcaesar.adapter.DataTypeAdapter;
 
 public class JdbCaesarHelper {
@@ -148,30 +144,6 @@ public class JdbCaesarHelper {
 				return ((Long) parameter).longValue() + Integer.MIN_VALUE;
 			}
 			return parameter;
-		}
-		
-	}
-	
-	static class HikariWrapper implements ConnectionSource {
-
-		private final HikariDataSource hikariDataSource;
-		
-		HikariWrapper(HikariDataSource hikariDataSource) {
-			this.hikariDataSource = hikariDataSource;
-		}
-		
-		HikariDataSource getHikariDataSource() {
-			return hikariDataSource;
-		}
-
-		@Override
-		public Connection getConnection() throws SQLException {
-			return hikariDataSource.getConnection();
-		}
-
-		@Override
-		public void close() {
-			hikariDataSource.close();
 		}
 		
 	}
