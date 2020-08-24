@@ -88,8 +88,10 @@ public class TableDefinitions {
 						.replace("<victimTypeInfo>", victimTypeInfo);
 
 				if (vendor == Vendor.MARIADB) {
+					// Ensure UTF8
+					sqlQuery += " CHARACTER SET `utf8mb4` COLLATE `utf8mb4_general_ci`";
 					// Ensure InnoDB
-					sqlQuery = sqlQuery.concat(" ENGINE = INNODB");
+					sqlQuery += " ENGINE `InnoDB`";
 				}
 				if (vendor.noUnsignedNumerics()) {
 					sqlQuery = sqlQuery.replace("INT UNSIGNED", "INT");
@@ -142,7 +144,7 @@ public class TableDefinitions {
 		/*
 		 * Refresher event, using MariaDB/MySQL database-side events
 		 */
-		CentralisedFuture<String> refresherEventFuture;
+		final CentralisedFuture<String> refresherEventFuture;
 		if (vendor == Vendor.MARIADB) {
 			refresherEventFuture = readResource("event_refresher");
 			futures.add(refresherEventFuture);

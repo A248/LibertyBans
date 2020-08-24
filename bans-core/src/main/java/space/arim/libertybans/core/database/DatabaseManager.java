@@ -19,6 +19,7 @@
 package space.arim.libertybans.core.database;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -99,6 +100,23 @@ public class DatabaseManager implements Part {
 	}
 	
 	public static List<ValueTransformer> createConfigTransformers() {
+		var vendorTransformer = SingleKeyValueTransformer.create("rdms-vendor", (value) -> {
+			if (value instanceof String) {
+				String vendorName = (String) value;
+				switch (vendorName.toUpperCase(Locale.ENGLISH)) {
+				case "HYPERSQL":
+				case "HSQLDB":
+					return Vendor.HSQLDB;
+				case "MYSQL":
+				case "MARIADB":
+					return Vendor.MARIADB;
+				default:
+					break;
+				}
+			}
+			logger.warn("Unknown RDMS vendor {}", value);
+			return null;
+		});
 		var poolSizeTransformer = SingleKeyValueTransformer.createPredicate("connection-pool-size", (value) -> {
 			if (!isAtLeast(value, 0)) {
 				logger.warn("Bad connection pool size {}", value);
@@ -120,7 +138,7 @@ public class DatabaseManager implements Part {
 			}
 			return false;
 		});
-		return List.of(poolSizeTransformer, timeoutTransformer, lifetimeTransformer);
+		return List.of(vendorTransformer, poolSizeTransformer, timeoutTransformer, lifetimeTransformer);
 	}
 	
 }

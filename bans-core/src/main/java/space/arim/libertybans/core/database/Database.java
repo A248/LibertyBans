@@ -52,7 +52,6 @@ import space.arim.libertybans.api.Victim.VictimType;
 import space.arim.libertybans.core.LibertyBansCore;
 
 import space.arim.jdbcaesar.JdbCaesar;
-import space.arim.jdbcaesar.adapter.DataTypeAdapter;
 import space.arim.jdbcaesar.adapter.EnumNameAdapter;
 import space.arim.jdbcaesar.builder.JdbCaesarBuilder;
 import space.arim.jdbcaesar.transact.IsolationLevel;
@@ -86,25 +85,25 @@ public class Database implements PunishmentDatabase {
 		this.vendor = vendor;
 
 		executor = Executors.newFixedThreadPool(poolSize, new IOUtils.ThreadFactoryImpl("LibertyBans-Database-"));
-		HikariDataSource hikariDataSource = new HikariDataSource(hikariConf);
+		HikariWrapper connectionSource = new HikariWrapper(new HikariDataSource(hikariConf));
 
-		DataTypeAdapter[] adapters = {
-				new EnumNameAdapter<>(PunishmentType.class),
-				new JdbCaesarHelper.VictimAdapter(),
-				new EnumNameAdapter<>(Victim.VictimType.class),
-				new JdbCaesarHelper.OperatorAdapter(),
-				new JdbCaesarHelper.ScopeAdapter(core.getScopeManager()),
-				new JdbCaesarHelper.InetAddressAdapter()};
 		JdbCaesarBuilder jdbCaesarBuilder = new JdbCaesarBuilder()
-				.connectionSource(new JdbCaesarHelper.HikariWrapper(hikariDataSource))
+				.connectionSource(connectionSource)
 				.exceptionHandler((ex) -> {
 					logger.error("Error while executing a database query", ex);
 				})
 				.defaultIsolation(IsolationLevel.REPEATABLE_READ)
 				.rewrapExceptions(true)
-				.addAdapters(adapters);
+				.addAdapters(
+						new EnumNameAdapter<>(PunishmentType.class),
+						new JdbCaesarHelper.VictimAdapter(),
+						new EnumNameAdapter<>(Victim.VictimType.class),
+						new JdbCaesarHelper.OperatorAdapter(),
+						new JdbCaesarHelper.ScopeAdapter(core.getScopeManager()),
+						new JdbCaesarHelper.InetAddressAdapter());
 		if (vendor.noUnsignedNumerics()) {
-			jdbCaesarBuilder.addAdapter(new JdbCaesarHelper.UnsigningTimestampAdapter());
+			jdbCaesarBuilder.addAdapter(
+					new JdbCaesarHelper.UnsigningTimestampAdapter());
 		}
 		jdbCaesar = jdbCaesarBuilder.build();
 	}
