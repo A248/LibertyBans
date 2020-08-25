@@ -32,7 +32,6 @@ import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import space.arim.libertybans.api.LibertyBans;
-import space.arim.libertybans.api.RunState;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.Formatter;
@@ -107,12 +106,12 @@ public class LibertyBansCore implements LibertyBans, Part {
 		configs.shutdown();
 		databaseManager.shutdown();
 
-		// 6 seconds should be sufficient
+		// 4 seconds should be sufficient
 		CompletableFuture.runAsync(() -> {
 			for (Runnable hook : delayedShutdownHooks) {
 				hook.run();
 			}
-		}, CompletableFuture.delayedExecutor(6, TimeUnit.SECONDS)).join();
+		}, CompletableFuture.delayedExecutor(4, TimeUnit.SECONDS)).join();
 	}
 	
 	public Path getFolder() {
@@ -121,11 +120,6 @@ public class LibertyBansCore implements LibertyBans, Part {
 	
 	public AbstractEnv getEnvironment() {
 		return environment;
-	}
-	
-	@Override
-	public RunState getRunState() {
-		return environment.getRunState();
 	}
 	
 	@Override

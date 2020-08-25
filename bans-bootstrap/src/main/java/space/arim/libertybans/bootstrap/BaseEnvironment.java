@@ -18,12 +18,11 @@
  */
 package space.arim.libertybans.bootstrap;
 
+import static space.arim.libertybans.bootstrap.RunState.*;
+
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import space.arim.libertybans.api.RunState;
-import static space.arim.libertybans.api.RunState.*;
 
 public abstract class BaseEnvironment {
 
@@ -46,6 +45,8 @@ public abstract class BaseEnvironment {
 				runState = LOADING;
 				if (timedEvent(LoadPoint.START)) {
 					runState = RUNNING;
+				} else {
+					runState = FAILED;
 				}
 			}
 		} finally {
@@ -67,6 +68,8 @@ public abstract class BaseEnvironment {
 			runState = LOADING;
 			if (timedEvent(LoadPoint.RESTART)) {
 				runState = RUNNING;
+			} else {
+				runState = FAILED;
 			}
 		} finally {
 			runStateLock.unlock();
@@ -86,6 +89,8 @@ public abstract class BaseEnvironment {
 				runState = LOADING;
 				if (timedEvent(LoadPoint.STOP)) {
 					runState = IDLE;
+				} else {
+					runState = FAILED;
 				}
 			}
 		} finally {

@@ -23,8 +23,6 @@ import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 public interface LibertyBans {
 
-	RunState getRunState();
-	
 	Omnibus getOmnibus();
 	
 	FactoryOfTheFuture getFuturesFactory();
