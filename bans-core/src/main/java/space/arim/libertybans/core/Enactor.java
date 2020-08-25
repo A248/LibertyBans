@@ -59,7 +59,7 @@ public class Enactor implements PunishmentEnactor {
 
 				return database.jdbCaesar().query(
 						"{CALL `libertybans_" + enactmentProcedure + "` (?, ?, ?, ?, ?, ?, ?)}")
-						.params(victim, victim.getType(), operator, reason,
+						.params(victim, victim.getType().ordinal() + 1, operator, reason,
 								scope, draftPunishment.getStart(), draftPunishment.getEnd())
 
 						.singleResult((resultSet) -> {

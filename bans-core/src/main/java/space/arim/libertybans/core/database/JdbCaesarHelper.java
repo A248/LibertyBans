@@ -124,6 +124,18 @@ public class JdbCaesarHelper {
 		
 	}
 	
+	static class UUIDBytesAdapter implements DataTypeAdapter {
+		
+		@Override
+		public Object adaptObject(Object parameter) {
+			if (parameter instanceof UUID) {
+				return UUIDUtil.toByteArray((UUID) parameter);
+			}
+			return parameter;
+		}
+		
+	}
+	
 	static class InetAddressAdapter implements DataTypeAdapter {
 
 		@Override

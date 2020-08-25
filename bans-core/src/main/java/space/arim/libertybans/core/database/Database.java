@@ -100,6 +100,7 @@ public class Database implements PunishmentDatabase {
 						new EnumNameAdapter<>(Victim.VictimType.class),
 						new JdbCaesarHelper.OperatorAdapter(),
 						new JdbCaesarHelper.ScopeAdapter(core.getScopeManager()),
+						new JdbCaesarHelper.UUIDBytesAdapter(),
 						new JdbCaesarHelper.InetAddressAdapter());
 		if (vendor.noUnsignedNumerics()) {
 			jdbCaesarBuilder.addAdapter(

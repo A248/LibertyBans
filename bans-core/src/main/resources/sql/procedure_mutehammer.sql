@@ -1,4 +1,4 @@
-DELIMITER //
+-- DELIMITER //
 
 CREATE PROCEDURE `libertybans_mutehammer` (
 IN victim_var VARBINARY(16),
@@ -29,6 +29,6 @@ BEGIN
 		SELECT LAST_INSERT_ID() AS `id`;
 	END IF;
 
-END //
+END
 
-DELIMITER ;
+-- DELIMITER ;

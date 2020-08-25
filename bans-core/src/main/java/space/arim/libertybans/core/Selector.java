@@ -260,14 +260,14 @@ public class Selector implements PunishmentSelector {
 
 			return database.jdbCaesar().transaction().transactor((querySource) -> {
 				querySource.query(
-						"INSERT INTO `libertybans_addresses` (`uuid`, `address`) VALUES (?, ?) "
+						"INSERT INTO `libertybans_addresses` (`uuid`, `address`, `updated`) VALUES (?, ?, ?) "
 								+ "ON DUPLICATE KEY UPDATE `updated` = ?")
-						.params(uuid, address, currentTime)
+						.params(uuid, address, currentTime, currentTime)
 						.voidResult().execute();
 				querySource.query(
-						"INSERT INTO `libertybans_names` (`uuid`, `name`) VALUES (?, ?) "
+						"INSERT INTO `libertybans_names` (`uuid`, `name`, `updated`) VALUES (?, ?, ?) "
 						+ "ON DUPLICATE KEY UPDATE `updated` = ?")
-						.params(uuid, name, currentTime)
+						.params(uuid, name, currentTime, currentTime)
 						.voidResult().execute();
 				Punishment potentialBan = querySource.query(
 						query.getKey())

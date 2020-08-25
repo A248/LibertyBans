@@ -1,4 +1,4 @@
-DELIMITER //
+-- DELIMITER //
 
 CREATE PROCEDURE `libertybans_warntallier` (
 IN victim_var VARBINARY(16),
@@ -21,6 +21,6 @@ BEGIN
 	COMMIT;
 	SELECT LAST_INSERT_ID() AS `id`;
 
-END //
+END
 
-DELIMITER ;
+-- DELIMITER ;
