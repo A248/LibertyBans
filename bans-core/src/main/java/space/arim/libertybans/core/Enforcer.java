@@ -30,7 +30,7 @@ import space.arim.api.chat.SendableMessage;
 import space.arim.api.env.annote.PlatformPlayer;
 
 import space.arim.libertybans.api.AddressVictim;
-import space.arim.libertybans.api.AddressVictim.NetworkAddress;
+import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.api.PunishmentEnforcer;

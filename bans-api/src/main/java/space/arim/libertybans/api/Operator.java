@@ -19,12 +19,13 @@
 package space.arim.libertybans.api;
 
 /**
- * A server operator able to punish victims
+ * A server operator able to punish victims. More information on the specific details of an operator
+ * is available through subclasses
  * 
  * @author A248
  *
  */
-public class Operator {
+public abstract class Operator {
 	
 	private final OperatorType type;
 	
@@ -35,14 +36,14 @@ public class Operator {
 	/**
 	 * Gets the type of the operator
 	 * 
-	 * @return the type
+	 * @return the operator type
 	 */
 	public OperatorType getType() {
 		return type;
 	}
 
 	/**
-	 * Type of operators
+	 * A type of operator. Corresponds to the subclasses of {@code Operator}
 	 * 
 	 * @author A248
 	 *
@@ -50,7 +51,7 @@ public class Operator {
 	public enum OperatorType {
 		
 		/**
-		 * A player with appropriate permissions, e.g. a player with the Admin rank
+		 * A player with appropriate permissions
 		 * 
 		 */
 		PLAYER,
@@ -61,5 +62,8 @@ public class Operator {
 		CONSOLE
 		
 	}
+	
+	@Override
+	public abstract String toString();
 	
 }

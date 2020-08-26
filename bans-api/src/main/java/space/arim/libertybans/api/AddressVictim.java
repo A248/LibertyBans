@@ -19,8 +19,7 @@
 package space.arim.libertybans.api;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * An IP address as the victim of a punishment
@@ -28,23 +27,46 @@ import java.util.Arrays;
  * @author A248
  *
  */
-public class AddressVictim extends Victim {
+public final class AddressVictim extends Victim {
 
 	private final NetworkAddress address;
 	
-	public AddressVictim(NetworkAddress address) {
+	private AddressVictim(NetworkAddress address) {
 		super(VictimType.ADDRESS);
 		this.address = address;
 	}
 	
 	/**
-	 * Gets a victim for the specified address
+	 * Gets a victim for the specified {@link NetworkAddress}
 	 * 
 	 * @param address the network address
 	 * @return a victim representing the address
+	 * @throws NullPointerException if {@code address} is null
 	 */
 	public static AddressVictim of(NetworkAddress address) {
-		return of(address);
+		return new AddressVictim(Objects.requireNonNull(address, "address"));
+	}
+	
+	/**
+	 * Gets a victim for the specified {@link InetAddress}
+	 * 
+	 * @param address the inet address
+	 * @return a victim representing the address
+	 */
+	public static AddressVictim of(InetAddress address) {
+		return new AddressVictim(NetworkAddress.of(address));
+	}
+	
+	/**
+	 * Gets a victim for the specified address bytes. Shortcut for
+	 * <code> AddressVictim.of(NetworkAddress.of(address)) </code>
+	 * 
+	 * @param address the raw address bytes
+	 * @return a victim representing the address
+	 * @throws IllegalArgumentException if the address bytes array is of illegal length
+	 */
+	public static AddressVictim of(byte[] address) {
+		return new AddressVictim(NetworkAddress.of(address));
 	}
 	
 	/**
@@ -55,95 +77,30 @@ public class AddressVictim extends Victim {
 	public NetworkAddress getAddress() {
 		return address;
 	}
-	
-	/**
-	 * Lighter alternative to {@code InetAddress} specialised for handling the raw address,
-	 * and not anything related to hostnames, etc.
-	 * 
-	 * @author A248
-	 *
-	 */
-	public static final class NetworkAddress {
-		
-		private final byte[] address;
-		
-		/**
-		 * Creates from an address byte array. For IPv4 addresses, this should be 4 bytes long,
-		 * for IPv6, 16 bytes. <br>
-		 * <br>
-		 * The array follows the same specifications as {@link InetAddress#getAddress()}
-		 * 
-		 * @param address the address array
-		 * @throws IllegalArgumentException if the array is of illegal length
-		 */
-		public NetworkAddress(byte[] address) {
-			if (address.length != 4 && address.length != 16) {
-				throw new IllegalArgumentException("Bad address length");
-			}
-			this.address = address;
-		}
-		
-		/**
-		 * Creates from a {@code InetAddress}
-		 * 
-		 * @param address the inet address
-		 */
-		public NetworkAddress(InetAddress address) {
-			// Note: Should never throw IllegalArgumentException
-			this(address.getAddress());
-		}
-		
-		/**
-		 * Gets the raw address bytes of this network address
-		 * 
-		 * @return the raw address
-		 */
-		public byte[] getRawAddress() {
-			return address.clone();
-		}
-		
-		/**
-		 * Converts this network address to an equivalent {@code InetAddress}
-		 * 
-		 * @return the inet address
-		 */
-		public InetAddress toInetAddress() {
-			try {
-				return InetAddress.getByAddress(address);
-			} catch (UnknownHostException ex) {
-				throw new AssertionError(ex);
-			}
-		}
 
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + Arrays.hashCode(address);
-			return result;
-		}
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + address.hashCode();
+		return result;
+	}
 
-		@Override
-		public boolean equals(Object object) {
-			if (this == object) {
-				return true;
-			}
-			if (!(object instanceof NetworkAddress)) {
-				return false;
-			}
-			NetworkAddress other = (NetworkAddress) object;
-			return Arrays.equals(address, other.address);
+	@Override
+	public boolean equals(Object object) {
+		if (this == object) {
+			return true;
 		}
+		if (!(object instanceof AddressVictim)) {
+			return false;
+		}
+		AddressVictim other = (AddressVictim) object;
+		return address.equals(other.address);
+	}
 
-		/**
-		 * Returns a textual representation of this network address
-		 * 
-		 */
-		@Override
-		public String toString() {
-			return toInetAddress().getHostAddress();
-		}
-		
+	@Override
+	public String toString() {
+		return "AddressVictim [address=" + address + "]";
 	}
 
 }

@@ -18,7 +18,14 @@
  */
 package space.arim.libertybans.api;
 
-public class Victim {
+/**
+ * The victim of a punishment. More information on the specific details of a victim
+ * is available through subclasses
+ * 
+ * @author A248
+ *
+ */
+public abstract class Victim {
 	
 	private final VictimType type;
 	
@@ -26,13 +33,32 @@ public class Victim {
 		this.type = type;
 	}
 	
+	/**
+	 * Gets the type of the victim
+	 * 
+	 * @return the victim type
+	 */
 	public VictimType getType() {
 		return type;
 	}
 
+	/**
+	 * A victim type. Corresponds to the subclasses of {@code Victim}
+	 * 
+	 * @author A248
+	 *
+	 */
 	public enum VictimType {
 		
+		/**
+		 * A player
+		 * 
+		 */
 		PLAYER,
+		/**
+		 * An IP address
+		 * 
+		 */
 		ADDRESS;
 		
 		/**
@@ -54,5 +80,14 @@ public class Victim {
 		}
 		
 	}
+	
+	@Override
+	public abstract int hashCode();
+	
+	@Override
+	public abstract boolean equals(Object object);
+	
+	@Override
+	public abstract String toString();
 	
 }

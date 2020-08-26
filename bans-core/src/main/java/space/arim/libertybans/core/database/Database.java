@@ -47,7 +47,6 @@ import space.arim.libertybans.api.PunishmentDatabase;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Scope;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.api.AddressVictim.NetworkAddress;
 import space.arim.libertybans.api.Victim.VictimType;
 import space.arim.libertybans.core.LibertyBansCore;
 
@@ -208,7 +207,7 @@ public class Database implements PunishmentDatabase {
 		case PLAYER:
 			return PlayerVictim.of(UUIDUtil.fromByteArray(bytes));
 		case ADDRESS:
-			return AddressVictim.of(new NetworkAddress(bytes));
+			return AddressVictim.of(bytes);
 		default:
 			throw new IllegalStateException("Unknown victim type " + vType);
 		}

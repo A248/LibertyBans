@@ -18,8 +18,15 @@
  */
 package space.arim.libertybans.api;
 
+import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * An operator which is a player
+ * 
+ * @author A248
+ *
+ */
 public final class PlayerOperator extends Operator {
 	
 	private final UUID uuid;
@@ -29,12 +36,49 @@ public final class PlayerOperator extends Operator {
 		this.uuid = uuid;
 	}
 	
+	/**
+	 * Gets an operator from a UUID
+	 * 
+	 * @param uuid the player UUID
+	 * @return the operator representation of the player
+	 * @throws NullPointerException if {@code uuid} is null
+	 */
 	public static PlayerOperator of(UUID uuid) {
-		return new PlayerOperator(uuid);
+		return new PlayerOperator(Objects.requireNonNull(uuid, "uuid"));
 	}
 	
+	/**
+	 * Gets the UUID of this player operator
+	 * 
+	 * @return the uuid
+	 */
 	public UUID getUUID() {
 		return uuid;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + uuid.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if (this == object) {
+			return true;
+		}
+		if (!(object instanceof PlayerOperator)) {
+			return false;
+		}
+		PlayerOperator other = (PlayerOperator) object;
+		return uuid.equals(other.uuid);
+	}
+
+	@Override
+	public String toString() {
+		return "PlayerOperator [uuid=" + uuid + "]";
 	}
 
 }

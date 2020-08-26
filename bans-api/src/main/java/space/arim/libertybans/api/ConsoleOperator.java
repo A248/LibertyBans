@@ -24,7 +24,7 @@ package space.arim.libertybans.api;
  * @author A248
  *
  */
-public class ConsoleOperator extends Operator {
+public final class ConsoleOperator extends Operator {
 
 	/**
 	 * The console operator instance
@@ -34,6 +34,11 @@ public class ConsoleOperator extends Operator {
 	
 	private ConsoleOperator() {
 		super(OperatorType.CONSOLE);
+	}
+
+	@Override
+	public String toString() {
+		return "ConsoleOperator.INSTANCE";
 	}
 	
 }

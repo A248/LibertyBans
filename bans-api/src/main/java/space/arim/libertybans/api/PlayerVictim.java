@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.api;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -26,7 +27,7 @@ import java.util.UUID;
  * @author A248
  *
  */
-public class PlayerVictim extends Victim {
+public final class PlayerVictim extends Victim {
 
 	private final UUID uuid;
 	
@@ -36,13 +37,14 @@ public class PlayerVictim extends Victim {
 	}
 	
 	/**
-	 * Gets a victim for the specified UUID
+	 * Gets a victim from a UUID
 	 * 
 	 * @param uuid the player UUID
-	 * @return the victim representation
+	 * @return the victim representation of the player
+	 * @throws NullPointerException if {@code uuid} is null
 	 */
 	public static PlayerVictim of(UUID uuid) {
-		return new PlayerVictim(uuid);
+		return new PlayerVictim(Objects.requireNonNull(uuid, "uuid"));
 	}
 	
 	/**
@@ -52,6 +54,31 @@ public class PlayerVictim extends Victim {
 	 */
 	public UUID getUUID() {
 		return uuid;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + uuid.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if (this == object) {
+			return true;
+		}
+		if (!(object instanceof PlayerVictim)) {
+			return false;
+		}
+		PlayerVictim other = (PlayerVictim) object;
+		return uuid.equals(other.uuid);
+	}
+
+	@Override
+	public String toString() {
+		return "PlayerVictim [uuid=" + uuid + "]";
 	}
 
 }

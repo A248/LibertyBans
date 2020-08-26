@@ -34,4 +34,15 @@ public interface Scope {
 	 */
 	boolean appliesTo(String server);
 	
+	/**
+	 * Determines equality with a given object. The contract of the {@code equals} method for {@code Scope}
+	 * is that the other object must be an instance of the same implementation type, and it must apply to the
+	 * same possible server strings as described in {@link #appliesTo(String)}
+	 * 
+	 * @param object the object to determine equality with
+	 * @return true if equal, false otherwise
+	 */
+	@Override
+	boolean equals(Object object);
+	
 }
