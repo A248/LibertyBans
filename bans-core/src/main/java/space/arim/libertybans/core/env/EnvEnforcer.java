@@ -21,13 +21,22 @@ package space.arim.libertybans.core.env;
 import java.util.UUID;
 
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.annote.PlatformPlayer;
 
 public interface EnvEnforcer {
 	
 	void sendToThoseWithPermission(String permission, SendableMessage message);
+	
+	@PlatformPlayer Object getOnlinePlayerByUUID(UUID uuid);
 
 	void kickByUUID(UUID uuid, SendableMessage message);
 	
+	void sendMessageByUUID(UUID uuid, SendableMessage message);
+	
 	void enforceMatcher(TargetMatcher matcher);
+	
+	UUID getUniqueIdFor(@PlatformPlayer Object player);
+	
+	byte[] getAddressFor(@PlatformPlayer Object player);
 	
 }

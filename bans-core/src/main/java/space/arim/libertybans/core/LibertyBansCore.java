@@ -52,6 +52,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 	private final UUIDMaster uuidMaster;
 	
 	private final Selector selector;
+	private final Cacher cacher;
 	private final Enactor enactor;
 	private final Enforcer enforcer;
 	private final Scoper scoper;
@@ -75,6 +76,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 		uuidMaster = new UUIDMaster(this);
 
 		selector = new Selector(this);
+		cacher = new Cacher(this);
 		enactor = new Enactor(this);
 		enforcer = new Enforcer(this);
 		scoper = new Scoper();
@@ -156,6 +158,10 @@ public class LibertyBansCore implements LibertyBans, Part {
 	@Override
 	public Selector getSelector() {
 		return selector;
+	}
+	
+	public Cacher getCacher() {
+		return cacher;
 	}
 
 	@Override

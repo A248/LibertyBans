@@ -41,4 +41,14 @@ public interface PunishmentEnforcer {
 	 */
 	CentralisedFuture<?> enforce(Punishment punishment);
 	
+	/**
+	 * "Unenforces" a punishment. <br>
+	 * <br>
+	 * This will update local punishment caches, such as the mute cache.
+	 * 
+	 * @param punishment the punishment to unenforce
+	 * @return a future completed when unenforcement has been conducted
+	 */
+	CentralisedFuture<?> unenforce(Punishment punishment);
+	
 }

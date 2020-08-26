@@ -19,10 +19,12 @@
 package space.arim.libertybans.core.config;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.AbstractMap;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -71,7 +73,7 @@ public class Formatter {
 	}
 	
 	public boolean isJsonEnabled() {
-		return core.getConfigs().getMessages().getBoolean("json.enable");
+		return core.getConfigs().getMessages().getBoolean("formatting.enable-json");
 	}
 	
 	/**
@@ -106,7 +108,7 @@ public class Formatter {
 
 		if (end == 0L) {
 			// Permanent punishment
-			ConfigAccessor config = core.getConfigs().getConfig();
+			ConfigAccessor config = core.getConfigs().getMessages();
 			durationFormatted = config.getString("formatting.permanent-display.relative");
 			timeEndRelFormatted = config.getString("formatting.permanent-display.absolute");
 		} else {
@@ -142,7 +144,7 @@ public class Formatter {
 	private String formatScope(Scope scope) {
 		String scopeDisplay = core.getScopeManager().getServer(scope);
 		if (scopeDisplay == null) {
-			scopeDisplay = core.getConfigs().getConfig().getString("formatting.global-scope-display");
+			scopeDisplay = core.getConfigs().getMessages().getString("formatting.global-scope-display");
 		}
 		return scopeDisplay;
 	}
@@ -195,7 +197,7 @@ public class Formatter {
 	public CentralisedFuture<String> formatOperator(Operator operator) {
 		switch (operator.getType()) {
 		case CONSOLE:
-			return core.getFuturesFactory().completedFuture(core.getConfigs().getConfig().getString("formatting.console-display"));
+			return core.getFuturesFactory().completedFuture(core.getConfigs().getMessages().getString("formatting.console-display"));
 		case PLAYER:
 			/*
 			 * Similarly in #formatVictim, this should be a complete future every time we call this ourselves,
@@ -212,21 +214,20 @@ public class Formatter {
 	}
 	
 	private String formatAbsolute(long time) {
-		ZonedDateTime zonedDate = Instant.ofEpochSecond(time).atZone(core.getConfigs().getZoneId());
-		return core.getConfigs().getTimeFormatter().format(zonedDate);
+		ZoneId zoneId = core.getConfigs().getConfig().getObject("date-formatting.timezone", ZoneId.class);
+		ZonedDateTime zonedDate = Instant.ofEpochSecond(time).atZone(zoneId);
+		DateTimeFormatter formatter = core.getConfigs().getConfig().getObject("date-formatting.format", DateTimeFormatter.class);
+		return formatter.format(zonedDate);
 	}
 	
 	static {
-		List<Entry<String, Long>> list = List.of(timeUnitEntry("years", 31_536_000L),
-				timeUnitEntry("months", 2_592_000L), timeUnitEntry("weeks", 604_800L), timeUnitEntry("days", 86_400L),
-				timeUnitEntry("hours", 3_600L), timeUnitEntry("minutes", 60L));
+		List<Entry<String, Long>> list = List.of(
+				Map.entry("years", 31_536_000L), Map.entry("months", 2_592_000L),
+				Map.entry("weeks", 604_800L), Map.entry("days", 86_400L),
+				Map.entry("hours", 3_600L), Map.entry("minutes", 60L));
 		@SuppressWarnings("unchecked")
 		Entry<String, Long>[] asArray = (Entry<String, Long>[]) list.toArray(new Map.Entry<?, ?>[] {});
 		timeUnits = asArray;
-	}
-	
-	private static Map.Entry<String, Long> timeUnitEntry(String key, long value) {
-		return new AbstractMap.SimpleImmutableEntry<>(key, value);
 	}
 	
 	private String formatRelative(long diff) {
@@ -241,16 +242,21 @@ public class Formatter {
 				long amount = (diff / unitLength);
 				diff -= (amount * unitLength);
 				segments.add(core.getConfigs().getMessages().getString("misc.time." + unitName + ".message")
-						.replace('%' + unitName.toUpperCase() + '%', Long.toString(amount)));
+						.replace('%' + unitName.toUpperCase(Locale.ENGLISH) + '%', Long.toString(amount)));
 			}
 		}
 		StringBuilder builder = new StringBuilder();
+		final boolean comma = core.getConfigs().getMessages().getBoolean("misc.time.grammar.comma");
+
 		for (int n = 0; n < segments.size(); n++) {
-			if (n != 0) {
-				builder.append(", ");
-			}
-			if (n == segments.size() - 1) {
+			boolean lastElement = n == segments.size() - 1;
+			if (lastElement) {
 				builder.append(core.getConfigs().getMessages().getString("misc.time.and"));
+			} else if (comma) {
+				builder.append(',');
+			}
+			if (n != 0) {
+				builder.append(" ");
 			}
 			builder.append(segments.get(n));
 		}

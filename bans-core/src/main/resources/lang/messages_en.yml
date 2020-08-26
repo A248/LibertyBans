@@ -1,19 +1,45 @@
+# Message configuration
+# Changing these settings can be done at any time; all punishments will be formatted accordingly
+# regardless of when they were made.
 all:
+  # The global prefix
   prefix:
+    # If enabled, all messages will be sent prefixed with the given value
     enable: true
+    # The prefix to use
     value: '&6&lLibertyBans &r&8»&7 '
+  # If a player types /libertybans but does not have the permission 'libertybans.commands', this is the denial message
   base-permission-message: '&cYou may not use this.'
+  # When issuing commands, if the specified target was not found, what should the error message be?
   not-found:
     uuid: '&c&o%TARGET%&r&7 was not found online or offline.'
-    ip: '&c&o%TARGET%&r&7 is not a valid IP.'
-    either: '&c&o%TARGET%&r&7 is not a valid player or IP.'
+    ip: '&c&o%TARGET%&r&7 is not a valid IP address.'
+    either: '&c&o%TARGET%&r&7 is not a valid player or IP address.'
+# Admin commands
 admin:
   ellipses: '&a...'
   reloaded: '&aReloaded!'
   restarted: '&aRestarted!'
-json:
-  enable: true
-  illegal-char: '&cYou may not use this character in commands: |'
+# Specific formatting options
+formatting:
+  # Should JSON formatting be enabled?
+  enable-json: true
+  # There are 2 ways to make permanent punishments. The first is to not specify a time (/ban <player> <reason>).
+  # The second is to specify a permanent amount of time (/ban <player> perm <reason>).
+  # When typing commands, what time arguments will be counted as permanent?
+  permanent-arguments:
+    - 'perm'
+    - 'permanent'
+    - 'permanently'
+  # How should 'permanent' be displayed as a length of time?
+  permanent-display:
+    relative: 'Permanent'
+    absolute: 'Never'
+  # How should the console be displayed?
+  console-display: 'Console'
+  # How should the global scope be displayed?
+  global-scope-display: 'Global'
+# Messages regarding /ban, /mute, /warn, /kick
 additions:
   bans:
     usage: '&cUsage: /ban &e<player> [time] <reason>&c.'
@@ -54,10 +80,10 @@ additions:
     permission:
       command: '&cYou may not warn other players.'
     successful:
-      message: '&aMuted &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.'
-      notification: '&c&o%OPERATOR%&r&7 muted &c&o%VICTIM%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
+      message: '&aWarned &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.'
+      notification: '&c&o%OPERATOR%&r&7 warned &c&o%VICTIM%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
     layout:
-      - '&7&lMuted'
+      - '&7&lWarned'
       - '&cDuration: &e%DURATION%'
       - '&7'
       - '&c&lReason'
@@ -67,14 +93,15 @@ additions:
     permission:
       command: '&cYou may not kick other players.'
     successful:
-      message: '&aMuted &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.'
-      notification: '&c&o%OPERATOR%&r&7 muted &c&o%VICTIM%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
+      message: '&aKicked &c&o%VICTIM%&r&a because of &e&o%REASON%&r&a.'
+      notification: '&c&o%OPERATOR%&r&7 kicked &c&o%VICTIM%&r&7 because of &e&o%REASON%&r&7.'
     layout:
-      - '&7&lMuted'
+      - '&7&lKicked'
       - '&cDuration: &e%DURATION%'
       - '&7'
       - '&c&lReason'
       - '&7%REASON%'
+# Messages regarding /unban, /unmute, /unwarn
 removals:
   bans:
     usage: '&cUsage: /unban &e<player>&c.'
@@ -82,7 +109,7 @@ removals:
       command: '&cYou may not unban other players.'
     not-found: '&c&o%TARGET%&r&7 is not banned.'
     successful:
-      message: '&7Unbanned &c&o%TARGET%&r&7.'
+      message: '&7Unbanned &c&o%VICTIM%&r&7.'
       notification: '&c&o%UNOPERATOR%&r&7 unbanned &c&o%TARGET%&r&7.'
   mutes:
     usage: '&cUsage: /unmute &e<player>&c.'
@@ -90,7 +117,7 @@ removals:
       command: '&cYou may not unmute other players.'
     not-found: '&c&o%TARGET%&r&7 is not muted.'
     successful:
-      message: '&7Unmuted &c&o%TARGET%&r&7.'
+      message: '&7Unmuted &c&o%VICTIM%&r&7.'
       notification: '&c&o%UNOPERATOR%&r&7 unmuted &c&o%TARGET%&r&7.'
   warns:
     usage: '&cUsage: /unwarn &e<player> <id>&c.'
@@ -99,8 +126,9 @@ removals:
     not-found: '&c&o%TARGET%&r&7 does not have a warn by &c&o%ID%&r&7.'
     not-a-number: '&c&o%ID_ARG%&r&7 is not a number.'
     successful:
-      message: '&7Unmuted &c&o%TARGET%&r&7.'
-      notification: '&c&o%UNOPERATOR%&r&7 unmuted &c&o%TARGET%&r&7.'
+      message: '&7Unmuted &c&o%VICTIM%&r&7.'
+      notification: '&c&o%UNOPERATOR%&r&7 unmuted &c&o%VICTIM%&r&7.'
+# Messages regarding /banlist, /mutelist, /history, /warns, /blame
 list:
   banlist:
     usage: '&cUsage: /banlist [page].'
@@ -116,8 +144,8 @@ list:
         - '&7Operator &8/ &7Reason &8/ &7Time Remaining'
         - '&7'
       body:
-        - '&7[&e%ID%&7] &e&o%TARGET%'
-        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME%'
+        - '&7[&e%ID%&7] &e&o%VICTIM%'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_END_REL%'
         - '&7'
       footer:
         - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
@@ -131,12 +159,12 @@ list:
       no-ip: '&7You may not view the ip mutelist.'
     layout:
       header:
-        - '&7[&eID&7] Subject'
+        - '&7[&eID&7] &e&oSubject'
         - '&7Operator &8/ &7Reason &8/ &7Time Remaining'
         - '&7'
       body:
-        - '&7[&e%ID%&7] &e&o%TARGET%'
-        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME%'
+        - '&7[&e%ID%&7] &e&o%VICTIM%'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_END_REL%'
         - '&7'
       footer:
         - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
@@ -150,12 +178,12 @@ list:
       no-ip: '&7You may not view history for an ip address.'
     layout:
       header:
-        - '&7[&eID&7] &e&oSubject &r&8/ &7Punishment Type'
-        - '&7Operator &8/ &7Reason &8/ &7Time Remaining'
+        - '&7[&eID&7] &r&8/ &7Punishment Type'
+        - '&7Operator &8/ &7Reason &8/ &7Date Enacted'
         - '&7'
       body:
-        - '&7[&e%ID%&7] &e&o%TARGET% &r&7/ &7%TYPE%'
-        - '&7%OPERATOR% &8/ &7REASON% &8/ &7%TIME%'
+        - '&7[&e%ID%&7] &r&7/ &7%TYPE%'
+        - '&7%OPERATOR% &8/ &7REASON% &8/ &7%TIME_START_ABS%'
         - '&7'
       footer:
         - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
@@ -172,7 +200,7 @@ list:
         - '&7[&eID&7] Operator &8/ &7Reason &8/ &7Time Remaining'
         - '&7'
       body:
-        - '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME%'
+        - '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_END_REL%'
         - '&7'
       footer:
         - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
@@ -186,17 +214,19 @@ list:
     layout:
       header:
         - '&7[&eID&7] &e&oSubject &r&8/ &7Punishment Type'
-        - '&7Reason &8/ &7Time Remaining'
+        - '&7Reason &8/ &7Date Enacted'
         - '&7'
       body:
         - '&7[&e%ID%&7] &e&o%SUBJECT% &r&8 / &7%TYPE%'
-        - '&7%REASON% &8/ &7%TIME%'
+        - '&7%REASON% &8/ &7%TIME_START_ABS%'
         - '&7'
       footer:
         - '&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/%CMD%'
+# Miscenallous messages
 misc:
   unknown-error: '&cAn unknown error occurred.'
   sync-denial-message: '&cSynchronous chat denied. &7Please try again.'
+  # Time formatting fragments
   time:
     years:
       enable: true
@@ -216,5 +246,9 @@ misc:
     minutes:
       enable: true
       message: '%MINUTES% minutes'
-    and: 'and '
+    grammar:
+      # If enabled, places commas after each time fragment, except the last one
+      comma: true
+      # What should come before the last fragment? Set to empty text to disable
+      and: ' and'
 config-version: 1

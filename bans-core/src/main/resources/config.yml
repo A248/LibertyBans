@@ -1,33 +1,13 @@
 # What language file should be used for messages?
 # For example, 'en' means LibertyBans will look for a file called 'messages_en.yml'
 lang-file: 'en'
-#
-# Options relating to formatting
-# Changing these settings can be done at any time; all punishments will be formatted accordingly
-# regardless of when they were made.
-formatting:
-  # There are 2 ways to make permanent punishments. The first is to not specify a time (/ban <player> <reason>).
-  # The second is to specify a permanent amount of time (/ban <player> perm <reason>).
-  # When typing commands, what time arguments will be counted as permanent?
-  permanent-arguments:
-    - 'perm'
-    - 'permanent'
-    - 'permanently'
-  # How should 'permanent' be displayed as a length of time?
-  permanent-display:
-    relative: 'Permanently'
-    absolute: 'Never'
-  # How should the console be displayed?
-  console-display: 'Console'
-  # How should the global scope be displayed?
-  global-scope-display: 'Global'
-  # Formatting related to absolute dates
-  dates:
-    # How should dates be formatted? Follows Java's DateTimeFormatter.ofPattern
-    format: 'dd/MM/yyyy kk:mm'
-    # Do you want to override the timezone? If 'default', the system default timezone is used
-    # The value must be in continent/city format, such as 'America/New_York'. Uses Java's ZoneId.of
-    timezone: 'default'
+# Formatting of absolute dates
+date-formatting:
+  # How should dates be formatted? Follows Java's DateTimeFormatter.ofPattern
+  format: 'dd/MM/yyyy kk:mm'
+  # Do you want to override the timezone? If 'default', the system default timezone is used
+  # The value must be in continent/city format, such as 'America/New_York'. Uses Java's ZoneId.of
+  timezone: 'default'
 reasons:
   # Are blank reasons permitted?
   # If blank reasons are not permitted, staff must specify the full reason

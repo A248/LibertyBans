@@ -21,15 +21,11 @@ package space.arim.libertybans.core;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
-import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
@@ -47,13 +43,8 @@ public class Selector implements PunishmentSelector {
 
 	private final LibertyBansCore core;
 	
-	private final AsyncLoadingCache<MuteCacheKey, Punishment> muteCache;
-	
 	Selector(LibertyBansCore core) {
 		this.core = core;
-		muteCache = Caffeine.newBuilder().expireAfterWrite(3L, TimeUnit.MINUTES).buildAsync((target, executor) -> {
-			return getApplicablePunishment0(target.uuid, target.address, PunishmentType.MUTE);
-		});
 	}
 
 	private static StringBuilder getColumns(PunishmentSelection selection) {
@@ -302,11 +293,12 @@ public class Selector implements PunishmentSelector {
 
 	@Override
 	public CentralisedFuture<Punishment> getApplicablePunishment(UUID uuid, byte[] address, PunishmentType type) {
+		Objects.requireNonNull(type, "type");
 		if (type == PunishmentType.KICK) {
 			// Kicks cannot possibly be active. They are all history
 			return core.getFuturesFactory().completedFuture(null);
 		}
-		return getApplicablePunishment0(uuid, address, type);
+		return getApplicablePunishment0(uuid, address.clone(), type);
 	}
 
 	@Override
@@ -350,48 +342,15 @@ public class Selector implements PunishmentSelector {
 			return Set.copyOf(result);
 		});
 	}
-
+	
 	@Override
 	public CentralisedFuture<Punishment> getCachedMute(UUID uuid, byte[] address) {
-		return (CentralisedFuture<Punishment>) muteCache.get(new MuteCacheKey(uuid, address));
+		Objects.requireNonNull(uuid, "uuid");
+		return core.getCacher().getCachedMute(uuid, address.clone());
 	}
 	
-	private static class MuteCacheKey {
-		
-		final UUID uuid;
-		final byte[] address;
-		
-		MuteCacheKey(UUID uuid, byte[] address) {
-			this.uuid = uuid;
-			this.address = address;
-		}
-
-		@Override
-		public String toString() {
-			return "MuteCacheKey [uuid=" + uuid + ", address=" + Arrays.toString(address) + "]";
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + uuid.hashCode();
-			result = prime * result + Arrays.hashCode(address);
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object object) {
-			if (this == object) {
-				return true;
-			}
-			if (!(object instanceof MuteCacheKey)) {
-				return false;
-			}
-			MuteCacheKey other = (MuteCacheKey) object;
-			return uuid.equals(other.uuid) && Arrays.equals(address, other.address);
-		}
-		
+	CentralisedFuture<Punishment> getApplicableMute(UUID uuid, byte[] address) {
+		return getApplicablePunishment0(uuid, address, PunishmentType.MUTE);
 	}
 
 }

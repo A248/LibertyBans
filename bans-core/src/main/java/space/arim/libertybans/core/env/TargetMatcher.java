@@ -21,21 +21,20 @@ package space.arim.libertybans.core.env;
 import java.net.InetAddress;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
-import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.annote.PlatformPlayer;
 
 public class TargetMatcher {
 
 	private final Set<UUID> uuids;
 	private final Set<InetAddress> addresses;
-	private final SendableMessage message;
-	private final boolean kick;
+	private final Consumer<@PlatformPlayer Object> callback;
 	
-	public TargetMatcher(Set<UUID> uuids, Set<InetAddress> addresses, SendableMessage message, boolean kick) {
+	public TargetMatcher(Set<UUID> uuids, Set<InetAddress> addresses, Consumer<@PlatformPlayer Object> callback) {
 		this.uuids = uuids;
 		this.addresses = addresses;
-		this.message = message;
-		this.kick = kick;
+		this.callback = callback;
 	}
 	
 	public Set<UUID> uuids() {
@@ -46,12 +45,8 @@ public class TargetMatcher {
 		return addresses;
 	}
 	
-	public SendableMessage message() {
-		return message;
-	}
-	
-	public boolean kick() {
-		return kick;
+	public Consumer<@PlatformPlayer Object> callback() {
+		return callback;
 	}
 
 	@Override
@@ -60,8 +55,7 @@ public class TargetMatcher {
 		int result = 1;
 		result = prime * result + uuids.hashCode();
 		result = prime * result + addresses.hashCode();
-		result = prime * result + message.hashCode();
-		result = prime * result + (kick ? 1231 : 1237);
+		result = prime * result + System.identityHashCode(callback);
 		return result;
 	}
 
@@ -74,8 +68,7 @@ public class TargetMatcher {
 			return false;
 		}
 		TargetMatcher other = (TargetMatcher) object;
-		return kick == other.kick && uuids.equals(other.uuids) && addresses.equals(other.addresses)
-				&& message.equals(other.message);
+		return callback == other.callback && uuids.equals(other.uuids) && addresses.equals(other.addresses);
 	}
 	
 }

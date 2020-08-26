@@ -56,14 +56,6 @@ public class Commands {
 			sender.parseThenSend(messages().getString("all.base-permission-message"));
 			return;
 		}
-		if (core.getFormatter().isJsonEnabled()) {
-			// Prevent JSON injection
-			String args = command.clone().allRemaining();
-			if (args.indexOf('|') != -1) {
-				sender.parseThenSend(core.getConfigs().getMessages().getString("json.illegal-char"));
-				return;
-			}
-		}
 		if (!command.hasNext()) {
 			sender.parseThenSend("&7&lLibertyBans version " +  PluginInfo.VERSION);
 			return;

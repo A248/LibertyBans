@@ -51,7 +51,7 @@ final class ConfigUtil {
 	private ConfigUtil() {}
 	
 	private static ValueTransformer dateFormatTransformer() {
-		return SingleKeyValueTransformer.create("formatting.dates.format", (value) -> {
+		return SingleKeyValueTransformer.create("date-formatting.format", (value) -> {
 			DateTimeFormatter result = null;
 			if (value instanceof String) {
 				String timeF = (String) value;
@@ -61,14 +61,14 @@ final class ConfigUtil {
 			}
 			if (result == null) {
 				//result = DateTimeFormatter.ofPattern("dd/MM/yyyy kk:mm");
-				logger.info("Config option formatting.dates.format invalid: {}", value);
+				logger.info("Config option date-formatting.format invalid: {}", value);
 			}
 			return result;
 		});
 	}
 	
 	private static ValueTransformer dateZoneTransformer() {
-		return SingleKeyValueTransformer.create("formatting.dates.timezone", (value) -> {
+		return SingleKeyValueTransformer.create("date-formatting.timezone", (value) -> {
 			ZoneId result = null;
 			if (value instanceof String) {
 				String timeZ = (String) value;
@@ -84,7 +84,7 @@ final class ConfigUtil {
 				}
 				return null;
 			}
-			logger.info("Config option formatting.dates.timezone invalid: {}", value);
+			logger.info("Config option date-formatting.timezone invalid: {}", value);
 			return result;
 		});
 	}

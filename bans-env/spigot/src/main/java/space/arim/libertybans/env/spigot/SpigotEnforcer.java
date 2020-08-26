@@ -21,6 +21,7 @@ package space.arim.libertybans.env.spigot;
 import java.util.UUID;
 
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.annote.PlatformPlayer;
 
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.TargetMatcher;
@@ -35,54 +36,67 @@ class SpigotEnforcer implements EnvEnforcer {
 		this.env = env;
 	}
 	
+	private void runSyncNow(Runnable command) {
+		env.core.getFuturesFactory().runSync(command).join();
+	}
+	
 	@Override
 	public void sendToThoseWithPermission(String permission, SendableMessage message) {
-		for (Player player : env.getPlugin().getServer().getOnlinePlayers()) {
-			if (player.hasPermission(permission)) {
-				env.handle.sendMessage(player, message);
+		runSyncNow(() -> {
+			for (Player player : env.getPlugin().getServer().getOnlinePlayers()) {
+				if (player.hasPermission(permission)) {
+					env.handle.sendMessage(player, message);
+				}
 			}
-		}
+		});
+	}
+	
+	@Override
+	@PlatformPlayer
+	public Object getOnlinePlayerByUUID(UUID uuid) {
+		return env.core.getFuturesFactory().supplySync(() -> env.getPlugin().getServer().getPlayer(uuid)).join();
 	}
 
 	@Override
 	public void kickByUUID(UUID uuid, SendableMessage message) {
-		env.core.getFuturesFactory().runSync(() -> {
+		runSyncNow(() -> {
 			Player player = env.getPlugin().getServer().getPlayer(uuid);
 			if (player != null) {
 				env.handle.disconnectUser(player, message);
 			}
-		}).join();
+		});
 	}
 
-	/*@Override
-	public CentralisedFuture<Set<OnlineTarget>> getOnlineTargets() {
-		return env.core.getFuturesFactory().supplySync(() -> {
-			Set<OnlineTarget> result = new HashSet<>();
-			for (Player player : env.getPlugin().getServer().getOnlinePlayers()) {
-				result.add(new SpigotOnlineTarget(env, player));
+	@Override
+	public void sendMessageByUUID(UUID uuid, SendableMessage message) {
+		runSyncNow(() -> {
+			Player player = env.getPlugin().getServer().getPlayer(uuid);
+			if (player != null) {
+				env.handle.sendMessage(player, message);
 			}
-			return result;
 		});
-	}*/
-	
-	private void enforce(Player player, TargetMatcher matcher) {
-		if (matcher.kick()) {
-			env.handle.disconnectUser(player, matcher.message());
-		} else {
-			env.handle.sendMessage(player, matcher.message());
-		}
 	}
 
 	@Override
 	public void enforceMatcher(TargetMatcher matcher) {
-		env.core.getFuturesFactory().runSync(() -> {
+		runSyncNow(() -> {
 			for (Player player : env.getPlugin().getServer().getOnlinePlayers()) {
 				if (matcher.uuids().contains(player.getUniqueId())
 						|| matcher.addresses().contains(player.getAddress().getAddress())) {
-					enforce(player, matcher);
+					matcher.callback().accept(player);
 				}
 			}
-		}).join();
+		});
+	}
+
+	@Override
+	public UUID getUniqueIdFor(@PlatformPlayer Object player) {
+		return ((Player) player).getUniqueId();
+	}
+
+	@Override
+	public byte[] getAddressFor(@PlatformPlayer Object player) {
+		return ((Player) player).getAddress().getAddress().getAddress();
 	}
 
 }

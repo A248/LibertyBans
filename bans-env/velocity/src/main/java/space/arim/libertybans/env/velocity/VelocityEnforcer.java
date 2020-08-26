@@ -21,6 +21,7 @@ package space.arim.libertybans.env.velocity;
 import java.util.UUID;
 
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.annote.PlatformPlayer;
 
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.TargetMatcher;
@@ -43,6 +44,12 @@ class VelocityEnforcer implements EnvEnforcer {
 			}
 		}
 	}
+	
+	@Override
+	@PlatformPlayer
+	public Object getOnlinePlayerByUUID(UUID uuid) {
+		return env.getServer().getPlayer(uuid).orElse(null);
+	}
 
 	@Override
 	public void kickByUUID(UUID uuid, SendableMessage message) {
@@ -52,20 +59,11 @@ class VelocityEnforcer implements EnvEnforcer {
 		}
 	}
 
-	/*@Override
-	public CentralisedFuture<Set<OnlineTarget>> getOnlineTargets() {
-		Set<OnlineTarget> result = new HashSet<>();
-		for (Player player : env.getServer().getAllPlayers()) {
-			result.add(new VelocityOnlineTarget(env, player));
-		}
-		return env.core.getFuturesFactory().completedFuture(result);
-	}*/
-	
-	private void enforce(Player player, TargetMatcher matcher) {
-		if (matcher.kick()) {
-			env.handle.disconnectUser(player, matcher.message());
-		} else {
-			env.handle.sendMessage(player, matcher.message());
+	@Override
+	public void sendMessageByUUID(UUID uuid, SendableMessage message) {
+		Player player = env.getServer().getPlayer(uuid).orElse(null);
+		if (player != null) {
+			env.handle.sendMessage(player, message);
 		}
 	}
 
@@ -74,9 +72,19 @@ class VelocityEnforcer implements EnvEnforcer {
 		for (Player player : env.getServer().getAllPlayers()) {
 			if (matcher.uuids().contains(player.getUniqueId())
 					|| matcher.addresses().contains(player.getRemoteAddress().getAddress())) {
-				enforce(player, matcher);
+				matcher.callback().accept(player);
 			}
 		}
+	}
+
+	@Override
+	public UUID getUniqueIdFor(@PlatformPlayer Object player) {
+		return ((Player) player).getUniqueId();
+	}
+
+	@Override
+	public byte[] getAddressFor(@PlatformPlayer Object player) {
+		return ((Player) player).getRemoteAddress().getAddress().getAddress();
 	}
 	
 }

@@ -20,12 +20,14 @@ package space.arim.libertybans.core;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.uuidvault.api.UUIDUtil;
 
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.annote.PlatformPlayer;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.AddressVictim.NetworkAddress;
@@ -35,6 +37,7 @@ import space.arim.libertybans.api.PunishmentEnforcer;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.config.AddressStrictness;
 import space.arim.libertybans.core.database.Database;
+import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.TargetMatcher;
 
 public class Enforcer implements PunishmentEnforcer {
@@ -52,12 +55,69 @@ public class Enforcer implements PunishmentEnforcer {
 		switch (punishment.getVictim().getType()) {
 		case PLAYER:
 			UUID uuid = ((PlayerVictim) punishment.getVictim()).getUUID();
-			return futureMessage.thenAccept((msg) -> core.getEnvironment().getEnforcer().kickByUUID(uuid, msg));
+			return futureMessage.thenAccept((message) -> {
+				PunishmentType type = punishment.getType();
+				if (shouldKick(type)) {
+					core.getEnvironment().getEnforcer().kickByUUID(uuid, message);
+				} else {
+					core.getEnvironment().getEnforcer().sendMessageByUUID(uuid, message);
+
+					if (type == PunishmentType.MUTE) {
+						// Mute enforcement must additionally take into account the mute cache
+						EnvEnforcer envEnforcer = core.getEnvironment().getEnforcer();
+						@PlatformPlayer Object player = envEnforcer.getOnlinePlayerByUUID(uuid);
+						if (player != null) {
+							core.getCacher().setCachedMute(uuid, envEnforcer.getAddressFor(player), punishment);
+						}
+					}
+				}
+			});
 		case ADDRESS:
 			return futureMessage.thenCompose((message) -> enforceAddressPunishment(punishment, message));
 		default:
 			throw new IllegalStateException("Unknown victim type " + punishment.getVictim().getType());
 		}
+	}
+	
+	@Override
+	public CentralisedFuture<?> unenforce(Punishment punishment) {
+		MiscUtil.validate(punishment);
+		core.getCacher().clearCachedMute(punishment);
+		return core.getFuturesFactory().completedFuture(null);
+	}
+	
+	private static boolean shouldKick(PunishmentType type) {
+		switch (type) {
+		case BAN:
+		case KICK:
+			return true;
+		case MUTE:
+		case WARN:
+			return false;
+		default:
+			throw new IllegalStateException("Unknown punishment type " + type);
+		}
+	}
+	
+	private Consumer<Object> playerCallback(Punishment punishment, SendableMessage message) {
+		PunishmentType type = punishment.getType();
+		boolean shouldKick = shouldKick(type);
+		return (playerObj) -> {
+			if (shouldKick) {
+				core.getEnvironment().getPlatformHandle().disconnectUser(playerObj, message);
+			} else {
+				core.getEnvironment().getPlatformHandle().sendMessage(playerObj, message);
+
+				/*
+				 * Mute enforcement must additionally take into account the mute cache
+				 */
+				if (type == PunishmentType.MUTE) {
+					EnvEnforcer envEnforcer = core.getEnvironment().getEnforcer();
+					core.getCacher().setCachedMute(envEnforcer.getUniqueIdFor(playerObj),
+							envEnforcer.getAddressFor(playerObj), punishment);
+				}
+			}
+		};
 	}
 	
 	private CentralisedFuture<?> enforceAddressPunishment(Punishment punishment, SendableMessage message) {
@@ -66,7 +126,7 @@ public class Enforcer implements PunishmentEnforcer {
 		AddressStrictness strictness = core.getConfigs().getAddressStrictness();
 		switch (strictness) {
 		case LENIENT:
-			TargetMatcher matcher = new TargetMatcher(Set.of(), Set.of(address.toInetAddress()), message, shouldKick(punishment));
+			var matcher = new TargetMatcher(Set.of(), Set.of(address.toInetAddress()), playerCallback(punishment, message));
 			futureMatcher = core.getFuturesFactory().completedFuture(matcher);
 			break;
 		case NORMAL:
@@ -80,20 +140,6 @@ public class Enforcer implements PunishmentEnforcer {
 		}
 		return futureMatcher.thenAccept(core.getEnvironment().getEnforcer()::enforceMatcher);
 	}
-	
-	private static boolean shouldKick(Punishment punishment) {
-		PunishmentType type = punishment.getType();
-		switch (type) {
-		case BAN:
-		case KICK:
-			return true;
-		case MUTE:
-		case WARN:
-			return false;
-		default:
-			throw new IllegalStateException("Unknown punishment type " + type);
-		}
-	}
 
 	private CentralisedFuture<TargetMatcher> matchAddressPunishmentNormal(NetworkAddress address, Punishment punishment,
 			SendableMessage message) {
@@ -104,7 +150,7 @@ public class Enforcer implements PunishmentEnforcer {
 					.params(address)
 					.setResult((resultSet) -> UUIDUtil.fromByteArray(resultSet.getBytes("uuid")))
 					.onError(Set::of).execute();
-			return new TargetMatcher(uuids, Set.of(), message, shouldKick(punishment));
+			return new TargetMatcher(uuids, Set.of(), playerCallback(punishment, message));
 		});
 	}
 	
@@ -117,7 +163,7 @@ public class Enforcer implements PunishmentEnforcer {
 					.params(address)
 					.setResult((resultSet) -> UUIDUtil.fromByteArray(resultSet.getBytes("uuid")))
 					.onError(Set::of).execute();
-			return new TargetMatcher(uuids, Set.of(), message, shouldKick(punishment));
+			return new TargetMatcher(uuids, Set.of(), playerCallback(punishment, message));
 		});
 	}
 	
@@ -157,7 +203,7 @@ public class Enforcer implements PunishmentEnforcer {
 		if (command != null && !blockForMuted(command)) {
 			return core.getFuturesFactory().completedFuture(null);
 		}
-		return core.getSelector().getCachedMute(uuid, address).thenCompose((mute) -> {
+		return core.getCacher().getCachedMute(uuid, address).thenCompose((mute) -> {
 			if (mute == null) {
 				return core.getFuturesFactory().completedFuture(null);
 			}
