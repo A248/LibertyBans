@@ -1,6 +1,6 @@
 -- DELIMITER //
 
-CREATE EVENT `libertybans_refresher`
+CREATE EVENT IF NOT EXISTS `libertybans_refresher`
 	ON SCHEDULE EVERY 3 HOUR
 	DO
 	BEGIN
