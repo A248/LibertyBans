@@ -113,7 +113,7 @@ public class Enactor implements PunishmentEnactor {
 		MiscUtil.validate(punishment);
 		PunishmentType type = punishment.getType();
 		if (type == PunishmentType.KICK) {
-			// Kicks are never active, they're pure history, so they can never be undone
+			// Kicks are never active
 			return core.getFuturesFactory().completedFuture(false);
 		}
 		Database database = core.getDatabase();
@@ -133,11 +133,10 @@ public class Enactor implements PunishmentEnactor {
 		Database database = core.getDatabase();
 		return database.selectAsync(() -> {
 			return database.jdbCaesar().transaction().transactor((querySource) -> {
+
 				final long currentTime = MiscUtil.currentTime();
-				for (PunishmentType type : MiscUtil.punishmentTypes()) {
-					if (type == PunishmentType.KICK) {
-						continue;
-					}
+				for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
+
 					boolean deleted = querySource.query(
 							"DELETE FROM `libertybans_" + type.getLowercaseNamePlural()
 									+ "` WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
@@ -158,11 +157,10 @@ public class Enactor implements PunishmentEnactor {
 		Database database = core.getDatabase();
 		return database.selectAsync(() -> {
 			return database.jdbCaesar().transaction().transactor((querySource) -> {
+
 				final long currentTime = MiscUtil.currentTime();
-				for (PunishmentType type : MiscUtil.punishmentTypes()) {
-					if (type == PunishmentType.KICK) {
-						continue;
-					}
+				for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
+
 					Punishment punishment = querySource.query(
 							"SELECT `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end` FROM "
 									+ "`libertybans_simple_" + type.getLowercaseNamePlural() + "` WHERE "

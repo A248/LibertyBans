@@ -26,7 +26,11 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 /**
  * A manager for selecting punishments with specific details from the database. This,
  * along with {@link PunishmentSelection}, essentially provide an API for efficient
- * database queries.
+ * database queries. <br>
+ * <br>
+ * Some methods refer to 'active' and/or 'historical' punishments. All punishments in the database
+ * are historical, including those which have been undone. Only punishments which have not expired
+ * and have not been undone are active.
  * 
  * @author A248
  *
@@ -62,19 +66,49 @@ public interface PunishmentSelector {
 	CentralisedFuture<Set<Punishment>> getSpecificPunishments(PunishmentSelection selection);
 	
 	/**
-	 * Gets all punishments regarding a specific {@link Victim}
+	 * Gets a punishment matching a specific ID, if a punishment with such ID exists. <br>
+	 * <br>
+	 * When the type of the punishment is known, {@link #getActivePunishmentByIdAndType(int, PunishmentType)}
+	 * should be preferred.
+	 * 
+	 * @param id the punishment ID
+	 * @return a future which yields the active punishment with the ID, or {@code null} if there is none
+	 */
+	CentralisedFuture<Punishment> getActivePunishmentById(int id);
+	
+	/**
+	 * Gets a punishment matching a specific ID and type, if one exists with matching type and ID. <br>
+	 * <br>
+	 * Unlike {@link #getActivePunishmentById(int)}, this method may be more efficient when the type of
+	 * the punishment is known beforehand.
+	 * 
+	 * @param id the punishment ID
+	 * @param type the punishment type
+	 * @return a future which yields the active punishment with the ID and type, or {@code null} if there is none
+	 */
+	CentralisedFuture<Punishment> getActivePunishmentByIdAndType(int id, PunishmentType type);
+	
+	/**
+	 * Gets a historical punishment matching a specific ID, if a punishment with such ID exists.
+	 * 
+	 * @param id the punishment ID
+	 * @return a future which yields the historical punishment with the ID, or {@code null} if there is none
+	 */
+	CentralisedFuture<Punishment> getHistoricalPunishmentById(int id);
+	
+	/**
+	 * Gets all historical punishments applying to a specific {@link Victim}
 	 * 
 	 * @param victim the victim
-	 * @return a future which yields all punishments applying to the victim, or an empty set
+	 * @return a future which yields all historical punishments applying to the victim, or an empty set
 	 */
 	CentralisedFuture<Set<Punishment>> getHistoryForVictim(Victim victim);
 	
 	/**
-	 * Gets all active punishments of a certain punishment type. <br>
-	 * The punishment must not be expired.
+	 * Gets all active punishments of a certain punishment type
 	 * 
 	 * @param type the punishment type
-	 * @return a future which yields all applicable punishments matching the type, or an empty set
+	 * @return a future which yields all active punishments matching the type, or an empty set
 	 */
 	CentralisedFuture<Set<Punishment>> getActivePunishmentsForType(PunishmentType type);
 
@@ -90,7 +124,7 @@ public interface PunishmentSelector {
 	 * @param uuid the UUID
 	 * @param address the IP address
 	 * @param type the punishment type
-	 * @return a future which yields the first applicable punishment for the id and address or {@code null}
+	 * @return a future which yields the first applicable punishment for the id and address or {@code null} if there is none
 	 */
 	CentralisedFuture<Punishment> getApplicablePunishment(UUID uuid, byte[] address, PunishmentType type);
 	

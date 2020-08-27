@@ -38,6 +38,8 @@ import space.arim.libertybans.core.config.Formatter;
 import space.arim.libertybans.core.database.DatabaseManager;
 import space.arim.libertybans.core.database.Database;
 import space.arim.libertybans.core.env.AbstractEnv;
+import space.arim.libertybans.core.selector.MuteCacher;
+import space.arim.libertybans.core.selector.Selector;
 import space.arim.libertybans.core.uuid.UUIDMaster;
 
 public class LibertyBansCore implements LibertyBans, Part {
@@ -52,7 +54,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 	private final UUIDMaster uuidMaster;
 	
 	private final Selector selector;
-	private final Cacher cacher;
+	private final MuteCacher cacher;
 	private final Enactor enactor;
 	private final Enforcer enforcer;
 	private final Scoper scoper;
@@ -76,7 +78,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 		uuidMaster = new UUIDMaster(this);
 
 		selector = new Selector(this);
-		cacher = new Cacher(this);
+		cacher = new MuteCacher(this);
 		enactor = new Enactor(this);
 		enforcer = new Enforcer(this);
 		scoper = new Scoper();
@@ -160,7 +162,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 		return selector;
 	}
 	
-	public Cacher getCacher() {
+	public MuteCacher getMuteCacher() {
 		return cacher;
 	}
 

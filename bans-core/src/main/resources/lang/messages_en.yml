@@ -15,6 +15,10 @@ all:
     uuid: '&c&o%TARGET%&r&7 was not found online or offline.'
     ip: '&c&o%TARGET%&r&7 is not a valid IP address.'
     either: '&c&o%TARGET%&r&7 is not a valid player or IP address.'
+  usage:
+    - '&7-- LibertyBans usage --'
+    - '&7Punish commands: /ban, /mute, /warn, /kick'
+    - '&7Unpunish commands: /unban, /unmute, /unwarn'
 # Admin commands
 admin:
   ellipses: '&a...'

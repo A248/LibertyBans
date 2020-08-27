@@ -67,7 +67,7 @@ public class Commands {
 				return;
 			}
 		}
-		sender.parseThenSend(core.getConfigs().getMessages().getString(""));
+		sender.parseThenSend(core.getConfigs().getMessages().getString("all.usage"));
 	}
 	
 	CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg) {

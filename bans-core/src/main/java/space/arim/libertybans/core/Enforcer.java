@@ -55,7 +55,7 @@ public class Enforcer implements PunishmentEnforcer {
 		switch (punishment.getVictim().getType()) {
 		case PLAYER:
 			UUID uuid = ((PlayerVictim) punishment.getVictim()).getUUID();
-			return futureMessage.thenAccept((message) -> {
+			CentralisedFuture<?> enforceFuture = futureMessage.thenAccept((message) -> {
 				PunishmentType type = punishment.getType();
 				if (shouldKick(type)) {
 					core.getEnvironment().getEnforcer().kickByUUID(uuid, message);
@@ -67,11 +67,13 @@ public class Enforcer implements PunishmentEnforcer {
 						EnvEnforcer envEnforcer = core.getEnvironment().getEnforcer();
 						@PlatformPlayer Object player = envEnforcer.getOnlinePlayerByUUID(uuid);
 						if (player != null) {
-							core.getCacher().setCachedMute(uuid, envEnforcer.getAddressFor(player), punishment);
+							core.getMuteCacher().setCachedMute(uuid, envEnforcer.getAddressFor(player), punishment);
 						}
 					}
 				}
 			});
+			return enforceFuture;
+
 		case ADDRESS:
 			return futureMessage.thenCompose((message) -> enforceAddressPunishment(punishment, message));
 		default:
@@ -82,7 +84,7 @@ public class Enforcer implements PunishmentEnforcer {
 	@Override
 	public CentralisedFuture<?> unenforce(Punishment punishment) {
 		MiscUtil.validate(punishment);
-		core.getCacher().clearCachedMute(punishment);
+		core.getMuteCacher().clearCachedMute(punishment);
 		return core.getFuturesFactory().completedFuture(null);
 	}
 	
@@ -113,7 +115,7 @@ public class Enforcer implements PunishmentEnforcer {
 				 */
 				if (type == PunishmentType.MUTE) {
 					EnvEnforcer envEnforcer = core.getEnvironment().getEnforcer();
-					core.getCacher().setCachedMute(envEnforcer.getUniqueIdFor(playerObj),
+					core.getMuteCacher().setCachedMute(envEnforcer.getUniqueIdFor(playerObj),
 							envEnforcer.getAddressFor(playerObj), punishment);
 				}
 			}
@@ -203,7 +205,7 @@ public class Enforcer implements PunishmentEnforcer {
 		if (command != null && !blockForMuted(command)) {
 			return core.getFuturesFactory().completedFuture(null);
 		}
-		return core.getCacher().getCachedMute(uuid, address).thenCompose((mute) -> {
+		return core.getMuteCacher().getCachedMute(uuid, address).thenCompose((mute) -> {
 			if (mute == null) {
 				return core.getFuturesFactory().completedFuture(null);
 			}

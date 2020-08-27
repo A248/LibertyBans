@@ -34,7 +34,7 @@ import space.arim.libertybans.core.env.CmdSender;
 public class UnpunishCommands extends AbstractSubCommandGroup {
 	
 	UnpunishCommands(Commands commands) {
-		super(commands, Arrays.stream(MiscUtil.punishmentTypes()).filter((type) -> type != PunishmentType.KICK)
+		super(commands, Arrays.stream(MiscUtil.punishmentTypesExcludingKick())
 				.map((type) -> "un" + type.name().toLowerCase(Locale.ENGLISH)).toArray(String[]::new));
 	}
 

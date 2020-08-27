@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.core;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import space.arim.libertybans.api.DraftPunishment;
@@ -33,6 +34,9 @@ public final class MiscUtil {
 	
 	private static final PunishmentType[] PUNISHMENT_TYPES = PunishmentType.values();
 	
+	private static final PunishmentType[] PUNISHMENT_TYPES_EXCLUDING_KICK = Arrays.stream(PUNISHMENT_TYPES)
+			.filter((type) -> type != PunishmentType.KICK).toArray(PunishmentType[]::new);
+	
 	private MiscUtil() {}
 	
 	/**
@@ -43,6 +47,16 @@ public final class MiscUtil {
 	 */
 	public static PunishmentType[] punishmentTypes() {
 		return PUNISHMENT_TYPES;
+	}
+	
+	/**
+	 * Gets a cached PunishmentType array, excluding {@code KICK} based on {@link PunishmentType#values()}. <br>
+	 * <b>DO NOT MUTATE the result</b>
+	 * 
+	 * @return the cached result of {@link PunishmentType#values()} excluding {@code KICK}
+	 */
+	public static PunishmentType[] punishmentTypesExcludingKick() {
+		return PUNISHMENT_TYPES_EXCLUDING_KICK;
 	}
 	
 	/**

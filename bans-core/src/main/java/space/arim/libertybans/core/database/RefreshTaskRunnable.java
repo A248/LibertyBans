@@ -47,10 +47,8 @@ class RefreshTaskRunnable implements Runnable {
 		}
 		long currentTime = MiscUtil.currentTime();
 		database.jdbCaesar().transaction().transactor((querySource) -> {
-			for (PunishmentType type : MiscUtil.punishmentTypes()) {
-				if (type == PunishmentType.KICK) {
-					continue;
-				}
+
+			for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
 				querySource.query(
 						"DELETE FROM `libertybans_" + type.getLowercaseNamePlural() + "` WHERE `id` IN "
 						+ "(SELECT `id` FROM `libertybans_punishments` `puns` WHERE (`puns`.`end` != 0 AND `puns`.`end` < ?))")

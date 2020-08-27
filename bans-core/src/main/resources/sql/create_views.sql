@@ -15,7 +15,13 @@ FROM `libertybans_simple_<lowerNamePlural>` `puns` INNER JOIN `libertybans_addre
 ON (`puns`.`victim_type` = 'PLAYER' AND `puns`.`victim` = `addrs`.`uuid` 
 OR `puns`.`victim_type` = 'ADDRESS' AND `puns`.`victim` = `addrs`.`address`);
 
--- This query is executed only once
+-- These queries are executed only once
+
+CREATE VIEW `libertybans_simple_history` AS 
+SELECT `puns`.`id`, `puns`.`type`, `thetype`.`victim`, `thetype`.`victim_type`, 
+`puns`.`operator`, `puns`.`reason`, `puns`.`scope`, `puns`.`start`, `puns`.`end` 
+FROM `libertybans_history` `thetype` INNER JOIN `libertybans_punishments` `puns` 
+ON `puns`.`id` = `thetype`.`id`;
 
 CREATE VIEW `libertybans_simple_active` AS 
 SELECT * FROM `libertybans_simple_bans` UNION ALL 

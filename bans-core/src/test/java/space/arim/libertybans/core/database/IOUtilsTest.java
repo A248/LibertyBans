@@ -45,7 +45,7 @@ public class IOUtilsTest {
 				"INSERT INTO myTable (value) VALUES ('another query')",
 				"CREATE VIEW idkView AS SELECT * FROM myTable WHERE value = 'idk'"
 				), IOUtils.readSqlQueries("queries.sql"));
-		assertEquals(3, IOUtils.readSqlQueries("sql/create_views.sql").size());
+		assertEquals(4, IOUtils.readSqlQueries("sql/create_views.sql").size());
 	}
 	
 }

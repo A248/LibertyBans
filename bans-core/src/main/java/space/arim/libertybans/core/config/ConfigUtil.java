@@ -170,6 +170,7 @@ final class ConfigUtil {
 	static List<ValueTransformer> messagesTransformers() {
 		List<ValueTransformer> result = new ArrayList<>();
 		result.add(prefixTransformer());
+		result.add(combinedListStringTransformer("all.usage"));
 		for (PunishmentType type : MiscUtil.punishmentTypes()) {
 			result.add(combinedListStringTransformer("additions." + type.getLowercaseNamePlural() + ".layout"));
 		}

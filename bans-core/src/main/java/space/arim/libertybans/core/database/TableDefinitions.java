@@ -106,21 +106,22 @@ public class TableDefinitions {
 		 * Create views
 		 */
 		CentralisedFuture<List<String>> futureCreateViews = readAllQueries("create_views").thenApply((rawCreateViews) -> {
-			if (rawCreateViews.size() != 3) {
+			if (rawCreateViews.size() != 4) {
 				throw new IllegalStateException("Unexpected raw create views size " + rawCreateViews.size());
 			}
+			// Add dynamically created view definitions
 			List<String> createViews = new ArrayList<>();
-			for (PunishmentType type : MiscUtil.punishmentTypes()) {
-				if (type == PunishmentType.KICK) {
-					continue;
-				}
+			for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
+
 				String lowerNamePlural = type.getLowercaseNamePlural();
 				String simpleForThisType = rawCreateViews.get(0);
 				String applicableForThisType = rawCreateViews.get(1);
 				createViews.add(simpleForThisType.replace("<lowerNamePlural>", lowerNamePlural));
 				createViews.add(applicableForThisType.replace("<lowerNamePlural>", lowerNamePlural));
 			}
+			// Add remaining view definitions
 			createViews.add(rawCreateViews.get(2));
+			createViews.add(rawCreateViews.get(3));
 			return createViews;
 		});
 		futures.add(futureCreateViews);
@@ -220,6 +221,17 @@ public class TableDefinitions {
 					@SuppressWarnings("null")
 					String refresherEvent = refresherEventFuture.join();
 					database.jdbCaesar().query(refresherEvent).voidResult().execute();
+
+					boolean eventSchedulerEnabled = database.jdbCaesar().query(
+							"SHOW GLOBAL VARIABLES LIKE 'event_scheduler'")
+							.combinedResult((resultSet) -> {
+								return resultSet.next() && resultSet.getString("Value").equalsIgnoreCase("ON");
+							}).execute();
+					if (!eventSchedulerEnabled) {
+						logger.info(
+								"It appears that your MySQL/MariaDB event scheduler is disabled. "
+								+ "It is recommended to enable it for slightly improved performance.");
+					}
 				}
 				return successOrFailure;
 			});

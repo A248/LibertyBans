@@ -25,11 +25,11 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Scope;
 import space.arim.libertybans.api.Victim;
 
-class SecurePunishment extends AbstractPunishment implements Punishment {
+public class SecurePunishment extends AbstractPunishment implements Punishment {
 
 	private final int id;
 	
-	SecurePunishment(int id, PunishmentType type, Victim victim, Operator operator, String reason, Scope scope,
+	public SecurePunishment(int id, PunishmentType type, Victim victim, Operator operator, String reason, Scope scope,
 			long start, long end) {
 		super(type, victim, operator, reason, scope, start, end);
 		this.id = id;

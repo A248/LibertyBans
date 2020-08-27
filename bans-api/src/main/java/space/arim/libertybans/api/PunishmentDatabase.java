@@ -41,9 +41,11 @@ import java.util.concurrent.Executor;
  * and minor version, respectively (both columns use the INT data type). <br>
  * <br>
  * Whenever the tables and/or views definitions change incompatibly, the major version will be incremented. The minor
- * version will be incremented as new tables and views are added, but which do not break backwards compatibility.
- * <b>Use of any SQL functions or procedures created by LibertyBans is strictly unsupported and their presence might
- * as well be considered coincidental</b>
+ * version will be incremented as new tables and views are added or existing ones changed, but not in ways which
+ * break backwards compatibility. <br>
+ * <br>
+ * Stored routines are not supported within any versioning context. <b>Use of any SQL functions or procedures created
+ * by LibertyBans is strictly unsupported.</b>
  * 
  * @author A248
  *
@@ -52,6 +54,7 @@ public interface PunishmentDatabase {
 
 	/**
 	 * Gets a connection from the LibertyBans connection pool. <br>
+	 * <br>
 	 * <b>Use of this should be avoided at great cost. Executing SQL queries is not considered traditional API.</b>
 	 * See the class javadoc for more information.
 	 * 
