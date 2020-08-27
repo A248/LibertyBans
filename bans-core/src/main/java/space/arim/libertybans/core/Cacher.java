@@ -23,13 +23,16 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.checkerframework.checker.index.qual.Positive;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import com.github.benmanes.caffeine.cache.AsyncCacheLoader;
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Scheduler;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
@@ -38,6 +41,8 @@ import space.arim.libertybans.api.PunishmentType;
 
 public class Cacher {
 	
+	private final LibertyBansCore core;
+	
 	/**
 	 * The mute cache. Optionals are used because Caffeine understands 'null' to mean 'remove this from the cache'.
 	 * 
@@ -45,16 +50,17 @@ public class Cacher {
 	private final AsyncLoadingCache<MuteCacheKey, Optional<Punishment>> muteCache;
 	
 	Cacher(LibertyBansCore core) {
+		this.core = core;
+
 		AsyncCacheLoader<MuteCacheKey, Optional<Punishment>> cacheLoader = new AsyncCacheLoader<>() {
 			@Override
-			public @NonNull CompletableFuture<Optional<Punishment>> asyncLoad(@NonNull MuteCacheKey key,
+			public @NonNull CentralisedFuture<Optional<Punishment>> asyncLoad(@NonNull MuteCacheKey key,
 					@NonNull Executor executor) {
 				return core.getSelector().getApplicableMute(key.uuid, key.address).thenApply(Optional::ofNullable);
 			}
 		};
-		muteCache = Caffeine.newBuilder()
-				.expireAfterWrite(4L, TimeUnit.MINUTES).initialCapacity(20)
-				.buildAsync(cacheLoader);
+		muteCache = Caffeine.newBuilder().expireAfterAccess(4L, TimeUnit.MINUTES).initialCapacity(32)
+				.scheduler(new DirectCaffeineScheduler()).buildAsync(cacheLoader);
 	}
 
 	public CentralisedFuture<Punishment> getCachedMute(UUID uuid, byte[] address) {
@@ -66,7 +72,7 @@ public class Cacher {
 		if (punishment.getType() != PunishmentType.MUTE) {
 			throw new IllegalArgumentException("Cannot set cached mute to a punishment which is not a mute");
 		}
-		muteCache.put(new MuteCacheKey(uuid, address), CompletableFuture.completedFuture(Optional.of(punishment)));
+		muteCache.put(new MuteCacheKey(uuid, address), core.getFuturesFactory().completedFuture(Optional.of(punishment)));
 	}
 	
 	void clearCachedMute(Punishment punishment) {
@@ -115,6 +121,23 @@ public class Cacher {
 			}
 			MuteCacheKey other = (MuteCacheKey) object;
 			return uuid.equals(other.uuid) && Arrays.equals(address, other.address);
+		}
+		
+	}
+	
+	/**
+	 * Caffeine's {@code Scheduler.SystemScheduler} implementation uses reflection since the library
+	 * must build on Java 8. Ideally no reflection is required for servers with modern Java.
+	 * 
+	 * @author A248
+	 *
+	 */
+	private static class DirectCaffeineScheduler implements Scheduler {
+
+		@Override
+		public @NonNull Future<?> schedule(@NonNull Executor executor, @NonNull Runnable command, @Positive long delay,
+				@NonNull TimeUnit unit) {
+			return CompletableFuture.runAsync(command, CompletableFuture.delayedExecutor(delay, unit, executor));
 		}
 		
 	}
