@@ -84,13 +84,13 @@ public class Formatter {
 	 * @return a future yielding the formatted sendable message
 	 */
 	public CentralisedFuture<SendableMessage> getPunishmentMessage(Punishment punishment) {
-		return formatVictim(punishment.getVictim()).thenCompose((victimFormatted) -> {
-			return formatOperator(punishment.getOperator()).thenApplyAsync((operatorFormatted) -> {
+		CentralisedFuture<String> futureVictimFormatted = formatVictim(punishment.getVictim());
+		CentralisedFuture<String> futureOperatorFormatted = formatOperator(punishment.getOperator());
 
-				String path = "additions." + punishment.getType().getLowercaseNamePlural() + ".layout";
-				String message = core.getConfigs().getMessages().getString(path);
-				return parseMessageNoPrefix(formatWithPunishment0(message, punishment, victimFormatted, operatorFormatted));
-			});
+		return futureVictimFormatted.thenCombineAsync(futureOperatorFormatted, (victimFormatted, operatorFormatted) -> {
+			String path = "additions." + punishment.getType().getLowercaseNamePlural() + ".layout";
+			String message = core.getConfigs().getMessages().getString(path);
+			return parseMessageNoPrefix(formatWithPunishment0(message, punishment, victimFormatted, operatorFormatted));
 		});
 	}
 	
@@ -157,10 +157,11 @@ public class Formatter {
 	 * @return a future of the resulting formatted sendable message
 	 */
 	public CentralisedFuture<SendableMessage> formatWithPunishment(String message, Punishment punishment) {
-		return formatVictim(punishment.getVictim()).thenCompose((victimFormatted) -> {
-			return formatOperator(punishment.getOperator()).thenApplyAsync((operatorFormatted) -> {
-				return parseMessage(formatWithPunishment0(message, punishment, victimFormatted, operatorFormatted));
-			});
+		CentralisedFuture<String> futureVictimFormatted = formatVictim(punishment.getVictim());
+		CentralisedFuture<String> futureOperatorFormatted = formatOperator(punishment.getOperator());
+
+		return futureVictimFormatted.thenCombineAsync(futureOperatorFormatted, (victimFormatted, operatorFormatted) -> {
+			return parseMessage(formatWithPunishment0(message, punishment, victimFormatted, operatorFormatted));
 		});
 	}
 

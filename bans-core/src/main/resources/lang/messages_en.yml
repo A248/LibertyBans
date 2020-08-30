@@ -21,6 +21,7 @@ all:
     - '&7Unpunish commands: /unban, /unmute, /unwarn'
 # Admin commands
 admin:
+  no-permission: '&cSorry, you cannot use this.'
   ellipses: '&a...'
   reloaded: '&aReloaded!'
   restarted: '&aRestarted!'

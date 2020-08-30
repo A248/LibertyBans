@@ -19,57 +19,44 @@
 package space.arim.libertybans.env.velocity;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.env.annote.PlatformPlayer;
 
-import space.arim.libertybans.core.env.EnvEnforcer;
+import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.TargetMatcher;
 
 import com.velocitypowered.api.proxy.Player;
 
-class VelocityEnforcer implements EnvEnforcer {
+class VelocityEnforcer extends AbstractEnvEnforcer {
 
-	private final VelocityEnv env;
-	
 	VelocityEnforcer(VelocityEnv env) {
-		this.env = env;
+		super(env);
+	}
+	
+	@Override
+	protected VelocityEnv env() {
+		return (VelocityEnv) super.env();
 	}
 
 	@Override
 	public void sendToThoseWithPermission(String permission, SendableMessage message) {
-		for (Player player : env.getServer().getAllPlayers()) {
+		for (Player player : env().getServer().getAllPlayers()) {
 			if (player.hasPermission(permission)) {
-				env.handle.sendMessage(player, message);
+				env().getPlatformHandle().sendMessage(player, message);
 			}
 		}
 	}
-	
-	@Override
-	@PlatformPlayer
-	public Object getOnlinePlayerByUUID(UUID uuid) {
-		return env.getServer().getPlayer(uuid).orElse(null);
-	}
 
 	@Override
-	public void kickByUUID(UUID uuid, SendableMessage message) {
-		Player player = env.getServer().getPlayer(uuid).orElse(null);
-		if (player != null) {
-			env.handle.disconnectUser(player, message);
-		}
-	}
-
-	@Override
-	public void sendMessageByUUID(UUID uuid, SendableMessage message) {
-		Player player = env.getServer().getPlayer(uuid).orElse(null);
-		if (player != null) {
-			env.handle.sendMessage(player, message);
-		}
+	public void doForPlayerIfOnline(UUID uuid, Consumer<@PlatformPlayer Object> callback) {
+		env().getServer().getPlayer(uuid).ifPresent(callback);
 	}
 
 	@Override
 	public void enforceMatcher(TargetMatcher matcher) {
-		for (Player player : env.getServer().getAllPlayers()) {
+		for (Player player : env().getServer().getAllPlayers()) {
 			if (matcher.uuids().contains(player.getUniqueId())
 					|| matcher.addresses().contains(player.getRemoteAddress().getAddress())) {
 				matcher.callback().accept(player);

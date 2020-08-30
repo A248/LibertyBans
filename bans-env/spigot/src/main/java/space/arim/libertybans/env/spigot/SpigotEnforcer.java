@@ -19,60 +19,48 @@
 package space.arim.libertybans.env.spigot;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.env.annote.PlatformPlayer;
 
-import space.arim.libertybans.core.env.EnvEnforcer;
+import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.TargetMatcher;
 
 import org.bukkit.entity.Player;
 
-class SpigotEnforcer implements EnvEnforcer {
+class SpigotEnforcer extends AbstractEnvEnforcer {
 
-	private final SpigotEnv env;
-	
 	SpigotEnforcer(SpigotEnv env) {
-		this.env = env;
+		super(env);
+	}
+	
+	@Override
+	protected SpigotEnv env() {
+		return (SpigotEnv) super.env();
 	}
 	
 	private void runSyncNow(Runnable command) {
-		env.core.getFuturesFactory().runSync(command).join();
+		env().core.getFuturesFactory().runSync(command).join();
 	}
 	
 	@Override
 	public void sendToThoseWithPermission(String permission, SendableMessage message) {
 		runSyncNow(() -> {
-			for (Player player : env.getPlugin().getServer().getOnlinePlayers()) {
+			for (Player player : env().getPlugin().getServer().getOnlinePlayers()) {
 				if (player.hasPermission(permission)) {
-					env.handle.sendMessage(player, message);
+					env().getPlatformHandle().sendMessage(player, message);
 				}
 			}
 		});
 	}
 	
 	@Override
-	@PlatformPlayer
-	public Object getOnlinePlayerByUUID(UUID uuid) {
-		return env.core.getFuturesFactory().supplySync(() -> env.getPlugin().getServer().getPlayer(uuid)).join();
-	}
-
-	@Override
-	public void kickByUUID(UUID uuid, SendableMessage message) {
+	public void doForPlayerIfOnline(UUID uuid, Consumer<@PlatformPlayer Object> callback) {
 		runSyncNow(() -> {
-			Player player = env.getPlugin().getServer().getPlayer(uuid);
+			Player player = env().getPlugin().getServer().getPlayer(uuid);
 			if (player != null) {
-				env.handle.disconnectUser(player, message);
-			}
-		});
-	}
-
-	@Override
-	public void sendMessageByUUID(UUID uuid, SendableMessage message) {
-		runSyncNow(() -> {
-			Player player = env.getPlugin().getServer().getPlayer(uuid);
-			if (player != null) {
-				env.handle.sendMessage(player, message);
+				callback.accept(player);
 			}
 		});
 	}
@@ -80,7 +68,7 @@ class SpigotEnforcer implements EnvEnforcer {
 	@Override
 	public void enforceMatcher(TargetMatcher matcher) {
 		runSyncNow(() -> {
-			for (Player player : env.getPlugin().getServer().getOnlinePlayers()) {
+			for (Player player : env().getPlugin().getServer().getOnlinePlayers()) {
 				if (matcher.uuids().contains(player.getUniqueId())
 						|| matcher.addresses().contains(player.getAddress().getAddress())) {
 					matcher.callback().accept(player);

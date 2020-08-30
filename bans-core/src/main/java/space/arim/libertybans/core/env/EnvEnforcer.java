@@ -19,18 +19,49 @@
 package space.arim.libertybans.core.env;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.env.annote.PlatformPlayer;
 
+/**
+ * Platform specific enforcer
+ * 
+ * @author A248
+ *
+ */
 public interface EnvEnforcer {
 	
+	/**
+	 * For all players with the specified permission, sends the message
+	 * 
+	 * @param permission the permission
+	 * @param message the message
+	 */
 	void sendToThoseWithPermission(String permission, SendableMessage message);
 	
-	@PlatformPlayer Object getOnlinePlayerByUUID(UUID uuid);
+	/**
+	 * Searches for a player with the given UUID, if found, invokes the callback
+	 * 
+	 * @param uuid the uuid
+	 * @param callback the callback
+	 */
+	void doForPlayerIfOnline(UUID uuid, Consumer<@PlatformPlayer Object> callback);
 
+	/**
+	 * Searches for a player with the given UUID, if found, kicks the player with the given message
+	 * 
+	 * @param uuid the uuid
+	 * @param message the kick message
+	 */
 	void kickByUUID(UUID uuid, SendableMessage message);
 	
+	/**
+	 * Searches for a player with the given UUID, if found, sends the player the given message
+	 * 
+	 * @param uuid the uuid
+	 * @param message the message
+	 */
 	void sendMessageByUUID(UUID uuid, SendableMessage message);
 	
 	void enforceMatcher(TargetMatcher matcher);

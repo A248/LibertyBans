@@ -27,7 +27,7 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.uuidvault.api.UUIDUtil;
 
 import space.arim.api.chat.SendableMessage;
-import space.arim.api.env.annote.PlatformPlayer;
+import space.arim.api.env.PlatformHandle;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.NetworkAddress;
@@ -56,21 +56,7 @@ public class Enforcer implements PunishmentEnforcer {
 		case PLAYER:
 			UUID uuid = ((PlayerVictim) punishment.getVictim()).getUUID();
 			CentralisedFuture<?> enforceFuture = futureMessage.thenAccept((message) -> {
-				PunishmentType type = punishment.getType();
-				if (shouldKick(type)) {
-					core.getEnvironment().getEnforcer().kickByUUID(uuid, message);
-				} else {
-					core.getEnvironment().getEnforcer().sendMessageByUUID(uuid, message);
-
-					if (type == PunishmentType.MUTE) {
-						// Mute enforcement must additionally take into account the mute cache
-						EnvEnforcer envEnforcer = core.getEnvironment().getEnforcer();
-						@PlatformPlayer Object player = envEnforcer.getOnlinePlayerByUUID(uuid);
-						if (player != null) {
-							core.getMuteCacher().setCachedMute(uuid, envEnforcer.getAddressFor(player), punishment);
-						}
-					}
-				}
+				core.getEnvironment().getEnforcer().doForPlayerIfOnline(uuid, enforcementCallback(punishment, message));
 			});
 			return enforceFuture;
 
@@ -101,14 +87,16 @@ public class Enforcer implements PunishmentEnforcer {
 		}
 	}
 	
-	private Consumer<Object> playerCallback(Punishment punishment, SendableMessage message) {
+	private Consumer<Object> enforcementCallback(Punishment punishment, SendableMessage message) {
 		PunishmentType type = punishment.getType();
 		boolean shouldKick = shouldKick(type);
 		return (playerObj) -> {
+
+			PlatformHandle handle = core.getEnvironment().getPlatformHandle();
 			if (shouldKick) {
-				core.getEnvironment().getPlatformHandle().disconnectUser(playerObj, message);
+				handle.disconnectUser(playerObj, message);
 			} else {
-				core.getEnvironment().getPlatformHandle().sendMessage(playerObj, message);
+				handle.sendMessage(playerObj, message);
 
 				/*
 				 * Mute enforcement must additionally take into account the mute cache
@@ -128,7 +116,7 @@ public class Enforcer implements PunishmentEnforcer {
 		AddressStrictness strictness = core.getConfigs().getAddressStrictness();
 		switch (strictness) {
 		case LENIENT:
-			var matcher = new TargetMatcher(Set.of(), Set.of(address.toInetAddress()), playerCallback(punishment, message));
+			var matcher = new TargetMatcher(Set.of(), Set.of(address.toInetAddress()), enforcementCallback(punishment, message));
 			futureMatcher = core.getFuturesFactory().completedFuture(matcher);
 			break;
 		case NORMAL:
@@ -152,7 +140,7 @@ public class Enforcer implements PunishmentEnforcer {
 					.params(address)
 					.setResult((resultSet) -> UUIDUtil.fromByteArray(resultSet.getBytes("uuid")))
 					.onError(Set::of).execute();
-			return new TargetMatcher(uuids, Set.of(), playerCallback(punishment, message));
+			return new TargetMatcher(uuids, Set.of(), enforcementCallback(punishment, message));
 		});
 	}
 	
@@ -165,7 +153,7 @@ public class Enforcer implements PunishmentEnforcer {
 					.params(address)
 					.setResult((resultSet) -> UUIDUtil.fromByteArray(resultSet.getBytes("uuid")))
 					.onError(Set::of).execute();
-			return new TargetMatcher(uuids, Set.of(), playerCallback(punishment, message));
+			return new TargetMatcher(uuids, Set.of(), enforcementCallback(punishment, message));
 		});
 	}
 	

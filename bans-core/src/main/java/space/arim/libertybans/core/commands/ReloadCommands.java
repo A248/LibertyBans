@@ -34,24 +34,36 @@ public class ReloadCommands extends AbstractSubCommandGroup {
 
 	@Override
 	public void execute(CmdSender sender, CommandPackage command, String arg) {
+		if (!sender.hasPermission("libertybans.admin." + arg)) {
+			sender.parseThenSend(messages().getString("admin.no-permission"));
+			return;
+		}
 		switch (arg) {
 		case "restart":
-			sender.sendMessage(ellipses());
-			boolean restarted = core().getEnvironment().fullRestart();
-			sender.parseThenSend((restarted) ? messages().getString("admin.restarted")
-					: "Not restarting because loading already in process");
+			restartCmd(sender);
 			break;
 		case "reload":
-			sender.sendMessage(ellipses());
-			core().getConfigs().reloadConfigs().thenAccept((result) -> {
-				if (result) {
-					sender.parseThenSend(messages().getString("admin.reloaded"));
-				}
-			});
+			reloadCmd(sender);
 			break;
 		default:
 			throw new IllegalStateException("Command mismatch");
 		}
+	}
+	
+	private void restartCmd(CmdSender sender) {
+		sender.sendMessage(ellipses());
+		boolean restarted = core().getEnvironment().fullRestart();
+		sender.parseThenSend((restarted) ? messages().getString("admin.restarted")
+				: "Not restarting because loading already in process");
+	}
+	
+	private void reloadCmd(CmdSender sender) {
+		sender.sendMessage(ellipses());
+		core().getConfigs().reloadConfigs().thenAccept((result) -> {
+			String message = (result) ? messages().getString("admin.reloaded")
+					: "&cAn error occurred reloading the configuration. Please check the server console.";
+			sender.parseThenSend(message);
+		});
 	}
 
 }

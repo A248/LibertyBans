@@ -22,58 +22,48 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.env.annote.PlatformPlayer;
 
-import space.arim.libertybans.core.env.EnvEnforcer;
+import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.TargetMatcher;
 
 import net.md_5.bungee.api.connection.Connection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
-class BungeeEnforcer implements EnvEnforcer {
+class BungeeEnforcer extends AbstractEnvEnforcer {
 
-	private final BungeeEnv env;
-	
 	BungeeEnforcer(BungeeEnv env) {
-		this.env = env;
+		super(env);
+	}
+	
+	@Override
+	protected BungeeEnv env() {
+		return (BungeeEnv) super.env();
 	}
 	
 	@Override
 	public void sendToThoseWithPermission(String permission, SendableMessage message) {
-		for (ProxiedPlayer player : env.getPlugin().getProxy().getPlayers()) {
+		for (ProxiedPlayer player : env().getPlugin().getProxy().getPlayers()) {
 			if (player.hasPermission(permission)) {
-				env.handle.sendMessage(player, message);
+				env().getPlatformHandle().sendMessage(player, message);
 			}
 		}
 	}
 	
 	@Override
-	@PlatformPlayer
-	public Object getOnlinePlayerByUUID(UUID uuid) {
-		return env.getPlugin().getProxy().getPlayer(uuid);
-	}
-	
-	@Override
-	public void kickByUUID(UUID uuid, SendableMessage message) {
-		ProxiedPlayer player = env.getPlugin().getProxy().getPlayer(uuid);
+	public void doForPlayerIfOnline(UUID uuid, Consumer<@PlatformPlayer Object> callback) {
+		ProxiedPlayer player = env().getPlugin().getProxy().getPlayer(uuid);
 		if (player != null) {
-			env.handle.disconnectUser(player, message);
-		}
-	}
-	
-	@Override
-	public void sendMessageByUUID(UUID uuid, SendableMessage message) {
-		ProxiedPlayer player = env.getPlugin().getProxy().getPlayer(uuid);
-		if (player != null) {
-			env.handle.sendMessage(player, message);
+			callback.accept(player);
 		}
 	}
 	
 	@Override
 	public void enforceMatcher(TargetMatcher matcher) {
-		for (ProxiedPlayer player : env.getPlugin().getProxy().getPlayers()) {
+		for (ProxiedPlayer player : env().getPlugin().getProxy().getPlayers()) {
 			if (matcher.uuids().contains(player.getUniqueId())
 					|| matcher.addresses().contains(getAddress(player))) {
 				matcher.callback().accept(player);
