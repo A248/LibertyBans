@@ -73,5 +73,16 @@ player-uuid-resolution:
     - 'ASHCON'
     - 'MCHEADS'
     - 'MOJANG'
+commands:
+  # What commands should be registered as aliases for libertybans commands?
+  # For each command listed here, '/<command>' will be equal to '/libertybans <command>'
+  aliases:
+    - 'ban'
+    - 'mute'
+    - 'warn'
+    - 'kick'
+    - 'unban'
+    - 'unmute'
+    - 'unwarn'
 # Do not touch this
 config-version: 1

@@ -30,6 +30,10 @@
 			<artifactId>spigot-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>space.arim.morepaperlib</groupId>
+			<artifactId>morepaperlib</artifactId>
+		</dependency>
 	</dependencies>
 	
 	<repositories>

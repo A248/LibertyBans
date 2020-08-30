@@ -25,18 +25,18 @@ public abstract class CommandPackage implements Iterator<String>, Cloneable {
 	private final String command;
 	
 	/**
-	 * Creates from a base command
+	 * Creates from the true name of the base command executed
 	 * 
-	 * @param command the base command
+	 * @param command the true base command executed
 	 */
 	public CommandPackage(String command) {
 		this.command = command.toLowerCase();
 	}
 	
 	/**
-	 * Gets the base command run, always lowercase
+	 * Gets the true base command run, always lowercase
 	 * 
-	 * @return the base command, lowercased
+	 * @return the true base command, lowercased
 	 */
 	public String getCommand() {
 		return command;

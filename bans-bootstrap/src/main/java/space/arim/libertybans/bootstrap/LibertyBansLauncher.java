@@ -176,6 +176,9 @@ public class LibertyBansLauncher {
 		// ArimAPI
 		loader.addPair(readDependency("arimapi"), ARIM_GPL3);
 
+		// MorePaperLib
+		loader.addPair(readDependency("morepaperlib"), ARIM_LESSER_GPL3);
+
 		// Self
 		loader.addPair(readDependency("self"), ARIM_AFFERO_GPL3);
 	}

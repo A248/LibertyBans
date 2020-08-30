@@ -38,6 +38,7 @@ import space.arim.libertybans.core.config.Formatter;
 import space.arim.libertybans.core.database.DatabaseManager;
 import space.arim.libertybans.core.database.Database;
 import space.arim.libertybans.core.env.AbstractEnv;
+import space.arim.libertybans.core.env.EnvironmentManager;
 import space.arim.libertybans.core.selector.MuteCacher;
 import space.arim.libertybans.core.selector.Selector;
 import space.arim.libertybans.core.uuid.UUIDMaster;
@@ -52,6 +53,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 	private final Configs configs;
 	private final DatabaseManager databaseManager;
 	private final UUIDMaster uuidMaster;
+	private final EnvironmentManager envManager;
 	
 	private final Selector selector;
 	private final MuteCacher cacher;
@@ -76,6 +78,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 		configs = new Configs(this);
 		databaseManager = new DatabaseManager(this);
 		uuidMaster = new UUIDMaster(this);
+		envManager = new EnvironmentManager(this);
 
 		selector = new Selector(this);
 		cacher = new MuteCacher(this);
@@ -93,18 +96,22 @@ public class LibertyBansCore implements LibertyBans, Part {
 		configs.startup();
 		databaseManager.startup();
 		uuidMaster.startup();
+		envManager.startup();
 	}
 	
 	@Override
 	public void restart() {
+		envManager.shutdown();
 		resources.restart();
 		uuidMaster.restart();
 		configs.restart();
 		databaseManager.restart();
+		envManager.startup();
 	}
 	
 	@Override
 	public void shutdown() {
+		envManager.shutdown();
 		resources.shutdown();
 		uuidMaster.shutdown();
 		configs.shutdown();

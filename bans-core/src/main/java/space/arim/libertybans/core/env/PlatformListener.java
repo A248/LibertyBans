@@ -19,7 +19,7 @@
 package space.arim.libertybans.core.env;
 
 public interface PlatformListener {
-
+	
 	void register();
 	
 	void unregister();

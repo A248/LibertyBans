@@ -21,9 +21,8 @@ package space.arim.libertybans.core.commands;
 import java.util.List;
 import java.util.Locale;
 
+import space.arim.omnibus.util.ArraysUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.api.configure.ConfigAccessor;
 
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Victim;
@@ -44,16 +43,13 @@ public class Commands {
 		subCommands = List.of(new PunishCommands(this), new UnpunishCommands(this), new ReloadCommands(this));
 	}
 	
-	// Shortcut access for convenience	
-	private ConfigAccessor messages() {
-		return core.getConfigs().getMessages();
-	}
-	
-	// Main command handler
+	/*
+	 * Main command handler
+	 */
 	
 	public void execute(CmdSender sender, CommandPackage command) {
 		if (!sender.hasPermission("libertybans.commands")) {
-			sender.parseThenSend(messages().getString("all.base-permission-message"));
+			sender.parseThenSend(core.getConfigs().getMessages().getString("all.base-permission-message"));
 			return;
 		}
 		if (!command.hasNext()) {
@@ -70,13 +66,34 @@ public class Commands {
 		sender.parseThenSend(core.getConfigs().getMessages().getString("all.usage"));
 	}
 	
+	/*
+	 * Tab completion
+	 */
+	
+	public List<String> suggest(CmdSender sender, String[] args) {
+		if (args.length >= 1 && sender.hasPermission("libertybans.commands")) {
+			String firstArg = args[0];
+			for (SubCommandGroup subCommand : subCommands) {
+				if (subCommand.matches(firstArg)) {
+					return subCommand.suggest(sender, ArraysUtil.contractAndRemove(args, 0));
+				}
+			}
+		}
+		return List.of();
+	}
+	
+	/*
+	 * Helpers
+	 */
+	
 	CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg) {
 		if (!core.getUUIDMaster().validateNameArgument(targetArg)) {
 			return core.getFuturesFactory().completedFuture(null);
 		}
 		return core.getUUIDMaster().fullLookupUUID(targetArg).thenApply((uuid) -> {
 			if (uuid == null) {
-				sender.parseThenSend(messages().getString("all.not-found.uuid").replace("%TARGET%", targetArg));
+				sender.parseThenSend(core.getConfigs().getMessages().getString("all.not-found.uuid")
+						.replace("%TARGET%", targetArg));
 				return null;
 			}
 			return PlayerVictim.of(uuid);

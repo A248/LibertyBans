@@ -19,8 +19,8 @@
 package space.arim.libertybans.env.velocity;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +35,7 @@ import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.VelocityPlatformHandle;
 
 import space.arim.libertybans.core.LibertyBansCore;
+import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.env.AbstractEnv;
 import space.arim.libertybans.core.env.PlatformListener;
 
@@ -46,8 +47,6 @@ public class VelocityEnv extends AbstractEnv {
 	final LibertyBansCore core;
 	final VelocityPlatformHandle handle;
 	
-	private final List<PlatformListener> listeners;
-	
 	private final VelocityEnforcer enforcer;
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
@@ -58,12 +57,6 @@ public class VelocityEnv extends AbstractEnv {
 
 		core = new LibertyBansCore(OmnibusProvider.getOmnibus(), folder, this);
 		handle = new VelocityPlatformHandle(plugin, server);
-
-		listeners = List.of(
-				new ConnectionListener(this),
-				new ChatListener(this),
-				new CommandListener(this),
-				new CommandHandler(this));
 
 		enforcer = new VelocityEnforcer(this);
 	}
@@ -97,9 +90,6 @@ public class VelocityEnv extends AbstractEnv {
 			}.setInstancePassive();
 		}
 		core.startup();
-		for (PlatformListener listener : listeners) {
-			listener.register();
-		}
 	}
 	
 	@Override
@@ -109,15 +99,26 @@ public class VelocityEnv extends AbstractEnv {
 	
 	@Override
 	protected void shutdown0() {
-		for (PlatformListener listener : listeners) {
-			listener.unregister();
-		}
 		core.shutdown();
 	}
 	
 	@Override
 	protected void infoMessage(String message) {
 		logger.info(message);
+	}
+
+	@Override
+	public Set<PlatformListener> createListeners() {
+		return Set.of(
+				new ConnectionListener(this),
+				new ChatListener(this),
+				new CommandListener(this),
+				new CommandHandler(this, Commands.BASE_COMMAND_NAME, false));
+	}
+
+	@Override
+	public PlatformListener createAliasCommand(String command) {
+		return new CommandHandler(this, command, true);
 	}
 	
 }

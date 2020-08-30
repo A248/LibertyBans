@@ -18,20 +18,34 @@
  */
 package space.arim.libertybans.core.env;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
-import space.arim.api.env.PlatformHandle;
-
+import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.Part;
 
-public interface Environment extends Part {
+public class EnvironmentManager implements Part {
+
+	private final LibertyBansCore core;
 	
-	PlatformHandle getPlatformHandle();
+	private final List<PlatformListener> listeners = new ArrayList<>();
 	
-	EnvEnforcer getEnforcer();
-	
-	Set<PlatformListener> createListeners();
-	
-	PlatformListener createAliasCommand(String command);
+	public EnvironmentManager(LibertyBansCore core) {
+		this.core = core;
+	}
+
+	@Override
+	public void startup() {
+		listeners.addAll(core.getEnvironment().createListeners());
+		for (String alias : core.getConfigs().getConfig().getStringList("commands.aliases")) {
+			listeners.add(core.getEnvironment().createAliasCommand(alias));
+		}
+		listeners.forEach(PlatformListener::register);
+	}
+
+	@Override
+	public void shutdown() {
+		listeners.forEach(PlatformListener::unregister);
+	}
 	
 }

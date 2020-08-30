@@ -18,44 +18,97 @@
  */
 package space.arim.libertybans.env.spigot;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InaccessibleObjectException;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import space.arim.omnibus.util.ArraysUtil;
+import space.arim.omnibus.util.ThisClass;
+
+import space.arim.api.env.util.command.BukkitCommandSkeleton;
+
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
-import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.PlatformListener;
 
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-class CommandHandler implements CommandExecutor, PlatformListener {
+class CommandHandler extends BukkitCommandSkeleton implements PlatformListener {
 
 	private final SpigotEnv env;
+	private final boolean alias;
 	
-	CommandHandler(SpigotEnv env) {
+	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+	
+	static final String COMMAND_MAP_WARNING = 
+			"LibertyBans has limited support for this situation - the plugin will continue to work, but restarting it may"
+			+ "encounter weird issues with command registration, as well as potential memory leaks.";
+	
+	CommandHandler(SpigotEnv env, String command, boolean alias) {
+		super(command);
 		this.env = env;
+		this.alias = alias;
 	}
 	
 	@Override
 	public void register() {
-		env.getPlugin().getCommand(Commands.BASE_COMMAND_NAME).setExecutor(this);
+		env.getCommandMap().register(getName(), env.getPlugin().getName().toLowerCase(Locale.ENGLISH), this);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void unregister() {
+		CommandMap commandMap = env.getCommandMap();
+		Field knownCommandsField = env.getCommandMapKnownCommandsField();
+		if (knownCommandsField == null) {
+			logger.debug("Skipping command unregistration as 'knownCommands' field was not previously found");
+
+		} else {
+			Map<String, Command> knownCommands = null;
+			try {
+				knownCommandsField.setAccessible(true);
+				knownCommands = (Map<String, Command>) knownCommandsField.get(commandMap);
+			} catch (ClassCastException | IllegalArgumentException | IllegalAccessException | SecurityException
+					| InaccessibleObjectException ex) {
+				logger.warn("Unable to retrieve server command map's known commands. " + COMMAND_MAP_WARNING, ex);
+			}
+			if (knownCommands != null) {
+				do {
+					logger.trace("Iteration: removing command from map");
+				} while (knownCommands.values().remove(this));
+			}
+		}
+	}
+	
+	private CmdSender adaptSender(CommandSender platformSender) {
+		return (platformSender instanceof Player) ?
+				new PlayerCmdSender(env, (Player) platformSender)
+				: new ConsoleCmdSender(env, platformSender);
+	}
+	
+	private String[] adaptArgs(String[] args) {
+		if (alias) {
+			return ArraysUtil.expandAndInsert(args, getName(), 0);
+		}
+		return args;
 	}
 
 	@Override
-	public void unregister() {
-		env.getPlugin().getCommand(Commands.BASE_COMMAND_NAME).setExecutor(env.getPlugin());
+	protected void execute(CommandSender platformSender, String[] args) {
+		env.core.getCommands().execute(adaptSender(platformSender), new ArrayCommandPackage(getName(), adaptArgs(args)));
 	}
-	
+
 	@Override
-	public boolean onCommand(CommandSender platformSender, Command command, String label, String[] args) {
-		CmdSender sender;
-		if (platformSender instanceof Player) {
-			sender = new PlayerCmdSender(env, (Player) platformSender);
-		} else {
-			sender = new ConsoleCmdSender(env, platformSender);
-		}
-		env.core.getCommands().execute(sender, new ArrayCommandPackage(command.getName(), args));
-		return true;
+	protected List<String> suggest(CommandSender platformSender, String[] args) {
+		return env.core.getCommands().suggest(adaptSender(platformSender), adaptArgs(args));
 	}
 
 }

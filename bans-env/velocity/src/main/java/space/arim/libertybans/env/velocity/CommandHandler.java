@@ -18,8 +18,11 @@
  */
 package space.arim.libertybans.env.velocity;
 
+import java.util.List;
+
+import space.arim.omnibus.util.ArraysUtil;
+
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
-import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.PlatformListener;
 
@@ -31,34 +34,52 @@ import com.velocitypowered.api.proxy.Player;
 class CommandHandler implements SimpleCommand, PlatformListener {
 
 	private final VelocityEnv env;
+	private final String name;
+	private final boolean alias;
 	
-	CommandHandler(VelocityEnv env) {
+	CommandHandler(VelocityEnv env, String name, boolean alias) {
 		this.env = env;
+		this.name = name;
+		this.alias = alias;
 	}
 	
 	@Override
 	public void register() {
 		CommandManager cmdManager = env.getServer().getCommandManager();
-		cmdManager.register(cmdManager.metaBuilder(Commands.BASE_COMMAND_NAME).build(), this);
+		cmdManager.register(cmdManager.metaBuilder(name).build(), this);
 	}
 
 	@Override
 	public void unregister() {
 		CommandManager cmdManager = env.getServer().getCommandManager();
-		cmdManager.unregister(Commands.BASE_COMMAND_NAME);
+		cmdManager.unregister(name);
+	}
+	
+	private CmdSender adaptSender(CommandSource platformSender) {
+		return (platformSender instanceof Player) ?
+				new PlayerCmdSender(env, (Player) platformSender)
+				: new ConsoleCmdSender(env, platformSender);
+	}
+	
+	private String[] adaptArgs(String[] args) {
+		if (alias) {
+			return ArraysUtil.expandAndInsert(args, name, 0);
+		}
+		return args;
 	}
 
 	@Override
 	public void execute(Invocation invocation) {
 		CommandSource platformSender = invocation.source();
 		String[] args = invocation.arguments();
-		CmdSender sender;
-		if (platformSender instanceof Player) {
-			sender = new PlayerCmdSender(env, (Player) platformSender);
-		} else {
-			sender = new ConsoleCmdSender(env, platformSender);
-		}
-		env.core.getCommands().execute(sender, new ArrayCommandPackage(Commands.BASE_COMMAND_NAME, args));
+		env.core.getCommands().execute(adaptSender(platformSender), new ArrayCommandPackage(name, adaptArgs(args)));
+	}
+	
+	@Override
+	public List<String> suggest(Invocation invocation) {
+		CommandSource platformSender = invocation.source();
+		String[] args = invocation.arguments();
+		return env.core.getCommands().suggest(adaptSender(platformSender), adaptArgs(args));
 	}
 	
 }
