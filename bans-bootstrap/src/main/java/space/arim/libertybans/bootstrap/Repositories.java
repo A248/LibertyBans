@@ -18,18 +18,14 @@
  */
 package space.arim.libertybans.bootstrap;
 
-public class Instantiator {
+import space.arim.libertybans.bootstrap.depend.Repository;
 
-	private final Class<?> clazz;
+final class Repositories {
+
+	static final Repository ARIM_LESSER_GPL3 = new Repository("https://mvn-repo.arim.space/lesser-gpl3");
+	static final Repository ARIM_GPL3 = new Repository("https://mvn-repo.arim.space/gpl3");
+	static final Repository ARIM_AFFERO_GPL3 = new Repository("https://mvn-repo.arim.space/affero-gpl3");
 	
-	public Instantiator(String clazzName, ClassLoader loader) throws ClassNotFoundException {
-		clazz = Class.forName(clazzName, true, loader);
-	}
-
-	public <T, U> BaseEnvironment invoke(Class<T> parameter1Type, T parameter1, Class<U> parameter2Type, U parameter2)
-			throws ReflectiveOperationException, IllegalArgumentException, SecurityException {
-		return (BaseEnvironment) clazz.getDeclaredConstructor(parameter1Type, parameter2Type).newInstance(parameter1,
-				parameter2);
-	}
+	static final Repository CENTRAL_REPO = new Repository("https://repo.maven.apache.org/maven2");
 	
 }

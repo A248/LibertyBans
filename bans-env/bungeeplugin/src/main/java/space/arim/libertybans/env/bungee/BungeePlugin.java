@@ -18,18 +18,16 @@
  */
 package space.arim.libertybans.env.bungee;
 
-import java.lang.reflect.Field;
 import java.nio.file.Path;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import net.md_5.bungee.api.plugin.Plugin;
-import net.md_5.bungee.api.plugin.PluginDescription;
 
 import space.arim.libertybans.bootstrap.BaseEnvironment;
 import space.arim.libertybans.bootstrap.Instantiator;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
+
+import net.md_5.bungee.api.plugin.Plugin;
+import net.md_5.bungee.api.scheduler.TaskScheduler;
 
 public class BungeePlugin extends Plugin {
 
@@ -37,32 +35,15 @@ public class BungeePlugin extends Plugin {
 	
 	@Override
 	public void onEnable() {
-		/*
-		 * It's only BungeeCord which has this problem
-		 */
-		informAboutSecurityManagerIfNeeded();
-
 		Path folder = getDataFolder().toPath();
-		ExecutorService executor = Instantiator.createReasonableExecutor();
-		ClassLoader launchLoader;
-		try {
-			LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
-				try {
-					ClassLoader pluginClassLoader = clazz.getClassLoader();
-					Field descField = pluginClassLoader.getClass().getDeclaredField("desc");
-					Object descObj = descField.get(pluginClassLoader);
-					if (descObj instanceof PluginDescription) {
-						PluginDescription desc = (PluginDescription) descObj;
-						return desc.getName() + " v" + desc.getVersion();
-					}
-				} catch (IllegalArgumentException | NoSuchFieldException | SecurityException | IllegalAccessException ignored) {}
-				return null;
-			});
-			launchLoader = launcher.attemptLaunch().join();
-		} finally {
-			executor.shutdown();
-			assert executor.isTerminated();
-		}
+		TaskScheduler scheduler = getProxy().getScheduler();
+		Executor executor = (cmd) -> scheduler.runAsync(this, cmd);
+
+		LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
+			return PluginClassLoaderReflection.getProvidingPlugin(clazz);
+		});
+		ClassLoader launchLoader = launcher.attemptLaunch().join();
+
 		if (launchLoader == null) {
 			getLogger().warning("Failed to launch LibertyBans");
 			return;
@@ -77,19 +58,6 @@ public class BungeePlugin extends Plugin {
 		}
 		base.startup();
 		this.base = base;
-	}
-	
-	private void informAboutSecurityManagerIfNeeded() {
-		Logger logger = getLogger();
-		SecurityManager sm = System.getSecurityManager();
-		if (sm == null) {
-			logger.info("Thank you for using Waterfall and not BungeeCord. Waterfall helps us and you.");
-
-		} else {
-			logger.warning(
-					"You are using BungeeCord and its 'BungeeSecurityManager' is enabled. LibertyBans requires permissions "
-					+ "to create reasonable thread pools per efficient connecting pooling. You may encounter some console spam.");
-		}
 	}
 
 	@Override

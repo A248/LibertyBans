@@ -20,7 +20,7 @@ package space.arim.libertybans.env.velocity;
 
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 
 import org.slf4j.Logger;
 
@@ -38,6 +38,7 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.scheduler.Scheduler;
 
 @Plugin(id = PluginInfo.ANNOTE_ID, name = PluginInfo.NAME, version = PluginInfo.VERSION, authors = {
 		"A248" }, description = PluginInfo.DESCRIPTION, url = PluginInfo.URL)
@@ -59,15 +60,12 @@ public class VelocityPlugin {
 	@Subscribe
 	public void onProxyInitialize(@SuppressWarnings("unused") ProxyInitializeEvent evt) {
 		PluginContainer plugin = server.getPluginManager().fromInstance(this).get();
-		ExecutorService executor = Instantiator.createReasonableExecutor();
-		ClassLoader launchLoader;
-		try {
-			LibertyBansLauncher launcher = new LibertyBansLauncherVelocity(this, executor);
-			launchLoader = launcher.attemptLaunch().join();
-		} finally {
-			executor.shutdown();
-			assert executor.isTerminated();
-		}
+		Scheduler scheduler = server.getScheduler();
+		Executor executor = (cmd) -> scheduler.buildTask(this, cmd).schedule();
+
+		LibertyBansLauncher launcher = new LibertyBansLauncherVelocity(this, executor);
+		ClassLoader launchLoader = launcher.attemptLaunch().join();
+
 		if (launchLoader == null) {
 			logger.warn("Failed to launch LibertyBans");
 			return;

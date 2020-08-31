@@ -28,6 +28,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -35,20 +37,15 @@ import java.util.function.Function;
 import space.arim.libertybans.bootstrap.depend.BootstrapLauncher;
 import space.arim.libertybans.bootstrap.depend.Dependency;
 import space.arim.libertybans.bootstrap.depend.DependencyLoaderBuilder;
-import space.arim.libertybans.bootstrap.depend.Repository;
 
 public class LibertyBansLauncher {
 
+	private final Executor executor;
 	private final BootstrapLauncher launcher;
 	private final Function<Class<?>, String> getPluginFor;
 	
-	private final Repository ARIM_LESSER_GPL3 = new Repository("https://mvn-repo.arim.space/lesser-gpl3");
-	private final Repository ARIM_GPL3 = new Repository("https://mvn-repo.arim.space/gpl3");
-	private final Repository ARIM_AFFERO_GPL3 = new Repository("https://mvn-repo.arim.space/affero-gpl3");
-	
-	private final Repository CENTRAL_REPO = new Repository("https://repo.maven.apache.org/maven2");
-	
 	public LibertyBansLauncher(Path folder, Executor executor, Function<Class<?>, String> getPluginFor) {
+		this.executor = executor;
 		this.getPluginFor = getPluginFor;
 
 		Path libsFolder = folder.resolve("libs");
@@ -56,9 +53,10 @@ public class LibertyBansLauncher {
 				.setExecutor(executor).setOutputDirectory(libsFolder.resolve("api"));
 		DependencyLoaderBuilder internalDepLoader = new DependencyLoaderBuilder()
 				.setExecutor(executor).setOutputDirectory(libsFolder.resolve("internal"));
-		
+
+		var internalDeps = addInternalDepsStart();
 		addApiDeps(apiDepLoader);
-		addInternalDeps(internalDepLoader);
+		addInternalDepsFinish(internalDepLoader, internalDeps);
 
 		launcher = new BootstrapLauncher("LibertyBans", getClass().getClassLoader(),
 				apiDepLoader.build(), internalDepLoader.build(), this::addUrlsToExternalClassLoader);
@@ -114,7 +112,7 @@ public class LibertyBansLauncher {
 		}
 	}
 	
-	private Dependency readDependency(String simpleDependencyName) {
+	private Dependency readDependency0(String simpleDependencyName) {
 		URL url = getClass().getClassLoader().getResource("dependencies/" + simpleDependencyName);
 		try (InputStream is = url.openStream()) {
 
@@ -126,6 +124,10 @@ public class LibertyBansLauncher {
 		}
 	}
 	
+	private CompletableFuture<Dependency> readDependency(String simpleDependencyName) {
+		return CompletableFuture.supplyAsync(() -> readDependency0(simpleDependencyName), executor);
+	}
+	
 	/*
 	 * Dependencies here are publicly exposed, but cannot be relocated, because
 	 * they are part of the API.
@@ -133,54 +135,45 @@ public class LibertyBansLauncher {
 	 */
 	private void addApiDeps(DependencyLoaderBuilder loader) {
 		if (!classExists("space.arim.omnibus.Omnibus")) {
-			loader.addPair(readDependency("omnibus"), ARIM_GPL3);
+			loader.addPair(readDependency0("omnibus"), Repositories.ARIM_GPL3);
 		}
 		if (!classExists("space.arim.uuidvault.api.UUIDVault")) {
-			loader.addPair(readDependency("uuidvault"), ARIM_LESSER_GPL3);
+			loader.addPair(readDependency0("uuidvault"), Repositories.ARIM_LESSER_GPL3);
 		}
 	}
 	
 	/*
-	 * Dependencies here are added to the isolated ClassLoader used by
+	 * Other dependencies, those internal, are added to the isolated ClassLoader used by
 	 * the core implementation. They do not need to be relocated.
 	 * 
 	 */
-	private void addInternalDeps(DependencyLoaderBuilder loader) {
+	
+	private Map<InternalDependency, CompletableFuture<Dependency>> addInternalDepsStart() {
+		EnumMap<InternalDependency, CompletableFuture<Dependency>> internalDeps = new EnumMap<>(InternalDependency.class);
+		for (InternalDependency internalDep : InternalDependency.values()) {
+			internalDeps.put(internalDep, readDependency(internalDep.id));
+		}
+		return internalDeps;
+	}
+	
+	private void addInternalDepsFinish(DependencyLoaderBuilder loader,
+			Map<InternalDependency, CompletableFuture<Dependency>> internalDeps) {
 		/*
 		 * Since Paper, Waterfall, Sponge, and Velocity include slf4j, it may already be present
 		 */
 		if (!classExists("org.slf4j.Logger")) {
-			loader.addPair(readDependency("slf4j-api"), CENTRAL_REPO);
-			loader.addPair(readDependency("slf4j-jdk14"), CENTRAL_REPO);
+			CompletableFuture<Dependency> slf4jApi = readDependency("slf4j-api");
+			CompletableFuture<Dependency> slf4jJdk14 = readDependency("slf4j-jdk14");
+			loader.addPair(slf4jApi.join(), Repositories.CENTRAL_REPO);
+			loader.addPair(slf4jJdk14.join(), Repositories.CENTRAL_REPO);
 		}
 
-		// HikariCP
-		warnRelocation("HikariCP", "com.zaxxer.hikari.HikariConfig");
-		loader.addPair(readDependency("hikaricp"), CENTRAL_REPO);
-
-		// HSQLDB
-		warnRelocation("HSQLDB", "org.hsqldb.jdbc.JDBCDriver");
-		loader.addPair(readDependency("hsqldb"), CENTRAL_REPO);
-
-		// MariaDB-Connector
-		warnRelocation("MariaDB-Connector", "org.mariadb.jdbc.Driver");
-		loader.addPair(readDependency("mariadb-connector"), CENTRAL_REPO);
-
-		// Caffeine
-		warnRelocation("Caffeine", "com.github.benmanes.caffeine.cache.Caffeine");
-		loader.addPair(readDependency("caffeine"), CENTRAL_REPO);
-
-		// JdbCaesar
-		loader.addPair(readDependency("jdbcaesar"), ARIM_LESSER_GPL3);
-
-		// ArimAPI
-		loader.addPair(readDependency("arimapi"), ARIM_GPL3);
-
-		// MorePaperLib
-		loader.addPair(readDependency("morepaperlib"), ARIM_LESSER_GPL3);
-
-		// Self
-		loader.addPair(readDependency("self"), ARIM_AFFERO_GPL3);
+		for (InternalDependency internalDep : InternalDependency.values()) {
+			if (internalDep.clazz != null) {
+				warnRelocation(internalDep.name, internalDep.clazz);
+			}
+			loader.addPair(internalDeps.get(internalDep).join(), internalDep.repo);
+		}
 	}
 	
 	// Must use System.err because we do not know whether the platform uses slf4j or JUL

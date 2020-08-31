@@ -23,6 +23,7 @@ import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * This is here in case we ever need to use it. At the moment, it is unused.
@@ -41,6 +42,18 @@ public class NoMoreSecurityManager {
 			legitSm = Boolean.getBoolean("space.arim.libertybans.env.bungee.legitSecurityManager");
 		} catch (SecurityException ignored) {}
 		LEGIT_SECURITY_MANAGER = legitSm;
+	}
+	
+	static void informAboutSecurityManagerIfNeeded(Logger logger) {
+		SecurityManager sm = System.getSecurityManager();
+		if (sm == null) {
+			logger.info("Thank you for using Waterfall and not BungeeCord. Waterfall helps us and you.");
+
+		} else {
+			logger.warning(
+					"You are using BungeeCord and its 'BungeeSecurityManager' is enabled. LibertyBans requires permissions "
+					+ "to create reasonable thread pools per efficient connecting pooling. You may encounter some console spam.");
+		}
 	}
 	
 	/*static boolean attemptRemove(SecurityManager sm) {

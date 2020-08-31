@@ -20,6 +20,7 @@ package space.arim.libertybans.env.spigot;
 
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 
 import org.bukkit.plugin.java.JavaPlugin;
@@ -35,7 +36,7 @@ public class SpigotPlugin extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		Path folder = getDataFolder().toPath();
-		ExecutorService executor = Instantiator.createReasonableExecutor();
+		ExecutorService executor = Executors.newFixedThreadPool(8);
 		ClassLoader launchLoader;
 		try {
 			LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
