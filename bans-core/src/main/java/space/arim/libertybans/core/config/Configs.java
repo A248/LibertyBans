@@ -84,14 +84,22 @@ public class Configs implements Part {
 			throw new StartupException("Unable to create plugin directories", ex);
 		}
 		ConfigSerialiser serialiser = new YamlConfigSerialiser();
-		var futureSql = getFor(serialiser, "sql.yml", DatabaseManager.createConfigTransformers(), executor);
-		var futureConfig = getFor(serialiser, "config.yml", ConfigUtil.configTransformers(), executor);
+		var futureSql = getFor(serialiser, "sql.yml", sqlValueTransformers(), executor);
+		var futureConfig = getFor(serialiser, "config.yml", configValueTransformers(), executor);
 		var futureMessages = getFor(serialiser, "lang/messages_en.yml", ConfigUtil.messagesTransformers(), executor);
 		SingularConfig sql = new SingularConfig(futureSql.join(), folder.resolve("sql.yml"));
 		SingularConfig config = new SingularConfig(futureConfig.join(), folder.resolve("config.yml"));
 		Configuration messages = futureMessages.join();
 
 		return new ConfigPackage(sql, config, messages, executor, langFolder);
+	}
+	
+	List<ValueTransformer> sqlValueTransformers() {
+		return DatabaseManager.createConfigTransformers();
+	}
+	
+	List<ValueTransformer> configValueTransformers() {
+		return ConfigUtil.configTransformers();
 	}
 	
 	@Override

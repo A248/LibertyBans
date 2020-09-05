@@ -101,10 +101,6 @@ public class Database implements PunishmentDatabase {
 						new JdbCaesarHelper.ScopeAdapter(core.getScopeManager()),
 						new JdbCaesarHelper.UUIDBytesAdapter(),
 						new JdbCaesarHelper.InetAddressAdapter());
-		if (vendor.noUnsignedNumerics()) {
-			jdbCaesarBuilder.addAdapter(
-					new JdbCaesarHelper.UnsigningTimestampAdapter());
-		}
 		jdbCaesar = jdbCaesarBuilder.build();
 	}
 	
@@ -230,19 +226,11 @@ public class Database implements PunishmentDatabase {
 	}
 	
 	public long getStartFromResult(ResultSet resultSet) throws SQLException {
-		long directValue = resultSet.getLong("start");
-		if (getVendor().noUnsignedNumerics()) {
-			directValue -= Integer.MIN_VALUE;
-		}
-		return directValue;
+		return resultSet.getLong("start");
 	}
 	
 	public long getEndFromResult(ResultSet resultSet) throws SQLException {
-		long directValue = resultSet.getLong("end");
-		if (getVendor().noUnsignedNumerics()) {
-			directValue -= Integer.MIN_VALUE;
-		}
-		return directValue;
+		return resultSet.getLong("end");
 	}
 
 }

@@ -76,7 +76,7 @@ public class UnpunishCommands extends AbstractSubCommandGroup {
 					sender.parseThenSend(messages().getString("removals.warns.not-a-number").replace("%ID_ARG%", idArg));
 					return completedFuture(null);
 				}
-				futureUndo = core().getEnactor().undoAndGetWarnByIdAndVictim(id, victim);
+				futureUndo = core().getEnactor().undoAndGetPunishmentByIdAndType(id, type);
 				finalId = id;
 			} else {
 				futureUndo = core().getEnactor().undoAndGetPunishmentByTypeAndVictim(type, victim);

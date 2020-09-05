@@ -46,7 +46,7 @@ class ApplicableImpl extends SelectorImplGroup {
 		case LENIENT:
 			statement = "SELECT `id`, `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end` "
 					+ "FROM `libertybans_simple_" + type.getLowercaseNamePlural() + "` "
-					+ "WHERE (`type` = ? AND ((`victim_type` = 'PLAYER' AND `victim` = ?) OR (`victim_type` = 'ADDRESS' AND `victim` = ?))";
+					+ "WHERE `type` = ? AND ((`victim_type` = 'PLAYER' AND `victim` = ?) OR (`victim_type` = 'ADDRESS' AND `victim` = ?))";
 			args = new Object[] {type, uuid, address};
 			break;
 		case NORMAL:
@@ -57,7 +57,7 @@ class ApplicableImpl extends SelectorImplGroup {
 		case STRICT:
 			statement = "SELECT `appl`.`id`, `appl`.`victim`, `appl`.`victim_type`, `appl`.`operator`, `appl`.`reason`, "
 					+ "`appl`.`scope`, `appl`.`start`, `appl`.`end`, `appl`.`uuid`, `appl`.`address` FROM "
-					+ "`libertybans_applicable_" + type.getLowercaseNamePlural() + "` INNER JOIN `libertybans_addresses` `addrs` "
+					+ "`libertybans_applicable_" + type.getLowercaseNamePlural() + "` `appl` INNER JOIN `libertybans_addresses` `addrs` "
 					+ "ON `appl`.`address` = `addrs`.`address` WHERE `appl`.`type` = ? AND `appl`.`address` = ?";
 			args = new Object[] {type, address};
 			break;

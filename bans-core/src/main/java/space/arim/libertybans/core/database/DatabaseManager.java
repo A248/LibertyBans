@@ -101,6 +101,9 @@ public class DatabaseManager implements Part {
 	
 	public static List<ValueTransformer> createConfigTransformers() {
 		var vendorTransformer = SingleKeyValueTransformer.create("rdms-vendor", (value) -> {
+			if (value instanceof Vendor) {
+				return value;
+			}
 			if (value instanceof String) {
 				String vendorName = (String) value;
 				switch (vendorName.toUpperCase(Locale.ENGLISH)) {

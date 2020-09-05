@@ -148,16 +148,4 @@ public class JdbCaesarHelper {
 		
 	}
 	
-	static class UnsigningTimestampAdapter implements DataTypeAdapter {
-		
-		@Override
-		public Object adaptObject(Object parameter) {
-			if (parameter instanceof Long) {
-				return ((Long) parameter).longValue() + Integer.MIN_VALUE;
-			}
-			return parameter;
-		}
-		
-	}
-	
 }

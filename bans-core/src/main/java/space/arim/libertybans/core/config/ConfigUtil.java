@@ -91,6 +91,9 @@ final class ConfigUtil {
 	
 	private static ValueTransformer strictnessTransformer() {
 		return SingleKeyValueTransformer.create("enforcement.address-strictness", (value) -> {
+			if (value instanceof AddressStrictness) {
+				return value;
+			}
 			AddressStrictness result = null;
 			if (value instanceof String) {
 				String addrS = (String) value;

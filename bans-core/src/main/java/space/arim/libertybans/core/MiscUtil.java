@@ -133,4 +133,16 @@ public final class MiscUtil {
 		return type.getLowercaseName() + ((type.isSingular()) ? "hammer" : "tallier");
 	}
 	
+	/**
+	 * Checks whether the specified end time is expired based on the current time, i.e.
+	 * {@code end != 0} and {@code end < currentTime}
+	 * 
+	 * @param currentTime the current time
+	 * @param end the end time
+	 * @return true if expired, false otherwise
+	 */
+	public static boolean isExpired(long currentTime, long end) {
+		return end != 0 && end < currentTime;
+	}
+	
 }

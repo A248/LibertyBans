@@ -20,6 +20,8 @@ package space.arim.libertybans.core.env;
 
 import java.util.Set;
 
+import space.arim.uuidvault.api.UUIDVault;
+
 import space.arim.api.env.PlatformHandle;
 
 import space.arim.libertybans.core.Part;
@@ -33,5 +35,9 @@ public interface Environment extends Part {
 	Set<PlatformListener> createListeners();
 	
 	PlatformListener createAliasCommand(String command);
+	
+	default UUIDVault getUUIDVault() {
+		return UUIDVault.get();
+	}
 	
 }

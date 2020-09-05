@@ -20,31 +20,25 @@ package space.arim.libertybans.core.database;
 
 public enum Vendor {
 
-	MARIADB("MariaDB", true),
-	HSQLDB("HyperSQL", false);
+	MARIADB("MariaDB"),
+	HSQLDB("HyperSQL");
 	
 	private final String displayName;
-	private final boolean unsignedNumerics;
 	
-	private Vendor(String displayName, boolean unsignedNumerics) {
+	private Vendor(String displayName) {
 		this.displayName = displayName;
-		this.unsignedNumerics = unsignedNumerics;
 	}
 	
 	String displayName() {
 		return displayName;
 	}
 	
-	public boolean unsignedNumerics() {
-		return unsignedNumerics;
+	public boolean useStoredRoutines() {
+		return this == MARIADB;
 	}
-	
-	public boolean noUnsignedNumerics() {
-		return !unsignedNumerics();
-	}
-	
-	public boolean useEnactmentProcedures() {
-		return this != HSQLDB;
+
+	public boolean hasDeleteFromJoin() {
+		return this == MARIADB;
 	}
 	
 }

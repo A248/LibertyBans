@@ -64,6 +64,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 	private final Formatter formatter;
 	private final Commands commands;
 	
+	/** Delayed shutdown hooks, must be synchronized on before access */
 	private final List<Runnable> delayedShutdownHooks = new ArrayList<>();
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
@@ -92,35 +93,37 @@ public class LibertyBansCore implements LibertyBans, Part {
 	
 	@Override
 	public void startup() {
-		resources.startup();
-		configs.startup();
-		databaseManager.startup();
-		uuidMaster.startup();
+		getResources().startup();
+		getConfigs().startup();
+		getDatabaseManager().startup();
+		getUUIDMaster().startup();
 		envManager.startup();
 	}
 	
 	@Override
 	public void restart() {
 		envManager.shutdown();
-		resources.restart();
-		uuidMaster.restart();
-		configs.restart();
-		databaseManager.restart();
+		getResources().restart();
+		getUUIDMaster().restart();
+		getConfigs().restart();
+		getDatabaseManager().restart();
 		envManager.startup();
 	}
 	
 	@Override
 	public void shutdown() {
 		envManager.shutdown();
-		resources.shutdown();
-		uuidMaster.shutdown();
-		configs.shutdown();
-		databaseManager.shutdown();
+		getResources().shutdown();
+		getUUIDMaster().shutdown();
+		getConfigs().shutdown();
+		getDatabaseManager().shutdown();
 
 		// 4 seconds should be sufficient
 		CompletableFuture.runAsync(() -> {
-			for (Runnable hook : delayedShutdownHooks) {
-				hook.run();
+			synchronized (delayedShutdownHooks) {
+				for (Runnable hook : delayedShutdownHooks) {
+					hook.run();
+				}
 			}
 		}, CompletableFuture.delayedExecutor(4, TimeUnit.SECONDS)).join();
 	}
@@ -140,7 +143,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 	
 	@Override
 	public FactoryOfTheFuture getFuturesFactory() {
-		return resources.getFuturesFactory();
+		return getResources().getFuturesFactory();
 	}
 	
 	public Resources getResources() {
@@ -206,13 +209,6 @@ public class LibertyBansCore implements LibertyBans, Part {
 		if (ex != null) {
 			logger.warn("Miscellaneous issue executing asynchronous computation", ex);
 		}
-	}
-	
-	public <T> T debugFutureHandled(T value, Throwable ex) {
-		if (ex != null) {
-			logger.warn("Miscellaneous issue executing asynchronous computation", ex);
-		}
-		return value;
 	}
 	
 }

@@ -20,15 +20,16 @@
 		
 		<!-- Testing dependencies -->
 		<junit.version>5.6.2</junit.version>
+		<mariadb4j.version>2.4.0</mariadb4j.version>
 		
-		<!-- Bumping dependency versions requires modification of LibertyBansLauncher versions and hashes -->
+		<!-- Bumping dependency versions requires modification of bans-boostrap dependency info -->
 		
 		<!-- API dependencies -->
 		<omnibus.version>0.15.5-SNAPSHOT</omnibus.version>
-		<uuidvault.version>0.5.2-SNAPSHOT</uuidvault.version>
+		<uuidvault.version>0.5.4-SNAPSHOT</uuidvault.version>
 
 		<!-- Internal dependencies -->
-		<jdbcaesar.version>0.4.1-SNAPSHOT</jdbcaesar.version>
+		<jdbcaesar.version>0.5.0-SNAPSHOT</jdbcaesar.version>
 		<arimapi.version>0.19.13-SNAPSHOT</arimapi.version>
 		<slf4j.version>1.7.25</slf4j.version>
 		<hikari.version>3.4.5</hikari.version>
@@ -106,6 +107,30 @@
 						</dependency>
 					</dependencies>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-failsafe-plugin</artifactId>
+					<version>3.0.0-M5</version>
+					<configuration>
+						<trimStackTrace>false</trimStackTrace>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>integration-test</goal>
+								<goal>verify</goal>
+							</goals>
+						</execution>
+					</executions>
+					<dependencies>
+						<dependency>
+							<groupId>org.junit.jupiter</groupId>
+							<artifactId>junit-jupiter-engine</artifactId>
+							<version>${junit.version}</version>
+							<scope>runtime</scope>
+						</dependency>
+					</dependencies>
+			</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
@@ -118,6 +143,7 @@
 		<module>bans-env</module>
 		<module>bans-dl</module>
 		<module>bans-distribution</module>
+		<module>bans-integrationtest</module>
 	</modules>
 	
 	<distributionManagement>
@@ -183,9 +209,32 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter-params</artifactId>
+				<version>${junit.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-simple</artifactId>
 				<version>${slf4j.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.uuidvault</groupId>
+				<artifactId>plugin</artifactId>
+				<version>${uuidvault.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>ch.vorburger.mariaDB4j</groupId>
+				<artifactId>mariaDB4j</artifactId>
+				<version>${mariadb4j.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.omnibus</groupId>
+				<artifactId>omnibus-all-shaded</artifactId>
+				<version>${omnibus.version}</version>
 			</dependency>
 
 			<!-- API dependencies -->

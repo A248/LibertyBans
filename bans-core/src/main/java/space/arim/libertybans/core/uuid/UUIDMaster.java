@@ -67,7 +67,7 @@ public class UUIDMaster implements Part {
 	@Override
 	public void startup() {
 		Class<?> pluginClass = core.getEnvironment().getPlatformHandle().getImplementingPluginInfo().getPlugin().getClass();
-		UUIDVault uuidVault = UUIDVault.get();
+		UUIDVault uuidVault = core.getEnvironment().getUUIDVault();
 		UUIDVaultRegistration registration = uuidVault.register(resolverImpl, pluginClass, (byte) 0, "LibertyBans");
 		CollectiveUUIDResolver collectiveResolver = uuidVault.createCollectiveResolverIgnoring(registration);
 		uuidStuff = new UUIDVaultStuff(registration, collectiveResolver);
@@ -81,7 +81,7 @@ public class UUIDMaster implements Part {
 	@Override
 	public void shutdown() {
 		UUIDVaultStuff uuidStuff = this.uuidStuff;
-		UUIDVault.get().unregister(uuidStuff.registration);
+		core.getEnvironment().getUUIDVault().unregister(uuidStuff.registration);
 	}
 	
 	public void addCache(UUID uuid, String name) {
@@ -116,7 +116,7 @@ public class UUIDMaster implements Part {
 	
 	public CentralisedFuture<UUID> fullLookupUUID(final String name) {
 		UUID quickResolve;
-		UUIDVault uuidVault = UUIDVault.get();
+		UUIDVault uuidVault = core.getEnvironment().getUUIDVault();
 		if (uuidVault.mustCallNativeResolutionSync()) {
 			quickResolve = core.getFuturesFactory().supplySync(() -> uuidVault.resolveNatively(name)).join();
 		} else {
@@ -187,7 +187,7 @@ public class UUIDMaster implements Part {
 
 	public CentralisedFuture<String> fullLookupName(final UUID uuid) {
 		String quickResolve;
-		UUIDVault uuidVault = UUIDVault.get();
+		UUIDVault uuidVault = core.getEnvironment().getUUIDVault();
 		if (uuidVault.mustCallNativeResolutionSync()) {
 			quickResolve = core.getFuturesFactory().supplySync(() -> uuidVault.resolveNatively(uuid)).join();
 		} else {

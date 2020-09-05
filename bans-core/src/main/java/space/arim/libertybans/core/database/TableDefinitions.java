@@ -19,6 +19,7 @@
 package space.arim.libertybans.core.database;
 
 import java.nio.charset.StandardCharsets;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
@@ -92,9 +93,9 @@ public class TableDefinitions {
 					sqlQuery += " CHARACTER SET `utf8mb4` COLLATE `utf8mb4_general_ci`";
 					// Ensure InnoDB
 					sqlQuery += " ENGINE `InnoDB`";
-				}
-				if (vendor.noUnsignedNumerics()) {
-					sqlQuery = sqlQuery.replace("INT UNSIGNED", "INT");
+
+				} else {
+					sqlQuery = sqlQuery.replace("INT UNSIGNED", "BIGINT");
 				}
 				it.set(sqlQuery);
 			}
@@ -130,7 +131,7 @@ public class TableDefinitions {
 		 * Enactment procedures
 		 */
 		final EnumMap<PunishmentType, CentralisedFuture<String>> enactmentProcedures;
-		if (vendor.useEnactmentProcedures()) {
+		if (vendor.useStoredRoutines()) {
 			enactmentProcedures = new EnumMap<>(PunishmentType.class);
 			for (PunishmentType type : MiscUtil.punishmentTypes()) {
 				String resourceName = "procedure_" + MiscUtil.getEnactmentProcedure(type);
@@ -165,11 +166,18 @@ public class TableDefinitions {
 					/*
 					 * Check for existing database revision
 					 */
-					int tableExistenceCount = querySource.query(
-							// Information schema is supported per the SQL standard
-							"SELECT COUNT(*) AS `found` FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_NAME` = 'libertybans_revision'")
-								.combinedResult((resultSet) -> (resultSet.next()) ? resultSet.getInt("found") : 0).execute();
-					if (tableExistenceCount != 0) {
+					String tableExistenceQuery;
+					if (vendor == Vendor.MARIADB) {
+						String database = core.getConfigs().getSql().getString("auth-details.database");
+						tableExistenceQuery = "SHOW TABLES FROM " + database + " LIKE 'libertybans_revision'";
+					} else {
+						// Information schema is supported per the SQL standard
+						tableExistenceQuery = 
+								"SELECT * FROM `INFORMATION_SCHEMA`.`TABLES` "
+								+ "WHERE `TABLE_NAME` = 'libertybans_revision'";
+					}
+					boolean tablesExist = querySource.query(tableExistenceQuery).combinedResult(ResultSet::next).execute();
+					if (tablesExist) {
 						Revision revision = querySource.query("SELECT `major`, `minor` FROM `libertybans_revision`")
 								.singleResult((resultSet) -> Revision.of(resultSet.getInt("major"), resultSet.getInt("minor")))
 								.execute();

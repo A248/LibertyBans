@@ -22,7 +22,11 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 /**
  * Guardkeeper of adding punishments while enforcing constraints and reporting such enforcement.
- * For example, one victim cannot have more than 1 ban.
+ * For example, one victim cannot have more than 1 ban. <br>
+ * <br>
+ * Generally, methods to undo punishments taking more information are more efficient than those taking less.
+ * For example, the "undoAndGet" methods are less efficient than the similar and simpler "undo" methods which
+ * do not return the undone {@code Punishment}, since the latter do not need to additionally fetch the punishment.
  * 
  * @author A248
  *
@@ -31,7 +35,7 @@ public interface PunishmentEnactor {
 	
 	/**
 	 * Enacts a punishment, adding it to the database. <br>
-	 * If the punishment type is a ban or mute, and there is already a ban or mute for the user,
+	 * If the punishment type is a ban or mute, and there is already a ban or mute for the victim,
 	 * the future will yield {@code null}. <br>
 	 * <br>
 	 * Assuming the caller wants the punishment to be enforced, {@link PunishmentEnforcer#enforce(Punishment)}
@@ -52,11 +56,40 @@ public interface PunishmentEnactor {
 	CentralisedFuture<Boolean> undoPunishment(Punishment punishment);
 	
 	/**
+	 * Undoes a punishment by its ID and type. <br>
+	 * If the punishment with the ID and of the specified type existed and was removed, the future yields {@code true},
+	 * else {@code false}. <br>
+	 * <br>
+	 * <i>Efficiency implications</i> <br>
+	 * When the full {@code Punishment} is known, {@link #undoPunishment(Punishment)} should be used.
+	 * 
+	 * @param id the id of the punishment to undo
+	 * @param type the type of the punishment to undo
+	 * @return a centralised future which yields {@code true} if the punishment existed and was removed, {@code false} otherwise
+	 */
+	CentralisedFuture<Boolean> undoPunishmentByIdAndType(int id, PunishmentType type);
+	
+	/**
+	 * Undoes and gets a punishment by its ID and type. <br>
+	 * If the punishment with the ID and of the specified type existed and was removed, the future yields it,
+	 * else {@code null}. <br>
+	 * <br>
+	 * <i>Efficiency implications</i> <br>
+	 * When the undone {@code Punishment} is not needed, {@link #undoPunishmentByIdAndType(int, PunishmentType)} should be used.
+	 * 
+	 * @param id the id of the punishment to undo
+	 * @param type the type of the punishment to undo
+	 * @return a centralised future which yields the punishment if it existed and was removed, {@code null} otherwise
+	 */
+	CentralisedFuture<Punishment> undoAndGetPunishmentByIdAndType(int id, PunishmentType type);
+	
+	/**
 	 * Undoes a punishment according to its ID. <br>
 	 * If the punishment with the ID existed and was removed, the future yields {@code true}, else {@code false}. <br>
 	 * <br>
-	 * <b>This operation may be less efficient than {@link #undoPunishment(Punishment)}. When a full {@code Punishment}
-	 * is known, the former method should be used instead.</b>
+	 * <i>Efficiency implications</i> <br>
+	 * When the full {@code Punishment} is known, {@link #undoPunishment(Punishment)} should be used. <br>
+	 * When the punishment type is known, {@link #undoPunishmentByIdAndType(int, PunishmentType)} should be used.
 	 * 
 	 * @param id the id of the punishment to undo
 	 * @return a centralised future which yields {@code true} if the punishment existed and was removed, {@code false} otherwise
@@ -65,10 +98,11 @@ public interface PunishmentEnactor {
 	
 	/**
 	 * Undoes and gets a punishment according to its ID. <br>
-	 * If the punishment with the ID existed and was removed, the future yields the punishment, else {@code null}. <br>
+	 * If the punishment with the ID existed and was removed, the future yields it, else {@code null}. <br>
 	 * <br>
-	 * <b>This operation may be less efficient than {@link #undoPunishmentById(int)}, because it needs to retrieve
-	 * the punishment as well.</b>
+	 * <i>Efficiency implications</i> <br>
+	 * When the undone {@code Punishment} is not needed, {@link #undoPunishmentById(int)} should be used. <br>
+	 * When the punishment type is known, {@link #undoAndGetPunishmentByIdAndType(int, PunishmentType)} should be used.
 	 * 
 	 * @param id the id of the punishment to undo
 	 * @return a centralised future which yields the punishment if it existed and was removed, {@code null} otherwise
@@ -76,49 +110,29 @@ public interface PunishmentEnactor {
 	CentralisedFuture<Punishment> undoAndGetPunishmentById(int id);
 	
 	/**
-	 * Undoes a single punishment by its type and victim. <b>This may only be used for bans and mutes,</b>
-	 * since it relies on the fact that a single victim cannot have more than 1 ban or mute.
+	 * Undoes a single punishment by its type and victim. <b>This may only be used for singular punishments
+	 * (bans and mutes),</b> since it relies on the fact that a single victim cannot have more than 1 such punishment.
 	 * 
-	 * @param type the punishment type, must be either BAN or MUTE
+	 * @param type the punishment type, must be singular per {@link PunishmentType#isSingular()}
 	 * @param victim the victim whose punishment to undo
 	 * @return a centralised future which yields {@code true} if the punishment existed and was removed, {@code false} otherwise
-	 * @throws IllegalArgumentException if {@code type} is not BAN or MUTE
+	 * @throws IllegalArgumentException if {@code type} is not singular (BAN or MUTE)
 	 */
 	CentralisedFuture<Boolean> undoPunishmentByTypeAndVictim(PunishmentType type, Victim victim);
 	
 	/**
-	 * Undoes and gets a single punishment by its type and victim. <b>This may only be used for bans and mutes,</b>
-	 * since it relies on the fact that a single victim cannot have more than 1 ban or mute. <br>
+	 * Undoes and gets a single punishment by its type and victim. <b>This may only be used for singular punishments
+	 * (bans and mutes),</b> since it relies on the fact that a single victim cannot have more than 1 such punishment. <br>
 	 * <br>
-	 * <b>This operation may be less efficient than {@link #undoPunishmentByTypeAndVictim(PunishmentType, Victim)},
-	 * because it needs to retrieve the punishment as well.</b>
+	 * <i>Efficiency implications</i> <br>
+	 * When the undone {@code Punishment} is not needed, {@link #undoPunishmentByTypeAndVictim(PunishmentType, Victim)}
+	 * should be used.
 	 * 
-	 * @param type the punishment type, must be either BAN or MUTE
+	 * @param type the punishment type, must be singular per {@link PunishmentType#isSingular()}
 	 * @param victim the victim whose punishment to undo
 	 * @return a centralised future which yields the punishment if it existed and was removed, {@code null} otherwise
-	 * @throws IllegalArgumentException if {@code type} is not BAN or MUTE
+	 * @throws IllegalArgumentException if {@code type} is not singular (BAN or MUTE)
 	 */
 	CentralisedFuture<Punishment> undoAndGetPunishmentByTypeAndVictim(PunishmentType type, Victim victim);
-	
-	/**
-	 * Undoes a warn by its ID and victim.
-	 * 
-	 * @param id the id of the warn to undo
-	 * @param victim the victim whose punishment to undo
-	 * @return a centralised future which yields {@code true} if the punishment existed and was removed, {@code false} otherwise
-	 */
-	CentralisedFuture<Boolean> undoWarnByIdAndVictim(int id, Victim victim);
-	
-	/**
-	 * Undoes and gets a warn by its ID and victim. <br>
-	 * <br>
-	 * <b>This operation may be less efficient than {@link #undoWarnByIdAndVictim(int, Victim)},
-	 * because it needs to retrieve the punishment as well.</b>
-	 * 
-	 * @param id the id of the warn to undo
-	 * @param victim the victim whose punishment to undo
-	 * @return a centralised future which yields {@code true} if the punishment existed and was removed, {@code false} otherwise
-	 */
-	CentralisedFuture<Punishment> undoAndGetWarnByIdAndVictim(int id, Victim victim);
 
 }
