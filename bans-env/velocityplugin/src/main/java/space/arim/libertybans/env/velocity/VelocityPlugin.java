@@ -58,7 +58,10 @@ public class VelocityPlugin {
 	}
 	
 	@Subscribe
-	public void onProxyInitialize(@SuppressWarnings("unused") ProxyInitializeEvent evt) {
+	public synchronized void onProxyInitialize(@SuppressWarnings("unused") ProxyInitializeEvent evt) {
+		if (base != null) {
+			throw new IllegalStateException("Proxy initialised twice?");
+		}
 		PluginContainer plugin = server.getPluginManager().fromInstance(this).get();
 		Scheduler scheduler = server.getScheduler();
 		Executor executor = (cmd) -> scheduler.buildTask(this, cmd).schedule();
@@ -83,7 +86,7 @@ public class VelocityPlugin {
 	}
 	
 	@Subscribe
-	public void onProxyShutdown(@SuppressWarnings("unused") ProxyShutdownEvent evt) {
+	public synchronized void onProxyShutdown(@SuppressWarnings("unused") ProxyShutdownEvent evt) {
 		BaseEnvironment base = this.base;
 		if (base == null) {
 			logger.warn("LibertyBans never launched; nothing to shutdown");

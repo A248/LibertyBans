@@ -79,6 +79,7 @@ public class UnpunishCommands extends AbstractSubCommandGroup {
 				futureUndo = core().getEnactor().undoAndGetPunishmentByIdAndType(id, type);
 				finalId = id;
 			} else {
+				assert type.isSingular() : type;
 				futureUndo = core().getEnactor().undoAndGetPunishmentByTypeAndVictim(type, victim);
 				finalId = -1;
 			}
@@ -112,7 +113,7 @@ public class UnpunishCommands extends AbstractSubCommandGroup {
 					});
 
 			// Conclusion
-			return CompletableFuture.allOf(futureSuccessMessage).thenAccept((ignore) -> {
+			return CompletableFuture.allOf(futureSuccessMessage, futureNotify).thenAccept((ignore) -> {
 				sender.sendMessage(futureSuccessMessage.join());
 
 				core().getEnvironment().getEnforcer().sendToThoseWithPermission(

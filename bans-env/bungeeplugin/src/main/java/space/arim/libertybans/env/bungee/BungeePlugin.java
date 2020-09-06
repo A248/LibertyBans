@@ -34,7 +34,10 @@ public class BungeePlugin extends Plugin {
 	private BaseEnvironment base;
 	
 	@Override
-	public void onEnable() {
+	public synchronized void onEnable() {
+		if (base != null) {
+			throw new IllegalStateException("Plugin enabled twice?");
+		}
 		Path folder = getDataFolder().toPath();
 		TaskScheduler scheduler = getProxy().getScheduler();
 		Executor executor = (cmd) -> scheduler.runAsync(this, cmd);
@@ -61,7 +64,7 @@ public class BungeePlugin extends Plugin {
 	}
 
 	@Override
-	public void onDisable() {
+	public synchronized void onDisable() {
 		BaseEnvironment base = this.base;
 		if (base == null) {
 			getLogger().warning("LibertyBans wasn't launched; check your log for a startup error");

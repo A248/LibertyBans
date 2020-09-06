@@ -34,6 +34,7 @@
 							<artifactSet>
 								<includes>
 									<include>space.arim.libertybans:*</include>
+									<include>space.arim.licenser:licenser-agpl3</include>
 								</includes>
 							</artifactSet>
 						</configuration>
@@ -63,6 +64,16 @@
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-database</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-api</artifactId>
 			<exclusions>
 				<exclusion>
 					<groupId>*</groupId>

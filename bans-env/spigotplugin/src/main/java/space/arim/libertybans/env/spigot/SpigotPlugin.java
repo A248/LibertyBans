@@ -34,7 +34,10 @@ public class SpigotPlugin extends JavaPlugin {
 	private BaseEnvironment base;
 	
 	@Override
-	public void onEnable() {
+	public synchronized void onEnable() {
+		if (base != null) {
+			throw new IllegalStateException("Plugin enabled twice?");
+		}
 		Path folder = getDataFolder().toPath();
 		ExecutorService executor = Executors.newFixedThreadPool(8);
 		ClassLoader launchLoader;
@@ -68,7 +71,7 @@ public class SpigotPlugin extends JavaPlugin {
 	}
 	
 	@Override
-	public void onDisable() {
+	public synchronized void onDisable() {
 		BaseEnvironment base = this.base;
 		if (base == null) {
 			getLogger().warning("LibertyBans never launched; nothing to shutdown");

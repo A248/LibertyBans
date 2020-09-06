@@ -72,11 +72,12 @@ public class SpigotEnv extends AbstractEnv {
 		if (commandMap instanceof SimpleCommandMap) {
 			Field knownCommandsField;
 			try {
-				knownCommandsField = SimpleCommandMap.class.getClass().getField("knownCommands");
+				knownCommandsField = SimpleCommandMap.class.getDeclaredField("knownCommands");
+
 			} catch (NoSuchFieldException | SecurityException ex) {
 				logger.warn(
 						"Unable to find your server's CommandMap's 'knownCommands' field. "
-						+ CommandHandler.COMMAND_MAP_WARNING);
+						+ CommandHandler.COMMAND_MAP_WARNING, ex);
 				knownCommandsField = null;
 			}
 			return knownCommandsField;
@@ -84,12 +85,12 @@ public class SpigotEnv extends AbstractEnv {
 			Class<?> replacementClass = commandMap.getClass();
 			String pluginName = "Unknown";
 			try {
-				JavaPlugin.getProvidingPlugin(replacementClass);
+				pluginName = JavaPlugin.getProvidingPlugin(replacementClass).getDescription().getFullName();
 			} catch (IllegalArgumentException ignored) {}
 			logger.warn(
 					"Your server's CommandMap is not an instance of SimpleCommandMap. Rather, it is {} from plugin {}. "
 					+ "This could be disastrous and you should remove the offending plugin or speak to its author(s), "
-					+ "as many plugins assume SimpleCommandMap as the norms. "
+					+ "as many plugins assume SimpleCommandMap as the norm. "
 					+ CommandHandler.COMMAND_MAP_WARNING,
 					replacementClass, pluginName);
 			return null;
