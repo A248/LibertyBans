@@ -74,7 +74,7 @@ class ApplicableImpl extends SelectorImplGroup {
 			Map.Entry<String, Object[]> query = getApplicabilityQuery(uuid, address, PunishmentType.BAN);
 			long currentTime = MiscUtil.currentTime();
 
-			return database.jdbCaesar().transaction().transactor((querySource) -> {
+			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 				querySource.query(
 						"INSERT INTO `libertybans_addresses` (`uuid`, `address`, `updated`) VALUES (?, ?, ?) "
 								+ "ON DUPLICATE KEY UPDATE `updated` = ?")
@@ -95,7 +95,7 @@ class ApplicableImpl extends SelectorImplGroup {
 									database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
 						}).execute();
 				return potentialBan;
-			}).onRollback(() -> null).execute();
+			}).onError(() -> null).execute();
 		});
 	}
 	

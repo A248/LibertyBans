@@ -35,7 +35,7 @@ class IDImpl extends SelectorImplGroup {
 	CentralisedFuture<Punishment> getActivePunishmentById(int id) {
 		Database database = core().getDatabase();
 		return database.selectAsync(() -> {
-			return database.jdbCaesar().transaction().transactor((querySource) -> {
+			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 				long currentTime = MiscUtil.currentTime();
 				for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
@@ -56,7 +56,7 @@ class IDImpl extends SelectorImplGroup {
 					}
 				}
 				return null;
-			}).onRollback(() -> null).execute();
+			}).onError(() -> null).execute();
 		});
 	}
 	

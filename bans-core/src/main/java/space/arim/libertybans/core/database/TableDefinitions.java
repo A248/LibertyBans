@@ -19,7 +19,6 @@
 package space.arim.libertybans.core.database;
 
 import java.nio.charset.StandardCharsets;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
@@ -40,13 +39,21 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.MiscUtil;
 
+import space.arim.jdbcaesar.mapper.UpdateCountMapper;
 import space.arim.jdbcaesar.transact.TransactionQuerySource;
 
-public class TableDefinitions {
+class TableDefinitions {
 	
-	private static final int REVISION_MAJOR = Database.REVISION_MAJOR;
-	private static final int REVISION_MINOR = Database.REVISION_MINOR;
-	private static final Revision REVISION = Revision.of(REVISION_MAJOR, REVISION_MINOR);
+	/**
+	 * The database revision of this version of LibertyBans
+	 * 
+	 */
+	static final Revision CURRENT_REVISION = Revision.of(1, 0);
+	/**
+	 * The empty database revision, used to indicate table creation in progress
+	 * 
+	 */
+	private static final Revision IN_PROGRESS_REVISION = Revision.of(0, 0);
 	
 	private final LibertyBansCore core;
 	private final Database database;
@@ -158,37 +165,53 @@ public class TableDefinitions {
 
 		return resourcesFuture.thenCompose((ignore) -> {
 			return database.selectAsync(() -> {
-				return database.jdbCaesar().transaction().transactor((querySource) -> {
+				/*
+				 * Objective
+				 * Create tables if they do not exist
+				 * Migrate tables if they do exist
+				 * Fail fast if table creation is in progress
+				 */
+				return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 					if (vendor == Vendor.HSQLDB) {
 						executeHyperSqlSettings(querySource);
 					}
 					/*
-					 * Check for existing database revision
+					 * Create revision table if not exists
 					 */
-					String tableExistenceQuery;
-					if (vendor == Vendor.MARIADB) {
-						String database = core.getConfigs().getSql().getString("auth-details.database");
-						tableExistenceQuery = "SHOW TABLES FROM " + database + " LIKE 'libertybans_revision'";
-					} else {
-						// Information schema is supported per the SQL standard
-						tableExistenceQuery = 
-								"SELECT * FROM `INFORMATION_SCHEMA`.`TABLES` "
-								+ "WHERE `TABLE_NAME` = 'libertybans_revision'";
-					}
-					boolean tablesExist = querySource.query(tableExistenceQuery).combinedResult(ResultSet::next).execute();
-					if (tablesExist) {
-						Revision revision = querySource.query("SELECT `major`, `minor` FROM `libertybans_revision`")
-								.singleResult((resultSet) -> Revision.of(resultSet.getInt("major"), resultSet.getInt("minor")))
-								.execute();
-						if (revision == null) {
-							logger.error("Revision table exists but has no information!");
-							return false;
-						}
+					querySource.query(
+							"CREATE TABLE IF NOT EXISTS `libertybans_revision` (" + 
+							"`constant` ENUM('Constant') NOT NULL UNIQUE, " + 
+							"`major` INT NOT NULL, " + 
+							"`minor` INT NOT NULL)")
+							.voidResult().execute();
+					/*
+					 * Get the current revision
+					 */
+					Revision revision = getRevision(querySource);
 
+					if (IN_PROGRESS_REVISION.equals(revision)) {
+						logger.error("Table creation already in progress");
+						return false;
+					}
+					if (revision != null) {
 						return migrateFrom(querySource, revision);
 					}
-					logger.debug("Creating tables transactionally");
+					/*
+					 * The revison table's single row is used as a kind of 'lock'
+					 * This is done because CREATE TABLE is not rolled back by ROLLBACK statements
+					 */
+					int initialLockUpdateCount = querySource.query(
+							"INSERT IGNORE INTO `libertybans_revision` (`constant`, `major`, `minor`) VALUES (?, ?, ?)")
+							.params("Constant", 0, 0)
+							.updateCount(UpdateCountMapper.identity())
+							.execute();
+					if (initialLockUpdateCount == 0) {
+						logger.error("Table creation already in progress (race condition)");
+						return false;
+					}
+
+					logger.debug("Creating tables 'transactionally'");
 					/*
 					 * Execute create tables
 					 */
@@ -210,18 +233,20 @@ public class TableDefinitions {
 							querySource.query(procedure).voidResult().execute();
 						}
 					}
-
+					/*
+					 * Finally, 'unlock' the revision table by updating it to the actual revision number
+					 */
 					int realUpdateCount = querySource.query(
-							"INSERT INTO `libertybans_revision` (`constant`, `major`, `minor`) VALUES (?, ?, ?)")
-							.params("Constant", REVISION_MAJOR, REVISION_MINOR)
-							.updateCount((updateCount) -> updateCount).execute();
+							"UPDATE `libertybans_revision` SET `major` = ?, `minor` = ? WHERE `major` = ? AND `minor` = ?")
+							.params(CURRENT_REVISION.major, CURRENT_REVISION.minor, 0, 0)
+							.updateCount(UpdateCountMapper.identity()).execute();
 					if (realUpdateCount != 1) {
 						logger.error("Unable to update database revision number. updateCount = {}", realUpdateCount);
 						return false;
 					}
 					return true;
 
-				}).onRollback(() -> false).execute();
+				}).onError(() -> false).execute();
 
 			}).thenApply((successOrFailure) -> {
 				if (successOrFailure && vendor == Vendor.MARIADB) {
@@ -230,20 +255,27 @@ public class TableDefinitions {
 					String refresherEvent = refresherEventFuture.join();
 					database.jdbCaesar().query(refresherEvent).voidResult().execute();
 
-					boolean eventSchedulerEnabled = database.jdbCaesar().query(
+					Boolean eventSchedulerEnabled = database.jdbCaesar().query(
 							"SHOW GLOBAL VARIABLES LIKE 'event_scheduler'")
 							.combinedResult((resultSet) -> {
 								return resultSet.next() && resultSet.getString("Value").equalsIgnoreCase("ON");
-							}).execute();
-					if (!eventSchedulerEnabled) {
+							}).onError(() -> null).execute();
+					if (eventSchedulerEnabled != null && !eventSchedulerEnabled.booleanValue()) {
 						logger.info(
 								"It appears that your MySQL/MariaDB event scheduler is disabled. "
-								+ "It is recommended to enable it for slightly improved performance.");
+								+ "It is recommended to enable it for improved performance.");
 					}
 				}
 				return successOrFailure;
 			});
 		});
+	}
+	
+	private Revision getRevision(TransactionQuerySource querySource) {
+		return querySource.query(
+				"SELECT `major`, `minor` FROM `libertybans_revision`")
+				.singleResult((resultSet) -> Revision.of(resultSet.getInt("major"), resultSet.getInt("minor")))
+				.execute();
 	}
 	
 	/**
@@ -274,7 +306,8 @@ public class TableDefinitions {
 				"TRANSACTION CONTROL", "MVLOCKS"
 				);
 		for (Map.Entry<String, String> property : properties.entrySet()) {
-			querySource.query("SET DATABASE " + property.getKey() + ' ' + property.getValue())
+			querySource.query(
+					"SET DATABASE " + property.getKey() + ' ' + property.getValue())
 					.voidResult().execute();
 		}
 	}
@@ -289,16 +322,20 @@ public class TableDefinitions {
 	 * @return true if successful, false otherwise
 	 */
 	private static boolean migrateFrom(TransactionQuerySource querySource, Revision revision) {
-		int comparison = REVISION.compareTo(revision);
+		int comparison = CURRENT_REVISION.compareTo(revision);
 		if (comparison == 0) {
-			// Same version
+			logger.info("Database tables already exist with correct version");
 			return true;
 		}
+		logger.info("Other revision number detected, attempting to migrate...");
 		if (comparison < 0) {
-			logger.error("Your database revision ({}) is in the future! Please upgrade LibertyBans", revision);
+			logger.error("Your database revision {} is in the future! Please upgrade this version of LibertyBans", revision);
 			return false;
 		}
-		// Schema migrator here
+		/*
+		 * Schema migrator here
+		 * 'Locking' the revision table will likewise be necessary
+		 */
 
 		// Currently there is no older version to migrate from
 		logger.error("Unknown database revision {}", revision);

@@ -19,7 +19,7 @@
 package space.arim.libertybans.core.database;
 
 final class Revision implements Comparable<Revision> {
-
+	
 	final int major;
 	final int minor;
 	
@@ -55,7 +55,7 @@ final class Revision implements Comparable<Revision> {
 
 	@Override
 	public String toString() {
-		return "Revision " + major + '.' + minor;
+		return major + "." + minor;
 	}
 
 	@Override

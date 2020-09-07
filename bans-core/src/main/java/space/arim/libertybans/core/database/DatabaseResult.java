@@ -18,7 +18,7 @@
  */
 package space.arim.libertybans.core.database;
 
-class DatabaseResult {
+final class DatabaseResult {
 
 	final Database database;
 	final boolean success;
@@ -26,6 +26,27 @@ class DatabaseResult {
 	DatabaseResult(Database database, boolean success) {
 		this.database = database;
 		this.success = success;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + System.identityHashCode(database);
+		result = prime * result + (success ? 1231 : 1237);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if (this == object) {
+			return true;
+		}
+		if (!(object instanceof DatabaseResult)) {
+			return false;
+		}
+		DatabaseResult other = (DatabaseResult) object;
+		return database == other.database && success == other.success;
 	}
 	
 }

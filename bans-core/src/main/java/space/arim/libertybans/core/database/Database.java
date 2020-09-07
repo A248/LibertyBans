@@ -64,9 +64,6 @@ public class Database implements PunishmentDatabase {
 	
 	private ScheduledWork<?> hyperSqlRefreshTask;
 	
-	static final int REVISION_MAJOR = 1;
-	static final int REVISION_MINOR = 0;
-	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
 	private static final boolean TRACE_FOREIGN_CONNECTIONS;
@@ -159,12 +156,12 @@ public class Database implements PunishmentDatabase {
 
 	@Override
 	public int getMajorRevision() {
-		return REVISION_MAJOR;
+		return TableDefinitions.CURRENT_REVISION.major;
 	}
 
 	@Override
 	public int getMinorRevision() {
-		return REVISION_MINOR;
+		return TableDefinitions.CURRENT_REVISION.minor;
 	}
 
 	@Override

@@ -1,20 +1,6 @@
 -- Here are all table definitions used by LibertyBans
--- These queries are also dynamically shaped by the database vendor.
--- Some data type arguments are also defined at runtime.
-
--- The database revision table, which contains the unique "constant" column
--- with only one possible value to ensure there is only one row
-
-CREATE TABLE `libertybans_revision` (
-`constant` ENUM('Constant') NOT NULL UNIQUE, 
-`major` INT NOT NULL, 
-`minor` INT NOT NULL);
-
--- The reason these are not the same table is that some servers
--- may need to periodically clear the addresses table per GDPR
--- regulations. However, using a single table with a null address
--- would be unwise, since unique constraints don't work nicely
--- with null values.
+-- These queries are dynamically shaped by the database vendor.
+-- Some data type arguments are defined at runtime.
 
 CREATE TABLE `libertybans_names` (
 `uuid` BINARY(16) NOT NULL, 
@@ -22,6 +8,11 @@ CREATE TABLE `libertybans_names` (
 `updated` INT UNSIGNED NOT NULL, 
 PRIMARY KEY (`uuid`), 
 UNIQUE (`uuid`, `name`));
+
+-- The reason this is not the same table as the last is that some servers
+-- may need to periodically clear the addresses table per GDPR regulations.
+-- Using a single table with a nullable address would be unwise, since
+-- unique constraints don't work nicely with null values.
 
 CREATE TABLE `libertybans_addresses` (
 `uuid` BINARY(16) NOT NULL, 

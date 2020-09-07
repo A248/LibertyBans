@@ -29,9 +29,9 @@
 		<uuidvault.version>0.5.4-SNAPSHOT</uuidvault.version>
 
 		<!-- Internal dependencies -->
-		<jdbcaesar.version>0.5.0-SNAPSHOT</jdbcaesar.version>
+		<jdbcaesar.version>0.5.0</jdbcaesar.version>
 		<arimapi.version>0.19.13-SNAPSHOT</arimapi.version>
-		<slf4j.version>1.7.25</slf4j.version>
+		<slf4j.version>1.7.30</slf4j.version>
 		<hikari.version>3.4.5</hikari.version>
 		<hsqldb.version>2.5.1</hsqldb.version>
 		<mariadb-connector.version>2.6.2</mariadb-connector.version>

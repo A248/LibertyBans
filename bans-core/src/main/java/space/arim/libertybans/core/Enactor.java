@@ -37,7 +37,6 @@ import space.arim.libertybans.core.database.Database;
 
 import space.arim.jdbcaesar.mapper.UpdateCountMapper;
 import space.arim.jdbcaesar.query.ResultSetConcurrency;
-import space.arim.jdbcaesar.transact.RollMeBackException;
 
 public class Enactor implements PunishmentEnactor {
 	
@@ -75,7 +74,7 @@ public class Enactor implements PunishmentEnactor {
 									scope, draftPunishment.getStart(), draftPunishment.getEnd());
 						}).onError(() -> null).execute();
 			} else {
-				return database.jdbCaesar().transaction().transactor((querySource) -> {
+				return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 					int id = querySource.query(
 							"INSERT INTO `libertybans_punishments` (`type`, `operator`, `reason`, `scope`, `start`, `end`) "
@@ -98,7 +97,8 @@ public class Enactor implements PunishmentEnactor {
 						int updateCount = querySource.query(enactStatement).params(enactArgs)
 								.updateCount(UpdateCountMapper.identity()).execute();
 						if (updateCount == 0) {
-							throw new RollMeBackException();
+							controller.rollback();
+							return null;
 						}
 					} else if (type != PunishmentType.KICK) { 
 						enactStatement = enactStatement.replace("%INSERT%", "INSERT");
@@ -111,7 +111,7 @@ public class Enactor implements PunishmentEnactor {
 							.voidResult().execute();
 					return new SecurePunishment(id, type, victim, operator, reason,
 							scope, draftPunishment.getStart(), draftPunishment.getEnd());
-				}).onRollback(() -> null).execute();
+				}).onError(() -> null).execute();
 			}
 		});
 	}
@@ -150,7 +150,7 @@ public class Enactor implements PunishmentEnactor {
 		Database database = core.getDatabase();
 		return database.selectAsync(() -> {
 			final long currentTime = MiscUtil.currentTime();
-			return database.jdbCaesar().transaction().transactor((querySource) -> {
+			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 				boolean deleted = querySource.query(
 						"DELETE FROM `libertybans_" + type.getLowercaseNamePlural() + "` WHERE `id` = ?")
@@ -169,7 +169,7 @@ public class Enactor implements PunishmentEnactor {
 				logger.trace("expired={} in undoPunishmentByIdAndType", expired);
 				return !expired;
 
-			}).onRollback(() -> false).execute();
+			}).onError(() -> false).execute();
 		});
 	}
 	
@@ -183,7 +183,7 @@ public class Enactor implements PunishmentEnactor {
 		Database database = core.getDatabase();
 		return database.selectAsync(() -> {
 			final long currentTime = MiscUtil.currentTime();
-			return database.jdbCaesar().transaction().transactor((querySource) -> {
+			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 				Victim victim = querySource.query(
 						// MariaDB-Connector requires the primary key to be present for ResultSet#deleteRow
@@ -215,7 +215,7 @@ public class Enactor implements PunishmentEnactor {
 						}).execute();
 				logger.trace("result={} in undoAndGetPunishmentByIdAndType", result);
 				return result;
-			}).onRollback(() -> null).execute();
+			}).onError(() -> null).execute();
 		});
 	}
 	
@@ -224,7 +224,7 @@ public class Enactor implements PunishmentEnactor {
 		Database database = core.getDatabase();
 		return database.selectAsync(() -> {
 			final long currentTime = MiscUtil.currentTime();
-			return database.jdbCaesar().transaction().transactor((querySource) -> {
+			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 				for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
 
@@ -245,7 +245,7 @@ public class Enactor implements PunishmentEnactor {
 					}
 				}
 				return false;
-			}).onRollback(() -> false).execute();
+			}).onError(() -> false).execute();
 		});
 	}
 	
@@ -253,7 +253,7 @@ public class Enactor implements PunishmentEnactor {
 	public CentralisedFuture<Punishment> undoAndGetPunishmentById(final int id) {
 		Database database = core.getDatabase();
 		return database.selectAsync(() -> {
-			return database.jdbCaesar().transaction().transactor((querySource) -> {
+			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 				final long currentTime = MiscUtil.currentTime();
 				for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
@@ -289,7 +289,7 @@ public class Enactor implements PunishmentEnactor {
 					}
 				}
 				return null;
-			}).onRollback(() -> null).execute();
+			}).onError(() -> null).execute();
 		});
 	}
 	
@@ -312,7 +312,7 @@ public class Enactor implements PunishmentEnactor {
 			if (database.getVendor().hasDeleteFromJoin()) {
 				
 			}
-			return database.jdbCaesar().transaction().transactor((querySource) -> {
+			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 				Integer id = querySource.query(
 						"SELECT `id` FROM `libertybans_" + type.getLowercaseNamePlural() + "` "
@@ -338,7 +338,7 @@ public class Enactor implements PunishmentEnactor {
 				boolean expired = MiscUtil.isExpired(currentTime, end);
 				logger.trace("expired={} in undoPunishmentByTypeAndVictim", expired);
 				return !expired;
-			}).onRollback(() -> false).execute();
+			}).onError(() -> false).execute();
 		});
 	}
 
@@ -350,7 +350,7 @@ public class Enactor implements PunishmentEnactor {
 		Database database = core.getDatabase();
 		return database.selectAsync(() -> {
 			final long currentTime = MiscUtil.currentTime();
-			return database.jdbCaesar().transaction().transactor((querySource) -> {
+			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 				Integer id = querySource.query(
 						"SELECT `id` FROM `libertybans_" + type.getLowercaseNamePlural() + "` "
@@ -382,7 +382,7 @@ public class Enactor implements PunishmentEnactor {
 						}).execute();
 				logger.trace("result={} in undoAndGetPunishmentByTypeAndVictim", result);
 				return result;
-			}).onRollback(() -> null).execute();
+			}).onError(() -> null).execute();
 		});
 	}
 	

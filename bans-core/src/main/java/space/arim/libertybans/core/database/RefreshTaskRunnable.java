@@ -46,7 +46,7 @@ class RefreshTaskRunnable implements Runnable {
 			return;
 		}
 		long currentTime = MiscUtil.currentTime();
-		database.jdbCaesar().transaction().transactor((querySource) -> {
+		database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 			for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
 				querySource.query(
@@ -56,6 +56,6 @@ class RefreshTaskRunnable implements Runnable {
 						.voidResult().execute();
 			}
 			return (Void) null;
-		}).onRollback(() -> null).execute();
+		}).onError(() -> null).execute();
 	}
 }

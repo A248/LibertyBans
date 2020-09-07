@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,12 +35,18 @@ import org.slf4j.LoggerFactory;
 
 import space.arim.omnibus.util.ThisClass;
 
-public class IOUtils {
+public final class IOUtils {
 	
 	private static final Class<?> THIS_CLASS = ThisClass.get();
+	
+	private IOUtils() {}
 
 	private static InputStream getResource(String resourceName) throws IOException {
-		return THIS_CLASS.getResource('/' + resourceName).openStream();
+		URL url = THIS_CLASS.getResource('/' + resourceName);
+		if (url == null) {
+			throw new IllegalArgumentException("Resource " + resourceName + " not found");
+		}
+		return url.openStream();
 	}
 	
 	/**
@@ -50,11 +57,11 @@ public class IOUtils {
 	 * @throws IllegalStateException if an IO error occurred
 	 */
 	static ByteArrayOutputStream readResource(String resourceName) {
-		try (InputStream is = getResource(resourceName);
-				ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+		try (InputStream is = getResource(resourceName)) {
 
-			is.transferTo(bos);
-			return bos;
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			is.transferTo(baos);
+			return baos;
 		} catch (IOException ex) {
 			throw new IllegalStateException("Failed to read internal resource " + resourceName, ex);
 		}
@@ -63,10 +70,12 @@ public class IOUtils {
 	/**
 	 * Blocking operation which reads all SQL queries from the specified resource name. <br>
 	 * This is otherwise equivalent to reading a resource file, excluding lines starting with
-	 * {@literal "--"} and blank lines, and splitting the result by ";".
+	 * {@literal "--"} and blank lines, and splitting the result by ";". <br>
+	 * <br>
+	 * The returned list is mutable.
 	 * 
 	 * @param resourceName the resource name
-	 * @return a list of SQL queries
+	 * @return a mutable list of SQL queries
 	 * @throws IllegalStateException if an IO error occurred
 	 */
 	static List<String> readSqlQueries(String resourceName) {
