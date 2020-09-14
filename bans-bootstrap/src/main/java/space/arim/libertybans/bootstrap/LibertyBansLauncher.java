@@ -20,6 +20,7 @@ package space.arim.libertybans.bootstrap;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.lang.reflect.InaccessibleObjectException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -40,11 +41,14 @@ import space.arim.libertybans.bootstrap.depend.DependencyLoaderBuilder;
 
 public class LibertyBansLauncher {
 
+	private final DependencyPlatform platform;
 	private final Executor executor;
 	private final BootstrapLauncher launcher;
 	private final Function<Class<?>, String> getPluginFor;
 	
-	public LibertyBansLauncher(Path folder, Executor executor, Function<Class<?>, String> getPluginFor) {
+	public LibertyBansLauncher(DependencyPlatform platform, Path folder, Executor executor,
+			Function<Class<?>, String> getPluginFor) {
+		this.platform = platform;
 		this.executor = executor;
 		this.getPluginFor = getPluginFor;
 
@@ -64,7 +68,7 @@ public class LibertyBansLauncher {
 	
 	protected boolean addUrlsToExternalClassLoader(ClassLoader apiClassLoader, Path[] paths) {
 		if (!(apiClassLoader instanceof URLClassLoader)) {
-			throw new IllegalStateException(
+			throw new IllegalArgumentException(
 					"To use the default LibertyBansLauncher, the plugin must be loaded through a URLClassLoader");
 		}
 		Method addUrlMethod;
@@ -120,7 +124,7 @@ public class LibertyBansLauncher {
 			return Dependency.of(value[0], value[1], value[2], value[3]);
 
 		} catch (IOException ex) {
-			throw new IllegalStateException(ex);
+			throw new UncheckedIOException(ex);
 		}
 	}
 	
@@ -158,16 +162,14 @@ public class LibertyBansLauncher {
 	
 	private void addInternalDepsFinish(DependencyLoaderBuilder loader,
 			Map<InternalDependency, CompletableFuture<Dependency>> internalDeps) {
-		/*
-		 * Since Paper, Waterfall, Sponge, and Velocity include slf4j, it may already be present
-		 */
-		if (!classExists("org.slf4j.Logger")) {
+
+		if (!platform.hasSlf4jSupport()) {
+			warnRelocation("Slf4j", "org.slf4j.Logger");
 			CompletableFuture<Dependency> slf4jApi = readDependency("slf4j-api");
 			CompletableFuture<Dependency> slf4jJdk14 = readDependency("slf4j-jdk14");
 			loader.addPair(slf4jApi.join(), Repositories.CENTRAL_REPO);
 			loader.addPair(slf4jJdk14.join(), Repositories.CENTRAL_REPO);
 		}
-
 		for (InternalDependency internalDep : InternalDependency.values()) {
 			if (internalDep.clazz != null) {
 				warnRelocation(internalDep.name, internalDep.clazz);

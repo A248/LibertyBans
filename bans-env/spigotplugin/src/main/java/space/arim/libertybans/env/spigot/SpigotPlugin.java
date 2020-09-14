@@ -28,6 +28,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import space.arim.libertybans.bootstrap.BaseEnvironment;
 import space.arim.libertybans.bootstrap.Instantiator;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
+import space.arim.libertybans.bootstrap.DependencyPlatform;
 
 public class SpigotPlugin extends JavaPlugin {
 
@@ -38,11 +39,20 @@ public class SpigotPlugin extends JavaPlugin {
 		if (base != null) {
 			throw new IllegalStateException("Plugin enabled twice?");
 		}
+		DependencyPlatform platform = DependencyPlatform.SPIGOT;
+		try {
+			getClass().getMethod("getSLF4JLogger");
+			platform = DependencyPlatform.PAPER;
+		} catch (NoSuchMethodException ignored) {
+
+		} catch (SecurityException ex) {
+			throw new IllegalStateException("Arrest that SecurityManager please", ex);
+		}
 		Path folder = getDataFolder().toPath();
 		ExecutorService executor = Executors.newFixedThreadPool(8);
 		ClassLoader launchLoader;
 		try {
-			LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
+			LibertyBansLauncher launcher = new LibertyBansLauncher(platform, folder, executor, (clazz) -> {
 				try {
 					JavaPlugin potential = JavaPlugin.getProvidingPlugin(clazz);
 					return potential.getDescription().getFullName();

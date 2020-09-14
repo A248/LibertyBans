@@ -18,30 +18,38 @@
  */
 package space.arim.libertybans.bootstrap;
 
-import space.arim.libertybans.bootstrap.depend.Repository;
+public enum DependencyPlatform {
 
-enum Repositories implements Repository {
-
-	ARIM_LESSER_GPL3("https://mvn-repo.arim.space/lesser-gpl3"),
-	ARIM_GPL3("https://mvn-repo.arim.space/gpl3"),
-	ARIM_AFFERO_GPL3("https://mvn-repo.arim.space/affero-gpl3"),
+	SPIGOT(Category.BUKKIT),
+	PAPER(Category.BUKKIT),
+	BUNGEE(Category.BUNGEE),
+	WATERFALL(Category.BUNGEE),
+	VELOCITY(Category.VELOCITY);
 	
-	CENTRAL_REPO("https://repo.maven.apache.org/maven2");
+	private final Category category;
 	
-	private final String baseUrl;
-	
-	/**
-	 * Creates from a base URL
-	 * 
-	 * @param baseUrl the base URL, without the trailing slash
-	 */
-	private Repositories(String baseUrl) {
-		this.baseUrl = baseUrl;
+	private DependencyPlatform(Category category) {
+		this.category = category;
 	}
 	
-	@Override
-	public String getBaseUrl() {
-		return baseUrl;
+	public boolean hasSlf4jSupport() {
+		switch (this) {
+		case SPIGOT:
+		case BUNGEE:
+			return false;
+		default:
+			return true;
+		}
+	}
+	
+	public Category getCategory() {
+		return category;
+	}
+	
+	public enum Category {
+		BUKKIT,
+		BUNGEE,
+		VELOCITY
 	}
 	
 }

@@ -23,6 +23,7 @@ import java.util.concurrent.Executor;
 import java.util.logging.Level;
 
 import space.arim.libertybans.bootstrap.BaseEnvironment;
+import space.arim.libertybans.bootstrap.DependencyPlatform;
 import space.arim.libertybans.bootstrap.Instantiator;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
 
@@ -38,11 +39,20 @@ public class BungeePlugin extends Plugin {
 		if (base != null) {
 			throw new IllegalStateException("Plugin enabled twice?");
 		}
+		DependencyPlatform platform = DependencyPlatform.BUNGEE;
+		try {
+			getClass().getMethod("getSLF4JLogger");
+			platform = DependencyPlatform.WATERFALL;
+		} catch (NoSuchMethodException ignored) {
+
+		} catch (SecurityException ex) {
+			throw new IllegalStateException("Arrest that SecurityManager please", ex);
+		}
 		Path folder = getDataFolder().toPath();
 		TaskScheduler scheduler = getProxy().getScheduler();
 		Executor executor = (cmd) -> scheduler.runAsync(this, cmd);
 
-		LibertyBansLauncher launcher = new LibertyBansLauncher(folder, executor, (clazz) -> {
+		LibertyBansLauncher launcher = new LibertyBansLauncher(platform, folder, executor, (clazz) -> {
 			return PluginClassLoaderReflection.getProvidingPlugin(clazz);
 		});
 		ClassLoader launchLoader = launcher.attemptLaunch().join();

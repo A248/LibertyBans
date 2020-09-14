@@ -18,21 +18,8 @@
  */
 package space.arim.libertybans.bootstrap.depend;
 
-public class Repository {
-
-	private final String baseUrl;
+public interface Repository {
 	
-	/**
-	 * Creates from a base URL
-	 * 
-	 * @param baseUrl the base URL, without the trailing slash
-	 */
-	public Repository(String baseUrl) {
-		this.baseUrl = baseUrl;
-	}
-	
-	public String getBaseUrl() {
-		return baseUrl;
-	}
+	String getBaseUrl();
 	
 }

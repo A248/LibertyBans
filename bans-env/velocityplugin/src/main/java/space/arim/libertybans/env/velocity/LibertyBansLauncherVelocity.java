@@ -21,6 +21,7 @@ package space.arim.libertybans.env.velocity;
 import java.nio.file.Path;
 import java.util.concurrent.Executor;
 
+import space.arim.libertybans.bootstrap.DependencyPlatform;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
 
 import com.velocitypowered.api.plugin.PluginContainer;
@@ -31,7 +32,7 @@ public class LibertyBansLauncherVelocity extends LibertyBansLauncher {
 	private final VelocityPlugin plugin;
 	
 	public LibertyBansLauncherVelocity(VelocityPlugin plugin, Executor executor) {
-		super(plugin.folder, executor, (c) -> null);
+		super(DependencyPlatform.VELOCITY, plugin.folder, executor, (c) -> null);
 		this.plugin = plugin;
 	}
 	
