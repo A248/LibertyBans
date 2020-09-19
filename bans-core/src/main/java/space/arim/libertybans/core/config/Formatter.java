@@ -252,7 +252,7 @@ public class Formatter {
 		for (int n = 0; n < segments.size(); n++) {
 			boolean lastElement = n == segments.size() - 1;
 			if (lastElement) {
-				builder.append(core.getConfigs().getMessages().getString("misc.time.and"));
+				builder.append(core.getConfigs().getMessages().getString("misc.time.grammar.and"));
 			} else if (comma) {
 				builder.append(',');
 			}
