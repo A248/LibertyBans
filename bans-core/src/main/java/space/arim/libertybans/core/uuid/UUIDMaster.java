@@ -18,12 +18,12 @@
  */
 package space.arim.libertybans.core.uuid;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
@@ -41,7 +41,9 @@ import space.arim.uuidvault.api.UUIDVaultRegistration;
 
 import space.arim.api.configure.SingleKeyValueTransformer;
 import space.arim.api.configure.ValueTransformer;
+import space.arim.api.util.web.RemoteApiResult;
 import space.arim.api.util.web.RemoteApiResult.ResultType;
+import space.arim.api.util.web.RemoteNameUUIDApi;
 
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.Part;
@@ -125,10 +127,6 @@ public class UUIDMaster implements Part {
 		if (quickResolve != null || (quickResolve = resolverImpl.resolveImmediately(name)) != null) {
 			return completedFuture(quickResolve);
 		}
-		return finishLookup(name);
-	}
-	
-	private CentralisedFuture<UUID> finishLookup(final String name) {
 		return resolverImpl.resolve(name).thenCompose((uuid1) -> {
 			if (uuid1 != null) {
 				return completedFuture(uuid1);
@@ -144,45 +142,7 @@ public class UUIDMaster implements Part {
 	
 	private CompletableFuture<UUID> externalLookup(final String name) {
 		CompletableFuture<UUID> result = uuidStuff.collectiveResolver.resolve(name);
-		ServerType serverType = getServerType();
-		switch (serverType) {
-		case MIXED:
-			return result;
-		case OFFLINE:
-			return result.thenApply((uuid) -> {
-				if (uuid != null) {
-					return uuid;
-				}
-				return getOfflineUuid(name);
-			});
-		case ONLINE:
-			for (RemoteApi remoteApi : getRemoteApis()) {
-				result = result.thenCompose((uuid) -> {
-					if (uuid != null) {
-						return completedFuture(uuid);
-					}
-					return remoteApi.getRemote().lookupUUID(name).thenApply((remoteApiResult) -> {
-						if (remoteApiResult.getResultType() != ResultType.FOUND) {
-							Exception ex = remoteApiResult.getException();
-							if (ex == null) {
-								logger.warn("Request for UUID to remote web API {} failed", remoteApi);
-							} else {
-								logger.warn("Request for UUID to remote web API {} failed", remoteApi, ex);
-							}
-							return null;
-						}
-						return remoteApiResult.getValue();
-					});
-				});
-			}
-			return result;
-		default:
-			throw new IllegalStateException("Unknown server type " + serverType);
-		}
-	}
-	
-	private static UUID getOfflineUuid(String name) {
-		return UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(StandardCharsets.UTF_8));
+		return webLookup(result, (remoteApi) -> remoteApi.lookupUUID(name));
 	}
 
 	public CentralisedFuture<String> fullLookupName(final UUID uuid) {
@@ -196,10 +156,6 @@ public class UUIDMaster implements Part {
 		if (quickResolve != null || (quickResolve = resolverImpl.resolveImmediately(uuid)) != null) {
 			return completedFuture(quickResolve);
 		}
-		return finishLookup(uuid);
-	}
-	
-	private CentralisedFuture<String> finishLookup(final UUID uuid) {
 		return resolverImpl.resolve(uuid).thenCompose((name1) -> {
 			if (name1 != null) {
 				return completedFuture(name1);
@@ -215,35 +171,35 @@ public class UUIDMaster implements Part {
 	
 	private CompletableFuture<String> externalLookup(final UUID uuid) {
 		CompletableFuture<String> result = uuidStuff.collectiveResolver.resolve(uuid);
+		return webLookup(result, (remoteApi) -> remoteApi.lookupName(uuid));
+	}
+	
+	private <T> CompletableFuture<T> webLookup(CompletableFuture<T> result,
+			Function<RemoteNameUUIDApi, CompletableFuture<RemoteApiResult<T>>> resultFunction) {
 		ServerType serverType = getServerType();
-		switch (serverType) {
-		case MIXED:
-		case OFFLINE:
+		if (serverType != ServerType.ONLINE) {
 			return result;
-		case ONLINE:
-			for (RemoteApi remoteApi : getRemoteApis()) {
-				result = result.thenCompose((name) -> {
-					if (name != null) {
-						return completedFuture(name);
-					}
-					return remoteApi.getRemote().lookupName(uuid).thenApply((remoteApiResult) -> {
-						if (remoteApiResult.getResultType() != ResultType.FOUND) {
-							Exception ex = remoteApiResult.getException();
-							if (ex == null) {
-								logger.warn("Request for name to remote web API {} failed", remoteApi);
-							} else {
-								logger.warn("Request for name to remote web API {} failed", remoteApi, ex);
-							}
-							return null;
-						}
-						return remoteApiResult.getValue();
-					});
-				});
-			}
-			return result;
-		default:
-			throw new IllegalStateException("Unknown server type " + serverType);
 		}
+		for (RemoteApi remoteApi : getRemoteApis()) {
+			result = result.thenCompose((name) -> {
+				if (name != null) {
+					return completedFuture(name);
+				}
+				return resultFunction.apply(remoteApi.getRemote()).thenApply((remoteApiResult) -> {
+					if (remoteApiResult.getResultType() != ResultType.FOUND) {
+						Exception ex = remoteApiResult.getException();
+						if (ex == null) {
+							logger.warn("Request for name to remote web API {} failed", remoteApi);
+						} else {
+							logger.warn("Request for name to remote web API {} failed", remoteApi, ex);
+						}
+						return null;
+					}
+					return remoteApiResult.getValue();
+				});
+			});
+		}
+		return result;
 	}
 	
 	private ServerType getServerType() {
