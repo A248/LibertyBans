@@ -28,7 +28,7 @@ import space.arim.libertybans.core.env.CmdSender;
  * @author A248
  *
  */
-public interface SubCommandGroup {
+interface SubCommandGroup {
 	
 	/**
 	 * Whether this subcommand object matches the specified subcommand argument
@@ -44,8 +44,9 @@ public interface SubCommandGroup {
 	 * @param sender the command sender
 	 * @param command the command
 	 * @param arg the argument, lowercased
+	 * @return the execution
 	 */
-	void execute(CmdSender sender, CommandPackage command, String arg);
+	CommandExecution execute(CmdSender sender, CommandPackage command, String arg);
 	
 	/**
 	 * Gets tab complete suggestions for the subcommand

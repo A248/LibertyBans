@@ -32,7 +32,7 @@ public class LibertyBansLauncherVelocity extends LibertyBansLauncher {
 	private final VelocityPlugin plugin;
 	
 	public LibertyBansLauncherVelocity(VelocityPlugin plugin, Executor executor) {
-		super(DependencyPlatform.VELOCITY, plugin.folder, executor, (c) -> null);
+		super(DependencyPlatform.VELOCITY, plugin.folder, executor, (c) -> "");
 		this.plugin = plugin;
 	}
 	

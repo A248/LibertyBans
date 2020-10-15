@@ -22,8 +22,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import space.arim.libertybans.core.config.AddressStrictness;
 import space.arim.libertybans.core.database.Vendor;
+import space.arim.libertybans.core.selector.AddressStrictness;
 
 public class ConfigSpec {
 	

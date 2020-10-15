@@ -37,7 +37,7 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.LibertyBansCore;
-import space.arim.libertybans.core.MiscUtil;
+import space.arim.libertybans.core.punish.MiscUtil;
 
 import space.arim.jdbcaesar.mapper.UpdateCountMapper;
 import space.arim.jdbcaesar.transact.TransactionQuerySource;

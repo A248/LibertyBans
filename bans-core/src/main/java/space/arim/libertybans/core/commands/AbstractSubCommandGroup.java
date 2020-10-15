@@ -19,12 +19,14 @@
 package space.arim.libertybans.core.commands;
 
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-import space.arim.api.configure.ConfigAccessor;
-
 import space.arim.libertybans.core.LibertyBansCore;
+import space.arim.libertybans.core.config.MainConfig;
+import space.arim.libertybans.core.config.MessagesConfig;
 
 public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 
@@ -35,9 +37,17 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 	 */
 	private final Set<String> matches;
 	
-	AbstractSubCommandGroup(Commands commands, String...matches) {
+	AbstractSubCommandGroup(Commands commands, Set<String> matches) {
 		this.commands = commands;
-		this.matches = Set.of(matches);
+		this.matches = Set.copyOf(matches);
+	}
+	
+	AbstractSubCommandGroup(Commands commands, String...matches) {
+		this(commands, Set.of(matches));
+	}
+	
+	AbstractSubCommandGroup(Commands commands, Stream<String> matches) {
+		this(commands, matches.collect(Collectors.toUnmodifiableSet()));
 	}
 	
 	@Override
@@ -52,19 +62,19 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 	 */
 	
 	<T> CentralisedFuture<T> completedFuture(T value) {
-		return commands.core.getFuturesFactory().completedFuture(value);
+		return core().getFuturesFactory().completedFuture(value);
 	}
 	
 	LibertyBansCore core() {
 		return commands.core;
 	}
 	
-	ConfigAccessor config() {
-		return commands.core.getConfigs().getConfig();
+	MainConfig config() {
+		return core().getConfigs().getMainConfig();
 	}
 	
-	ConfigAccessor messages() {
-		return commands.core.getConfigs().getMessages();
+	MessagesConfig messages() {
+		return core().getMessagesConfig();
 	}
 	
 }

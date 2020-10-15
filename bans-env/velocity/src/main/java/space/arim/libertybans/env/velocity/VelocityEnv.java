@@ -54,11 +54,23 @@ public class VelocityEnv extends AbstractEnv {
 	public VelocityEnv(Entry<PluginContainer, ProxyServer> pluginAndServer, Path folder) {
 		PluginContainer plugin = pluginAndServer.getKey();
 		ProxyServer server = pluginAndServer.getValue();
+		setUUIDVaultIfNecessary(server);
 
 		core = new LibertyBansCore(OmnibusProvider.getOmnibus(), folder, this);
 		handle = new VelocityPlatformHandle(plugin, server);
 
 		enforcer = new VelocityEnforcer(this);
+	}
+	
+	private static void setUUIDVaultIfNecessary(ProxyServer server) {
+		if (UUIDVault.get() == null) {
+			new UUIDVaultVelocity(server, logger) {
+				@Override
+				protected boolean setInstancePassive() {
+					return super.setInstancePassive();
+				}
+			}.setInstancePassive();
+		}
 	}
 	
 	PluginContainer getPlugin() {
@@ -81,14 +93,6 @@ public class VelocityEnv extends AbstractEnv {
 	
 	@Override
 	protected void startup0() {
-		if (UUIDVault.get() == null) {
-			new UUIDVaultVelocity(getServer(), logger) {
-				@Override
-				protected boolean setInstancePassive() {
-					return super.setInstancePassive();
-				}
-			}.setInstancePassive();
-		}
 		core.startup();
 	}
 	

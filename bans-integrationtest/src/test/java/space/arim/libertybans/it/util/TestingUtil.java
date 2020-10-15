@@ -20,11 +20,15 @@ package space.arim.libertybans.it.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-import space.arim.libertybans.api.Punishment;
-import space.arim.libertybans.api.PunishmentBase;
+import org.junit.jupiter.api.Assertions;
+
+import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.punish.PunishmentBase;
 
 public final class TestingUtil {
 
@@ -46,13 +50,30 @@ public final class TestingUtil {
 		return result;
 	}
 	
+	public static boolean randomBoolean() {
+		return random().nextBoolean();
+	}
+	
 	/**
 	 * Random Ipv4 or Ipv6 address bytes
 	 * 
 	 * @return network address bytes
 	 */
-	public static byte[] randomAddress() {
+	private static byte[] randomAddressBytes() {
 		return randomBytes((random().nextBoolean()) ? 4 : 16);
+	}
+	
+	/**
+	 * Random Ipv4 or Ipv6 InetAddress
+	 * 
+	 * @return the network address 
+	 */
+	public static InetAddress randomAddress() {
+		try {
+			return InetAddress.getByAddress(randomAddressBytes());
+		} catch (UnknownHostException ex) {
+			throw Assertions.<RuntimeException>fail(ex);
+		}
 	}
 	
 	/**
@@ -67,11 +88,15 @@ public final class TestingUtil {
 		assertEquals(expected.getOperator(), actual.getOperator());
 		assertEquals(expected.getReason(), actual.getReason());
 		assertEquals(expected.getScope(), actual.getScope());
-		assertEquals(expected.getStart(), actual.getStart());
-		assertEquals(expected.getEnd(), actual.getEnd());
 		if (expected instanceof Punishment && actual instanceof Punishment) {
-			assertEquals(((Punishment) expected).getID(), ((Punishment) actual).getID());
+			assertEqualDetailsFinish((Punishment) expected, (Punishment) actual);
 		}
+	}
+	
+	private static void assertEqualDetailsFinish(Punishment expected, Punishment actual) {
+		assertEquals(expected.getID(), actual.getID());
+		assertEquals(expected.getStartDate(), actual.getStartDate());
+		assertEquals(expected.getEndDate(), actual.getEndDate());
 	}
 
 	/**

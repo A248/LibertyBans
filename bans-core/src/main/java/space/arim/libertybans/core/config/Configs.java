@@ -19,134 +19,117 @@
 package space.arim.libertybans.core.config;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.nio.file.StandardOpenOption;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import space.arim.api.configure.ConfigAccessor;
-import space.arim.api.configure.ConfigSerialiser;
-import space.arim.api.configure.Configuration;
-import space.arim.api.configure.JarResources;
-import space.arim.api.configure.ValueTransformer;
-import space.arim.api.configure.configs.ConfigurationBuilder;
-import space.arim.api.configure.configs.SingularConfig;
-import space.arim.api.configure.yaml.YamlConfigSerialiser;
 
 import space.arim.libertybans.bootstrap.StartupException;
-import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.Part;
-import space.arim.libertybans.core.database.DatabaseManager;
-import space.arim.libertybans.core.database.IOUtils;
 
 public class Configs implements Part {
 	
-	private final LibertyBansCore core;
+	private final Path folder;
 	
-	private volatile ConfigPackage configPackage;
+	private final ConfigHolder<MainConfig> mainHolder = new ConfigHolder<>(MainConfig.class);
+	private final ConfigHolder<MessagesConfig> messagesHolder = new ConfigHolder<>(MessagesConfig.class);
+	private final ConfigHolder<SqlConfig> sqlHolder = new ConfigHolder<>(SqlConfig.class);
 	
-	public Configs(LibertyBansCore core) {
-		this.core = core;
+	public Configs(Path folder) {
+		this.folder = folder;
 	}
 	
-	private static CompletableFuture<? extends Configuration> getFor(ConfigSerialiser serialiser, String resourceName,
-			List<ValueTransformer> transformers, Executor readWriteService) {
-		return new ConfigurationBuilder()
-				.defaultResource(JarResources.forCallerClass(resourceName))
-				.executor(readWriteService).serialiser(serialiser)
-				.addTransformers(transformers).buildMergingConfig();
+	public MainConfig getMainConfig() {
+		return mainHolder.getConfigData();
 	}
 	
-	private ConfigPackage recreateConfig(Executor existingReadWriteService) {
-		Executor executor;
-		if (existingReadWriteService == null) {
-			executor = core.getEnvironment().getPlatformHandle().getRealExecutorFinder().findExecutor();
-			if (executor instanceof ExecutorService) {
-				// Danger! Don't shut down the platform's combined thread pool
-				// readWriteService must NOT be an instance of ExecutorService unless shutdown is desired
-				executor = new IOUtils.SafeExecutorWrapper(executor);
-
-			} else if (executor == null) {
-				executor = Executors.newCachedThreadPool(new IOUtils.ThreadFactoryImpl("LibertyBans-Config-"));
-			}
-		} else {
-			executor = existingReadWriteService;
-		}
-
-		Path folder = core.getFolder();
+	public MessagesConfig getMessagesConfig() {
+		return messagesHolder.getConfigData();
+	}
+	
+	public SqlConfig getSqlConfig() {
+		return sqlHolder.getConfigData();
+	}
+	
+	public CompletableFuture<Boolean> reloadConfigs() {
 		Path langFolder = folder.resolve("lang");
 		try {
 			Files.createDirectories(langFolder);
 		} catch (IOException ex) {
-			throw new StartupException("Unable to create plugin directories", ex);
+			throw new UncheckedIOException("Unable to create plugin directories", ex);
 		}
-		ConfigSerialiser serialiser = new YamlConfigSerialiser();
-		var futureSql = getFor(serialiser, "sql.yml", sqlValueTransformers(), executor);
-		var futureConfig = getFor(serialiser, "config.yml", configValueTransformers(), executor);
-		var futureMessages = getFor(serialiser, "lang/messages_en.yml", ConfigUtil.messagesTransformers(), executor);
-		SingularConfig sql = new SingularConfig(futureSql.join(), folder.resolve("sql.yml"));
-		SingularConfig config = new SingularConfig(futureConfig.join(), folder.resolve("config.yml"));
-		Configuration messages = futureMessages.join();
+		// Save default language files
+		CompletableFuture<?> futureLangFiles = createLangFiles(langFolder);
 
-		return new ConfigPackage(sql, config, messages, executor, langFolder);
+		// Reload main config
+		CompletableFuture<Boolean> reloadMain = mainHolder.reload(folder.resolve("config.yml"));
+		// Reload sql config
+		CompletableFuture<Boolean> reloadSql = sqlHolder.reload(folder.resolve("sql.yml"));
+
+		// Reload messages config from specified language file
+		CompletableFuture<Boolean> reloadMessages = CompletableFuture.allOf(futureLangFiles, reloadMain)
+				.thenCompose((ignore) -> {
+			String langFileOption = mainHolder.getConfigData().langFile();
+			return messagesHolder.reload(langFolder.resolve("messages_" + langFileOption + ".yml"));
+		});
+		return CompletableFuture.allOf(reloadMessages, reloadSql).thenApply((ignore) -> {
+			return reloadMain.join() && reloadMessages.join() && reloadSql.join();
+		});
 	}
 	
-	List<ValueTransformer> sqlValueTransformers() {
-		return DatabaseManager.createConfigTransformers();
+	private CompletableFuture<?> createLangFiles(Path langFolder) {
+		Set<CompletableFuture<?>> futureLangFiles = new HashSet<>();
+		for (Translation translation : Translation.values()) {
+
+			final String name = "messages_" + translation.name().toLowerCase(Locale.ROOT) + ".yml";
+			Path messagesPath = langFolder.resolve(name);
+			if (!Files.exists(messagesPath)) {
+				futureLangFiles.add(CompletableFuture.runAsync(() -> {
+
+					try (InputStream inputStream = getClass().getResource("/lang/" + name).openStream();
+							ReadableByteChannel source = Channels.newChannel(inputStream);
+							FileChannel dest = FileChannel.open(messagesPath, StandardOpenOption.WRITE,
+									StandardOpenOption.CREATE_NEW)) {
+
+						dest.transferFrom(source, 0, Long.MAX_VALUE);
+					} catch (IOException ex) {
+						throw new UncheckedIOException("Unable to copy language file for language " + name, ex);
+					}
+				}));
+			}
+		}
+		return CompletableFuture.allOf(futureLangFiles.toArray(CompletableFuture[]::new));
 	}
 	
-	List<ValueTransformer> configValueTransformers() {
-		return ConfigUtil.configTransformers();
+	private enum Translation {
+		
 	}
 	
 	@Override
 	public void startup() {
-		ConfigPackage configPackage = recreateConfig(null);
-		if (!configPackage.reloadConfigs().join()) {
+		if (!reloadConfigs().join()) {
 			throw new StartupException("Issue while loading configuration");
 		}
-		this.configPackage = configPackage;
 	}
 	
 	@Override
 	public void restart() {
-		ConfigPackage existing = this.configPackage;
-		ConfigPackage configPackage = recreateConfig(existing.readWriteService);
-		if (!configPackage.reloadConfigs().join()) {
+		if (!reloadConfigs().join()) {
 			throw new StartupException("Issue while reloading configuration");
 		}
-		this.configPackage = configPackage;
 	}
 	
 	@Override
 	public void shutdown() {
-		Executor executor = configPackage.readWriteService;
-		if (executor instanceof ExecutorService) {
-			((ExecutorService) executor).shutdown();
-		}
-	}
-	
-	public CompletableFuture<Boolean> reloadConfigs() {
-		return configPackage.reloadConfigs();
-	}
-	
-	public ConfigAccessor getSql() {
-		return configPackage.sql.getAccessor();
-	}
-	
-	public ConfigAccessor getConfig() {
-		return configPackage.config.getAccessor();
-	}
-	
-	public ConfigAccessor getMessages() {
-		return configPackage.messages.getAccessor();
-	}
-	
-	public AddressStrictness getAddressStrictness() {
-		return getConfig().getObject("enforcement.address-strictness", AddressStrictness.class);
+
 	}
 	
 }

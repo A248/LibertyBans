@@ -30,7 +30,7 @@ public interface CmdSender {
 	
 	void sendMessage(SendableMessage message);
 	
-	void parseThenSend(String message);
+	void sendLiteralMessage(String messageToParse);
 	
 	Object getRawSender();
 	

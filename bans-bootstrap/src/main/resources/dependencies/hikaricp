@@ -1,4 +1,4 @@
 com.zaxxer
 HikariCP
-3.4.5
+${hikari.version}
 4e70e08544e199eed09f5f3681ab5a39681d8d6eb6c9ca2cb6a78535aedbcc66b4292330bbcb40bfb8bf8a6f284d013e55a039542ffc85222d6ac26f816eafd3

@@ -30,15 +30,15 @@ import space.arim.libertybans.core.database.Database;
 
 class ResolverImpl implements UUIDResolver {
 
-	private final UUIDMaster um;
+	private final UUIDManager manager;
 	
-	ResolverImpl(UUIDMaster um) {
-		this.um = um;
+	ResolverImpl(UUIDManager manager) {
+		this.manager = manager;
 	}
 	
 	@Override
 	public CentralisedFuture<UUID> resolve(String name) {
-		Database helper = um.core.getDatabase();
+		Database helper = manager.core.getDatabase();
 		return helper.selectAsync(() -> {
 			return helper.jdbCaesar().query(
 					"SELECT `uuid` FROM `libertybans_names` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1")
@@ -51,7 +51,7 @@ class ResolverImpl implements UUIDResolver {
 
 	@Override
 	public CentralisedFuture<String> resolve(UUID uuid) {
-		Database helper = um.core.getDatabase();
+		Database helper = manager.core.getDatabase();
 		return helper.selectAsync(() -> {
 			return helper.jdbCaesar().query(
 					"SELECT `name` FROM `libertybans_names` WHERE `uuid` = ? ORDER BY `updated` DESC LIMIT 1")
@@ -65,11 +65,11 @@ class ResolverImpl implements UUIDResolver {
 	@Override
 	public UUID resolveImmediately(String name) {
 		// Caffeine specifies that operations on the entry set do not refresh the expiration timer
-		for (Map.Entry<UUID, String> entry : um.fastCache.asMap().entrySet()) {
+		for (Map.Entry<UUID, String> entry : manager.fastCache.asMap().entrySet()) {
 			if (entry.getValue().equalsIgnoreCase(name)) {
 				UUID uuid = entry.getKey();
 				// Manual cache refresh
-				um.fastCache.getIfPresent(uuid);
+				manager.fastCache.getIfPresent(uuid);
 				return uuid;
 			}
 		}
@@ -78,7 +78,7 @@ class ResolverImpl implements UUIDResolver {
 
 	@Override
 	public String resolveImmediately(UUID uuid) {
-		return um.fastCache.getIfPresent(uuid);
+		return manager.fastCache.getIfPresent(uuid);
 	}
 	
 }

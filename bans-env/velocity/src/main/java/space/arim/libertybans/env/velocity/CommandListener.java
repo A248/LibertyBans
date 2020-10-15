@@ -45,7 +45,7 @@ class CommandListener extends VelocityParallelisedListener<CommandExecuteEvent, 
 			return null;
 		}
 		Player player = (Player) source;
-		return env.core.getEnforcer().checkChat(player.getUniqueId(), player.getRemoteAddress().getAddress().getAddress(), evt.getCommand());
+		return env.core.getEnforcementCenter().checkChat(player.getUniqueId(), player.getRemoteAddress().getAddress(), evt.getCommand());
 	}
 
 	@Override

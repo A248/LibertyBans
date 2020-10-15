@@ -29,7 +29,7 @@ import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.LibertyBansCore;
-import space.arim.libertybans.core.MiscUtil;
+import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.it.ProfligateInstanceProvider;
 import space.arim.libertybans.it.test.applicable.ApplicabilityTesting;
 import space.arim.libertybans.it.test.applicable.NonapplicabilityTesting;

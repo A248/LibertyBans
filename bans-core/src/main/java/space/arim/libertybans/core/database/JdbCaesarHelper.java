@@ -18,7 +18,6 @@
  */
 package space.arim.libertybans.core.database;
 
-import java.net.InetAddress;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -28,13 +27,14 @@ import space.arim.uuidvault.api.UUIDUtil;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.ConsoleOperator;
+import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.Scope;
+import space.arim.libertybans.api.ServerScope;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.Victim.VictimType;
-import space.arim.libertybans.core.Scoper;
+import space.arim.libertybans.core.punish.Scoper;
 
 import space.arim.jdbcaesar.adapter.DataTypeAdapter;
 
@@ -116,8 +116,8 @@ public class JdbCaesarHelper {
 
 		@Override
 		public Object adaptObject(Object parameter) {
-			if (parameter instanceof Scope) {
-				return scoper.getServer((Scope) parameter);
+			if (parameter instanceof ServerScope) {
+				return scoper.getServer((ServerScope) parameter);
 			}
 			return parameter;
 		}
@@ -136,12 +136,12 @@ public class JdbCaesarHelper {
 		
 	}
 	
-	static class InetAddressAdapter implements DataTypeAdapter {
+	static class NetworkAddressAdapter implements DataTypeAdapter {
 
 		@Override
 		public Object adaptObject(Object parameter) {
-			if (parameter instanceof InetAddress) {
-				return ((InetAddress) parameter).getAddress();
+			if (parameter instanceof NetworkAddress) {
+				return ((NetworkAddress) parameter).getRawAddress();
 			}
 			return parameter;
 		}

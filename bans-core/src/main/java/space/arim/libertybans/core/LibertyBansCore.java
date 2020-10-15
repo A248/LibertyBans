@@ -19,29 +19,30 @@
 package space.arim.libertybans.core;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.ThreadFactory;
 
 import space.arim.omnibus.Omnibus;
-import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.EnhancedExecutor;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import space.arim.libertybans.api.LibertyBans;
+import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.api.revoke.PunishmentRevoker;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.Formatter;
+import space.arim.libertybans.core.config.MainConfig;
+import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.database.DatabaseManager;
 import space.arim.libertybans.core.database.Database;
 import space.arim.libertybans.core.env.AbstractEnv;
 import space.arim.libertybans.core.env.EnvironmentManager;
+import space.arim.libertybans.core.punish.EnforcementCenter;
+import space.arim.libertybans.core.punish.Scoper;
 import space.arim.libertybans.core.selector.MuteCacher;
 import space.arim.libertybans.core.selector.Selector;
-import space.arim.libertybans.core.uuid.UUIDMaster;
+import space.arim.libertybans.core.uuid.UUIDManager;
 
 public class LibertyBansCore implements LibertyBans, Part {
 
@@ -52,22 +53,16 @@ public class LibertyBansCore implements LibertyBans, Part {
 	private final Resources resources;
 	private final Configs configs;
 	private final DatabaseManager databaseManager;
-	private final UUIDMaster uuidMaster;
+	private final UUIDManager uuidMaster;
 	private final EnvironmentManager envManager;
 	
+	private final EnforcementCenter enforcement;
 	private final Selector selector;
 	private final MuteCacher cacher;
-	private final Enactor enactor;
-	private final Enforcer enforcer;
 	private final Scoper scoper;
 	
 	private final Formatter formatter;
 	private final Commands commands;
-	
-	/** Delayed shutdown hooks, must be synchronized on before access */
-	private final List<Runnable> delayedShutdownHooks = new ArrayList<>();
-	
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
 	public LibertyBansCore(Omnibus omnibus,
 			Path folder, AbstractEnv environment) {
@@ -76,15 +71,14 @@ public class LibertyBansCore implements LibertyBans, Part {
 		this.environment = environment;
 
 		resources = new Resources(this);
-		configs = new Configs(this);
+		configs = new Configs(folder);
 		databaseManager = new DatabaseManager(this);
-		uuidMaster = new UUIDMaster(this);
+		uuidMaster = new UUIDManager(this);
 		envManager = new EnvironmentManager(this);
 
 		selector = new Selector(this);
 		cacher = new MuteCacher(this);
-		enactor = new Enactor(this);
-		enforcer = new Enforcer(this);
+		enforcement = new EnforcementCenter(this);
 		scoper = new Scoper();
 
 		formatter = new Formatter(this);
@@ -93,39 +87,31 @@ public class LibertyBansCore implements LibertyBans, Part {
 	
 	@Override
 	public void startup() {
-		getResources().startup();
+		resources.startup();
 		getConfigs().startup();
-		getDatabaseManager().startup();
-		getUUIDMaster().startup();
+		databaseManager.startup();
+		uuidMaster.startup();
 		envManager.startup();
 	}
 	
 	@Override
 	public void restart() {
 		envManager.shutdown();
-		getResources().restart();
-		getUUIDMaster().restart();
+		resources.restart();
+		uuidMaster.restart();
 		getConfigs().restart();
-		getDatabaseManager().restart();
+		databaseManager.restart();
 		envManager.startup();
 	}
 	
 	@Override
 	public void shutdown() {
 		envManager.shutdown();
-		getResources().shutdown();
-		getUUIDMaster().shutdown();
+		uuidMaster.shutdown();
 		getConfigs().shutdown();
-		getDatabaseManager().shutdown();
+		databaseManager.shutdown();
 
-		// 4 seconds should be sufficient
-		CompletableFuture.runAsync(() -> {
-			synchronized (delayedShutdownHooks) {
-				for (Runnable hook : delayedShutdownHooks) {
-					hook.run();
-				}
-			}
-		}, CompletableFuture.delayedExecutor(4, TimeUnit.SECONDS)).join();
+		resources.shutdown();
 	}
 	
 	public Path getFolder() {
@@ -143,15 +129,23 @@ public class LibertyBansCore implements LibertyBans, Part {
 	
 	@Override
 	public FactoryOfTheFuture getFuturesFactory() {
-		return getResources().getFuturesFactory();
+		return resources.getFuturesFactory();
 	}
 	
-	public Resources getResources() {
-		return resources;
+	public EnhancedExecutor getEnhancedExecutor() {
+		return resources.getEnhancedExecutor();
 	}
 	
 	public Configs getConfigs() {
 		return configs;
+	}
+	
+	public MainConfig getMainConfig() {
+		return getConfigs().getMainConfig();
+	}
+	
+	public MessagesConfig getMessagesConfig() {
+		return getConfigs().getMessagesConfig();
 	}
 	
 	@Override
@@ -163,7 +157,7 @@ public class LibertyBansCore implements LibertyBans, Part {
 		return databaseManager;
 	}
 	
-	public UUIDMaster getUUIDMaster() {
+	public UUIDManager getUUIDMaster() {
 		return uuidMaster;
 	}
 	
@@ -177,20 +171,25 @@ public class LibertyBansCore implements LibertyBans, Part {
 	}
 
 	@Override
-	public Enactor getEnactor() {
-		return enactor;
+	public PunishmentDrafter getDrafter() {
+		return enforcement;
 	}
 	
+	public EnforcementCenter getEnforcementCenter() {
+		return enforcement;
+	}
+
 	@Override
-	public Enforcer getEnforcer() {
-		return enforcer;
+	public PunishmentRevoker getRevoker() {
+		return enforcement.getRevoker();
 	}
-	
+
 	@Override
 	public Scoper getScopeManager() {
 		return scoper;
 	}
 	
+	@Override
 	public Formatter getFormatter() {
 		return formatter;
 	}
@@ -199,16 +198,12 @@ public class LibertyBansCore implements LibertyBans, Part {
 		return commands;
 	}
 	
-	public void addDelayedShutdownHook(Runnable hook) {
-		synchronized (delayedShutdownHooks) {
-			delayedShutdownHooks.add(hook);
-		}
+	public void postFuture(CentralisedFuture<?> future) {
+		resources.postFuture(future);
 	}
 	
-	public <T> void debugFuture(@SuppressWarnings("unused") T value, Throwable ex) {
-		if (ex != null) {
-			logger.warn("Miscellaneous issue executing asynchronous computation", ex);
-		}
+	public ThreadFactory newThreadFactory(String component) {
+		return new ThreadFactoryImpl("LibertyBans-" + component + "-");
 	}
 	
 }

@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.it.env;
 
+import java.net.InetAddress;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -34,12 +35,12 @@ public class QuackEnvEnforcer extends AbstractEnvEnforcer {
 	private final QuackPlatform platform;
 	
 	QuackEnvEnforcer(QuackEnv env, QuackPlatform platform) {
-		super(env);
+		super(env.core, env);
 		this.platform = platform;
 	}
 	
 	@Override
-	public void sendToThoseWithPermission(String permission, SendableMessage message) {
+	protected void sendToThoseWithPermission0(String permission, SendableMessage message) {
 		for (QuackPlayer player : platform.getAllPlayers()) {
 			if (player.hasPermission(permission)) {
 				player.sendMessage(message);
@@ -58,7 +59,7 @@ public class QuackEnvEnforcer extends AbstractEnvEnforcer {
 	@Override
 	public void enforceMatcher(TargetMatcher matcher) {
 		for (QuackPlayer player : platform.getAllPlayers()) {
-			if (matcher.uuids().contains(player.getUniqueId()) || matcher.addresses().contains(player.getAddress())) {
+			if (matcher.matches(player.getUniqueId(), player.getAddress())) {
 				matcher.callback().accept(player);
 			}
 		}
@@ -70,8 +71,8 @@ public class QuackEnvEnforcer extends AbstractEnvEnforcer {
 	}
 
 	@Override
-	public byte[] getAddressFor(@PlatformPlayer Object player) {
-		return ((QuackPlayer) player).getAddress().getAddress();
+	public InetAddress getAddressFor(@PlatformPlayer Object player) {
+		return ((QuackPlayer) player).getAddress();
 	}
 
 }

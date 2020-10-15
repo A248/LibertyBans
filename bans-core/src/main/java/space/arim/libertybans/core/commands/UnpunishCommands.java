@@ -20,52 +20,82 @@ package space.arim.libertybans.core.commands;
 
 import java.util.Arrays;
 import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.chat.manipulator.SendableMessageManipulator;
 
-import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.core.MiscUtil;
+import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.core.config.RemovalsSection.PunishmentRemoval;
+import space.arim.libertybans.core.config.RemovalsSection.WarnRemoval;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.punish.MiscUtil;
 
 public class UnpunishCommands extends AbstractSubCommandGroup {
 	
 	UnpunishCommands(Commands commands) {
 		super(commands, Arrays.stream(MiscUtil.punishmentTypesExcludingKick())
-				.map((type) -> "un" + type.name().toLowerCase(Locale.ENGLISH)).toArray(String[]::new));
+				.map((type) -> "un" + type.name().toLowerCase(Locale.ROOT)));
 	}
 
 	@Override
-	public void execute(CmdSender sender, CommandPackage command, String arg) {
-		execute(sender, command, PunishmentType.valueOf(arg.substring(2).toUpperCase(Locale.ENGLISH)));
+	public CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
+		return new Execution(sender, command, PunishmentType.valueOf(arg.substring(2).toUpperCase(Locale.ROOT)));
 	}
 	
-	private void execute(CmdSender sender, CommandPackage command,
-			PunishmentType type) {
-		if (!sender.hasPermission("libertybans." + type.getLowercaseName() + ".undo")) { // libertybans.ban.undo
-			sender.parseThenSend(messages().getString(
-					"removals." + type.getLowercaseNamePlural() + ".permission.command")); // removals.bans.permission.command
-			return;
+	private class Execution extends TypeSpecificExecution {
+		
+		private final PunishmentRemoval section;
+
+		Execution(CmdSender sender, CommandPackage command, PunishmentType type) {
+			super(sender, command, type);
+			section = messages().removals().forType(type);
 		}
-		if (!command.hasNext()) {
-			sender.parseThenSend(messages().getString(
-					"removals." + type.getLowercaseNamePlural() + ".usage")); // removals.bans.usage
-			return;
-		}
-		String targetArg = command.next();
-		commands.parseVictim(sender, targetArg).thenCompose((victim) -> {
-			if (victim == null) {
-				return completedFuture(null);
+
+		@Override
+		public void execute() {
+			if (!sender().hasPermission("libertybans.un" + type().getLowercaseName() + ".command")) { // libertybans.unban.command
+				sender().sendMessage(section.permissionCommand());
+				return;
 			}
+			if (!command().hasNext()) {
+				sender().sendMessage(section.usage());
+				return;
+			}
+			execute0();
+		}
+		
+		private void execute0() {
+			String targetArg = command().next();
+			CentralisedFuture<?> future = commands.parseVictim(sender(), targetArg).thenCompose((victim) -> {
+				if (victim == null) {
+					return completedFuture(null);
+				}
+				return performUndo(victim, targetArg);
+
+			}).thenCompose((punishment) -> {
+				if (punishment == null) {
+					return completedFuture(null);
+				}
+				return sendSuccess(punishment);
+			});
+			core().postFuture(future);
+		}
+		
+		private CentralisedFuture<Punishment> performUndo(Victim victim, String targetArg) {
+			CmdSender sender = sender();
+			CommandPackage command = command();
+			PunishmentType type = type();
+
 			CentralisedFuture<Punishment> futureUndo = null;
 			final int finalId;
 			if (type == PunishmentType.WARN) {
 
 				if (!command.hasNext()) {
-					sender.parseThenSend(messages().getString("removals.warns.usage"));
+					sender.sendMessage(section.usage());
 					return completedFuture(null);
 				}
 				String idArg = command.next();
@@ -73,53 +103,44 @@ public class UnpunishCommands extends AbstractSubCommandGroup {
 				try {
 					id = Integer.parseInt(idArg);
 				} catch (NumberFormatException ignored) {
-					sender.parseThenSend(messages().getString("removals.warns.not-a-number").replace("%ID_ARG%", idArg));
+					sender.sendMessage(((WarnRemoval) section).notANumber().replaceText("%ID_ARG%", idArg));
 					return completedFuture(null);
 				}
-				futureUndo = core().getEnactor().undoAndGetPunishmentByIdAndType(id, type);
+				futureUndo = core().getRevoker().revokeByIdAndType(id, type).undoAndGetPunishmentWithoutUnenforcement();
 				finalId = id;
 			} else {
 				assert type.isSingular() : type;
-				futureUndo = core().getEnactor().undoAndGetPunishmentByTypeAndVictim(type, victim);
+				futureUndo = core().getRevoker().revokeByTypeAndVictim(type, victim).undoAndGetPunishmentWithoutUnenforcement();
 				finalId = -1;
 			}
 			return futureUndo.thenApply((nullIfNotFound) -> {
 				if (nullIfNotFound == null) {
-					String configPath = "removals." + type.getLowercaseNamePlural() + ".not-found"; // removals.bans.not-found
-					String rawMessage = messages().getString(configPath).replace("%TARGET%", targetArg);
+					SendableMessage notFound = section.notFound().replaceText("%TARGET%", targetArg);
 					if (type == PunishmentType.WARN) {
-						rawMessage = rawMessage.replace("%ID%", Integer.toString(finalId));
+						notFound = SendableMessageManipulator.create(notFound).replaceText("%ID%", Integer.toString(finalId));
 					}
-					sender.parseThenSend(rawMessage);
+					sender.sendMessage(notFound);
 				}
 				return nullIfNotFound;
 			});
-		}).thenCompose((punishment) -> {
-			if (punishment == null) {
-				return completedFuture(null);
-			}
-			// Success message
-			String rawMsg = messages().getString(
-					"removals." + type.getLowercaseNamePlural() + ".successful.message"); // removals.bans.successful.message
-			CentralisedFuture<SendableMessage> futureSuccessMessage = core().getFormatter().formatWithPunishment(rawMsg, punishment);
+		}
+		
+		private CentralisedFuture<?> sendSuccess(Punishment punishment) {
 
-			// Notification
-			CentralisedFuture<SendableMessage> futureNotify = core().getFormatter().formatOperator(sender.getOperator())
-					.thenCompose((operatorFormatted) -> {
-						String rawNotify = messages()
-								.getString("removals." + type.getLowercaseNamePlural() + ".successful.notification"); // removals.bans.successful.notification
-						rawNotify = rawNotify.replace("%UNOPERATOR%", operatorFormatted);
-						return core().getFormatter().formatWithPunishment(rawNotify, punishment);
-					});
+			CentralisedFuture<?> unenforcement = punishment.unenforcePunishment();
+			CentralisedFuture<SendableMessage> successMessage = core().getFormatter().formatWithPunishment(
+					section.successMessage(), punishment);
+			CentralisedFuture<SendableMessage> successNotify = core().getFormatter().formatWithPunishmentAndUnoperator(
+					section.successNotification(), punishment, sender().getOperator());
 
-			// Conclusion
-			return CompletableFuture.allOf(futureSuccessMessage, futureNotify).thenAccept((ignore) -> {
-				sender.sendMessage(futureSuccessMessage.join());
+			return core().getFuturesFactory().allOf(unenforcement, successMessage, successNotify).thenAccept((ignore) -> {
+				sender().sendMessage(successMessage.join());
 
-				core().getEnvironment().getEnforcer().sendToThoseWithPermission(
-							"libertybans." + type.getLowercaseName() + ".unnotify", futureNotify.join()); // libertybans.ban.unnotify
+				SendableMessage fullNotify = core().getFormatter().prefix(successNotify.join());
+				String notifyPerm = "libertybans." + type().getLowercaseName() + ".unnotify";
+				core().getEnvironment().getEnforcer().sendToThoseWithPermission(notifyPerm, fullNotify);
 			});
-		}).whenComplete(core()::debugFuture);
+		}
 	}
 
 }

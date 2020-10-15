@@ -32,8 +32,7 @@ public final class PlayerVictim extends Victim {
 	private final UUID uuid;
 	
 	private PlayerVictim(UUID uuid) {
-		super(VictimType.PLAYER);
-		this.uuid = uuid;
+		this.uuid = Objects.requireNonNull(uuid, "uuid");
 	}
 	
 	/**
@@ -41,10 +40,18 @@ public final class PlayerVictim extends Victim {
 	 * 
 	 * @param uuid the player UUID
 	 * @return the victim representation of the player
-	 * @throws NullPointerException if {@code uuid} is null
 	 */
 	public static PlayerVictim of(UUID uuid) {
-		return new PlayerVictim(Objects.requireNonNull(uuid, "uuid"));
+		return new PlayerVictim(uuid);
+	}
+	
+	/**
+	 * Gets this victim's type: {@link VictimType#PLAYER}
+	 * 
+	 */
+	@Override
+	public VictimType getType() {
+		return VictimType.PLAYER;
 	}
 	
 	/**

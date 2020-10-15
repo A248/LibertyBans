@@ -18,6 +18,8 @@
  */
 package space.arim.libertybans.env.bungee;
 
+import java.net.InetAddress;
+
 import space.arim.api.chat.SendableMessage;
 
 import space.arim.libertybans.core.env.ParallelisedListener;
@@ -54,9 +56,9 @@ public class ChatListener extends ParallelisedListener<ChatEvent, SendableMessag
 			return;
 		}
 		ProxiedPlayer player = (ProxiedPlayer) sender;
-		byte[] address = env.getEnforcer().getAddress(player).getAddress();
+		InetAddress address = env.getEnforcer().getAddress(player);
 		String command = (evt.isCommand()) ? evt.getMessage().substring(1) : evt.getMessage();
-		begin(evt, env.core.getEnforcer().checkChat(player.getUniqueId(), address, command));
+		begin(evt, env.core.getEnforcementCenter().checkChat(player.getUniqueId(), address, command));
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH)

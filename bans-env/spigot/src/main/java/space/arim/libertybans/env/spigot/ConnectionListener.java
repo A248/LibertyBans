@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.env.spigot;
 
+import java.net.InetAddress;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import space.arim.omnibus.util.ThisClass;
 
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.chat.serialiser.LegacyCodeSerialiser;
 
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
@@ -49,13 +51,13 @@ public class ConnectionListener extends SpigotParallelisedListener<AsyncPlayerPr
 		}
 		UUID uuid = evt.getUniqueId();
 		String name = evt.getName();
-		byte[] address = evt.getAddress().getAddress();
-		begin(evt, env.core.getEnforcer().executeAndCheckConnection(uuid, name, address));
+		InetAddress address = evt.getAddress();
+		begin(evt, env.core.getEnforcementCenter().executeAndCheckConnection(uuid, name, address));
 	}
 	
 	@Override
 	protected void absentFutureHandler(AsyncPlayerPreLoginEvent evt) {
-		if (evt.getLoginResult() != Result.ALLOWED) {
+		if (evt.getLoginResult() == Result.ALLOWED) {
 			logger.error(
 					"Critical: Player ({}, {}, {}) was previously blocked by the server or another plugin, "
 					+ "but since then, some plugin has *uncancelled* the blocking. "
@@ -73,7 +75,7 @@ public class ConnectionListener extends SpigotParallelisedListener<AsyncPlayerPr
 			logger.trace("Letting '{}' through the gates", evt.getName());
 			return;
 		}
-		evt.disallow(Result.KICK_BANNED, message.toLegacyMessageString(ChatColor.COLOR_CHAR));
+		evt.disallow(Result.KICK_BANNED, LegacyCodeSerialiser.getInstance(ChatColor.COLOR_CHAR).serialise(message));
 	}
 	
 }

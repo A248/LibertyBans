@@ -40,7 +40,7 @@ public class Commands {
 	
 	public Commands(LibertyBansCore core) {
 		this.core = core;
-		subCommands = List.of(new PunishCommands(this), new UnpunishCommands(this), new ReloadCommands(this));
+		subCommands = List.of(new PunishCommands(this), new UnpunishCommands(this), new AdminCommands(this));
 	}
 	
 	/*
@@ -49,21 +49,45 @@ public class Commands {
 	
 	public void execute(CmdSender sender, CommandPackage command) {
 		if (!sender.hasPermission("libertybans.commands")) {
-			sender.parseThenSend(core.getConfigs().getMessages().getString("all.base-permission-message"));
+			sender.sendMessage(core.getMessagesConfig().all().basePermissionMessage());
 			return;
 		}
 		if (!command.hasNext()) {
-			sender.parseThenSend("&7&lLibertyBans version " +  PluginInfo.VERSION);
+			sender.sendLiteralMessage("&7&lLibertyBans version " +  PluginInfo.VERSION);
 			return;
 		}
-		String firstArg = command.next().toLowerCase(Locale.ENGLISH);
+		String firstArg = command.next().toLowerCase(Locale.ROOT);
 		for (SubCommandGroup subCommand : subCommands) {
 			if (subCommand.matches(firstArg)) {
-				subCommand.execute(sender, command, firstArg);
+				CommandExecution execution = subCommand.execute(sender, command, firstArg);
+				execution.execute();
 				return;
 			}
 		}
-		sender.parseThenSend(core.getConfigs().getMessages().getString("all.usage"));
+		sendUsage(sender, command, firstArg.equals("usage"));
+	}
+	
+	/*
+	 * Usage
+	 */
+	
+	private void sendUsage(CmdSender sender, CommandPackage command, boolean explicit) {
+		if (!explicit) {
+			sender.sendMessage(core.getMessagesConfig().all().usage());
+		}
+		UsageSection[] sections = UsageSection.values();
+		int page = 1;
+		if (command.hasNext()) {
+			try {
+				page = Integer.parseInt(command.next());
+			} catch (NumberFormatException ignored) {}
+			if (page <= 0 || page > sections.length) {
+				page = 1;
+			}
+		}
+		UsageSection section = sections[page - 1];
+		sender.sendMessage(section.getContent());
+		sender.sendLiteralMessage("&ePage " + page + "/4. &7Use /libertybans usage <page> to navigate");
 	}
 	
 	/*
@@ -92,8 +116,7 @@ public class Commands {
 		}
 		return core.getUUIDMaster().fullLookupUUID(targetArg).thenApply((uuid) -> {
 			if (uuid == null) {
-				sender.parseThenSend(core.getConfigs().getMessages().getString("all.not-found.uuid")
-						.replace("%TARGET%", targetArg));
+				sender.sendMessage(core.getMessagesConfig().all().notFound().uuid().replaceText("%TARGET%", targetArg));
 				return null;
 			}
 			return PlayerVictim.of(uuid);

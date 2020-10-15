@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.ExtensionContext.Store.CloseableResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import space.arim.omnibus.defaultimpl.DefaultOmnibus;
+import space.arim.omnibus.OmnibusProvider;
 import space.arim.omnibus.util.ThisClass;
 
 import space.arim.uuidvault.api.UUIDVault;
@@ -44,7 +44,7 @@ import space.arim.libertybans.it.env.platform.QuackUUIDVault;
 
 public class QuackEnv extends AbstractEnv implements CloseableResource {
 
-	private final LibertyBansCore core;
+	final LibertyBansCore core;
 	private final QuackPlatform quackPlatform;
 	private final QuackHandle handle;
 	private final QuackEnvEnforcer enforcer;
@@ -54,7 +54,7 @@ public class QuackEnv extends AbstractEnv implements CloseableResource {
 	
 	public QuackEnv(Path folder, ConfigSpec spec) {
 		quackPlatform = new QuackPlatform();
-		core = new LibertyBansCoreOverride(new DefaultOmnibus(), folder, this, spec);
+		core = new LibertyBansCoreOverride(OmnibusProvider.getOmnibus(), folder, this, spec);
 		handle = new QuackHandle(quackPlatform);
 		enforcer = new QuackEnvEnforcer(this, quackPlatform);
 		uuidVault = new QuackUUIDVault(quackPlatform);

@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.env.spigot;
 
+import java.net.InetAddress;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -32,7 +33,7 @@ import org.bukkit.entity.Player;
 class SpigotEnforcer extends AbstractEnvEnforcer {
 
 	SpigotEnforcer(SpigotEnv env) {
-		super(env);
+		super(env.core, env);
 	}
 	
 	@Override
@@ -45,7 +46,7 @@ class SpigotEnforcer extends AbstractEnvEnforcer {
 	}
 	
 	@Override
-	public void sendToThoseWithPermission(String permission, SendableMessage message) {
+	protected void sendToThoseWithPermission0(String permission, SendableMessage message) {
 		runSyncNow(() -> {
 			for (Player player : env().getPlugin().getServer().getOnlinePlayers()) {
 				if (player.hasPermission(permission)) {
@@ -69,8 +70,7 @@ class SpigotEnforcer extends AbstractEnvEnforcer {
 	public void enforceMatcher(TargetMatcher matcher) {
 		runSyncNow(() -> {
 			for (Player player : env().getPlugin().getServer().getOnlinePlayers()) {
-				if (matcher.uuids().contains(player.getUniqueId())
-						|| matcher.addresses().contains(player.getAddress().getAddress())) {
+				if (matcher.matches(player.getUniqueId(), player.getAddress().getAddress())) {
 					matcher.callback().accept(player);
 				}
 			}
@@ -83,8 +83,8 @@ class SpigotEnforcer extends AbstractEnvEnforcer {
 	}
 
 	@Override
-	public byte[] getAddressFor(@PlatformPlayer Object player) {
-		return ((Player) player).getAddress().getAddress().getAddress();
+	public InetAddress getAddressFor(@PlatformPlayer Object player) {
+		return ((Player) player).getAddress().getAddress();
 	}
 
 }

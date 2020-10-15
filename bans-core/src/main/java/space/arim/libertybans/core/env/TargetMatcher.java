@@ -32,17 +32,13 @@ public class TargetMatcher {
 	private final Consumer<@PlatformPlayer Object> callback;
 	
 	public TargetMatcher(Set<UUID> uuids, Set<InetAddress> addresses, Consumer<@PlatformPlayer Object> callback) {
-		this.uuids = uuids;
-		this.addresses = addresses;
+		this.uuids = Set.copyOf(uuids);
+		this.addresses = Set.copyOf(addresses);
 		this.callback = callback;
 	}
 	
-	public Set<UUID> uuids() {
-		return uuids;
-	}
-	
-	public Set<InetAddress> addresses() {
-		return addresses;
+	public boolean matches(UUID uuid, InetAddress address) {
+		return uuids.contains(uuid) || addresses.contains(address);
 	}
 	
 	public Consumer<@PlatformPlayer Object> callback() {

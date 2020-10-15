@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.env.velocity;
 
+import java.net.InetAddress;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -55,8 +56,8 @@ class ConnectionListener extends VelocityParallelisedListener<LoginEvent, Sendab
 		Player player = evt.getPlayer();
 		UUID uuid = player.getUniqueId();
 		String name = player.getUsername();
-		byte[] address = player.getRemoteAddress().getAddress().getAddress();
-		return env.core.getEnforcer().executeAndCheckConnection(uuid, name, address);
+		InetAddress address = player.getRemoteAddress().getAddress();
+		return env.core.getEnforcementCenter().executeAndCheckConnection(uuid, name, address);
 	}
 	
 	@Override
@@ -80,7 +81,7 @@ class ConnectionListener extends VelocityParallelisedListener<LoginEvent, Sendab
 			logger.trace("Letting '{}' through the gates", evt.getPlayer().getUsername());
 			return;
 		}
-		evt.setResult(ComponentResult.denied(new AdventureTextConverter().convertFrom(message)));
+		evt.setResult(ComponentResult.denied(new AdventureTextConverter().convert(message)));
 	}
 	
 }

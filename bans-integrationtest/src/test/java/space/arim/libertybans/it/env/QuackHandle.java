@@ -21,10 +21,6 @@ package space.arim.libertybans.it.env;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
-import space.arim.omnibus.resourcer.ResourceHook;
-import space.arim.omnibus.resourcer.ResourceInfo;
-import space.arim.omnibus.resourcer.Resourcer;
-import space.arim.omnibus.resourcer.ShutdownHandler;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
@@ -33,7 +29,6 @@ import space.arim.omnibus.util.concurrent.impl.SimplifiedEnhancedExecutor;
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.PlatformPluginInfo;
-import space.arim.api.env.PlatformType;
 import space.arim.api.env.annote.PlatformCommandSender;
 import space.arim.api.env.annote.PlatformPlayer;
 import space.arim.api.env.realexecutor.RealExecutorFinder;
@@ -47,29 +42,6 @@ public class QuackHandle implements PlatformHandle {
 	
 	QuackHandle(QuackPlatform platform) {
 		this.platform = platform;
-	}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> ResourceHook<T> hookPlatformResource(Resourcer resourcer, Class<T> resourceClass) {
-		if (resourceClass == EnhancedExecutor.class) {
-			return resourcer.hookUsage(resourceClass, () -> {
-				EnhancedExecutor ee = new SimplifiedEnhancedExecutor() {
-					@Override
-					public void execute(Runnable command) {
-						new Thread(command).start();
-					}
-				};
-				return new ResourceInfo<T>("QuackPlatformEnhancedExecutor", (T) ee, ShutdownHandler.none());
-			});
-		}
-		if (resourceClass == FactoryOfTheFuture.class) {
-			return resourcer.hookUsage(resourceClass, () -> {
-				return new ResourceInfo<T>("QuackPlatformFuturesFactory",
-						(T) new IndifferentFactoryOfTheFuture(), ShutdownHandler.none());
-			});
-		}
-		throw new IllegalArgumentException();
 	}
 
 	@Override
@@ -94,16 +66,24 @@ public class QuackHandle implements PlatformHandle {
 		};
 	}
 
-	@SuppressWarnings("deprecation")
-	@Deprecated
-	@Override
-	public PlatformType getPlatformType() {
-		throw new UnsupportedOperationException();
-	}
-
 	@Override
 	public PlatformPluginInfo getImplementingPluginInfo() {
 		return new PlatformPluginInfo(this, platform);
+	}
+
+	@Override
+	public FactoryOfTheFuture createFuturesFactory() {
+		return new IndifferentFactoryOfTheFuture();
+	}
+
+	@Override
+	public EnhancedExecutor createEnhancedExecutor() {
+		return new SimplifiedEnhancedExecutor() {
+			@Override
+			public void execute(Runnable command) {
+				new Thread(command).start();
+			}
+		};
 	}
 
 }

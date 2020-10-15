@@ -18,95 +18,133 @@
  */
 package space.arim.libertybans.core.commands;
 
-import java.util.Arrays;
+import java.time.Duration;
 import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.api.chat.SendableMessage;
 
-import space.arim.libertybans.api.DraftPunishment;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.core.MiscUtil;
+import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.DraftPunishment;
+import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.core.config.AdditionsSection.PunishmentAddition;
+import space.arim.libertybans.core.config.AdditionsSection.ExclusivePunishmentAddition;
+import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.punish.MiscUtil;
 
 public class PunishCommands extends AbstractSubCommandGroup {
 
 	PunishCommands(Commands commands) {
-		super(commands, Arrays.stream(MiscUtil.punishmentTypes()).map((type) -> type.name().toLowerCase(Locale.ENGLISH))
-				.toArray(String[]::new));
+		super(commands, MiscUtil.punishmentTypes().stream().map((type) -> type.name().toLowerCase(Locale.ROOT)));
 	}
 
 	@Override
-	public void execute(CmdSender sender, CommandPackage command, String arg) {
-		execute(sender, command, PunishmentType.valueOf(arg.toUpperCase(Locale.ENGLISH)));
+	public CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
+		return new Execution(sender, command, PunishmentType.valueOf(arg.toUpperCase(Locale.ROOT)));
 	}
 	
-	private void execute(CmdSender sender, CommandPackage command, PunishmentType type) {
-		if (!sender.hasPermission("libertybans." + type.getLowercaseName() + ".do")) { // libertybans.ban.do
-			String path = "additions." + type.getLowercaseNamePlural() + ".permission.command"; // additions.bans.permission.command
-			sender.parseThenSend(messages().getString(path)); 
-			return;
+	private class Execution extends TypeSpecificExecution {
+
+		private final PunishmentAddition section;
+		
+		Execution(CmdSender sender, CommandPackage command, PunishmentType type) {
+			super(sender, command, type);
+			section = messages().additions().forType(type);
 		}
-		if (!command.hasNext()) {
-			sender.parseThenSend(messages().getString(
-					"additions." + type.getLowercaseNamePlural() + ".usage")); // additions.bans.usage
-			return;
+
+		@Override
+		public void execute() {
+			if (!sender().hasPermission("libertybans." + type().getLowercaseName() + ".command")) { // libertybans.ban.command
+				sender().sendMessage(section.permissionCommand()); 
+				return;
+			}
+			if (!command().hasNext()) {
+				sender().sendMessage(section.usage());
+				return;
+			}
+			execute0();
 		}
-		String targetArg = command.next();
-		commands.parseVictim(sender, targetArg).thenCompose((victim) -> {
-			if (victim == null) {
-				return completedFuture(null);
+		
+		private void execute0() {
+			String targetArg = command().next();
+			CentralisedFuture<?> future = commands.parseVictim(sender(), targetArg).thenCompose((victim) -> {
+				if (victim == null) {
+					return completedFuture(null);
+				}
+				return performEnact(victim, targetArg);
+
+			}).thenCompose((punishment) -> {
+				if (punishment == null) {
+					return completedFuture(null);
+				}
+				return enforceAndSendSuccess(punishment);
+			});
+			core().postFuture(future);
+		}
+		
+		private CentralisedFuture<Punishment> performEnact(Victim victim, String targetArg) {
+			final Duration duration;
+			if (type() != PunishmentType.KICK && command().hasNext()) {
+				String time = command().peek();
+				duration = new DurationParser(time, messages().formatting().permanentArguments()).parse();
+				if (!duration.isZero()) {
+					command().next();
+				}
+			} else {
+				duration = Duration.ZERO;
 			}
 			String reason;
-			if (command.hasNext()) {
-				reason = command.allRemaining();
-			} else if (core().getConfigs().getConfig().getBoolean("reasons.permit-blank")) {
+			MainConfig.Reasons reasonsCfg;
+			if (command().hasNext()) {
+				reason = command().allRemaining();
+			} else if ((reasonsCfg = core().getMainConfig().reasons()).permitBlank()) {
 				reason = "";
 			} else {
-				reason = core().getConfigs().getConfig().getString("reasons.default-reason");
+				reason = reasonsCfg.defaultReason();
 			}
-			DraftPunishment draftPunishment = new DraftPunishment.Builder().victim(victim)
-					.operator(sender.getOperator()).type(type).reason(reason)
-					.scope(core().getScopeManager().globalScope()).build();
+			DraftPunishment draftPunishment = core().getDrafter().draftBuilder()
+					.victim(victim).operator(sender().getOperator()).type(type()).reason(reason)
+					.duration(duration)
+					.build();
 
-			return core().getEnactor().enactPunishment(draftPunishment).thenApply((nullIfConflict) -> {
+			return draftPunishment.enactPunishmentWithoutEnforcement().thenApply((nullIfConflict) -> {
 				if (nullIfConflict == null) {
-					if (type.isSingular()) {
-						String configPath = "additions." + type.getLowercaseNamePlural() + ".error.conflicting"; // additions.bans.error.conflicting
-						sender.parseThenSend(messages().getString(configPath).replace("%TARGET%", targetArg));
-					} else {
-						sender.parseThenSend(messages().getString("misc.unknown-error"));
-					}
+					sendConflict(targetArg);
 				}
 				return nullIfConflict;
 			});
-		}).thenCompose((punishment) -> {
-			if (punishment == null) {
-				return completedFuture(null);
+		}
+		
+		private void sendConflict(String targetArg) {
+			SendableMessage message;
+			if (type().isSingular()) {
+				message = ((ExclusivePunishmentAddition) section).conflicting().replaceText("%TARGET%", targetArg);
+			} else {
+				message = messages().misc().unknownError();
 			}
-			// Success message
-			String rawMsg = messages().getString(
-					"additions." + type.getLowercaseNamePlural() + ".successful.message"); // additions.bans.successful.message
-			CentralisedFuture<SendableMessage> futureMsg = core().getFormatter().formatWithPunishment(rawMsg, punishment);
+			sender().sendMessage(message);
+		}
+		
+		private CentralisedFuture<?> enforceAndSendSuccess(Punishment punishment) {
 
-			// Enforcement
-			CentralisedFuture<?> enforcement = core().getEnforcer().enforce(punishment);
+			CentralisedFuture<?> enforcement = punishment.enforcePunishment();
+			CentralisedFuture<SendableMessage> successMessage = core().getFormatter().formatWithPunishment(
+					section.successMessage(), punishment);
+			CentralisedFuture<SendableMessage> successNotify = core().getFormatter().formatWithPunishment(
+					section.successNotification(), punishment);
 
-			// Notification
-			String configMsgPath = "additions." + type.getLowercaseNamePlural() + ".successful.notification"; // addition.bans.successful.notification
-			String rawNotify = messages().getString(configMsgPath);
-			CentralisedFuture<SendableMessage> futureNotify = core().getFormatter().formatWithPunishment(rawNotify, punishment);
+			return core().getFuturesFactory().allOf(enforcement, successMessage, successNotify).thenAccept((ignore) -> {
+				sender().sendMessage(successMessage.join());
 
-			// Conclusion
-			return CompletableFuture.allOf(futureMsg, enforcement, futureNotify).thenAccept((ignore) -> {
-				sender.sendMessage(futureMsg.join());
-
-				String notifyPerm = "libertybans." + type.getLowercaseName() + ".notify"; // libertybans.ban.notify
-				core().getEnvironment().getEnforcer().sendToThoseWithPermission(notifyPerm, futureNotify.join());
+				SendableMessage fullNotify = core().getFormatter().prefix(successNotify.join());
+				String notifyPerm = "libertybans." + type().getLowercaseName() + ".notify";
+				core().getEnvironment().getEnforcer().sendToThoseWithPermission(notifyPerm, fullNotify);
 			});
-		}).whenComplete(core()::debugFuture);
+		}
+		
 	}
 
 }

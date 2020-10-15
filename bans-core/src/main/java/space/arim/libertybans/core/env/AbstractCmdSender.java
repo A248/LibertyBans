@@ -36,6 +36,10 @@ public abstract class AbstractCmdSender implements CmdSender {
 		this.operator = operator;
 	}
 	
+	protected LibertyBansCore core() {
+		return core;
+	}
+	
 	@Override
 	public Operator getOperator() {
 		return operator;
@@ -43,12 +47,14 @@ public abstract class AbstractCmdSender implements CmdSender {
 	
 	@Override
 	public void sendMessage(SendableMessage message) {
+		SendableMessage prefix = core.getMessagesConfig().all().prefix();
+		message = prefix.concatenate(message);
 		core.getEnvironment().getPlatformHandle().sendMessage(rawSender, message);
 	}
 	
 	@Override
-	public void parseThenSend(String message) {
-		sendMessage(core.getFormatter().parseMessage(message));
+	public void sendLiteralMessage(String message) {
+		sendMessage(core.getFormatter().parseMessageWithPrefix(message));
 	}
 	
 	@Override

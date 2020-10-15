@@ -34,7 +34,7 @@ abstract class SpigotCmdSender extends AbstractCmdSender {
 
 	@Override
 	public boolean hasPermission(String permission) {
-		return getRawSender().hasPermission(permission);
+		return core().getFuturesFactory().supplySync(() -> getRawSender().hasPermission(permission)).join();
 	}
 
 	@Override

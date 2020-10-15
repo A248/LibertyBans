@@ -36,7 +36,7 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 class BungeeEnforcer extends AbstractEnvEnforcer {
 
 	BungeeEnforcer(BungeeEnv env) {
-		super(env);
+		super(env.core, env);
 	}
 	
 	@Override
@@ -45,7 +45,7 @@ class BungeeEnforcer extends AbstractEnvEnforcer {
 	}
 	
 	@Override
-	public void sendToThoseWithPermission(String permission, SendableMessage message) {
+	protected void sendToThoseWithPermission0(String permission, SendableMessage message) {
 		for (ProxiedPlayer player : env().getPlugin().getProxy().getPlayers()) {
 			if (player.hasPermission(permission)) {
 				env().getPlatformHandle().sendMessage(player, message);
@@ -64,8 +64,7 @@ class BungeeEnforcer extends AbstractEnvEnforcer {
 	@Override
 	public void enforceMatcher(TargetMatcher matcher) {
 		for (ProxiedPlayer player : env().getPlugin().getProxy().getPlayers()) {
-			if (matcher.uuids().contains(player.getUniqueId())
-					|| matcher.addresses().contains(getAddress(player))) {
+			if (matcher.matches(player.getUniqueId(), getAddress(player))) {
 				matcher.callback().accept(player);
 			}
 		}
@@ -85,8 +84,8 @@ class BungeeEnforcer extends AbstractEnvEnforcer {
 	}
 	
 	@Override
-	public byte[] getAddressFor(@PlatformPlayer Object player) {
-		return getAddress((ProxiedPlayer) player).getAddress();
+	public InetAddress getAddressFor(@PlatformPlayer Object player) {
+		return getAddress((ProxiedPlayer) player);
 	}
 	
 }

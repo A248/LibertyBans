@@ -40,7 +40,7 @@ class ChatListener extends VelocityParallelisedListener<PlayerChatEvent, Sendabl
 	@Override
 	protected CentralisedFuture<SendableMessage> beginFor(PlayerChatEvent evt) {
 		Player player = evt.getPlayer();
-		return env.core.getEnforcer().checkChat(player.getUniqueId(), player.getRemoteAddress().getAddress().getAddress(), null);
+		return env.core.getEnforcementCenter().checkChat(player.getUniqueId(), player.getRemoteAddress().getAddress(), null);
 	}
 
 	@Override

@@ -5,7 +5,7 @@
 	
 	<groupId>space.arim.libertybans</groupId>
 	<artifactId>bans-parent</artifactId>
-	<version>0.1.4-SNAPSHOT</version>
+	<version>0.2.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	
 	<name>LibertyBans</name>
@@ -15,32 +15,32 @@
 	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>11</maven.compiler.source>
-    	<maven.compiler.target>11</maven.compiler.target>
+		<project.build.outputTimestamp>2020-10-17T0:40:06Z</project.build.outputTimestamp>
 		
 		<!-- Testing dependencies -->
-		<junit.version>5.6.2</junit.version>
+		<junit.version>5.7.0</junit.version>
 		<mariadb4j.version>2.4.0</mariadb4j.version>
 		
-		<!-- Bumping dependency versions requires modification of bans-boostrap dependency info -->
+		<!-- Bumping dependency versions requires modification of dependency hashes -->
 		
 		<!-- API dependencies -->
-		<omnibus.version>0.15.5-SNAPSHOT</omnibus.version>
+		<omnibus.version>1.0.0-RC4</omnibus.version>
 		<uuidvault.version>0.5.4-SNAPSHOT</uuidvault.version>
 
 		<!-- Internal dependencies -->
 		<jdbcaesar.version>0.5.0</jdbcaesar.version>
-		<arimapi.version>0.19.13-SNAPSHOT</arimapi.version>
+		<dazzleconf.version>1.0.0-RC4</dazzleconf.version>
+		<arimapi.version>0.20.6-SNAPSHOT</arimapi.version>
 		<slf4j.version>1.7.30</slf4j.version>
 		<hikari.version>3.4.5</hikari.version>
 		<hsqldb.version>2.5.1</hsqldb.version>
 		<mariadb-connector.version>2.6.2</mariadb-connector.version>
 		<caffeine.version>2.8.5</caffeine.version>
-		
+		<morepaperlib.version>0.1.0-SNAPSHOT</morepaperlib.version>
 		
 		<!-- Plugin variables -->
 		<plugin.name>LibertyBans</plugin.name>
-		<plugin.annotationId>libertybans</plugin.annotationId> <!-- Used for @Plugin annotation on Sponge and Velocity -->
+		<plugin.annotationId>libertybans</plugin.annotationId> <!-- Used for @Plugin annotation on Velocity -->
 		<plugin.version>${project.version}</plugin.version>
 		<plugin.author>A248</plugin.author>
 		<plugin.url>${project.parent.url}</plugin.url>
@@ -138,7 +138,6 @@
 	<modules>
 		<module>bans-api</module>
 		<module>bans-bootstrap</module>
-		<module>bans-database</module>
 		<module>bans-core</module>
 		<module>bans-env</module>
 		<module>bans-dl</module>
@@ -172,11 +171,6 @@
 			</dependency>
 			<dependency>
 				<groupId>space.arim.libertybans</groupId>
-				<artifactId>bans-database</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>space.arim.libertybans</groupId>
 				<artifactId>bans-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -188,11 +182,6 @@
 			<dependency>
 				<groupId>space.arim.libertybans</groupId>
 				<artifactId>bans-env-bungee</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>space.arim.libertybans</groupId>
-				<artifactId>bans-env-sponge</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -232,15 +221,22 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.omnibus</groupId>
-				<artifactId>omnibus-all-shaded</artifactId>
-				<version>${omnibus.version}</version>
+				<groupId>org.mariadb.jdbc</groupId>
+				<artifactId>mariadb-java-client</artifactId>
+				<version>${mariadb-connector.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.hsqldb</groupId>
+				<artifactId>hsqldb</artifactId>
+				<version>${hsqldb.version}</version>
+				<scope>test</scope>
 			</dependency>
 
 			<!-- API dependencies -->
 			<dependency>
 				<groupId>space.arim.omnibus</groupId>
-				<artifactId>omnibus-core</artifactId>
+				<artifactId>omnibus</artifactId>
 				<version>${omnibus.version}</version>
 			</dependency>
 			<dependency>
@@ -256,6 +252,11 @@
 				<version>${jdbcaesar.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>space.arim.dazzleconf</groupId>
+				<artifactId>dazzleconf-ext-snakeyaml</artifactId>
+				<version>${dazzleconf.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>space.arim.api</groupId>
 				<artifactId>arimapi-all</artifactId>
 				<version>${arimapi.version}</version>
@@ -269,16 +270,6 @@
 				<groupId>com.zaxxer</groupId>
 				<artifactId>HikariCP</artifactId>
 				<version>${hikari.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mariadb.jdbc</groupId>
-				<artifactId>mariadb-java-client</artifactId>
-				<version>${mariadb-connector.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.hsqldb</groupId>
-				<artifactId>hsqldb</artifactId>
-				<version>${hsqldb.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.github.ben-manes.caffeine</groupId>

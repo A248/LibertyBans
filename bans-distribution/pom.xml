@@ -6,11 +6,11 @@
 	<parent>
 		<groupId>space.arim.libertybans</groupId>
 		<artifactId>bans-parent</artifactId>
-		<version>0.1.4-SNAPSHOT</version>
+		<version>0.2.0-SNAPSHOT</version>
 	</parent>
 	
 	<artifactId>bans-distribution</artifactId>
-	<description>Shaded combination of LibertyBans API, main plugin classes, and launcher.</description>
+	<description>Shaded combination of main plugin classes, and launcher.</description>
 	
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -27,11 +27,6 @@
 						</goals>
 						<configuration>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
-							<artifactSet>
-								<includes>
-									<include>space.arim.libertybans:*</include>
-								</includes>
-							</artifactSet>
 						</configuration>
 					</execution>
 				</executions>
@@ -48,12 +43,6 @@
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-bootstrap</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>

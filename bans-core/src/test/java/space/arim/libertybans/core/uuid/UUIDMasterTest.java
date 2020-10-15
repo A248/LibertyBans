@@ -28,16 +28,16 @@ public class UUIDMasterTest {
 	@Test
 	public void testBadNameArguments() {
 		// Valid name
-		assertTrue(UUIDMaster.validateNameArgument0("A248"));
+		assertTrue(UUIDManager.validateNameArgument0("A248"));
 		
 		// Invalid name with non alphanumeric/underscore
-		assertFalse(UUIDMaster.validateNameArgument0("NameWith=Sign"));
+		assertFalse(UUIDManager.validateNameArgument0("NameWith=Sign"));
 		
 		// Valid name with underscore
-		assertTrue(UUIDMaster.validateNameArgument0("Name_Underscored"));
+		assertTrue(UUIDManager.validateNameArgument0("Name_Underscored"));
 		
 		// Invalid name of too much length
-		assertFalse(UUIDMaster.validateNameArgument0("ThisNameHasMoreThan16Characters"));
+		assertFalse(UUIDManager.validateNameArgument0("ThisNameHasMoreThan16Characters"));
 	}
 	
 }

@@ -18,19 +18,6 @@
  */
 package space.arim.libertybans.core.database;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import space.arim.omnibus.util.ThisClass;
-
-import space.arim.api.configure.SingleKeyValueTransformer;
-import space.arim.api.configure.ValueTransformer;
-
 import space.arim.libertybans.bootstrap.StartupException;
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.Part;
@@ -40,8 +27,6 @@ public class DatabaseManager implements Part {
 	private final LibertyBansCore core;
 	
 	private volatile Database database;
-	
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
 	public DatabaseManager(LibertyBansCore core) {
 		this.core = core;
@@ -74,9 +59,12 @@ public class DatabaseManager implements Part {
 			throw new StartupException("Database restart failed");
 		}
 		currentDatabase.cancelRefreshTaskIfNecessary();
-		CompletableFuture.delayedExecutor(8, TimeUnit.SECONDS).execute(
-				(currentDatabase.getVendor() == database.getVendor()) ?
-				currentDatabase::close : currentDatabase::closeCompletely);
+
+		if (currentDatabase.getVendor() == database.getVendor()) {
+			currentDatabase.close();
+		} else {
+			currentDatabase.closeCompletely();
+		}
 
 		database.startRefreshTaskIfNecessary();
 		this.database = database;
@@ -86,62 +74,7 @@ public class DatabaseManager implements Part {
 	public void shutdown() {
 		Database database = this.database;
 		database.cancelRefreshTaskIfNecessary();
-		core.addDelayedShutdownHook(database::closeCompletely);
-	}
-	
-	/*
-	 * 
-	 * Configuration
-	 * 
-	 */
-	
-	private static boolean isAtLeast(Object value, int amount) {
-		return value instanceof Integer && ((Integer) value) >= amount;
-	}
-	
-	public static List<ValueTransformer> createConfigTransformers() {
-		var vendorTransformer = SingleKeyValueTransformer.create("rdms-vendor", (value) -> {
-			if (value instanceof Vendor) {
-				return value;
-			}
-			if (value instanceof String) {
-				String vendorName = (String) value;
-				switch (vendorName.toUpperCase(Locale.ENGLISH)) {
-				case "HYPERSQL":
-				case "HSQLDB":
-					return Vendor.HSQLDB;
-				case "MYSQL":
-				case "MARIADB":
-					return Vendor.MARIADB;
-				default:
-					break;
-				}
-			}
-			logger.warn("Unknown RDMS vendor {}", value);
-			return null;
-		});
-		var poolSizeTransformer = SingleKeyValueTransformer.createPredicate("connection-pool-size", (value) -> {
-			if (!isAtLeast(value, 0)) {
-				logger.warn("Bad connection pool size {}", value);
-				return true;
-			}
-			return false;
-		});
-		var timeoutTransformer = SingleKeyValueTransformer.createPredicate("timeouts.connection-timeout-seconds", (value) -> {
-			if (!isAtLeast(value, 1)) {
-				logger.warn("Bad connection timeout setting {}", value);
-				return true;
-			}
-			return false;
-		});
-		var lifetimeTransformer = SingleKeyValueTransformer.createPredicate("timeouts.max-lifetime-minutes", (value) -> {
-			if (!isAtLeast(value, 1)) {
-				logger.warn("Bad lifetime timeout setting {}", value);
-				return true;
-			}
-			return false;
-		});
-		return List.of(vendorTransformer, poolSizeTransformer, timeoutTransformer, lifetimeTransformer);
+		database.closeCompletely();
 	}
 	
 }

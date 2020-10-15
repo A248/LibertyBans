@@ -44,10 +44,23 @@ public class BungeeEnv extends AbstractEnv {
 	private final BungeeEnforcer enforcer;
 	
 	public BungeeEnv(Plugin plugin, Path folder) {
+		setUUIDVaultIfNecessary(plugin);
+
 		handle = new BungeePlatformHandle(plugin);
 		core = new LibertyBansCore(OmnibusProvider.getOmnibus(), folder, this);
 
 		enforcer = new BungeeEnforcer(this);
+	}
+	
+	private static void setUUIDVaultIfNecessary(Plugin plugin) {
+		if (UUIDVault.get() == null) {
+			new UUIDVaultBungee(plugin) {
+				@Override
+				protected boolean setInstancePassive() {
+					return super.setInstancePassive();
+				}
+			}.setInstancePassive();
+		}
 	}
 	
 	Plugin getPlugin() {
@@ -66,14 +79,6 @@ public class BungeeEnv extends AbstractEnv {
 	
 	@Override
 	protected void startup0() {
-		if (UUIDVault.get() == null) {
-			new UUIDVaultBungee(getPlugin()) {
-				@Override
-				protected boolean setInstancePassive() {
-					return super.setInstancePassive();
-				}
-			}.setInstancePassive();
-		}
 		core.startup();
 	}
 	

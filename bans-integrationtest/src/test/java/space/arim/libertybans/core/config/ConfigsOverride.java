@@ -18,47 +18,80 @@
  */
 package space.arim.libertybans.core.config;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.file.Path;
 
-import space.arim.api.configure.SingleKeyValueTransformer;
-import space.arim.api.configure.ValueTransformer;
-
-import space.arim.libertybans.core.LibertyBansCoreOverride;
+import space.arim.libertybans.core.selector.EnforcementConfig;
 import space.arim.libertybans.it.ConfigSpec;
 
 public class ConfigsOverride extends Configs {
 
 	private final ConfigSpec spec;
 	
-	public ConfigsOverride(LibertyBansCoreOverride core, ConfigSpec spec) {
-		super(core);
+	public ConfigsOverride(Path folder, ConfigSpec spec) {
+		super(folder);
 		this.spec = spec;
 	}
 	
 	@Override
-	List<ValueTransformer> sqlValueTransformers() {
-		return prepend(super.sqlValueTransformers(),
-				SingleKeyValueTransformer.create("rdms-vendor", (oldVendor) -> spec.getVendor()),
-				SingleKeyValueTransformer.create("auth-details.port", (oldPort) -> spec.getPort()),
-				SingleKeyValueTransformer.create("auth-details.user", (oldUser) -> "root"),
-				SingleKeyValueTransformer.create("auth-details.password", (oldPass) -> ""),
-				SingleKeyValueTransformer.create("auth-details.database", (oldDb) -> spec.getDatabase()));
+	public SqlConfig getSqlConfig() {
+		return new Delegator<>(SqlConfig.class, super.getSqlConfig()) {
+			@Override
+			Object replacementFor(SqlConfig original, String methodName) {
+				if (methodName.equals("vendor")) {
+					return spec.getVendor();
+				}
+				if (methodName.equals("authDetails")) {
+					return new SqlConfig.AuthDetails() {
+						@Override
+						public String host() {
+							return "localhost";
+						}
+						@Override
+						public int port() {
+							return spec.getPort();
+						}
+						@Override
+						public String database() {
+							return spec.getDatabase();
+						}
+						@Override
+						public String username() {
+							return "root";
+						}
+						@Override
+						public String password() {
+							return "";
+						}
+					};
+				}
+				return null;
+			}
+		}.proxy();
 	}
 	
 	@Override
-	List<ValueTransformer> configValueTransformers() {
-		var replacement = SingleKeyValueTransformer.create("enforcement.address-strictness",
-				(oldStrictness) -> spec.getAddressStrictness());
-		return prepend(super.configValueTransformers(), replacement);
-	}
-	
-	private static List<ValueTransformer> prepend(List<ValueTransformer> transformers, ValueTransformer...elements) {
-		List<ValueTransformer> result = new ArrayList<>(transformers);
-		for (ValueTransformer prepend : elements) {
-			result.add(0, prepend);
-		}
-		return List.copyOf(result);
+	public MainConfig getMainConfig() {
+		return new Delegator<>(MainConfig.class, super.getMainConfig()) {
+			@Override
+			Object replacementFor(MainConfig original, String methodName) {
+				if (methodName.equals("enforcement")) {
+					return enforcement(original);
+				}
+				return null;
+			}
+			private EnforcementConfig enforcement(MainConfig original) {
+				return new Delegator<>(EnforcementConfig.class, original.enforcement()) {
+					@Override
+					Object replacementFor(EnforcementConfig original, String methodName) {
+						if (methodName.equals("addressStrictness")) {
+							return spec.getAddressStrictness();
+						}
+						return null;
+					}
+				}.proxy();
+			}
+			
+		}.proxy();
 	}
 
 }

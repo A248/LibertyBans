@@ -33,7 +33,7 @@ abstract class ApplicabilityTestingBase {
 		this.core = core;
 		this.type = type;
 		this.operator = operator;
-		info = type + "/" + core.getDatabase().getVendor() + '/' + core.getConfigs().getAddressStrictness();
+		info = type + "/" + core.getDatabase().getVendor() + '/' + core.getMainConfig().enforcement().addressStrictness();
 	}
 	
 	public abstract void doTest();

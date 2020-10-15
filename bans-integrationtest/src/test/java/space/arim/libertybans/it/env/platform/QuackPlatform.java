@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import space.arim.omnibus.util.ThisClass;
 
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.chat.serialiser.LegacyCodeSerialiser;
 
 public class QuackPlatform {
 
@@ -55,7 +56,11 @@ public class QuackPlatform {
 	
 	void remove(QuackPlayer player, SendableMessage msg) {
 		players.values().remove(player);
-		logger.info("{} was kicked for '{}'", player.getName(), msg.toLegacyMessageString('&'));
+		logger.info("{} was kicked for '{}'", player.getName(), toDisplay(msg));
+	}
+	
+	String toDisplay(SendableMessage msg) {
+		return LegacyCodeSerialiser.getInstance('&').serialise(msg);
 	}
 	
 }

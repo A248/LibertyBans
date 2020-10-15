@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>space.arim.libertybans</groupId>
 		<artifactId>bans-parent</artifactId>
-		<version>0.1.4-SNAPSHOT</version>
+		<version>0.2.0-SNAPSHOT</version>
 	</parent>
 	
 	<artifactId>bans-core</artifactId>
@@ -27,12 +27,12 @@
 			<artifactId>bans-bootstrap</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-database</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>space.arim.jdbcaesar</groupId>
 			<artifactId>jdbcaesar</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.dazzleconf</groupId>
+			<artifactId>dazzleconf-ext-snakeyaml</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.api</groupId>

@@ -18,8 +18,10 @@
  */
 package space.arim.libertybans.bootstrap;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.lang.reflect.InaccessibleObjectException;
 import java.lang.reflect.InvocationTargetException;
@@ -29,7 +31,9 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -58,7 +62,7 @@ public class LibertyBansLauncher {
 		DependencyLoaderBuilder internalDepLoader = new DependencyLoaderBuilder()
 				.setExecutor(executor).setOutputDirectory(libsFolder.resolve("internal"));
 
-		var internalDeps = addInternalDepsStart();
+		Map<InternalDependency, CompletableFuture<Dependency>> internalDeps = addInternalDepsStart();
 		addApiDeps(apiDepLoader);
 		addInternalDepsFinish(internalDepLoader, internalDeps);
 
@@ -109,19 +113,28 @@ public class LibertyBansLauncher {
 	private void warnRelocation(String libName, String clazzName) {
 		Class<?> libClass = forName(clazzName);
 		if (libClass != null) {
-			String plugin = getPluginFor.apply(libClass);
-			warn("Plugin '" + ((plugin == null) ? "Unknown" : plugin) + "' has shaded the library '" + libName
-					+ "' but did not relocate it. This may or may not pose any problems. "
+			String pluginName = getPluginFor.apply(libClass);
+			warn("Plugin '" + ((pluginName.isEmpty()) ? "Unknown" : pluginName) + "' has shaded the library '"
+					+ libName + "' but did not relocate it. This may or may not pose any problems. "
 					+ "Contact the author of this plugin and tell them to relocate their dependencies.");
 		}
 	}
 	
 	private Dependency readDependency0(String simpleDependencyName) {
 		URL url = getClass().getClassLoader().getResource("dependencies/" + simpleDependencyName);
-		try (InputStream is = url.openStream()) {
+		try (InputStream inputStream = url.openStream();
+				InputStreamReader inputReader = new InputStreamReader(inputStream, StandardCharsets.US_ASCII);
+				BufferedReader buffReader = new BufferedReader(inputReader)) {
 
-			String[] value = new String(is.readAllBytes(), StandardCharsets.US_ASCII).split("\n");
-			return Dependency.of(value[0], value[1], value[2], value[3]);
+            List<String> lines = new ArrayList<>();
+            String line;
+            while ((line = buffReader.readLine()) != null) {
+            	lines.add(line);
+            }
+			if (lines.size() < 4) {
+				throw new IllegalArgumentException("Dependency file for " + simpleDependencyName + " is malformatted");
+			}
+			return Dependency.of(lines.get(0), lines.get(1), lines.get(2), lines.get(3));
 
 		} catch (IOException ex) {
 			throw new UncheckedIOException(ex);
@@ -138,11 +151,15 @@ public class LibertyBansLauncher {
 	 * 
 	 */
 	private void addApiDeps(DependencyLoaderBuilder loader) {
+		CompletableFuture<Dependency> selfApi = readDependency("self-api");
 		if (!classExists("space.arim.omnibus.Omnibus")) {
-			loader.addPair(readDependency0("omnibus"), Repositories.ARIM_GPL3);
+			loader.addPair(readDependency0("omnibus"), Repositories.ARIM_LESSER_GPL3);
 		}
 		if (!classExists("space.arim.uuidvault.api.UUIDVault")) {
 			loader.addPair(readDependency0("uuidvault"), Repositories.ARIM_LESSER_GPL3);
+		}
+		if (!skipSelfDependencies()) {
+			loader.addPair(selfApi.join(), Repositories.ARIM_AFFERO_GPL3);
 		}
 	}
 	
@@ -174,8 +191,16 @@ public class LibertyBansLauncher {
 			if (internalDep.clazz != null) {
 				warnRelocation(internalDep.name, internalDep.clazz);
 			}
+			if (skipSelfDependencies() && internalDep == InternalDependency.SELF_CORE) {
+				continue;
+			}
 			loader.addPair(internalDeps.get(internalDep).join(), internalDep.repo);
 		}
+	}
+	
+	/* Used in testing */
+	protected boolean skipSelfDependencies() {
+		return false;
 	}
 	
 	// Must use System.err because we do not know whether the platform uses slf4j or JUL

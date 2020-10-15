@@ -21,8 +21,10 @@ package space.arim.libertybans.core.database;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,11 +34,10 @@ import com.zaxxer.hikari.HikariConfig;
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-import space.arim.api.configure.ConfigAccessor;
-
 import space.arim.libertybans.bootstrap.StartupException;
 import space.arim.libertybans.core.LibertyBansCore;
-import space.arim.libertybans.driver.DriverCreator;
+import space.arim.libertybans.core.config.SqlConfig;
+import space.arim.libertybans.core.punish.MiscUtil;
 
 /**
  * Database settings creator, NOT thread safe!
@@ -48,7 +49,7 @@ class DatabaseSettings {
 
 	private final LibertyBansCore core;
 	
-	private ConfigAccessor config;
+	private SqlConfig config;
 	private Vendor vendor;
 	private HikariConfig hikariConf;
 	
@@ -64,7 +65,7 @@ class DatabaseSettings {
 	 * @return a database result, which should be checked for success or failure
 	 */
 	CentralisedFuture<DatabaseResult> create() {
-		return create(core.getConfigs().getSql());
+		return create(core.getConfigs().getSqlConfig());
 	}
 	
 	/**
@@ -73,9 +74,9 @@ class DatabaseSettings {
 	 * @param config the config accessor
 	 * @return a database result, which should be checked for success or failure
 	 */
-	CentralisedFuture<DatabaseResult> create(ConfigAccessor config) {
+	CentralisedFuture<DatabaseResult> create(SqlConfig config) {
 		this.config = config;
-		vendor = config.getObject("rdms-vendor", Vendor.class);
+		vendor = config.vendor();
 		hikariConf = new HikariConfig();
 
 		setHikariConfig();
@@ -86,9 +87,32 @@ class DatabaseSettings {
 		return tablesAndViewsCreation.thenApply((success) -> new DatabaseResult(database, success));
 	}
 	
+	private void setHikariConfig() {
+		setUsernameAndPassword();
+		setConfiguredDriver();
+
+		// Timeouts
+		SqlConfig.Timeouts timeouts = config.timeouts();
+		Duration connectionTimeout = Duration.ofSeconds(timeouts.connectionTimeoutSeconds());
+		Duration maxLifetime = Duration.ofMinutes(timeouts.maxLifetimeMinutes());
+		hikariConf.setConnectionTimeout(connectionTimeout.toMillis());
+		hikariConf.setMaxLifetime(maxLifetime.toMillis());
+
+		// Pool size
+		int poolSize = config.poolSize();
+		hikariConf.setMinimumIdle(poolSize);
+		hikariConf.setMaximumPoolSize(poolSize);
+
+		// Other settings
+		hikariConf.setAutoCommit(false);
+		hikariConf.setTransactionIsolation("TRANSACTION_REPEATABLE_READ");
+		hikariConf.setPoolName("LibertyBans-HikariCP-" + vendor.displayName());
+	}
+	
 	private void setUsernameAndPassword() {
-		String username = config.getString("auth-details.user");
-		String password = config.getString("auth-details.password");
+		SqlConfig.AuthDetails authDetails = config.authDetails();
+		String username = authDetails.username();
+		String password = authDetails.password();
 		if (vendor == Vendor.MARIADB && (username.equals("username") || password.equals("defaultpass"))) {
 			logger.warn("Not using MariaDB/MySQL because authentication details are still default");
 			vendor = Vendor.HSQLDB;
@@ -101,62 +125,70 @@ class DatabaseSettings {
 		hikariConf.setPassword(password);
 	}
 	
-	private void setHikariConfig() {
-		setUsernameAndPassword();
-
-		int poolSize = config.getInteger("connection-pool-size");
-		hikariConf.setMinimumIdle(poolSize);
-		hikariConf.setMaximumPoolSize(poolSize);
-
-		int connectionTimeout = config.getInteger("timeouts.connection-timeout-seconds");
-		int maxLifetime = config.getInteger("timeouts.max-lifetime-minutes");
-		hikariConf.setConnectionTimeout(TimeUnit.MILLISECONDS.convert(connectionTimeout, TimeUnit.SECONDS));
-		hikariConf.setMaxLifetime(TimeUnit.MILLISECONDS.convert(maxLifetime, TimeUnit.MINUTES));
-
-		setConfiguredDriver();
-
-		hikariConf.setAutoCommit(false);
-
-		@SuppressWarnings("unchecked")
-		Map<String, Object> connectProps = config.getObject("connection-properties", Map.class);
-		for (Map.Entry<String, Object> property : connectProps.entrySet()) {
-			String propName = property.getKey();
-			Object propValue = property.getValue();
-			logger.trace("Setting data source property {} to {}", propName, propValue);
-			hikariConf.addDataSourceProperty(propName, propValue);
-		}
-
-		hikariConf.setPoolName("LibertyBans-HikariCP-" + vendor.displayName());
-	}
-	
 	private void setConfiguredDriver() {
-		boolean jdbcUrl = config.getBoolean("use-traditional-jdbc-url");
-		DriverCreator driverCreator = new DriverCreator(hikariConf, jdbcUrl);
-
+		final String jdbcUrl;
 		switch (vendor) {
 
 		case MARIADB:
-			String host = config.getString("auth-details.host");
-			int port = config.getInteger("auth-details.port");
-			String database = config.getString("auth-details.database");
-			driverCreator.createMariaDb(host, port, database);
+			SqlConfig.AuthDetails authDetails = config.authDetails();
+			String host = authDetails.host();
+			int port = authDetails.port();
+			String database = authDetails.database();
+
+			hikariConf.addDataSourceProperty("databaseName", database);
+			jdbcUrl = "jdbc:mariadb://" + host + ":" + port + "/" + database + getMariaDbUrlProperties();
 			break;
 
 		case HSQLDB:
 			Path databaseFolder = core.getFolder().resolve("hypersql");
-			if (!Files.isDirectory(databaseFolder)) {
-				try {
-					Files.createDirectory(databaseFolder);
-				} catch (IOException ex) {
-					throw new StartupException("Cannot create database folder", ex);
-				}
+			try {
+				Files.createDirectories(databaseFolder);
+			} catch (IOException ex) {
+				throw new StartupException("Cannot create database folder", ex);
 			}
-			driverCreator.createHsqldb(databaseFolder + "/punishments-database");
+			Path databaseFile = databaseFolder.resolve("punishments-database").toAbsolutePath();
+			jdbcUrl = "jdbc:hsqldb:file:" + databaseFile;
 			break;
 
 		default:
-			throw new IllegalStateException("Unknown database vendor " + vendor);
-		}			
+			throw MiscUtil.unknownVendor(vendor);
+		}
+		if (config.useTraditionalJdbcUrl()) {
+			setDriverClassName(vendor.driverClassName());
+			hikariConf.setJdbcUrl(jdbcUrl);
+
+		} else {
+			hikariConf.setDataSourceClassName(vendor.dataSourceClassName());
+			hikariConf.addDataSourceProperty("url", jdbcUrl);
+		}
+	}
+	
+	private String getMariaDbUrlProperties() {
+		List<String> connectProps = new ArrayList<>();
+		for (Map.Entry<String, String> property : config.connectionProperties().entrySet()) {
+			String propName = property.getKey();
+			String propValue = property.getValue();
+			logger.trace("Adding connection property {} with value {}", propName, propValue);
+			connectProps.add(propName + "=" + propValue);
+		}
+		String properties = String.join("&", connectProps);
+		return (properties.isEmpty()) ? "" : "?" + properties;
+	}
+	
+	/**
+	 * Sets the driver class name utilising the context classloader
+	 * 
+	 * @param driverClassName the driver class name
+	 */
+	private void setDriverClassName(String driverClassName) {
+		Thread currentThread = Thread.currentThread();
+		ClassLoader initialContextLoader = currentThread.getContextClassLoader();
+		try {
+			currentThread.setContextClassLoader(getClass().getClassLoader());
+			hikariConf.setDriverClassName(driverClassName);
+		} finally {
+			currentThread.setContextClassLoader(initialContextLoader);
+		}
 	}
 	
 }

@@ -81,7 +81,7 @@ public class QuackPlayer {
 	}
 	
 	public void sendMessage(SendableMessage msg) {
-		logger.info("{} received '{}'", name, msg.toLegacyMessageString('&'));
+		logger.info("{} received '{}'", name, platform.toDisplay(msg));
 	}
 	
 	public void kickPlayer(SendableMessage msg) {

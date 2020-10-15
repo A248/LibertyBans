@@ -42,8 +42,6 @@ import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.morepaperlib.MorePaperLib;
 
 import org.bukkit.command.CommandMap;
-import org.bukkit.command.SimpleCommandMap;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class SpigotEnv extends AbstractEnv {
@@ -59,41 +57,25 @@ public class SpigotEnv extends AbstractEnv {
 	private final SpigotEnforcer enforcer;
 	
 	public SpigotEnv(JavaPlugin plugin, Path folder) {
+		setUUIDVaultIfNecessary(plugin);
+
 		core = new LibertyBansCore(OmnibusProvider.getOmnibus(), folder, this);
 		handle = new BukkitPlatformHandle(plugin);
 
 		enforcer = new SpigotEnforcer(this);
 
 		commandMap = new MorePaperLib(plugin).getServerCommandMap();
-		knownCommandsField = getKnownCommandsField(commandMap);
+		knownCommandsField = CommandHandler.getKnownCommandsField(commandMap);
 	}
 	
-	private static Field getKnownCommandsField(CommandMap commandMap) {
-		if (commandMap instanceof SimpleCommandMap) {
-			Field knownCommandsField;
-			try {
-				knownCommandsField = SimpleCommandMap.class.getDeclaredField("knownCommands");
-
-			} catch (NoSuchFieldException | SecurityException ex) {
-				logger.warn(
-						"Unable to find your server's CommandMap's 'knownCommands' field. "
-						+ CommandHandler.COMMAND_MAP_WARNING, ex);
-				knownCommandsField = null;
-			}
-			return knownCommandsField;
-		} else {
-			Class<?> replacementClass = commandMap.getClass();
-			String pluginName = "Unknown";
-			try {
-				pluginName = JavaPlugin.getProvidingPlugin(replacementClass).getDescription().getFullName();
-			} catch (IllegalArgumentException ignored) {}
-			logger.warn(
-					"Your server's CommandMap is not an instance of SimpleCommandMap. Rather, it is {} from plugin {}. "
-					+ "This could be disastrous and you should remove the offending plugin or speak to its author(s), "
-					+ "as many plugins assume SimpleCommandMap as the norm. "
-					+ CommandHandler.COMMAND_MAP_WARNING,
-					replacementClass, pluginName);
-			return null;
+	private static void setUUIDVaultIfNecessary(JavaPlugin plugin) {
+		if (UUIDVault.get() == null) {
+			new UUIDVaultSpigot(plugin) {
+				@Override
+				protected boolean setInstancePassive() {
+					return super.setInstancePassive();
+				}
+			}.setInstancePassive();
 		}
 	}
 	
@@ -121,14 +103,6 @@ public class SpigotEnv extends AbstractEnv {
 
 	@Override
 	protected void startup0() {
-		if (UUIDVault.get() == null) {
-			new UUIDVaultSpigot(getPlugin()) {
-				@Override
-				protected boolean setInstancePassive() {
-					return super.setInstancePassive();
-				}
-			}.setInstancePassive();
-		}
 		core.startup();
 	}
 	
@@ -145,11 +119,6 @@ public class SpigotEnv extends AbstractEnv {
 	@Override
 	protected void infoMessage(String message) {
 		logger.info(message);
-	}
-	
-	boolean hasPermissionSafe(Player player, String permission) {
-		// TODO: Account for non-thread safe permission plugins
-		return player.hasPermission(permission);
 	}
 
 	@Override

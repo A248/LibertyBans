@@ -27,20 +27,14 @@ package space.arim.libertybans.api;
  */
 public abstract class Victim {
 	
-	private final VictimType type;
-	
-	Victim(VictimType type) {
-		this.type = type;
-	}
+	Victim() {}
 	
 	/**
 	 * Gets the type of the victim
 	 * 
 	 * @return the victim type
 	 */
-	public VictimType getType() {
-		return type;
-	}
+	public abstract VictimType getType();
 
 	/**
 	 * A victim type. Corresponds to the subclasses of {@code Victim}
@@ -51,7 +45,7 @@ public abstract class Victim {
 	public enum VictimType {
 		
 		/**
-		 * A player
+		 * A player, identified by UUID
 		 * 
 		 */
 		PLAYER,
@@ -61,29 +55,15 @@ public abstract class Victim {
 		 */
 		ADDRESS;
 		
-		/**
-		 * Gets a VictimType from an ordinal, or {@code null} if no such
-		 * ordinal exists in the enum
-		 * 
-		 * @param ordinal the ordinal, 0 or 1
-		 * @return the corresponding victim type, or {@code null}
-		 */
-		public static VictimType fromOrdinal(int ordinal) {
-			switch (ordinal) {
-			case 0:
-				return PLAYER;
-			case 1:
-				return ADDRESS;
-			default:
-				return null;
-			}
-		}
-		
 	}
 	
 	@Override
 	public abstract int hashCode();
 	
+	/**
+	 * Evaluates whether this victim is the same as another
+	 * 
+	 */
 	@Override
 	public abstract boolean equals(Object object);
 	

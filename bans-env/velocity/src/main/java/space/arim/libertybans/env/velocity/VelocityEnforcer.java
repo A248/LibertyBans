@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.env.velocity;
 
+import java.net.InetAddress;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -32,7 +33,7 @@ import com.velocitypowered.api.proxy.Player;
 class VelocityEnforcer extends AbstractEnvEnforcer {
 
 	VelocityEnforcer(VelocityEnv env) {
-		super(env);
+		super(env.core, env);
 	}
 	
 	@Override
@@ -41,7 +42,7 @@ class VelocityEnforcer extends AbstractEnvEnforcer {
 	}
 
 	@Override
-	public void sendToThoseWithPermission(String permission, SendableMessage message) {
+	protected void sendToThoseWithPermission0(String permission, SendableMessage message) {
 		for (Player player : env().getServer().getAllPlayers()) {
 			if (player.hasPermission(permission)) {
 				env().getPlatformHandle().sendMessage(player, message);
@@ -57,8 +58,7 @@ class VelocityEnforcer extends AbstractEnvEnforcer {
 	@Override
 	public void enforceMatcher(TargetMatcher matcher) {
 		for (Player player : env().getServer().getAllPlayers()) {
-			if (matcher.uuids().contains(player.getUniqueId())
-					|| matcher.addresses().contains(player.getRemoteAddress().getAddress())) {
+			if (matcher.matches(player.getUniqueId(), player.getRemoteAddress().getAddress())) {
 				matcher.callback().accept(player);
 			}
 		}
@@ -70,8 +70,8 @@ class VelocityEnforcer extends AbstractEnvEnforcer {
 	}
 
 	@Override
-	public byte[] getAddressFor(@PlatformPlayer Object player) {
-		return ((Player) player).getRemoteAddress().getAddress().getAddress();
+	public InetAddress getAddressFor(@PlatformPlayer Object player) {
+		return ((Player) player).getRemoteAddress().getAddress();
 	}
 	
 }

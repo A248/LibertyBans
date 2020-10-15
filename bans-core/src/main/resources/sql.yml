@@ -16,7 +16,7 @@
 # What RDMS vendor category will you be using?
 # Available options:
 # - 'HSQLDB' - Local HyperSQL database. No additional setup required.
-# - 'MARIADB' - Requires a separate MariaDB or MySQL database. 'MYSQL' is accepted as an alias for this option.
+# - 'MARIADB' - Requires a separate MariaDB or MySQL database.
 rdms-vendor: 'HSQLDB'
 #
 # How large should the connection pool be?

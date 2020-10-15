@@ -57,7 +57,7 @@ public class SpigotPlugin extends JavaPlugin {
 					JavaPlugin potential = JavaPlugin.getProvidingPlugin(clazz);
 					return potential.getDescription().getFullName();
 				} catch (IllegalArgumentException ignored) {}
-				return null;
+				return "";
 			});
 			launchLoader = launcher.attemptLaunch().join();
 		} finally {

@@ -34,7 +34,7 @@ final class PluginClassLoaderReflection {
 				return desc.getName() + " v" + desc.getVersion();
 			}
 		} catch (IllegalArgumentException | NoSuchFieldException | SecurityException | IllegalAccessException ignored) {}
-		return null;
+		return "";
 	}
 	
 }

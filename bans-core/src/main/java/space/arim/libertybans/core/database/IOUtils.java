@@ -23,26 +23,18 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadFactory;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import space.arim.omnibus.util.ThisClass;
-
-public final class IOUtils {
-	
-	private static final Class<?> THIS_CLASS = ThisClass.get();
+final class IOUtils {
 	
 	private IOUtils() {}
 
 	private static InputStream getResource(String resourceName) throws IOException {
-		URL url = THIS_CLASS.getResource('/' + resourceName);
+		URL url = IOUtils.class.getResource('/' + resourceName);
 		if (url == null) {
 			throw new IllegalArgumentException("Resource " + resourceName + " not found");
 		}
@@ -54,7 +46,7 @@ public final class IOUtils {
 	 * 
 	 * @param resourceName the resource name
 	 * @return the resource content
-	 * @throws IllegalStateException if an IO error occurred
+	 * @throws UncheckedIOException if an IO error occurred
 	 */
 	static ByteArrayOutputStream readResource(String resourceName) {
 		try (InputStream is = getResource(resourceName)) {
@@ -63,7 +55,7 @@ public final class IOUtils {
 			is.transferTo(baos);
 			return baos;
 		} catch (IOException ex) {
-			throw new IllegalStateException("Failed to read internal resource " + resourceName, ex);
+			throw new UncheckedIOException("Failed to read internal resource " + resourceName, ex);
 		}
 	}
 	
@@ -76,7 +68,7 @@ public final class IOUtils {
 	 * 
 	 * @param resourceName the resource name
 	 * @return a mutable list of SQL queries
-	 * @throws IllegalStateException if an IO error occurred
+	 * @throws UncheckedIOException if an IO error occurred
 	 */
 	static List<String> readSqlQueries(String resourceName) {
 		try (InputStream inputStream = getResource(resourceName);
@@ -102,47 +94,8 @@ public final class IOUtils {
 			}
 			return result;
 		} catch (IOException ex) {
-			throw new IllegalStateException("Failed to read internal resource " + resourceName, ex);
+			throw new UncheckedIOException("Failed to read internal resource " + resourceName, ex);
 		}
-	}
-	
-	public static class ThreadFactoryImpl implements ThreadFactory {
-		
-		private final String prefix;
-		private int threadId = 1;
-		
-		private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-		
-		public ThreadFactoryImpl(String prefix) {
-			this.prefix = prefix;
-		}
-		
-		private synchronized int nextId() {
-			return threadId++;
-		}
-		
-		@Override
-		public Thread newThread(Runnable r) {
-			String name = prefix + nextId();
-			logger.debug("Spawning new thread {}", name);
-			return new Thread(r, name);
-		}
-		
-	}
-	
-	public static class SafeExecutorWrapper implements Executor {
-		
-		private final Executor delegate;
-		
-		public SafeExecutorWrapper(Executor delegate) {
-			this.delegate = delegate;
-		}
-
-		@Override
-		public void execute(Runnable command) {
-			delegate.execute(command);
-		}
-		
 	}
 	
 }

@@ -20,13 +20,16 @@ package space.arim.libertybans.it.test.applicable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.net.InetAddress;
 import java.util.UUID;
 
 import space.arim.libertybans.api.AddressVictim;
+import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.revoke.RevocationOrder;
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.it.util.TestingUtil;
 
@@ -40,18 +43,20 @@ public class NonapplicabilityTesting extends ApplicabilityTestingBase {
 	public void doTest() {
 		final UUID uuid = UUID.randomUUID();
 		final String name = TestingUtil.randomString(16);
-		final byte[] address = TestingUtil.randomAddress();
+		final InetAddress address = TestingUtil.randomAddress();
 
-		assertNull(core.getEnforcer().executeAndCheckConnection(uuid, name, address).join());
-		assertNull(core.getEnforcer().checkChat(uuid, address, null).join());
+		assertNull(core.getEnforcementCenter().executeAndCheckConnection(uuid, name, address).join());
+		assertNull(core.getEnforcementCenter().checkChat(uuid, address, null).join());
 
-		assertNull(core.getSelector().getApplicablePunishment(uuid, address, type).join());
-		assertNull(core.getMuteCacher().getCachedMute(uuid, address).join());
+		NetworkAddress netAddress = NetworkAddress.of(address);
+		assertNull(core.getSelector().getApplicablePunishment(uuid, netAddress, type).join());
+		assertNull(core.getSelector().getCachedMute(uuid, netAddress).join());
 
 		if (type.isSingular()) {
 			for (Victim victim : new Victim[] {PlayerVictim.of(uuid), AddressVictim.of(address)}) {
-				assertFalse(core.getEnactor().undoPunishmentByTypeAndVictim(type, victim).join());
-				assertNull(core.getEnactor().undoAndGetPunishmentByTypeAndVictim(type, victim).join());
+				RevocationOrder order = core.getRevoker().revokeByTypeAndVictim(type, victim);
+				assertFalse(order.undoPunishment().join());
+				assertNull(order.undoAndGetPunishment().join());
 			}
 		}
 	}

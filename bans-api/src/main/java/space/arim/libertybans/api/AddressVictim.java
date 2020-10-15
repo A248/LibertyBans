@@ -21,6 +21,8 @@ package space.arim.libertybans.api;
 import java.net.InetAddress;
 import java.util.Objects;
 
+import space.arim.libertybans.api.Victim.VictimType;
+
 /**
  * An IP address as the victim of a punishment
  * 
@@ -32,7 +34,6 @@ public final class AddressVictim extends Victim {
 	private final NetworkAddress address;
 	
 	private AddressVictim(NetworkAddress address) {
-		super(VictimType.ADDRESS);
 		this.address = address;
 	}
 	
@@ -67,6 +68,15 @@ public final class AddressVictim extends Victim {
 	 */
 	public static AddressVictim of(byte[] address) {
 		return new AddressVictim(NetworkAddress.of(address));
+	}
+	
+	/**
+	 * Gets this victim's type: {@link VictimType#ADDRESS}
+	 * 
+	 */
+	@Override
+	public VictimType getType() {
+		return VictimType.ADDRESS;
 	}
 	
 	/**

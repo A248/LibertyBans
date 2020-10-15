@@ -22,16 +22,21 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Random;
+import java.net.InetAddress;
 import java.util.UUID;
 
+import org.junit.jupiter.api.Assertions;
+
 import space.arim.libertybans.api.AddressVictim;
-import space.arim.libertybans.api.DraftPunishment;
+import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.DraftPunishment;
+import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.revoke.PunishmentRevoker;
+import space.arim.libertybans.api.revoke.RevocationOrder;
 import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.it.util.TestingUtil;
 
@@ -49,26 +54,32 @@ public class ApplicabilityTesting extends ApplicabilityTestingBase {
 	
 	private void testApplicableUUID() {
 		UUID uuid = UUID.randomUUID();
-		byte[] address = TestingUtil.randomAddress();
-		assertNull(core.getEnforcer().executeAndCheckConnection(uuid, "whoknows", address).join());
+		InetAddress address = TestingUtil.randomAddress();
+		assertNull(core.getEnforcementCenter().executeAndCheckConnection(uuid, "whoknows", address).join());
 		Victim victim = PlayerVictim.of(uuid);
-		testApplicable(victim, uuid, address);
+		testApplicable(victim, uuid, NetworkAddress.of(address));
 	}
 	
 	private void testApplicableAddress() {
 		UUID uuid = UUID.randomUUID();
-		byte[] address = TestingUtil.randomAddress();
-		assertNull(core.getEnforcer().executeAndCheckConnection(uuid, "another", address).join());
-		Victim victim = AddressVictim.of(address);
-		testApplicable(victim, uuid, address);
+		InetAddress address = TestingUtil.randomAddress();
+		assertNull(core.getEnforcementCenter().executeAndCheckConnection(uuid, "another", address).join());
+		AddressVictim victim = AddressVictim.of(address);
+		testApplicable(victim, uuid, victim.getAddress());
 	}
 	
-	private void testApplicable(Victim victim, UUID uuid, byte[] address) {
+	private void testApplicable(Victim victim, UUID uuid, NetworkAddress address) {
 
 		String reason = TestingUtil.randomString(TestingUtil.random().nextInt(100));
-		DraftPunishment draft = new DraftPunishment.Builder().type(type).victim(victim)
-				.operator(operator).reason(reason).scope(core.getScopeManager().globalScope()).build();
-		Punishment enacted = core.getEnactor().enactPunishment(draft).join();
+
+		DraftPunishment draft = core.getDrafter().draftBuilder().type(type).victim(victim)
+				.operator(operator).reason(reason).build();
+		Punishment enacted;
+		if (TestingUtil.randomBoolean()) {
+			enacted = draft.enactPunishment().join();
+		} else {
+			enacted = draft.enactPunishmentWithoutEnforcement().join();
+		}
 		assertNotNull(enacted, "Initial enactment failed for " + info);
 		TestingUtil.assertEqualDetails(draft, enacted);
 
@@ -81,35 +92,56 @@ public class ApplicabilityTesting extends ApplicabilityTestingBase {
 		assertNotNull(selected, "Applicability selection failed for " + info);
 		TestingUtil.assertEqualDetails(enacted, selected);
 
-		testUndo(victim, enacted);
+		testUndo(enacted);
 	}
 	
-	private void testUndo(Victim victim, Punishment enacted) {
-		Random random = TestingUtil.random();
-		if (random.nextBoolean()) {
-			assertTrue(core.getEnactor().undoPunishment(enacted).join());
-			return;
-		}
-		boolean singularAndChance = type.isSingular() && random.nextBoolean();
-		if (random.nextBoolean()) {
-			boolean result;
-			if (singularAndChance) {
-				result = core.getEnactor().undoPunishmentByTypeAndVictim(type, victim).join();
+	private void testUndo(Punishment enacted) {
+		int randomFrom1To4 = TestingUtil.random().nextInt(4) + 1;
+		PunishmentRevoker revoker = core.getRevoker();
+		RevocationOrder order;
+
+		switch (randomFrom1To4) {
+		case 1:
+			if (TestingUtil.randomBoolean()) {
+				assertTrue(enacted.undoPunishment().join());
 			} else {
-				result = core.getEnactor().undoPunishmentByIdAndType(enacted.getID(), enacted.getType()).join();
+				assertTrue(enacted.undoPunishmentWithoutUnenforcement().join());
 			}
-			assertTrue(result, "Undoing of enacted punishment failed for " + info);
-
-		} else {
-
-			Punishment retrieved;
-			if (singularAndChance) {
-				retrieved = core.getEnactor().undoAndGetPunishmentByTypeAndVictim(type, victim).join();
+			return;
+		case 2:
+			order = revoker.revokeById(enacted.getID());
+			break;
+		case 3:
+			order = revoker.revokeByIdAndType(enacted.getID(), type);
+			break;
+		case 4:
+			if (type.isSingular()) {
+				order = revoker.revokeByTypeAndVictim(type, enacted.getVictim());
 			} else {
-				retrieved = core.getEnactor().undoAndGetPunishmentByIdAndType(enacted.getID(), enacted.getType()).join();
+				order = revoker.revokeByIdAndType(enacted.getID(), type);
+			}
+			break;
+		default:
+			throw Assertions.<RuntimeException>fail("Testing code is broken");
+		}
+		if (TestingUtil.randomBoolean()) {
+			Punishment retrieved;
+			if (TestingUtil.randomBoolean()) {
+				retrieved = order.undoAndGetPunishment().join();
+			} else {
+				retrieved = order.undoAndGetPunishmentWithoutUnenforcement().join();
 			}
 			assertNotNull(retrieved, "Undoing and retrieving of enacted punishment failed for " + info);
 			TestingUtil.assertEqualDetails(enacted, retrieved);
+
+		} else {
+			boolean result;
+			if (TestingUtil.randomBoolean()) {
+				result = order.undoPunishment().join();
+			} else {
+				result = order.undoPunishmentWithoutUnenforcement().join();
+			}
+			assertTrue(result, "Undoing of enacted punishment failed for " + info);
 		}
 	}
 	

@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>space.arim.libertybans</groupId>
 		<artifactId>bans-parent</artifactId>
-		<version>0.1.4-SNAPSHOT</version>
+		<version>0.2.0-SNAPSHOT</version>
 	</parent>
 	
 	<artifactId>bans-dl</artifactId>
@@ -33,8 +33,11 @@
 							<createDependencyReducedPom>false</createDependencyReducedPom>
 							<artifactSet>
 								<includes>
-									<include>space.arim.libertybans:*</include>
 									<include>space.arim.licenser:licenser-agpl3</include>
+									<include>space.arim.libertybans:bans-core</include>
+									<include>space.arim.libertybans:bans-env-spigot</include>
+									<include>space.arim.libertybans:bans-env-bungee</include>
+									<include>space.arim.libertybans:bans-env-velocity</include>
 								</includes>
 							</artifactSet>
 						</configuration>
@@ -63,63 +66,19 @@
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-database</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-api</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-core</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-env-spigot</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-env-bungee</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-env-velocity</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 	</dependencies>
 </project>

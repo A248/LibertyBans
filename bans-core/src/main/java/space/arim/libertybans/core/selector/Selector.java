@@ -24,11 +24,12 @@ import java.util.UUID;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-import space.arim.libertybans.api.Punishment;
-import space.arim.libertybans.api.PunishmentSelection;
-import space.arim.libertybans.api.PunishmentSelector;
+import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.select.SelectionOrder;
+import space.arim.libertybans.api.select.SelectionOrderBuilder;
+import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.core.LibertyBansCore;
 
 public class Selector implements PunishmentSelector {
@@ -38,7 +39,6 @@ public class Selector implements PunishmentSelector {
 	private final SelectionImpl selectionImpl;
 	private final IDImpl idImpl;
 	private final ApplicableImpl applicableImpl;
-	private final OtherImpl otherImpl;
 	
 	public Selector(LibertyBansCore core) {
 		this.core = core;
@@ -46,7 +46,11 @@ public class Selector implements PunishmentSelector {
 		selectionImpl = new SelectionImpl(this);
 		idImpl = new IDImpl(this);
 		applicableImpl = new ApplicableImpl(this);
-		otherImpl = new OtherImpl(this);
+	}
+	
+	@Override
+	public SelectionOrderBuilder selectionBuilder() {
+		return new SelectionOrderBuilderImpl(this);
 	}
 	
 	/*
@@ -55,13 +59,11 @@ public class Selector implements PunishmentSelector {
 	 * 
 	 */
 	
-	@Override
-	public CentralisedFuture<Punishment> getFirstSpecificPunishment(PunishmentSelection selection) {
+	CentralisedFuture<Punishment> getFirstSpecificPunishment(SelectionOrder selection) {
 		return selectionImpl.getFirstSpecificPunishment(selection);
 	}
 	
-	@Override
-	public CentralisedFuture<Set<Punishment>> getSpecificPunishments(PunishmentSelection selection) {
+	CentralisedFuture<Set<Punishment>> getSpecificPunishments(SelectionOrder selection) {
 		return selectionImpl.getSpecificPunishments(selection);
 	}
 	
@@ -97,42 +99,26 @@ public class Selector implements PunishmentSelector {
 	 * 
 	 * @param uuid the player UUID
 	 * @param name the player name
-	 * @param address the player IP address
+	 * @param address the player address
 	 * @return a future which yields the ban itself, or null if there is none
 	 */
-	public CentralisedFuture<Punishment> executeAndCheckConnection(UUID uuid, String name, byte[] address) {
+	public CentralisedFuture<Punishment> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address) {
 		return applicableImpl.executeAndCheckConnection(uuid, name, address);
 	}
 	
 	@Override
-	public CentralisedFuture<Punishment> getApplicablePunishment(UUID uuid, byte[] address, PunishmentType type) {
+	public CentralisedFuture<Punishment> getApplicablePunishment(UUID uuid, NetworkAddress address, PunishmentType type) {
 		return applicableImpl.getApplicablePunishment(uuid, address, type);
 	}
 	
 	@Override
-	public CentralisedFuture<Punishment> getCachedMute(UUID uuid, byte[] address) {
+	public CentralisedFuture<Punishment> getCachedMute(UUID uuid, NetworkAddress address) {
 		Objects.requireNonNull(uuid, "uuid");
-		return core.getMuteCacher().getCachedMute(uuid, address.clone());
+		return core.getMuteCacher().getCachedMute(uuid, address);
 	}
 	
-	CentralisedFuture<Punishment> getApplicableMute(UUID uuid, byte[] address) {
+	CentralisedFuture<Punishment> getApplicableMute(UUID uuid, NetworkAddress address) {
 		return applicableImpl.getApplicableMute(uuid, address);
-	}
-	
-	/*
-	 * 
-	 * Other methods
-	 * 
-	 */
-	
-	@Override
-	public CentralisedFuture<Set<Punishment>> getHistoryForVictim(Victim victim) {
-		return otherImpl.getHistoryForVictim(victim);
-	}
-	
-	@Override
-	public CentralisedFuture<Set<Punishment>> getActivePunishmentsForType(PunishmentType type) {
-		return otherImpl.getActivePunishmentsForType(type);
 	}
 	
 }

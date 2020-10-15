@@ -18,52 +18,55 @@
  */
 package space.arim.libertybans.core;
 
-import space.arim.omnibus.resourcer.ResourceHook;
-import space.arim.omnibus.resourcer.Resourcer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
-import space.arim.api.env.PlatformHandle;
+import space.arim.libertybans.bootstrap.ShutdownException;
 
-public class Resources implements Part {
+class Resources implements Part {
 
 	private final LibertyBansCore core;
 	
-	private volatile HookBundle bundle;
+	private FactoryOfTheFuture futuresFactory;
+	private EnhancedExecutor enhancedExecutor;
+	
+	/**
+	 * Awaits the execution of all independent asynchronous execution chains.
+	 * Ensures all plugin operations can be shutdown.
+	 */
+	private final ExecutorService universalJoiner;
 	
 	Resources(LibertyBansCore core) {
 		this.core = core;
+		universalJoiner = Executors.newFixedThreadPool(1, core.newThreadFactory("Joiner"));
 	}
 	
 	FactoryOfTheFuture getFuturesFactory() {
-		return bundle.futuresFactory.getResource();
+		return futuresFactory;
 	}
 	
-	public EnhancedExecutor getEnhancedExecutor() {
-		return bundle.enhancedExecutor.getResource();
-	}
-	
-	private Resourcer getResourcer() {
-		return core.getOmnibus().getResourcer();
-	}
-	
-	private static class HookBundle {
-		final ResourceHook<FactoryOfTheFuture> futuresFactory;
-		final ResourceHook<EnhancedExecutor> enhancedExecutor;
-		
-		HookBundle(ResourceHook<FactoryOfTheFuture> futuresFactory, ResourceHook<EnhancedExecutor> enhancedExecutor) {
-			this.futuresFactory = futuresFactory;
-			this.enhancedExecutor = enhancedExecutor;
+	synchronized EnhancedExecutor getEnhancedExecutor() {
+		if (enhancedExecutor == null) {
+			enhancedExecutor = core.getEnvironment().getPlatformHandle().createEnhancedExecutor();
 		}
+		return enhancedExecutor;
+	}
+	
+	void postFuture(CentralisedFuture<?> future) {
+		universalJoiner.execute(future::join);
 	}
 
 	@Override
 	public void startup() {
-		Resourcer resourcer = getResourcer();
-		PlatformHandle handle = core.getEnvironment().getPlatformHandle();
-		ResourceHook<FactoryOfTheFuture> futuresFactory = handle.hookPlatformResource(resourcer, FactoryOfTheFuture.class);
-		ResourceHook<EnhancedExecutor> enhancedExecutor = handle.hookPlatformResource(resourcer, EnhancedExecutor.class);
-		bundle = new HookBundle(futuresFactory, enhancedExecutor);
+		futuresFactory = core.getEnvironment().getPlatformHandle().createFuturesFactory();
 	}
 	
 	@Override
@@ -71,13 +74,41 @@ public class Resources implements Part {
 
 	@Override
 	public void shutdown() {
-		final HookBundle bundle = this.bundle;
-		Resourcer resourcer = getResourcer();
-		core.addDelayedShutdownHook(() -> {
-			resourcer.unhookUsage(bundle.futuresFactory);
-			resourcer.unhookUsage(bundle.enhancedExecutor);
-		});
-		this.bundle = null;
+		universalJoiner.shutdown();
+		/*
+		 * On Bukkit, this prevents deadlocks.
+		 * 
+		 * By awaiting termination through the futures factory, the managed wait
+		 * implementation breaks dependencies arising from tasks needing the main thread
+		 * The main thread executes this shutdown() method, so if it is simply blocked,
+		 * tasks depending on it cannot complete.
+		 * 
+		 * On any platform other than Bukkit, this is uninmportant.
+		 */
+		boolean termination = futuresFactory.supplyAsync(() -> {
+			try {
+				return universalJoiner.awaitTermination(6L, TimeUnit.SECONDS);
+			} catch (InterruptedException ex) {
+				Thread.currentThread().interrupt();
+				getLogger().warn("Failed to shutdown all chains of asynchronous execution (Interrupted)", ex);
+				return true;
+			}
+		}).join();
+
+		if (!termination) {
+			getLogger().warn("Failed to shutdown all chains of asynchronous execution");
+		}
+		if (futuresFactory instanceof AutoCloseable) {
+			try {
+				((AutoCloseable) futuresFactory).close();
+			} catch (Exception ex) {
+				throw new ShutdownException("Cannot shutdown factory of the future", ex);
+			}
+		}
+	}
+	
+	private Logger getLogger() {
+		return LoggerFactory.getLogger(getClass());
 	}
 	
 }

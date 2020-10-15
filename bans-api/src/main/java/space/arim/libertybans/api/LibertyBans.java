@@ -21,20 +21,66 @@ package space.arim.libertybans.api;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
+import space.arim.libertybans.api.manager.PunishmentDatabase;
+import space.arim.libertybans.api.manager.PunishmentFormatter;
+import space.arim.libertybans.api.manager.ScopeManager;
+import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.api.revoke.PunishmentRevoker;
+import space.arim.libertybans.api.select.PunishmentSelector;
+
+/**
+ * The main entry point to the LibertyBans API
+ * 
+ * @author A248
+ *
+ */
 public interface LibertyBans {
 
 	Omnibus getOmnibus();
 	
 	FactoryOfTheFuture getFuturesFactory();
 	
-	PunishmentDatabase getDatabase();
+	/**
+	 * Gets the punishment drafter used for creating punishments
+	 * 
+	 * @return the punishment drafter
+	 */
+	PunishmentDrafter getDrafter();
 	
+	/**
+	 * Gets the punishment revoker used for undoing punishments
+	 * 
+	 * @return the punishment revoker
+	 */
+	PunishmentRevoker getRevoker();
+	
+	/**
+	 * Gets the punishment selector used to select punishments from the database
+	 * 
+	 * @return the punishment selector
+	 */
 	PunishmentSelector getSelector();
 	
-	PunishmentEnactor getEnactor();
+	/**
+	 * Gets the punishment database. Per the class javadoc of {@link PunishmentDatabase},
+	 * use of this method should be avoided in all but a few cases
+	 * 
+	 * @return the punishment database
+	 */
+	PunishmentDatabase getDatabase();
 	
-	PunishmentEnforcer getEnforcer();
+	/**
+	 * Gets the punishment formatter
+	 * 
+	 * @return the formatter manager
+	 */
+	PunishmentFormatter getFormatter();
 	
+	/**
+	 * Gets the scope manager used to create scopes
+	 * 
+	 * @return the scope manager
+	 */
 	ScopeManager getScopeManager();
 	
 }

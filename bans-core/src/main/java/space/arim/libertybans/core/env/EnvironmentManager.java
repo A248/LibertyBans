@@ -37,7 +37,7 @@ public class EnvironmentManager implements Part {
 	@Override
 	public void startup() {
 		listeners.addAll(core.getEnvironment().createListeners());
-		for (String alias : core.getConfigs().getConfig().getStringList("commands.aliases")) {
+		for (String alias : core.getMainConfig().commandAliases()) {
 			listeners.add(core.getEnvironment().createAliasCommand(alias));
 		}
 		listeners.forEach(PlatformListener::register);

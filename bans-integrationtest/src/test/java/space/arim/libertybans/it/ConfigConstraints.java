@@ -23,7 +23,7 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import space.arim.libertybans.core.database.Vendor;
-import space.arim.libertybans.core.config.AddressStrictness;
+import space.arim.libertybans.core.selector.AddressStrictness;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.core.env;
 
+import java.net.InetAddress;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -68,6 +69,6 @@ public interface EnvEnforcer {
 	
 	UUID getUniqueIdFor(@PlatformPlayer Object player);
 	
-	byte[] getAddressFor(@PlatformPlayer Object player);
+	InetAddress getAddressFor(@PlatformPlayer Object player);
 	
 }

@@ -39,7 +39,9 @@ import space.arim.libertybans.core.env.PlatformListener;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 class CommandHandler extends BukkitCommandSkeleton implements PlatformListener {
 
@@ -48,14 +50,45 @@ class CommandHandler extends BukkitCommandSkeleton implements PlatformListener {
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
-	static final String COMMAND_MAP_WARNING = 
-			"LibertyBans has limited support for this situation - the plugin will continue to work, but restarting it may"
+	private static final String COMMAND_MAP_WARNING = 
+			"LibertyBans has limited support for this situation - the plugin will continue to work, but restarting it may "
 			+ "encounter weird issues with command registration, as well as potential memory leaks.";
 	
 	CommandHandler(SpigotEnv env, String command, boolean alias) {
 		super(command);
 		this.env = env;
 		this.alias = alias;
+	}
+	
+	static Field getKnownCommandsField(CommandMap commandMap) {
+		if (!(commandMap instanceof SimpleCommandMap)) {
+			/*
+			 * CommandMap was replaced by a criminal plugin
+			 */
+			Class<?> replacementClass = commandMap.getClass();
+			String pluginName = "Unknown";
+			try {
+				pluginName = JavaPlugin.getProvidingPlugin(replacementClass).getDescription().getFullName();
+			} catch (IllegalArgumentException ignored) {}
+			logger.warn(
+					"Your server's CommandMap is not an instance of SimpleCommandMap. Rather, it is {} from plugin {}. "
+					+ "This could be disastrous and you should remove the offending plugin or speak to its author(s), "
+					+ "as many plugins assume SimpleCommandMap as the norm. "
+					+ COMMAND_MAP_WARNING,
+					replacementClass, pluginName);
+			return null;
+		}
+		Field knownCommandsField;
+		try {
+			knownCommandsField = SimpleCommandMap.class.getDeclaredField("knownCommands");
+
+		} catch (NoSuchFieldException | SecurityException ex) {
+			logger.warn(
+					"Unable to find your server's CommandMap's 'knownCommands' field. "
+					+ COMMAND_MAP_WARNING, ex);
+			knownCommandsField = null;
+		}
+		return knownCommandsField;
 	}
 	
 	@Override

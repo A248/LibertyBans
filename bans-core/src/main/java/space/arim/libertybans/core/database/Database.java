@@ -43,14 +43,16 @@ import space.arim.uuidvault.api.UUIDUtil;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.PunishmentDatabase;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Scope;
+import space.arim.libertybans.api.ServerScope;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.Victim.VictimType;
+import space.arim.libertybans.api.manager.PunishmentDatabase;
 import space.arim.libertybans.core.LibertyBansCore;
+import space.arim.libertybans.core.punish.MiscUtil;
 
 import space.arim.jdbcaesar.JdbCaesar;
+import space.arim.jdbcaesar.QuerySource;
 import space.arim.jdbcaesar.adapter.EnumNameAdapter;
 import space.arim.jdbcaesar.builder.JdbCaesarBuilder;
 import space.arim.jdbcaesar.transact.IsolationLevel;
@@ -80,7 +82,7 @@ public class Database implements PunishmentDatabase {
 		this.core = core;
 		this.vendor = vendor;
 
-		executor = Executors.newFixedThreadPool(poolSize, new IOUtils.ThreadFactoryImpl("LibertyBans-Database-"));
+		executor = Executors.newFixedThreadPool(poolSize, core.newThreadFactory("Database"));
 		HikariWrapper connectionSource = new HikariWrapper(new HikariDataSource(hikariConf));
 
 		JdbCaesarBuilder jdbCaesarBuilder = new JdbCaesarBuilder()
@@ -88,6 +90,7 @@ public class Database implements PunishmentDatabase {
 				.exceptionHandler((ex) -> {
 					logger.error("Error while executing a database query", ex);
 				})
+				.defaultFetchSize(1000)
 				.defaultIsolation(IsolationLevel.REPEATABLE_READ)
 				.rewrapExceptions(true)
 				.addAdapters(
@@ -97,14 +100,14 @@ public class Database implements PunishmentDatabase {
 						new JdbCaesarHelper.OperatorAdapter(),
 						new JdbCaesarHelper.ScopeAdapter(core.getScopeManager()),
 						new JdbCaesarHelper.UUIDBytesAdapter(),
-						new JdbCaesarHelper.InetAddressAdapter());
+						new JdbCaesarHelper.NetworkAddressAdapter());
 		jdbCaesar = jdbCaesarBuilder.build();
 	}
 	
 	void startRefreshTaskIfNecessary() {
 		if (getVendor() != Vendor.MARIADB) {
 			synchronized (this) {
-				hyperSqlRefreshTask = core.getResources().getEnhancedExecutor().scheduleRepeating(
+				hyperSqlRefreshTask = core.getEnhancedExecutor().scheduleRepeating(
 						new RefreshTaskRunnable(core.getDatabaseManager(), this),
 						Duration.ofHours(1L), DelayCalculators.fixedDelay());
 			}
@@ -194,15 +197,15 @@ public class Database implements PunishmentDatabase {
 	}
 	
 	public Victim getVictimFromResult(ResultSet resultSet) throws SQLException {
-		VictimType vType = VictimType.valueOf(resultSet.getString("victim_type"));
+		VictimType victimType = VictimType.valueOf(resultSet.getString("victim_type"));
 		byte[] bytes = resultSet.getBytes("victim");
-		switch (vType) {
+		switch (victimType) {
 		case PLAYER:
 			return PlayerVictim.of(UUIDUtil.fromByteArray(bytes));
 		case ADDRESS:
 			return AddressVictim.of(bytes);
 		default:
-			throw new IllegalStateException("Unknown victim type " + vType);
+			throw MiscUtil.unknownVictimType(victimType);
 		}
 	}
 
@@ -214,7 +217,7 @@ public class Database implements PunishmentDatabase {
 		return resultSet.getString("reason");
 	}
 
-	public Scope getScopeFromResult(ResultSet resultSet) throws SQLException {
+	public ServerScope getScopeFromResult(ResultSet resultSet) throws SQLException {
 		String server = resultSet.getString("scope");
 		if (server != null) {
 			return core.getScopeManager().specificScope(server);
@@ -228,6 +231,21 @@ public class Database implements PunishmentDatabase {
 	
 	public long getEndFromResult(ResultSet resultSet) throws SQLException {
 		return resultSet.getLong("end");
+	}
+	
+	public void clearExpiredPunishments(QuerySource<?> querySource, PunishmentType type, long currentTime) {
+		assert type != PunishmentType.KICK;
+		String query;
+		if (getVendor().hasDeleteFromJoin()) {
+			query = "DELETE `thetype` FROM `libertybans_" + type.getLowercaseNamePlural() + "` `thetype` "
+					+ "INNER JOIN `libertybans_punishments` `puns` ON `puns`.`id` = `thetype`.`id` WHERE "
+					+ "`puns`.`end` != 0 AND `puns`.`end` < ?";
+
+		} else {
+			query = "DELETE FROM `libertybans_" + type.getLowercaseNamePlural() + "` WHERE `id` IN "
+					+ "(SELECT `id` FROM `libertybans_punishments` `puns` WHERE `puns`.`end` != 0 AND `puns`.`end` < ?)";
+		}
+		querySource.query(query).params(currentTime).voidResult().execute();
 	}
 
 }

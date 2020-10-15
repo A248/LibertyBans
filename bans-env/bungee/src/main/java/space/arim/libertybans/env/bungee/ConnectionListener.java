@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.env.bungee;
 
+import java.net.InetAddress;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ import space.arim.api.env.chat.BungeeComponentConverter;
 
 import space.arim.libertybans.core.env.PlatformListener;
 
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
@@ -61,18 +63,19 @@ public class ConnectionListener implements Listener, PlatformListener {
 			logger.debug("Player '{}' is already blocked by the server or another plugin", evt.getConnection().getName());
 			return;
 		}
-		evt.registerIntent(env.getPlugin());
-		PendingConnection conn = evt.getConnection();
-		UUID uuid = conn.getUniqueId();
-		String name = conn.getName();
-		byte[] address = env.getEnforcer().getAddress(conn).getAddress();
+		PendingConnection connection = evt.getConnection();
+		UUID uuid = connection.getUniqueId();
+		String name = connection.getName();
+		InetAddress address = env.getEnforcer().getAddress(connection);
 
-		env.core.getEnforcer().executeAndCheckConnection(uuid, name, address).thenAccept((message) -> {
+		evt.registerIntent(env.getPlugin());
+
+		env.core.getEnforcementCenter().executeAndCheckConnection(uuid, name, address).thenAccept((message) -> {
 			if (message == null) {
 				logger.trace("Letting '{}' through the gates", name);
 			} else {
 				evt.setCancelled(true);
-				evt.setCancelReason(new BungeeComponentConverter().convertFrom(message));
+				evt.setCancelReason(new BungeeComponentConverter().convert(message).toArray(BaseComponent[]::new));
 			}
 		}).whenComplete((ignore, ex) -> {
 			if (ex != null) {

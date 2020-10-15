@@ -18,39 +18,41 @@
  */
 package space.arim.libertybans.core.config;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.function.UnaryOperator;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.uuidvault.api.UUIDUtil;
 
 import space.arim.api.chat.SendableMessage;
-import space.arim.api.configure.ConfigAccessor;
+import space.arim.api.chat.manipulator.SendableMessageManipulator;
+import space.arim.api.chat.serialiser.JsonSkSerialiser;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Scope;
+import space.arim.libertybans.api.ServerScope;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.manager.PunishmentFormatter;
+import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.core.LibertyBansCore;
-import space.arim.libertybans.core.MiscUtil;
+import space.arim.libertybans.core.punish.MiscUtil;
 
-public class Formatter {
+public class Formatter implements PunishmentFormatter {
 
 	private final LibertyBansCore core;
-	
-	private static final Entry<String, Long>[] timeUnits;
 
 	private static final long MARGIN_OF_INITIATION = 10; // seconds
 	
@@ -58,115 +60,199 @@ public class Formatter {
 		this.core = core;
 	}
 	
-	public SendableMessage parseMessage(String rawMessage) {
-		SendableMessage message = parseMessageNoPrefix(rawMessage);
-		ConfigAccessor messages = core.getConfigs().getMessages();
-		if (messages.getBoolean("all.prefix.enable")) {
-			SendableMessage prefix = messages.getObject("all.prefix.value", SendableMessage.class);
-			message = prefix.concatenate(message);
-		}
-		return message;
-	}
-	
-	private SendableMessage parseMessageNoPrefix(String rawMessage) {
-		return ConfigUtil.parseMessage(isJsonEnabled(), rawMessage);
-	}
-	
-	public boolean isJsonEnabled() {
-		return core.getConfigs().getMessages().getBoolean("formatting.enable-json");
+	private MessagesConfig messages() {
+		return core.getMessagesConfig();
 	}
 	
 	/**
-	 * Gets, formats, and parses the punishment message for a punishment. Punishment messages
-	 * do not use the global prefix.
+	 * Parses a message to send including the prefix
+	 * 
+	 * @param messageToParse the message to parse
+	 * @return the message parsed including the prefix
+	 */
+	public SendableMessage parseMessageWithPrefix(String messageToParse) {
+		return prefix(JsonSkSerialiser.getInstance().deserialise(messageToParse));
+	}
+	
+	/**
+	 * Prefixes a message and returns the prefixed result
+	 * 
+	 * @param message the message
+	 * @return the message including the prefix
+	 */
+	public SendableMessage prefix(SendableMessage message) {
+		return messages().all().prefix().concatenate(message);
+	}
+	
+	/**
+	 * Gets, formats, and parses the punishment message for a punishment.
 	 * 
 	 * @param punishment the punishment
 	 * @return a future yielding the formatted sendable message
 	 */
 	public CentralisedFuture<SendableMessage> getPunishmentMessage(Punishment punishment) {
-		CentralisedFuture<String> futureVictimFormatted = formatVictim(punishment.getVictim());
-		CentralisedFuture<String> futureOperatorFormatted = formatOperator(punishment.getOperator());
-
-		return futureVictimFormatted.thenCombineAsync(futureOperatorFormatted, (victimFormatted, operatorFormatted) -> {
-			String path = "additions." + punishment.getType().getLowercaseNamePlural() + ".layout";
-			String message = core.getConfigs().getMessages().getString(path);
-			return parseMessageNoPrefix(formatWithPunishment0(message, punishment, victimFormatted, operatorFormatted));
-		});
-	}
-	
-	private String formatWithPunishment0(String message, Punishment punishment, String victimFormatted,
-			String operatorFormatted) {
-
-		final long now = MiscUtil.currentTime();
-		final long start = punishment.getStart();
-		final long end = punishment.getEnd();
-
-		long timePassed = now - start;
-
-		String durationFormatted;
-		String timeEndRelFormatted;
-
-		if (end == 0L) {
-			// Permanent punishment
-			ConfigAccessor config = core.getConfigs().getMessages();
-			durationFormatted = config.getString("formatting.permanent-display.relative");
-			timeEndRelFormatted = config.getString("formatting.permanent-display.absolute");
-		} else {
-			// Temporary punishment
-			long duration = end - start;
-			durationFormatted = formatRelative(duration);
-
-			long timeRemaining;
-			// Using a margin of initiation prevents the "29 days, 23 hours, 59 minutes" issue
-			if (timePassed < MARGIN_OF_INITIATION) {
-				timeRemaining = duration;
-			} else {
-				timeRemaining = end - now;
-			}
-			timeEndRelFormatted = formatRelative(timeRemaining);
-		}
-
-		return message
-				.replace("%ID%", Integer.toString(punishment.getID()))
-				.replace("%TYPE%", formatType(punishment.getType()))
-				.replace("%VICTIM%", victimFormatted)
-				.replace("%VICTIM_ID%", formatVictimId(punishment.getVictim()))
-				.replace("%OPERATOR%", operatorFormatted)
-				.replace("%REASON%", punishment.getReason())
-				.replace("%SCOPE%", formatScope(punishment.getScope()))
-				.replace("%DURATION%", durationFormatted)
-				.replace("%TIME_START_ABS%", formatAbsolute(start))
-				.replace("%TIME_START_REL%", formatRelative(timePassed))
-				.replace("%TIME_END_ABS%", formatAbsolute(end))
-				.replace("%TIME_END_REL%", timeEndRelFormatted);
-	}
-	
-	private String formatScope(Scope scope) {
-		String scopeDisplay = core.getScopeManager().getServer(scope);
-		if (scopeDisplay == null) {
-			scopeDisplay = core.getConfigs().getMessages().getString("formatting.global-scope-display");
-		}
-		return scopeDisplay;
+		return formatWithPunishment(messages().additions().forType(punishment.getType()).layout(), punishment);
 	}
 	
 	/**
 	 * Parses and formats a message with a punishment
 	 * 
-	 * @param message the message
+	 * @param manipulator the message manipulator
 	 * @param punishment the punishment
 	 * @return a future of the resulting formatted sendable message
 	 */
-	public CentralisedFuture<SendableMessage> formatWithPunishment(String message, Punishment punishment) {
-		CentralisedFuture<String> futureVictimFormatted = formatVictim(punishment.getVictim());
-		CentralisedFuture<String> futureOperatorFormatted = formatOperator(punishment.getOperator());
-
-		return futureVictimFormatted.thenCombineAsync(futureOperatorFormatted, (victimFormatted, operatorFormatted) -> {
-			return parseMessage(formatWithPunishment0(message, punishment, victimFormatted, operatorFormatted));
-		});
+	public CentralisedFuture<SendableMessage> formatWithPunishment(SendableMessageManipulator manipulator,
+			Punishment punishment) {
+		return formatWithPunishment(manipulator, punishment, null);
+	}
+	
+	/**
+	 * Parses and formats a message with a punishment and an undoing operator. Used when punishments are revoked.
+	 * 
+	 * @param manipulator the message manipulator
+	 * @param punishment the punishment
+	 * @param unOperator the operator undoing the punishment
+	 * @return a future of the resulting formatted sendable message
+	 */
+	public CentralisedFuture<SendableMessage> formatWithPunishmentAndUnoperator(SendableMessageManipulator manipulator,
+			Punishment punishment, Operator unOperator) {
+		return formatWithPunishment(manipulator, punishment, Objects.requireNonNull(unOperator, "unOperator"));
 	}
 
+	private CentralisedFuture<SendableMessage> formatWithPunishment(SendableMessageManipulator manipulator,
+			Punishment punishment, Operator unOperator) {
+
+		EnumMap<FutureReplaceable, CentralisedFuture<String>> futureReplacements = new EnumMap<>(FutureReplaceable.class);
+		for (FutureReplaceable futureReplaceable : FutureReplaceable.values()) {
+
+			if (unOperator == null && futureReplaceable == FutureReplaceable.UNOPERATOR) {
+				continue;
+			}
+			if (manipulator.contains(futureReplaceable.getVariable())) {
+				CentralisedFuture<String> replacement = getFutureReplacement(futureReplaceable, punishment, unOperator);
+				futureReplacements.put(futureReplaceable, replacement);
+			}
+		}
+		return core.getFuturesFactory().supplyAsync(() -> {
+			return formatWithPunishment0(manipulator, punishment, unOperator, futureReplacements);
+		});
+	}
+	
+	private enum SimpleReplaceable {
+		ID,
+		TYPE,
+		VICTIM_ID,
+		OPERATOR_ID,
+		UNOPERATOR_ID,
+		REASON,
+		SCOPE,
+		DURATION,
+		START_DATE,
+		TIME_PASSED,
+		END_DATE,
+		TIME_REMAINING;
+		
+		String getVariable() {
+			return "%" + name() + "%";
+		}
+		
+	}
+	
+	private enum FutureReplaceable {
+		VICTIM,
+		OPERATOR,
+		UNOPERATOR;
+		
+		String getVariable() {
+			return "%" + name() + "%";
+		}
+	}
+	
+	private SendableMessage formatWithPunishment0(SendableMessageManipulator manipulator, Punishment punishment,
+			Operator unOperator, EnumMap<FutureReplaceable, CentralisedFuture<String>> futureReplacements) {
+
+		final long now = MiscUtil.currentTime();
+		final long start = punishment.getStartDateSeconds();
+
+		final long timePassed = now - start;
+
+		final String durationFormatted;
+		final String relativeEndFormatted;
+
+		if (punishment.isPermanent()) {
+			// Permanent punishment
+			MessagesConfig.Formatting.PermanentDisplay display = messages().formatting().permanentDisplay();
+			durationFormatted = display.duration();
+			relativeEndFormatted = display.relative();
+
+		} else {
+			final long end = punishment.getEndDateSeconds();
+			assert end != 0 : end;
+			// Temporary punishment
+			long duration = end - start;
+			durationFormatted = formatRelative(duration);
+
+			// Using a margin of initiation prevents the "29 days, 23 hours, 59 minutes" issue
+			if (timePassed < MARGIN_OF_INITIATION) {
+				relativeEndFormatted = durationFormatted;
+
+			} else {
+				long timeRemaining = end - now;
+				relativeEndFormatted = formatRelative(timeRemaining);
+			}
+		}
+
+		EnumMap<SimpleReplaceable, String> simpleReplacements = new EnumMap<>(SimpleReplaceable.class);
+		simpleReplacements.put(SimpleReplaceable.ID, Integer.toString(punishment.getID()));
+		simpleReplacements.put(SimpleReplaceable.TYPE, formatType(punishment.getType()));
+		simpleReplacements.put(SimpleReplaceable.VICTIM_ID, formatVictimId(punishment.getVictim()));
+		simpleReplacements.put(SimpleReplaceable.OPERATOR_ID, formatOperatorId(punishment.getOperator()));
+		if (unOperator != null)
+			simpleReplacements.put(SimpleReplaceable.UNOPERATOR_ID, formatOperatorId(unOperator));
+		simpleReplacements.put(SimpleReplaceable.REASON, punishment.getReason());
+		simpleReplacements.put(SimpleReplaceable.SCOPE, formatScope(punishment.getScope()));
+		simpleReplacements.put(SimpleReplaceable.DURATION, durationFormatted);
+		simpleReplacements.put(SimpleReplaceable.START_DATE, formatAbsoluteDate(punishment.getStartDate()));
+		simpleReplacements.put(SimpleReplaceable.TIME_PASSED, formatRelative(timePassed));
+		simpleReplacements.put(SimpleReplaceable.END_DATE, formatAbsoluteDate(punishment.getEndDate()));
+		simpleReplacements.put(SimpleReplaceable.TIME_REMAINING, relativeEndFormatted);
+
+		class Replacer implements UnaryOperator<String> {
+			@Override
+			public String apply(String text) {
+				for (Map.Entry<SimpleReplaceable, String> simpleReplacement : simpleReplacements.entrySet()) {
+					text = text.replace(
+							simpleReplacement.getKey().getVariable(),
+							simpleReplacement.getValue());
+				}
+				for (Map.Entry<FutureReplaceable, CentralisedFuture<String>> futureReplacement : futureReplacements.entrySet()) {
+					text = text.replace(
+							futureReplacement.getKey().getVariable(),
+							futureReplacement.getValue().join());
+				}
+				return text;
+			}
+		}
+		return manipulator.replaceText(new Replacer());
+	}
+	
+	
+	private CentralisedFuture<String> getFutureReplacement(FutureReplaceable futureReplaceable, Punishment punishment,
+			Operator unOperator) {
+		switch (futureReplaceable) {
+		case VICTIM:
+			return formatVictim(punishment.getVictim());
+		case OPERATOR:
+			return formatOperator(punishment.getOperator());
+		case UNOPERATOR:
+			return formatOperator(unOperator);
+		default:
+			throw new IllegalArgumentException("Unknown replaceable " + futureReplaceable);
+		}
+	}
+	
 	private String formatType(PunishmentType type) {
-		return type.toString();
+		return messages().formatting().punishmentTypeDisplay().forType(type);
 	}
 	
 	private String formatVictimId(Victim victim) {
@@ -176,7 +262,7 @@ public class Formatter {
 		case ADDRESS:
 			return formatAddressVictim((AddressVictim) victim);
 		default:
-			throw new IllegalStateException("Unknown victim type " + victim.getType());
+			throw MiscUtil.unknownVictimType(victim.getType());
 		}
 	}
 	
@@ -191,14 +277,25 @@ public class Formatter {
 		case ADDRESS:
 			return core.getFuturesFactory().completedFuture(formatAddressVictim((AddressVictim) victim));
 		default:
-			throw new IllegalStateException("Unknown victim type " + victim.getType());
+			throw MiscUtil.unknownVictimType(victim.getType());
 		}
 	}
 	
-	public CentralisedFuture<String> formatOperator(Operator operator) {
+	private String formatOperatorId(Operator operator) {
 		switch (operator.getType()) {
 		case CONSOLE:
-			return core.getFuturesFactory().completedFuture(core.getConfigs().getMessages().getString("formatting.console-display"));
+			return messages().formatting().consoleDisplay();
+		case PLAYER:
+			return UUIDUtil.toShortString(((PlayerOperator) operator).getUUID());
+		default:
+			throw MiscUtil.unknownOperatorType(operator.getType());
+		}
+	}
+	
+	private CentralisedFuture<String> formatOperator(Operator operator) {
+		switch (operator.getType()) {
+		case CONSOLE:
+			return core.getFuturesFactory().completedFuture(messages().formatting().consoleDisplay());
 		case PLAYER:
 			/*
 			 * Similarly in #formatVictim, this should be a complete future every time we call this ourselves,
@@ -206,7 +303,7 @@ public class Formatter {
 			 */
 			return core.getUUIDMaster().fullLookupName(((PlayerOperator) operator).getUUID());
 		default:
-			throw new IllegalStateException("Unknown operator type " + operator.getType());
+			throw MiscUtil.unknownOperatorType(operator.getType());
 		}
 	}
 	
@@ -214,54 +311,76 @@ public class Formatter {
 		return addressVictim.getAddress().toString();
 	}
 	
-	private String formatAbsolute(long time) {
-		ZoneId zoneId = core.getConfigs().getConfig().getObject("date-formatting.timezone", ZoneId.class);
-		ZonedDateTime zonedDate = Instant.ofEpochSecond(time).atZone(zoneId);
-		DateTimeFormatter formatter = core.getConfigs().getConfig().getObject("date-formatting.format", DateTimeFormatter.class);
-		return formatter.format(zonedDate);
-	}
-	
-	static {
-		List<Entry<String, Long>> list = List.of(
-				Map.entry("years", 31_536_000L), Map.entry("months", 2_592_000L),
-				Map.entry("weeks", 604_800L), Map.entry("days", 86_400L),
-				Map.entry("hours", 3_600L), Map.entry("minutes", 60L));
-		@SuppressWarnings("unchecked")
-		Entry<String, Long>[] asArray = (Entry<String, Long>[]) list.toArray(new Map.Entry<?, ?>[] {});
-		timeUnits = asArray;
-	}
-	
 	private String formatRelative(long diff) {
 		if (diff < 0) {
 			return formatRelative(-diff);
 		}
-		List<String> segments = new ArrayList<>();
-		for (Entry<String, Long> unit : timeUnits) {
-			String unitName = unit.getKey();
-			long unitLength = unit.getValue();
-			if (diff > unitLength && core.getConfigs().getMessages().getBoolean("misc.time." + unitName + ".enable")) {
+		MessagesConfig.Misc.Time timeConfig = messages().misc().time();
+		Map<ChronoUnit, String> fragments = timeConfig.fragments();
+		List<String> segments = new ArrayList<>(fragments.size());
+		for (Map.Entry<ChronoUnit, String> fragment : fragments.entrySet()) {
+			long unitLength = fragment.getKey().getDuration().toSeconds();
+			if (diff > unitLength) {
 				long amount = (diff / unitLength);
 				diff -= (amount * unitLength);
-				segments.add(core.getConfigs().getMessages().getString("misc.time." + unitName + ".message")
-						.replace('%' + unitName.toUpperCase(Locale.ENGLISH) + '%', Long.toString(amount)));
+				segments.add(fragment.getValue().replace("%VALUE%", Long.toString(amount)));
 			}
 		}
+		if (segments.isEmpty()) {
+			return timeConfig.fallbackSeconds().replace("%VALUE%", Long.toString(diff));
+		}
+		if (segments.size() == 1) {
+			return segments.get(0);
+		}
 		StringBuilder builder = new StringBuilder();
-		final boolean comma = core.getConfigs().getMessages().getBoolean("misc.time.grammar.comma");
+		final boolean comma = timeConfig.useComma();
 
 		for (int n = 0; n < segments.size(); n++) {
 			boolean lastElement = n == segments.size() - 1;
 			if (lastElement) {
-				builder.append(core.getConfigs().getMessages().getString("misc.time.grammar.and"));
-			} else if (comma) {
-				builder.append(',');
-			}
-			if (n != 0) {
-				builder.append(" ");
+				builder.append(timeConfig.and());
 			}
 			builder.append(segments.get(n));
+			if (!lastElement) {
+				if (comma) {
+					builder.append(',');
+				}
+				builder.append(" ");
+			}
 		}
 		return builder.toString();
+	}
+	
+	private String formatScope(ServerScope scope) {
+		String scopeDisplay = core.getScopeManager().getServer(scope);
+		if (scopeDisplay == null) {
+			scopeDisplay = messages().formatting().globalScopeDisplay();
+		}
+		return scopeDisplay;
+	}
+
+	@Override
+	public ZoneId getTimezone() {
+		return core.getMainConfig().dateFormatting().zoneId();
+	}
+	
+	@Override
+	public DateTimeFormatter getDateTimeFormatter() {
+		return core.getConfigs().getMainConfig().dateFormatting().formatAndPattern().getFormatter();
+	}
+	
+	@Override
+	public String formatAbsoluteDate(Instant date) {
+		if (date.equals(Instant.MAX)) { // implicit null check
+			return messages().formatting().permanentDisplay().absolute();
+		}
+		return getDateTimeFormatter().format(date.atZone(getTimezone()));
+	}
+
+	@Override
+	public String formatDuration(Duration duration) {
+		Objects.requireNonNull(duration, "duration");
+		return formatRelative(duration.toSeconds());
 	}
 	
 }

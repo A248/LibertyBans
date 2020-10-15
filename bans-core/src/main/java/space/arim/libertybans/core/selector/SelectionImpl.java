@@ -28,108 +28,80 @@ import java.util.Set;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.Punishment;
-import space.arim.libertybans.api.PunishmentSelection;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Scope;
+import space.arim.libertybans.api.ServerScope;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.core.MiscUtil;
-import space.arim.libertybans.core.SecurePunishment;
+import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.select.SelectionOrder;
 import space.arim.libertybans.core.database.Database;
+import space.arim.libertybans.core.punish.MiscUtil;
 
-class SelectionImpl extends SelectorImplGroup {
+class SelectionImpl extends SelectorImplMember {
 
 	SelectionImpl(Selector selector) {
 		super(selector);
 	}
 	
-	private static StringBuilder getColumns(PunishmentSelection selection) {
+	private static String getColumns(SelectionOrder selection) {
 		List<String> columns = new ArrayList<>();
-		columns.add("id");
+		columns.add("`id`");
 		if (selection.getType() == null) {
-			columns.add("type");
+			columns.add("`type`");
 		}
 		if (selection.getVictim() == null) {
-			columns.add("victim");
-			columns.add("victim_type");
+			columns.add("`victim`");
+			columns.add("`victim_type`");
 		}
 		if (selection.getOperator() == null) {
-			columns.add("operator");
+			columns.add("`operator`");
 		}
-		columns.add("reason");
+		columns.add("`reason`");
 		if (selection.getScope() == null) {
-			columns.add("scope");
+			columns.add("`scope`");
 		}
-		columns.add("start");
-		columns.add("end");
-		StringBuilder builder = new StringBuilder();
-		String[] columnArray = columns.toArray(new String[] {});
-		for (int n = 0; n < columnArray.length; n++) {
-			if (n != 0) {
-				builder.append(", ");
-			}
-			builder.append('`').append(columnArray[n]).append('`');
-		}
-		return builder;
+		columns.add("`start`");
+		columns.add("`end`");
+
+		return String.join(", ", columns);
 	}
 	
-	private static Map.Entry<StringBuilder, Object[]> getPredication(PunishmentSelection selection) {
-		boolean foundAny = false;
+	private static Map.Entry<String, Object[]> getPredication(SelectionOrder selection) {
+		List<String> predicates = new ArrayList<>();
 		List<Object> params = new ArrayList<>();
-		StringBuilder builder = new StringBuilder();
+
 		if (selection.getType() != null) {
-			builder.append("`type` = ?");
+			predicates.add("`type` = ?");
 			params.add(selection.getType());
-			if (!foundAny) {
-				foundAny = true;
-			}
 		}
 		if (selection.getVictim() != null) {
-			if (foundAny) {
-				builder.append(" AND ");
-			} else {
-				foundAny = true;
-			}
-			builder.append("`victim` = ? AND `victim_type` = ?");
+			predicates.add("`victim` = ? AND `victim_type` = ?");
 			Victim victim = selection.getVictim();
 			params.add(victim);
 			params.add(victim.getType());
 		}
 		if (selection.getOperator() != null) {
-			if (foundAny) {
-				builder.append(" AND ");
-			} else {
-				foundAny = true;
-			}
-			builder.append("`operator` = ?");
+			predicates.add("`operator` = ?");
 			params.add(selection.getOperator());
 		}
 		if (selection.getScope() != null) {
-			if (foundAny) {
-				builder.append(" AND ");
-			} else {
-				foundAny = true;
-			}
-			builder.append("`scope` = ?");
+			predicates.add("`scope` = ?");
 			params.add(selection.getScope());
 		}
 		if (selection.selectActiveOnly()) {
-			if (foundAny) {
-				builder.append(" AND ");
-			}
-			builder.append("(`end` = 0 OR `end` > ?)");
+			predicates.add("(`end` = 0 OR `end` > ?)");
 			params.add(MiscUtil.currentTime());
 		}
-		return Map.entry(builder, params.toArray());
+		return Map.entry(String.join(" AND ", predicates), params.toArray());
 	}
 	
-	private static SecurePunishment fromResultSetAndSelection(Database database, ResultSet resultSet,
-			PunishmentSelection selection) throws SQLException {
+	private Punishment fromResultSetAndSelection(Database database, ResultSet resultSet,
+			SelectionOrder selection) throws SQLException {
 		PunishmentType type = selection.getType();
 		Victim victim = selection.getVictim();
 		Operator operator = selection.getOperator();
-		Scope scope = selection.getScope();
-		return new SecurePunishment(resultSet.getInt("id"),
+		ServerScope scope = selection.getScope();
+		return core().getEnforcementCenter().createPunishment(
+				resultSet.getInt("id"),
 				(type == null) ? database.getTypeFromResult(resultSet) : type,
 				(victim == null) ? database.getVictimFromResult(resultSet) : victim,
 				(operator == null) ? database.getOperatorFromResult(resultSet) : operator,
@@ -139,9 +111,9 @@ class SelectionImpl extends SelectorImplGroup {
 				database.getEndFromResult(resultSet));
 	}
 	
-	private static Map.Entry<String, Object[]> getSelectionQuery(PunishmentSelection selection) {
-		StringBuilder columns = getColumns(selection);
-		Map.Entry<StringBuilder, Object[]> predication = getPredication(selection);
+	private static Map.Entry<String, Object[]> getSelectionQuery(SelectionOrder selection) {
+		String columns = getColumns(selection);
+		Map.Entry<String, Object[]> predication = getPredication(selection);
 
 		StringBuilder statementBuilder = new StringBuilder("SELECT ");
 		statementBuilder.append(columns).append(" FROM `libertybans_");
@@ -155,14 +127,14 @@ class SelectionImpl extends SelectorImplGroup {
 		}
 		statementBuilder.append('`');
 
-		String predicates = predication.getKey().toString();
+		String predicates = predication.getKey();
 		if (!predicates.isEmpty()) {
 			statementBuilder.append(" WHERE ").append(predicates);
 		}
 		return Map.entry(statementBuilder.toString(), predication.getValue());
 	}
 	
-	CentralisedFuture<Punishment> getFirstSpecificPunishment(PunishmentSelection selection) {
+	CentralisedFuture<Punishment> getFirstSpecificPunishment(SelectionOrder selection) {
 		if (selection.selectActiveOnly() && selection.getType() == PunishmentType.KICK) {
 			// Kicks cannot possibly be active. They are all history
 			return core().getFuturesFactory().completedFuture(null);
@@ -179,7 +151,7 @@ class SelectionImpl extends SelectorImplGroup {
 		});
 	}
 	
-	CentralisedFuture<Set<Punishment>> getSpecificPunishments(PunishmentSelection selection) {
+	CentralisedFuture<Set<Punishment>> getSpecificPunishments(SelectionOrder selection) {
 		if (selection.selectActiveOnly() && selection.getType() == PunishmentType.KICK) {
 			// Kicks cannot possibly be active. They are all history
 			return core().getFuturesFactory().completedFuture(Set.of());
@@ -191,7 +163,7 @@ class SelectionImpl extends SelectorImplGroup {
 					query.getKey())
 					.params(query.getValue())
 					.setResult((resultSet) -> {
-						return (Punishment) fromResultSetAndSelection(database, resultSet, selection);
+						return fromResultSetAndSelection(database, resultSet, selection);
 					}).onError(Set::of).execute();
 			return Set.copyOf(result);
 		});

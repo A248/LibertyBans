@@ -50,8 +50,7 @@ additions:
     usage: '&cUsage: /ban &e<player> [time] <reason>&c.'
     permission:
       command: '&cYou may not ban other players.'
-    error:
-      conflicting: '&c&o%TARGET%&r&7 is already banned!'
+    conflicting: '&c&o%TARGET%&r&7 is already banned!'
     successful:
       message: '&aBanned &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.'
       notification: '&c&o%OPERATOR%&r&7 banned &c&o%VICTIM%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
@@ -69,8 +68,7 @@ additions:
     usage: '&cUsage: /mute &e<player> [time] <reason>&c.'
     permission:
       command: '&cYou may not mute other players.'
-    error:
-      conflicting: '&c&o%TARGET%&r&7 is already muted!'
+    conflicting: '&c&o%TARGET%&r&7 is already muted!'
     successful:
       message: '&aMuted &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.'
       notification: '&c&o%OPERATOR%&r&7 muted &c&o%VICTIM%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.'
@@ -134,7 +132,7 @@ removals:
       message: '&7Unmuted &c&o%VICTIM%&r&7.'
       notification: '&c&o%UNOPERATOR%&r&7 unmuted &c&o%VICTIM%&r&7.'
 # Messages regarding /banlist, /mutelist, /history, /warns, /blame
-list:
+lists:
   banlist:
     usage: '&cUsage: /banlist [page].'
     per-page: 10

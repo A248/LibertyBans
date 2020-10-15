@@ -20,7 +20,7 @@ package space.arim.libertybans.bootstrap;
 
 import space.arim.libertybans.bootstrap.depend.Repository;
 
-public enum InternalDependency {
+enum InternalDependency {
 
 	HIKARICP("HikariCP", "com.zaxxer.hikari.HikariConfig", "hikaricp"),
 	
@@ -30,10 +30,12 @@ public enum InternalDependency {
 	CAFFEINE("Caffeine", "com.github.benmanes.caffeine.cache.Caffeine", "caffeine"),
 	
 	JDBCAESAR("jdbcaesar", Repositories.ARIM_LESSER_GPL3),
+	DAZZLECONF_CORE("dazzleconf-core", Repositories.ARIM_LESSER_GPL3),
+	DAZZLECONF_EXT_SNAKEYAML("dazzleconf-ext-snakeyaml", Repositories.ARIM_LESSER_GPL3),
 	ARIMAPI("arimapi", Repositories.ARIM_GPL3),
 	MOREPAPERLIB("morepaperlib", Repositories.ARIM_LESSER_GPL3),
 	
-	SELF("self", Repositories.ARIM_AFFERO_GPL3);
+	SELF_CORE("self-core", Repositories.ARIM_AFFERO_GPL3);
 	
 	final String name;
 	final String clazz;

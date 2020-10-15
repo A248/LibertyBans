@@ -32,10 +32,27 @@ public final class ConsoleOperator extends Operator {
 	 */
 	public static final ConsoleOperator INSTANCE = new ConsoleOperator();
 	
-	private ConsoleOperator() {
-		super(OperatorType.CONSOLE);
+	private ConsoleOperator() {}
+	
+	/**
+	 * Gets this operator's type: {@link OperatorType#CONSOLE}
+	 * 
+	 */
+	@Override
+	public OperatorType getType() {
+		return OperatorType.CONSOLE;
 	}
 
+	@Override
+	public int hashCode() {
+		return System.identityHashCode(this);
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return this == object;
+	}
+	
 	@Override
 	public String toString() {
 		return "ConsoleOperator.INSTANCE";

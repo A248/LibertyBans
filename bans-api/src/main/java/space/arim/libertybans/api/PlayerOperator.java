@@ -32,7 +32,6 @@ public final class PlayerOperator extends Operator {
 	private final UUID uuid;
 	
 	private PlayerOperator(UUID uuid) {
-		super(OperatorType.PLAYER);
 		this.uuid = uuid;
 	}
 	
@@ -41,10 +40,18 @@ public final class PlayerOperator extends Operator {
 	 * 
 	 * @param uuid the player UUID
 	 * @return the operator representation of the player
-	 * @throws NullPointerException if {@code uuid} is null
 	 */
 	public static PlayerOperator of(UUID uuid) {
 		return new PlayerOperator(Objects.requireNonNull(uuid, "uuid"));
+	}
+	
+	/**
+	 * Gets this operator's type: {@link OperatorType#PLAYER}
+	 * 
+	 */
+	@Override
+	public OperatorType getType() {
+		return OperatorType.PLAYER;
 	}
 	
 	/**

@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>space.arim.libertybans</groupId>
 		<artifactId>bans-parent</artifactId>
-		<version>0.1.4-SNAPSHOT</version>
+		<version>0.2.0-SNAPSHOT</version>
 	</parent>
 	
 	<artifactId>bans-api</artifactId>
@@ -14,7 +14,11 @@
 	
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
-		<finalName>${project.name}_v${project.version}</finalName>
+
+		<!-- This is the same name format used by the dependency downloader -->
+		<!-- For quick testing, drag and drop the output jar to LibertyBans/libs/api/ -->
+		<finalName>${project.groupId}.${project.name}_${project.version}</finalName>
+
 		<plugins>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -62,17 +66,22 @@
 	<dependencies>
 		<dependency>
 			<groupId>space.arim.omnibus</groupId>
-			<artifactId>omnibus-core</artifactId>
+			<artifactId>omnibus</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.uuidvault</groupId>
 			<artifactId>api</artifactId>
 		</dependency>
 		
+		<!-- Used for WikiExamples -->
 		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
 		</dependency>
 	</dependencies>
 </project>

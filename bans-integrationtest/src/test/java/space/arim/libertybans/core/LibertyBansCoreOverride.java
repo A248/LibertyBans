@@ -33,7 +33,7 @@ public class LibertyBansCoreOverride extends LibertyBansCore {
 	
 	public LibertyBansCoreOverride(Omnibus omnibus, Path folder, AbstractEnv environment, ConfigSpec spec) {
 		super(omnibus, folder, environment);
-		configs = new ConfigsOverride(this, spec);
+		configs = new ConfigsOverride(folder, spec);
 	}
 	
 	@Override

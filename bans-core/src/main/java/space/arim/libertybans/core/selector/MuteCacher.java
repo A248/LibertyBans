@@ -18,13 +18,15 @@
  */
 package space.arim.libertybans.core.selector;
 
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+
+import org.slf4j.LoggerFactory;
 
 import com.github.benmanes.caffeine.cache.AsyncCacheLoader;
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
@@ -33,8 +35,10 @@ import com.github.benmanes.caffeine.cache.Scheduler;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-import space.arim.libertybans.api.Punishment;
+import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.core.LibertyBansCore;
 
 public class MuteCacher {
@@ -54,50 +58,75 @@ public class MuteCacher {
 			@Override
 			public @NonNull CentralisedFuture<Optional<Punishment>> asyncLoad(@NonNull MuteCacheKey key,
 					@NonNull Executor executor) {
-				return core.getSelector().getApplicableMute(key.uuid, key.address).thenApply(Optional::ofNullable);
+				return core.getSelector().getApplicableMute(key.uuid, key.address)
+						.thenApply(Optional::ofNullable)
+						.exceptionally((ex) -> {
+							LoggerFactory.getLogger(getClass()).warn("Exception while computing cached mute", ex);
+							return Optional.empty();
+						});
 			}
 		};
 		muteCache = Caffeine.newBuilder().expireAfterAccess(4L, TimeUnit.MINUTES).initialCapacity(32)
 				.scheduler(Scheduler.systemScheduler()).buildAsync(cacheLoader);
 	}
 
-	public CentralisedFuture<Punishment> getCachedMute(UUID uuid, byte[] address) {
+	public CentralisedFuture<Punishment> getCachedMute(UUID uuid, NetworkAddress address) {
 		return (CentralisedFuture<Punishment>) muteCache.get(new MuteCacheKey(uuid, address))
-				.thenApply((optPunishment) -> optPunishment.orElse(null));
+				.thenApply((optPunishment) -> {
+					Punishment punishment = optPunishment.orElse(null);
+					if (punishment == null || punishment.isExpired()) {
+						return null;
+					}
+					return punishment;
+				});
 	}
 	
-	public void setCachedMute(UUID uuid, byte[] address, Punishment punishment) {
+	public void setCachedMute(UUID uuid, NetworkAddress address, Punishment punishment) {
 		if (punishment.getType() != PunishmentType.MUTE) {
 			throw new IllegalArgumentException("Cannot set cached mute to a punishment which is not a mute");
 		}
 		muteCache.put(new MuteCacheKey(uuid, address), core.getFuturesFactory().completedFuture(Optional.of(punishment)));
 	}
 	
-	public void clearCachedMute(Punishment punishment) {
-		if (punishment.getType() != PunishmentType.MUTE) {
-			throw new IllegalArgumentException("Cannot set cached mute to a punishment which is not a mute");
-		}
+	private void clearCachedMuteIf(Predicate<Punishment> filter) {
 		/*
 		 * Any matching entries must be fully removed so that they may be recalculated afresh,
 		 * and not merely set to an empty Optional, the reason being there may be multiple
 		 * applicable mutes for the UUID/address combination.
 		 */
-		muteCache.synchronous().asMap().values().removeIf((optPunishment) -> punishment.equals(optPunishment.orElse(null)));
+		muteCache.synchronous().asMap().values().removeIf((optPunishment) -> {
+			return optPunishment.isPresent() && filter.test(optPunishment.get());
+		});
+	}
+	
+	public void clearCachedMute(Punishment punishment) {
+		if (punishment.getType() != PunishmentType.MUTE) {
+			throw new IllegalArgumentException("Cannot clear cached mute of a punishment which is not a mute");
+		}
+		clearCachedMuteIf(punishment::equals);
+	}
+
+	public void clearCachedMute(int id) {
+		clearCachedMuteIf((punishment) -> punishment.getID() == id);
+	}
+	
+	public void clearCachedMute(Victim victim) {
+		clearCachedMuteIf((punishment) -> punishment.getVictim().equals(victim));
 	}
 	
 	private static class MuteCacheKey {
 		
 		final UUID uuid;
-		final byte[] address;
+		final NetworkAddress address;
 		
-		MuteCacheKey(UUID uuid, byte[] address) {
+		MuteCacheKey(UUID uuid, NetworkAddress address) {
 			this.uuid = uuid;
 			this.address = address;
 		}
 
 		@Override
 		public String toString() {
-			return "MuteCacheKey [uuid=" + uuid + ", address=" + Arrays.toString(address) + "]";
+			return "MuteCacheKey [uuid=" + uuid + ", address=" + address + "]";
 		}
 
 		@Override
@@ -105,7 +134,7 @@ public class MuteCacher {
 			final int prime = 31;
 			int result = 1;
 			result = prime * result + uuid.hashCode();
-			result = prime * result + Arrays.hashCode(address);
+			result = prime * result + address.hashCode();
 			return result;
 		}
 
@@ -118,7 +147,7 @@ public class MuteCacher {
 				return false;
 			}
 			MuteCacheKey other = (MuteCacheKey) object;
-			return uuid.equals(other.uuid) && Arrays.equals(address, other.address);
+			return uuid.equals(other.uuid) && address.equals(other.address);
 		}
 		
 	}

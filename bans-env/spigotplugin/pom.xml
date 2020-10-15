@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>space.arim.libertybans</groupId>
 		<artifactId>bans-env</artifactId>
-		<version>0.1.4-SNAPSHOT</version>
+		<version>0.2.0-SNAPSHOT</version>
 	</parent>
 	
 	<artifactId>bans-env-spigotplugin</artifactId>
@@ -25,7 +25,6 @@
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-bootstrap</artifactId>
-			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.spigotmc</groupId>

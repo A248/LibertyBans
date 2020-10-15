@@ -20,17 +20,29 @@ package space.arim.libertybans.core.database;
 
 public enum Vendor {
 
-	MARIADB("MariaDB"),
-	HSQLDB("HyperSQL");
+	MARIADB("MariaDB", "org.mariadb.jdbc.Driver", "org.mariadb.jdbc.MariaDbDataSource"),
+	HSQLDB("HyperSQL", "org.hsqldb.jdbc.JDBCDriver", "org.hsqldb.jdbc.JDBCDataSource");
 	
 	private final String displayName;
+	private final String driverClassName;
+	private final String dataSourceClassName;
 	
-	private Vendor(String displayName) {
+	private Vendor(String displayName, String driverClassName, String dataSourceClassName) {
 		this.displayName = displayName;
+		this.driverClassName = driverClassName;
+		this.dataSourceClassName = dataSourceClassName;
 	}
 	
 	String displayName() {
 		return displayName;
+	}
+	
+	String driverClassName() {
+		return driverClassName;
+	}
+	
+	String dataSourceClassName() {
+		return dataSourceClassName;
 	}
 	
 	public boolean useStoredRoutines() {

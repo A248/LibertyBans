@@ -20,13 +20,12 @@ package space.arim.libertybans.core.selector;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-import space.arim.libertybans.api.Punishment;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.core.MiscUtil;
-import space.arim.libertybans.core.SecurePunishment;
+import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.core.database.Database;
+import space.arim.libertybans.core.punish.MiscUtil;
 
-class IDImpl extends SelectorImplGroup {
+class IDImpl extends SelectorImplMember {
 
 	IDImpl(Selector selector) {
 		super(selector);
@@ -46,7 +45,7 @@ class IDImpl extends SelectorImplGroup {
 							+ "WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
 							.params(id, currentTime)
 							.singleResult((resultSet) -> {
-								return new SecurePunishment(id, type,
+								return core().getEnforcementCenter().createPunishment(id, type,
 										database.getVictimFromResult(resultSet), database.getOperatorFromResult(resultSet),
 										database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
 										database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
@@ -73,7 +72,7 @@ class IDImpl extends SelectorImplGroup {
 					+ "WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
 					.params(id, MiscUtil.currentTime())
 					.singleResult((resultSet) -> {
-						return new SecurePunishment(id, type,
+						return core().getEnforcementCenter().createPunishment(id, type,
 								database.getVictimFromResult(resultSet), database.getOperatorFromResult(resultSet),
 								database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
 								database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
@@ -89,7 +88,7 @@ class IDImpl extends SelectorImplGroup {
 					+ "FROM `libertybans_simple_history` WHERE `id` = ?")
 					.params(id)
 					.singleResult((resultSet) -> {
-						return new SecurePunishment(id, database.getTypeFromResult(resultSet),
+						return core().getEnforcementCenter().createPunishment(id, database.getTypeFromResult(resultSet),
 								database.getVictimFromResult(resultSet), database.getOperatorFromResult(resultSet),
 								database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
 								database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));

@@ -27,20 +27,14 @@ package space.arim.libertybans.api;
  */
 public abstract class Operator {
 	
-	private final OperatorType type;
-	
-	Operator(OperatorType type) {
-		this.type = type;
-	}
+	Operator() {}
 	
 	/**
 	 * Gets the type of the operator
 	 * 
 	 * @return the operator type
 	 */
-	public OperatorType getType() {
-		return type;
-	}
+	public abstract OperatorType getType();
 
 	/**
 	 * A type of operator. Corresponds to the subclasses of {@code Operator}
@@ -62,6 +56,16 @@ public abstract class Operator {
 		CONSOLE
 		
 	}
+	
+	@Override
+	public abstract int hashCode();
+	
+	/**
+	 * Evaluates whether this operator is the same as another
+	 * 
+	 */
+	@Override
+	public abstract boolean equals(Object object);
 	
 	@Override
 	public abstract String toString();

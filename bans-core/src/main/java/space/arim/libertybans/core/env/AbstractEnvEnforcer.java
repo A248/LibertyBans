@@ -21,17 +21,28 @@ package space.arim.libertybans.core.env;
 import java.util.UUID;
 import space.arim.api.chat.SendableMessage;
 
+import space.arim.libertybans.core.LibertyBansCore;
+
 public abstract class AbstractEnvEnforcer implements EnvEnforcer {
 
+	private final LibertyBansCore core;
 	private final Environment env;
 	
-	protected AbstractEnvEnforcer(Environment env) {
+	protected AbstractEnvEnforcer(LibertyBansCore core, Environment env) {
+		this.core = core;
 		this.env = env;
 	}
 	
 	protected Environment env() {
 		return env;
 	}
+	
+	@Override
+	public final void sendToThoseWithPermission(String permission, SendableMessage message) {
+		sendToThoseWithPermission0(permission, core.getFormatter().prefix(message));
+	}
+	
+	protected abstract void sendToThoseWithPermission0(String permission, SendableMessage message);
 
 	@Override
 	public void kickByUUID(UUID uuid, SendableMessage message) {

@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import space.arim.omnibus.util.ThisClass;
 
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.core.MiscUtil;
+import space.arim.libertybans.core.punish.MiscUtil;
 
 class RefreshTaskRunnable implements Runnable {
 
@@ -49,11 +49,7 @@ class RefreshTaskRunnable implements Runnable {
 		database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 			for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
-				querySource.query(
-						"DELETE FROM `libertybans_" + type.getLowercaseNamePlural() + "` WHERE `id` IN "
-						+ "(SELECT `id` FROM `libertybans_punishments` `puns` WHERE (`puns`.`end` != 0 AND `puns`.`end` < ?))")
-						.params(currentTime)
-						.voidResult().execute();
+				database.clearExpiredPunishments(querySource, type, currentTime);
 			}
 			return (Void) null;
 		}).onError(() -> null).execute();

@@ -18,11 +18,14 @@
  */
 package space.arim.libertybans.env.spigot;
 
+import java.net.InetAddress;
+
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.api.chat.SendableMessage;
 
-import space.arim.libertybans.core.config.SyncEnforcement;
+import space.arim.libertybans.core.punish.MiscUtil;
+import space.arim.libertybans.core.selector.SyncEnforcement;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -51,8 +54,8 @@ public class ChatListener extends SpigotParallelisedListener<PlayerEvent, Sendab
 	
 	private void combinedBegin(PlayerEvent evt, String command) {
 		Player player = evt.getPlayer();
-		byte[] address = player.getAddress().getAddress().getAddress();
-		begin(evt, env.core.getEnforcer().checkChat(player.getUniqueId(), address, command));
+		InetAddress address = player.getAddress().getAddress();
+		begin(evt, env.core.getEnforcementCenter().checkChat(player.getUniqueId(), address, command));
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH)
@@ -68,24 +71,23 @@ public class ChatListener extends SpigotParallelisedListener<PlayerEvent, Sendab
 	private void combinedWithdraw(PlayerEvent evt) {
 		CentralisedFuture<SendableMessage> futureMessage = withdrawRaw(evt);
 		SendableMessage message;
-		if (futureMessage.isDone() || evt.isAsynchronous()) {
+		if (evt.isAsynchronous() || futureMessage.isDone()) {
 			message = futureMessage.join();
 		} else {
-			SyncEnforcement strategy = env.core.getConfigs().getConfig().getObject(
-					"enforcement.sync-events-strategy", SyncEnforcement.class);
+			SyncEnforcement strategy = env.core.getMainConfig().enforcement().syncEnforcement();
 			switch (strategy) {
 			case WAIT:
 				message = futureMessage.join();
 				break;
 			case ALLOW:
-				futureMessage.whenComplete(env.core::debugFuture);
+				env.core.postFuture(futureMessage);
 				return;
 			case DENY:
-				futureMessage.whenComplete(env.core::debugFuture);
-				message = env.core.getFormatter().parseMessage(env.core.getConfigs().getMessages().getString("misc.sync-denial-message"));
+				env.core.postFuture(futureMessage);
+				message = env.core.getMessagesConfig().misc().syncDenialMessage();
 				break;
 			default:
-				throw new IllegalStateException("Unknown SyncEnforcement strategy " + strategy);
+				throw MiscUtil.unknownSyncEnforcement(strategy);
 			}
 		}
 		if (message == null) {
