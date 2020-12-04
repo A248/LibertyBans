@@ -21,67 +21,50 @@ package space.arim.libertybans.env.velocity;
 import java.net.InetAddress;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
-import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.env.chat.AdventureTextConverter;
 
+import space.arim.libertybans.core.punish.Enforcer;
+
 import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.connection.LoginEvent;
+import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
 
-class ConnectionListener extends VelocityParallelisedListener<LoginEvent, SendableMessage> {
+@Singleton
+public class ConnectionListener extends VelocityParallelisedListener<LoginEvent, SendableMessage> {
 	
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+	private final Enforcer enforcer;
 	
-	ConnectionListener(VelocityEnv env) {
-		super(env);
+	@Inject
+	public ConnectionListener(PluginContainer plugin, ProxyServer server, Enforcer enforcer) {
+		super(plugin, server);
+		this.enforcer = enforcer;
 	}
-	
+
 	@Override
-	public void register() {
-		register(LoginEvent.class);
+	public Class<LoginEvent> getEventClass() {
+		return LoginEvent.class;
 	}
-	
+
 	@Override
-	protected CentralisedFuture<SendableMessage> beginFor(LoginEvent evt) {
-		if (!evt.getResult().isAllowed()) {
-			logger.debug("Player '{}' is already blocked by the server or another plugin", evt.getPlayer().getUsername());
-			return null;
-		}
-		Player player = evt.getPlayer();
+	protected CentralisedFuture<SendableMessage> beginComputation(LoginEvent event) {
+		Player player = event.getPlayer();
 		UUID uuid = player.getUniqueId();
 		String name = player.getUsername();
 		InetAddress address = player.getRemoteAddress().getAddress();
-		return env.core.getEnforcementCenter().executeAndCheckConnection(uuid, name, address);
+		return enforcer.executeAndCheckConnection(uuid, name, address);
 	}
-	
+
 	@Override
-	protected void absentFutureHandler(LoginEvent evt) {
-		Player player = evt.getPlayer();
-		if (evt.getResult().isAllowed()) {
-			logger.error(
-					"Critical: Player ({}, {}, {}) was previously blocked by the server or another plugin, "
-					+ "but since then, some plugin has *uncancelled* the blocking. "
-					+ "This may lead to bans not being checked and enforced.",
-					player.getUniqueId(), player.getUsername(), player.getRemoteAddress().getAddress());
-		} else {
-			logger.trace("Confirmation: Player '{}' is already blocked by the server or another plugin", player.getUsername());
-		}
+	protected void executeNonNullResult(LoginEvent event, SendableMessage message) {
+		event.setResult(ComponentResult.denied(new AdventureTextConverter().convert(message)));
 	}
-	
-	@Override
-	protected void withdrawFor(LoginEvent evt) {
-		SendableMessage message = withdraw(evt);
-		if (message == null) {
-			logger.trace("Letting '{}' through the gates", evt.getPlayer().getUsername());
-			return;
-		}
-		evt.setResult(ComponentResult.denied(new AdventureTextConverter().convert(message)));
-	}
-	
+
 }

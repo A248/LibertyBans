@@ -38,6 +38,8 @@ public interface RemovalsSection {
 		
 		SendableMessage permissionCommand();
 		
+		SendableMessage permissionIpAddress();
+		
 		SendableMessageManipulator notFound();
 		
 		SendableMessageManipulator successMessage();
@@ -58,6 +60,11 @@ public interface RemovalsSection {
 		SendableMessage permissionCommand();
 		
 		@Override
+		@ConfKey("permission.ip-address")
+		@DefaultString("&cYou may not unban IP addresses.")
+		SendableMessage permissionIpAddress();
+		
+		@Override
 		@ConfKey("not-found")
 		@DefaultString("&c&o%TARGET%&r&7 is not banned.")
 		SendableMessageManipulator notFound();
@@ -69,7 +76,7 @@ public interface RemovalsSection {
 		
 		@Override
 		@ConfKey("success.notification")
-		@DefaultString("&c&o%UNOPERATOR%&r&7 unbanned &c&o%TARGET%&r&7.")
+		@DefaultString("&c&o%UNOPERATOR%&r&7 unbanned &c&o%VICTIM%&r&7.")
 		SendableMessageManipulator successNotification();
 		
 	}
@@ -86,6 +93,11 @@ public interface RemovalsSection {
 		SendableMessage permissionCommand();
 		
 		@Override
+		@ConfKey("permission.ip-address")
+		@DefaultString("&cYou may not unmute IP addresses.")
+		SendableMessage permissionIpAddress();
+		
+		@Override
 		@ConfKey("not-found")
 		@DefaultString("&c&o%TARGET%&r&7 is not muted.")
 		SendableMessageManipulator notFound();
@@ -97,7 +109,7 @@ public interface RemovalsSection {
 		
 		@Override
 		@ConfKey("success.notification")
-		@DefaultString("&c&o%UNOPERATOR%&r&7 unmuted &c&o%TARGET%&r&7.")
+		@DefaultString("&c&o%UNOPERATOR%&r&7 unmuted &c&o%VICTIM%&r&7.")
 		SendableMessageManipulator successNotification();
 		
 	}
@@ -114,6 +126,11 @@ public interface RemovalsSection {
 		SendableMessage permissionCommand();
 		
 		@Override
+		@ConfKey("permission.ip-address")
+		@DefaultString("&cYou may not unwarn IP addresses.")
+		SendableMessage permissionIpAddress();
+		
+		@Override
 		@ConfKey("not-found")
 		@DefaultString("&c&o%TARGET%&r&7 does not have a warn by &c&o%ID%&r&7.")
 		SendableMessageManipulator notFound();
@@ -124,12 +141,12 @@ public interface RemovalsSection {
 		
 		@Override
 		@ConfKey("success.message")
-		@DefaultString("&7Unmuted &c&o%VICTIM%&r&7.")
+		@DefaultString("&7Unwarned &c&o%VICTIM%&r&7.")
 		SendableMessageManipulator successMessage();
 		
 		@Override
 		@ConfKey("success.notification")
-		@DefaultString("&c&o%UNOPERATOR%&r&7 unmuted &c&o%VICTIM%&r&7.")
+		@DefaultString("&c&o%UNOPERATOR%&r&7 unwarned &c&o%VICTIM%&r&7.")
 		SendableMessageManipulator successNotification();
 		
 	}

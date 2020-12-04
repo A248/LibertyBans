@@ -18,26 +18,41 @@
  */
 package space.arim.libertybans.core.env;
 
+import jakarta.inject.Inject;
+
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.annote.PlatformCommandSender;
 
 import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.core.LibertyBansCore;
+import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.config.InternalFormatter;
 
 public abstract class AbstractCmdSender implements CmdSender {
 	
-	private final LibertyBansCore core;
+	private final AbstractDependencies dependencies;
 	private final Object rawSender;
 	private final Operator operator;
 	
-	protected AbstractCmdSender(LibertyBansCore core, Object rawSender, Operator operator) {
-		this.core = core;
+	protected AbstractCmdSender(AbstractDependencies dependencies, Object rawSender, Operator operator) {
+		this.dependencies = dependencies;
 		this.rawSender = rawSender;
 		this.operator = operator;
 	}
 	
-	protected LibertyBansCore core() {
-		return core;
+	public static class AbstractDependencies {
+		
+		final Configs configs;
+		final InternalFormatter formatter;
+		final PlatformHandle handle;
+		
+		@Inject
+		public AbstractDependencies(Configs configs, InternalFormatter formatter, PlatformHandle handle) {
+			this.configs = configs;
+			this.formatter = formatter;
+			this.handle = handle;
+		}
+		
 	}
 	
 	@Override
@@ -46,15 +61,25 @@ public abstract class AbstractCmdSender implements CmdSender {
 	}
 	
 	@Override
+	public void sendMessageNoPrefix(SendableMessage message) {
+		dependencies.handle.sendMessage(rawSender, message);
+	}
+	
+	@Override
 	public void sendMessage(SendableMessage message) {
-		SendableMessage prefix = core.getMessagesConfig().all().prefix();
+		SendableMessage prefix = dependencies.configs.getMessagesConfig().all().prefix();
 		message = prefix.concatenate(message);
-		core.getEnvironment().getPlatformHandle().sendMessage(rawSender, message);
+		sendMessageNoPrefix(message);
+	}
+	
+	@Override
+	public void sendLiteralMessageNoPrefix(String message) {
+		sendMessageNoPrefix(dependencies.formatter.parseMessageWithoutPrefix(message));
 	}
 	
 	@Override
 	public void sendLiteralMessage(String message) {
-		sendMessage(core.getFormatter().parseMessageWithPrefix(message));
+		sendMessage(dependencies.formatter.parseMessageWithoutPrefix(message));
 	}
 	
 	@Override

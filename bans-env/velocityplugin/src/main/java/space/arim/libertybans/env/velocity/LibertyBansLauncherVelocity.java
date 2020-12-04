@@ -19,31 +19,32 @@
 package space.arim.libertybans.env.velocity;
 
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 import space.arim.libertybans.bootstrap.DependencyPlatform;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
+import space.arim.libertybans.bootstrap.logger.Slf4jBootstrapLogger;
 
-import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
 
-public class LibertyBansLauncherVelocity extends LibertyBansLauncher {
+class LibertyBansLauncherVelocity extends LibertyBansLauncher {
 
 	private final VelocityPlugin plugin;
 	
-	public LibertyBansLauncherVelocity(VelocityPlugin plugin, Executor executor) {
-		super(DependencyPlatform.VELOCITY, plugin.folder, executor, (c) -> "");
+	LibertyBansLauncherVelocity(VelocityPlugin plugin, Executor executor) {
+		super(new Slf4jBootstrapLogger(plugin.logger), DependencyPlatform.VELOCITY, plugin.folder, executor);
 		this.plugin = plugin;
 	}
-	
+
 	@Override
-	protected boolean addUrlsToExternalClassLoader(ClassLoader apiClassLoader, Path[] paths) {
-		PluginManager pm = plugin.server.getPluginManager();
-		PluginContainer plugin = pm.fromInstance(this.plugin).get();
+	protected void addUrlsToExternalClassLoader(ClassLoader apiClassLoader, Set<Path> paths) {
+		PluginManager pluginManager = plugin.server.getPluginManager();
 		for (Path path : paths) {
-			pm.addToClasspath(plugin, path);
+			// Explicitly use plugin instance instead of PluginContainer
+			// Avoids https://github.com/VelocityPowered/Velocity/pull/387
+			pluginManager.addToClasspath(plugin, path);
 		}
-		return true;
 	}
 
 }

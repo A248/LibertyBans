@@ -18,44 +18,55 @@
  */
 package space.arim.libertybans.env.velocity;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.PlatformHandle;
 
-import com.velocitypowered.api.command.CommandSource;
+import space.arim.libertybans.core.punish.Enforcer;
+
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
+import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
 
-class CommandListener extends VelocityParallelisedListener<CommandExecuteEvent, SendableMessage> {
+@Singleton
+public class CommandListener extends VelocityParallelisedListener<CommandExecuteEvent, SendableMessage> {
 
-	CommandListener(VelocityEnv env) {
-		super(env);
-	}
+	private final Enforcer enforcer;
+	private final PlatformHandle handle;
 	
-	@Override
-	public void register() {
-		register(CommandExecuteEvent.class);
+	@Inject
+	public CommandListener(PluginContainer plugin, ProxyServer server, Enforcer enforcer, PlatformHandle handle) {
+		super(plugin, server);
+		this.enforcer = enforcer;
+		this.handle = handle;
 	}
 
 	@Override
-	protected CentralisedFuture<SendableMessage> beginFor(CommandExecuteEvent evt) {
-		CommandSource source = evt.getCommandSource();
-		if (!(source instanceof Player)) {
-			return null;
-		}
-		Player player = (Player) source;
-		return env.core.getEnforcementCenter().checkChat(player.getUniqueId(), player.getRemoteAddress().getAddress(), evt.getCommand());
+	public Class<CommandExecuteEvent> getEventClass() {
+		return CommandExecuteEvent.class;
 	}
 
 	@Override
-	protected void withdrawFor(CommandExecuteEvent evt) {
-		SendableMessage message = withdraw(evt);
-		if (message == null) {
-			return;
-		}
-		evt.setResult(CommandResult.denied());
-		env.handle.sendMessage(evt.getCommandSource(), message);
+	protected boolean filter(CommandExecuteEvent event) {
+		return event.getCommandSource() instanceof Player;
+	}
+
+	@Override
+	protected CentralisedFuture<SendableMessage> beginComputation(CommandExecuteEvent event) {
+		Player player = (Player) event.getCommandSource();
+		return enforcer.checkChat(player.getUniqueId(), player.getRemoteAddress().getAddress(), event.getCommand());
+	}
+
+	@Override
+	protected void executeNonNullResult(CommandExecuteEvent event, SendableMessage message) {
+		event.setResult(CommandResult.denied());
+		handle.sendMessage(event.getCommandSource(), message);
 	}
 
 }

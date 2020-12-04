@@ -33,7 +33,6 @@ import space.arim.api.util.web.HttpAshconApi;
 import space.arim.api.util.web.HttpMcHeadsApi;
 import space.arim.api.util.web.HttpMojangApi;
 import space.arim.api.util.web.RemoteApiResult;
-import space.arim.api.util.web.RemoteApiResult.ResultType;
 import space.arim.api.util.web.RemoteNameHistoryApi;
 import space.arim.api.util.web.RemoteNameUUIDApi;
 
@@ -52,26 +51,43 @@ public class RemoteApiBundle {
 		this.remotes = List.copyOf(remotes);
 	}
 	
-	<T> CompletableFuture<T> lookup(CompletableFuture<T> future,
-			Function<RemoteNameUUIDApi, CompletableFuture<RemoteApiResult<T>>> intermediateResultFunction) {
+	<T> CompletableFuture<T> lookup(Function<RemoteNameUUIDApi, CompletableFuture<RemoteApiResult<T>>> intermediateResultFunction) {
+		CompletableFuture<T> future = null;
 		for (RemoteNameHistoryApi remoteApi : remotes) {
-			future = future.thenCompose((result) -> {
-				if (result != null) {
-					return CompletableFuture.completedFuture(result);
-				}
-				return intermediateResultFunction.apply(remoteApi).thenApply((remoteApiResult) -> {
-					if (remoteApiResult.getResultType() != ResultType.FOUND) {
-						Exception ex = remoteApiResult.getException();
-						if (ex == null) {
-							logger.warn("Request for name to remote web API {} failed", remoteApi);
-						} else {
-							logger.warn("Request for name to remote web API {} failed", remoteApi, ex);
-						}
-						return null;
+
+			CompletableFuture<T> fromThisApi = intermediateResultFunction.apply(remoteApi).thenApply((remoteApiResult) -> {
+
+				switch (remoteApiResult.getResultType()) {
+				case FOUND:
+				case NOT_FOUND:
+					break;
+				case RATE_LIMITED:
+				case ERROR:
+				case UNKNOWN:
+				default:
+					Exception ex = remoteApiResult.getException();
+					if (ex == null) {
+						logger.warn("Request for name to remote web API {} failed", remoteApi);
+					} else {
+						logger.warn("Request for name to remote web API {} failed", remoteApi, ex);
 					}
-					return remoteApiResult.getValue();
-				});
+					return null;
+				}
+				return remoteApiResult.getValue();
 			});
+			if (future == null) {
+				future = fromThisApi;
+			} else {
+				future = future.thenCompose((result) -> {
+					if (result != null) {
+						return CompletableFuture.completedFuture(result);
+					}
+					return fromThisApi;
+				});
+			}
+		}
+		if (future == null) {
+			return CompletableFuture.completedFuture(null);
 		}
 		return future;
 	}

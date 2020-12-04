@@ -19,9 +19,13 @@
 package space.arim.libertybans.core.commands;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.api.chat.SendableMessage;
 
@@ -29,26 +33,50 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.DraftPunishment;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.core.config.AdditionsSection.PunishmentAddition;
+import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.core.config.AdditionsSection;
 import space.arim.libertybans.core.config.AdditionsSection.ExclusivePunishmentAddition;
+import space.arim.libertybans.core.config.AdditionsSection.PunishmentAdditionWithDurationPerm;
+import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.env.CmdSender;
-import space.arim.libertybans.core.punish.MiscUtil;
+import space.arim.libertybans.core.env.EnvEnforcer;
 
-public class PunishCommands extends AbstractSubCommandGroup {
+abstract class PunishCommands extends AbstractSubCommandGroup implements PunishUnpunishCommands {
 
-	PunishCommands(Commands commands) {
-		super(commands, MiscUtil.punishmentTypes().stream().map((type) -> type.name().toLowerCase(Locale.ROOT)));
+	private final PunishmentDrafter drafter;
+	private final InternalFormatter formatter;
+	private final EnvEnforcer envEnforcer;
+	
+	PunishCommands(Dependencies dependencies, Stream<String> matches,
+			PunishmentDrafter drafter, InternalFormatter formatter, EnvEnforcer envEnforcer) {
+		super(dependencies, matches);
+		this.drafter = drafter;
+		this.formatter = formatter;
+		this.envEnforcer = envEnforcer;
 	}
 
 	@Override
-	public CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
-		return new Execution(sender, command, PunishmentType.valueOf(arg.toUpperCase(Locale.ROOT)));
+	public final CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
+		return new Execution(sender, command, parseType(arg.toUpperCase(Locale.ROOT)));
+	}
+
+	@Override
+	public final Collection<String> suggest(CmdSender sender, String arg, int argIndex) {
+		switch (argIndex) {
+		case 0:
+			return getMatches();
+		case 1:
+			return sender.getOtherPlayersOnSameServer();
+		default:
+			break;
+		}
+		return Set.of();
 	}
 	
 	private class Execution extends TypeSpecificExecution {
 
-		private final PunishmentAddition section;
+		private final AdditionsSection.PunishmentAddition section;
 		
 		Execution(CmdSender sender, CommandPackage command, PunishmentType type) {
 			super(sender, command, type);
@@ -57,8 +85,13 @@ public class PunishCommands extends AbstractSubCommandGroup {
 
 		@Override
 		public void execute() {
-			if (!sender().hasPermission("libertybans." + type().getLowercaseName() + ".command")) { // libertybans.ban.command
+			if (!sender().hasPermission("libertybans." + type() + ".command")) {
 				sender().sendMessage(section.permissionCommand()); 
+				return;
+			}
+			String additionalPermission = getAdditionalPermission(type());
+			if (!additionalPermission.isEmpty() && !sender().hasPermission(additionalPermission)) {
+				sender().sendMessage(section.permissionIpAddress());
 				return;
 			}
 			if (!command().hasNext()) {
@@ -70,7 +103,7 @@ public class PunishCommands extends AbstractSubCommandGroup {
 		
 		private void execute0() {
 			String targetArg = command().next();
-			CentralisedFuture<?> future = commands.parseVictim(sender(), targetArg).thenCompose((victim) -> {
+			CentralisedFuture<?> future = parseVictim(sender(), targetArg).thenCompose((victim) -> {
 				if (victim == null) {
 					return completedFuture(null);
 				}
@@ -82,10 +115,13 @@ public class PunishCommands extends AbstractSubCommandGroup {
 				}
 				return enforceAndSendSuccess(punishment);
 			});
-			core().postFuture(future);
+			postFuture(future);
 		}
 		
-		private CentralisedFuture<Punishment> performEnact(Victim victim, String targetArg) {
+		private ReactionStage<Punishment> performEnact(Victim victim, String targetArg) {
+			/*
+			 * Parse duration. Duration.ZERO represents permanent duration
+			 */
 			final Duration duration;
 			if (type() != PunishmentType.KICK && command().hasNext()) {
 				String time = command().peek();
@@ -96,27 +132,68 @@ public class PunishCommands extends AbstractSubCommandGroup {
 			} else {
 				duration = Duration.ZERO;
 			}
+
+			/*
+			 * Duration permissions
+			 */
+			Duration greatestPermission;
+			if (type() != PunishmentType.KICK // kicks are always permanent
+					&& config().durationPermissions().enable() // Duration permissions enabled
+					&& !(greatestPermission = getGreatestPermittedDuration()).isZero() // sender does not have permanent permission
+					&& (duration.isZero() || greatestPermission.compareTo(duration) < 0)) { // sender does not have enough permissions
+
+				String durationFormatted = formatter.formatDuration(duration);
+				PunishmentAdditionWithDurationPerm sectionWithDurationPerm = ((PunishmentAdditionWithDurationPerm) section);
+				sender().sendMessage(sectionWithDurationPerm.permissionDuration().replaceText("%DURATION%", durationFormatted));
+				return completedFuture(null);
+			}
 			String reason;
-			MainConfig.Reasons reasonsCfg;
+			MainConfig.Reasons reasonsConfig;
 			if (command().hasNext()) {
 				reason = command().allRemaining();
-			} else if ((reasonsCfg = core().getMainConfig().reasons()).permitBlank()) {
+			} else if ((reasonsConfig = config().reasons()).permitBlank()) {
 				reason = "";
 			} else {
-				reason = reasonsCfg.defaultReason();
+				reason = reasonsConfig.defaultReason();
 			}
-			DraftPunishment draftPunishment = core().getDrafter().draftBuilder()
-					.victim(victim).operator(sender().getOperator()).type(type()).reason(reason)
-					.duration(duration)
+			DraftPunishment draftPunishment = drafter.draftBuilder()
+					.type(type()).victim(victim).operator(sender().getOperator())
+					.reason(reason).duration(duration)
 					.build();
 
-			return draftPunishment.enactPunishmentWithoutEnforcement().thenApply((nullIfConflict) -> {
-				if (nullIfConflict == null) {
+			return draftPunishment.enactPunishmentWithoutEnforcement().thenApply((optPunishment) -> {
+				if (optPunishment.isEmpty()) {
 					sendConflict(targetArg);
+					return null;
 				}
-				return nullIfConflict;
+				return optPunishment.get();
 			});
 		}
+		
+		// Duration permissions
+		
+		/**
+		 * Gets the sender's greatest duration permission, or zero for permanent
+		 * @return the greatest duration permission or zero for permanent
+		 */
+		private Duration getGreatestPermittedDuration() {
+			Duration greatestPermission = Duration.ofNanos(-1L);
+			for (String durationPerm : config().durationPermissions().permissionsToCheck()) {
+				if (!sender().hasPermission(durationPerm)) {
+					continue;
+				}
+				Duration thisDurationPerm = new DurationParser(durationPerm).parse();
+				if (thisDurationPerm.isZero()) {
+					return Duration.ZERO;
+				}
+				if (thisDurationPerm.compareTo(greatestPermission) > 0) {
+					greatestPermission = thisDurationPerm;
+				}
+			}
+			return greatestPermission;
+		}
+		
+		// Conflicting punishment
 		
 		private void sendConflict(String targetArg) {
 			SendableMessage message;
@@ -128,20 +205,22 @@ public class PunishCommands extends AbstractSubCommandGroup {
 			sender().sendMessage(message);
 		}
 		
+		// Enforcement and notification
+		
 		private CentralisedFuture<?> enforceAndSendSuccess(Punishment punishment) {
 
-			CentralisedFuture<?> enforcement = punishment.enforcePunishment();
-			CentralisedFuture<SendableMessage> successMessage = core().getFormatter().formatWithPunishment(
+			CentralisedFuture<?> enforcement = punishment.enforcePunishment().toCompletableFuture();
+			CentralisedFuture<SendableMessage> successMessage = formatter.formatWithPunishment(
 					section.successMessage(), punishment);
-			CentralisedFuture<SendableMessage> successNotify = core().getFormatter().formatWithPunishment(
+			CentralisedFuture<SendableMessage> successNotify = formatter.formatWithPunishment(
 					section.successNotification(), punishment);
 
-			return core().getFuturesFactory().allOf(enforcement, successMessage, successNotify).thenAccept((ignore) -> {
+			return futuresFactory().allOf(enforcement, successMessage, successNotify).thenRun(() -> {
 				sender().sendMessage(successMessage.join());
 
-				SendableMessage fullNotify = core().getFormatter().prefix(successNotify.join());
-				String notifyPerm = "libertybans." + type().getLowercaseName() + ".notify";
-				core().getEnvironment().getEnforcer().sendToThoseWithPermission(notifyPerm, fullNotify);
+				SendableMessage fullNotify = formatter.prefix(successNotify.join());
+				String notifyPerm = "libertybans." + type() + ".notify";
+				envEnforcer.sendToThoseWithPermission(notifyPerm, fullNotify);
 			});
 		}
 		

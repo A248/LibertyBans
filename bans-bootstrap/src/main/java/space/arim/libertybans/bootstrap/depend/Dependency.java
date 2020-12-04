@@ -19,6 +19,7 @@
 package space.arim.libertybans.bootstrap.depend;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -46,11 +47,11 @@ public class Dependency {
 		this.groupId = Objects.requireNonNull(groupId);
 		this.artifactId = Objects.requireNonNull(artifactId);
 		this.version = Objects.requireNonNull(version);
-		this.sha512hash = sha512hash;
+		this.sha512hash = sha512hash.clone();
 	}
 	
 	public static Dependency of(String groupId, String artifactId, String version, String hexHash) {
-		return new Dependency(groupId, artifactId, version, hexStringToByteArray(hexHash.toLowerCase()));
+		return new Dependency(groupId, artifactId, version, hexStringToByteArray(hexHash.toLowerCase(Locale.ROOT)));
 	}
 	
 	// https://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
@@ -63,7 +64,7 @@ public class Dependency {
 		return data;
 	}
 	
-	private static final char[] HEX_ARRAY = "0123456789ABCDEF".toLowerCase().toCharArray();
+	private static final char[] HEX_ARRAY = "0123456789ABCDEF".toLowerCase(Locale.ROOT).toCharArray();
 	static String bytesToHex(byte[] bytes) {
 	    char[] hexChars = new char[bytes.length * 2];
 	    for (int j = 0; j < bytes.length; j++) {
@@ -71,7 +72,7 @@ public class Dependency {
 	        hexChars[j * 2] = HEX_ARRAY[v >>> 4];
 	        hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
 	    }
-	    return new String(hexChars);
+	    return String.valueOf(hexChars);
 	}
 	
 	public String getFullName() {
@@ -90,12 +91,16 @@ public class Dependency {
 		return version;
 	}
 	
+	public byte[] getSha512Hash() {
+		return sha512hash.clone();
+	}
+	
 	public boolean matchesHash(byte[] otherSha512Hash) {
 		return Arrays.equals(sha512hash, otherSha512Hash);
 	}
 	
-	public byte[] getSha512Hash() {
-		return sha512hash.clone();
+	DownloadResult hashMismatchResult(byte[] actualHash) {
+		return DownloadResult.hashMismatch0(sha512hash, actualHash);
 	}
 	
 	@Override

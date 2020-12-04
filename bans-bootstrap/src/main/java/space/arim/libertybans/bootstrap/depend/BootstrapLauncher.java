@@ -18,11 +18,16 @@
  */
 package space.arim.libertybans.bootstrap.depend;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
 /**
  * Composition of 2 {@link DependencyLoader}s used to add dependencies to an external URLClassLoader and
@@ -32,9 +37,7 @@ import java.util.function.BiFunction;
  * @author A248
  *
  */
-public class BootstrapLauncher {
-	
-	private final String programName;
+public abstract class BootstrapLauncher {
 	
 	private final ClassLoader apiClassLoader;
 	private final AddableURLClassLoader internalClassLoader;
@@ -42,18 +45,13 @@ public class BootstrapLauncher {
 	private final DependencyLoader apiDepLoader;
 	private final DependencyLoader internalDepLoader;
 	
-	private final BiFunction<ClassLoader, Path[], Boolean> addUrlsToExternal;
-	
-	public BootstrapLauncher(String programName, ClassLoader apiClassLoader, DependencyLoader apiDepLoader,
-			DependencyLoader internalDepLoader, BiFunction<ClassLoader, Path[], Boolean> addUrlsToExternal) {
-		this.programName = programName;
+	public BootstrapLauncher(String programName, ClassLoader apiClassLoader,
+			DependencyLoader apiDepLoader, DependencyLoader internalDepLoader) {
 		this.apiClassLoader = apiClassLoader;
 		internalClassLoader = new AddableURLClassLoader(programName, apiClassLoader);
 
 		this.apiDepLoader = apiDepLoader;
 		this.internalDepLoader = internalDepLoader;
-
-		this.addUrlsToExternal = addUrlsToExternal;
 	}
 	
 	public DependencyLoader getApiDepLoader() {
@@ -72,72 +70,80 @@ public class BootstrapLauncher {
 		return internalClassLoader;
 	}
 	
-	private boolean informErrorOrReturnTrue(Dependency dependency, DownloadResult result) {
-		switch (result.getResultType()) {
-		case HASH_MISMATCH:
-			errorMessage("Failed to download dependency: " + dependency + " . Reason: Hash mismatch, " + "expected "
-					+ Dependency.bytesToHex(result.getExpectedHash()) + " but got "
-					+ Dependency.bytesToHex(result.getActualHash()));
-			return false;
-		case ERROR:
-			errorMessage("Failed to download dependency: " + dependency + " . Reason: Exception");
-			result.getException().printStackTrace(System.err);
-			return false;
-		default:
-			break;
-		}
-		return true;
-	}
-	
-	private CompletableFuture<Path[]> loadPaths(DependencyLoader loader) {
+	private CompletableFuture<Set<Path>> loadJarPaths(DependencyLoader loader) {
 		return loader.execute().thenApply((results) -> {
-			Path[] paths = new Path[results.size()];
-			int n = 0;
+
+			Set<Path> jarPaths = new HashSet<>(results.size());
+			Set<BootstrapException> failures = new HashSet<>();
 			for (Map.Entry<Dependency, DownloadResult> entry : results.entrySet()) {
-				if (!informErrorOrReturnTrue(entry.getKey(), entry.getValue())) {
-					return null;
+
+				Dependency dependency = entry.getKey();
+				DownloadResult result = entry.getValue();
+				switch (result.getResultType()) {
+				case HASH_MISMATCH:
+					failures.add(new BootstrapException(
+							"Failed to download dependency: " + dependency + " . Reason: Hash mismatch, " + "expected "
+									+ Dependency.bytesToHex(result.getExpectedHash()) + " but got "
+									+ Dependency.bytesToHex(result.getActualHash())));
+					continue;
+				case ERROR:
+					failures.add(new BootstrapException(
+							"Failed to download dependency: " + dependency + " . Reason: Exception",
+							result.getException()));
+					continue;
+				default:
+					break;
 				}
-				paths[n++] = entry.getValue().getJarFile();
+				jarPaths.add(entry.getValue().getJarFile());
 			}
-			return paths;
+			if (!failures.isEmpty()) {
+				if (failures.size() == 1) {
+					throw failures.iterator().next();
+				}
+				BootstrapException ex = new BootstrapException("Failed to download dependencies. View and report details.");
+				for (BootstrapException failure : failures) {
+					ex.addSuppressed(failure);
+				}
+				throw ex;
+			}
+			/*
+			 * Cleanup previously downloaded but now-unused dependencies (old versions)
+			 */
+			try (Stream<Path> fileStream = Files.list(loader.getOutputDirectory())) {
+				fileStream.filter((file) -> !jarPaths.contains(file)).forEach((toDelete) -> {
+					try {
+						Files.delete(toDelete);
+					} catch (IOException ex) {
+						throw new UncheckedIOException(ex);
+					}
+				});
+			} catch (IOException ex) {
+				throw new UncheckedIOException(ex);
+			}
+			return jarPaths;
 		});
 	}
-	
-	private CompletableFuture<Boolean> loadApi() {
-		return loadPaths(apiDepLoader).thenApply((paths) -> {
-			if (paths == null) {
-				return false;
-			}
-			return addUrlsToExternal.apply(apiClassLoader, paths);
-		});
+
+	private CompletableFuture<Void> loadApi() {
+		return loadJarPaths(apiDepLoader).thenAccept((paths) -> addUrlsToExternal(apiClassLoader, paths));
 	}
-	
-	private CompletableFuture<Boolean> loadInternal() {
-		return loadPaths(internalDepLoader).thenApply((paths) -> {
-			if (paths == null) {
-				return false;
-			}
+
+	public abstract void addUrlsToExternal(ClassLoader apiClassLoader, Set<Path> paths);
+
+	private CompletableFuture<Void> loadInternal() {
+		return loadJarPaths(internalDepLoader).thenAccept((paths) -> {
 			try {
 				for (Path path : paths) {
 					internalClassLoader.addURL(path.toUri().toURL());
 				}
 			} catch (MalformedURLException ex) {
-				ex.printStackTrace();
-				return false;
+				throw new BootstrapException("Unable to convert Path to URL", ex);
 			}
-			return true;
 		});
 	}
-	
-	// Must use System.err because we do not know whether the platform uses slf4j or JUL
-	private void errorMessage(String message) {
-		System.err.println('[' + programName + "] " + message);
-	}
-	
-	public CompletableFuture<Boolean> loadAll() {
-		CompletableFuture<Boolean> apiFuture = loadApi();
-		CompletableFuture<Boolean> internalFuture = loadInternal();
-		return apiFuture.thenCombine(internalFuture, (r1, r2) -> r1 && r2);
+
+	public CompletableFuture<Void> loadAll() {
+		return CompletableFuture.allOf(loadApi(), loadInternal());
 	}
 
 }

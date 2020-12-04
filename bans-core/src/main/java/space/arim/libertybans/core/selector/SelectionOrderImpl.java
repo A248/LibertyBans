@@ -18,71 +18,101 @@
  */
 package space.arim.libertybans.core.selector;
 
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
+import java.util.Optional;
 
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.ServerScope;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.select.SelectionOrder;
+import space.arim.libertybans.api.scope.ServerScope;
 
-class SelectionOrderImpl implements SelectionOrder {
-	
-	private transient final Selector selector;
-	
-	private final PunishmentType type;
+class SelectionOrderImpl implements InternalSelectionOrder {
+
+	private transient final SelectorImpl selector;
+
+	final PunishmentType type;
 	private final Victim victim;
 	private final Operator operator;
 	private final ServerScope scope;
 	private final boolean selectActiveOnly;
-	
-	SelectionOrderImpl(Selector selector,
-			PunishmentType type, Victim victim, Operator operator, ServerScope scope, boolean selectActiveOnly) {
+	private final int skipCount;
+	private final int maximumToRetrieve;
+
+	SelectionOrderImpl(SelectorImpl selector,
+			PunishmentType type, Victim victim, Operator operator, ServerScope scope, boolean selectActiveOnly,
+			int skipCount, int maximumToRetrieve) {
 		this.selector = selector;
 
-		this.type = type;
+		this.type = Objects.requireNonNull(type, "type");
 		this.victim = victim;
 		this.operator = operator;
 		this.scope = scope;
 		this.selectActiveOnly = selectActiveOnly;
+		this.skipCount = skipCount;
+		this.maximumToRetrieve = maximumToRetrieve;
 	}
-	
+
 	@Override
 	public PunishmentType getType() {
 		return type;
 	}
-	
+
 	@Override
-	public Victim getVictim() {
+	public Optional<Victim> getVictim() {
+		return Optional.ofNullable(victim);
+	}
+
+	@Override
+	public Victim getVictimNullable() {
 		return victim;
 	}
 
 	@Override
-	public Operator getOperator() {
+	public Optional<Operator> getOperator() {
+		return Optional.ofNullable(operator);
+	}
+
+	@Override
+	public Operator getOperatorNullable() {
 		return operator;
 	}
-	
+
 	@Override
-	public ServerScope getScope() {
+	public Optional<ServerScope> getScope() {
+		return Optional.ofNullable(scope);
+	}
+
+	@Override
+	public ServerScope getScopeNullable() {
 		return scope;
 	}
-	
+
 	@Override
 	public boolean selectActiveOnly() {
 		return selectActiveOnly;
 	}
-	
+
 	@Override
-	public CentralisedFuture<Punishment> getFirstSpecificPunishment() {
-		return selector.getFirstSpecificPunishment(this);
+	public int skipCount() {
+		return skipCount;
 	}
 
 	@Override
-	public CentralisedFuture<Set<Punishment>> getAllSpecificPunishments() {
+	public int maximumToRetrieve() {
+		return maximumToRetrieve;
+	}
+
+	@Override
+	public ReactionStage<Optional<Punishment>> getFirstSpecificPunishment() {
+		return selector.getFirstSpecificPunishment(this).thenApply(Optional::ofNullable);
+	}
+
+	@Override
+	public ReactionStage<List<Punishment>> getAllSpecificPunishments() {
 		return selector.getSpecificPunishments(this);
 	}
 
@@ -95,6 +125,8 @@ class SelectionOrderImpl implements SelectionOrder {
 		result = prime * result + Objects.hashCode(operator);
 		result = prime * result + Objects.hashCode(scope);
 		result = prime * result + (selectActiveOnly ? 1231 : 1237);
+		result = prime * result + skipCount;
+		result = prime * result + maximumToRetrieve;
 		return result;
 	}
 
@@ -111,13 +143,15 @@ class SelectionOrderImpl implements SelectionOrder {
 				&& Objects.equals(victim, other.victim)
 				&& Objects.equals(operator, other.operator)
 				&& Objects.equals(scope, other.scope)
-				&& selectActiveOnly == other.selectActiveOnly;
+				&& selectActiveOnly == other.selectActiveOnly
+				&& maximumToRetrieve == other.maximumToRetrieve;
 	}
 
 	@Override
 	public String toString() {
 		return "SelectionOrderImpl [type=" + type + ", victim=" + victim + ", operator=" + operator + ", scope=" + scope
-				+ ", selectActiveOnly=" + selectActiveOnly + "]";
+				+ ", selectActiveOnly=" + selectActiveOnly + ", skipCount=" + skipCount + ", maximumToRetrieve="
+				+ maximumToRetrieve + "]";
 	}
-	
+
 }

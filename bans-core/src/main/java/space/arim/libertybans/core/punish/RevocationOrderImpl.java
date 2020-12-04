@@ -19,44 +19,43 @@
 package space.arim.libertybans.core.punish;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.revoke.RevocationOrder;
-import space.arim.libertybans.core.selector.MuteCacher;
+import space.arim.libertybans.core.selector.MuteCache;
 
 class RevocationOrderImpl implements RevocationOrder {
 	
-	private transient final EnforcementCenter center;
-
+	private final Revoker revoker;
 	private final int id;
 	private final PunishmentType type;
 	private final Victim victim;
 	
-	private RevocationOrderImpl(EnforcementCenter center, int id, PunishmentType type, Victim victim) {
-		this.center = center;
-
+	private RevocationOrderImpl(Revoker revoker, int id, PunishmentType type, Victim victim) {
+		this.revoker = revoker;
 		this.id = id;
 		this.type = type;
 		this.victim = victim;
 	}
 	
-	RevocationOrderImpl(EnforcementCenter center, int id) {
-		this(center, id, null, null);
+	RevocationOrderImpl(Revoker revoker, int id) {
+		this(revoker, id, null, null);
 		assert getApproach() == Approach.ID;
 	}
 	
-	RevocationOrderImpl(EnforcementCenter center, int id, PunishmentType type) {
-		this(center, id, Objects.requireNonNull(type, "type"), null);
+	RevocationOrderImpl(Revoker revoker, int id, PunishmentType type) {
+		this(revoker, id, Objects.requireNonNull(type, "type"), null);
 		assert getApproach() == Approach.ID_TYPE;
 	}
 	
-	RevocationOrderImpl(EnforcementCenter center, PunishmentType type, Victim victim) {
-		this(center, -1, MiscUtil.checkSingular(type), Objects.requireNonNull(victim, "victim"));
+	RevocationOrderImpl(Revoker revoker, PunishmentType type, Victim victim) {
+		this(revoker, -1, MiscUtil.checkSingular(type), Objects.requireNonNull(victim, "victim"));
 		assert getApproach() == Approach.TYPE_VICTIM;
 	}
 	
@@ -77,37 +76,37 @@ class RevocationOrderImpl implements RevocationOrder {
 	}
 
 	@Override
-	public Integer getID() {
-		return id;
+	public Optional<Integer> getID() {
+		return Optional.ofNullable(id);
 	}
 
 	@Override
-	public PunishmentType getType() {
-		return type;
+	public Optional<PunishmentType> getType() {
+		return Optional.ofNullable(type);
 	}
 
 	@Override
-	public Victim getVictim() {
-		return victim;
+	public Optional<Victim> getVictim() {
+		return Optional.ofNullable(victim);
 	}
 
 	@Override
-	public CentralisedFuture<Boolean> undoPunishment() {
+	public ReactionStage<Boolean> undoPunishment() {
 		return undoPunishmentWithoutUnenforcement().thenApply((revoked) -> {
 			if (revoked) {
-				MuteCacher muteCacher = center.core().getMuteCacher();
+				MuteCache muteCache = revoker.muteCache();
 				switch (getApproach()) {
 				case ID:
-					muteCacher.clearCachedMute(id);
+					muteCache.clearCachedMute(id);
 					break;
 				case ID_TYPE:
 					if (type == PunishmentType.MUTE) {
-						muteCacher.clearCachedMute(id);
+						muteCache.clearCachedMute(id);
 					}
 					break;
 				case TYPE_VICTIM:
 					if (type == PunishmentType.MUTE) {
-						muteCacher.clearCachedMute(victim);
+						muteCache.clearCachedMute(victim);
 					}
 					break;
 				default:
@@ -119,8 +118,7 @@ class RevocationOrderImpl implements RevocationOrder {
 	}
 
 	@Override
-	public CentralisedFuture<Boolean> undoPunishmentWithoutUnenforcement() {
-		Revoker revoker = center.getRevoker();
+	public ReactionStage<Boolean> undoPunishmentWithoutUnenforcement() {
 		switch (getApproach()) {
 		case ID:
 			return revoker.undoPunishmentById(id);
@@ -132,20 +130,23 @@ class RevocationOrderImpl implements RevocationOrder {
 			throw MiscUtil.unknownEnumEntry(getApproach());
 		}
 	}
-	
+
 	@Override
-	public CentralisedFuture<Punishment> undoAndGetPunishment() {
-		return undoAndGetPunishmentWithoutUnenforcement().thenCompose((punishment) -> {
-			if (punishment == null) {
-				return CompletableFuture.completedStage(null);
+	public ReactionStage<Optional<Punishment>> undoAndGetPunishment() {
+		return undoAndGetPunishmentWithoutUnenforcement().thenCompose((optPunishment) -> {
+			if (optPunishment.isEmpty()) {
+				return CompletableFuture.completedStage(Optional.empty());
 			}
-			return punishment.unenforcePunishment().thenApply((ignore) -> punishment);
+			return optPunishment.get().unenforcePunishment().thenApply((ignore) -> optPunishment);
 		});
 	}
 
 	@Override
-	public CentralisedFuture<Punishment> undoAndGetPunishmentWithoutUnenforcement() {
-		Revoker revoker = center.getRevoker();
+	public ReactionStage<Optional<Punishment>> undoAndGetPunishmentWithoutUnenforcement() {
+		return undoAndGetPunishmentWithoutUnenforcementNullable().thenApply(Optional::ofNullable);
+	}
+
+	private ReactionStage<Punishment> undoAndGetPunishmentWithoutUnenforcementNullable() {
 		switch (getApproach()) {
 		case ID:
 			return revoker.undoAndGetPunishmentById(id);

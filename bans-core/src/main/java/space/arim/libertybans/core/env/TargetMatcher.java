@@ -19,52 +19,15 @@
 package space.arim.libertybans.core.env;
 
 import java.net.InetAddress;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
 import space.arim.api.env.annote.PlatformPlayer;
 
-public class TargetMatcher {
+public interface TargetMatcher {
 
-	private final Set<UUID> uuids;
-	private final Set<InetAddress> addresses;
-	private final Consumer<@PlatformPlayer Object> callback;
+	boolean matches(UUID uuid, InetAddress address);
 	
-	public TargetMatcher(Set<UUID> uuids, Set<InetAddress> addresses, Consumer<@PlatformPlayer Object> callback) {
-		this.uuids = Set.copyOf(uuids);
-		this.addresses = Set.copyOf(addresses);
-		this.callback = callback;
-	}
-	
-	public boolean matches(UUID uuid, InetAddress address) {
-		return uuids.contains(uuid) || addresses.contains(address);
-	}
-	
-	public Consumer<@PlatformPlayer Object> callback() {
-		return callback;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + uuids.hashCode();
-		result = prime * result + addresses.hashCode();
-		result = prime * result + System.identityHashCode(callback);
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object object) {
-		if (this == object) {
-			return true;
-		}
-		if (!(object instanceof TargetMatcher)) {
-			return false;
-		}
-		TargetMatcher other = (TargetMatcher) object;
-		return callback == other.callback && uuids.equals(other.uuids) && addresses.equals(other.addresses);
-	}
+	Consumer<@PlatformPlayer Object> callback();
 	
 }

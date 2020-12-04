@@ -18,90 +18,107 @@
  */
 package space.arim.libertybans.api.revoke;
 
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import java.util.Optional;
+
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 
 /**
- * An order to undo a punishment by some specific details. Obtained from {@link PunishmentRevoker}. <br>
+ * An order to undo a punishment by some specific details. Obtained from
+ * {@link PunishmentRevoker}. <br>
  * <br>
- * See {@link space.arim.libertybans.api.punish} for a description of active and historical punishments.
+ * See {@link space.arim.libertybans.api.punish} for a description of active and
+ * historical punishments.
  * 
  * @author A248
  *
  */
 public interface RevocationOrder {
-	
+
 	/**
-	 * Gets the ID of the punishment which will be revoked, or {@code null} if no ID
-	 * is known
+	 * Gets the ID of the punishment which will be revoked, or none if no ID is
+	 * known
 	 * 
-	 * @return the ID of the punishment to be revoked, or null
+	 * @return the ID of the punishment to be revoked if there is one
 	 */
-	Integer getID();
-	
+	Optional<Integer> getID();
+
 	/**
-	 * Gets the punishment type of the punishment which will be revoked, or {@code null}
-	 * if the type is not known
+	 * Gets the punishment type of the punishment which will be revoked, or none if
+	 * the type is not known
 	 * 
-	 * @return the type of the punishment to be revoked, or null
+	 * @return the type of the punishment to be revoked if there is one
 	 */
-	PunishmentType getType();
-	
+	Optional<PunishmentType> getType();
+
 	/**
-	 * Gets the victim whose punishment will be revoked, or {@code null} if the victim
-	 * is not known
+	 * Gets the victim whose punishment will be revoked, or none if the victim is
+	 * not known
 	 * 
-	 * @return the victim, or null
+	 * @return the victim if there is one
 	 */
-	Victim getVictim();
-	
+	Optional<Victim> getVictim();
+
 	/**
-	 * Revokes the punishment matching this revocation order, and "unenforces" it. <br>
+	 * Revokes the punishment matching this revocation order, and "unenforces" it.
 	 * <br>
-	 * If no active punishment in the database matched this revocation order, the future yields {@code false}. <br>
+	 * <br>
+	 * If no active punishment in the database matched this revocation order, the
+	 * future yields {@code false}. <br>
 	 * <br>
 	 * Unenforcement implies purging of this punishment from any local caches.
 	 * 
-	 * @return a future which yields {@code true} if the punishment existed and has been revoked, {@code false} otherwise
+	 * @return a future which yields {@code true} if the punishment existed and has
+	 *         been revoked, {@code false} otherwise
 	 */
-	CentralisedFuture<Boolean> undoPunishment();
-	
+	ReactionStage<Boolean> undoPunishment();
+
 	/**
 	 * Revokes the punishment matching this revocation order. <br>
 	 * <br>
-	 * If no active punishment in the database matched this revocation order, the future yields {@code false}. <br>
+	 * If no active punishment in the database matched this revocation order, the
+	 * future yields {@code false}. <br>
 	 * <br>
-	 * Most callers will want to use {@link #undoPunishment()} instead, which has the added effect
-	 * of "unenforcing" the punishment. Unenforcement implies purging of this punishment from any local caches.
+	 * Most callers will want to use {@link #undoPunishment()} instead, which has
+	 * the added effect of "unenforcing" the punishment. Unenforcement implies
+	 * purging of this punishment from any local caches.
 	 * 
-	 * @return a future which yields {@code true} if the punishment existed and has been revoked, {@code false} otherwise
+	 * @return a future which yields {@code true} if the punishment existed and has
+	 *         been revoked, {@code false} otherwise
 	 */
-	CentralisedFuture<Boolean> undoPunishmentWithoutUnenforcement();
-	
+	ReactionStage<Boolean> undoPunishmentWithoutUnenforcement();
+
 	/**
-	 * Revokes the punishment matching this revocation order, "unenforces" it, and gets the punishment revoked. <br>
+	 * Revokes the punishment matching this revocation order, "unenforces" it, and
+	 * gets the punishment revoked. <br>
 	 * <br>
-	 * If no active punishment in the database matched this revocation order, the future yields {@code null}. <br>
+	 * If no active punishment in the database matched this revocation order, the
+	 * future yields an empty optional. <br>
 	 * <br>
 	 * Unenforcement implies purging of this punishment from any local caches.
 	 * 
-	 * @return a future which yields the punishment if it existed and was revoked, null otherwise
+	 * @return a future which yields the punishment if it existed and was revoked,
+	 *         nothing otherwise
 	 */
-	CentralisedFuture<Punishment> undoAndGetPunishment();
-	
+	ReactionStage<Optional<Punishment>> undoAndGetPunishment();
+
 	/**
-	 * Revokes the punishment matching this revocation order, and gets the punishment revoked. <br>
+	 * Revokes the punishment matching this revocation order, and gets the
+	 * punishment revoked. <br>
 	 * <br>
-	 * If no active punishment in the database matched this revocation order, the future yields {@code null}. <br>
+	 * If no active punishment in the database matched this revocation order, the
+	 * future yields an empty optional. <br>
 	 * <br>
-	 * Most callers will want to use {@link #undoAndGetPunishment()} instead, which has the added effect
-	 * of "unenforcing" the punishment. Unenforcement implies purging of this punishment from any local caches.
+	 * Most callers will want to use {@link #undoAndGetPunishment()} instead, which
+	 * has the added effect of "unenforcing" the punishment. Unenforcement implies
+	 * purging of this punishment from any local caches.
 	 * 
-	 * @return a future which yields the punishment if it existed and was revoked, null otherwise
+	 * @return a future which yields the punishment if it existed and was revoked,
+	 *         nothing otherwise
 	 */
-	CentralisedFuture<Punishment> undoAndGetPunishmentWithoutUnenforcement();
-	
+	ReactionStage<Optional<Punishment>> undoAndGetPunishmentWithoutUnenforcement();
+
 }

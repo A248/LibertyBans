@@ -18,7 +18,7 @@
  */
 package space.arim.libertybans.api.example;
 
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 import space.arim.omnibus.util.ThisClass;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.api.LibertyBans;
 import space.arim.libertybans.api.PlayerOperator;
@@ -62,26 +62,26 @@ public class WikiExamples {
 		DraftPunishment draftBan = drafter.draftBuilder().type(PunishmentType.BAN).victim(PlayerVictim.of(uuidToBan))
 				.reason("Because I said so").build();
 
-		draftBan.enactPunishment().thenAcceptSync((punishment) -> {
+		draftBan.enactPunishment().thenAcceptSync((optPunishment) -> {
 
 			// In this example it is assumed you have a logger
 			// You should not copy and paste examples verbatim
-			if (punishment == null) {
+			if (optPunishment.isEmpty()) {
 				logger.info("UUID {} is already banned", uuidToBan);
 				return;
 			}
-			logger.info("ID of the enacted punishment is {}", punishment.getID());
+			logger.info("ID of the enacted punishment is {}", optPunishment.get().getID());
 		});
 	}
 	
-	public CentralisedFuture<Set<Punishment>> getMutesFrom(UUID staffMemberUuid) {
+	public ReactionStage<List<Punishment>> getMutesFrom(UUID staffMemberUuid) {
 		PunishmentSelector selector = libertyBans.getSelector();
-		
+
 		return selector.selectionBuilder().operator(PlayerOperator.of(staffMemberUuid)).type(PunishmentType.MUTE)
 				.build().getAllSpecificPunishments();
 	}
-	
-	public CentralisedFuture<?> revokeBanFor(UUID bannedPlayer) {
+
+	public ReactionStage<?> revokeBanFor(UUID bannedPlayer) {
 		PunishmentRevoker revoker = libertyBans.getRevoker();
 
 		// Relies on the fact a single victim can only have 1 active ban

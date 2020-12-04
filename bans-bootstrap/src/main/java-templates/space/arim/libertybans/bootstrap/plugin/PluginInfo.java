@@ -21,14 +21,14 @@ package space.arim.libertybans.bootstrap.plugin;
 public final class PluginInfo {
 
 	public static final String ANNOTE_ID = "${plugin.annotationId}";
-	
 	public static final String NAME = "${plugin.name}";
-	
 	public static final String VERSION = "${plugin.version}";
-	
 	public static final String DESCRIPTION = "${plugin.description}";
-	
 	public static final String URL = "${plugin.url}";
+	
+	
+	public static final String DATABASE_REVISION_MAJOR = "${dbrevision.major}";
+	public static final String DATABASE_REVISION_MINOR = "${dbrevision.minor}";
 	
 	private PluginInfo() {}
 	

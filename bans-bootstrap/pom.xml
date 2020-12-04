@@ -51,5 +51,14 @@
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-params</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-bootstrap-logger</artifactId>
+		</dependency>
 	</dependencies>
 </project>

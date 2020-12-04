@@ -21,61 +21,57 @@ package space.arim.libertybans.env.spigot;
 import java.net.InetAddress;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import space.arim.omnibus.util.ThisClass;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.chat.serialiser.LegacyCodeSerialiser;
+
+import space.arim.libertybans.core.punish.Enforcer;
 
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
+import org.bukkit.plugin.java.JavaPlugin;
 
+@Singleton
 public class ConnectionListener extends SpigotParallelisedListener<AsyncPlayerPreLoginEvent, SendableMessage> {
-
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
-	ConnectionListener(SpigotEnv env) {
-		super(env);
+	private final Enforcer enforcer;
+	
+	@Inject
+	public ConnectionListener(JavaPlugin plugin, Enforcer enforcer) {
+		super(plugin);
+		this.enforcer = enforcer;
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
-	public void onConnectLow(AsyncPlayerPreLoginEvent evt) {
-		if (evt.getLoginResult() != Result.ALLOWED) {
-			logger.debug("Player '{}' is already blocked by the server or another plugin", evt.getName());
+	public void onConnectLow(AsyncPlayerPreLoginEvent event) {
+		if (event.getLoginResult() != Result.ALLOWED) {
+			debugPrematurelyDenied(event);
 			return;
 		}
-		UUID uuid = evt.getUniqueId();
-		String name = evt.getName();
-		InetAddress address = evt.getAddress();
-		begin(evt, env.core.getEnforcementCenter().executeAndCheckConnection(uuid, name, address));
+		UUID uuid = event.getUniqueId();
+		String name = event.getName();
+		InetAddress address = event.getAddress();
+		begin(event, enforcer.executeAndCheckConnection(uuid, name, address));
 	}
 	
 	@Override
-	protected void absentFutureHandler(AsyncPlayerPreLoginEvent evt) {
-		if (evt.getLoginResult() == Result.ALLOWED) {
-			logger.error(
-					"Critical: Player ({}, {}, {}) was previously blocked by the server or another plugin, "
-					+ "but since then, some plugin has *uncancelled* the blocking. "
-					+ "This may lead to bans not being checked and enforced.",
-					evt.getUniqueId(), evt.getName(), evt.getAddress());
-		} else {
-			logger.trace("Confirmation: Player '{}' is already blocked by the server or another plugin", evt.getName());
-		}
+	protected boolean isAllowed(AsyncPlayerPreLoginEvent event) {
+		return event.getLoginResult() == Result.ALLOWED;
 	}
 
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onConnectHigh(AsyncPlayerPreLoginEvent evt) {
-		SendableMessage message = withdraw(evt);
+	public void onConnectHigh(AsyncPlayerPreLoginEvent event) {
+		SendableMessage message = withdraw(event);
 		if (message == null) {
-			logger.trace("Letting '{}' through the gates", evt.getName());
+			debugResultPermitted(event);
 			return;
 		}
-		evt.disallow(Result.KICK_BANNED, LegacyCodeSerialiser.getInstance(ChatColor.COLOR_CHAR).serialise(message));
+		event.disallow(Result.KICK_BANNED, LegacyCodeSerialiser.getInstance(ChatColor.COLOR_CHAR).serialise(message));
 	}
 	
 }

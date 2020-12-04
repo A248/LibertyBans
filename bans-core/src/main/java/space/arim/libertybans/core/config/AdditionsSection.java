@@ -44,6 +44,8 @@ public interface AdditionsSection {
 		
 		SendableMessage permissionCommand();
 		
+		SendableMessage permissionIpAddress();
+		
 		SendableMessageManipulator successMessage();
 		
 		SendableMessageManipulator successNotification();
@@ -52,7 +54,13 @@ public interface AdditionsSection {
 		
 	}
 	
-	interface ExclusivePunishmentAddition extends PunishmentAddition {
+	interface PunishmentAdditionWithDurationPerm extends PunishmentAddition {
+		
+		SendableMessageManipulator permissionDuration();
+		
+	}
+	
+	interface ExclusivePunishmentAddition extends PunishmentAdditionWithDurationPerm {
 		
 		SendableMessageManipulator conflicting();
 		
@@ -68,6 +76,16 @@ public interface AdditionsSection {
 		@ConfKey("permission.command")
 		@DefaultString("&cYou may not ban other players.")
 		SendableMessage permissionCommand();
+		
+		@Override
+		@ConfKey("permission.ip-address")
+		@DefaultString("&cYou may not ban by IP address.")
+		SendableMessage permissionIpAddress();
+		
+		@Override
+		@ConfKey("permission.duration")
+		@DefaultString("&cYou may not ban other players for &e%DURATION%&c.")
+		SendableMessageManipulator permissionDuration();
 
 		@Override
 		@DefaultString("&c&o%TARGET%&r&7 is already banned.")
@@ -108,6 +126,16 @@ public interface AdditionsSection {
 		@ConfKey("permission.command")
 		@DefaultString("&cYou may not mute other players.")
 		SendableMessage permissionCommand();
+		
+		@Override
+		@ConfKey("permission.ip-address")
+		@DefaultString("&cYou may not mute by IP address.")
+		SendableMessage permissionIpAddress();
+		
+		@Override
+		@ConfKey("permission.duration")
+		@DefaultString("&cYou may not mute other players for &e%DURATION%&c.")
+		SendableMessageManipulator permissionDuration();
 
 		@Override
 		@DefaultString("&c&o%TARGET%&r&7 is already muted.")
@@ -134,7 +162,7 @@ public interface AdditionsSection {
 		
 	}
 	
-	interface WarnAddition extends PunishmentAddition {
+	interface WarnAddition extends PunishmentAdditionWithDurationPerm {
 		
 		@Override
 		@DefaultString("&cUsage: /warn &e<player> [time] <reason>&c.")
@@ -144,6 +172,16 @@ public interface AdditionsSection {
 		@ConfKey("permission.command")
 		@DefaultString("&cYou may not warn other players.")
 		SendableMessage permissionCommand();
+		
+		@Override
+		@ConfKey("permission.ip-address")
+		@DefaultString("&cYou may not warn by IP address.")
+		SendableMessage permissionIpAddress();
+		
+		@Override
+		@ConfKey("permission.duration")
+		@DefaultString("&cYou may not warn other players for &e%DURATION%&c.")
+		SendableMessageManipulator permissionDuration();
 		
 		@Override
 		@ConfKey("success.message")
@@ -178,6 +216,11 @@ public interface AdditionsSection {
 		SendableMessage permissionCommand();
 		
 		@Override
+		@ConfKey("permission.ip-address")
+		@DefaultString("&cYou may not kick by IP address.")
+		SendableMessage permissionIpAddress();
+		
+		@Override
 		@ConfKey("success.message")
 		@DefaultString("&aKicked &c&o%VICTIM%&r&a because of &e&o%REASON%&r&a.")
 		SendableMessageManipulator successMessage();
@@ -190,7 +233,6 @@ public interface AdditionsSection {
 		@Override
 		@DefaultStrings({
 				"&7&lKicked",
-				"&cDuration: &e%TIME_REMAINING%",
 				"&7",
 				"&c&lReason",
 				"&7%REASON%"})

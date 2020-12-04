@@ -20,10 +20,10 @@ package space.arim.libertybans.core.database;
 
 final class DatabaseResult {
 
-	final Database database;
+	final StandardDatabase database;
 	final boolean success;
 	
-	DatabaseResult(Database database, boolean success) {
+	DatabaseResult(StandardDatabase database, boolean success) {
 		this.database = database;
 		this.success = success;
 	}

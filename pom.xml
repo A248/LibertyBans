@@ -20,22 +20,25 @@
 		<!-- Testing dependencies -->
 		<junit.version>5.7.0</junit.version>
 		<mariadb4j.version>2.4.0</mariadb4j.version>
+		<mockito.version>3.6.28</mockito.version>
 		
 		<!-- Bumping dependency versions requires modification of dependency hashes -->
 		
 		<!-- API dependencies -->
-		<omnibus.version>1.0.0-RC4</omnibus.version>
-		<uuidvault.version>0.5.4-SNAPSHOT</uuidvault.version>
-
+		<omnibus.version>1.0.0-RC5</omnibus.version>
+		
 		<!-- Internal dependencies -->
-		<jdbcaesar.version>0.5.0</jdbcaesar.version>
-		<dazzleconf.version>1.0.0-RC4</dazzleconf.version>
-		<arimapi.version>0.20.6-SNAPSHOT</arimapi.version>
+		<jakarta-inject.version>2.0.0</jakarta-inject.version>
+		<solidinjector.version>1.0.0</solidinjector.version>
+		<jdbcaesar.version>1.0.0-SNAPSHOT</jdbcaesar.version>
+		<dazzleconf.version>1.1.0</dazzleconf.version>
 		<slf4j.version>1.7.30</slf4j.version>
 		<hikari.version>3.4.5</hikari.version>
 		<hsqldb.version>2.5.1</hsqldb.version>
 		<mariadb-connector.version>2.6.2</mariadb-connector.version>
 		<caffeine.version>2.8.5</caffeine.version>
+		<flyway.version>7.0.4</flyway.version>
+		<arimapi.version>0.21.0-SNAPSHOT</arimapi.version>
 		<morepaperlib.version>0.1.0-SNAPSHOT</morepaperlib.version>
 		
 		<!-- Plugin variables -->
@@ -43,8 +46,12 @@
 		<plugin.annotationId>libertybans</plugin.annotationId> <!-- Used for @Plugin annotation on Velocity -->
 		<plugin.version>${project.version}</plugin.version>
 		<plugin.author>A248</plugin.author>
-		<plugin.url>${project.parent.url}</plugin.url>
+		<plugin.url>https://github.com/A248/LibertyBans</plugin.url>
 		<plugin.description>${project.description}</plugin.description>
+		
+		<!-- Database revision table -->
+		<dbrevision.major>2</dbrevision.major>
+		<dbrevision.minor>0</dbrevision.minor>
 	</properties>
 	
 	<licenses>
@@ -130,13 +137,14 @@
 							<scope>runtime</scope>
 						</dependency>
 					</dependencies>
-			</plugin>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
 	
 	<modules>
 		<module>bans-api</module>
+		<module>bans-bootstrap-logger</module>
 		<module>bans-bootstrap</module>
 		<module>bans-core</module>
 		<module>bans-env</module>
@@ -155,10 +163,10 @@
 			<url>https://maven.cloudsmith.io/anand-beh/affero-gpl3/</url>
 		</snapshotRepository>
 	</distributionManagement>
-	
+
 	<dependencyManagement>
 		<dependencies>
-			<!-- Internal dependencies -->
+			<!-- Own dependencies -->
 			<dependency>
 				<groupId>space.arim.libertybans</groupId>
 				<artifactId>bans-api</artifactId>
@@ -167,6 +175,11 @@
 			<dependency>
 				<groupId>space.arim.libertybans</groupId>
 				<artifactId>bans-bootstrap</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-bootstrap-logger</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -210,9 +223,10 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.uuidvault</groupId>
-				<artifactId>plugin</artifactId>
-				<version>${uuidvault.version}</version>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-junit-jupiter</artifactId>
+				<version>${mockito.version}</version>
+				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>ch.vorburger.mariaDB4j</groupId>
@@ -239,13 +253,18 @@
 				<artifactId>omnibus</artifactId>
 				<version>${omnibus.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>space.arim.uuidvault</groupId>
-				<artifactId>api</artifactId>
-				<version>${uuidvault.version}</version>
-			</dependency>
 			
 			<!-- Internal dependencies -->
+			<dependency>
+				<groupId>jakarta.inject</groupId>
+				<artifactId>jakarta.inject-api</artifactId>
+				<version>${jakarta-inject.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.injector</groupId>
+				<artifactId>injector</artifactId>
+				<version>${solidinjector.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>space.arim.jdbcaesar</groupId>
 				<artifactId>jdbcaesar</artifactId>
@@ -255,11 +274,6 @@
 				<groupId>space.arim.dazzleconf</groupId>
 				<artifactId>dazzleconf-ext-snakeyaml</artifactId>
 				<version>${dazzleconf.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>space.arim.api</groupId>
-				<artifactId>arimapi-all</artifactId>
-				<version>${arimapi.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.slf4j</groupId>
@@ -272,11 +286,21 @@
 				<version>${hikari.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-core</artifactId>
+				<version>${flyway.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>com.github.ben-manes.caffeine</groupId>
 				<artifactId>caffeine</artifactId>
 				<version>${caffeine.version}</version>
 			</dependency>
-			
+			<dependency>
+				<groupId>space.arim.api</groupId>
+				<artifactId>arimapi-all</artifactId>
+				<version>${arimapi.version}</version>
+			</dependency>
+
 			<!-- License dependency -->
 			<dependency>
 				<groupId>space.arim.licenser</groupId>

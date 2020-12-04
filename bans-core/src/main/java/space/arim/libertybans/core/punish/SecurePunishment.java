@@ -21,25 +21,26 @@ package space.arim.libertybans.core.punish;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.ServerScope;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.scope.ServerScope;
 
 class SecurePunishment extends AbstractPunishmentBase implements Punishment {
 
+	private final SecurePunishmentCreator creator;
 	private final int id;
 	private final Instant startDate;
 	private final Instant endDate;
 	
-	SecurePunishment(EnforcementCenter center,
+	SecurePunishment(SecurePunishmentCreator creator,
 			int id, PunishmentType type, Victim victim, Operator operator,
 			String reason, ServerScope scope, Instant startDate, Instant endDate) {
-		super(center, type, victim, operator, reason, scope);
-
+		super(type, victim, operator, reason, scope);
+		this.creator = creator;
 		this.id = id;
 		this.startDate = startDate;
 		this.endDate = endDate;
@@ -59,32 +60,32 @@ class SecurePunishment extends AbstractPunishmentBase implements Punishment {
 	public Instant getEndDate() {
 		return endDate;
 	}
-	
+
 	@Override
-	public CentralisedFuture<?> enforcePunishment() {
-		return center.getEnforcer().enforce(this);
+	public ReactionStage<?> enforcePunishment() {
+		return creator.enforcer().enforce(this);
 	}
-	
+
 	@Override
-	public CentralisedFuture<Boolean> undoPunishment() {
+	public ReactionStage<Boolean> undoPunishment() {
 		return undoPunishmentWithoutUnenforcement().thenCompose((undone) -> {
 			return (undone) ?
 					unenforcePunishment().thenApply((ignore) -> true)
 					: CompletableFuture.completedStage(false);
 		});
 	}
-	
+
 	@Override
-	public CentralisedFuture<Boolean> undoPunishmentWithoutUnenforcement() {
-		return center.getRevoker().undoPunishment(this);
+	public ReactionStage<Boolean> undoPunishmentWithoutUnenforcement() {
+		return creator.revoker().undoPunishment(this);
 	}
 
 	@Override
-	public CentralisedFuture<?> unenforcePunishment() {
+	public ReactionStage<?> unenforcePunishment() {
 		if (getType() == PunishmentType.MUTE) {
-			center.core().getMuteCacher().clearCachedMute(this);
+			creator.muteCache().clearCachedMute(this);
 		}
-		return center.core().getFuturesFactory().completedFuture(null);
+		return creator.futuresFactory().completedFuture(null);
 	}
 
 	@Override
@@ -102,7 +103,10 @@ class SecurePunishment extends AbstractPunishmentBase implements Punishment {
 
 	@Override
 	public String toString() {
-		return "SecurePunishment [id=" + id + "]";
+		return "SecurePunishment [id=" + id + ", getType()=" + getType() + ", getVictim()=" + getVictim()
+				+ ", getOperator()=" + getOperator() + ", getReason()=" + getReason() + ", getScope()=" + getScope()
+				+ ", getStartDateSeconds()=" + getStartDateSeconds() + ", getEndDateSeconds()=" + getEndDateSeconds()
+				+ "]";
 	}
 
 }

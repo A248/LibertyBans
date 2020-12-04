@@ -27,10 +27,11 @@ package space.arim.libertybans.api.punish;
 public interface PunishmentDrafter {
 
 	/**
-	 * Begins creating a draft punishment by returning a {@link DraftPunishmentBuilder}
+	 * Begins creating a draft punishment by returning a
+	 * {@link DraftPunishmentBuilder}
 	 * 
 	 * @return a draft punishment builder
 	 */
 	DraftPunishmentBuilder draftBuilder();
-	
+
 }

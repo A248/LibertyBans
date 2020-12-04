@@ -40,6 +40,8 @@ import space.arim.dazzleconf.annote.SubSection;
 		"However, for servers wishing to use MariaDB / MySQL, or for large servers wishing to tweak performance,",
 		"further setup is required.",
 		"",
+		"Using MariaDB requires at least MySQL 5.7/8.0 or MariaDB 10.2. Older versions of MySQL/MariaDB are not supported.",
+		"",
 		"",
 		"Note well:",
 		"To apply changes made here, use '/libertybans restart' or restart the server.",
@@ -54,7 +56,7 @@ public interface SqlConfig {
 			"What RDMS vendor will you be using?",
 			"Available options:",
 			"'HSQLDB' - Local HyperSQL database. No additional setup required.",
-			"'MARIADB' - Requires a separate MariaDB or MySQL database."})
+			"'MARIADB' - Requires a separate database, and at least MySQL 5.7/8.0 or MariaDB 10.2. "})
 	@DefaultString("HSQLDB")
 	Vendor vendor(); // Sensitive name used in integration testing
 	
@@ -120,19 +122,33 @@ public interface SqlConfig {
 		
 	}
 	
-	@ConfKey("mariadb-connection-properties")
-	@ConfComments({
-			"Connection properties to be applied to database connections to the MariaDB / MySQL database",
-			"These are specified in key-value format. Has no effect on HSQLDB"
-	})
-	@DefaultMap({
-			"useUnicode", "true",
-			"characterEncoding", "UTF-8",
-			"useServerPrepStmts", "true",
-			"cachePrepStmts", "true",
-			"prepStmtCacheSize", "25",
-			"prepStmtCacheSqlLimit", "256"})
-	Map<String, String> connectionProperties();
+	@ConfKey("mariadb")
+	@ConfComments("The values in this section only apply when using a MariaDB / MySQL database")
+	@SubSection
+	MariaDbConfig mariaDb();
+	
+	interface MariaDbConfig {
+		
+		@ConfKey("connection-properties")
+		@ConfComments({
+				"Connection properties to be applied to database connections"
+		})
+		@DefaultMap({
+				"useUnicode", "true",
+				"characterEncoding", "UTF-8",
+				"useServerPrepStmts", "true",
+				"cachePrepStmts", "true",
+				"prepStmtCacheSize", "25",
+				"prepStmtCacheSqlLimit", "256"})
+		Map<String, String> connectionProperties();
+		
+		@ConfKey("use-event-scheduler")
+		@ConfComments({"Whether to take advantage of the event scheduler to setup an event to clean out expired punishments.",
+			"You must also turn on your database's event scheduler in order to use this."})
+		@DefaultBoolean(false)
+		boolean useEventScheduler();
+		
+	}
 	
 	@ConfKey("use-traditional-jdbc-url")
 	@ConfComments("Legacy option. Don't touch this unless you understand it or you're told to enable it.")

@@ -87,24 +87,57 @@ public interface MainConfig {
 	}
 	
 	@SubSection
+	DurationPermissions durationPermissions();
+	
+	interface DurationPermissions {
+		
+		@ConfComments("If disabled, players are not checked for duration permissions.")
+		@DefaultBoolean(false)
+		boolean enable();
+		
+		@ConfKey("permissions-to-check")
+		@ConfComments({"Which duration permissions should a staff member be checked for?",
+				"Specify all the durations which you want to explicitly grant permission for."})
+		@DefaultStrings({"perm", "30d", "10d", "4h"})
+		Set<String> permissionsToCheck();
+		
+	}
+	
+	@SubSection
 	EnforcementConfig enforcement(); // Sensitive name used in integration testing
 	
 	@ConfKey("player-uuid-resolution")
 	@SubSection
 	UUIDResolutionConfig uuidResolution();
 	
-	@ConfKey("commands.aliases")
-	@ConfComments({"What commands should be registered as aliases for libertybans commands?",
-		"For each command listed here, '/<command>' will be equal to '/libertybans <command>'"})
-	@DefaultStrings({
-		"ban",
-	    "mute",
-	    "warn",
-	    "kick",
-	    "unban",
-	    "unmute",
-	    "unwarn"
-	})
-	Set<String> commandAliases();
+	@SubSection
+	Commands commands();
+	
+	interface Commands {
+		
+		@ConfKey("enable-tab-completion")
+		@ConfComments("Whether to enable tab completion")
+		@DefaultBoolean(true)
+		boolean tabComplete();
+		
+		@ConfComments({"What commands should be registered as aliases for libertybans commands?",
+			"For each command listed here, '/<command>' will be equal to '/libertybans <command>'"})
+		@DefaultStrings({
+			"ban", "ipban",
+		    "mute", "ipmute",
+		    "warn", "ipwarn",
+		    "kick", "ipkick",
+		    "unban", "unbanip",
+		    "unmute", "unmuteip",
+		    "unwarn", "unwarnip",
+		    "banlist",
+		    "mutelist",
+		    "history",
+		    "warns",
+		    "blame"
+		})
+		Set<String> aliases();
+		
+	}
 	
 }

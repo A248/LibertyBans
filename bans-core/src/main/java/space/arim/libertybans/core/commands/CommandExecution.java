@@ -22,8 +22,4 @@ interface CommandExecution {
 
 	void execute();
 	
-	static CommandExecution empty() {
-		return () -> {};
-	}
-	
 }

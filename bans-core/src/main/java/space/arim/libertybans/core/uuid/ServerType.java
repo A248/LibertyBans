@@ -18,7 +18,7 @@
  */
 package space.arim.libertybans.core.uuid;
 
-enum ServerType {
+public enum ServerType {
 	
 	ONLINE,
 	OFFLINE,

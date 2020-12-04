@@ -18,6 +18,8 @@
  */
 package space.arim.libertybans.core.config;
 
+import java.util.Locale;
+
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.chat.manipulator.SendableMessageManipulator;
 
@@ -26,6 +28,7 @@ import space.arim.dazzleconf.annote.ConfDefault.DefaultString;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultStrings;
 import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
+import space.arim.dazzleconf.annote.IntegerRange;
 import space.arim.dazzleconf.annote.SubSection;
 
 @ConfHeader("Used for /banlist, /mutelist, /history, /warns, /blame")
@@ -58,6 +61,7 @@ public interface ListSection {
 		SendableMessage usage();
 		
 		@Override
+		@IntegerRange(min = 1)
 		@DefaultInteger(10)
 		int perPage();
 		
@@ -66,7 +70,7 @@ public interface ListSection {
 		SendableMessageManipulator noPages();
 		
 		@Override
-		@DefaultString("&7Page &e%PAGE%&7 does not exist. Max pages: &e%MAXPAGE%&7.")
+		@DefaultString("&7Page &e%PAGE%&7 does not exist.")
 		SendableMessageManipulator maxPages();
 		
 		@Override
@@ -84,13 +88,13 @@ public interface ListSection {
 		@Override
 		@ConfKey("layout.body")
 		@DefaultStrings({"&7[&e%ID%&7] &e&o%VICTIM%",
-				"&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_END_REL%",
+				"&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%",
 				"&7"})
 		SendableMessageManipulator layoutBody();
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/libertybans banlist %NEXTPAGE%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans banlist %NEXTPAGE%"})
 		SendableMessageManipulator layoutFooter();
 		
 	}
@@ -102,6 +106,7 @@ public interface ListSection {
 		SendableMessage usage();
 		
 		@Override
+		@IntegerRange(min = 1)
 		@DefaultInteger(10)
 		int perPage();
 		
@@ -110,7 +115,7 @@ public interface ListSection {
 		SendableMessageManipulator noPages();
 		
 		@Override
-		@DefaultString("&7Page &e%PAGE%&7 does not exist. Max pages: &e%MAXPAGE%&7.")
+		@DefaultString("&7Page &e%PAGE%&7 does not exist.")
 		SendableMessageManipulator maxPages();
 		
 		@Override
@@ -128,13 +133,13 @@ public interface ListSection {
 		@Override
 		@ConfKey("layout.body")
 		@DefaultStrings({"&7[&e%ID%&7] &e&o%VICTIM%",
-				"&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_END_REL%",
+				"&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%",
 				"&7"})
 		SendableMessageManipulator layoutBody();
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/libertybans mutelist %NEXTPAGE%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans mutelist %NEXTPAGE%"})
 		SendableMessageManipulator layoutFooter();
 		
 	}
@@ -146,6 +151,7 @@ public interface ListSection {
 		SendableMessage usage();
 		
 		@Override
+		@IntegerRange(min = 1)
 		@DefaultInteger(10)
 		int perPage();
 		
@@ -154,7 +160,7 @@ public interface ListSection {
 		SendableMessageManipulator noPages();
 		
 		@Override
-		@DefaultString("&7Page &e%PAGE%&7 does not exist. Max pages: &e%MAXPAGE%&7.")
+		@DefaultString("&7Page &e%PAGE%&7 does not exist.")
 		SendableMessageManipulator maxPages();
 		
 		@Override
@@ -172,13 +178,13 @@ public interface ListSection {
 		@Override
 		@ConfKey("layout.body")
 		@DefaultStrings({"&7[&e%ID%&7] &r&7/ &7%TYPE%",
-				"&7%OPERATOR% &8/ &7REASON% &8/ &7%TIME_START_ABS%",
+				"&7%OPERATOR% &8/ &7REASON% &8/ &7%START_DATE%",
 				"&7"})
 		SendableMessageManipulator layoutBody();
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/libertybans history %TARGET% %NEXTPAGE%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans history %TARGET% %NEXTPAGE%"})
 		SendableMessageManipulator layoutFooter();
 		
 	}
@@ -190,6 +196,7 @@ public interface ListSection {
 		SendableMessage usage();
 		
 		@Override
+		@IntegerRange(min = 1)
 		@DefaultInteger(10)
 		int perPage();
 		
@@ -198,7 +205,7 @@ public interface ListSection {
 		SendableMessageManipulator noPages();
 		
 		@Override
-		@DefaultString("&7Page &e%PAGE%&7 does not exist. Max pages: &e%MAXPAGE%&7.")
+		@DefaultString("&7Page &e%PAGE%&7 does not exist.")
 		SendableMessageManipulator maxPages();
 		
 		@Override
@@ -214,13 +221,13 @@ public interface ListSection {
 		
 		@Override
 		@ConfKey("layout.body")
-		@DefaultStrings({"&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_END_REL%",
+		@DefaultStrings({"&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%",
 				"&7"})
 		SendableMessageManipulator layoutBody();
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE%"})
 		SendableMessageManipulator layoutFooter();
 		
 	}
@@ -232,6 +239,7 @@ public interface ListSection {
 		SendableMessage usage();
 		
 		@Override
+		@IntegerRange(min = 1)
 		@DefaultInteger(10)
 		int perPage();
 		
@@ -240,7 +248,7 @@ public interface ListSection {
 		SendableMessageManipulator noPages();
 		
 		@Override
-		@DefaultString("&7Page &e%PAGE%&7 does not exist. Max pages: &e%MAXPAGE%&7.")
+		@DefaultString("&7Page &e%PAGE%&7 does not exist.")
 		SendableMessageManipulator maxPages();
 		
 		@Override
@@ -258,23 +266,43 @@ public interface ListSection {
 		@Override
 		@ConfKey("layout.body")
 		@DefaultStrings({"&7[&e%ID%&7] &e&o%SUBJECT% &r&8 / &7%TYPE%",
-				"&7%REASON% &8/ &7%TIME_START_ABS%",
+				"&7%REASON% &8/ &7%START_DATE%",
 				"&7"})
 		SendableMessageManipulator layoutBody();
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7/&e%MAXPAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE%"})
 		SendableMessageManipulator layoutFooter();
 		
 	}
 	
 	enum ListType {
+		
 		BANLIST,
 		MUTELIST,
 		HISTORY,
 		WARNS,
 		BLAME;
+		
+		public boolean requiresTarget() {
+			switch (this) {
+			case BANLIST:
+			case MUTELIST:
+				return false;
+			case HISTORY:
+			case WARNS:
+			case BLAME:
+				return true;
+			default:
+				throw new IllegalArgumentException("requiresTarget not up-to-date");
+			}
+		}
+		
+		@Override
+		public String toString() {
+			return name().toLowerCase(Locale.ROOT);
+		}
 	}
 	
 	default PunishmentList forType(ListType type) {

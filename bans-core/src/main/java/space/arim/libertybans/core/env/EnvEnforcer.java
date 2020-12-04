@@ -65,10 +65,27 @@ public interface EnvEnforcer {
 	 */
 	void sendMessageByUUID(UUID uuid, SendableMessage message);
 	
+	/**
+	 * Enforces a target matcher, invoking its callback for players matching its UUID or address set
+	 * 
+	 * @param matcher the target matcher
+	 */
 	void enforceMatcher(TargetMatcher matcher);
 	
+	/**
+	 * Gets the UUID of a player
+	 * 
+	 * @param player the player
+	 * @return the UUID
+	 */
 	UUID getUniqueIdFor(@PlatformPlayer Object player);
 	
+	/**
+	 * Gets the address of a player
+	 * 
+	 * @param player the player
+	 * @return the address
+	 */
 	InetAddress getAddressFor(@PlatformPlayer Object player);
 	
 }

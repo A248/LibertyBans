@@ -32,7 +32,7 @@ public class ConfigsTest {
 	
 	@Test
 	public void testLoadAndReloadDefaults() {
-		Configs configs = new Configs(folder);
+		Configs configs = new StandardConfigs(folder);
 		assertTrue(configs.reloadConfigs().join());
 		assertTrue(configs.reloadConfigs().join());
 	}

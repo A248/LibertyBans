@@ -19,17 +19,9 @@
 package space.arim.libertybans.bootstrap.depend;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -62,54 +54,14 @@ class DefaultDependencyLoader implements DependencyLoader {
 	public Path getOutputDirectory() {
 		return outputDir;
 	}
-	
+
 	private CompletableFuture<DownloadResult> downloadDependency(Dependency dependency, Repository repository) {
+		Path outputJar = outputDir.resolve(dependency.getFullName() + ".jar");
+		if (Files.exists(outputJar)) {
+			return CompletableFuture.completedFuture(DownloadResult.success(outputJar));
+		}
 		return CompletableFuture.supplyAsync(() -> {
-
-			Path outputJar = outputDir.resolve(dependency.getFullName() + ".jar");
-			if (Files.exists(outputJar)) {
-				return DownloadResult.success(outputJar);
-			}
-			String urlPath = repository.getBaseUrl() + '/' + dependency.groupId().replace('.', '/') + '/'
-					+ dependency.artifactId() + '/' + dependency.version() + '/' + dependency.artifactId() + '-'
-					+ dependency.version() + ".jar";
-			URL url;
-			try {
-				url = new URL(urlPath);
-			} catch (MalformedURLException ex) {
-				return DownloadResult.exception(ex);
-			}
-
-			// Get MessageDigest instance
-			MessageDigest md;
-			try {
-				md = MessageDigest.getInstance("SHA-512");
-			} catch (NoSuchAlgorithmException ex) {
-				return DownloadResult.exception(ex);
-			}
-			// Read all bytes from download stream
-			byte[] jarBytes;
-			try (InputStream is = url.openStream();
-					DigestInputStream dis = new DigestInputStream(is, md)) {
-				jarBytes = dis.readAllBytes();
-
-			} catch (IOException ex) {
-				return DownloadResult.exception(ex);
-			}
-
-			// Compare hash to expected hash
-			byte[] actualHash = md.digest();
-			if (!dependency.matchesHash(actualHash)) {
-				return DownloadResult.hashMismatch(dependency.getSha512Hash(), actualHash);
-			}
-
-			// Write to file
-			try (FileChannel fc = FileChannel.open(outputJar, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)) {
-				fc.write(ByteBuffer.wrap(jarBytes));
-			} catch (IOException ex) {
-				return DownloadResult.exception(ex);
-			}
-			return DownloadResult.success(outputJar);
+			return new DependencyDownload(dependency, repository, outputJar).download();
 		}, executor);
 	}
 
@@ -118,23 +70,21 @@ class DefaultDependencyLoader implements DependencyLoader {
 		try {
 			Files.createDirectories(outputDir);
 		} catch (IOException ex) {
-			throw new IllegalStateException("Cannot create directory " + outputDir, ex);
+			throw new UncheckedIOException("Cannot create directory " + outputDir, ex);
 		}
 		Map<Dependency, CompletableFuture<DownloadResult>> futures = new HashMap<>(pairs.size());
 		for (Entry<Dependency, Repository> pair : pairs.entrySet()) {
 			futures.put(pair.getKey(), downloadDependency(pair.getKey(), pair.getValue()));
 		}
-		/*
-		 * Now, all we have to do is convert a map with futures to a future of a map
-		 */
+		// Convert a map with futures to a future of a map
 		return CompletableFuture.allOf(futures.values().toArray(CompletableFuture[]::new)).thenApply((ignore) -> {
 
-			Map<Dependency, DownloadResult> result = new HashMap<>();
+			Map<Dependency, DownloadResult> result = new HashMap<>(futures.size());
 			for (Entry<Dependency, CompletableFuture<DownloadResult>> entry : futures.entrySet()) {
 				// Will not block, because the future must already be complete
 				result.put(entry.getKey(), entry.getValue().join());
 			}
-			return result;
+			return Map.copyOf(result);
 		});
 	}
 

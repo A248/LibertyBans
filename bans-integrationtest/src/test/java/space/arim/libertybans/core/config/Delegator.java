@@ -26,16 +26,16 @@ abstract class Delegator<T> implements InvocationHandler {
 
 	private final Class<T> clazz;
 	private final T delegate;
-	
+
 	Delegator(Class<T> clazz, T delegate) {
 		this.clazz = clazz;
 		this.delegate = delegate;
 	}
-	
+
 	T proxy() {
 		return clazz.cast(Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] {clazz}, this));
 	}
-	
+
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 		Object replacement = replacementFor(delegate, method.getName());
@@ -44,7 +44,7 @@ abstract class Delegator<T> implements InvocationHandler {
 		}
 		return method.invoke(delegate, args);
 	}
-	
+
 	abstract Object replacementFor(T original, String methodName);
-	
+
 }

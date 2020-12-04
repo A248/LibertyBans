@@ -18,28 +18,75 @@
  */
 package space.arim.libertybans.core.database;
 
-import space.arim.libertybans.bootstrap.StartupException;
-import space.arim.libertybans.core.LibertyBansCore;
-import space.arim.libertybans.core.Part;
+import java.nio.file.Path;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
+
+import space.arim.omnibus.util.concurrent.EnhancedExecutor;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
+
+import space.arim.libertybans.api.database.PunishmentDatabase;
+import space.arim.libertybans.bootstrap.StartupException;
+import space.arim.libertybans.core.Part;
+import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.scope.InternalScopeManager;
+
+@Singleton
 public class DatabaseManager implements Part {
 
-	private final LibertyBansCore core;
+	private final Path folder;
+	private final FactoryOfTheFuture futuresFactory;
+	private final Provider<EnhancedExecutor> enhancedExecutorProvider;
+	private final Configs configs;
+	private final InternalScopeManager scopeManager;
 	
-	private volatile Database database;
+	private volatile StandardDatabase database;
 	
-	public DatabaseManager(LibertyBansCore core) {
-		this.core = core;
+	@Inject
+	public DatabaseManager(@Named("folder") Path folder, FactoryOfTheFuture futuresFactory,
+			Provider<EnhancedExecutor> enhancedExecutorProvider, Configs configs, InternalScopeManager scopeManager) {
+		this.folder = folder;
+		this.futuresFactory = futuresFactory;
+		this.enhancedExecutorProvider = enhancedExecutorProvider;
+		this.configs = configs;
+		this.scopeManager = scopeManager;
 	}
 	
-	public Database getCurrentDatabase() {
+	Path folder() {
+		return folder;
+	}
+	
+	FactoryOfTheFuture futuresFactory() {
+		return futuresFactory;
+	}
+	
+	Provider<EnhancedExecutor> enhancedExecutorProvider() {
+		return enhancedExecutorProvider;
+	}
+	
+	Configs configs() {
+		return configs;
+	}
+	
+	InternalScopeManager scopeManager() {
+		return scopeManager;
+	}
+	
+	public InternalDatabase getInternal() {
+		return database;
+	}
+	
+	public PunishmentDatabase getExternal() {
 		return database;
 	}
 	
 	@Override
 	public void startup() {
-		DatabaseResult dbResult = new DatabaseSettings(core).create().join();
-		Database database = dbResult.database;
+		DatabaseResult dbResult = new DatabaseSettings(this).create();
+		StandardDatabase database = dbResult.database;
 		if (!dbResult.success) {
 			database.closeCompletely();
 			throw new StartupException("Database initialisation failed");
@@ -50,10 +97,10 @@ public class DatabaseManager implements Part {
 	
 	@Override
 	public void restart() {
-		Database currentDatabase = this.database;
+		StandardDatabase currentDatabase = this.database;
 
-		DatabaseResult dbResult = new DatabaseSettings(core).create().join();
-		Database database = dbResult.database;
+		DatabaseResult dbResult = new DatabaseSettings(this).create();
+		StandardDatabase database = dbResult.database;
 		if (!dbResult.success) {
 			database.close();
 			throw new StartupException("Database restart failed");
@@ -72,7 +119,7 @@ public class DatabaseManager implements Part {
 
 	@Override
 	public void shutdown() {
-		Database database = this.database;
+		StandardDatabase database = this.database;
 		database.cancelRefreshTaskIfNecessary();
 		database.closeCompletely();
 	}

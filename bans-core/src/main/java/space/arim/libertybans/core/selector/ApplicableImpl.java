@@ -22,18 +22,36 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
+
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.core.database.Database;
+import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.punish.MiscUtil;
+import space.arim.libertybans.core.punish.PunishmentCreator;
 
-class ApplicableImpl extends SelectorImplMember {
+@Singleton
+public class ApplicableImpl {
 
-	ApplicableImpl(Selector selector) {
-		super(selector);
+	private final Configs configs;
+	private final FactoryOfTheFuture futuresFactory;
+	private final Provider<InternalDatabase> dbProvider;
+	private final PunishmentCreator creator;
+	
+	@Inject
+	public ApplicableImpl(Configs configs, FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider,
+			PunishmentCreator creator) {
+		this.configs = configs;
+		this.futuresFactory = futuresFactory;
+		this.dbProvider = dbProvider;
+		this.creator = creator;
 	}
 	
 	private Map.Entry<String, Object[]> getApplicabilityQuery(UUID uuid, NetworkAddress address, PunishmentType type) {
@@ -41,27 +59,27 @@ class ApplicableImpl extends SelectorImplMember {
 		Object[] args;
 
 		long currentTime = MiscUtil.currentTime();
-		AddressStrictness strictness = core().getMainConfig().enforcement().addressStrictness();
+		AddressStrictness strictness = configs.getMainConfig().enforcement().addressStrictness();
 		switch (strictness) {
 		case LENIENT:
 			statement = "SELECT `id`, `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end` "
-					+ "FROM `libertybans_simple_" + type.getLowercaseNamePlural() + "` "
-					+ "WHERE (`end` = 0 OR `end` > ?) AND `type` = ? AND ((`victim_type` = 'PLAYER' AND `victim` = ?) OR (`victim_type` = 'ADDRESS' AND `victim` = ?))";
+					+ "FROM `libertybans_simple_" + type + "s` "
+					+ "WHERE (`end` = 0 OR `end` > ?) AND `type` = ? "
+					+ "AND ((`victim_type` = 'PLAYER' AND `victim` = ?) OR (`victim_type` = 'ADDRESS' AND `victim` = ?))";
 			args = new Object[] {currentTime, type, uuid, address};
 			break;
 		case NORMAL:
 			statement = "SELECT `id`, `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end`, `uuid` "
-					+ "FROM `libertybans_applicable_" + type.getLowercaseNamePlural() + "` "
+					+ "FROM `libertybans_applicable_" + type + "s` "
 					+ "WHERE (`end` = 0 OR `end` > ?) AND `type` = ? AND `uuid` = ?";
 			args = new Object[] {currentTime, type, uuid};
 			break;
 		case STRICT:
-			statement = "SELECT `appl`.`id`, `appl`.`victim`, `appl`.`victim_type`, `appl`.`operator`, `appl`.`reason`, "
-					+ "`appl`.`scope`, `appl`.`start`, `appl`.`end`, `appl`.`uuid`, `appl`.`address` FROM "
-					+ "`libertybans_applicable_" + type.getLowercaseNamePlural() + "` `appl` INNER JOIN `libertybans_addresses` `addrs` "
-					+ "ON `appl`.`address` = `addrs`.`address` "
-					+ "WHERE (`appl`.`end` = 0 OR `appl`.`end` > ?) AND `appl`.`type` = ? AND `appl`.`address` = ?";
-			args = new Object[] {currentTime, type, address};
+			statement = "SELECT `id`, `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end`, `uuid` "
+					+ "FROM `libertybans_applicable_" + type + "s` `appl` INNER JOIN `libertybans_strict_links` `links` "
+					+ "ON `appl`.`uuid` = `links`.`uuid1` "
+					+ "WHERE (`end` = 0 OR `end` > ?) AND `type` = ? AND `links`.`uuid2` = ?";
+			args = new Object[] {currentTime, type, uuid};
 			break;
 		default:
 			throw MiscUtil.unknownAddressStrictness(strictness);
@@ -70,7 +88,7 @@ class ApplicableImpl extends SelectorImplMember {
 	}
 	
 	CentralisedFuture<Punishment> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address) {
-		Database database = core().getDatabase();
+		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
 
 			Map.Entry<String, Object[]> query = getApplicabilityQuery(uuid, address, PunishmentType.BAN);
@@ -91,18 +109,18 @@ class ApplicableImpl extends SelectorImplMember {
 						query.getKey())
 						.params(query.getValue())
 						.singleResult((resultSet) -> {
-							return core().getEnforcementCenter().createPunishment(resultSet.getInt("id"), PunishmentType.BAN,
+							return creator.createPunishment(resultSet.getInt("id"), PunishmentType.BAN,
 									database.getVictimFromResult(resultSet), database.getOperatorFromResult(resultSet),
 									database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
 									database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
 						}).execute();
 				return potentialBan;
-			}).onError(() -> null).execute();
+			}).execute();
 		});
 	}
 	
 	private CentralisedFuture<Punishment> getApplicablePunishment0(UUID uuid, NetworkAddress address, PunishmentType type) {
-		Database database = core().getDatabase();
+		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
 
 			Map.Entry<String, Object[]> query = getApplicabilityQuery(uuid, address, type);
@@ -110,11 +128,11 @@ class ApplicableImpl extends SelectorImplMember {
 					query.getKey())
 					.params(query.getValue())
 					.singleResult((resultSet) -> {
-						return core().getEnforcementCenter().createPunishment(resultSet.getInt("id"), type,
+						return creator.createPunishment(resultSet.getInt("id"), type,
 								database.getVictimFromResult(resultSet), database.getOperatorFromResult(resultSet),
 								database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
 								database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
-					}).onError(() -> null).execute();
+					}).execute();
 		});
 	}
 
@@ -122,7 +140,7 @@ class ApplicableImpl extends SelectorImplMember {
 		Objects.requireNonNull(type, "type");
 		if (type == PunishmentType.KICK) {
 			// Kicks are never active
-			return core().getFuturesFactory().completedFuture(null);
+			return futuresFactory.completedFuture(null);
 		}
 		return getApplicablePunishment0(uuid, address, type);
 	}

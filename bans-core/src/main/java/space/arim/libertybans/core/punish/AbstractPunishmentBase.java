@@ -22,13 +22,11 @@ import java.util.Objects;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.ServerScope;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.PunishmentBase;
+import space.arim.libertybans.api.scope.ServerScope;
 
 abstract class AbstractPunishmentBase implements PunishmentBase {
-	
-	transient final EnforcementCenter center;
 	
 	private final PunishmentType type;
 	private final Victim victim;
@@ -36,10 +34,7 @@ abstract class AbstractPunishmentBase implements PunishmentBase {
 	private final String reason;
 	private final ServerScope scope;
 	
-	AbstractPunishmentBase(EnforcementCenter center,
-			PunishmentType type, Victim victim, Operator operator, String reason, ServerScope scope) {
-		this.center = center;
-
+	AbstractPunishmentBase(PunishmentType type, Victim victim, Operator operator, String reason, ServerScope scope) {
 		this.type = Objects.requireNonNull(type, "type");
 		this.victim = Objects.requireNonNull(victim, "victim");
 		this.operator = Objects.requireNonNull(operator, "operator");

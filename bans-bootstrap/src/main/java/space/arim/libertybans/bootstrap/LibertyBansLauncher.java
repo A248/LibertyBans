@@ -18,10 +18,8 @@
  */
 package space.arim.libertybans.bootstrap;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.lang.reflect.InaccessibleObjectException;
 import java.lang.reflect.InvocationTargetException;
@@ -31,58 +29,53 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.function.Function;
 
+import space.arim.libertybans.bootstrap.depend.BootstrapException;
 import space.arim.libertybans.bootstrap.depend.BootstrapLauncher;
 import space.arim.libertybans.bootstrap.depend.Dependency;
 import space.arim.libertybans.bootstrap.depend.DependencyLoaderBuilder;
+import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 
 public class LibertyBansLauncher {
 
+	private final BootstrapLogger logger;
 	private final DependencyPlatform platform;
+	private final Path libsFolder;
 	private final Executor executor;
-	private final BootstrapLauncher launcher;
-	private final Function<Class<?>, String> getPluginFor;
+	private final CulpritFinder culpritFinder;
 	
-	public LibertyBansLauncher(DependencyPlatform platform, Path folder, Executor executor,
-			Function<Class<?>, String> getPluginFor) {
+	public LibertyBansLauncher(BootstrapLogger logger, DependencyPlatform platform, Path folder, Executor executor,
+			CulpritFinder culpritFinder) {
+		this.logger = logger;
 		this.platform = platform;
+		libsFolder = folder.resolve("libs");
 		this.executor = executor;
-		this.getPluginFor = getPluginFor;
-
-		Path libsFolder = folder.resolve("libs");
-		DependencyLoaderBuilder apiDepLoader = new DependencyLoaderBuilder()
-				.setExecutor(executor).setOutputDirectory(libsFolder.resolve("api"));
-		DependencyLoaderBuilder internalDepLoader = new DependencyLoaderBuilder()
-				.setExecutor(executor).setOutputDirectory(libsFolder.resolve("internal"));
-
-		Map<InternalDependency, CompletableFuture<Dependency>> internalDeps = addInternalDepsStart();
-		addApiDeps(apiDepLoader);
-		addInternalDepsFinish(internalDepLoader, internalDeps);
-
-		launcher = new BootstrapLauncher("LibertyBans", getClass().getClassLoader(),
-				apiDepLoader.build(), internalDepLoader.build(), this::addUrlsToExternalClassLoader);
+		this.culpritFinder = culpritFinder;
 	}
 	
-	protected boolean addUrlsToExternalClassLoader(ClassLoader apiClassLoader, Path[] paths) {
+	public LibertyBansLauncher(BootstrapLogger logger, DependencyPlatform platform, Path folder, Executor executor) {
+		this(logger, platform, folder, executor, (clazz) -> "");
+	}
+	
+	protected void addUrlsToExternalClassLoader(ClassLoader apiClassLoader, Set<Path> paths) {
 		if (!(apiClassLoader instanceof URLClassLoader)) {
 			throw new IllegalArgumentException(
 					"To use the default LibertyBansLauncher, the plugin must be loaded through a URLClassLoader");
 		}
+		logger.info(
+				"You may receive a warning about illegal reflective access to URLClassLoader#addURL. "
+				+ "This is harmless but unavoidable. See https://github.com/A248/LibertyBans/wiki/URLClassLoader%23addURL-warning");
 		Method addUrlMethod;
 		try {
 			addUrlMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
 			addUrlMethod.setAccessible(true);
 		} catch (NoSuchMethodException | SecurityException | InaccessibleObjectException ex) {
-			warn("Failed to attach dependencies to API ClassLoader");
-			ex.printStackTrace();
-			return false;
+			throw new BootstrapException("Failed to attach dependencies to API ClassLoader (locate method)", ex);
 		}
 		try {
 			for (Path path : paths) {
@@ -90,14 +83,11 @@ public class LibertyBansLauncher {
 				addUrlMethod.invoke(apiClassLoader, url);
 			}
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | MalformedURLException ex) {
-			warn("Failed to attach dependencies to API ClassLoader");
-			ex.printStackTrace();
-			return false;
+			throw new BootstrapException("Failed to attach dependencies to API ClassLoader (invoke method)", ex);
 		}
-		return true;
 	}
 	
-	private static Class<?> forName(String clazzName) {
+	private static Class<?> classForName(String clazzName) {
 		try {
 			Class<?> result = Class.forName(clazzName);
 			return result;
@@ -107,34 +97,39 @@ public class LibertyBansLauncher {
 	}
 	
 	private static boolean classExists(String clazzName) {
-		return forName(clazzName) != null;
+		return classForName(clazzName) != null;
+	}
+	
+	private String findCulpritWhoFailedToRelocate(Class<?> libClass) {
+		String pluginName = culpritFinder.findCulprit(libClass);
+		if (pluginName == null || pluginName.isEmpty()) {
+			return "Unknown";
+		}
+		return pluginName;
 	}
 	
 	private void warnRelocation(String libName, String clazzName) {
-		Class<?> libClass = forName(clazzName);
-		if (libClass != null) {
-			String pluginName = getPluginFor.apply(libClass);
-			warn("Plugin '" + ((pluginName.isEmpty()) ? "Unknown" : pluginName) + "' has shaded the library '"
-					+ libName + "' but did not relocate it. This may or may not pose any problems. "
-					+ "Contact the author of this plugin and tell them to relocate their dependencies.");
+		Class<?> libClass = classForName(clazzName);
+		if (libClass == null) {
+			return;
 		}
+		String pluginName = findCulpritWhoFailedToRelocate(libClass);
+		logger.warn("Plugin '" + pluginName + "' has shaded the library '"
+				+ libName + "' but did not relocate it. This may or may not pose any problems. "
+				+ "Contact the author of this plugin and tell them to relocate their dependencies. "
+				+ "Unrelocated class detected was " + libClass.getName());
 	}
-	
+
 	private Dependency readDependency0(String simpleDependencyName) {
 		URL url = getClass().getClassLoader().getResource("dependencies/" + simpleDependencyName);
-		try (InputStream inputStream = url.openStream();
-				InputStreamReader inputReader = new InputStreamReader(inputStream, StandardCharsets.US_ASCII);
-				BufferedReader buffReader = new BufferedReader(inputReader)) {
+		try (InputStream inputStream = url.openStream()) {
 
-            List<String> lines = new ArrayList<>();
-            String line;
-            while ((line = buffReader.readLine()) != null) {
-            	lines.add(line);
-            }
-			if (lines.size() < 4) {
+			String fullString = new String(inputStream.readAllBytes(), StandardCharsets.US_ASCII);
+			String[] lines = fullString.lines().toArray(String[]::new);
+			if (lines.length < 4) {
 				throw new IllegalArgumentException("Dependency file for " + simpleDependencyName + " is malformatted");
 			}
-			return Dependency.of(lines.get(0), lines.get(1), lines.get(2), lines.get(3));
+			return Dependency.of(lines[0], lines[1], lines[2], lines[3]);
 
 		} catch (IOException ex) {
 			throw new UncheckedIOException(ex);
@@ -153,13 +148,10 @@ public class LibertyBansLauncher {
 	private void addApiDeps(DependencyLoaderBuilder loader) {
 		CompletableFuture<Dependency> selfApi = readDependency("self-api");
 		if (!classExists("space.arim.omnibus.Omnibus")) {
-			loader.addPair(readDependency0("omnibus"), Repositories.ARIM_LESSER_GPL3);
-		}
-		if (!classExists("space.arim.uuidvault.api.UUIDVault")) {
-			loader.addPair(readDependency0("uuidvault"), Repositories.ARIM_LESSER_GPL3);
+			loader.addDependencyPair(readDependency0("omnibus"), Repositories.ARIM_LESSER_GPL3);
 		}
 		if (!skipSelfDependencies()) {
-			loader.addPair(selfApi.join(), Repositories.ARIM_AFFERO_GPL3);
+			loader.addDependencyPair(selfApi.join(), Repositories.ARIM_AFFERO_GPL3);
 		}
 	}
 	
@@ -170,7 +162,7 @@ public class LibertyBansLauncher {
 	 */
 	
 	private Map<InternalDependency, CompletableFuture<Dependency>> addInternalDepsStart() {
-		EnumMap<InternalDependency, CompletableFuture<Dependency>> internalDeps = new EnumMap<>(InternalDependency.class);
+		Map<InternalDependency, CompletableFuture<Dependency>> internalDeps = new EnumMap<>(InternalDependency.class);
 		for (InternalDependency internalDep : InternalDependency.values()) {
 			internalDeps.put(internalDep, readDependency(internalDep.id));
 		}
@@ -184,8 +176,8 @@ public class LibertyBansLauncher {
 			warnRelocation("Slf4j", "org.slf4j.Logger");
 			CompletableFuture<Dependency> slf4jApi = readDependency("slf4j-api");
 			CompletableFuture<Dependency> slf4jJdk14 = readDependency("slf4j-jdk14");
-			loader.addPair(slf4jApi.join(), Repositories.CENTRAL_REPO);
-			loader.addPair(slf4jJdk14.join(), Repositories.CENTRAL_REPO);
+			loader.addDependencyPair(slf4jApi.join(), Repositories.CENTRAL_REPO);
+			loader.addDependencyPair(slf4jJdk14.join(), Repositories.CENTRAL_REPO);
 		}
 		for (InternalDependency internalDep : InternalDependency.values()) {
 			if (internalDep.clazz != null) {
@@ -194,7 +186,7 @@ public class LibertyBansLauncher {
 			if (skipSelfDependencies() && internalDep == InternalDependency.SELF_CORE) {
 				continue;
 			}
-			loader.addPair(internalDeps.get(internalDep).join(), internalDep.repo);
+			loader.addDependencyPair(internalDeps.get(internalDep).join(), internalDep.repo);
 		}
 	}
 	
@@ -203,18 +195,27 @@ public class LibertyBansLauncher {
 		return false;
 	}
 	
-	// Must use System.err because we do not know whether the platform uses slf4j or JUL
-	private void warn(String message) {
-		System.err.println("[LibertyBans] " + message);
+	private DependencyLoaderBuilder loaderBuilder(String subFolder) {
+		return new DependencyLoaderBuilder().executor(executor).outputDirectory(libsFolder.resolve(subFolder));
 	}
 
 	public CompletableFuture<ClassLoader> attemptLaunch() {
-		return launcher.loadAll().thenApply((downloaded) -> {
-			if (!downloaded) {
-				return null;
-			}
-			return launcher.getInternalClassLoader();
-		});
+		DependencyLoaderBuilder apiDepLoader = loaderBuilder("api");
+		DependencyLoaderBuilder internalDepLoader = loaderBuilder("internal");
+
+		Map<InternalDependency, CompletableFuture<Dependency>> internalDeps = addInternalDepsStart();
+		addApiDeps(apiDepLoader);
+		addInternalDepsFinish(internalDepLoader, internalDeps);
+
+		BootstrapLauncher launcher = new BootstrapLauncher("LibertyBans", getClass().getClassLoader(),
+				apiDepLoader.build(), internalDepLoader.build()) {
+
+					@Override
+					public void addUrlsToExternal(ClassLoader apiClassLoader, Set<Path> paths) {
+						LibertyBansLauncher.this.addUrlsToExternalClassLoader(apiClassLoader, paths);
+					}
+		};
+		return launcher.loadAll().thenApply((ignore) -> launcher.getInternalClassLoader());
 	}
 	
 }

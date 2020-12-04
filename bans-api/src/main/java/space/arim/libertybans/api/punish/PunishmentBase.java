@@ -20,8 +20,8 @@ package space.arim.libertybans.api.punish;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.ServerScope;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.scope.ServerScope;
 
 /**
  * Base interface for {@link DraftPunishment} and {@link Punishment}
@@ -37,33 +37,33 @@ public interface PunishmentBase {
 	 * @return the type
 	 */
 	PunishmentType getType();
-	
+
 	/**
 	 * Gets the victim of the punishment
 	 * 
 	 * @return the victim
 	 */
 	Victim getVictim();
-	
+
 	/**
 	 * Gets the operator of the punishment
 	 * 
 	 * @return the operator
 	 */
 	Operator getOperator();
-	
+
 	/**
 	 * Gets the reason of the punishment
 	 * 
 	 * @return the reason
 	 */
 	String getReason();
-	
+
 	/**
 	 * Gets the scope of the punishment
 	 * 
 	 * @return the scope
 	 */
 	ServerScope getScope();
-	
+
 }

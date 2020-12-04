@@ -22,18 +22,19 @@ import space.arim.libertybans.core.env.ParallelisedListener;
 
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.plugin.java.JavaPlugin;
 
-class SpigotParallelisedListener<E, R> extends ParallelisedListener<E, R> implements Listener {
+abstract class SpigotParallelisedListener<E, R> extends ParallelisedListener<E, R> implements Listener {
 
-	final SpigotEnv env;
+	private final JavaPlugin plugin;
 	
-	SpigotParallelisedListener(SpigotEnv env) {
-		this.env = env;
+	SpigotParallelisedListener(JavaPlugin plugin) {
+		this.plugin = plugin;
 	}
 	
 	@Override
 	public void register() {
-		env.getPlugin().getServer().getPluginManager().registerEvents(this, env.getPlugin());
+		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
 
 	@Override

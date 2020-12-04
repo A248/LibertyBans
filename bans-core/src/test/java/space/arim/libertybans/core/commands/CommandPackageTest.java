@@ -29,30 +29,38 @@ public abstract class CommandPackageTest {
 	protected abstract CommandPackage getPackage(String command, String... args);
 	
 	@Test
-	public void testNoArgs() {
-		CommandPackage pkg = getPackage("cmd");
+	public void testNoArguments() {
+		CommandPackage pkg = getPackage("Cmd");
 		assertEquals(pkg.getCommand(), "cmd");
 		assertFalse(pkg.hasNext());
 		assertTrue(pkg.allRemaining().isEmpty());
-		try {
-			pkg.next();
-			fail("Should not be able to advanced past nonexistent argument");
-		} catch (NoSuchElementException expected) {}
+		assertThrows(NoSuchElementException.class, pkg::next);
 	}
 	
 	@Test
-	public void testOneArgAndClone() {
+	public void testOneArgument() {
 		CommandPackage pkg = getPackage("cmd", "arg");
 		assertTrue(pkg.hasNext());
-		CommandPackage pkgClone = pkg.clone();
-		assertEquals("arg", pkgClone.next());
+		CommandPackage pkgCopy = pkg.copy();
+
 		assertEquals("arg", pkg.allRemaining());
+		assertThrows(NoSuchElementException.class, pkg::next);
+
+		assertEquals("arg", pkgCopy.next());
+		assertThrows(NoSuchElementException.class, pkgCopy::next);
 	}
 	
 	@Test
-	public void testMultiArgConcat() {
+	public void testMultipleArguments() {
 		CommandPackage pkg = getPackage("cmd", "arg", "second", "another");
+		assertTrue(pkg.hasNext());
+		CommandPackage pkgCopy = pkg.copy();
+
 		assertEquals("arg second another", pkg.allRemaining());
+		assertThrows(NoSuchElementException.class, pkg::next);
+
+		assertEquals("arg", pkgCopy.next());
+		assertEquals("second", pkgCopy.next());
 	}
 	
 }

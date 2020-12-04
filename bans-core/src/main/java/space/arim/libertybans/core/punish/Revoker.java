@@ -18,64 +18,85 @@
  */
 package space.arim.libertybans.core.punish;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.revoke.PunishmentRevoker;
 import space.arim.libertybans.api.revoke.RevocationOrder;
-import space.arim.libertybans.core.database.Database;
+import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.selector.MuteCache;
 
 import space.arim.jdbcaesar.query.ResultSetConcurrency;
 
-class Revoker extends EnforcementCenterMember implements PunishmentRevoker {
+@Singleton
+public class Revoker implements InternalRevoker {
+	
+	private final FactoryOfTheFuture futuresFactory;
+	private final Provider<InternalDatabase> dbProvider;
+	private final PunishmentCreator creator;
+	private final MuteCache muteCache;
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
-	Revoker(EnforcementCenter center) {
-		super(center);
+	@Inject
+	public Revoker(FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider, PunishmentCreator creator,
+			MuteCache muteCache) {
+		this.futuresFactory = futuresFactory;
+		this.dbProvider = dbProvider;
+		this.creator = creator;
+		this.muteCache = muteCache;
 	}
 	
-	CentralisedFuture<Boolean> undoPunishment(final Punishment punishment) {
+	MuteCache muteCache() {
+		return muteCache;
+	}
+	
+	@Override
+	public CentralisedFuture<Boolean> undoPunishment(final Punishment punishment) {
 		if (punishment.isExpired()) {
 			// Already expired
-			return core().getFuturesFactory().completedFuture(false);
+			return futuresFactory.completedFuture(false);
 		}
 		return undoPunishmentByIdAndType(punishment.getID(), punishment.getType());
 	}
 	
 	@Override
 	public RevocationOrder revokeByIdAndType(int id, PunishmentType type) {
-		return new RevocationOrderImpl(center, id, type);
+		return new RevocationOrderImpl(this, id, type);
 	}
 
 	@Override
 	public RevocationOrder revokeById(int id) {
-		return new RevocationOrderImpl(center, id);
+		return new RevocationOrderImpl(this, id);
 	}
 
 	@Override
 	public RevocationOrder revokeByTypeAndVictim(PunishmentType type, Victim victim) {
-		return new RevocationOrderImpl(center, type, victim);
+		return new RevocationOrderImpl(this, type, victim);
 	}
 	
 	CentralisedFuture<Boolean> undoPunishmentByIdAndType(final int id, final PunishmentType type) {
 		if (type == PunishmentType.KICK) {
 			// Kicks are never active
-			return core().getFuturesFactory().completedFuture(false);
+			return futuresFactory.completedFuture(false);
 		}
-		Database database = core().getDatabase();
+		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
 			final long currentTime = MiscUtil.currentTime();
 
 			if (database.getVendor().hasDeleteFromJoin()) {
 				return database.jdbCaesar().query(
-						"DELETE `thetype` FROM `libertybans_" + type.getLowercaseNamePlural() + "` `thetype` "
+						"DELETE `thetype` FROM `libertybans_" + type + "s` `thetype` "
 								+ "INNER JOIN `libertybans_punishments` `puns` ON `thetype`.`id` = `puns`.`id` "
 								+ "WHERE `thetype`.`id` = ? AND (`puns`.`end` = 0 OR `puns`.`end` > ?)")
 						.params(id, currentTime)
@@ -85,7 +106,7 @@ class Revoker extends EnforcementCenterMember implements PunishmentRevoker {
 			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 				boolean deleted = querySource.query(
-						"DELETE FROM `libertybans_" + type.getLowercaseNamePlural() + "` WHERE `id` = ?")
+						"DELETE FROM `libertybans_" + type + "s` WHERE `id` = ?")
 						.params(id)
 						.updateCount((updateCount) -> updateCount == 1)
 						.execute();
@@ -101,23 +122,23 @@ class Revoker extends EnforcementCenterMember implements PunishmentRevoker {
 				logger.trace("expired={} in undoPunishmentByIdAndType", expired);
 				return !expired;
 
-			}).onError(() -> false).execute();
+			}).execute();
 		});
 	}
 	
 	CentralisedFuture<Punishment> undoAndGetPunishmentByIdAndType(final int id, final PunishmentType type) {
 		if (type == PunishmentType.KICK) {
 			// Kicks are never active
-			return core().getFuturesFactory().completedFuture(null);
+			return futuresFactory.completedFuture(null);
 		}
-		Database database = core().getDatabase();
+		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
 			final long currentTime = MiscUtil.currentTime();
 			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 				Victim victim = querySource.query(
 						// MariaDB-Connector requires the primary key to be present for ResultSet#deleteRow
-						"SELECT `id`, `victim`, `victim_type` FROM `libertybans_" + type.getLowercaseNamePlural() + "` "
+						"SELECT `id`, `victim`, `victim_type` FROM `libertybans_" + type + "s` "
 						+ "WHERE `id` = ? FOR UPDATE")
 						.params(id)
 						.resultSetConcurrency(ResultSetConcurrency.UPDATABLE)
@@ -139,18 +160,18 @@ class Revoker extends EnforcementCenterMember implements PunishmentRevoker {
 						+ "WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
 						.params(id, currentTime)
 						.singleResult((resultSet) -> {
-							return center.createPunishment(id, type, victim, database.getOperatorFromResult(resultSet),
+							return creator.createPunishment(id, type, victim, database.getOperatorFromResult(resultSet),
 									database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
 									database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
 						}).execute();
 				logger.trace("result={} in undoAndGetPunishmentByIdAndType", result);
 				return result;
-			}).onError(() -> null).execute();
+			}).execute();
 		});
 	}
 	
 	CentralisedFuture<Boolean> undoPunishmentById(final int id) {
-		Database database = core().getDatabase();
+		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
 			final long currentTime = MiscUtil.currentTime();
 
@@ -161,7 +182,7 @@ class Revoker extends EnforcementCenterMember implements PunishmentRevoker {
 
 					if (hasDeleteFromJoin) {
 						boolean deleted = querySource.query(
-								"DELETE `thetype` FROM `libertybans_" + type.getLowercaseNamePlural() + "` `thetype` "
+								"DELETE `thetype` FROM `libertybans_" + type + "s` `thetype` "
 										+ "INNER JOIN `libertybans_punishments` `puns` ON `thetype`.`id` = `puns`.`id` "
 										+ "WHERE `thetype`.`id` = ? AND (`end` = 0 OR `end` > ?)")
 								.params(id, currentTime)
@@ -172,7 +193,7 @@ class Revoker extends EnforcementCenterMember implements PunishmentRevoker {
 						}
 					} else {
 						boolean deleted = querySource.query(
-								"DELETE FROM `libertybans_" + type.getLowercaseNamePlural() + "` WHERE `id` = ?")
+								"DELETE FROM `libertybans_" + type + "s` WHERE `id` = ?")
 								.params(id)
 								.updateCount((updateCount) -> updateCount == 1)
 								.execute();
@@ -189,12 +210,12 @@ class Revoker extends EnforcementCenterMember implements PunishmentRevoker {
 					}
 				}
 				return false;
-			}).onError(() -> false).execute();
+			}).execute();
 		});
 	}
 	
 	CentralisedFuture<Punishment> undoAndGetPunishmentById(final int id) {
-		Database database = core().getDatabase();
+		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
 			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
@@ -203,7 +224,7 @@ class Revoker extends EnforcementCenterMember implements PunishmentRevoker {
 
 					Victim victim = querySource.query(
 							// MariaDB-Connector requires the primary key to be present for ResultSet#deleteRow
-							"SELECT `id`, `victim`, `victim_type` FROM `libertybans_" + type.getLowercaseNamePlural() + "` "
+							"SELECT `id`, `victim`, `victim_type` FROM `libertybans_" + type + "s` "
 							+ "WHERE `id` = ? FOR UPDATE")
 							.params(id)
 							.resultSetConcurrency(ResultSetConcurrency.UPDATABLE)
@@ -223,7 +244,7 @@ class Revoker extends EnforcementCenterMember implements PunishmentRevoker {
 								+ "WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
 								.params(id, currentTime)
 								.singleResult((resultSet) -> {
-									return center.createPunishment(id, type, victim, database.getOperatorFromResult(resultSet),
+									return creator.createPunishment(id, type, victim, database.getOperatorFromResult(resultSet),
 											database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
 											database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
 								}).execute();
@@ -232,18 +253,18 @@ class Revoker extends EnforcementCenterMember implements PunishmentRevoker {
 					}
 				}
 				return null;
-			}).onError(() -> null).execute();
+			}).execute();
 		});
 	}
 	
 	CentralisedFuture<Boolean> undoPunishmentByTypeAndVictim(final PunishmentType type, final Victim victim) {
-		Database database = core().getDatabase();
+		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
 			final long currentTime = MiscUtil.currentTime();
 
 			if (database.getVendor().hasDeleteFromJoin()) {
 				return database.jdbCaesar().query(
-						"DELETE `thetype` FROM `libertybans_" + type.getLowercaseNamePlural() + "` `thetype` "
+						"DELETE `thetype` FROM `libertybans_" + type + "s` `thetype` "
 								+ "INNER JOIN `libertybans_punishments` `puns` ON `thetype`.`id` = `puns`.`id` "
 								+ "WHERE `thetype`.`victim` = ? AND `thetype`.`victim_type` = ? "
 								+ "AND (`end` = 0 OR `end` > ?)")
@@ -254,7 +275,7 @@ class Revoker extends EnforcementCenterMember implements PunishmentRevoker {
 			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 				Integer id = querySource.query(
-						"SELECT `id` FROM `libertybans_" + type.getLowercaseNamePlural() + "` "
+						"SELECT `id` FROM `libertybans_" + type + "s` "
 						+ "WHERE `victim` = ? AND `victim_type` = ? FOR UPDATE")
 						.params(victim, victim.getType())
 						.resultSetConcurrency(ResultSetConcurrency.UPDATABLE)
@@ -277,18 +298,18 @@ class Revoker extends EnforcementCenterMember implements PunishmentRevoker {
 				boolean expired = MiscUtil.isExpired(currentTime, end);
 				logger.trace("expired={} in undoPunishmentByTypeAndVictim", expired);
 				return !expired;
-			}).onError(() -> false).execute();
+			}).execute();
 		});
 	}
 
 	CentralisedFuture<Punishment> undoAndGetPunishmentByTypeAndVictim(final PunishmentType type, final Victim victim) {
-		Database database = core().getDatabase();
+		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
 			final long currentTime = MiscUtil.currentTime();
 			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 				Integer id = querySource.query(
-						"SELECT `id` FROM `libertybans_" + type.getLowercaseNamePlural() + "` "
+						"SELECT `id` FROM `libertybans_" + type + "s` "
 						+ "WHERE `victim` = ? AND `victim_type` = ? FOR UPDATE")
 						.params(victim, victim.getType())
 						.resultSetConcurrency(ResultSetConcurrency.UPDATABLE)
@@ -310,14 +331,14 @@ class Revoker extends EnforcementCenterMember implements PunishmentRevoker {
 						+ "WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
 						.params(id, currentTime)
 						.singleResult((resultSet) -> {
-							return center.createPunishment(id, type,
+							return creator.createPunishment(id, type,
 									victim, database.getOperatorFromResult(resultSet),
 									database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
 									database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
 						}).execute();
 				logger.trace("result={} in undoAndGetPunishmentByTypeAndVictim", result);
 				return result;
-			}).onError(() -> null).execute();
+			}).execute();
 		});
 	}
 	

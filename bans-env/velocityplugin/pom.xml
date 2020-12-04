@@ -15,6 +15,13 @@
 		<finalName>${project.name}_${project.version}</finalName>
 		<plugins>
 			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>8</source>
+					<target>8</target>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>templating-maven-plugin</artifactId>
 				<version>1.0.0</version>

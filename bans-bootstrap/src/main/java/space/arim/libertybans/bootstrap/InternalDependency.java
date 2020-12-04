@@ -21,17 +21,22 @@ package space.arim.libertybans.bootstrap;
 import space.arim.libertybans.bootstrap.depend.Repository;
 
 enum InternalDependency {
-
-	HIKARICP("HikariCP", "com.zaxxer.hikari.HikariConfig", "hikaricp"),
 	
 	HSQLDB("HSQLDB", "org.hsqldb.jdbc.JDBCDriver", "hsqldb"),
 	MARIADB("MariaDB-Connector", "org.mariadb.jdbc.Driver", "mariadb-connector"),
 	
+	HIKARICP("HikariCP", "com.zaxxer.hikari.HikariConfig", "hikaricp"),
+	FLYWAY("Flyway", "org.flywaydb.core.Flyway", "flyway"),
 	CAFFEINE("Caffeine", "com.github.benmanes.caffeine.cache.Caffeine", "caffeine"),
 	
+	DAZZLECONF_CORE("DazzleConf-Core", "space.arim.dazzleconf.ConfigurationFactory", "dazzleconf-core"),
+	DAZZLECONF_EXT_SNAKEYAML("DazzleConf-SnakeYaml",
+			"space.arim.dazzleconf.ext.snakeyaml.SnakeYamlConfigurationFactory", "dazzleconf-ext-snakeyaml"),
+	
+	JAKARTA_INJECT("Jakarta-Inject", "jakarta.inject.Provider", "jakarta-inject"),
+	SOLID_INJECTOR("SolidInjector", "space.arim.injector.Injector", "solidinjector"),
+	
 	JDBCAESAR("jdbcaesar", Repositories.ARIM_LESSER_GPL3),
-	DAZZLECONF_CORE("dazzleconf-core", Repositories.ARIM_LESSER_GPL3),
-	DAZZLECONF_EXT_SNAKEYAML("dazzleconf-ext-snakeyaml", Repositories.ARIM_LESSER_GPL3),
 	ARIMAPI("arimapi", Repositories.ARIM_GPL3),
 	MOREPAPERLIB("morepaperlib", Repositories.ARIM_LESSER_GPL3),
 	

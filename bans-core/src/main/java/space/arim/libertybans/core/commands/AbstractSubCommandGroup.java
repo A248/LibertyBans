@@ -22,37 +22,66 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
-import space.arim.libertybans.core.LibertyBansCore;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
+import space.arim.omnibus.util.concurrent.ReactionStage;
+
+import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.config.MessagesConfig;
+import space.arim.libertybans.core.service.FuturePoster;
 
 public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 
-	final Commands commands;
+	private final Dependencies dependencies;
 	/**
 	 * Matching commands, lowercased
 	 * 
 	 */
 	private final Set<String> matches;
 	
-	AbstractSubCommandGroup(Commands commands, Set<String> matches) {
-		this.commands = commands;
+	private AbstractSubCommandGroup(Dependencies dependencies, Set<String> matches) {
+		this.dependencies = dependencies;
 		this.matches = Set.copyOf(matches);
 	}
 	
-	AbstractSubCommandGroup(Commands commands, String...matches) {
-		this(commands, Set.of(matches));
+	AbstractSubCommandGroup(Dependencies dependencies, String...matches) {
+		this(dependencies, Set.of(matches));
 	}
 	
-	AbstractSubCommandGroup(Commands commands, Stream<String> matches) {
-		this(commands, matches.collect(Collectors.toUnmodifiableSet()));
+	AbstractSubCommandGroup(Dependencies dependencies, Stream<String> matches) {
+		this(dependencies, matches.collect(Collectors.toUnmodifiableSet()));
+	}
+	
+	@Singleton
+	public static class Dependencies {
+		
+		final FactoryOfTheFuture futuresFactory;
+		final FuturePoster futurePoster;
+		final Configs configs;
+		final ArgumentParser argumentParser;
+		
+		@Inject
+		public Dependencies(FactoryOfTheFuture futuresFactory, FuturePoster futurePoster, Configs configs,
+				ArgumentParser argumentParser) {
+			this.futuresFactory = futuresFactory;
+			this.futurePoster = futurePoster;
+			this.configs = configs;
+			this.argumentParser = argumentParser;
+		}
+		
 	}
 	
 	@Override
 	public boolean matches(String arg) {
 		return matches.contains(arg);
+	}
+	
+	Set<String> getMatches() {
+		return matches;
 	}
 	
 	/*
@@ -61,20 +90,32 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 	 * 
 	 */
 	
-	<T> CentralisedFuture<T> completedFuture(T value) {
-		return core().getFuturesFactory().completedFuture(value);
+	ArgumentParser argumentParser() {
+		return dependencies.argumentParser;
 	}
 	
-	LibertyBansCore core() {
-		return commands.core;
+	FactoryOfTheFuture futuresFactory() {
+		return dependencies.futuresFactory;
+	}
+	
+	<T> CentralisedFuture<T> completedFuture(T value) {
+		return futuresFactory().completedFuture(value);
+	}
+	
+	void postFuture(ReactionStage<?> reactionStage) {
+		dependencies.futurePoster.postFuture(reactionStage);
+	}
+	
+	Configs configs() {
+		return dependencies.configs;
 	}
 	
 	MainConfig config() {
-		return core().getConfigs().getMainConfig();
+		return configs().getMainConfig();
 	}
 	
 	MessagesConfig messages() {
-		return core().getMessagesConfig();
+		return configs().getMessagesConfig();
 	}
 	
 }

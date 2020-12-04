@@ -68,10 +68,6 @@
 			<groupId>space.arim.omnibus</groupId>
 			<artifactId>omnibus</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>space.arim.uuidvault</groupId>
-			<artifactId>api</artifactId>
-		</dependency>
 		
 		<!-- Used for WikiExamples -->
 		<dependency>

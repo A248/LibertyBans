@@ -18,8 +18,25 @@
  */
 package space.arim.libertybans.bootstrap.depend;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 public interface Repository {
 	
 	String getBaseUrl();
+	
+	/**
+	 * Gets the URL pointing to a dependency, assuming it is in this repository
+	 * 
+	 * @param dependency the dependency
+	 * @return a url pointing to it
+	 * @throws MalformedURLException if the url is malformed for whatever reason
+	 */
+	default URL locateDependency(Dependency dependency) throws MalformedURLException {
+		String urlPath = getBaseUrl() + '/' + dependency.groupId().replace('.', '/') + '/'
+				+ dependency.artifactId() + '/' + dependency.version() + '/' + dependency.artifactId() + '-'
+				+ dependency.version() + ".jar";
+		return new URL(urlPath);
+	}
 	
 }

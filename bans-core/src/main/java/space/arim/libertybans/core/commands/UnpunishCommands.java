@@ -18,10 +18,13 @@
  */
 package space.arim.libertybans.core.commands;
 
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.chat.manipulator.SendableMessageManipulator;
@@ -29,21 +32,48 @@ import space.arim.api.chat.manipulator.SendableMessageManipulator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.revoke.PunishmentRevoker;
+import space.arim.libertybans.api.revoke.RevocationOrder;
+import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.RemovalsSection.PunishmentRemoval;
 import space.arim.libertybans.core.config.RemovalsSection.WarnRemoval;
 import space.arim.libertybans.core.env.CmdSender;
-import space.arim.libertybans.core.punish.MiscUtil;
+import space.arim.libertybans.core.env.EnvEnforcer;
 
-public class UnpunishCommands extends AbstractSubCommandGroup {
+abstract class UnpunishCommands extends AbstractSubCommandGroup implements PunishUnpunishCommands {
 	
-	UnpunishCommands(Commands commands) {
-		super(commands, Arrays.stream(MiscUtil.punishmentTypesExcludingKick())
-				.map((type) -> "un" + type.name().toLowerCase(Locale.ROOT)));
+	private final PunishmentRevoker revoker;
+	private final InternalFormatter formatter;
+	private final EnvEnforcer envEnforcer;
+	
+	UnpunishCommands(Dependencies dependencies, Stream<String> matches,
+			PunishmentRevoker revoker, InternalFormatter formatter, EnvEnforcer envEnforcer) {
+		super(dependencies, matches);
+		this.revoker = revoker;
+		this.formatter = formatter;
+		this.envEnforcer = envEnforcer;
 	}
 
 	@Override
-	public CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
-		return new Execution(sender, command, PunishmentType.valueOf(arg.substring(2).toUpperCase(Locale.ROOT)));
+	public final CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
+		return new Execution(sender, command, parseType(arg.toUpperCase(Locale.ROOT)));
+	}
+	
+	@Override
+	public final Collection<String> suggest(CmdSender sender, String arg, int argIndex) {
+		switch (argIndex) {
+		case 0:
+			return getMatches();
+		case 1:
+			PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
+			if (type == PunishmentType.MUTE || type == PunishmentType.WARN) {
+				return sender.getOtherPlayersOnSameServer();
+			}
+			break;
+		default:
+			break;
+		}
+		return Set.of();
 	}
 	
 	private class Execution extends TypeSpecificExecution {
@@ -57,8 +87,13 @@ public class UnpunishCommands extends AbstractSubCommandGroup {
 
 		@Override
 		public void execute() {
-			if (!sender().hasPermission("libertybans.un" + type().getLowercaseName() + ".command")) { // libertybans.unban.command
+			if (!sender().hasPermission("libertybans." + type() + ".undo")) {
 				sender().sendMessage(section.permissionCommand());
+				return;
+			}
+			String additionalPermission = getAdditionalPermission(type());
+			if (!additionalPermission.isEmpty() && !sender().hasPermission(additionalPermission)) {
+				sender().sendMessage(section.permissionIpAddress());
 				return;
 			}
 			if (!command().hasNext()) {
@@ -70,7 +105,7 @@ public class UnpunishCommands extends AbstractSubCommandGroup {
 		
 		private void execute0() {
 			String targetArg = command().next();
-			CentralisedFuture<?> future = commands.parseVictim(sender(), targetArg).thenCompose((victim) -> {
+			CentralisedFuture<?> future = parseVictim(sender(), targetArg).thenCompose((victim) -> {
 				if (victim == null) {
 					return completedFuture(null);
 				}
@@ -82,16 +117,16 @@ public class UnpunishCommands extends AbstractSubCommandGroup {
 				}
 				return sendSuccess(punishment);
 			});
-			core().postFuture(future);
+			postFuture(future);
 		}
-		
-		private CentralisedFuture<Punishment> performUndo(Victim victim, String targetArg) {
+
+		private ReactionStage<Punishment> performUndo(Victim victim, String targetArg) {
 			CmdSender sender = sender();
 			CommandPackage command = command();
 			PunishmentType type = type();
 
-			CentralisedFuture<Punishment> futureUndo = null;
-			final int finalId;
+			RevocationOrder revocationOrder;
+			final int id;
 			if (type == PunishmentType.WARN) {
 
 				if (!command.hasNext()) {
@@ -99,46 +134,45 @@ public class UnpunishCommands extends AbstractSubCommandGroup {
 					return completedFuture(null);
 				}
 				String idArg = command.next();
-				int id;
 				try {
 					id = Integer.parseInt(idArg);
 				} catch (NumberFormatException ignored) {
 					sender.sendMessage(((WarnRemoval) section).notANumber().replaceText("%ID_ARG%", idArg));
 					return completedFuture(null);
 				}
-				futureUndo = core().getRevoker().revokeByIdAndType(id, type).undoAndGetPunishmentWithoutUnenforcement();
-				finalId = id;
+				revocationOrder = revoker.revokeByIdAndType(id, type);
 			} else {
 				assert type.isSingular() : type;
-				futureUndo = core().getRevoker().revokeByTypeAndVictim(type, victim).undoAndGetPunishmentWithoutUnenforcement();
-				finalId = -1;
+				revocationOrder = revoker.revokeByTypeAndVictim(type, victim);
+				id = -1;
 			}
-			return futureUndo.thenApply((nullIfNotFound) -> {
-				if (nullIfNotFound == null) {
+			return revocationOrder.undoAndGetPunishmentWithoutUnenforcement().thenApply((optPunishment) -> {
+				if (optPunishment.isEmpty()) {
 					SendableMessage notFound = section.notFound().replaceText("%TARGET%", targetArg);
 					if (type == PunishmentType.WARN) {
-						notFound = SendableMessageManipulator.create(notFound).replaceText("%ID%", Integer.toString(finalId));
+						notFound = SendableMessageManipulator.create(notFound).replaceText("%ID%", Integer.toString(id));
 					}
 					sender.sendMessage(notFound);
+					return null;
 				}
-				return nullIfNotFound;
+				return optPunishment.get();
 			});
 		}
-		
+
 		private CentralisedFuture<?> sendSuccess(Punishment punishment) {
 
-			CentralisedFuture<?> unenforcement = punishment.unenforcePunishment();
-			CentralisedFuture<SendableMessage> successMessage = core().getFormatter().formatWithPunishment(
+			CentralisedFuture<?> unenforcement = punishment.unenforcePunishment().toCompletableFuture();
+			CentralisedFuture<SendableMessage> successMessage = formatter.formatWithPunishment(
 					section.successMessage(), punishment);
-			CentralisedFuture<SendableMessage> successNotify = core().getFormatter().formatWithPunishmentAndUnoperator(
+			CentralisedFuture<SendableMessage> successNotify = formatter.formatWithPunishmentAndUnoperator(
 					section.successNotification(), punishment, sender().getOperator());
 
-			return core().getFuturesFactory().allOf(unenforcement, successMessage, successNotify).thenAccept((ignore) -> {
+			return futuresFactory().allOf(unenforcement, successMessage, successNotify).thenRun(() -> {
 				sender().sendMessage(successMessage.join());
 
-				SendableMessage fullNotify = core().getFormatter().prefix(successNotify.join());
-				String notifyPerm = "libertybans." + type().getLowercaseName() + ".unnotify";
-				core().getEnvironment().getEnforcer().sendToThoseWithPermission(notifyPerm, fullNotify);
+				SendableMessage fullNotify = formatter.prefix(successNotify.join());
+				String notifyPerm = "libertybans." + type() + ".unnotify";
+				envEnforcer.sendToThoseWithPermission(notifyPerm, fullNotify);
 			});
 		}
 	}

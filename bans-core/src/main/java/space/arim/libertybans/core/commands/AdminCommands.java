@@ -18,47 +18,95 @@
  */
 package space.arim.libertybans.core.commands;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
+
+import space.arim.api.env.PlatformHandle;
+
+import space.arim.libertybans.bootstrap.BaseFoundation;
+import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.env.Environment;
 
+@Singleton
 public class AdminCommands extends AbstractSubCommandGroup {
 
-	AdminCommands(Commands commands) {
-		super(commands, "reload", "restart");
+	private final Provider<BaseFoundation> foundation;
+	private final Provider<Environment> environment;
+	private final PlatformHandle envHandle;
+
+	@Inject
+	public AdminCommands(Dependencies dependencies, Provider<BaseFoundation> foundation,
+			Provider<Environment> environment, PlatformHandle envHandle) {
+		super(dependencies, Arrays.stream(Type.values()).map(Type::toString));
+		this.foundation = foundation;
+		this.environment = environment;
+		this.envHandle = envHandle;
 	}
-	
-	private MessagesConfig.Admin cfg() {
+
+	private MessagesConfig.Admin adminConfig() {
 		return messages().admin();
 	}
 
 	@Override
 	public CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
-		return new Execution(sender, command, arg);
+		return new Execution(sender, command, Type.valueOf(arg.toUpperCase(Locale.ROOT)));
+	}
+	
+	@Override
+	public Collection<String> suggest(CmdSender sender, String arg, int argIndex) {
+		switch (argIndex) {
+		case 0:
+			return getMatches();
+		default:
+			return Set.of();
+		}
+	}
+	
+	private enum Type {
+		RELOAD,
+		RESTART,
+		DEBUG;
+		
+		@Override
+		public String toString() {
+			return name().toLowerCase(Locale.ROOT);
+		}
 	}
 	
 	private class Execution extends AbstractCommandExecution {
 
-		private final String arg;
+		private final Type type;
 		
-		Execution(CmdSender sender, CommandPackage command, String arg) {
+		Execution(CmdSender sender, CommandPackage command, Type type) {
 			super(sender, command);
-			this.arg = arg;
+			this.type = type;
 		}
 		
 		@Override
 		public void execute() {
-			if (!sender().hasPermission("libertybans.admin." + arg)) {
-				sender().sendMessage(cfg().noPermission());
+			if (!sender().hasPermission("libertybans.admin." + type)) {
+				sender().sendMessage(adminConfig().noPermission());
 				return;
 			}
-			switch (arg) {
-			case "restart":
+			switch (type) {
+			case RESTART:
 				restartCmd();
 				break;
-			case "reload":
+			case RELOAD:
 				reloadCmd();
+				break;
+			case DEBUG:
+				debugCmd();
 				break;
 			default:
 				throw new IllegalArgumentException("Command mismatch");
@@ -66,26 +114,35 @@ public class AdminCommands extends AbstractSubCommandGroup {
 		}
 		
 		private void restartCmd() {
-			sender().sendMessage(cfg().ellipses());
-			boolean restarted = core().getEnvironment().fullRestart();
+			sender().sendMessage(adminConfig().ellipses());
+			boolean restarted = foundation.get().fullRestart();
 			if (restarted) {
-				sender().sendMessage(cfg().restarted());
+				sender().sendMessage(adminConfig().restarted());
 			} else {
 				sender().sendLiteralMessage("Not restarting because loading already in process");
 			}
 		}
 		
 		private void reloadCmd() {
-			sender().sendMessage(cfg().ellipses());
-			CompletableFuture<?> reloadFuture = core().getConfigs().reloadConfigs().thenAccept((result) -> {
+			sender().sendMessage(adminConfig().ellipses());
+			CompletableFuture<?> reloadFuture = configs().reloadConfigs().thenAccept((result) -> {
 				if (result) {
-					sender().sendMessage(cfg().reloaded());
+					sender().sendMessage(adminConfig().reloaded());
 				} else {
 					sender().sendLiteralMessage(
 							"&cAn error occurred reloading the configuration. Please check the server console.");
 				}
 			});
-			core().postFuture(core().getFuturesFactory().copyFuture(reloadFuture));
+			postFuture(futuresFactory().copyFuture(reloadFuture));
+		}
+
+		private void debugCmd() {
+			String environmentImplName = environment.get().getClass().getSimpleName();
+			List<String> debugInfo = List.of(
+					"Version: " + PluginInfo.VERSION,
+					"Platform Category: " + environmentImplName.substring(0, environmentImplName.length() - 3),
+					"Platform Version: " + envHandle.getPlatformVersion()); // TODO add more debug information
+			debugInfo.forEach(sender()::sendLiteralMessage);
 		}
 		
 	}

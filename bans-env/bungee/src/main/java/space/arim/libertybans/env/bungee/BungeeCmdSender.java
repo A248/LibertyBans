@@ -18,44 +18,99 @@
  */
 package space.arim.libertybans.env.bungee;
 
-import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
+import jakarta.inject.Inject;
 
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.core.env.AbstractCmdSender;
 
-abstract class BungeeCmdSender extends AbstractCmdSender {
+import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.api.connection.Server;
+import net.md_5.bungee.api.plugin.Plugin;
 
-	BungeeCmdSender(BungeeEnv env, CommandSender sender, Operator operator) {
-		super(env.core, sender, operator);
+public abstract class BungeeCmdSender extends AbstractCmdSender {
+
+	BungeeCmdSender(CmdSenderDependencies dependencies, CommandSender sender, Operator operator) {
+		super(dependencies.abstractDependencies, sender, operator);
+	}
+	
+	public static class CmdSenderDependencies {
+		
+		final AbstractCmdSender.AbstractDependencies abstractDependencies;
+		final Plugin plugin;
+		
+		@Inject
+		public CmdSenderDependencies(AbstractCmdSender.AbstractDependencies abstractDependencies, Plugin plugin) {
+			this.abstractDependencies = abstractDependencies;
+			this.plugin = plugin;
+		}
+		
+	}
+	
+	@Override
+	public CommandSender getRawSender() {
+		return (CommandSender) super.getRawSender();
 	}
 
 	@Override
 	public boolean hasPermission(String permission) {
 		return getRawSender().hasPermission(permission);
 	}
-
-	@Override
-	public CommandSender getRawSender() {
-		return (CommandSender) super.getRawSender();
+	
+	Set<String> playersToNames(Collection<ProxiedPlayer> players, ProxiedPlayer exclude) {
+		Set<String> result = new HashSet<>(players.size());
+		for (ProxiedPlayer player : players) {
+			if (exclude != null && exclude.getUniqueId().equals(player.getUniqueId())) {
+				continue;
+			}
+			result.add(player.getName());
+		}
+		return result;
 	}
 	
-}
+	static class PlayerSender extends BungeeCmdSender {
 
-class PlayerCmdSender extends BungeeCmdSender {
+		PlayerSender(CmdSenderDependencies dependencies, ProxiedPlayer player) {
+			super(dependencies, player, PlayerOperator.of(player.getUniqueId()));
+		}
+		
+		@Override
+		public ProxiedPlayer getRawSender() {
+			return (ProxiedPlayer) super.getRawSender();
+		}
 
-	PlayerCmdSender(BungeeEnv env, ProxiedPlayer player) {
-		super(env, player, PlayerOperator.of(player.getUniqueId()));
+		@Override
+		public Set<String> getOtherPlayersOnSameServer() {
+			ProxiedPlayer player = getRawSender();
+			Server server = player.getServer();
+			if (server == null) { // There is no documented contract whether this is null
+				return Set.of();
+			}
+			return playersToNames(server.getInfo().getPlayers(), player);
+		}
+		
 	}
 	
-}
+	static class ConsoleSender extends BungeeCmdSender {
 
-class ConsoleCmdSender extends BungeeCmdSender {
+		private final Plugin plugin;
+		
+		ConsoleSender(CmdSenderDependencies dependencies, CommandSender sender) {
+			super(dependencies, sender, ConsoleOperator.INSTANCE);
+			this.plugin = dependencies.plugin;
+		}
 
-	ConsoleCmdSender(BungeeEnv env, CommandSender sender) {
-		super(env, sender, ConsoleOperator.INSTANCE);
+		@Override
+		public Set<String> getOtherPlayersOnSameServer() {
+			return playersToNames(plugin.getProxy().getPlayers(), null);
+		}
+
 	}
 	
 }

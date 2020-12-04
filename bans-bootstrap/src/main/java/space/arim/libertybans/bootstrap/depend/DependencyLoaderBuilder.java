@@ -26,20 +26,20 @@ import java.util.concurrent.Executor;
 public class DependencyLoaderBuilder {
 
 	private Executor executor;
-	private Map<Dependency, Repository> pairs = new HashMap<>();
+	private final Map<Dependency, Repository> pairs = new HashMap<>();
 	private Path outputDir;
-	
-	public DependencyLoaderBuilder setExecutor(Executor executor) {
+
+	public DependencyLoaderBuilder executor(Executor executor) {
 		this.executor = executor;
 		return this;
 	}
 
-	public DependencyLoaderBuilder addPair(Dependency dependency, Repository repository) {
+	public DependencyLoaderBuilder addDependencyPair(Dependency dependency, Repository repository) {
 		pairs.put(dependency, repository);
 		return this;
 	}
 
-	public DependencyLoaderBuilder setOutputDirectory(Path outputDir) {
+	public DependencyLoaderBuilder outputDirectory(Path outputDir) {
 		this.outputDir = outputDir;
 		return this;
 	}

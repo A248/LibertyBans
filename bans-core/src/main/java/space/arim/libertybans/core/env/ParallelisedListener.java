@@ -21,6 +21,7 @@ package space.arim.libertybans.core.env;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,8 @@ import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 /**
- * Base class for listeners which initiate a computation at a low priority and complete at a higher priority.
+ * Base class for listeners which initiate a computation at a low priority and
+ * complete at a higher priority.
  * 
  * @author A248
  *
@@ -38,58 +40,61 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
  */
 public abstract class ParallelisedListener<E, R> implements PlatformListener {
 
-	private final Map<E, CentralisedFuture<R>> events;
-	
+	private final Map<E, CentralisedFuture<R>> events = Collections.synchronizedMap(new IdentityHashMap<>());
+
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-	
-	protected ParallelisedListener(boolean synchronize) {
-		if (synchronize) {
-			events = Collections.synchronizedMap(new IdentityHashMap<>());
-		} else {
-			events = new IdentityHashMap<>();
-		}
-	}
-	
+
 	protected ParallelisedListener() {
-		this(true);
 	}
-	
+
 	/**
 	 * Initiates a computation for an event
 	 * 
-	 * @param event the event
+	 * @param event       the event
 	 * @param computation the future
 	 */
-	protected void begin(E event, CentralisedFuture<R> computation) {
+	protected final void begin(E event, CentralisedFuture<R> computation) {
+		Objects.requireNonNull(computation, "computation");
 		CentralisedFuture<R> previous = events.put(event, computation);
 		if (previous != null) {
 			logger.warn("Replaced existing computation for {}; previous result is {}", event, computation.join());
 		}
 	}
-	
-	/**
-	 * Used when {@link #withdraw(Object)} is called but no future is present
-	 * 
-	 * @param event the event
-	 */
-	protected void absentFutureHandler(E event) {
-		logger.trace("Missing computation for {}", event);
+
+	protected final void debugPrematurelyDenied(E event) {
+		logger.debug("Event {} is already blocked", event);
 	}
-	
+
+	protected final void absentFutureHandler(E event) {
+		if (isAllowed(event)) {
+			logger.error("Critical: Event {} was previously blocked by the server or another plugin, "
+					+ "but since then, some plugin has *uncancelled* the blocking. "
+					+ "This may lead to bans or mutes not being checked and enforced.", event);
+		} else {
+			logger.trace("Event {} is already blocked (confirmation)", event);
+		}
+	}
+
+	protected abstract boolean isAllowed(E event);
+
+	protected final void debugResultPermitted(E event) {
+		logger.trace("Event {} will be permitted", event);
+	}
+
 	/**
 	 * Withdraws the computation
 	 * 
 	 * @param event the event
-	 * @return the future
+	 * @return the future, or null if no computation was started
 	 */
 	protected CentralisedFuture<R> withdrawRaw(E event) {
 		return events.remove(event);
 	}
-	
+
 	/**
 	 * Withdraws the result, waiting if necessary if it has not yet completed. <br>
-	 * If no computation is present, this returns {@code null}. Else it returns the result
-	 * of the future.
+	 * If no computation is present, this returns {@code null}. Else it returns the
+	 * result of the future.
 	 * 
 	 * @param event the event
 	 * @return the future
@@ -102,5 +107,5 @@ public abstract class ParallelisedListener<E, R> implements PlatformListener {
 		}
 		return future.join();
 	}
-	
+
 }

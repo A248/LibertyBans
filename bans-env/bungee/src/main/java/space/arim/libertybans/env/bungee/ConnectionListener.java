@@ -21,6 +21,9 @@ package space.arim.libertybans.env.bungee;
 import java.net.InetAddress;
 import java.util.UUID;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,59 +32,67 @@ import space.arim.omnibus.util.ThisClass;
 import space.arim.api.env.chat.BungeeComponentConverter;
 
 import space.arim.libertybans.core.env.PlatformListener;
+import space.arim.libertybans.core.punish.Enforcer;
 
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
+import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 
+@Singleton
 public class ConnectionListener implements Listener, PlatformListener {
 
-	private final BungeeEnv env;
+	private final Plugin plugin;
+	private final Enforcer enforcer;
+	private final AddressReporter addressReporter;
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
-	ConnectionListener(BungeeEnv env) {
-		this.env = env;
+	@Inject
+	public ConnectionListener(Plugin plugin, Enforcer enforcer, AddressReporter addressReporter) {
+		this.plugin = plugin;
+		this.enforcer = enforcer;
+		this.addressReporter = addressReporter;
 	}
 	
 	@Override
 	public void register() {
-		env.getPlugin().getProxy().getPluginManager().registerListener(env.getPlugin(), this);
+		plugin.getProxy().getPluginManager().registerListener(plugin, this);
 	}
 
 	@Override
 	public void unregister() {
-		env.getPlugin().getProxy().getPluginManager().unregisterListener(this);
+		plugin.getProxy().getPluginManager().unregisterListener(this);
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
-	public void onConnect(LoginEvent evt) {
-		if (evt.isCancelled()) {
-			logger.debug("Player '{}' is already blocked by the server or another plugin", evt.getConnection().getName());
+	public void onConnect(LoginEvent event) {
+		if (event.isCancelled()) {
+			logger.debug("Event {} is already blocked", event);
 			return;
 		}
-		PendingConnection connection = evt.getConnection();
+		PendingConnection connection = event.getConnection();
 		UUID uuid = connection.getUniqueId();
 		String name = connection.getName();
-		InetAddress address = env.getEnforcer().getAddress(connection);
+		InetAddress address = addressReporter.getAddress(connection);
 
-		evt.registerIntent(env.getPlugin());
+		event.registerIntent(plugin);
 
-		env.core.getEnforcementCenter().executeAndCheckConnection(uuid, name, address).thenAccept((message) -> {
+		enforcer.executeAndCheckConnection(uuid, name, address).thenAccept((message) -> {
 			if (message == null) {
-				logger.trace("Letting '{}' through the gates", name);
+				logger.trace("Event {} will be permitted", event);
 			} else {
-				evt.setCancelled(true);
-				evt.setCancelReason(new BungeeComponentConverter().convert(message).toArray(BaseComponent[]::new));
+				event.setCancelled(true);
+				event.setCancelReason(new BungeeComponentConverter().convert(message).toArray(BaseComponent[]::new));
 			}
 		}).whenComplete((ignore, ex) -> {
 			if (ex != null) {
 				logger.error("Exception enforcing incoming connection", ex);
 			}
-			evt.completeIntent(env.getPlugin());
+			event.completeIntent(plugin);
 		});
 	}
 	

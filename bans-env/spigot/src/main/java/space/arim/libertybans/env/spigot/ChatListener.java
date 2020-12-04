@@ -20,12 +20,19 @@ package space.arim.libertybans.env.spigot;
 
 import java.net.InetAddress;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.PlatformHandle;
 
+import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.punish.Enforcer;
 import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.selector.SyncEnforcement;
+import space.arim.libertybans.core.service.FuturePoster;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -34,67 +41,94 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 
+@Singleton
 public class ChatListener extends SpigotParallelisedListener<PlayerEvent, SendableMessage> {
 
-	ChatListener(SpigotEnv env) {
-		super(env);
+	private final FuturePoster futurePoster;
+	private final Enforcer enforcer;
+	private final Configs configs;
+	private final PlatformHandle handle;
+
+	@Inject
+	public ChatListener(JavaPlugin plugin, FuturePoster futurePoster, Enforcer enforcer,
+			Configs configs, PlatformHandle handle) {
+		super(plugin);
+		this.futurePoster = futurePoster;
+		this.enforcer = enforcer;
+		this.configs = configs;
+		this.handle = handle;
 	}
-	
+
 	@EventHandler(priority = EventPriority.LOW)
-	public void onChatLow(AsyncPlayerChatEvent evt) {
-		combinedBegin(evt, null);
+	public void onChatLow(AsyncPlayerChatEvent event) {
+		combinedBegin(event, null);
 	}
-	
+
 	@EventHandler(priority = EventPriority.LOW)
-	public void onCommandLow(PlayerCommandPreprocessEvent evt) {
-		String command = evt.getMessage();
-		combinedBegin(evt, (command.charAt(0) == '/') ? command.substring(1) : command);
+	public void onCommandLow(PlayerCommandPreprocessEvent event) {
+		String command = event.getMessage();
+		combinedBegin(event, (command.charAt(0) == '/') ? command.substring(1) : command);
 	}
-	
-	private void combinedBegin(PlayerEvent evt, String command) {
-		Player player = evt.getPlayer();
+
+	private <E extends PlayerEvent & Cancellable> void combinedBegin(E event, String command) {
+		if (event.isCancelled()) {
+			debugPrematurelyDenied(event);
+			return;
+		}
+		Player player = event.getPlayer();
 		InetAddress address = player.getAddress().getAddress();
-		begin(evt, env.core.getEnforcementCenter().checkChat(player.getUniqueId(), address, command));
+		begin(event, enforcer.checkChat(player.getUniqueId(), address, command));
+	}
+	
+	@Override
+	protected boolean isAllowed(PlayerEvent event) {
+		return !((Cancellable) event).isCancelled();
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onChatHigh(AsyncPlayerChatEvent evt) {
-		combinedWithdraw(evt);
+	public void onChatHigh(AsyncPlayerChatEvent event) {
+		combinedWithdraw(event);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onCommandHigh(PlayerCommandPreprocessEvent evt) {
-		combinedWithdraw(evt);
+	public void onCommandHigh(PlayerCommandPreprocessEvent event) {
+		combinedWithdraw(event);
 	}
 	
-	private void combinedWithdraw(PlayerEvent evt) {
-		CentralisedFuture<SendableMessage> futureMessage = withdrawRaw(evt);
+	private <E extends PlayerEvent & Cancellable> void combinedWithdraw(E event) {
+		CentralisedFuture<SendableMessage> futureMessage = withdrawRaw(event);
+		if (futureMessage == null) {
+			absentFutureHandler(event);
+			return;
+		}
 		SendableMessage message;
-		if (evt.isAsynchronous() || futureMessage.isDone()) {
+		if (event.isAsynchronous() || futureMessage.isDone()) {
 			message = futureMessage.join();
 		} else {
-			SyncEnforcement strategy = env.core.getMainConfig().enforcement().syncEnforcement();
+			SyncEnforcement strategy = configs.getMainConfig().enforcement().syncEnforcement();
 			switch (strategy) {
 			case WAIT:
 				message = futureMessage.join();
 				break;
 			case ALLOW:
-				env.core.postFuture(futureMessage);
+				futurePoster.postFuture(futureMessage);
 				return;
 			case DENY:
-				env.core.postFuture(futureMessage);
-				message = env.core.getMessagesConfig().misc().syncDenialMessage();
+				futurePoster.postFuture(futureMessage);
+				message = configs.getMessagesConfig().misc().syncDenialMessage();
 				break;
 			default:
 				throw MiscUtil.unknownSyncEnforcement(strategy);
 			}
 		}
 		if (message == null) {
+			debugResultPermitted(event);
 			return;
 		}
-		((Cancellable) evt).setCancelled(true);
-		env.handle.sendMessage(evt.getPlayer(), message);
+		event.setCancelled(true);
+		handle.sendMessage(event.getPlayer(), message);
 	}
 	
 }

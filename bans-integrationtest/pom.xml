@@ -40,11 +40,6 @@
 			<artifactId>slf4j-simple</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.uuidvault</groupId>
-			<artifactId>plugin</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>ch.vorburger.mariaDB4j</groupId>
 			<artifactId>mariaDB4j</artifactId>
 		</dependency>
@@ -55,6 +50,10 @@
 		<dependency>
 			<groupId>org.mariadb.jdbc</groupId>
 			<artifactId>mariadb-java-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.injector</groupId>
+			<artifactId>injector</artifactId>
 		</dependency>
 	</dependencies>
 </project>

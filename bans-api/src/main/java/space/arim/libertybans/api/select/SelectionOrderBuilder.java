@@ -20,11 +20,11 @@ package space.arim.libertybans.api.select;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.ServerScope;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.scope.ServerScope;
 
 /**
- * Builder of {@link SelectionOrder}s
+ * Builder of {@link SelectionOrder}s. Only the punishment type is required.
  * 
  * @author A248
  *
@@ -32,41 +32,40 @@ import space.arim.libertybans.api.Victim;
 public interface SelectionOrderBuilder {
 
 	/**
-	 * Sets the punishment type matched. Use {@code null} to match all types,
-	 * which is the default behaviour
+	 * Sets the punishment type matched. Required operation
 	 * 
-	 * @param type the punishment type or {@code null} for all types
+	 * @param type the punishment type
 	 * @return this builder
 	 */
 	SelectionOrderBuilder type(PunishmentType type);
-	
+
 	/**
-	 * Sets the victim matched. Use {@code null} to match all victims,
-	 * which is the default behaviour
+	 * Sets the victim matched. Use {@code null} to match all victims, which is the
+	 * default behaviour
 	 * 
 	 * @param victim the victim or {@code null} for all victims
 	 * @return this builder
 	 */
 	SelectionOrderBuilder victim(Victim victim);
-	
+
 	/**
-	 * Sets the operator matched. Use {@code null} to match all operators,
-	 * which is the default behaviour
+	 * Sets the operator matched. Use {@code null} to match all operators, which is
+	 * the default behaviour
 	 * 
 	 * @param operator the operator or {@code null} for all operators
 	 * @return this builder
 	 */
 	SelectionOrderBuilder operator(Operator operator);
-	
+
 	/**
-	 * Sets the scope matched. Use {@code null} to match all scopes,
-	 * which is the default behaviour
+	 * Sets the scope matched. Use {@code null} to match all scopes, which is the
+	 * default behaviour
 	 * 
 	 * @param scope the scope or {@code null} for all scopes
 	 * @return this builder
 	 */
 	SelectionOrderBuilder scope(ServerScope scope);
-	
+
 	/**
 	 * Sets whether only active punishments should be matched. True by default,
 	 * meaning only active punishments are selected. <br>
@@ -77,7 +76,7 @@ public interface SelectionOrderBuilder {
 	 * @return this builder
 	 */
 	SelectionOrderBuilder selectActiveOnly(boolean selectActiveOnly);
-	
+
 	/**
 	 * Sets that only active punishments should be matched. Enabled by default,
 	 * meaning only active punishments are selected. <br>
@@ -89,11 +88,11 @@ public interface SelectionOrderBuilder {
 	default SelectionOrderBuilder selectActiveOnly() {
 		return selectActiveOnly(true);
 	}
-	
-	
+
 	/**
-	 * Sets that all punishments, not just those active, should be matched. When this
-	 * method is used, historical punishments and expired punishments are selected. <br>
+	 * Sets that all punishments, not just those active, should be matched. When
+	 * this method is used, historical punishments and expired punishments are
+	 * selected. <br>
 	 * <br>
 	 * Active punishments are those not expired and not undone.
 	 * 
@@ -102,13 +101,41 @@ public interface SelectionOrderBuilder {
 	default SelectionOrderBuilder selectAll() {
 		return selectActiveOnly(false);
 	}
-	
+
 	/**
-	 * Builds a {@link SelectionOrder} from the details of this builder. May be used repeatedly
-	 * without side effects.
+	 * Sets the amount of punishments to skip when retrieving. No punishments are
+	 * skipped by default. <br>
+	 * <br>
+	 * For example, this may be used to implement pagination on a user interface.
+	 * Punishments on earlier pages need not be displayed.
+	 * 
+	 * @param skipCount the amount of punishments to skip
+	 * @return this builder
+	 * @throws IllegalArgumentException if {@code skipCount} is negative
+	 */
+	SelectionOrderBuilder skipFirstRetrieved(int skipCount);
+
+	/**
+	 * Sets the maximum amount of punishments to retrieve. Unlimited by default.
+	 * <br>
+	 * <br>
+	 * Note: If this is used with {@link #skipFirstRetrieved(int)}, the amount of
+	 * punishments retrieved is equal to {@code maximumToRetrieve - skipCount}
+	 * 
+	 * @param maximumToRetrieve the max amount of punishments to retrieve, {@code 0}
+	 *                          for unlimited
+	 * @return this builder
+	 * @throws IllegalArgumentException if {@code maximumToRetrieve} is negative
+	 */
+	SelectionOrderBuilder maximumToRetrieve(int maximumToRetrieve);
+
+	/**
+	 * Builds a {@link SelectionOrder} from the details of this builder. May be used
+	 * repeatedly without side effects.
 	 * 
 	 * @return a selection order from this builder's details
+	 * @throws IllegalStateException if the required details on this builder have not been set
 	 */
 	SelectionOrder build();
-	
+
 }

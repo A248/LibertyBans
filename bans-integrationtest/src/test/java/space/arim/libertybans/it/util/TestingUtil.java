@@ -20,12 +20,8 @@ package space.arim.libertybans.it.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
-
-import org.junit.jupiter.api.Assertions;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentBase;
@@ -33,48 +29,6 @@ import space.arim.libertybans.api.punish.PunishmentBase;
 public final class TestingUtil {
 
 	private TestingUtil() {}
-	
-	/**
-	 * Fast access to a {@code Random}
-	 * 
-	 * @return a random
-	 */
-	public static Random random() {
-		return ThreadLocalRandom.current();
-	}
-	
-	private static byte[] randomBytes(int length) {
-		Random random = random();
-		byte[] result = new byte[length];
-		random.nextBytes(result);
-		return result;
-	}
-	
-	public static boolean randomBoolean() {
-		return random().nextBoolean();
-	}
-	
-	/**
-	 * Random Ipv4 or Ipv6 address bytes
-	 * 
-	 * @return network address bytes
-	 */
-	private static byte[] randomAddressBytes() {
-		return randomBytes((random().nextBoolean()) ? 4 : 16);
-	}
-	
-	/**
-	 * Random Ipv4 or Ipv6 InetAddress
-	 * 
-	 * @return the network address 
-	 */
-	public static InetAddress randomAddress() {
-		try {
-			return InetAddress.getByAddress(randomAddressBytes());
-		} catch (UnknownHostException ex) {
-			throw Assertions.<RuntimeException>fail(ex);
-		}
-	}
 	
 	/**
 	 * Asserts the qualities of the punishment objects are equal
@@ -100,25 +54,17 @@ public final class TestingUtil {
 	}
 
 	/**
-	 * Generates a random string
+	 * Invokes {@code Thread.sleep} for the specified duration
 	 * 
-	 * @param maxLength the maximum length of the string
-	 * @return the random string
+	 * @param duration the duration to sleep
 	 */
-	public static String randomString(int maxLength) {
-		if (maxLength == 0) {
-			return "";
+	public static void sleepUnchecked(Duration duration) {
+		try {
+			TimeUnit.MILLISECONDS.sleep(duration.toMillis());
+		} catch (InterruptedException ex) {
+			Thread.currentThread().interrupt();
+			fail("Failed to sleep", ex);
 		}
-		Random random = random();
-		final String possibleChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-		int length = (maxLength == 1) ? 1 : random.nextInt(maxLength - 1);
-
-		StringBuilder result = new StringBuilder();
-		for (int n = 0; n < length; n++) {
-			int index = random.nextInt(possibleChars.length());
-			result.append(possibleChars.charAt(index));
-		}
-		return result.toString();
 	}
-	
+
 }

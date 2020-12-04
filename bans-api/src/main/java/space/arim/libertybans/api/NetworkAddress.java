@@ -21,7 +21,6 @@ package space.arim.libertybans.api;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.Objects;
 
 /**
  * Lighter alternative to {@code InetAddress} specialised for handling the raw address,
@@ -46,7 +45,7 @@ public final class NetworkAddress {
 	 * @throws NullPointerException if {@code address} is null
 	 */
 	public static NetworkAddress of(InetAddress address) {
-		return new NetworkAddress(Objects.requireNonNull(address, "address").getAddress());
+		return new NetworkAddress(address.getAddress());
 	}
 	
 	/**
@@ -61,11 +60,10 @@ public final class NetworkAddress {
 	 * @throws NullPointerException if {@code address} is null
 	 */
 	public static NetworkAddress of(byte[] address) {
-		byte[] addr = Objects.requireNonNull(address, "address").clone();
-		if (addr.length != 4 && addr.length != 16) {
+		if (address.length != 4 && address.length != 16) {
 			throw new IllegalArgumentException("Bad address length");
 		}
-		return new NetworkAddress(addr);
+		return new NetworkAddress(address.clone());
 	}
 	
 	/**

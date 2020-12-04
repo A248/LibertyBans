@@ -22,19 +22,24 @@ import java.lang.reflect.Field;
 
 import net.md_5.bungee.api.plugin.PluginDescription;
 
-final class PluginClassLoaderReflection {
+class PluginClassLoaderReflection {
 
-	static String getProvidingPlugin(Class<?> clazz) {
+	private final Class<?> clazz;
+	
+	PluginClassLoaderReflection(Class<?> clazz) {
+		this.clazz = clazz;
+	}
+	
+	PluginDescription getProvidingPlugin() {
 		try {
 			ClassLoader pluginClassLoader = clazz.getClassLoader();
-			Field descField = pluginClassLoader.getClass().getDeclaredField("desc");
-			Object descObj = descField.get(pluginClassLoader);
-			if (descObj instanceof PluginDescription) {
-				PluginDescription desc = (PluginDescription) descObj;
-				return desc.getName() + " v" + desc.getVersion();
+			Field descriptionField = pluginClassLoader.getClass().getDeclaredField("desc");
+			Object description = descriptionField.get(pluginClassLoader);
+			if (description instanceof PluginDescription) {
+				return (PluginDescription) description;
 			}
 		} catch (IllegalArgumentException | NoSuchFieldException | SecurityException | IllegalAccessException ignored) {}
-		return "";
+		return null;
 	}
 	
 }

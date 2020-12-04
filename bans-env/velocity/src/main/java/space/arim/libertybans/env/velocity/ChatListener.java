@@ -18,39 +18,50 @@
  */
 package space.arim.libertybans.env.velocity;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.PlatformHandle;
+
+import space.arim.libertybans.core.punish.Enforcer;
 
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent.ChatResult;
+import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
 
-class ChatListener extends VelocityParallelisedListener<PlayerChatEvent, SendableMessage> {
+@Singleton
+public class ChatListener extends VelocityParallelisedListener<PlayerChatEvent, SendableMessage> {
 
-	ChatListener(VelocityEnv env) {
-		super(env);
-	}
-	
-	@Override
-	public void register() {
-		register(PlayerChatEvent.class);
-	}
+	private final Enforcer enforcer;
+	private final PlatformHandle handle;
 
-	@Override
-	protected CentralisedFuture<SendableMessage> beginFor(PlayerChatEvent evt) {
-		Player player = evt.getPlayer();
-		return env.core.getEnforcementCenter().checkChat(player.getUniqueId(), player.getRemoteAddress().getAddress(), null);
+	@Inject
+	public ChatListener(PluginContainer plugin, ProxyServer server, Enforcer enforcer, PlatformHandle handle) {
+		super(plugin, server);
+		this.enforcer = enforcer;
+		this.handle = handle;
 	}
 
 	@Override
-	protected void withdrawFor(PlayerChatEvent evt) {
-		SendableMessage message = withdraw(evt);
-		if (message == null) {
-			return;
-		}
-		evt.setResult(ChatResult.denied());
-		env.handle.sendMessage(evt.getPlayer(), message);
+	public Class<PlayerChatEvent> getEventClass() {
+		return PlayerChatEvent.class;
+	}
+
+	@Override
+	protected CentralisedFuture<SendableMessage> beginComputation(PlayerChatEvent event) {
+		Player player = event.getPlayer();
+		return enforcer.checkChat(player.getUniqueId(), player.getRemoteAddress().getAddress(), null);
+	}
+
+	@Override
+	protected void executeNonNullResult(PlayerChatEvent event, SendableMessage message) {
+		event.setResult(ChatResult.denied());
+		handle.sendMessage(event.getPlayer(), message);
 	}
 
 }

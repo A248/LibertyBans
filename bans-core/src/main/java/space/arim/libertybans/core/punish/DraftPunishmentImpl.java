@@ -19,39 +19,43 @@
 package space.arim.libertybans.core.punish;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.api.punish.DraftPunishment;
 import space.arim.libertybans.api.punish.Punishment;
 
 class DraftPunishmentImpl extends AbstractPunishmentBase implements DraftPunishment {
-	
+
+	private final Enactor enactor;
 	private final Duration duration;
-	
-	DraftPunishmentImpl(EnforcementCenter center, DraftPunishmentBuilderImpl builder) {
-		super(center, builder.type, builder.victim, builder.operator, builder.reason, builder.scope);
+
+	DraftPunishmentImpl(Enactor enactor, DraftPunishmentBuilderImpl builder) {
+		super(builder.type, builder.victim, builder.operator, builder.reason, builder.scope);
+		this.enactor = enactor;
 		duration = builder.duration;
 	}
-	
+
 	@Override
 	public Duration getDuration() {
 		return duration;
 	}
-	
+
 	@Override
-	public CentralisedFuture<Punishment> enactPunishment() {
-		return enactPunishmentWithoutEnforcement().thenCompose((punishment) -> {
-			return (punishment == null) ?
-					CompletableFuture.completedStage(null) :
-					punishment.enforcePunishment().thenApply((ignore) -> punishment);
+	public ReactionStage<Optional<Punishment>> enactPunishment() {
+		return enactPunishmentWithoutEnforcement().thenCompose((optPunishment) -> {
+			if (optPunishment.isEmpty()) {
+				return CompletableFuture.completedStage(Optional.empty());
+			}
+			return optPunishment.get().enforcePunishment().thenApply((ignore) -> optPunishment);
 		});
 	}
-	
+
 	@Override
-	public CentralisedFuture<Punishment> enactPunishmentWithoutEnforcement() {
-		return center.getEnactor().enactPunishment(this);
+	public ReactionStage<Optional<Punishment>> enactPunishmentWithoutEnforcement() {
+		return enactor.enactPunishment(this).thenApply(Optional::ofNullable);
 	}
 
 	@Override
@@ -76,10 +80,10 @@ class DraftPunishmentImpl extends AbstractPunishmentBase implements DraftPunishm
 		DraftPunishmentImpl other = (DraftPunishmentImpl) object;
 		return duration.equals(other.duration);
 	}
-	
+
 	@Override
 	public String toString() {
-		return "DraftPunishmentImpl [duration=" + duration + ", toString()=" + super.toString() + "]";
+		return "DraftPunishmentImpl [duration=" + duration + ", super.toString()=" + super.toString() + "]";
 	}
-	
+
 }

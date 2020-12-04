@@ -23,19 +23,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.FlywayException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 import space.arim.omnibus.util.ThisClass;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.libertybans.bootstrap.StartupException;
-import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.config.SqlConfig;
 import space.arim.libertybans.core.punish.MiscUtil;
 
@@ -47,16 +50,22 @@ import space.arim.libertybans.core.punish.MiscUtil;
  */
 class DatabaseSettings {
 
-	private final LibertyBansCore core;
-	
+	private final DatabaseManager manager;
+
 	private SqlConfig config;
 	private Vendor vendor;
 	private HikariConfig hikariConf;
-	
+	private boolean refresherEvent;
+
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-	
-	DatabaseSettings(LibertyBansCore core) {
-		this.core = core;
+
+	static {
+		// Prevent HSQLDB from reconfiguring JUL/Log4j2
+		System.setProperty("hsqldb.reconfig_logging", "false");
+	}
+
+	DatabaseSettings(DatabaseManager manager) {
+		this.manager = manager;
 	}
 	
 	/**
@@ -64,8 +73,8 @@ class DatabaseSettings {
 	 * 
 	 * @return a database result, which should be checked for success or failure
 	 */
-	CentralisedFuture<DatabaseResult> create() {
-		return create(core.getConfigs().getSqlConfig());
+	DatabaseResult create() {
+		return create(manager.configs().getSqlConfig());
 	}
 	
 	/**
@@ -74,17 +83,42 @@ class DatabaseSettings {
 	 * @param config the config accessor
 	 * @return a database result, which should be checked for success or failure
 	 */
-	CentralisedFuture<DatabaseResult> create(SqlConfig config) {
+	DatabaseResult create(SqlConfig config) {
 		this.config = config;
 		vendor = config.vendor();
 		hikariConf = new HikariConfig();
 
 		setHikariConfig();
 
-		Database database = new Database(core, vendor, hikariConf, hikariConf.getMaximumPoolSize());
+		HikariDataSource hikariDataSource = new HikariDataSource(hikariConf);
+		refresherEvent = vendor == Vendor.MARIADB && config.mariaDb().useEventScheduler();
 
-		CentralisedFuture<Boolean> tablesAndViewsCreation = new TableDefinitions(core, database).createTablesAndViews();
-		return tablesAndViewsCreation.thenApply((success) -> new DatabaseResult(database, success));
+		StandardDatabase database = StandardDatabase.create(
+				manager, vendor, hikariDataSource, hikariConf.getMaximumPoolSize(), refresherEvent);
+
+		Flyway flyway = createFlyway(hikariDataSource);
+		try {
+			flyway.migrate();
+		} catch (FlywayException ex) {
+			logger.error("Unable to migrate your database. Please create a backup of your database "
+					+ "and promptly report this issue.", ex);
+			return new DatabaseResult(database, false);
+		}
+		return new DatabaseResult(database, true);
+	}
+	
+	private Flyway createFlyway(HikariDataSource hikariDataSource) {
+		List<String> locations = new ArrayList<>();
+		locations.add("classpath:sql-migrations/common");
+		//locations.add("classpath:sql-migrations/" + vendor);
+		if (refresherEvent) {
+			locations.add("classpath:sql-migrations/refresher-event");
+		}
+		return Flyway.configure(getClass().getClassLoader())
+				.dataSource(hikariDataSource).table("libertybans_flyway")
+				.locations(locations.toArray(String[]::new))
+				.ignoreFutureMigrations(false).validateMigrationNaming(true).group(true)
+				.load();
 	}
 	
 	private void setHikariConfig() {
@@ -104,8 +138,8 @@ class DatabaseSettings {
 		hikariConf.setMaximumPoolSize(poolSize);
 
 		// Other settings
-		hikariConf.setAutoCommit(false);
-		hikariConf.setTransactionIsolation("TRANSACTION_REPEATABLE_READ");
+		hikariConf.setAutoCommit(DatabaseDefaults.AUTOCOMMIT);
+		hikariConf.setTransactionIsolation("TRANSACTION_" + DatabaseDefaults.ISOLATION.name());
 		hikariConf.setPoolName("LibertyBans-HikariCP-" + vendor.displayName());
 	}
 	
@@ -126,33 +160,8 @@ class DatabaseSettings {
 	}
 	
 	private void setConfiguredDriver() {
-		final String jdbcUrl;
-		switch (vendor) {
+		String jdbcUrl = getBaseUrl() + getUrlProperties();
 
-		case MARIADB:
-			SqlConfig.AuthDetails authDetails = config.authDetails();
-			String host = authDetails.host();
-			int port = authDetails.port();
-			String database = authDetails.database();
-
-			hikariConf.addDataSourceProperty("databaseName", database);
-			jdbcUrl = "jdbc:mariadb://" + host + ":" + port + "/" + database + getMariaDbUrlProperties();
-			break;
-
-		case HSQLDB:
-			Path databaseFolder = core.getFolder().resolve("hypersql");
-			try {
-				Files.createDirectories(databaseFolder);
-			} catch (IOException ex) {
-				throw new StartupException("Cannot create database folder", ex);
-			}
-			Path databaseFile = databaseFolder.resolve("punishments-database").toAbsolutePath();
-			jdbcUrl = "jdbc:hsqldb:file:" + databaseFile;
-			break;
-
-		default:
-			throw MiscUtil.unknownVendor(vendor);
-		}
 		if (config.useTraditionalJdbcUrl()) {
 			setDriverClassName(vendor.driverClassName());
 			hikariConf.setJdbcUrl(jdbcUrl);
@@ -163,16 +172,84 @@ class DatabaseSettings {
 		}
 	}
 	
-	private String getMariaDbUrlProperties() {
-		List<String> connectProps = new ArrayList<>();
-		for (Map.Entry<String, String> property : config.connectionProperties().entrySet()) {
-			String propName = property.getKey();
-			String propValue = property.getValue();
-			logger.trace("Adding connection property {} with value {}", propName, propValue);
-			connectProps.add(propName + "=" + propValue);
+	private String getBaseUrl() {
+		String url;
+		switch (vendor) {
+
+		case MARIADB:
+			SqlConfig.AuthDetails authDetails = config.authDetails();
+			String host = authDetails.host();
+			int port = authDetails.port();
+			String database = authDetails.database();
+
+			hikariConf.addDataSourceProperty("databaseName", database);
+			url = "jdbc:mariadb://" + host + ":" + port + "/" + database;
+			break;
+
+		case HSQLDB:
+			Path databaseFolder = manager.folder().resolve("hypersql");
+			try {
+				Files.createDirectories(databaseFolder);
+			} catch (IOException ex) {
+				throw new StartupException("Cannot create database folder", ex);
+			}
+			Path databaseFile = databaseFolder.resolve("punishments-database").toAbsolutePath();
+			url = "jdbc:hsqldb:file:" + databaseFile;
+			break;
+
+		default:
+			throw MiscUtil.unknownVendor(vendor);
 		}
-		String properties = String.join("&", connectProps);
-		return (properties.isEmpty()) ? "" : "?" + properties;
+		return url;
+	}
+	
+	private String getUrlProperties() {
+		Map<String, Object> properties = new HashMap<>();
+
+		switch (vendor) {
+		case HSQLDB:
+			// MySQL syntax compatibility
+			properties.put("sql.syntax_mys", true);
+			// Use case-insensitive comparisons
+			properties.put("sql.ignore_case", true);
+			// Prevent execution of multiple queries in one Statement
+			properties.put("sql.restrict_exec", true);
+			/* 
+			 * Enforce SQL standards on
+			 * 1.) table and column names
+			 * 2.) ambiguous column references
+			 * 3.) illegal type conversions
+			 */
+			properties.put("sql.enforce_names", true);
+			properties.put("sql.enforce_refs", true);
+			properties.put("sql.enforce_types", true);
+			// Respect interrupt status during query execution
+			properties.put("hsqldb.tx_interrupt_rollback", true);
+
+			break;
+
+		case MARIADB:
+			// Set default connection settings
+			properties.put("autocommit", DatabaseDefaults.AUTOCOMMIT);
+			properties.put("defaultFetchSize", DatabaseDefaults.FETCH_SIZE);
+
+			// Help debug in case of deadlock
+			properties.put("includeInnodbStatusInDeadlockExceptions", true);
+			properties.put("includeThreadDumpInDeadlockExceptions", true);
+
+			// https://github.com/brettwooldridge/HikariCP/wiki/Rapid-Recovery#mysql
+			properties.put("socketTimeout", Duration.ofSeconds(30L).toMillis());
+
+			// User-defined additional properties
+			properties.putAll(config.mariaDb().connectionProperties());
+
+			break;
+
+		default:
+			throw MiscUtil.unknownVendor(vendor);
+		}
+		logger.trace("Using connection properties {}", properties);
+		return vendor.formatConnectionProperties(properties);
 	}
 	
 	/**

@@ -18,69 +18,36 @@
  */
 package space.arim.libertybans.env.bungee;
 
-import java.nio.file.Path;
-import java.util.concurrent.Executor;
-import java.util.logging.Level;
-
-import space.arim.libertybans.bootstrap.BaseEnvironment;
-import space.arim.libertybans.bootstrap.DependencyPlatform;
-import space.arim.libertybans.bootstrap.Instantiator;
-import space.arim.libertybans.bootstrap.LibertyBansLauncher;
+import space.arim.libertybans.bootstrap.logger.JavaVersionDetection;
+import space.arim.libertybans.bootstrap.logger.JulBootstrapLogger;
 
 import net.md_5.bungee.api.plugin.Plugin;
-import net.md_5.bungee.api.scheduler.TaskScheduler;
 
 public class BungeePlugin extends Plugin {
 
-	private BaseEnvironment base;
+	private BaseWrapper wrapper;
 	
 	@Override
 	public synchronized void onEnable() {
-		if (base != null) {
+		JulBootstrapLogger logger = new JulBootstrapLogger(getLogger());
+		if (!new JavaVersionDetection(logger).detectVersion()) {
+			return;
+		}
+		if (wrapper != null) {
 			throw new IllegalStateException("Plugin enabled twice?");
 		}
-		DependencyPlatform platform = DependencyPlatform.BUNGEE;
-		try {
-			getClass().getMethod("getSLF4JLogger");
-			platform = DependencyPlatform.WATERFALL;
-		} catch (NoSuchMethodException ignored) {
-
-		} catch (SecurityException ex) {
-			throw new IllegalStateException("Arrest that SecurityManager please", ex);
-		}
-		Path folder = getDataFolder().toPath();
-		TaskScheduler scheduler = getProxy().getScheduler();
-		Executor executor = (cmd) -> scheduler.runAsync(this, cmd);
-
-		LibertyBansLauncher launcher = new LibertyBansLauncher(platform, folder, executor, (clazz) -> {
-			return PluginClassLoaderReflection.getProvidingPlugin(clazz);
-		});
-		ClassLoader launchLoader = launcher.attemptLaunch().join();
-
-		if (launchLoader == null) {
-			getLogger().warning("Failed to launch LibertyBans");
-			return;
-		}
-		BaseEnvironment base;
-		try {
-			base = new Instantiator("space.arim.libertybans.env.bungee.BungeeEnv", launchLoader)
-					.invoke(Plugin.class, this, Path.class, folder);
-		} catch (IllegalArgumentException | SecurityException | ReflectiveOperationException ex) {
-			getLogger().log(Level.WARNING, "Failed to launch LibertyBans", ex);
-			return;
-		}
-		base.startup();
-		this.base = base;
+		wrapper = new BaseWrapper.Creator(this, logger).create();
 	}
 
 	@Override
 	public synchronized void onDisable() {
-		BaseEnvironment base = this.base;
-		if (base == null) {
+		BaseWrapper wrapper = this.wrapper;
+		this.wrapper = null;
+		if (wrapper == null) {
 			getLogger().warning("LibertyBans wasn't launched; check your log for a startup error");
 			return;
 		}
-		base.shutdown();
+		wrapper.close();
 	}
 	
 }

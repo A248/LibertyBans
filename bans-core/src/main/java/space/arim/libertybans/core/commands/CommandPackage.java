@@ -19,8 +19,9 @@
 package space.arim.libertybans.core.commands;
 
 import java.util.Iterator;
+import java.util.Locale;
 
-public abstract class CommandPackage implements Iterator<String>, Cloneable {
+public abstract class CommandPackage implements Iterator<String> {
 
 	private final String command;
 	
@@ -30,7 +31,7 @@ public abstract class CommandPackage implements Iterator<String>, Cloneable {
 	 * @param command the true base command executed
 	 */
 	public CommandPackage(String command) {
-		this.command = command.toLowerCase();
+		this.command = command;
 	}
 	
 	/**
@@ -39,7 +40,7 @@ public abstract class CommandPackage implements Iterator<String>, Cloneable {
 	 * @return the true base command, lowercased
 	 */
 	public String getCommand() {
-		return command;
+		return command.toLowerCase(Locale.ROOT);
 	}
 	
 	/**
@@ -75,10 +76,10 @@ public abstract class CommandPackage implements Iterator<String>, Cloneable {
 	public abstract String allRemaining();
 	
 	/**
-	 * Clones this instance, never throws CloneNotSupportedException
+	 * Creates an identical copy of this command package. Mutating this object
+	 * or the produced copy will not affect the other.
 	 * 
 	 */
-	@Override
-	public abstract CommandPackage clone();
+	public abstract CommandPackage copy();
 	
 }

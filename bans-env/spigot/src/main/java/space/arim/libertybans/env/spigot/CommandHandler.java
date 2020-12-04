@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import jakarta.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,100 +35,94 @@ import space.arim.omnibus.util.ThisClass;
 import space.arim.api.env.util.command.BukkitCommandSkeleton;
 
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
+import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.PlatformListener;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-class CommandHandler extends BukkitCommandSkeleton implements PlatformListener {
+public class CommandHandler extends BukkitCommandSkeleton implements PlatformListener {
 
-	private final SpigotEnv env;
+	private final DependencyPackage dependencies;
 	private final boolean alias;
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
-	private static final String COMMAND_MAP_WARNING = 
-			"LibertyBans has limited support for this situation - the plugin will continue to work, but restarting it may "
-			+ "encounter weird issues with command registration, as well as potential memory leaks.";
-	
-	CommandHandler(SpigotEnv env, String command, boolean alias) {
+	CommandHandler(DependencyPackage dependencies, String command, boolean alias) {
 		super(command);
-		this.env = env;
+		this.dependencies = dependencies;
 		this.alias = alias;
 	}
 	
-	static Field getKnownCommandsField(CommandMap commandMap) {
-		if (!(commandMap instanceof SimpleCommandMap)) {
-			/*
-			 * CommandMap was replaced by a criminal plugin
-			 */
-			Class<?> replacementClass = commandMap.getClass();
-			String pluginName = "Unknown";
-			try {
-				pluginName = JavaPlugin.getProvidingPlugin(replacementClass).getDescription().getFullName();
-			} catch (IllegalArgumentException ignored) {}
-			logger.warn(
-					"Your server's CommandMap is not an instance of SimpleCommandMap. Rather, it is {} from plugin {}. "
-					+ "This could be disastrous and you should remove the offending plugin or speak to its author(s), "
-					+ "as many plugins assume SimpleCommandMap as the norm. "
-					+ COMMAND_MAP_WARNING,
-					replacementClass, pluginName);
-			return null;
+	public static class DependencyPackage {
+		
+		final SpigotCmdSender.CmdSenderDependencies parentDependencies;
+		final Commands commands;
+		final JavaPlugin plugin;
+		final CommandMapHelper commandMapHelper;
+		
+		@Inject
+		public DependencyPackage(SpigotCmdSender.CmdSenderDependencies parentDependencies, Commands commands,
+				JavaPlugin plugin, CommandMapHelper commandMapHelper) {
+			this.parentDependencies = parentDependencies;
+			this.commands = commands;
+			this.plugin = plugin;
+			this.commandMapHelper = commandMapHelper;
 		}
-		Field knownCommandsField;
-		try {
-			knownCommandsField = SimpleCommandMap.class.getDeclaredField("knownCommands");
-
-		} catch (NoSuchFieldException | SecurityException ex) {
-			logger.warn(
-					"Unable to find your server's CommandMap's 'knownCommands' field. "
-					+ COMMAND_MAP_WARNING, ex);
-			knownCommandsField = null;
-		}
-		return knownCommandsField;
+		
 	}
 	
 	@Override
 	public void register() {
-		env.getCommandMap().register(getName(), env.getPlugin().getName().toLowerCase(Locale.ENGLISH), this);
+		CommandMapHelper commandMapHelper = dependencies.commandMapHelper;
+		CommandMap commandMap = commandMapHelper.getCommandMap();
+		if (commandMap == null
+				|| commandMapHelper.getKnownCommandsField(commandMap) == null && alias) {
+			return;
+		}
+		commandMap.register(getName(), dependencies.plugin.getName().toLowerCase(Locale.ENGLISH), this);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public void unregister() {
-		CommandMap commandMap = env.getCommandMap();
-		Field knownCommandsField = env.getCommandMapKnownCommandsField();
+		CommandMapHelper commandMapHelper = dependencies.commandMapHelper;
+		CommandMap commandMap = commandMapHelper.getCommandMap();
+		if (commandMap == null) {
+			return;
+		}
+		Field knownCommandsField = commandMapHelper.getKnownCommandsField(commandMap);
 		if (knownCommandsField == null) {
-			logger.debug("Skipping command unregistration as 'knownCommands' field was not previously found");
-
-		} else {
-			Map<String, Command> knownCommands = null;
-			try {
-				knownCommandsField.setAccessible(true);
-				knownCommands = (Map<String, Command>) knownCommandsField.get(commandMap);
-			} catch (ClassCastException | IllegalArgumentException | IllegalAccessException | SecurityException
-					| InaccessibleObjectException ex) {
-				logger.warn("Unable to retrieve server command map's known commands. " + COMMAND_MAP_WARNING, ex);
+			if (!alias) {
+				logger.warn("As stated previously, /libertybans cannot be unregistered.");
 			}
-			if (knownCommands != null) {
-				do {
-					logger.trace("Iteration: removing command from map");
-				} while (knownCommands.values().remove(this));
-			}
+			return;
+		}
+		Map<String, Command> knownCommands;
+		try {
+			knownCommandsField.setAccessible(true);
+			knownCommands = (Map<String, Command>) knownCommandsField.get(commandMap);
+		} catch (ClassCastException | IllegalArgumentException | IllegalAccessException | SecurityException
+				| InaccessibleObjectException ex) {
+			logger.warn("Unable to retrieve server command map's known commands.", ex);
+			return;
+		}
+		while (knownCommands.values().remove(this)) {
+			// Remove from map
 		}
 	}
-	
+
 	private CmdSender adaptSender(CommandSender platformSender) {
+		SpigotCmdSender.CmdSenderDependencies parentDependencies = dependencies.parentDependencies;
 		return (platformSender instanceof Player) ?
-				new PlayerCmdSender(env, (Player) platformSender)
-				: new ConsoleCmdSender(env, platformSender);
+				new SpigotCmdSender.PlayerSender(parentDependencies, (Player) platformSender)
+				: new SpigotCmdSender.ConsoleSender(parentDependencies, platformSender);
 	}
-	
+
 	private String[] adaptArgs(String[] args) {
 		if (alias) {
 			return ArraysUtil.expandAndInsert(args, getName(), 0);
@@ -136,12 +132,12 @@ class CommandHandler extends BukkitCommandSkeleton implements PlatformListener {
 
 	@Override
 	protected void execute(CommandSender platformSender, String[] args) {
-		env.core.getCommands().execute(adaptSender(platformSender), new ArrayCommandPackage(getName(), adaptArgs(args)));
+		dependencies.commands.execute(adaptSender(platformSender), new ArrayCommandPackage(getName(), adaptArgs(args)));
 	}
 
 	@Override
 	protected List<String> suggest(CommandSender platformSender, String[] args) {
-		return env.core.getCommands().suggest(adaptSender(platformSender), adaptArgs(args));
+		return dependencies.commands.suggest(adaptSender(platformSender), adaptArgs(args));
 	}
 
 }

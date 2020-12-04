@@ -59,12 +59,22 @@ public class DownloadResult {
 		return jarFile;
 	}
 	
+	/**
+	 * Gets the expected hash or {@code null} if this result is not a hash mismatch
+	 * 
+	 * @return the expected hash or null
+	 */
 	public byte[] getExpectedHash() {
-		return expectedHash;
+		return (expectedHash == null) ? null : expectedHash.clone();
 	}
 	
+	/**
+	 * Gets the actual hash or {@code null} if this result is not a hash mismatch
+	 * 
+	 * @return the actual hash or null
+	 */
 	public byte[] getActualHash() {
-		return actualHash;
+		return (actualHash == null) ? null : actualHash.clone();
 	}
 	
 	/**
@@ -81,6 +91,10 @@ public class DownloadResult {
 	}
 	
 	public static DownloadResult hashMismatch(byte[] expected, byte[] actual) {
+		return hashMismatch0(expected.clone(), actual.clone());
+	}
+	
+	static DownloadResult hashMismatch0(byte[] expected, byte[] actual) {
 		return new DownloadResult(ResultType.HASH_MISMATCH, null, expected, actual, null);
 	}
 	

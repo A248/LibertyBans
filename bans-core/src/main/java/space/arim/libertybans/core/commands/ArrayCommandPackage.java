@@ -19,8 +19,9 @@
 package space.arim.libertybans.core.commands;
 
 import java.util.NoSuchElementException;
+import java.util.StringJoiner;
 
-public class ArrayCommandPackage extends CommandPackage {
+public final class ArrayCommandPackage extends CommandPackage {
 
 	private final String[] args;
 	
@@ -51,21 +52,19 @@ public class ArrayCommandPackage extends CommandPackage {
 	
 	@Override
 	public String allRemaining() {
-		StringBuilder result = new StringBuilder();
+		StringJoiner joiner = new StringJoiner(" ");
 		for (int n = position; n < args.length; n++) {
-			if (n != position) {
-				result.append(' ');
-			}
-			result.append(args[n]);
+			joiner.add(args[n]);
 		}
-		return result.toString();
+		position = args.length;
+		return joiner.toString();
 	}
 
 	@Override
-	public CommandPackage clone() {
-		ArrayCommandPackage result = new ArrayCommandPackage(getCommand(), args);
-		result.position = position;
-		return result;
+	public CommandPackage copy() {
+		ArrayCommandPackage copy = new ArrayCommandPackage(getCommand(), args);
+		copy.position = position;
+		return copy;
 	}
 
 }

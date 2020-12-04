@@ -18,111 +18,46 @@
  */
 package space.arim.libertybans.env.velocity;
 
-import java.nio.file.Path;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
-import space.arim.omnibus.OmnibusProvider;
-import space.arim.omnibus.util.ThisClass;
-
-import space.arim.uuidvault.api.UUIDVault;
-import space.arim.uuidvault.plugin.UUIDVaultVelocity;
-
-import space.arim.api.env.PlatformHandle;
-import space.arim.api.env.VelocityPlatformHandle;
-
-import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.commands.Commands;
-import space.arim.libertybans.core.env.AbstractEnv;
+import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.env.PlatformListener;
 
-import com.velocitypowered.api.plugin.PluginContainer;
-import com.velocitypowered.api.proxy.ProxyServer;
+@Singleton
+public class VelocityEnv implements Environment {
 
-public class VelocityEnv extends AbstractEnv {
+	private final Provider<ConnectionListener> connectionListenerProvider;
+	private final Provider<ChatListener> chatListenerProvider;
+	private final Provider<CommandListener> commandListenerProvider;
+	private final CommandHandler.DependencyPackage commandDependencies;
 
-	final LibertyBansCore core;
-	final VelocityPlatformHandle handle;
-	
-	private final VelocityEnforcer enforcer;
-	
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-	
-	public VelocityEnv(Entry<PluginContainer, ProxyServer> pluginAndServer, Path folder) {
-		PluginContainer plugin = pluginAndServer.getKey();
-		ProxyServer server = pluginAndServer.getValue();
-		setUUIDVaultIfNecessary(server);
-
-		core = new LibertyBansCore(OmnibusProvider.getOmnibus(), folder, this);
-		handle = new VelocityPlatformHandle(plugin, server);
-
-		enforcer = new VelocityEnforcer(this);
-	}
-	
-	private static void setUUIDVaultIfNecessary(ProxyServer server) {
-		if (UUIDVault.get() == null) {
-			new UUIDVaultVelocity(server, logger) {
-				@Override
-				protected boolean setInstancePassive() {
-					return super.setInstancePassive();
-				}
-			}.setInstancePassive();
-		}
-	}
-	
-	PluginContainer getPlugin() {
-		return handle.getPlugin();
-	}
-	
-	ProxyServer getServer() {
-		return handle.getServer();
-	}
-	
-	@Override
-	public PlatformHandle getPlatformHandle() {
-		return handle;
-	}
-	
-	@Override
-	public VelocityEnforcer getEnforcer() {
-		return enforcer;
-	}
-	
-	@Override
-	protected void startup0() {
-		core.startup();
-	}
-	
-	@Override
-	protected void restart0() {
-		core.restart();
-	}
-	
-	@Override
-	protected void shutdown0() {
-		core.shutdown();
-	}
-	
-	@Override
-	protected void infoMessage(String message) {
-		logger.info(message);
+	@Inject
+	public VelocityEnv(Provider<ConnectionListener> connectionListenerProvider,
+			Provider<ChatListener> chatListenerProvider, Provider<CommandListener> commandListenerProvider,
+			CommandHandler.DependencyPackage commandDependencies) {
+		this.connectionListenerProvider = connectionListenerProvider;
+		this.chatListenerProvider = chatListenerProvider;
+		this.commandListenerProvider = commandListenerProvider;
+		this.commandDependencies = commandDependencies;
 	}
 
 	@Override
 	public Set<PlatformListener> createListeners() {
 		return Set.of(
-				new ConnectionListener(this),
-				new ChatListener(this),
-				new CommandListener(this),
-				new CommandHandler(this, Commands.BASE_COMMAND_NAME, false));
+				connectionListenerProvider.get(),
+				chatListenerProvider.get(),
+				commandListenerProvider.get(),
+				new CommandHandler(commandDependencies, Commands.BASE_COMMAND_NAME, false));
 	}
 
 	@Override
 	public PlatformListener createAliasCommand(String command) {
-		return new CommandHandler(this, command, true);
+		return new CommandHandler(commandDependencies, command, true);
 	}
-	
+
 }

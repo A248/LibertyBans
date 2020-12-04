@@ -18,6 +18,12 @@
  */
 package space.arim.libertybans.env.velocity;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
+import jakarta.inject.Inject;
+
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
@@ -25,37 +31,87 @@ import space.arim.libertybans.core.env.AbstractCmdSender;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.ServerConnection;
 
-abstract class VelocityCmdSender extends AbstractCmdSender {
+public abstract class VelocityCmdSender extends AbstractCmdSender {
 	
-	VelocityCmdSender(VelocityEnv env, CommandSource sender, Operator operator) {
-		super(env.core, sender, operator);
+	VelocityCmdSender(CmdSenderDependencies dependencies, CommandSource sender, Operator operator) {
+		super(dependencies.abstractDependencies, sender, operator);
 	}
 	
-	@Override
-	public boolean hasPermission(String permission) {
-		return getRawSender().hasPermission(permission);
+	public static class CmdSenderDependencies {
+		
+		final AbstractCmdSender.AbstractDependencies abstractDependencies;
+		final ProxyServer server;
+		
+		@Inject
+		public CmdSenderDependencies(AbstractCmdSender.AbstractDependencies abstractDependencies, ProxyServer server) {
+			this.abstractDependencies = abstractDependencies;
+			this.server = server;
+		}
+		
 	}
 
 	@Override
 	public CommandSource getRawSender() {
 		return (CommandSource) super.getRawSender();
 	}
-
-}
-
-class PlayerCmdSender extends VelocityCmdSender {
-
-	PlayerCmdSender(VelocityEnv env, Player player) {
-		super(env, player, PlayerOperator.of(player.getUniqueId()));
+	
+	@Override
+	public boolean hasPermission(String permission) {
+		return getRawSender().hasPermission(permission);
 	}
 	
-}
-
-class ConsoleCmdSender extends VelocityCmdSender {
-
-	ConsoleCmdSender(VelocityEnv env, CommandSource sender) {
-		super(env, sender, ConsoleOperator.INSTANCE);
+	Set<String> playersToNames(Collection<Player> players, Player exclude) {
+		Set<String> result = new HashSet<>(players.size());
+		for (Player player : players) {
+			if (exclude != null && exclude.getUniqueId().equals(player.getUniqueId())) {
+				continue;
+			}
+			result.add(player.getUsername());
+		}
+		return result;
 	}
 	
+	static class PlayerSender extends VelocityCmdSender {
+
+		PlayerSender(CmdSenderDependencies dependencies, Player player) {
+			super(dependencies, player, PlayerOperator.of(player.getUniqueId()));
+		}
+		
+		@Override
+		public Player getRawSender() {
+			return (Player) super.getRawSender();
+		}
+		
+		@Override
+		public Set<String> getOtherPlayersOnSameServer() {
+			Player player = getRawSender();
+			ServerConnection serverConnection = player.getCurrentServer().orElse(null);
+			if (serverConnection == null) {
+				return Set.of();
+			}
+			Collection<Player> players = serverConnection.getServer().getPlayersConnected();
+			return playersToNames(players, player);
+		}
+		
+	}
+
+	static class ConsoleSender extends VelocityCmdSender {
+
+		private final ProxyServer server;
+		
+		ConsoleSender(CmdSenderDependencies dependencies, CommandSource sender) {
+			super(dependencies, sender, ConsoleOperator.INSTANCE);
+			this.server = dependencies.server;
+		}
+		
+		@Override
+		public Set<String> getOtherPlayersOnSameServer() {
+			return playersToNames(server.getAllPlayers(), null);
+		}
+		
+	}
+
 }

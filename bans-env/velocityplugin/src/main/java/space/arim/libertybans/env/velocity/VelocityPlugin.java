@@ -19,26 +19,21 @@
 package space.arim.libertybans.env.velocity;
 
 import java.nio.file.Path;
-import java.util.Map;
-import java.util.concurrent.Executor;
+
+import javax.inject.Inject;
 
 import org.slf4j.Logger;
 
-import com.google.inject.Inject;
-
-import space.arim.libertybans.bootstrap.BaseEnvironment;
-import space.arim.libertybans.bootstrap.Instantiator;
-import space.arim.libertybans.bootstrap.LibertyBansLauncher;
+import space.arim.libertybans.bootstrap.logger.JavaVersionDetection;
+import space.arim.libertybans.bootstrap.logger.Slf4jBootstrapLogger;
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
-import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.api.scheduler.Scheduler;
 
 @Plugin(id = PluginInfo.ANNOTE_ID, name = PluginInfo.NAME, version = PluginInfo.VERSION, authors = {
 		"A248" }, description = PluginInfo.DESCRIPTION, url = PluginInfo.URL)
@@ -46,9 +41,9 @@ public class VelocityPlugin {
 
 	final ProxyServer server;
 	final Path folder;
-	private final Logger logger;
+	final Logger logger;
 	
-	private BaseEnvironment base;
+	private BaseWrapper wrapper;
 	
 	@Inject
 	public VelocityPlugin(ProxyServer server, @DataDirectory Path folder, Logger logger) {
@@ -56,43 +51,27 @@ public class VelocityPlugin {
 		this.folder = folder;
 		this.logger = logger;
 	}
-	
+
 	@Subscribe
-	public synchronized void onProxyInitialize(@SuppressWarnings("unused") ProxyInitializeEvent evt) {
-		if (base != null) {
+	public synchronized void onProxyInitialize(ProxyInitializeEvent evt) {
+		if (!new JavaVersionDetection(new Slf4jBootstrapLogger(logger)).detectVersion()) {
+			return;
+		}
+		if (wrapper != null) {
 			throw new IllegalStateException("Proxy initialised twice?");
 		}
-		PluginContainer plugin = server.getPluginManager().fromInstance(this).get();
-		Scheduler scheduler = server.getScheduler();
-		Executor executor = (cmd) -> scheduler.buildTask(this, cmd).schedule();
-
-		LibertyBansLauncher launcher = new LibertyBansLauncherVelocity(this, executor);
-		ClassLoader launchLoader = launcher.attemptLaunch().join();
-
-		if (launchLoader == null) {
-			logger.warn("Failed to launch LibertyBans");
-			return;
-		}
-		BaseEnvironment base;
-		try {
-			base = new Instantiator("space.arim.libertybans.env.velocity.VelocityEnv", launchLoader)
-					.invoke(Map.Entry.class, Map.entry(plugin, server), Path.class, folder);
-		} catch (IllegalArgumentException | SecurityException | ReflectiveOperationException ex) {
-			logger.warn("Failed to launch LibertyBans", ex);
-			return;
-		}
-		base.startup();
-		this.base = base;
+		wrapper = new BaseWrapper.Creator(this).create();
 	}
-	
+
 	@Subscribe
-	public synchronized void onProxyShutdown(@SuppressWarnings("unused") ProxyShutdownEvent evt) {
-		BaseEnvironment base = this.base;
-		if (base == null) {
-			logger.warn("LibertyBans never launched; nothing to shutdown");
+	public synchronized void onProxyShutdown(ProxyShutdownEvent evt) {
+		BaseWrapper wrapper = this.wrapper;
+		this.wrapper = null;
+		if (wrapper == null) {
+			logger.warn("LibertyBans wasn't launched; check your log for a startup error");
 			return;
 		}
-		base.shutdown();
+		wrapper.close();
 	}
 	
 }

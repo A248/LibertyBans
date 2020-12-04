@@ -24,14 +24,14 @@ import java.util.Objects;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.ServerScope;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.DraftPunishment;
 import space.arim.libertybans.api.punish.DraftPunishmentBuilder;
+import space.arim.libertybans.api.scope.ServerScope;
 
 class DraftPunishmentBuilderImpl implements DraftPunishmentBuilder {
 
-	private final EnforcementCenter center;
+	private final Enactor enactor;
 	
 	PunishmentType type;
 	Victim victim;
@@ -40,9 +40,9 @@ class DraftPunishmentBuilderImpl implements DraftPunishmentBuilder {
 	ServerScope scope;
 	Duration duration = Duration.ZERO;
 
-	DraftPunishmentBuilderImpl(EnforcementCenter center) {
-		this.center = center;
-		scope = center.core().getScopeManager().globalScope();
+	DraftPunishmentBuilderImpl(Enactor enactor) {
+		this.enactor = enactor;
+		scope = enactor.scopeManager().globalScope();
 	}
 	
 	@Override
@@ -71,7 +71,8 @@ class DraftPunishmentBuilderImpl implements DraftPunishmentBuilder {
 
 	@Override
 	public DraftPunishmentBuilder scope(ServerScope scope) {
-		this.scope = MiscUtil.checkScope(scope);
+		enactor.scopeManager().checkScope(scope);
+		this.scope = scope;
 		return this;
 	}
 
@@ -93,7 +94,7 @@ class DraftPunishmentBuilderImpl implements DraftPunishmentBuilder {
 		if (type == PunishmentType.KICK && !duration.isZero()) {
 			throw new IllegalArgumentException("Kicks cannot be temporary");
 		}
-		return new DraftPunishmentImpl(center, this);
+		return new DraftPunishmentImpl(enactor, this);
 	}
 
 }

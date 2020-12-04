@@ -23,86 +23,106 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.StringJoiner;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.ServerScope;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.select.SelectionOrder;
-import space.arim.libertybans.core.database.Database;
+import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.punish.MiscUtil;
+import space.arim.libertybans.core.punish.PunishmentCreator;
 
-class SelectionImpl extends SelectorImplMember {
+@Singleton
+public class SelectionImpl {
 
-	SelectionImpl(Selector selector) {
-		super(selector);
+	private final FactoryOfTheFuture futuresFactory;
+	private final Provider<InternalDatabase> dbProvider;
+	private final PunishmentCreator creator;
+
+	@Inject
+	public SelectionImpl(FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider, PunishmentCreator creator) {
+		this.futuresFactory = futuresFactory;
+		this.dbProvider = dbProvider;
+		this.creator = creator;
 	}
-	
-	private static String getColumns(SelectionOrder selection) {
-		List<String> columns = new ArrayList<>();
+
+	/*
+	 * The objective is to dynamically build SQL queries while avoiding
+	 * security-poor concatenated SQL.
+	 * 
+	 * When selecting non-active punishments from the history table,
+	 * the SELECT statement must be qualified by the punishment type
+	 */
+
+	private static String getColumns(InternalSelectionOrder selection) {
+		StringJoiner columns = new StringJoiner(", ");
 		columns.add("`id`");
-		if (selection.getType() == null) {
-			columns.add("`type`");
-		}
-		if (selection.getVictim() == null) {
+		if (selection.getVictimNullable() == null) {
 			columns.add("`victim`");
 			columns.add("`victim_type`");
 		}
-		if (selection.getOperator() == null) {
+		if (selection.getOperatorNullable() == null) {
 			columns.add("`operator`");
 		}
 		columns.add("`reason`");
-		if (selection.getScope() == null) {
+		if (selection.getScopeNullable() == null) {
 			columns.add("`scope`");
 		}
 		columns.add("`start`");
 		columns.add("`end`");
 
-		return String.join(", ", columns);
+		return columns.toString();
 	}
-	
-	private static Map.Entry<String, Object[]> getPredication(SelectionOrder selection) {
-		List<String> predicates = new ArrayList<>();
+
+	private static Map.Entry<String, Object[]> getPredication(InternalSelectionOrder selection) {
+		StringJoiner predicates = new StringJoiner(" AND ");
 		List<Object> params = new ArrayList<>();
 
-		if (selection.getType() != null) {
-			predicates.add("`type` = ?");
-			params.add(selection.getType());
-		}
-		if (selection.getVictim() != null) {
+		Victim victim = selection.getVictimNullable();
+		if (victim != null) {
 			predicates.add("`victim` = ? AND `victim_type` = ?");
-			Victim victim = selection.getVictim();
 			params.add(victim);
 			params.add(victim.getType());
 		}
-		if (selection.getOperator() != null) {
+		Operator operator = selection.getOperatorNullable();
+		if (operator != null) {
 			predicates.add("`operator` = ?");
-			params.add(selection.getOperator());
+			params.add(operator);
 		}
-		if (selection.getScope() != null) {
+		ServerScope scope = selection.getScopeNullable();
+		if (scope != null) {
 			predicates.add("`scope` = ?");
-			params.add(selection.getScope());
+			params.add(scope);
 		}
 		if (selection.selectActiveOnly()) {
 			predicates.add("(`end` = 0 OR `end` > ?)");
 			params.add(MiscUtil.currentTime());
+		} else {
+			predicates.add("`type` = ?");
+			params.add(selection.getType());
 		}
-		return Map.entry(String.join(" AND ", predicates), params.toArray());
+		return Map.entry(predicates.toString(), params.toArray());
 	}
-	
-	private Punishment fromResultSetAndSelection(Database database, ResultSet resultSet,
-			SelectionOrder selection) throws SQLException {
+
+	private Punishment fromResultSetAndSelection(InternalDatabase database, ResultSet resultSet,
+			InternalSelectionOrder selection) throws SQLException {
 		PunishmentType type = selection.getType();
-		Victim victim = selection.getVictim();
-		Operator operator = selection.getOperator();
-		ServerScope scope = selection.getScope();
-		return core().getEnforcementCenter().createPunishment(
+		Victim victim = selection.getVictimNullable();
+		Operator operator = selection.getOperatorNullable();
+		ServerScope scope = selection.getScopeNullable();
+		return creator.createPunishment(
 				resultSet.getInt("id"),
-				(type == null) ? database.getTypeFromResult(resultSet) : type,
+				type,
 				(victim == null) ? database.getVictimFromResult(resultSet) : victim,
 				(operator == null) ? database.getOperatorFromResult(resultSet) : operator,
 				database.getReasonFromResult(resultSet),
@@ -111,7 +131,7 @@ class SelectionImpl extends SelectorImplMember {
 				database.getEndFromResult(resultSet));
 	}
 	
-	private static Map.Entry<String, Object[]> getSelectionQuery(SelectionOrder selection) {
+	private static Map.Entry<String, Object[]> getSelectionQuery(InternalSelectionOrder selection) {
 		String columns = getColumns(selection);
 		Map.Entry<String, Object[]> predication = getPredication(selection);
 
@@ -121,9 +141,10 @@ class SelectionImpl extends SelectorImplMember {
 		PunishmentType type = selection.getType();
 		if (selection.selectActiveOnly()) {
 			assert type != PunishmentType.KICK : type;
-			statementBuilder.append("simple_").append(type.getLowercaseNamePlural());
+			statementBuilder.append("simple_").append(type.toString()).append('s');
 		} else {
-			statementBuilder.append("history");
+			// getPredication will be responsible for narrowing the type selected
+			statementBuilder.append("simple_history");
 		}
 		statementBuilder.append('`');
 
@@ -131,15 +152,20 @@ class SelectionImpl extends SelectorImplMember {
 		if (!predicates.isEmpty()) {
 			statementBuilder.append(" WHERE ").append(predicates);
 		}
+		statementBuilder.append(" ORDER BY `start` DESC");
+		int maximumToRetrieve = selection.maximumToRetrieve();
+		if (maximumToRetrieve != 0) {
+			statementBuilder.append(" LIMIT " + maximumToRetrieve);
+		}
 		return Map.entry(statementBuilder.toString(), predication.getValue());
 	}
 	
-	CentralisedFuture<Punishment> getFirstSpecificPunishment(SelectionOrder selection) {
+	CentralisedFuture<Punishment> getFirstSpecificPunishment(InternalSelectionOrder selection) {
 		if (selection.selectActiveOnly() && selection.getType() == PunishmentType.KICK) {
 			// Kicks cannot possibly be active. They are all history
-			return core().getFuturesFactory().completedFuture(null);
+			return futuresFactory.completedFuture(null);
 		}
-		Database database = core().getDatabase();
+		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
 			Map.Entry<String, Object[]> query = getSelectionQuery(selection);
 			return database.jdbCaesar().query(
@@ -147,25 +173,39 @@ class SelectionImpl extends SelectorImplMember {
 					.params(query.getValue())
 					.singleResult((resultSet) -> {
 						return fromResultSetAndSelection(database, resultSet, selection);
-					}).onError(() -> null).execute();
+					}).execute();
 		});
 	}
 	
-	CentralisedFuture<Set<Punishment>> getSpecificPunishments(SelectionOrder selection) {
+	ReactionStage<List<Punishment>> getSpecificPunishments(InternalSelectionOrder selection) {
 		if (selection.selectActiveOnly() && selection.getType() == PunishmentType.KICK) {
 			// Kicks cannot possibly be active. They are all history
-			return core().getFuturesFactory().completedFuture(Set.of());
+			return futuresFactory.completedFuture(List.of());
 		}
-		Database database = core().getDatabase();
+		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
+
 			Map.Entry<String, Object[]> query = getSelectionQuery(selection);
-			Set<Punishment> result = database.jdbCaesar().query(
+			int skipCount = selection.skipCount();
+
+			List<Punishment> result = database.jdbCaesar().query(
 					query.getKey())
 					.params(query.getValue())
-					.setResult((resultSet) -> {
-						return fromResultSetAndSelection(database, resultSet, selection);
-					}).onError(Set::of).execute();
-			return Set.copyOf(result);
+					.totalResult((resultSet) -> {
+
+						for (int toSkipRemaining = skipCount; toSkipRemaining > 0; toSkipRemaining--) {
+							if (!resultSet.next()) {
+								return List.<Punishment>of();
+							}
+						}
+						List<Punishment> punishments = new ArrayList<>();
+						while (resultSet.next()) {
+							punishments.add(fromResultSetAndSelection(database, resultSet, selection));
+						}
+						return punishments;
+					}).execute();
+
+			return List.copyOf(result);
 		});
 	}
 

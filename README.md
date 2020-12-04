@@ -3,21 +3,33 @@ The be-all, end-all of discipline.
 
 ## Introduction
 
-### Features
+### Design
 
-* Option to use local file-based HyperSQL database, or remote MariaDB/MySQL database.
-* No complicated installation. All dependencies are automatically downloaded with hard-coded secure SHA-512 hashes used to validate the downloads.
-* Enhanced database-oriented performance emphasising database-side calculations through stored procedures. Further optimisation on MySQL using MySQL events.
-* Compact database storage setup. UUIDs are stored in minimal form as raw bytes instead of strings. Same for IP addresses.
+* Effective and lightweight. No complicated installation and avoids unnecessary features.
+* Option to use local file-based database (HyperSQL), or remote database (MariaDB/MySQL).
+* Enhanced database-oriented performance emphasising calculations in SQL. Low memory usage because punishments are stored almost completely in the database.
+* Compact storage definitions. UUIDs are stored in minimal form as raw bytes instead of strings. Same for IP addresses.
 * Best practices for asynchronous calculations are followed. The performance cost of context switching is understood and avoided; the plugin does not blindly fire async tasks.
 * Designed for high availability and concurrency. Minimal locking is employed while keeping state consistent; this is mostly realised through the fact that most plugin state is maintained in the database itself.
 * Well-structured API providing a framework for other plugins to work with the plugin.
 
-### Why?
+### Features
 
-I noticed the striking predominance of closed-source, premium punishment plugins, particularly one which I won't name (it will be obvious for many readers). I did not like this, so I decided I would set out to change it by making a free, higher-quality alternative.
-
-Yes, that's right. This plugin strives to be better at a lower price.
+* Add and remove punishments:
+    * /ban, /ipban, /unban, /unbanip - bans or unbans a player or IP address
+    * /mute, /ipmute, /unmute, /unmuteip - mutes or unmutes a player or IP address
+    * /warn, /ipwarn, /unwarn, /unwarnip - warns or unwarns a player or IP address
+    * /kick, /ipkick - kicks a player or IP address
+* All player data is stored using UUIDs. This isn't a silly plugin which stores data by player name.
+* List punishments:
+    * /banlist - shows all bans
+    * /mutelist - shows all mutes
+    * /history <player> - shows all punishments for a player
+    * /warns <player> - shows all warns for a player
+    * /blame <player> - shows all the punishments a staff member has enacted
+* There is no /alts or /dupeip command. Why? Because this functionality is built into the enforcement of punishments. By default, alts are automatically banned from joining if the alt account's IP address matches that of a banned player.
+* Options and behaviour are fully configurable. You can even tweak your connection pool and statement cache settings to fine-tune performance.
+* All dependencies are automatically downloaded with secure SHA-512 hashes used to validate the downloads. Additionally, builds of LibertyBans are reproducible from the source code, meaning checksums can be personally verified.
 
 ## Basic Info
 
@@ -34,13 +46,13 @@ Yes, that's right. This plugin strives to be better at a lower price.
 
 ### Why Java 11?
 
-There have been several major improvements to Java for developers and server owners. Newer Java versions are faster for server owners and easier to develop with for developers. I would strongly recommend updating to Java 11 or 14.
+There have been several major improvements to Java for developers and server owners. Newer Java versions are faster for server owners and easier to develop with. I would strongly recommend updating to Java 11 or 14.
 
 [Read more here](https://github.com/A248/LibertyBans/wiki/Why-Java-11%3F)
 
 ## Developer API
 
-The developer API is extensive. Unlike other plugins, LibertyBans does NOT recommend developers mess with the database as a first recourse. [More information here](https://github.com/A248/LibertyBans/wiki/Developer-API)
+The developer API is extensive. LibertyBans does not recommend developers mess with the database as a first recourse. [More information here](https://github.com/A248/LibertyBans/wiki/Developer-API)
 
 ## Other Information
 

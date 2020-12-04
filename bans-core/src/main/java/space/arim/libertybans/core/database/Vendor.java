@@ -18,19 +18,30 @@
  */
 package space.arim.libertybans.core.database;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 public enum Vendor {
 
-	MARIADB("MariaDB", "org.mariadb.jdbc.Driver", "org.mariadb.jdbc.MariaDbDataSource"),
-	HSQLDB("HyperSQL", "org.hsqldb.jdbc.JDBCDriver", "org.hsqldb.jdbc.JDBCDataSource");
+	MARIADB("MariaDB", "org.mariadb.jdbc.Driver", "org.mariadb.jdbc.MariaDbDataSource", '?', '&'),
+	HSQLDB("HyperSQL", "org.hsqldb.jdbc.JDBCDriver", "org.hsqldb.jdbc.JDBCDataSource", ';', ';');
 	
 	private final String displayName;
 	private final String driverClassName;
 	private final String dataSourceClassName;
 	
-	private Vendor(String displayName, String driverClassName, String dataSourceClassName) {
+	private final char urlPropertyPrefix;
+	private final char urlPropertySeparator;
+	
+	private Vendor(String displayName, String driverClassName, String dataSourceClassName,
+			char urlPropertyPrefix, char urlPropertySeparator) {
 		this.displayName = displayName;
 		this.driverClassName = driverClassName;
 		this.dataSourceClassName = dataSourceClassName;
+
+		this.urlPropertyPrefix = urlPropertyPrefix;
+		this.urlPropertySeparator = urlPropertySeparator;
 	}
 	
 	String displayName() {
@@ -44,13 +55,19 @@ public enum Vendor {
 	String dataSourceClassName() {
 		return dataSourceClassName;
 	}
-	
-	public boolean useStoredRoutines() {
-		return this == MARIADB;
-	}
 
 	public boolean hasDeleteFromJoin() {
 		return this == MARIADB;
+	}
+	
+	String formatConnectionProperties(Map<String, Object> properties) {
+		if (properties.isEmpty()) {
+			return "";
+		}
+		List<String> connectProps = new ArrayList<>(properties.size());
+		properties.forEach((key, value) -> connectProps.add(key + "=" + value));
+
+		return urlPropertyPrefix + String.join(Character.toString(urlPropertySeparator), connectProps);
 	}
 	
 }

@@ -20,22 +20,24 @@ package space.arim.libertybans.core.selector;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.ServerScope;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.SelectionOrder;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
 
 class SelectionOrderBuilderImpl implements SelectionOrderBuilder {
 	
-	private final Selector selector;
+	private final SelectorImpl selector;
 	
 	private PunishmentType type;
 	private Victim victim;
 	private Operator operator;
 	private ServerScope scope;
 	private boolean selectActiveOnly = true;
+	private int skipCount;
+	private int maximumToRetrieve;
 	
-	SelectionOrderBuilderImpl(Selector selector) {
+	SelectionOrderBuilderImpl(SelectorImpl selector) {
 		this.selector = selector;
 	}
 
@@ -70,8 +72,30 @@ class SelectionOrderBuilderImpl implements SelectionOrderBuilder {
 	}
 
 	@Override
+	public SelectionOrderBuilder skipFirstRetrieved(int skipCount) {
+		if (skipCount < 0) {
+			throw new IllegalArgumentException("Skip count must be non-negative");
+		}
+		this.skipCount = skipCount;
+		return this;
+	}
+
+	@Override
+	public SelectionOrderBuilder maximumToRetrieve(int maximumToRetrieve) {
+		if (maximumToRetrieve < 0) {
+			throw new IllegalArgumentException("Maximum to retrieve must be non-negative");
+		}
+		this.maximumToRetrieve = maximumToRetrieve;
+		return this;
+	}
+
+	@Override
 	public SelectionOrder build() {
-		return new SelectionOrderImpl(selector, type, victim, operator, scope, selectActiveOnly);
+		if (type == null) {
+			throw new IllegalStateException("Builder details have not been set");
+		}
+		return new SelectionOrderImpl(selector, type, victim, operator, scope, selectActiveOnly, skipCount,
+				maximumToRetrieve);
 	}
 	
 }

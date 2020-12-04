@@ -18,7 +18,6 @@
  */
 package space.arim.libertybans.it;
 
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -59,31 +58,13 @@ public class ConfigSpec {
 		return database;
 	}
 	
-	static Set<ConfigSpec> getAll() {
-		Set<ConfigSpec> possibilities = new HashSet<>();
-		for (Vendor vendor : Vendor.values()) {
-			for (AddressStrictness addressStrictness : AddressStrictness.values()) {
-				possibilities.add(new ConfigSpec(vendor, addressStrictness));
-			}
-		}
-		return possibilities;
-	}
-	
 	boolean agrees(ConfigConstraints constraints) {
-		return containsOrEmpty(constraints.vendor(), vendor)
-				&& containsOrEmpty(constraints.addressStrictness(), addressStrictness);
+		return containsOrEmpty(constraints.vendors(), vendor)
+				&& containsOrEmpty(constraints.strictnesses(), addressStrictness);
 	}
-	
-	private static <T extends Enum<T>> boolean containsOrEmpty(T[] array, T element) {
-		if (array.length == 0) {
-			return true;
-		}
-		for (T e : array) {
-			if (e == element) {
-				return true;
-			}
-		}
-		return false;
+
+	private static <T extends Enum<T>> boolean containsOrEmpty(Set<T> set, T element) {
+		return set.isEmpty() || set.contains(element);
 	}
 
 	@Override

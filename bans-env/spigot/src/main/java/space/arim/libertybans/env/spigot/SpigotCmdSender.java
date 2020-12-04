@@ -18,23 +18,48 @@
  */
 package space.arim.libertybans.env.spigot;
 
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
+import jakarta.inject.Inject;
+
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.core.env.AbstractCmdSender;
 
-abstract class SpigotCmdSender extends AbstractCmdSender {
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
-	SpigotCmdSender(SpigotEnv env, CommandSender sender, Operator operator) {
-		super(env.core, sender, operator);
+public abstract class SpigotCmdSender extends AbstractCmdSender {
+
+	private final FactoryOfTheFuture futuresFactory;
+	private final JavaPlugin plugin;
+	
+	SpigotCmdSender(CmdSenderDependencies dependencies, CommandSender sender, Operator operator) {
+		super(dependencies.abstractDependencies, sender, operator);
+		this.futuresFactory = dependencies.futuresFactory;
+		this.plugin = dependencies.plugin;
 	}
-
-	@Override
-	public boolean hasPermission(String permission) {
-		return core().getFuturesFactory().supplySync(() -> getRawSender().hasPermission(permission)).join();
+	
+	public static class CmdSenderDependencies {
+		
+		final AbstractCmdSender.AbstractDependencies abstractDependencies;
+		final FactoryOfTheFuture futuresFactory;
+		final JavaPlugin plugin;
+		
+		@Inject
+		public CmdSenderDependencies(AbstractCmdSender.AbstractDependencies abstractDependencies,
+				FactoryOfTheFuture futuresFactory, JavaPlugin plugin) {
+			this.abstractDependencies = abstractDependencies;
+			this.futuresFactory = futuresFactory;
+			this.plugin = plugin;
+		}
+		
 	}
 
 	@Override
@@ -42,20 +67,49 @@ abstract class SpigotCmdSender extends AbstractCmdSender {
 		return (CommandSender) super.getRawSender();
 	}
 	
-}
-
-class PlayerCmdSender extends SpigotCmdSender {
-
-	PlayerCmdSender(SpigotEnv env, Player player) {
-		super(env, player, PlayerOperator.of(player.getUniqueId()));
+	@Override
+	public Set<String> getOtherPlayersOnSameServer() {
+		return futuresFactory.supplySync(() -> {
+			CommandSender sender = getRawSender();
+			Collection<? extends Player> players = plugin.getServer().getOnlinePlayers();
+			Set<String> result = new HashSet<>(players.size());
+			for (Player player : players) {
+				if (sender instanceof Player && ((Player) sender).getUniqueId().equals(player.getUniqueId())) {
+					continue;
+				}
+				result.add(player.getName());
+			}
+			return result;
+		}).join();
 	}
 	
-}
+	static class PlayerSender extends SpigotCmdSender {
+		
+		private final FactoryOfTheFuture futuresFactory;
 
-class ConsoleCmdSender extends SpigotCmdSender {
+		PlayerSender(CmdSenderDependencies dependencies, Player player) {
+			super(dependencies, player, PlayerOperator.of(player.getUniqueId()));
+			this.futuresFactory = dependencies.futuresFactory;
+		}
+		
+		@Override
+		public boolean hasPermission(String permission) {
+			return futuresFactory.supplySync(() -> getRawSender().hasPermission(permission)).join();
+		}
+		
+	}
 
-	ConsoleCmdSender(SpigotEnv env, CommandSender sender) {
-		super(env, sender, ConsoleOperator.INSTANCE);
+	static class ConsoleSender extends SpigotCmdSender {
+
+		ConsoleSender(CmdSenderDependencies dependencies, CommandSender sender) {
+			super(dependencies, sender, ConsoleOperator.INSTANCE);
+		}
+		
+		@Override
+		public boolean hasPermission(String permission) {
+			return true;
+		}
+		
 	}
 	
 }

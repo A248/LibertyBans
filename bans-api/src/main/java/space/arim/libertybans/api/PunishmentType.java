@@ -44,28 +44,9 @@ public enum PunishmentType {
 		return this == BAN || this == MUTE;
 	}
 	
-	/**
-	 * Shortcut for {@link #name()} lowercased using the root locale
-	 * 
-	 * @return the lowercased name
-	 */
-	public String getLowercaseName() {
-		return name().toLowerCase(Locale.ROOT);
-	}
-	
-	/**
-	 * Shortcut for <code>getLowercaseName() + 's'</code>
-	 * 
-	 * @return the lowercased name with 's' appended
-	 */
-	public String getLowercaseNamePlural() {
-		return getLowercaseName() + 's';
-	}
-	
 	@Override
 	public String toString() {
-		String name = name();
-		return name.charAt(0) + name.substring(1).toLowerCase();
+		return name().toLowerCase(Locale.ROOT);
 	}
 	
 }

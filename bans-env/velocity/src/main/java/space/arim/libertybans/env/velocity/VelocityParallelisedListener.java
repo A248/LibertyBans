@@ -25,55 +25,84 @@ import space.arim.libertybans.core.env.ParallelisedListener;
 import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.PostOrder;
+import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
+import com.velocitypowered.api.proxy.ProxyServer;
 
-abstract class VelocityParallelisedListener<E, R> extends ParallelisedListener<E, R>{
+abstract class VelocityParallelisedListener<E extends ResultedEvent<?>, R> extends ParallelisedListener<E, R> {
 
-	final VelocityEnv env;
-	
+	private final PluginContainer plugin;
+	private final ProxyServer server;
+
 	private final EarlyHandler earlyHandler = new EarlyHandler();
 	private final LateHandler lateHandler = new LateHandler();
 	
-	VelocityParallelisedListener(VelocityEnv env) {
-		this.env = env;
+	VelocityParallelisedListener(PluginContainer plugin, ProxyServer server) {
+		this.plugin = plugin;
+		this.server = server;
 	}
-	
-	void register(Class<E> evtClass) {
-		PluginContainer plugin = env.getPlugin();
-		EventManager evtManager = env.getServer().getEventManager();
-		evtManager.register(plugin, evtClass, PostOrder.EARLY, earlyHandler);
-		evtManager.register(plugin, evtClass, PostOrder.LATE, lateHandler);
+
+	@Override
+	public final void register() {
+		Class<E> eventClass = getEventClass();
+		EventManager eventManager = server.getEventManager();
+		eventManager.register(plugin, eventClass, PostOrder.EARLY, earlyHandler);
+		eventManager.register(plugin, eventClass, PostOrder.LATE, lateHandler);
 	}
+
+	abstract Class<E> getEventClass();
 	
 	@Override
 	public void unregister() {
-		PluginContainer plugin = env.getPlugin();
-		EventManager evtManager = env.getServer().getEventManager();
-		evtManager.unregister(plugin, earlyHandler);
-		evtManager.unregister(plugin, lateHandler);
+		EventManager eventManager = server.getEventManager();
+		eventManager.unregister(plugin, earlyHandler);
+		eventManager.unregister(plugin, lateHandler);
 	}
-	
-	protected abstract CentralisedFuture<R> beginFor(E event);
-	
-	protected abstract void withdrawFor(E event);
-	
+
+	@Override
+	protected final boolean isAllowed(E event) {
+		return event.getResult().isAllowed();
+	}
+
+	/** Can be overridden to skip events */
+	protected boolean filter(E event) {
+		return true;
+	}
+
+	protected abstract CentralisedFuture<R> beginComputation(E event);
+
+	protected abstract void executeNonNullResult(E event, R result);
+
 	private class EarlyHandler implements EventHandler<E> {
 
 		@Override
 		public void execute(E event) {
-			CentralisedFuture<R> future = beginFor(event);
-			if (future != null) {
-				begin(event, future);
+			if (!filter(event)) {
+				return;
 			}
+			if (!event.getResult().isAllowed()) {
+				debugPrematurelyDenied(event);
+				return;
+			}
+			CentralisedFuture<R> future = beginComputation(event);
+			begin(event, future);
 		}
-		
+
 	}
-	
+
 	private class LateHandler implements EventHandler<E> {
 
 		@Override
 		public void execute(E event) {
-			withdrawFor(event);
+			if (!filter(event)) {
+				return;
+			}
+			R result = withdraw(event);
+			if (result == null) {
+				debugResultPermitted(event);
+				return;
+			}
+			executeNonNullResult(event, result);
 		}
 		
 	}

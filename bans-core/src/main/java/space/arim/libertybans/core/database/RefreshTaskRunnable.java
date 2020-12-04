@@ -29,29 +29,29 @@ import space.arim.libertybans.core.punish.MiscUtil;
 class RefreshTaskRunnable implements Runnable {
 
 	private final DatabaseManager manager;
-	private final Database database;
+	private final InternalDatabase database;
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
-	RefreshTaskRunnable(DatabaseManager manager, Database database) {
+	RefreshTaskRunnable(DatabaseManager manager, InternalDatabase database) {
 		this.manager = manager;
 		this.database = database;
 	}
-	
+
 	@Override
 	public void run() {
-		if (manager.getCurrentDatabase() != database) {
+		if (manager.getInternal() != database) {
 			// cancelled but not stopped yet, or failed to stop
-			logger.debug("HSQLDB cleaning task continues after shutdown");
+			logger.warn("Cleaning task continues after shutdown");
 			return;
 		}
-		long currentTime = MiscUtil.currentTime();
 		database.jdbCaesar().transaction().body((querySource, controller) -> {
 
+			long currentTime = MiscUtil.currentTime();
 			for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
 				database.clearExpiredPunishments(querySource, type, currentTime);
 			}
 			return (Void) null;
-		}).onError(() -> null).execute();
+		}).execute();
 	}
 }

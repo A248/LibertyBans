@@ -19,39 +19,37 @@
 package space.arim.libertybans.core.env;
 
 import java.util.UUID;
-import space.arim.api.chat.SendableMessage;
 
-import space.arim.libertybans.core.LibertyBansCore;
+import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.PlatformHandle;
+
+import space.arim.libertybans.core.config.InternalFormatter;
 
 public abstract class AbstractEnvEnforcer implements EnvEnforcer {
 
-	private final LibertyBansCore core;
-	private final Environment env;
+	private final InternalFormatter formatter;
+	private final PlatformHandle handle;
 	
-	protected AbstractEnvEnforcer(LibertyBansCore core, Environment env) {
-		this.core = core;
-		this.env = env;
-	}
-	
-	protected Environment env() {
-		return env;
+	protected AbstractEnvEnforcer(InternalFormatter formatter, PlatformHandle handle) {
+		this.formatter = formatter;
+		this.handle = handle;
 	}
 	
 	@Override
 	public final void sendToThoseWithPermission(String permission, SendableMessage message) {
-		sendToThoseWithPermission0(permission, core.getFormatter().prefix(message));
+		sendToThoseWithPermission0(permission, formatter.prefix(message));
 	}
 	
 	protected abstract void sendToThoseWithPermission0(String permission, SendableMessage message);
 
 	@Override
 	public void kickByUUID(UUID uuid, SendableMessage message) {
-		doForPlayerIfOnline(uuid, (player) -> env.getPlatformHandle().disconnectUser(player, message));
+		doForPlayerIfOnline(uuid, (player) -> handle.disconnectUser(player, message));
 	}
 
 	@Override
 	public void sendMessageByUUID(UUID uuid, SendableMessage message) {
-		doForPlayerIfOnline(uuid, (player) -> env.getPlatformHandle().sendMessage(player, message));
+		doForPlayerIfOnline(uuid, (player) -> handle.sendMessage(player, message));
 	}
 	
 }

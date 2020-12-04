@@ -21,26 +21,39 @@ package space.arim.libertybans.core.env;
 import java.util.ArrayList;
 import java.util.List;
 
-import space.arim.libertybans.core.LibertyBansCore;
-import space.arim.libertybans.core.Part;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
+import space.arim.libertybans.bootstrap.StartupException;
+import space.arim.libertybans.core.Part;
+import space.arim.libertybans.core.config.Configs;
+
+@Singleton
 public class EnvironmentManager implements Part {
 
-	private final LibertyBansCore core;
+	private final Environment environment;
+	private final Configs configs;
 	
 	private final List<PlatformListener> listeners = new ArrayList<>();
 	
-	public EnvironmentManager(LibertyBansCore core) {
-		this.core = core;
+	@Inject
+	public EnvironmentManager(Environment environment, Configs configs) {
+		this.environment = environment;
+		this.configs = configs;
 	}
 
 	@Override
 	public void startup() {
-		listeners.addAll(core.getEnvironment().createListeners());
-		for (String alias : core.getMainConfig().commandAliases()) {
-			listeners.add(core.getEnvironment().createAliasCommand(alias));
+		listeners.addAll(environment.createListeners());
+		for (String alias : configs.getMainConfig().commands().aliases()) {
+			listeners.add(environment.createAliasCommand(alias));
 		}
 		listeners.forEach(PlatformListener::register);
+	}
+	
+	@Override
+	public void restart() {
+		throw new StartupException("Internal error, EnvironmentManager#restart should not be called");
 	}
 
 	@Override

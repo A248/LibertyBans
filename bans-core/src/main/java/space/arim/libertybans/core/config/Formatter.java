@@ -24,96 +24,79 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.UnaryOperator;
 
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import jakarta.inject.Inject;
 
-import space.arim.uuidvault.api.UUIDUtil;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.chat.manipulator.SendableMessageManipulator;
 import space.arim.api.chat.serialiser.JsonSkSerialiser;
+import space.arim.api.util.web.UUIDUtil;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.ServerScope;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.api.manager.PunishmentFormatter;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.core.LibertyBansCore;
+import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.punish.MiscUtil;
+import space.arim.libertybans.core.scope.InternalScopeManager;
+import space.arim.libertybans.core.uuid.UUIDManager;
 
-public class Formatter implements PunishmentFormatter {
+public class Formatter implements InternalFormatter {
 
-	private final LibertyBansCore core;
+	private final FactoryOfTheFuture futuresFactory;
+	private final Configs configs;
+	private final InternalScopeManager scopeManager;
+	private final UUIDManager uuidManager;
 
 	private static final long MARGIN_OF_INITIATION = 10; // seconds
 	
-	public Formatter(LibertyBansCore core) {
-		this.core = core;
+	@Inject
+	public Formatter(FactoryOfTheFuture futuresFactory, Configs configs, InternalScopeManager scopeManager,
+			UUIDManager uuidManager) {
+		this.futuresFactory = futuresFactory;
+		this.configs = configs;
+		this.scopeManager = scopeManager;
+		this.uuidManager = uuidManager;
 	}
 	
 	private MessagesConfig messages() {
-		return core.getMessagesConfig();
+		return configs.getMessagesConfig();
 	}
 	
-	/**
-	 * Parses a message to send including the prefix
-	 * 
-	 * @param messageToParse the message to parse
-	 * @return the message parsed including the prefix
-	 */
-	public SendableMessage parseMessageWithPrefix(String messageToParse) {
-		return prefix(JsonSkSerialiser.getInstance().deserialise(messageToParse));
+	@Override
+	public SendableMessage parseMessageWithoutPrefix(String messageToParse) {
+		return JsonSkSerialiser.getInstance().deserialise(messageToParse);
 	}
 	
-	/**
-	 * Prefixes a message and returns the prefixed result
-	 * 
-	 * @param message the message
-	 * @return the message including the prefix
-	 */
+	@Override
 	public SendableMessage prefix(SendableMessage message) {
 		return messages().all().prefix().concatenate(message);
 	}
 	
-	/**
-	 * Gets, formats, and parses the punishment message for a punishment.
-	 * 
-	 * @param punishment the punishment
-	 * @return a future yielding the formatted sendable message
-	 */
+	@Override
 	public CentralisedFuture<SendableMessage> getPunishmentMessage(Punishment punishment) {
 		return formatWithPunishment(messages().additions().forType(punishment.getType()).layout(), punishment);
 	}
 	
-	/**
-	 * Parses and formats a message with a punishment
-	 * 
-	 * @param manipulator the message manipulator
-	 * @param punishment the punishment
-	 * @return a future of the resulting formatted sendable message
-	 */
+	@Override
 	public CentralisedFuture<SendableMessage> formatWithPunishment(SendableMessageManipulator manipulator,
 			Punishment punishment) {
 		return formatWithPunishment(manipulator, punishment, null);
 	}
 	
-	/**
-	 * Parses and formats a message with a punishment and an undoing operator. Used when punishments are revoked.
-	 * 
-	 * @param manipulator the message manipulator
-	 * @param punishment the punishment
-	 * @param unOperator the operator undoing the punishment
-	 * @return a future of the resulting formatted sendable message
-	 */
+	@Override
 	public CentralisedFuture<SendableMessage> formatWithPunishmentAndUnoperator(SendableMessageManipulator manipulator,
 			Punishment punishment, Operator unOperator) {
 		return formatWithPunishment(manipulator, punishment, Objects.requireNonNull(unOperator, "unOperator"));
@@ -122,7 +105,7 @@ public class Formatter implements PunishmentFormatter {
 	private CentralisedFuture<SendableMessage> formatWithPunishment(SendableMessageManipulator manipulator,
 			Punishment punishment, Operator unOperator) {
 
-		EnumMap<FutureReplaceable, CentralisedFuture<String>> futureReplacements = new EnumMap<>(FutureReplaceable.class);
+		Map<FutureReplaceable, CentralisedFuture<String>> futureReplacements = new EnumMap<>(FutureReplaceable.class);
 		for (FutureReplaceable futureReplaceable : FutureReplaceable.values()) {
 
 			if (unOperator == null && futureReplaceable == FutureReplaceable.UNOPERATOR) {
@@ -133,8 +116,9 @@ public class Formatter implements PunishmentFormatter {
 				futureReplacements.put(futureReplaceable, replacement);
 			}
 		}
-		return core.getFuturesFactory().supplyAsync(() -> {
-			return formatWithPunishment0(manipulator, punishment, unOperator, futureReplacements);
+		return futuresFactory.supplyAsync(() -> getSimpleReplacements(punishment, unOperator))
+				.thenCompose((simpleReplacements) -> {
+			return formatWithPunishment0(manipulator, simpleReplacements, futureReplacements);
 		});
 	}
 	
@@ -168,8 +152,7 @@ public class Formatter implements PunishmentFormatter {
 		}
 	}
 	
-	private SendableMessage formatWithPunishment0(SendableMessageManipulator manipulator, Punishment punishment,
-			Operator unOperator, EnumMap<FutureReplaceable, CentralisedFuture<String>> futureReplacements) {
+	private Map<SimpleReplaceable, String> getSimpleReplacements(Punishment punishment, Operator unOperator) {
 
 		final long now = MiscUtil.currentTime();
 		final long start = punishment.getStartDateSeconds();
@@ -202,9 +185,9 @@ public class Formatter implements PunishmentFormatter {
 			}
 		}
 
-		EnumMap<SimpleReplaceable, String> simpleReplacements = new EnumMap<>(SimpleReplaceable.class);
+		Map<SimpleReplaceable, String> simpleReplacements = new EnumMap<>(SimpleReplaceable.class);
 		simpleReplacements.put(SimpleReplaceable.ID, Integer.toString(punishment.getID()));
-		simpleReplacements.put(SimpleReplaceable.TYPE, formatType(punishment.getType()));
+		simpleReplacements.put(SimpleReplaceable.TYPE, formatPunishmentType(punishment.getType()));
 		simpleReplacements.put(SimpleReplaceable.VICTIM_ID, formatVictimId(punishment.getVictim()));
 		simpleReplacements.put(SimpleReplaceable.OPERATOR_ID, formatOperatorId(punishment.getOperator()));
 		if (unOperator != null)
@@ -217,25 +200,34 @@ public class Formatter implements PunishmentFormatter {
 		simpleReplacements.put(SimpleReplaceable.END_DATE, formatAbsoluteDate(punishment.getEndDate()));
 		simpleReplacements.put(SimpleReplaceable.TIME_REMAINING, relativeEndFormatted);
 
-		class Replacer implements UnaryOperator<String> {
-			@Override
-			public String apply(String text) {
-				for (Map.Entry<SimpleReplaceable, String> simpleReplacement : simpleReplacements.entrySet()) {
-					text = text.replace(
-							simpleReplacement.getKey().getVariable(),
-							simpleReplacement.getValue());
-				}
-				for (Map.Entry<FutureReplaceable, CentralisedFuture<String>> futureReplacement : futureReplacements.entrySet()) {
-					text = text.replace(
-							futureReplacement.getKey().getVariable(),
-							futureReplacement.getValue().join());
-				}
-				return text;
-			}
-		}
-		return manipulator.replaceText(new Replacer());
+		return simpleReplacements;
 	}
 	
+	private CentralisedFuture<SendableMessage> formatWithPunishment0(SendableMessageManipulator manipulator,
+			Map<SimpleReplaceable, String> simpleReplacements,
+			Map<FutureReplaceable, CentralisedFuture<String>> futureReplacements) {
+
+		return futuresFactory.allOf(futureReplacements.values()).thenApply((ignore) -> {
+
+			class Replacer implements UnaryOperator<String> {
+				@Override
+				public String apply(String text) {
+					for (Map.Entry<SimpleReplaceable, String> simpleReplacement : simpleReplacements.entrySet()) {
+						text = text.replace(
+								simpleReplacement.getKey().getVariable(),
+								simpleReplacement.getValue());
+					}
+					for (Map.Entry<FutureReplaceable, CentralisedFuture<String>> futureReplacement : futureReplacements.entrySet()) {
+						text = text.replace(
+								futureReplacement.getKey().getVariable(),
+								futureReplacement.getValue().join());
+					}
+					return text;
+				}
+			}
+			return manipulator.replaceText(new Replacer());
+		});
+	}
 	
 	private CentralisedFuture<String> getFutureReplacement(FutureReplaceable futureReplaceable, Punishment punishment,
 			Operator unOperator) {
@@ -251,10 +243,6 @@ public class Formatter implements PunishmentFormatter {
 		}
 	}
 	
-	private String formatType(PunishmentType type) {
-		return messages().formatting().punishmentTypeDisplay().forType(type);
-	}
-	
 	private String formatVictimId(Victim victim) {
 		switch (victim.getType()) {
 		case PLAYER:
@@ -266,6 +254,8 @@ public class Formatter implements PunishmentFormatter {
 		}
 	}
 	
+	private static final String NAME_UNKNOWN_ERROR = "-UnknownError-";
+
 	private CentralisedFuture<String> formatVictim(Victim victim) {
 		switch (victim.getType()) {
 		case PLAYER:
@@ -273,9 +263,10 @@ public class Formatter implements PunishmentFormatter {
 			 * This should be a complete future every time we call this ourselves, because of UUIDMaster's fastCache.
 			 * However, for API calls, the UUID/name might not be added to the cache.
 			 */
-			return core.getUUIDMaster().fullLookupName(((PlayerVictim) victim).getUUID());
+			return uuidManager.fullLookupName(((PlayerVictim) victim).getUUID())
+					.thenApply((optName) -> optName.orElse(NAME_UNKNOWN_ERROR));
 		case ADDRESS:
-			return core.getFuturesFactory().completedFuture(formatAddressVictim((AddressVictim) victim));
+			return futuresFactory.completedFuture(formatAddressVictim((AddressVictim) victim));
 		default:
 			throw MiscUtil.unknownVictimType(victim.getType());
 		}
@@ -295,13 +286,14 @@ public class Formatter implements PunishmentFormatter {
 	private CentralisedFuture<String> formatOperator(Operator operator) {
 		switch (operator.getType()) {
 		case CONSOLE:
-			return core.getFuturesFactory().completedFuture(messages().formatting().consoleDisplay());
+			return futuresFactory.completedFuture(messages().formatting().consoleDisplay());
 		case PLAYER:
 			/*
 			 * Similarly in #formatVictim, this should be a complete future every time we call this ourselves,
 			 * because of UUIDMaster's fastCache.
 			 */
-			return core.getUUIDMaster().fullLookupName(((PlayerOperator) operator).getUUID());
+			return uuidManager.fullLookupName(((PlayerOperator) operator).getUUID())
+					.thenApply((optName) -> optName.orElse(NAME_UNKNOWN_ERROR));
 		default:
 			throw MiscUtil.unknownOperatorType(operator.getType());
 		}
@@ -316,9 +308,12 @@ public class Formatter implements PunishmentFormatter {
 			return formatRelative(-diff);
 		}
 		MessagesConfig.Misc.Time timeConfig = messages().misc().time();
-		Map<ChronoUnit, String> fragments = timeConfig.fragments();
+
+		List<Map.Entry<ChronoUnit, String>> fragments = new ArrayList<>(timeConfig.fragments().entrySet());
+		fragments.sort(Comparator.comparing(Map.Entry::getKey));
 		List<String> segments = new ArrayList<>(fragments.size());
-		for (Map.Entry<ChronoUnit, String> fragment : fragments.entrySet()) {
+
+		for (Map.Entry<ChronoUnit, String> fragment : fragments) {
 			long unitLength = fragment.getKey().getDuration().toSeconds();
 			if (diff > unitLength) {
 				long amount = (diff / unitLength);
@@ -351,22 +346,20 @@ public class Formatter implements PunishmentFormatter {
 		return builder.toString();
 	}
 	
-	private String formatScope(ServerScope scope) {
-		String scopeDisplay = core.getScopeManager().getServer(scope);
-		if (scopeDisplay == null) {
-			scopeDisplay = messages().formatting().globalScopeDisplay();
-		}
-		return scopeDisplay;
+	@Override
+	public String formatPunishmentType(PunishmentType type) {
+		String formatted = messages().formatting().punishmentTypeDisplay().get(type);
+		return (formatted == null) ? type.toString() : formatted;
 	}
 
 	@Override
 	public ZoneId getTimezone() {
-		return core.getMainConfig().dateFormatting().zoneId();
+		return configs.getMainConfig().dateFormatting().zoneId();
 	}
 	
 	@Override
 	public DateTimeFormatter getDateTimeFormatter() {
-		return core.getConfigs().getMainConfig().dateFormatting().formatAndPattern().getFormatter();
+		return configs.getMainConfig().dateFormatting().formatAndPattern().getFormatter();
 	}
 	
 	@Override
@@ -379,8 +372,17 @@ public class Formatter implements PunishmentFormatter {
 
 	@Override
 	public String formatDuration(Duration duration) {
-		Objects.requireNonNull(duration, "duration");
+		if (duration.equals(Duration.ZERO)) { // implicit null check
+			return messages().formatting().permanentDisplay().duration();
+		}
 		return formatRelative(duration.toSeconds());
+	}
+	
+	@Override
+	public String formatScope(ServerScope scope) {
+		Objects.requireNonNull(scope, "scope");
+		String globalScopeDisplay = messages().formatting().globalScopeDisplay();
+		return scopeManager.getServer(scope, globalScopeDisplay);
 	}
 	
 }

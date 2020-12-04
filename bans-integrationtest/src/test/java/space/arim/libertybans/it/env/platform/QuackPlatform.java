@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import jakarta.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,16 +33,17 @@ import space.arim.omnibus.util.ThisClass;
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.chat.serialiser.LegacyCodeSerialiser;
 
+@Singleton
 public class QuackPlatform {
 
 	private final Map<UUID, QuackPlayer> players = new HashMap<>();
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-	
+
 	public QuackPlayer getPlayer(UUID uuid) {
 		return players.get(uuid);
 	}
-	
+
 	public QuackPlayer getPlayer(String name) {
 		for (QuackPlayer player : players.values()) {
 			if (player.getName().equalsIgnoreCase(name)) {
@@ -49,18 +52,18 @@ public class QuackPlatform {
 		}
 		return null;
 	}
-	
+
 	public Collection<? extends QuackPlayer> getAllPlayers() {
 		return players.values();
 	}
-	
+
 	void remove(QuackPlayer player, SendableMessage msg) {
 		players.values().remove(player);
 		logger.info("{} was kicked for '{}'", player.getName(), toDisplay(msg));
 	}
-	
+
 	String toDisplay(SendableMessage msg) {
 		return LegacyCodeSerialiser.getInstance('&').serialise(msg);
 	}
-	
+
 }

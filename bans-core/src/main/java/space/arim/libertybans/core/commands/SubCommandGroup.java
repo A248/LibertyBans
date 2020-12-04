@@ -18,7 +18,7 @@
  */
 package space.arim.libertybans.core.commands;
 
-import java.util.List;
+import java.util.Collection;
 
 import space.arim.libertybans.core.env.CmdSender;
 
@@ -43,7 +43,7 @@ interface SubCommandGroup {
 	 * 
 	 * @param sender the command sender
 	 * @param command the command
-	 * @param arg the argument, lowercased
+	 * @param arg the argument matched to this sub command group, lowercased
 	 * @return the execution
 	 */
 	CommandExecution execute(CmdSender sender, CommandPackage command, String arg);
@@ -52,11 +52,10 @@ interface SubCommandGroup {
 	 * Gets tab complete suggestions for the subcommand
 	 * 
 	 * @param sender the command sender
-	 * @param args the arguments
+	 * @param arg the argument matched to this sub command group, lowercased
+	 * @param argIndex the index of the furthest subcommand argument
 	 * @return tab complete suggestions
 	 */
-	default List<String> suggest(CmdSender sender, String[] args) {
-		return List.of();
-	}
+	Collection<String> suggest(CmdSender sender, String arg, int argIndex);
 	
 }

@@ -22,35 +22,48 @@ import java.net.InetAddress;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
+
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.annote.PlatformPlayer;
 
+import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.TargetMatcher;
 
+import org.bukkit.Server;
 import org.bukkit.entity.Player;
 
-class SpigotEnforcer extends AbstractEnvEnforcer {
-
-	SpigotEnforcer(SpigotEnv env) {
-		super(env.core, env);
-	}
+@Singleton
+public class SpigotEnforcer extends AbstractEnvEnforcer {
 	
-	@Override
-	protected SpigotEnv env() {
-		return (SpigotEnv) super.env();
+	private final FactoryOfTheFuture futuresFactory;
+	private final PlatformHandle handle;
+	private final Server server;
+
+	@Inject
+	public SpigotEnforcer(InternalFormatter formatter, PlatformHandle handle, FactoryOfTheFuture futuresFactory,
+			Server server) {
+		super(formatter, handle);
+		this.futuresFactory = futuresFactory;
+		this.handle = handle;
+		this.server = server;
 	}
 	
 	private void runSyncNow(Runnable command) {
-		env().core.getFuturesFactory().runSync(command).join();
+		futuresFactory.runSync(command).join();
 	}
 	
 	@Override
 	protected void sendToThoseWithPermission0(String permission, SendableMessage message) {
 		runSyncNow(() -> {
-			for (Player player : env().getPlugin().getServer().getOnlinePlayers()) {
+			for (Player player : server.getOnlinePlayers()) {
 				if (player.hasPermission(permission)) {
-					env().getPlatformHandle().sendMessage(player, message);
+					handle.sendMessage(player, message);
 				}
 			}
 		});
@@ -59,7 +72,7 @@ class SpigotEnforcer extends AbstractEnvEnforcer {
 	@Override
 	public void doForPlayerIfOnline(UUID uuid, Consumer<@PlatformPlayer Object> callback) {
 		runSyncNow(() -> {
-			Player player = env().getPlugin().getServer().getPlayer(uuid);
+			Player player = server.getPlayer(uuid);
 			if (player != null) {
 				callback.accept(player);
 			}
@@ -69,7 +82,7 @@ class SpigotEnforcer extends AbstractEnvEnforcer {
 	@Override
 	public void enforceMatcher(TargetMatcher matcher) {
 		runSyncNow(() -> {
-			for (Player player : env().getPlugin().getServer().getOnlinePlayers()) {
+			for (Player player : server.getOnlinePlayers()) {
 				if (matcher.matches(player.getUniqueId(), player.getAddress().getAddress())) {
 					matcher.callback().accept(player);
 				}

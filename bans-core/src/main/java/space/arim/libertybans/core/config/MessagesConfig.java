@@ -26,7 +26,6 @@ import space.arim.api.chat.SendableMessage;
 import space.arim.api.chat.manipulator.SendableMessageManipulator;
 
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.core.punish.MiscUtil;
 
 import space.arim.dazzleconf.annote.ConfComments;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultBoolean;
@@ -83,7 +82,7 @@ public interface MessagesConfig {
 		SendableMessage rawPrefix();
 		
 		default SendableMessage prefix() {
-			return (enablePrefix()) ? rawPrefix() : SendableMessage.create();
+			return (enablePrefix()) ? rawPrefix() : SendableMessage.empty();
 		}
 		
 		@ConfKey("base-permission-message")
@@ -100,13 +99,13 @@ public interface MessagesConfig {
 		interface NotFound {
 			
 			@DefaultString("&c&o%TARGET%&r&7 was not found online or offline.")
+			SendableMessageManipulator player();
+			
+			@DefaultString("&c&o%TARGET%&r&7 is not a valid UUID.")
 			SendableMessageManipulator uuid();
 			
-			@DefaultString("&c&o%TARGET%&r&7 is not a valid IP address.")
-			SendableMessageManipulator ip();
-			
-			@DefaultString("&c&o%TARGET%&r&7 is not a valid player or IP address.")
-			SendableMessageManipulator either();
+			@DefaultString("&c&o%TARGET%&r&7 was not found online or offline, and is not a valid IP address.")
+			SendableMessageManipulator playerOrAddress();
 			
 		}
 		
@@ -170,6 +169,11 @@ public interface MessagesConfig {
 			
 		}
 		
+		@ConfKey("console-arguments")
+		@ConfComments("When using /blame, how should the console be specified?")
+		@DefaultStrings("console")
+		Set<String> consoleArguments();
+		
 		@ConfKey("console-display")
 		@ConfComments("How should the console be displayed?")
 		@DefaultString("Console")
@@ -182,39 +186,14 @@ public interface MessagesConfig {
 		
 		@ConfKey("punishment-type-display")
 		@ConfComments("How should punishment types be displayed?")
-		@SubSection
-		PunishmentTypeDisplay punishmentTypeDisplay();
-		
-		interface PunishmentTypeDisplay {
-			
-			@DefaultString("Ban")
-			String ban();
-			
-			@DefaultString("Mute")
-			String mute();
-			
-			@DefaultString("Warn")
-			String warn();
-			
-			@DefaultString("Kick")
-			String kick();
-			
-			default String forType(PunishmentType type) {
-				switch (type) {
-				case BAN:
-					return ban();
-				case MUTE:
-					return mute();
-				case WARN:
-					return warn();
-				case KICK:
-					return kick();
-				default:
-					throw MiscUtil.unknownType(type);
-				}
-			}
-			
-		}
+		@DefaultMap({
+			"ban", "Ban",
+			"mute", "Mute",
+			"warn", "Warn",
+			"kick", "Kick"
+		})
+		Map<PunishmentType, String> punishmentTypeDisplay();
+
 	}
 	
 	@SubSection

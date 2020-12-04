@@ -19,73 +19,73 @@
 package space.arim.libertybans.env.bungee;
 
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.annote.PlatformPlayer;
 
+import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.TargetMatcher;
 
-import net.md_5.bungee.api.connection.Connection;
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
-class BungeeEnforcer extends AbstractEnvEnforcer {
+@Singleton
+public class BungeeEnforcer extends AbstractEnvEnforcer {
 
-	BungeeEnforcer(BungeeEnv env) {
-		super(env.core, env);
+	private final PlatformHandle handle;
+	private final ProxyServer server;
+	private final AddressReporter addressReporter;
+
+	@Inject
+	public BungeeEnforcer(InternalFormatter formatter, PlatformHandle handle, ProxyServer server,
+			AddressReporter addressReporter) {
+		super(formatter, handle);
+		this.handle = handle;
+		this.server = server;
+		this.addressReporter = addressReporter;
 	}
-	
-	@Override
-	protected BungeeEnv env() {
-		return (BungeeEnv) super.env();
-	}
-	
+
 	@Override
 	protected void sendToThoseWithPermission0(String permission, SendableMessage message) {
-		for (ProxiedPlayer player : env().getPlugin().getProxy().getPlayers()) {
+		for (ProxiedPlayer player : server.getPlayers()) {
 			if (player.hasPermission(permission)) {
-				env().getPlatformHandle().sendMessage(player, message);
+				handle.sendMessage(player, message);
 			}
 		}
 	}
-	
+
 	@Override
 	public void doForPlayerIfOnline(UUID uuid, Consumer<@PlatformPlayer Object> callback) {
-		ProxiedPlayer player = env().getPlugin().getProxy().getPlayer(uuid);
+		ProxiedPlayer player = server.getPlayer(uuid);
 		if (player != null) {
 			callback.accept(player);
 		}
 	}
-	
+
 	@Override
 	public void enforceMatcher(TargetMatcher matcher) {
-		for (ProxiedPlayer player : env().getPlugin().getProxy().getPlayers()) {
-			if (matcher.matches(player.getUniqueId(), getAddress(player))) {
+		for (ProxiedPlayer player : server.getPlayers()) {
+			if (matcher.matches(player.getUniqueId(), addressReporter.getAddress(player))) {
 				matcher.callback().accept(player);
 			}
 		}
 	}
-	
-	InetAddress getAddress(Connection bungeePlayer) {
-		SocketAddress socketAddress = bungeePlayer.getSocketAddress();
-		if (socketAddress instanceof InetSocketAddress) {
-			return ((InetSocketAddress) socketAddress).getAddress();
-		}
-		throw new IllegalStateException("Non-InetSocketAddress addresses are not supported by LibertyBans");
-	}
-	
+
 	@Override
 	public UUID getUniqueIdFor(@PlatformPlayer Object player) {
 		return ((ProxiedPlayer) player).getUniqueId();
 	}
-	
+
 	@Override
 	public InetAddress getAddressFor(@PlatformPlayer Object player) {
-		return getAddress((ProxiedPlayer) player);
+		return addressReporter.getAddress((ProxiedPlayer) player);
 	}
-	
+
 }

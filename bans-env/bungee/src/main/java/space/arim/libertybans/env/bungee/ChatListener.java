@@ -20,55 +20,82 @@ package space.arim.libertybans.env.bungee;
 
 import java.net.InetAddress;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
 import space.arim.api.chat.SendableMessage;
+import space.arim.api.env.PlatformHandle;
 
 import space.arim.libertybans.core.env.ParallelisedListener;
+import space.arim.libertybans.core.punish.Enforcer;
 
 import net.md_5.bungee.api.connection.Connection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
 import net.md_5.bungee.api.plugin.Listener;
+import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 
+@Singleton
 public class ChatListener extends ParallelisedListener<ChatEvent, SendableMessage> implements Listener {
 
-	private final BungeeEnv env;
+	private final Plugin plugin;
+	private final Enforcer enforcer;
+	private final AddressReporter addressReporter;
+	private final PlatformHandle handle;
 	
-	ChatListener(BungeeEnv env) {
-		this.env = env;
+	@Inject
+	public ChatListener(Plugin plugin, Enforcer enforcer, AddressReporter addressReporter, PlatformHandle handle) {
+		this.plugin = plugin;
+		this.enforcer = enforcer;
+		this.addressReporter = addressReporter;
+		this.handle = handle;
 	}
 	
 	@Override
 	public void register() {
-		env.getPlugin().getProxy().getPluginManager().registerListener(env.getPlugin(), this);
+		plugin.getProxy().getPluginManager().registerListener(plugin, this);
 	}
 	
 	@Override
 	public void unregister() {
-		env.getPlugin().getProxy().getPluginManager().unregisterListener(this);
+		plugin.getProxy().getPluginManager().unregisterListener(this);
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
-	public void onChatLow(ChatEvent evt) {
-		Connection sender = evt.getSender();
+	public void onChatLow(ChatEvent event) {
+		Connection sender = event.getSender();
 		if (!(sender instanceof ProxiedPlayer)) {
 			return;
 		}
-		ProxiedPlayer player = (ProxiedPlayer) sender;
-		InetAddress address = env.getEnforcer().getAddress(player);
-		String command = (evt.isCommand()) ? evt.getMessage().substring(1) : evt.getMessage();
-		begin(evt, env.core.getEnforcementCenter().checkChat(player.getUniqueId(), address, command));
-	}
-	
-	@EventHandler(priority = EventPriority.HIGH)
-	public void onChatHigh(ChatEvent evt) {
-		SendableMessage message = withdraw(evt);
-		if (message == null) {
+		if (event.isCancelled()) {
+			debugPrematurelyDenied(event);
 			return;
 		}
-		evt.setCancelled(true);
-		env.handle.sendMessage((ProxiedPlayer) evt.getSender(), message);
+		ProxiedPlayer player = (ProxiedPlayer) sender;
+		InetAddress address = addressReporter.getAddress(player);
+		String command = (event.isCommand()) ? event.getMessage().substring(1) : event.getMessage();
+		begin(event, enforcer.checkChat(player.getUniqueId(), address, command));
+	}
+
+	@Override
+	protected boolean isAllowed(ChatEvent event) {
+		return !event.isCancelled();
+	}
+
+	@EventHandler(priority = EventPriority.HIGH)
+	public void onChatHigh(ChatEvent event) {
+		if (!(event.getSender() instanceof ProxiedPlayer)) {
+			return;
+		}
+		SendableMessage message = withdraw(event);
+		if (message == null) {
+			debugResultPermitted(event);
+			return;
+		}
+		event.setCancelled(true);
+		handle.sendMessage(event.getSender(), message);
 	}
 	
 }

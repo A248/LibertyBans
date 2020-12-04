@@ -18,21 +18,35 @@
  */
 package space.arim.libertybans.core.selector;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
+
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.core.database.Database;
+import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.punish.MiscUtil;
+import space.arim.libertybans.core.punish.PunishmentCreator;
 
-class IDImpl extends SelectorImplMember {
+@Singleton
+public class IDImpl {
 
-	IDImpl(Selector selector) {
-		super(selector);
+	private final FactoryOfTheFuture futuresFactory;
+	private final Provider<InternalDatabase> dbProvider;
+	private final PunishmentCreator creator;
+	
+	@Inject
+	public IDImpl(FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider, PunishmentCreator creator) {
+		this.futuresFactory = futuresFactory;
+		this.dbProvider = dbProvider;
+		this.creator = creator;
 	}
 	
 	CentralisedFuture<Punishment> getActivePunishmentById(int id) {
-		Database database = core().getDatabase();
+		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
 			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
@@ -41,11 +55,11 @@ class IDImpl extends SelectorImplMember {
 
 					Punishment found = querySource.query(
 							"SELECT `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end` "
-							+ "FROM `libertybans_simple_" + type.getLowercaseNamePlural() + "` "
+							+ "FROM `libertybans_simple_" + type + "s` "
 							+ "WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
 							.params(id, currentTime)
 							.singleResult((resultSet) -> {
-								return core().getEnforcementCenter().createPunishment(id, type,
+								return creator.createPunishment(id, type,
 										database.getVictimFromResult(resultSet), database.getOperatorFromResult(resultSet),
 										database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
 										database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
@@ -55,44 +69,44 @@ class IDImpl extends SelectorImplMember {
 					}
 				}
 				return null;
-			}).onError(() -> null).execute();
+			}).execute();
 		});
 	}
 	
 	CentralisedFuture<Punishment> getActivePunishmentByIdAndType(int id, PunishmentType type) {
 		if (type == PunishmentType.KICK) {
 			// Kicks are never active
-			return core().getFuturesFactory().completedFuture(null);
+			return futuresFactory.completedFuture(null);
 		}
-		Database database = core().getDatabase();
+		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
 			return database.jdbCaesar().query(
 					"SELECT `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end` "
-					+ "FROM `libertybans_simple_" + type.getLowercaseNamePlural() + "` "
+					+ "FROM `libertybans_simple_" + type + "s` "
 					+ "WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
 					.params(id, MiscUtil.currentTime())
 					.singleResult((resultSet) -> {
-						return core().getEnforcementCenter().createPunishment(id, type,
+						return creator.createPunishment(id, type,
 								database.getVictimFromResult(resultSet), database.getOperatorFromResult(resultSet),
 								database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
 								database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
-					}).onError(() -> null).execute();
+					}).execute();
 		});
 	}
 	
 	CentralisedFuture<Punishment> getHistoricalPunishmentById(int id) {
-		Database database = core().getDatabase();
+		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
 			return database.jdbCaesar().query(
 					"SELECT `type`, `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end` "
 					+ "FROM `libertybans_simple_history` WHERE `id` = ?")
 					.params(id)
 					.singleResult((resultSet) -> {
-						return core().getEnforcementCenter().createPunishment(id, database.getTypeFromResult(resultSet),
+						return creator.createPunishment(id, database.getTypeFromResult(resultSet),
 								database.getVictimFromResult(resultSet), database.getOperatorFromResult(resultSet),
 								database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
 								database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
-					}).onError(() -> null).execute();
+					}).execute();
 		});
 	}
 

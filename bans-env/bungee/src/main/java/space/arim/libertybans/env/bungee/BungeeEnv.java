@@ -18,96 +18,42 @@
  */
 package space.arim.libertybans.env.bungee;
 
-import java.nio.file.Path;
 import java.util.Set;
 
-import space.arim.omnibus.OmnibusProvider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
-import space.arim.uuidvault.api.UUIDVault;
-import space.arim.uuidvault.plugin.UUIDVaultBungee;
-
-import space.arim.api.env.BungeePlatformHandle;
-import space.arim.api.env.PlatformHandle;
-
-import space.arim.libertybans.core.LibertyBansCore;
 import space.arim.libertybans.core.commands.Commands;
-import space.arim.libertybans.core.env.AbstractEnv;
+import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.env.PlatformListener;
 
-import net.md_5.bungee.api.plugin.Plugin;
+@Singleton
+public class BungeeEnv implements Environment {
 
-public class BungeeEnv extends AbstractEnv {
+	private final Provider<ConnectionListener> connectionListenerProvider;
+	private final Provider<ChatListener> chatListenerProvider;
+	private final CommandHandler.DependencyPackage commandDependencies;
 
-	final LibertyBansCore core;
-	final BungeePlatformHandle handle;
-	
-	private final BungeeEnforcer enforcer;
-	
-	public BungeeEnv(Plugin plugin, Path folder) {
-		setUUIDVaultIfNecessary(plugin);
-
-		handle = new BungeePlatformHandle(plugin);
-		core = new LibertyBansCore(OmnibusProvider.getOmnibus(), folder, this);
-
-		enforcer = new BungeeEnforcer(this);
-	}
-	
-	private static void setUUIDVaultIfNecessary(Plugin plugin) {
-		if (UUIDVault.get() == null) {
-			new UUIDVaultBungee(plugin) {
-				@Override
-				protected boolean setInstancePassive() {
-					return super.setInstancePassive();
-				}
-			}.setInstancePassive();
-		}
-	}
-	
-	Plugin getPlugin() {
-		return handle.getPlugin();
-	}
-
-	@Override
-	public PlatformHandle getPlatformHandle() {
-		return handle;
-	}
-	
-	@Override
-	public BungeeEnforcer getEnforcer() {
-		return enforcer;
-	}
-	
-	@Override
-	protected void startup0() {
-		core.startup();
-	}
-	
-	@Override
-	protected void restart0() {
-		core.restart();
-	}
-
-	@Override
-	protected void shutdown0() {
-		core.shutdown();
-	}
-	
-	@Override
-	protected void infoMessage(String message) {
-		getPlugin().getLogger().info(message);
+	@Inject
+	public BungeeEnv(Provider<ConnectionListener> connectionListenerProvider,
+			Provider<ChatListener> chatListenerProvider, CommandHandler.DependencyPackage commandDependencies) {
+		this.connectionListenerProvider = connectionListenerProvider;
+		this.chatListenerProvider = chatListenerProvider;
+		this.commandDependencies = commandDependencies;
 	}
 
 	@Override
 	public Set<PlatformListener> createListeners() {
 		return Set.of(
-				new ConnectionListener(this),
-				new ChatListener(this),
-				new CommandHandler(this, Commands.BASE_COMMAND_NAME, false));
+				connectionListenerProvider.get(),
+				chatListenerProvider.get(),
+				new CommandHandler(commandDependencies, Commands.BASE_COMMAND_NAME, false));
 	}
 
 	@Override
 	public PlatformListener createAliasCommand(String command) {
-		return new CommandHandler(this, command, true);
+		return new CommandHandler(commandDependencies, command, true);
 	}
 
 }

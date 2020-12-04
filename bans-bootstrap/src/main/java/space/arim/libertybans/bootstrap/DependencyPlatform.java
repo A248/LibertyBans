@@ -42,6 +42,15 @@ public enum DependencyPlatform {
 		}
 	}
 	
+	public static boolean detectGetSlf4jLoggerMethod(Object plugin) {
+		try {
+			plugin.getClass().getMethod("getSLF4JLogger");
+			return true;
+		} catch (NoSuchMethodException ignored) {
+			return false;
+		}
+	}
+	
 	public Category getCategory() {
 		return category;
 	}

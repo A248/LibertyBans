@@ -18,6 +18,8 @@
  */
 package space.arim.libertybans.core.env;
 
+import java.util.Set;
+
 import space.arim.api.chat.SendableMessage;
 
 import space.arim.libertybans.api.Operator;
@@ -28,10 +30,22 @@ public interface CmdSender {
 	
 	boolean hasPermission(String permission);
 	
+	void sendMessageNoPrefix(SendableMessage message);
+	
 	void sendMessage(SendableMessage message);
+	
+	void sendLiteralMessageNoPrefix(String messageToParse);
 	
 	void sendLiteralMessage(String messageToParse);
 	
 	Object getRawSender();
+	
+	/**
+	 * Gets the names of other players on the same server as this player. <br>
+	 * Used for tab completions
+	 * 
+	 * @return the names of other players on the same server as this command sender
+	 */
+	Set<String> getOtherPlayersOnSameServer();
 	
 }

@@ -39,11 +39,8 @@ final class ConfigSerialisers {
 	private ConfigSerialisers() {}
 	
 	static void addTo(ConfigurationOptions.Builder builder) {
-		List<ValueSerialiser<?>> serialisers = List.of(new MessageManipulatorSerialiser(), new MessageSerialiser(),
+		builder.addSerialisers(new MessageManipulatorSerialiser(), new MessageSerialiser(),
 				new DateTimeFormatterSerialiser(), new ZoneIdSerialiser());
-		for (ValueSerialiser<?> serialiser : serialisers) {
-			builder.addSerialiser(serialiser);
-		}
 	}
 
 	private static class MessageManipulatorSerialiser implements ValueSerialiser<SendableMessageManipulator> {

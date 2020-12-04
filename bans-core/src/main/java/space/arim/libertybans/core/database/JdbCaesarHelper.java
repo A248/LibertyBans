@@ -23,22 +23,24 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.UUID;
 
-import space.arim.uuidvault.api.UUIDUtil;
+import space.arim.api.util.web.UUIDUtil;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
+import space.arim.libertybans.api.Operator.OperatorType;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.ServerScope;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.Victim.VictimType;
-import space.arim.libertybans.core.punish.Scoper;
+import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.punish.MiscUtil;
+import space.arim.libertybans.core.scope.InternalScopeManager;
 
 import space.arim.jdbcaesar.adapter.DataTypeAdapter;
 
-public class JdbCaesarHelper {
+class JdbCaesarHelper {
 	
 	private static final byte[] consoleUUIDBytes = UUIDUtil.toByteArray(new UUID(0, 0));
 
@@ -70,13 +72,14 @@ public class JdbCaesarHelper {
 		}
 		
 		private static byte[] getOperatorBytes(Operator operator) {
-			switch (operator.getType()) {
+			OperatorType operatorType = operator.getType();
+			switch (operatorType) {
 			case PLAYER:
 				return UUIDUtil.toByteArray(((PlayerOperator) operator).getUUID());
 			case CONSOLE:
 				return consoleUUIDBytes;
 			default:
-				throw new IllegalStateException("Unknown operator type " + operator.getType());
+				throw MiscUtil.unknownOperatorType(operatorType);
 			}
 		}
 		
@@ -93,14 +96,14 @@ public class JdbCaesarHelper {
 		}
 		
 		private static byte[] getVictimBytes(Victim victim) {
-			VictimType vType = victim.getType();
-			switch (vType) {
+			VictimType victimType = victim.getType();
+			switch (victimType) {
 			case PLAYER:
 				return UUIDUtil.toByteArray(((PlayerVictim) victim).getUUID());
 			case ADDRESS:
 				return ((AddressVictim) victim).getAddress().getRawAddress();
 			default:
-				throw new IllegalStateException("Unknown VictimType " + vType);
+				throw MiscUtil.unknownVictimType(victimType);
 			}
 		}
 		
@@ -108,16 +111,16 @@ public class JdbCaesarHelper {
 	
 	static class ScopeAdapter implements DataTypeAdapter {
 		
-		private final Scoper scoper;
+		private final InternalScopeManager scopeManager;
 		
-		ScopeAdapter(Scoper scoper) {
-			this.scoper = scoper;
+		ScopeAdapter(InternalScopeManager scopeManager) {
+			this.scopeManager = scopeManager;
 		}
 
 		@Override
 		public Object adaptObject(Object parameter) {
 			if (parameter instanceof ServerScope) {
-				return scoper.getServer((ServerScope) parameter);
+				return scopeManager.getServer((ServerScope) parameter, "");
 			}
 			return parameter;
 		}

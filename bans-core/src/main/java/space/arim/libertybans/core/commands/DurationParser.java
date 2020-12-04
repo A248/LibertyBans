@@ -26,13 +26,19 @@ class DurationParser {
 	private final String argument;
 	private final Set<String> permanentArguments;
 	
+	private static final Set<String> defaultPermanentArguments = Set.of("perm");
+	
 	DurationParser(String argument, Set<String> permanentArguments) {
 		this.argument = argument;
-		this.permanentArguments = permanentArguments;
+		this.permanentArguments = Set.copyOf(permanentArguments);
 	}
 	
+	DurationParser(String argument) {
+		this(argument, defaultPermanentArguments);
+	}
+
 	Duration parse() {
-		if (permanentArguments.contains(argument)) {
+		if (ContainsCI.containsIgnoreCase(permanentArguments, argument)) {
 			return Duration.ZERO;
 		}
 		char[] characters = argument.toCharArray();

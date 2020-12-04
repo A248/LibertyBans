@@ -18,18 +18,23 @@
  */
 package space.arim.libertybans.bootstrap;
 
+import java.nio.file.Path;
+
 public class Instantiator {
 
-	private final Class<?> clazz;
-	
+	private final Class<? extends PlatformLauncher> clazz;
+
 	public Instantiator(String clazzName, ClassLoader loader) throws ClassNotFoundException {
-		clazz = Class.forName(clazzName, true, loader);
+		Class<?> clazz = Class.forName(clazzName, true, loader);
+		if (!PlatformLauncher.class.isAssignableFrom(clazz)) {
+			throw new IllegalArgumentException("Class " + clazzName + " is not a PlatformLauncher");
+		}
+		this.clazz = clazz.asSubclass(PlatformLauncher.class);
 	}
 
-	public <T, U> BaseEnvironment invoke(Class<T> parameter1Type, T parameter1, Class<U> parameter2Type, U parameter2)
+	public <P> BaseFoundation invoke(Class<P> pluginType, P plugin, Path folder)
 			throws ReflectiveOperationException, IllegalArgumentException, SecurityException {
-		return (BaseEnvironment) clazz.getDeclaredConstructor(parameter1Type, parameter2Type).newInstance(parameter1,
-				parameter2);
+		return clazz.getDeclaredConstructor(pluginType, Path.class).newInstance(plugin, folder).launch();
 	}
-	
+
 }
