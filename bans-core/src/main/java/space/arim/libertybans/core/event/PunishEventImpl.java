@@ -16,12 +16,24 @@
  * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core.service;
+package space.arim.libertybans.core.event;
 
-import java.util.concurrent.CompletionStage;
+import java.util.Objects;
 
-public interface FuturePoster {
+import space.arim.libertybans.api.event.PunishEvent;
+import space.arim.libertybans.api.punish.DraftPunishment;
 
-	void postFuture(CompletionStage<?> completionStage);
+public class PunishEventImpl extends AbstractCancellable implements PunishEvent {
+
+	private final DraftPunishment draftPunishment;
+
+	public PunishEventImpl(DraftPunishment draftPunishment) {
+		this.draftPunishment = Objects.requireNonNull(draftPunishment);
+	}
+
+	@Override
+	public DraftPunishment getDraftPunishment() {
+		return draftPunishment;
+	}
 
 }

@@ -19,15 +19,18 @@
 package space.arim.libertybans.core.commands;
 
 import java.util.Set;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import space.arim.omnibus.Omnibus;
+import space.arim.omnibus.events.AsyncEvent;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
-import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MainConfig;
@@ -58,15 +61,17 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 	
 	@Singleton
 	public static class Dependencies {
-		
+
+		final Omnibus omnibus;
 		final FactoryOfTheFuture futuresFactory;
 		final FuturePoster futurePoster;
 		final Configs configs;
 		final ArgumentParser argumentParser;
-		
+
 		@Inject
-		public Dependencies(FactoryOfTheFuture futuresFactory, FuturePoster futurePoster, Configs configs,
-				ArgumentParser argumentParser) {
+		public Dependencies(Omnibus omnibus, FactoryOfTheFuture futuresFactory, FuturePoster futurePoster,
+				Configs configs, ArgumentParser argumentParser) {
+			this.omnibus = omnibus;
 			this.futuresFactory = futuresFactory;
 			this.futurePoster = futurePoster;
 			this.configs = configs;
@@ -102,8 +107,8 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 		return futuresFactory().completedFuture(value);
 	}
 	
-	void postFuture(ReactionStage<?> reactionStage) {
-		dependencies.futurePoster.postFuture(reactionStage);
+	void postFuture(CompletionStage<?> completionStage) {
+		dependencies.futurePoster.postFuture(completionStage);
 	}
 	
 	Configs configs() {
@@ -117,5 +122,9 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 	MessagesConfig messages() {
 		return configs().getMessagesConfig();
 	}
-	
+
+	<E extends AsyncEvent> CompletionStage<E> fireWithTimeout(E event) {
+		return dependencies.omnibus.getEventBus().fireAsyncEvent(event).orTimeout(10L, TimeUnit.SECONDS);
+	}
+
 }

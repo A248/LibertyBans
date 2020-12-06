@@ -54,11 +54,11 @@ public class UUIDStoreIT {
 	}
 
 	private String fullLookupName(UUID uuid) {
-		return uuidManager.fullLookupName(uuid).join().orElse(null);
+		return uuidManager.lookupName(uuid).join().orElse(null);
 	}
 
 	private UUID fullLookupUUID(String name) {
-		return uuidManager.fullLookupUUID(name).join().orElse(null);
+		return uuidManager.lookupUUID(name).join().orElse(null);
 	}
 
 	private NetworkAddress fullLookupAddress(String name) {

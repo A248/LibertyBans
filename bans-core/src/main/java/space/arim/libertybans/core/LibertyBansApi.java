@@ -32,6 +32,7 @@ import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.revoke.PunishmentRevoker;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.select.PunishmentSelector;
+import space.arim.libertybans.api.user.UserResolver;
 
 @Singleton
 public class LibertyBansApi implements LibertyBans {
@@ -44,11 +45,12 @@ public class LibertyBansApi implements LibertyBans {
 	private final Provider<PunishmentDatabase> databaseProvider;
 	private final PunishmentFormatter formatter;
 	private final ScopeManager scopeManager;
+	private final UserResolver userResolver;
 
 	@Inject
 	public LibertyBansApi(Omnibus omnibus, FactoryOfTheFuture futuresFactory, PunishmentDrafter drafter,
 			PunishmentRevoker revoker, PunishmentSelector selector, Provider<PunishmentDatabase> databaseProvider,
-			PunishmentFormatter formatter, ScopeManager scopeManager) {
+			PunishmentFormatter formatter, ScopeManager scopeManager, UserResolver userResolver) {
 		this.omnibus = omnibus;
 		this.futuresFactory = futuresFactory;
 		this.drafter = drafter;
@@ -57,6 +59,7 @@ public class LibertyBansApi implements LibertyBans {
 		this.databaseProvider = databaseProvider;
 		this.formatter = formatter;
 		this.scopeManager = scopeManager;
+		this.userResolver = userResolver;
 	}
 
 	@Override
@@ -98,5 +101,10 @@ public class LibertyBansApi implements LibertyBans {
 	public ScopeManager getScopeManager() {
 		return scopeManager;
 	}
-	
+
+	@Override
+	public UserResolver getUserResolver() {
+		return userResolver;
+	}
+
 }

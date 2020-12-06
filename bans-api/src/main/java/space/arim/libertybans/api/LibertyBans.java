@@ -27,6 +27,7 @@ import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.revoke.PunishmentRevoker;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.select.PunishmentSelector;
+import space.arim.libertybans.api.user.UserResolver;
 
 /**
  * The main entry point to the LibertyBans API
@@ -94,5 +95,12 @@ public interface LibertyBans {
 	 * @return the scope manager
 	 */
 	ScopeManager getScopeManager();
+
+	/**
+	 * Gets the user resolver for looking up UUIDs and names
+	 * 
+	 * @return the user resolver
+	 */
+	UserResolver getUserResolver();
 
 }

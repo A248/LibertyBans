@@ -263,7 +263,7 @@ public class Formatter implements InternalFormatter {
 			 * This should be a complete future every time we call this ourselves, because of UUIDMaster's fastCache.
 			 * However, for API calls, the UUID/name might not be added to the cache.
 			 */
-			return uuidManager.fullLookupName(((PlayerVictim) victim).getUUID())
+			return uuidManager.lookupName(((PlayerVictim) victim).getUUID())
 					.thenApply((optName) -> optName.orElse(NAME_UNKNOWN_ERROR));
 		case ADDRESS:
 			return futuresFactory.completedFuture(formatAddressVictim((AddressVictim) victim));
@@ -292,7 +292,7 @@ public class Formatter implements InternalFormatter {
 			 * Similarly in #formatVictim, this should be a complete future every time we call this ourselves,
 			 * because of UUIDMaster's fastCache.
 			 */
-			return uuidManager.fullLookupName(((PlayerOperator) operator).getUUID())
+			return uuidManager.lookupName(((PlayerOperator) operator).getUUID())
 					.thenApply((optName) -> optName.orElse(NAME_UNKNOWN_ERROR));
 		default:
 			throw MiscUtil.unknownOperatorType(operator.getType());

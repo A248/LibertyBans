@@ -22,10 +22,10 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
 
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
-import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.api.chat.SendableMessage;
 
@@ -41,6 +41,8 @@ import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.EnvEnforcer;
+import space.arim.libertybans.core.event.PostPunishEventImpl;
+import space.arim.libertybans.core.event.PunishEventImpl;
 
 abstract class PunishCommands extends AbstractSubCommandGroup implements PunishUnpunishCommands {
 
@@ -100,7 +102,7 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 			}
 			execute0();
 		}
-		
+
 		private void execute0() {
 			String targetArg = command().next();
 			CentralisedFuture<?> future = parseVictim(sender(), targetArg).thenCompose((victim) -> {
@@ -117,8 +119,8 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 			});
 			postFuture(future);
 		}
-		
-		private ReactionStage<Punishment> performEnact(Victim victim, String targetArg) {
+
+		private CompletionStage<Punishment> performEnact(Victim victim, String targetArg) {
 			/*
 			 * Parse duration. Duration.ZERO represents permanent duration
 			 */
@@ -161,12 +163,17 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 					.reason(reason).duration(duration)
 					.build();
 
-			return draftPunishment.enactPunishmentWithoutEnforcement().thenApply((optPunishment) -> {
-				if (optPunishment.isEmpty()) {
-					sendConflict(targetArg);
-					return null;
+			return fireWithTimeout(new PunishEventImpl(draftPunishment)).thenCompose((event) -> {
+				if (event.isCancelled()) {
+					return completedFuture(null);
 				}
-				return optPunishment.get();
+				return draftPunishment.enactPunishmentWithoutEnforcement().thenApply((optPunishment) -> {
+					if (optPunishment.isEmpty()) {
+						sendConflict(targetArg);
+						return null;
+					}
+					return optPunishment.get();
+				});
 			});
 		}
 		
@@ -192,9 +199,9 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 			}
 			return greatestPermission;
 		}
-		
-		// Conflicting punishment
-		
+
+		// Outcomes
+
 		private void sendConflict(String targetArg) {
 			SendableMessage message;
 			if (type().isSingular()) {
@@ -204,24 +211,24 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 			}
 			sender().sendMessage(message);
 		}
-		
-		// Enforcement and notification
-		
+
 		private CentralisedFuture<?> enforceAndSendSuccess(Punishment punishment) {
 
 			CentralisedFuture<?> enforcement = punishment.enforcePunishment().toCompletableFuture();
-			CentralisedFuture<SendableMessage> successMessage = formatter.formatWithPunishment(
+			CentralisedFuture<SendableMessage> futureMessage = formatter.formatWithPunishment(
 					section.successMessage(), punishment);
-			CentralisedFuture<SendableMessage> successNotify = formatter.formatWithPunishment(
+			CentralisedFuture<SendableMessage> futureNotify = formatter.formatWithPunishment(
 					section.successNotification(), punishment);
 
-			return futuresFactory().allOf(enforcement, successMessage, successNotify).thenRun(() -> {
-				sender().sendMessage(successMessage.join());
+			var completion = futuresFactory().allOf(enforcement, futureMessage, futureNotify).thenRun(() -> {
+				sender().sendMessage(futureMessage.join());
 
-				SendableMessage fullNotify = formatter.prefix(successNotify.join());
-				String notifyPerm = "libertybans." + type() + ".notify";
-				envEnforcer.sendToThoseWithPermission(notifyPerm, fullNotify);
+				envEnforcer.sendToThoseWithPermission(
+						"libertybans." + type() + ".notify",
+						formatter.prefix(futureNotify.join()));
 			});
+			postFuture(fireWithTimeout(new PostPunishEventImpl(punishment)));
+			return completion;
 		}
 		
 	}

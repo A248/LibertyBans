@@ -36,7 +36,7 @@ import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.DelayCalculators;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
-import space.arim.omnibus.util.concurrent.ScheduledWork;
+import space.arim.omnibus.util.concurrent.ScheduledTask;
 
 import space.arim.api.util.web.UUIDUtil;
 
@@ -66,7 +66,7 @@ public class StandardDatabase implements PunishmentDatabase, InternalDatabase {
 	private final ExecutorService executor;
 	private final boolean refresherEvent;
 	
-	private ScheduledWork<?> hyperSqlRefreshTask;
+	private ScheduledTask hyperSqlRefreshTask;
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
@@ -109,24 +109,22 @@ public class StandardDatabase implements PunishmentDatabase, InternalDatabase {
 	
 	/*
 	 * Lifecycle
+	 * 
+	 * Guarded by the global lock on BaseFoundation lifecycle events
 	 */
 	
 	void startRefreshTaskIfNecessary() {
 		if (!refresherEvent) {
 			EnhancedExecutor enhancedExecutor = manager.enhancedExecutorProvider().get();
-			synchronized (this) {
-				hyperSqlRefreshTask = enhancedExecutor.scheduleRepeating(
-						new RefreshTaskRunnable(manager, this),
-						Duration.ofHours(1L), DelayCalculators.fixedDelay());
-			}
+			hyperSqlRefreshTask = enhancedExecutor.scheduleRepeating(
+					new RefreshTaskRunnable(manager, this),
+					Duration.ofHours(1L), DelayCalculators.fixedDelay());
 		}
 	}
 	
 	void cancelRefreshTaskIfNecessary() {
 		if (!refresherEvent) {
-			synchronized (this) {
-				hyperSqlRefreshTask.cancel();
-			}
+			hyperSqlRefreshTask.cancel();
 		}
 	}
 	

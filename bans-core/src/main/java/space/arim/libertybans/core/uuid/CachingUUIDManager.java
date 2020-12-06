@@ -103,7 +103,7 @@ public class CachingUUIDManager implements UUIDManager {
 	 */
 	
 	@Override
-	public CentralisedFuture<Optional<UUID>> fullLookupUUID(final String name) {
+	public CentralisedFuture<Optional<UUID>> lookupUUID(final String name) {
 		if (!nameValidator.validateNameArgument(name)) {
 			return completedFuture(Optional.empty());
 		}
@@ -129,7 +129,7 @@ public class CachingUUIDManager implements UUIDManager {
 	}
 
 	@Override
-	public CentralisedFuture<Optional<String>> fullLookupName(final UUID uuid) {
+	public CentralisedFuture<Optional<String>> lookupName(final UUID uuid) {
 		Optional<String> envResolve = envResolver.lookupName(uuid);
 		if (envResolve.isPresent()) {
 			return completedFuture(envResolve);

@@ -16,37 +16,33 @@
  * along with LibertyBans-api. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.api.user;
+package space.arim.libertybans.api.event;
 
-import java.util.Optional;
-import java.util.UUID;
+import space.arim.omnibus.events.AsyncEvent;
 
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.libertybans.api.Operator;
+import space.arim.libertybans.api.punish.Punishment;
 
 /**
- * Provides the capability to resolve UUIDs and names.
+ * Called once a punishment has been revoked
  * 
  * @author A248
  *
  */
-public interface UserResolver {
+public interface PostPardonEvent extends AsyncEvent {
 
 	/**
-	 * Performs a full lookup of a UUID from a player name. May contact
-	 * external APIs such as the Mojang API.
+	 * Gets the staff member who revoked the punishment
 	 * 
-	 * @param name the player name
-	 * @return a future yielding the UUID or if it was found
+	 * @return the operator responsible for the pardon
 	 */
-	CentralisedFuture<Optional<UUID>> lookupUUID(String name);
+	Operator getOperator();
 
 	/**
-	 * Performs a full lookup of a player name from a UUID. May contact
-	 * external APIs such as the Mojang API.
+	 * Gets the punishment revoked
 	 * 
-	 * @param uuid the uuid
-	 * @return a future yielding the player name if it was found
+	 * @return the punishment which was revoked
 	 */
-	CentralisedFuture<Optional<String>> lookupName(UUID uuid);
+	Punishment getPunishment();
 
 }

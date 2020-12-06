@@ -80,7 +80,7 @@ public class StandardArgumentParser implements ArgumentParser {
 		default:
 			break;
 		}
-		return uuidManager.fullLookupUUID(targetArg).thenApply((uuid) -> {
+		return uuidManager.lookupUUID(targetArg).thenApply((uuid) -> {
 			if (uuid.isEmpty()) {
 				sender.sendMessage(configs.getMessagesConfig().all().notFound().player().replaceText("%TARGET%", targetArg));
 				return null;

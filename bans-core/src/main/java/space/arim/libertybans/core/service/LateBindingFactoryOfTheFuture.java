@@ -39,11 +39,7 @@ public class LateBindingFactoryOfTheFuture implements FactoryOfTheFuture {
 	}
 
 	private FactoryOfTheFuture delegate() {
-		FactoryOfTheFuture delegate = provider.get();
-		if (delegate == null) {
-			throw new IllegalStateException("Uninitialized");
-		}
-		return delegate;
+		return provider.get();
 	}
 
 	@Override

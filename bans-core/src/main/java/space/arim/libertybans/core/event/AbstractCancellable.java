@@ -16,12 +16,22 @@
  * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core.service;
+package space.arim.libertybans.core.event;
 
-import java.util.concurrent.CompletionStage;
+import space.arim.omnibus.events.Cancellable;
 
-public interface FuturePoster {
+abstract class AbstractCancellable implements Cancellable {
 
-	void postFuture(CompletionStage<?> completionStage);
+	private volatile boolean cancelled;
+
+	@Override
+	public void cancel() {
+		cancelled = true;
+	}
+
+	@Override
+	public boolean isCancelled() {
+		return cancelled;
+	}
 
 }

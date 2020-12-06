@@ -29,6 +29,7 @@ import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.revoke.PunishmentRevoker;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.select.PunishmentSelector;
+import space.arim.libertybans.api.user.UserResolver;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.database.DatabaseManager;
 import space.arim.libertybans.core.punish.Enactor;
@@ -37,6 +38,7 @@ import space.arim.libertybans.core.scope.InternalScopeManager;
 import space.arim.libertybans.core.selector.InternalSelector;
 import space.arim.libertybans.core.service.AsynchronicityManager;
 import space.arim.libertybans.core.service.LateBindingFactoryOfTheFuture;
+import space.arim.libertybans.core.uuid.UUIDManager;
 
 public class ApiBindModule {
 
@@ -71,6 +73,10 @@ public class ApiBindModule {
 
 	public ScopeManager scopeManager(InternalScopeManager scopeManager) {
 		return scopeManager;
+	}
+
+	public UserResolver userResolver(UUIDManager uuidManager) {
+		return uuidManager;
 	}
 
 }
