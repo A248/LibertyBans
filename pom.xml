@@ -35,7 +35,7 @@
 		<slf4j.version>1.7.30</slf4j.version>
 		<hikari.version>3.4.5</hikari.version>
 		<hsqldb.version>2.5.1</hsqldb.version>
-		<mariadb-connector.version>2.6.2</mariadb-connector.version>
+		<mariadb-connector.version>2.7.0</mariadb-connector.version>
 		<caffeine.version>2.8.5</caffeine.version>
 		<flyway.version>7.0.4</flyway.version>
 		<arimapi.version>0.21.0-SNAPSHOT</arimapi.version>
