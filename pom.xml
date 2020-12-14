@@ -103,7 +103,7 @@
 					<version>3.0.0-M5</version>
 					<configuration>
 						<trimStackTrace>false</trimStackTrace>
-						<argLine>-Xverify:none -XX:TieredStopAtLevel=1 -XX:-TieredCompilation</argLine>
+						<argLine>-XX:TieredStopAtLevel=1 -XX:-TieredCompilation</argLine>
 					</configuration>
 					<dependencies>
 						<dependency>
