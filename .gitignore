@@ -7,6 +7,14 @@ target/
 dependency-reduced-pom.xml
 pom.xml.versionsBackup
 
+### Intellij ###
+.idea/
+*.iws
+out/
+*.iml
+.idea_modules/
+atlassian-ide-plugin.xml
+
 ### Eclipse ###
 
 .classpath
