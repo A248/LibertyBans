@@ -24,11 +24,11 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.function.UnaryOperator;
 
 import jakarta.inject.Inject;
@@ -302,15 +302,16 @@ public class Formatter implements InternalFormatter {
 	private String formatAddressVictim(AddressVictim addressVictim) {
 		return addressVictim.getAddress().toString();
 	}
-	
-	private String formatRelative(long diff) {
+
+	/** Visible for testing */
+	String formatRelative(long diff) {
 		if (diff < 0) {
 			return formatRelative(-diff);
 		}
 		MessagesConfig.Misc.Time timeConfig = messages().misc().time();
 
 		List<Map.Entry<ChronoUnit, String>> fragments = new ArrayList<>(timeConfig.fragments().entrySet());
-		fragments.sort(Comparator.comparing(Map.Entry::getKey));
+		fragments.sort(Map.Entry.<ChronoUnit, String>comparingByKey().reversed());
 		List<String> segments = new ArrayList<>(fragments.size());
 
 		for (Map.Entry<ChronoUnit, String> fragment : fragments) {
@@ -327,23 +328,15 @@ public class Formatter implements InternalFormatter {
 		if (segments.size() == 1) {
 			return segments.get(0);
 		}
-		StringBuilder builder = new StringBuilder();
-		final boolean comma = timeConfig.useComma();
 
+		String delimiter = (timeConfig.useComma()) ? ", " : " ";
+		StringJoiner joiner = new StringJoiner(delimiter);
 		for (int n = 0; n < segments.size(); n++) {
+			String segment = segments.get(n);
 			boolean lastElement = n == segments.size() - 1;
-			if (lastElement) {
-				builder.append(timeConfig.and());
-			}
-			builder.append(segments.get(n));
-			if (!lastElement) {
-				if (comma) {
-					builder.append(',');
-				}
-				builder.append(" ");
-			}
+			joiner.add((lastElement) ? timeConfig.and() + segment : segment);
 		}
-		return builder.toString();
+		return joiner.toString();
 	}
 	
 	@Override
