@@ -51,7 +51,7 @@ class BaseWrapper {
 		}
 		
 		BaseWrapper create() {
-			DependencyPlatform platform = DependencyPlatform.detectGetSlf4jLoggerMethod(this) ?
+			DependencyPlatform platform = DependencyPlatform.detectGetSlf4jLoggerMethod(plugin) ?
 					DependencyPlatform.WATERFALL : DependencyPlatform.BUNGEE;
 			Path folder = plugin.getDataFolder().toPath();
 			TaskScheduler scheduler = plugin.getProxy().getScheduler();

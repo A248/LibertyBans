@@ -51,7 +51,7 @@ class BaseWrapper {
 		}
 		
 		BaseWrapper create() {
-			DependencyPlatform platform = DependencyPlatform.detectGetSlf4jLoggerMethod(this) ?
+			DependencyPlatform platform = DependencyPlatform.detectGetSlf4jLoggerMethod(plugin) ?
 					DependencyPlatform.PAPER : DependencyPlatform.SPIGOT;
 			Path folder = plugin.getDataFolder().toPath();
 			ExecutorService executor = Executors.newCachedThreadPool();
