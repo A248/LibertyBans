@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -89,15 +90,10 @@ public class LibertyBansLauncher {
 	
 	private static Class<?> classForName(String clazzName) {
 		try {
-			Class<?> result = Class.forName(clazzName);
-			return result;
+			return Class.forName(clazzName);
 		} catch (ClassNotFoundException ignored) {
 			return null;
 		}
-	}
-	
-	private static boolean classExists(String clazzName) {
-		return classForName(clazzName) != null;
 	}
 	
 	private String findCulpritWhoFailedToRelocate(Class<?> libClass) {
@@ -121,7 +117,9 @@ public class LibertyBansLauncher {
 	}
 
 	private Dependency readDependency0(String simpleDependencyName) {
-		URL url = getClass().getClassLoader().getResource("dependencies/" + simpleDependencyName);
+		String resourcePath = "dependencies/" + simpleDependencyName;
+		URL url = getClass().getClassLoader().getResource(resourcePath);
+		Objects.requireNonNull(url, "internal error, missing " + resourcePath);
 		try (InputStream inputStream = url.openStream()) {
 
 			String fullString = new String(inputStream.readAllBytes(), StandardCharsets.US_ASCII);
@@ -147,7 +145,7 @@ public class LibertyBansLauncher {
 	 */
 	private void addApiDeps(DependencyLoaderBuilder loader) {
 		CompletableFuture<Dependency> selfApi = readDependency("self-api");
-		if (!classExists("space.arim.omnibus.Omnibus")) {
+		if (classForName("space.arim.omnibus.Omnibus") != null) {
 			loader.addDependencyPair(readDependency0("omnibus"), Repositories.ARIM_LESSER_GPL3);
 		}
 		if (!skipSelfDependencies()) {
