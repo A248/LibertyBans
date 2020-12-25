@@ -18,19 +18,13 @@
  */
 package space.arim.libertybans.env.spigot;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InaccessibleObjectException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import jakarta.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import space.arim.omnibus.util.ArraysUtil;
-import space.arim.omnibus.util.ThisClass;
 
 import space.arim.api.env.util.command.BukkitCommandSkeleton;
 
@@ -49,8 +43,6 @@ public class CommandHandler extends BukkitCommandSkeleton implements PlatformLis
 
 	private final DependencyPackage dependencies;
 	private final boolean alias;
-
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
 	CommandHandler(DependencyPackage dependencies, String command, boolean alias) {
 		super(command);
@@ -80,35 +72,18 @@ public class CommandHandler extends BukkitCommandSkeleton implements PlatformLis
 	public void register() {
 		CommandMapHelper commandMapHelper = dependencies.commandMapHelper;
 		CommandMap commandMap = commandMapHelper.getCommandMap();
-		if (commandMap == null
-				|| commandMapHelper.getKnownCommandsField(commandMap) == null && alias) {
+		if (commandMapHelper.getKnownCommands(commandMap) == null && alias) {
 			return;
 		}
 		commandMap.register(getName(), dependencies.plugin.getName().toLowerCase(Locale.ENGLISH), this);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void unregister() {
 		CommandMapHelper commandMapHelper = dependencies.commandMapHelper;
 		CommandMap commandMap = commandMapHelper.getCommandMap();
-		if (commandMap == null) {
-			return;
-		}
-		Field knownCommandsField = commandMapHelper.getKnownCommandsField(commandMap);
-		if (knownCommandsField == null) {
-			if (!alias) {
-				logger.warn("As stated previously, /libertybans cannot be unregistered.");
-			}
-			return;
-		}
-		Map<String, Command> knownCommands;
-		try {
-			knownCommandsField.setAccessible(true);
-			knownCommands = (Map<String, Command>) knownCommandsField.get(commandMap);
-		} catch (ClassCastException | IllegalArgumentException | IllegalAccessException | SecurityException
-				| InaccessibleObjectException ex) {
-			logger.warn("Unable to retrieve server command map's known commands.", ex);
+		Map<String, Command> knownCommands = commandMapHelper.getKnownCommands(commandMap);
+		if (knownCommands == null) {
 			return;
 		}
 		while (knownCommands.values().remove(this)) {

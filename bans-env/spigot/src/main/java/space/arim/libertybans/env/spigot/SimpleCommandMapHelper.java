@@ -18,11 +18,12 @@
  */
 package space.arim.libertybans.env.spigot;
 
-import java.lang.reflect.Field;
+import java.util.Map;
 import java.util.Objects;
 
 import jakarta.inject.Inject;
 
+import org.bukkit.command.Command;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 // How ironic
 public class SimpleCommandMapHelper implements CommandMapHelper {
 
-	private final JavaPlugin plugin;
+	private final MorePaperLib morePaperLib;
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
@@ -47,21 +48,20 @@ public class SimpleCommandMapHelper implements CommandMapHelper {
 	
 	@Inject
 	public SimpleCommandMapHelper(JavaPlugin plugin) {
-		this.plugin = plugin;
+		this(new MorePaperLib(plugin));
 	}
-	
-	@Override
-	public CommandMap getCommandMap() {
-		CommandMap commandMap = new MorePaperLib(plugin).getServerCommandMap();
-		if (commandMap == null) {
-			logger.warn("Your server's CommandMap is null. This is disastrous and you should debug the problem immediately. "
-					+ MISSING_COMMAND_MAP_STATUS);
-		}
-		return commandMap;
+
+	private SimpleCommandMapHelper(MorePaperLib morePaperLib) {
+		this.morePaperLib = morePaperLib;
 	}
 
 	@Override
-	public Field getKnownCommandsField(CommandMap commandMap) {
+	public CommandMap getCommandMap() {
+		return morePaperLib.getServerCommandMap();
+	}
+
+	@Override
+	public Map<String, Command> getKnownCommands(CommandMap commandMap) {
 		Objects.requireNonNull(commandMap, "commandMap");
 		if (!(commandMap instanceof SimpleCommandMap)) {
 			/*
@@ -74,23 +74,13 @@ public class SimpleCommandMapHelper implements CommandMapHelper {
 			} catch (IllegalArgumentException ignored) {}
 			logger.warn(
 					"Your server's CommandMap is not an instance of SimpleCommandMap. Rather, it is {} from plugin {}. "
-					+ "This could be disastrous and you should remove the offending plugin or speak to its author(s), "
-					+ "as many plugins assume SimpleCommandMap as the norm. "
-					+ MISSING_COMMAND_MAP_STATUS,
+							+ "This could be disastrous and you should remove the offending plugin or speak to its author(s), "
+							+ "as many plugins assume SimpleCommandMap as the norm. "
+							+ MISSING_COMMAND_MAP_STATUS,
 					replacementClass, pluginName);
 			return null;
 		}
-		Field knownCommandsField;
-		try {
-			knownCommandsField = SimpleCommandMap.class.getDeclaredField("knownCommands");
-
-		} catch (NoSuchFieldException | SecurityException ex) {
-			logger.warn(
-					"Unable to find your server's CommandMap's 'knownCommands' field. "
-					+ MISSING_COMMAND_MAP_STATUS, ex);
-			knownCommandsField = null;
-		}
-		return knownCommandsField;
+		return morePaperLib.getCommandMapKnownCommands((SimpleCommandMap) commandMap);
 	}
 
 }

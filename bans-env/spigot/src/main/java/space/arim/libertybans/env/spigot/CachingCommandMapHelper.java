@@ -18,8 +18,9 @@
  */
 package space.arim.libertybans.env.spigot;
 
-import java.lang.reflect.Field;
+import java.util.Map;
 
+import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 
 class CachingCommandMapHelper implements CommandMapHelper {
@@ -34,12 +35,12 @@ class CachingCommandMapHelper implements CommandMapHelper {
 	
 	private static class Cache {
 		
-		private final CommandMap commandMap;
-		private final Field knownCommandsField;
+		final CommandMap commandMap;
+		final Map<String, Command> knownCommands;
 		
-		Cache(CommandMap commandMap, Field knownCommandsField) {
+		Cache(CommandMap commandMap, Map<String, Command> knownCommands) {
 			this.commandMap = commandMap;
-			this.knownCommandsField = knownCommandsField;
+			this.knownCommands = knownCommands;
 		}
 		
 	}
@@ -47,14 +48,11 @@ class CachingCommandMapHelper implements CommandMapHelper {
 	private Cache getCache() {
 		Cache cache = this.cache;
 		if (cache == null) {
-			synchronized (this) {
-				cache = this.cache;
-				if (cache == null) {
-					CommandMap commandMap = delegate.getCommandMap();
-					cache = new Cache(commandMap, delegate.getKnownCommandsField(commandMap));
-					this.cache = cache;
-				}
-			}
+			CommandMap commandMap = delegate.getCommandMap();
+			Map<String, Command> knownCommands = delegate.getKnownCommands(commandMap);
+
+			cache = new Cache(commandMap, knownCommands);
+			this.cache = cache;
 		}
 		return cache;
 	}
@@ -65,8 +63,8 @@ class CachingCommandMapHelper implements CommandMapHelper {
 	}
 
 	@Override
-	public Field getKnownCommandsField(CommandMap commandMap) {
-		return getCache().knownCommandsField;
+	public Map<String, Command> getKnownCommands(CommandMap commandMap) {
+		return getCache().knownCommands;
 	}
 
 }

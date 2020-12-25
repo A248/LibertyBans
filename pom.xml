@@ -39,7 +39,7 @@
 		<caffeine.version>2.8.5</caffeine.version>
 		<flyway.version>7.0.4</flyway.version>
 		<arimapi.version>0.21.0-SNAPSHOT</arimapi.version>
-		<morepaperlib.version>0.1.0-SNAPSHOT</morepaperlib.version>
+		<morepaperlib.version>0.2.0-SNAPSHOT</morepaperlib.version>
 		
 		<!-- Plugin variables -->
 		<plugin.name>LibertyBans</plugin.name>
