@@ -18,49 +18,54 @@
  */
 package space.arim.libertybans.core.commands;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 
 import java.util.NoSuchElementException;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public abstract class CommandPackageTest {
+public class CommandPackageTest {
 	
-	protected abstract CommandPackage getPackage(String command, String... args);
-	
-	@Test
-	public void testNoArguments() {
-		CommandPackage pkg = getPackage("Cmd");
-		assertEquals(pkg.getCommand(), "cmd");
-		assertFalse(pkg.hasNext());
-		assertTrue(pkg.allRemaining().isEmpty());
-		assertThrows(NoSuchElementException.class, pkg::next);
+	@ParameterizedTest
+	@ArgumentsSource(CommandPackageArgumentsProvider.class)
+	@CommandPackageArgumentsProvider.CommandArgs(cmd = "Cmd", args = {})
+	public void noArguments(CommandPackage cmdPackage) {
+		assertEquals(cmdPackage.getCommand(), "cmd");
+		assertFalse(cmdPackage.hasNext());
+		assertTrue(cmdPackage.allRemaining().isEmpty());
+		assertThrows(NoSuchElementException.class, cmdPackage::next);
 	}
-	
-	@Test
-	public void testOneArgument() {
-		CommandPackage pkg = getPackage("cmd", "arg");
-		assertTrue(pkg.hasNext());
-		CommandPackage pkgCopy = pkg.copy();
 
-		assertEquals("arg", pkg.allRemaining());
-		assertThrows(NoSuchElementException.class, pkg::next);
+	@ParameterizedTest
+	@ArgumentsSource(CommandPackageArgumentsProvider.class)
+	@CommandPackageArgumentsProvider.CommandArgs(cmd = "cmd", args = {"arg"})
+	public void oneArgument(CommandPackage cmdPackage) {
+		assertTrue(cmdPackage.hasNext());
+		CommandPackage copy = cmdPackage.copy();
 
-		assertEquals("arg", pkgCopy.next());
-		assertThrows(NoSuchElementException.class, pkgCopy::next);
+		assertEquals("arg", cmdPackage.allRemaining());
+		assertThrows(NoSuchElementException.class, cmdPackage::next);
+
+		assertEquals("arg", copy.next());
+		assertThrows(NoSuchElementException.class, copy::next);
 	}
-	
-	@Test
-	public void testMultipleArguments() {
-		CommandPackage pkg = getPackage("cmd", "arg", "second", "another");
-		assertTrue(pkg.hasNext());
-		CommandPackage pkgCopy = pkg.copy();
 
-		assertEquals("arg second another", pkg.allRemaining());
-		assertThrows(NoSuchElementException.class, pkg::next);
+	@ParameterizedTest
+	@ArgumentsSource(CommandPackageArgumentsProvider.class)
+	@CommandPackageArgumentsProvider.CommandArgs(cmd = "cmd", args = {"arg", "second", "another"})
+	public void multipleArguments(CommandPackage cmdPackage) {
+		assertTrue(cmdPackage.hasNext());
+		CommandPackage copy = cmdPackage.copy();
 
-		assertEquals("arg", pkgCopy.next());
-		assertEquals("second", pkgCopy.next());
+		assertEquals("arg second another", cmdPackage.allRemaining());
+		assertThrows(NoSuchElementException.class, cmdPackage::next);
+
+		assertEquals("arg", copy.next());
+		assertEquals("second", copy.next());
 	}
 	
 }

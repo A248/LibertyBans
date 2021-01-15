@@ -18,61 +18,41 @@
  */
 package space.arim.libertybans.core.commands;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import space.arim.libertybans.bootstrap.plugin.PluginInfo;
+import space.arim.libertybans.core.commands.usage.UsageGlossary;
+import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.env.CmdSender;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
-
-import space.arim.libertybans.bootstrap.plugin.PluginInfo;
-import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.env.CmdSender;
-import space.arim.libertybans.core.service.FuturePoster;
-
-import jakarta.inject.Inject;
-import jakarta.inject.Provider;
-import jakarta.inject.Singleton;
-
 @Singleton
 public class CommandsCore implements Commands {
 
-	private final FactoryOfTheFuture futuresFactory;
-	private final FuturePoster futurePoster;
 	private final Configs configs;
-	private final Provider<ArgumentParser> argumentParser;
+	private final UsageGlossary usage;
 	
 	private final List<SubCommandGroup> subCommands;
 	
-	private static final String BASE_COMMAND_PERMISSION = "libertybans.commands";
-	
+	static final String BASE_COMMAND_PERMISSION = "libertybans.commands";
+
+	CommandsCore(Configs configs, UsageGlossary usage, List<SubCommandGroup> subCommands) {
+		this.configs = configs;
+		this.usage = usage;
+		this.subCommands = subCommands;
+	}
+
 	@Inject
-	public CommandsCore(FactoryOfTheFuture futuresFactory, Configs configs, Provider<ArgumentParser> argumentParser,
-			FuturePoster futurePoster,
+	public CommandsCore(Configs configs, UsageGlossary usage,
 			PlayerPunishCommands playerPunish, AddressPunishCommands addressPunish,
 			PlayerUnpunishCommands playerUnpunish, AddressUnpunishCommands addressUnpunish,
-			ListCommands list, AdminCommands admin) {
-		this.futuresFactory = futuresFactory;
-		this.futurePoster = futurePoster;
-		this.configs = configs;
-		this.argumentParser = argumentParser;
-		subCommands = List.of(playerPunish, addressPunish, playerUnpunish, addressUnpunish, list, admin);
-	}
-	
-	FactoryOfTheFuture futuresFactory() {
-		return futuresFactory;
-	}
-	
-	Configs configs() {
-		return configs;
-	}
-	
-	ArgumentParser argumentParser() {
-		return argumentParser.get();
-	}
-	
-	FuturePoster futurePoster() {
-		return futurePoster;
+			ListCommands list, AdminCommands admin, ImportCommands importing) {
+		this(configs, usage, List.of(
+				playerPunish, addressPunish, playerUnpunish, addressUnpunish, list, admin, importing));
 	}
 	
 	private SubCommandGroup getMatchingSubCommand(String firstArg) {
@@ -102,34 +82,11 @@ public class CommandsCore implements Commands {
 		String firstArg = command.next().toLowerCase(Locale.ROOT);
 		SubCommandGroup subCommand = getMatchingSubCommand(firstArg);
 		if (subCommand == null) {
-			sendUsage(sender, command, firstArg.equals("usage") || firstArg.equals("help"));
+			usage.sendUsage(sender, command, firstArg.equals("usage") || firstArg.equals("help"));
 			return;
 		}
 		CommandExecution execution = subCommand.execute(sender, command, firstArg);
 		execution.execute();
-	}
-	
-	/*
-	 * Usage
-	 */
-	
-	private void sendUsage(CmdSender sender, CommandPackage command, boolean explicit) {
-		if (!explicit) {
-			sender.sendMessage(configs.getMessagesConfig().all().usage());
-		}
-		UsageSection[] sections = UsageSection.values();
-		int page = 1;
-		if (command.hasNext()) {
-			try {
-				page = Integer.parseInt(command.next());
-			} catch (NumberFormatException ignored) {}
-			if (page <= 0 || page > sections.length) {
-				page = 1;
-			}
-		}
-		UsageSection section = sections[page - 1];
-		sender.sendMessageNoPrefix(section.getContent());
-		sender.sendLiteralMessage("&ePage " + page + "/4. &7Use /libertybans usage <page> to navigate");
 	}
 	
 	/*
@@ -153,12 +110,11 @@ public class CommandsCore implements Commands {
 	}
 	
 	private List<String> filterAndSort(Collection<String> unfilteredSuggestions, String argument) {
-		List<String> filtered = new ArrayList<>();
-		for (String suggestion : unfilteredSuggestions) {
-			if (suggestion.startsWith(argument)) {
-				filtered.add(suggestion);
-			}
+		if (unfilteredSuggestions.isEmpty()) {
+			return List.of();
 		}
+		List<String> filtered = new ArrayList<>(unfilteredSuggestions);
+		filtered.removeIf((suggestion) -> !suggestion.startsWith(argument));
 		filtered.sort(null);
 		return List.copyOf(filtered);
 	}

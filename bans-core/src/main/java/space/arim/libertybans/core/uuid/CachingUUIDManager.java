@@ -19,11 +19,11 @@
 package space.arim.libertybans.core.uuid;
 
 import java.net.InetAddress;
-import java.util.Map;
+import java.time.Duration;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import jakarta.inject.Inject;
@@ -45,109 +45,109 @@ import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.env.EnvUserResolver;
 
 @Singleton
-public class CachingUUIDManager implements UUIDManager {
+public final class CachingUUIDManager implements UUIDManager {
 
 	private final Configs configs;
 	private final FactoryOfTheFuture futuresFactory;
 	private final NameValidator nameValidator;
 	private final EnvUserResolver envResolver;
-
-	final Cache<UUID, String> fastCache = Caffeine.newBuilder().expireAfterAccess(20L, TimeUnit.SECONDS).build();
 	private final QueryingImpl queryingImpl;
+
+	private final Cache<String, UUID> nameToUuidCache;
+	private final Cache<UUID, String> uuidToNameCache;
 
 	@Inject
 	public CachingUUIDManager(Configs configs, FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider,
 			NameValidator nameValidator, EnvUserResolver envResolver) {
+		this(configs, futuresFactory, nameValidator, envResolver, new QueryingImpl(dbProvider));
+	}
+
+	CachingUUIDManager(Configs configs, FactoryOfTheFuture futuresFactory, NameValidator nameValidator,
+					   EnvUserResolver envResolver, QueryingImpl queryingImpl) {
 		this.configs = configs;
 		this.futuresFactory = futuresFactory;
 		this.nameValidator = nameValidator;
 		this.envResolver = envResolver;
+		this.queryingImpl = queryingImpl;
 
-		queryingImpl = new QueryingImpl(dbProvider);
+		Duration expiration = Duration.ofSeconds(20L);
+		nameToUuidCache = Caffeine.newBuilder().expireAfterAccess(expiration).build();
+		uuidToNameCache = Caffeine.newBuilder().expireAfterAccess(expiration).build();
 	}
 	
 	@Override
 	public void addCache(UUID uuid, String name) {
-		fastCache.put(uuid, name);
+		nameToUuidCache.put(name.toLowerCase(Locale.ROOT), uuid);
+		uuidToNameCache.put(uuid, name);
 	}
 	
 	private <T> CentralisedFuture<T> completedFuture(T value) {
 		return futuresFactory.completedFuture(value);
 	}
 
-	UUID resolveUuidCached(String name) {
-		// Caffeine specifies that operations on the entry set do not refresh the expiration timer
-		for (Map.Entry<UUID, String> entry : fastCache.asMap().entrySet()) {
-			if (entry.getValue().equalsIgnoreCase(name)) {
-				UUID uuid = entry.getKey();
-				// Manual cache refresh
-				fastCache.getIfPresent(uuid);
-				return uuid;
-			}
-		}
-		return null;
-	}
-
 	/*
 	 * UUID resolution works as follows:
 	 * 
-	 * 1. Check online players
-	 * 2. Check fast cache using own resolver
-	 * 3. Check own database using own resolver
-	 * 4. Check other resolvers through UUIDVault.
-	 * 5. If online server, check Mojang API and third party web APIs where configured.
-	 * If offline server, calculate UUID if possible. If mixed server, stop.
-	 * 
-	 * If 4 or 5 found an answer, add it to the fast cache.
-	 * 
+	 * 1. Check caches
+	 * 2. Check online players
+	 * 3. Check own database
+	 * 4. If online server, check Mojang API and third party web APIs where configured.
 	 */
 	
 	@Override
-	public CentralisedFuture<Optional<UUID>> lookupUUID(final String name) {
+	public CentralisedFuture<Optional<UUID>> lookupUUID(String name) {
 		if (!nameValidator.validateNameArgument(name)) {
 			return completedFuture(Optional.empty());
 		}
+		UUID cachedResolve = nameToUuidCache.getIfPresent(name.toLowerCase(Locale.ROOT));
+		if (cachedResolve != null) {
+			return completedFuture(Optional.of(cachedResolve));
+		}
+		return lookupUUIDUncached(name).thenApply((optExternalUuid) -> {
+			if (optExternalUuid.isPresent()) {
+				addCache(optExternalUuid.get(), name);
+			}
+			return optExternalUuid;
+		});
+	}
+
+	private CentralisedFuture<Optional<UUID>> lookupUUIDUncached(String name) {
 		Optional<UUID> envResolve = envResolver.lookupUUID(name);
 		if (envResolve.isPresent()) {
 			return completedFuture(envResolve);
-		}
-		UUID cachedResolve = resolveUuidCached(name);
-		if (cachedResolve != null) {
-			return completedFuture(Optional.of(cachedResolve));
 		}
 		return queryingImpl.resolve(name).thenCompose((queriedUuid) -> {
 			if (queriedUuid != null) {
 				return completedFuture(Optional.of(queriedUuid));
 			}
-			return webLookup((remoteApi) -> remoteApi.lookupUUID(name)).thenApply((optExternalUuid) -> {
-				if (optExternalUuid.isPresent()) {
-					fastCache.put(optExternalUuid.get(), name);
-				}
-				return optExternalUuid;
-			});
+			return webLookup((remoteApi) -> remoteApi.lookupUUID(name));
 		});
 	}
 
 	@Override
-	public CentralisedFuture<Optional<String>> lookupName(final UUID uuid) {
+	public CentralisedFuture<Optional<String>> lookupName(UUID uuid) {
+		String cachedResolve = uuidToNameCache.getIfPresent(uuid);
+		if (cachedResolve != null) {
+			return completedFuture(Optional.of(cachedResolve));
+		}
+		return lookupNameUncached(uuid).thenApply((optExternalName) -> {
+			if (optExternalName.isPresent()) {
+				addCache(uuid, optExternalName.get());
+			}
+			return optExternalName;
+		});
+	}
+
+	private CentralisedFuture<Optional<String>> lookupNameUncached(UUID uuid) {
 		Optional<String> envResolve = envResolver.lookupName(uuid);
 		if (envResolve.isPresent()) {
 			return completedFuture(envResolve);
-		}
-		String cachedResolve = fastCache.getIfPresent(uuid);
-		if (cachedResolve != null) {
-			return completedFuture(Optional.of(cachedResolve));
 		}
 		return queryingImpl.resolve(uuid).thenCompose((queriedName) -> {
 			if (queriedName != null) {
 				return completedFuture(Optional.of(queriedName));
 			}
-			return webLookup((remoteApi) -> remoteApi.lookupName(uuid)).thenApply((optExternalName) -> {
-				if (optExternalName.isPresent()) {
-					fastCache.put(uuid, optExternalName.get());
-				}
-				return optExternalName;
-			});
+			return webLookup((remoteApi) -> remoteApi.lookupName(uuid));
 		});
 	}
 	
@@ -162,7 +162,7 @@ public class CachingUUIDManager implements UUIDManager {
 	// Address lookups
 	
 	@Override
-	public CentralisedFuture<NetworkAddress> fullLookupAddress(String name) {
+	public CentralisedFuture<NetworkAddress> lookupAddress(String name) {
 		if (!nameValidator.validateNameArgument(name)) {
 			return completedFuture(null);
 		}

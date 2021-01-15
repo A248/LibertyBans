@@ -18,6 +18,26 @@
  */
 package space.arim.libertybans.core.config;
 
+import jakarta.inject.Inject;
+import space.arim.api.chat.SendableMessage;
+import space.arim.api.chat.manipulator.SendableMessageManipulator;
+import space.arim.api.chat.serialiser.JsonSkSerialiser;
+import space.arim.api.util.web.UUIDUtil;
+import space.arim.libertybans.api.AddressVictim;
+import space.arim.libertybans.api.Operator;
+import space.arim.libertybans.api.PlayerOperator;
+import space.arim.libertybans.api.PlayerVictim;
+import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.service.Time;
+import space.arim.libertybans.core.punish.MiscUtil;
+import space.arim.libertybans.core.scope.InternalScopeManager;
+import space.arim.libertybans.core.uuid.UUIDManager;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -31,44 +51,24 @@ import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.function.UnaryOperator;
 
-import jakarta.inject.Inject;
-
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
-
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.manipulator.SendableMessageManipulator;
-import space.arim.api.chat.serialiser.JsonSkSerialiser;
-import space.arim.api.util.web.UUIDUtil;
-
-import space.arim.libertybans.api.AddressVictim;
-import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.PlayerOperator;
-import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.scope.ServerScope;
-import space.arim.libertybans.core.punish.MiscUtil;
-import space.arim.libertybans.core.scope.InternalScopeManager;
-import space.arim.libertybans.core.uuid.UUIDManager;
-
 public class Formatter implements InternalFormatter {
 
 	private final FactoryOfTheFuture futuresFactory;
 	private final Configs configs;
 	private final InternalScopeManager scopeManager;
 	private final UUIDManager uuidManager;
+	private final Time time;
 
 	private static final long MARGIN_OF_INITIATION = 10; // seconds
 	
 	@Inject
 	public Formatter(FactoryOfTheFuture futuresFactory, Configs configs, InternalScopeManager scopeManager,
-			UUIDManager uuidManager) {
+					 UUIDManager uuidManager, Time time) {
 		this.futuresFactory = futuresFactory;
 		this.configs = configs;
 		this.scopeManager = scopeManager;
 		this.uuidManager = uuidManager;
+		this.time = time;
 	}
 	
 	private MessagesConfig messages() {
@@ -154,7 +154,7 @@ public class Formatter implements InternalFormatter {
 	
 	private Map<SimpleReplaceable, String> getSimpleReplacements(Punishment punishment, Operator unOperator) {
 
-		final long now = MiscUtil.currentTime();
+		final long now = time.currentTime();
 		final long start = punishment.getStartDateSeconds();
 
 		final long timePassed = now - start;
@@ -316,7 +316,7 @@ public class Formatter implements InternalFormatter {
 
 		for (Map.Entry<ChronoUnit, String> fragment : fragments) {
 			long unitLength = fragment.getKey().getDuration().toSeconds();
-			if (diff > unitLength) {
+			if (diff >= unitLength) {
 				long amount = (diff / unitLength);
 				diff -= (amount * unitLength);
 				segments.add(fragment.getValue().replace("%VALUE%", Long.toString(amount)));

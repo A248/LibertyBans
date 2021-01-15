@@ -20,14 +20,16 @@ package space.arim.libertybans.core;
 
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.core.commands.usage.StandardUsageGlossary;
+import space.arim.libertybans.core.commands.usage.UsageGlossary;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
 
 import space.arim.api.env.PlatformHandle;
 
-import space.arim.libertybans.core.commands.ArgumentParser;
+import space.arim.libertybans.core.commands.extra.ArgumentParser;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.commands.CommandsCore;
-import space.arim.libertybans.core.commands.StandardArgumentParser;
+import space.arim.libertybans.core.commands.extra.StandardArgumentParser;
 import space.arim.libertybans.core.config.Formatter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.database.DatabaseManager;
@@ -79,4 +81,7 @@ public class PillarTwoBindModule {
 		return nameValidator;
 	}
 
+	public UsageGlossary usage(StandardUsageGlossary usage) {
+		return usage;
+	}
 }

@@ -155,7 +155,7 @@ public class SelectionImpl {
 		statementBuilder.append(" ORDER BY `start` DESC");
 		int maximumToRetrieve = selection.maximumToRetrieve();
 		if (maximumToRetrieve != 0) {
-			statementBuilder.append(" LIMIT " + maximumToRetrieve);
+			statementBuilder.append(" LIMIT ").append(Integer.toString(maximumToRetrieve));
 		}
 		return Map.entry(statementBuilder.toString(), predication.getValue());
 	}

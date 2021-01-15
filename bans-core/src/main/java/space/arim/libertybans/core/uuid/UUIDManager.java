@@ -35,6 +35,6 @@ public interface UUIDManager extends UserResolver {
 	 * @param name the name of the player
 	 * @return a future which yields the address or {@code null} if none was found
 	 */
-	CentralisedFuture<NetworkAddress> fullLookupAddress(String name);
+	CentralisedFuture<NetworkAddress> lookupAddress(String name);
 	
 }

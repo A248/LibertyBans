@@ -31,6 +31,7 @@ import space.arim.libertybans.core.selector.CaffeineMuteCache;
 import space.arim.libertybans.core.selector.InternalSelector;
 import space.arim.libertybans.core.selector.MuteCache;
 import space.arim.libertybans.core.selector.SelectorImpl;
+import space.arim.libertybans.core.service.Time;
 
 public abstract class PillarOneBindModuleMinusConfigs {
 
@@ -62,4 +63,7 @@ public abstract class PillarOneBindModuleMinusConfigs {
 		return scopeManager;
 	}
 
+	public Time time() {
+		return Time.live();
+	}
 }

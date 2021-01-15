@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.core.commands.extra.ArgumentParser;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.events.AsyncEvent;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;

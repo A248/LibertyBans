@@ -22,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 
 import jakarta.inject.Inject;
 
+import space.arim.libertybans.core.importing.ImportConfig;
 import space.arim.libertybans.core.selector.EnforcementConfig;
 import space.arim.libertybans.it.ConfigSpec;
 
@@ -72,7 +73,7 @@ public class SpecifiedConfigs implements Configs {
 			}
 		}.proxy();
 	}
-	
+
 	@Override
 	public MainConfig getMainConfig() {
 		return new Delegator<>(MainConfig.class, delegate.getMainConfig()) {
@@ -116,6 +117,11 @@ public class SpecifiedConfigs implements Configs {
 	@Override
 	public MessagesConfig getMessagesConfig() {
 		return delegate.getMessagesConfig();
+	}
+
+	@Override
+	public ImportConfig getImportConfig() {
+		return delegate.getImportConfig();
 	}
 
 	@Override

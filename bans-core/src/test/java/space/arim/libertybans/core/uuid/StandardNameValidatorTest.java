@@ -16,20 +16,33 @@
  * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core.commands;
+package space.arim.libertybans.core.uuid;
 
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.core.env.CmdSender;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-public interface ArgumentParser {
+public class StandardNameValidatorTest {
 
-	CentralisedFuture<Victim> parseVictimByName(CmdSender sender, String targetArg);
-	
-	CentralisedFuture<Operator> parseOperatorByName(CmdSender sender, String operatorArg);
-	
-	CentralisedFuture<Victim> parseAddressVictim(CmdSender sender, String targetArg);
+	private final NameValidator validator = new StandardNameValidator();
+
+	@ParameterizedTest
+	@ValueSource(strings = {"A248", "ObsidianWolf_", "lol_haha_dead"})
+	public void validNames(String name) {
+		assertTrue(validator.validateNameArgument(name));
+	}
+
+	@Test
+	public void nonAlphaNumericUnderscore() {
+		assertFalse(validator.validateNameArgument("NameWith=Sign"));
+	}
+
+	@Test
+	public void tooManyCharacters() {
+		assertFalse(validator.validateNameArgument("ThisNameHasMoreThan16Characters"));
+	}
 	
 }

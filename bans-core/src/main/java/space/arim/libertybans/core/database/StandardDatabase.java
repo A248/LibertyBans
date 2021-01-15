@@ -57,7 +57,7 @@ import space.arim.jdbcaesar.JdbCaesarBuilder;
 import space.arim.jdbcaesar.QuerySource;
 import space.arim.jdbcaesar.adapter.EnumNameAdapter;
 
-public class StandardDatabase implements PunishmentDatabase, InternalDatabase {
+public final class StandardDatabase implements InternalDatabase {
 
 	private final DatabaseManager manager;
 	private final Vendor vendor;
@@ -65,6 +65,7 @@ public class StandardDatabase implements PunishmentDatabase, InternalDatabase {
 	private final JdbCaesar jdbCaesar;
 	private final ExecutorService executor;
 	private final boolean refresherEvent;
+	private final PunishmentDatabase external = new External();
 	
 	private ScheduledTask hyperSqlRefreshTask;
 	
@@ -140,38 +141,9 @@ public class StandardDatabase implements PunishmentDatabase, InternalDatabase {
 		close();
 	}
 	
-	/*
-	 * API
-	 */
-	
-	@Override
-	public Connection getConnection() throws SQLException {
-		logger.debug("Foreign caller acquiring connection");
-		return dataSource.getConnection();
-	}
-	
-	@Override
-	public int getMajorRevision() {
-		return MAJOR_REVISION;
-	}
-
-	@Override
-	public int getMinorRevision() {
-		return MINOR_REVISION;
-	}
-
-	@Override
-	public Executor getExecutor() {
-		return executor;
-	}
-	
-	/*
-	 * Internal methods
-	 */
-	
 	@Override
 	public PunishmentDatabase asExternal() {
-		return this;
+		return external;
 	}
 	
 	@Override
@@ -267,6 +239,36 @@ public class StandardDatabase implements PunishmentDatabase, InternalDatabase {
 			String queryCommand = (getVendor() == Vendor.HSQLDB) ? "TRUNCATE TABLE" : "DELETE FROM";
 			jdbCaesar().query(queryCommand + " `libertybans_" + table + "`").voidResult().execute();
 		}
+	}
+
+	@Override
+	public Connection getConnection() throws SQLException {
+		return dataSource.getConnection();
+	}
+
+	private class External implements PunishmentDatabase {
+
+		@Override
+		public Connection getConnection() throws SQLException {
+			logger.debug("Foreign caller acquiring connection");
+			return StandardDatabase.this.getConnection();
+		}
+
+		@Override
+		public int getMajorRevision() {
+			return MAJOR_REVISION;
+		}
+
+		@Override
+		public int getMinorRevision() {
+			return MINOR_REVISION;
+		}
+
+		@Override
+		public Executor getExecutor() {
+			return executor;
+		}
+
 	}
 
 }

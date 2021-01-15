@@ -20,6 +20,7 @@ package space.arim.libertybans.it.env;
 
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.core.importing.PlatformImportSource;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
@@ -52,6 +53,10 @@ public class QuackBindModule {
 
 	public EnvUserResolver resolver(QuackUserResolver resolver) {
 		return resolver;
+	}
+
+	public PlatformImportSource platformImportSource() {
+		throw new UnsupportedOperationException("PlatformImportSource not available");
 	}
 
 }

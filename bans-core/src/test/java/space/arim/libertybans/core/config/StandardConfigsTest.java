@@ -16,30 +16,38 @@
  * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core.uuid;
+package space.arim.libertybans.core.config;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.nio.file.Path;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-public class NameValidatorTest {
+public class StandardConfigsTest {
 
-	private final NameValidator validator = new StandardNameValidator();
+	@TempDir
+	public Path folder;
+
+	private Configs configs;
+
+	@BeforeEach
+	public void setup() {
+		configs = new StandardConfigs(folder);
+	}
+
+	@Test
+	public void loadDefaults() {
+		assertTrue(configs.reloadConfigs().join());
+	}
 	
 	@Test
-	public void testBadNameArguments() {
-		// Valid name
-		assertTrue(validator.validateNameArgument("A248"));
-		
-		// Invalid name with non alphanumeric/underscore
-		assertFalse(validator.validateNameArgument("NameWith=Sign"));
-		
-		// Valid name with underscore
-		assertTrue(validator.validateNameArgument("Name_Underscored"));
-		
-		// Invalid name of too much length
-		assertFalse(validator.validateNameArgument("ThisNameHasMoreThan16Characters"));
+	public void loadAndReloadDefaults() {
+		assumeTrue(configs.reloadConfigs().join());
+		assertTrue(configs.reloadConfigs().join());
 	}
 	
 }

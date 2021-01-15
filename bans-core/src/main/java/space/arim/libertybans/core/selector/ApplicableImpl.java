@@ -26,6 +26,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.core.punish.Association;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -95,17 +96,12 @@ public class ApplicableImpl {
 			long currentTime = MiscUtil.currentTime();
 
 			return database.jdbCaesar().transaction().body((querySource, controller) -> {
-				querySource.query(
-						"INSERT INTO `libertybans_addresses` (`uuid`, `address`, `updated`) VALUES (?, ?, ?) "
-								+ "ON DUPLICATE KEY UPDATE `updated` = ?")
-						.params(uuid, address, currentTime, currentTime)
-						.voidResult().execute();
-				querySource.query(
-						"INSERT INTO `libertybans_names` (`uuid`, `name`, `updated`) VALUES (?, ?, ?) "
-						+ "ON DUPLICATE KEY UPDATE `updated` = ?")
-						.params(uuid, name, currentTime, currentTime)
-						.voidResult().execute();
-				Punishment potentialBan = querySource.query(
+
+				Association association = new Association(uuid, querySource);
+				association.associateCurrentName(name, currentTime);
+				association.associateCurrentAddress(address, currentTime);
+
+				return querySource.query(
 						query.getKey())
 						.params(query.getValue())
 						.singleResult((resultSet) -> {
@@ -114,7 +110,6 @@ public class ApplicableImpl {
 									database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
 									database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
 						}).execute();
-				return potentialBan;
 			}).execute();
 		});
 	}

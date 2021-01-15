@@ -20,22 +20,34 @@ package space.arim.libertybans.core.scope;
 
 import space.arim.libertybans.api.scope.ServerScope;
 
-final class ScopeImpl implements ServerScope {
+public final class ScopeImpl implements ServerScope {
 
-	final String server;
+	private final String server;
 	
-	static final ServerScope GLOBAL = new ScopeImpl("");
-	
-	/**
-	 * Creates a scope applying to a specific server
-	 * 
-	 * @param server the server name
-	 */
-	ScopeImpl(String server) {
+	public static final ServerScope GLOBAL = new ScopeImpl("");
+
+	private ScopeImpl(String server) {
 		if (server.length() > 32) {
 			throw new IllegalArgumentException("Server must be 32 or less chars");
 		}
 		this.server = server;
+	}
+
+	/**
+	 * Creates a scope applying to a specific server
+	 *
+	 * @param server the server name. cannot be empty
+	 * @return the scope
+	 */
+	public static ScopeImpl create(String server) {
+		if (server.isEmpty()) {
+			throw new IllegalArgumentException("Server cannot be empty");
+		}
+		return new ScopeImpl(server);
+	}
+
+	String server() {
+		return server;
 	}
 
 	@Override

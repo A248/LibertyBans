@@ -62,7 +62,7 @@ public class UUIDStoreIT {
 	}
 
 	private NetworkAddress fullLookupAddress(String name) {
-		return uuidManager.fullLookupAddress(name).join();
+		return uuidManager.lookupAddress(name).join();
 	}
 
 	@TestTemplate

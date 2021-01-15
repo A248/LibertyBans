@@ -20,6 +20,7 @@ package space.arim.libertybans.env.spigot;
 
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.core.importing.PlatformImportSource;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
@@ -59,6 +60,10 @@ public class SpigotBindModule {
 	@Singleton
 	public CommandMapHelper commandMapHelper(SimpleCommandMapHelper scmh) {
 		return new CachingCommandMapHelper(scmh);
+	}
+
+	public PlatformImportSource platformImportSource(BukkitImportSource importSource) {
+		return importSource;
 	}
 
 }

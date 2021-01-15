@@ -37,6 +37,7 @@ import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
 import space.arim.libertybans.bootstrap.StartupException;
+import space.arim.libertybans.core.importing.ImportConfig;
 
 @Singleton
 public class StandardConfigs implements Configs {
@@ -46,6 +47,7 @@ public class StandardConfigs implements Configs {
 	private final ConfigHolder<MainConfig> mainHolder = new ConfigHolder<>(MainConfig.class);
 	private final ConfigHolder<MessagesConfig> messagesHolder = new ConfigHolder<>(MessagesConfig.class);
 	private final ConfigHolder<SqlConfig> sqlHolder = new ConfigHolder<>(SqlConfig.class);
+	private final ConfigHolder<ImportConfig> importHolder = new ConfigHolder<>(ImportConfig.class);
 	
 	@Inject
 	public StandardConfigs(@Named("folder") Path folder) {
@@ -66,6 +68,11 @@ public class StandardConfigs implements Configs {
 	public SqlConfig getSqlConfig() {
 		return sqlHolder.getConfigData();
 	}
+
+	@Override
+	public ImportConfig getImportConfig() {
+		return importHolder.getConfigData();
+	}
 	
 	@Override
 	public CompletableFuture<Boolean> reloadConfigs() {
@@ -82,6 +89,8 @@ public class StandardConfigs implements Configs {
 		CompletableFuture<Boolean> reloadMain = mainHolder.reload(folder.resolve("config.yml"));
 		// Reload sql config
 		CompletableFuture<Boolean> reloadSql = sqlHolder.reload(folder.resolve("sql.yml"));
+		// Reload import config
+		CompletableFuture<Boolean> reloadImport = importHolder.reload(folder.resolve("import.yml"));
 
 		// Reload messages config from specified language file
 		CompletableFuture<Boolean> reloadMessages = CompletableFuture.allOf(futureLangFiles, reloadMain)
@@ -92,8 +101,8 @@ public class StandardConfigs implements Configs {
 			String langFileOption = mainHolder.getConfigData().langFile();
 			return messagesHolder.reload(langFolder.resolve("messages_" + langFileOption + ".yml"));
 		});
-		return CompletableFuture.allOf(reloadMessages, reloadSql).thenApply((ignore) -> {
-			return reloadMain.join() && reloadMessages.join() && reloadSql.join();
+		return CompletableFuture.allOf(reloadMessages, reloadSql, reloadImport).thenApply((ignore) -> {
+			return reloadMain.join() && reloadMessages.join() && reloadSql.join() && reloadImport.join();
 		});
 	}
 	

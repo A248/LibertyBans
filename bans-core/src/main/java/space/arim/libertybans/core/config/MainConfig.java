@@ -18,12 +18,6 @@
  */
 package space.arim.libertybans.core.config;
 
-import java.time.ZoneId;
-import java.util.Set;
-
-import space.arim.libertybans.core.selector.EnforcementConfig;
-import space.arim.libertybans.core.uuid.UUIDResolutionConfig;
-
 import space.arim.dazzleconf.annote.ConfComments;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultBoolean;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultString;
@@ -31,6 +25,13 @@ import space.arim.dazzleconf.annote.ConfDefault.DefaultStrings;
 import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.SubSection;
+import space.arim.libertybans.core.commands.extra.DurationPermissionsConfig;
+import space.arim.libertybans.core.commands.extra.ReasonsConfig;
+import space.arim.libertybans.core.selector.EnforcementConfig;
+import space.arim.libertybans.core.uuid.UUIDResolutionConfig;
+
+import java.time.ZoneId;
+import java.util.Set;
 
 @ConfHeader({
 		"",
@@ -68,40 +69,10 @@ public interface MainConfig {
 	}
 	
 	@SubSection
-	Reasons reasons();
-	
-	interface Reasons {
-		
-		@ConfKey("permit-blank")
-		@ConfComments({"Are blank reasons permitted?",
-			"If blank reasons are not permitted, staff must specify the full reason",
-			"If blank reasons are permitted, the default reason is used"})
-		@DefaultBoolean(false)
-		boolean permitBlank();
-		
-		@ConfKey("default-reason:")
-		@ConfComments("If the above is true, what is the default reason to use when staff do not specify a reason?")
-		@DefaultString("No reason stated.")
-		String defaultReason();
-		
-	}
+	ReasonsConfig reasons();
 	
 	@SubSection
-	DurationPermissions durationPermissions();
-	
-	interface DurationPermissions {
-		
-		@ConfComments("If disabled, players are not checked for duration permissions.")
-		@DefaultBoolean(false)
-		boolean enable();
-		
-		@ConfKey("permissions-to-check")
-		@ConfComments({"Which duration permissions should a staff member be checked for?",
-				"Specify all the durations which you want to explicitly grant permission for."})
-		@DefaultStrings({"perm", "30d", "10d", "4h"})
-		Set<String> permissionsToCheck();
-		
-	}
+	DurationPermissionsConfig durationPermissions();
 	
 	@SubSection
 	EnforcementConfig enforcement(); // Sensitive name used in integration testing

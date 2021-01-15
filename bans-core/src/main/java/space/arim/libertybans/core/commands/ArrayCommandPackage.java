@@ -27,7 +27,7 @@ public final class ArrayCommandPackage extends CommandPackage {
 	
 	private transient int position = 0;
 	
-	public ArrayCommandPackage(String command, String[] args) {
+	public ArrayCommandPackage(String command, String...args) {
 		super(command);
 		this.args = args;
 	}

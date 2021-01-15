@@ -50,39 +50,41 @@ public class RemoteApiBundle {
 	RemoteApiBundle(List<RemoteNameHistoryApi> remotes) {
 		this.remotes = List.copyOf(remotes);
 	}
+
+	private <T> T unboxResult(RemoteNameHistoryApi remoteApi, RemoteApiResult<T> remoteApiResult) {
+		switch (remoteApiResult.getResultType()) {
+		case FOUND:
+		case NOT_FOUND:
+			break;
+		case RATE_LIMITED:
+		case ERROR:
+		case UNKNOWN:
+		default:
+			Exception ex = remoteApiResult.getException();
+			if (ex == null) {
+				logger.warn("Request for name to remote web API {} failed", remoteApi);
+			} else {
+				logger.warn("Request for name to remote web API {} failed", remoteApi, ex);
+			}
+			return null;
+		}
+		return remoteApiResult.getValue();
+	}
 	
 	<T> CompletableFuture<T> lookup(Function<RemoteNameUUIDApi, CompletableFuture<RemoteApiResult<T>>> intermediateResultFunction) {
 		CompletableFuture<T> future = null;
 		for (RemoteNameHistoryApi remoteApi : remotes) {
 
-			CompletableFuture<T> fromThisApi = intermediateResultFunction.apply(remoteApi).thenApply((remoteApiResult) -> {
-
-				switch (remoteApiResult.getResultType()) {
-				case FOUND:
-				case NOT_FOUND:
-					break;
-				case RATE_LIMITED:
-				case ERROR:
-				case UNKNOWN:
-				default:
-					Exception ex = remoteApiResult.getException();
-					if (ex == null) {
-						logger.warn("Request for name to remote web API {} failed", remoteApi);
-					} else {
-						logger.warn("Request for name to remote web API {} failed", remoteApi, ex);
-					}
-					return null;
-				}
-				return remoteApiResult.getValue();
-			});
 			if (future == null) {
-				future = fromThisApi;
+				future = intermediateResultFunction.apply(remoteApi)
+						.thenApply((remoteApiResult) -> unboxResult(remoteApi, remoteApiResult));
 			} else {
 				future = future.thenCompose((result) -> {
 					if (result != null) {
 						return CompletableFuture.completedFuture(result);
 					}
-					return fromThisApi;
+					return intermediateResultFunction.apply(remoteApi)
+							.thenApply((remoteApiResult) -> unboxResult(remoteApi, remoteApiResult));
 				});
 			}
 		}

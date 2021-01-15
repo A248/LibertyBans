@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.core.database;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.function.Supplier;
@@ -67,4 +68,11 @@ public interface InternalDatabase {
 	 */
 	void truncateAllTables();
 
+	/**
+	 * Obtains a direct JDBC connection
+	 *
+	 * @return the direct JDBC connection
+	 * @throws SQLException if the connection could not be acquired
+	 */
+	Connection getConnection() throws SQLException;
 }

@@ -131,6 +131,31 @@ public interface MessagesConfig {
 		
 		@DefaultString("&aRestarted")
 		SendableMessage restarted();
+
+		@SubSection
+		Importing importing();
+
+		interface Importing {
+
+			@ConfKey("in-progress")
+			@ConfComments("To prevent mistakes, it is not allowed to import multiple times at once.")
+			@DefaultString("&cThere is already an import in progress.")
+			SendableMessage inProgress();
+
+			@DefaultString("&7Import has started. View your server console for details and progress.")
+			SendableMessage started();
+
+			@DefaultString("&cUsage: /libertybans import <advancedban|litebans|vanilla>")
+			SendableMessage usage();
+
+			@DefaultString("&7Import completed.")
+			SendableMessage complete();
+
+			@DefaultString("&cImport failed. View the server console for details.")
+			SendableMessage failure();
+
+		}
+
 		
 	}
 	

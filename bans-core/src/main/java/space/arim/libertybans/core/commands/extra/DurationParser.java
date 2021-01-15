@@ -1,43 +1,45 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core.commands;
+package space.arim.libertybans.core.commands.extra;
 
 import java.time.Duration;
 import java.util.Set;
 
-class DurationParser {
+public class DurationParser {
 
-	private final String argument;
 	private final Set<String> permanentArguments;
 	
-	private static final Set<String> defaultPermanentArguments = Set.of("perm");
-	
-	DurationParser(String argument, Set<String> permanentArguments) {
-		this.argument = argument;
+	public DurationParser(Set<String> permanentArguments) {
 		this.permanentArguments = Set.copyOf(permanentArguments);
 	}
-	
-	DurationParser(String argument) {
-		this(argument, defaultPermanentArguments);
+
+	public DurationParser() {
+		this(Set.of("perm"));
 	}
 
-	Duration parse() {
+	/**
+	 * Parses a duration from an argument
+	 *
+	 * @param argument the argument
+	 * @return the parsed duration, zero for permanent, a negative duration if unable to parse
+	 */
+	public Duration parse(String argument) {
 		if (ContainsCI.containsIgnoreCase(permanentArguments, argument)) {
 			return Duration.ZERO;
 		}
@@ -50,7 +52,7 @@ class DurationParser {
 			}
 		}
 		if (unitIndex == 0) {
-			return Duration.ZERO;
+			return Duration.ofNanos(-1L);
 		}
 		long number = Long.parseLong(argument.substring(0, unitIndex));
 		switch (argument.substring(unitIndex)) {
@@ -63,6 +65,9 @@ class DurationParser {
 		case "D":
 		case "d":
 			return Duration.ofDays(number);
+		case "H":
+		case "h":
+			return Duration.ofHours(number);
 		case "M":
 		case "m":
 			return Duration.ofMinutes(number);

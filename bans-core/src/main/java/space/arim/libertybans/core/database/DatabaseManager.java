@@ -80,7 +80,7 @@ public class DatabaseManager implements Part {
 	}
 	
 	public PunishmentDatabase getExternal() {
-		return database;
+		return database.asExternal();
 	}
 	
 	@Override

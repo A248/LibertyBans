@@ -20,6 +20,7 @@ package space.arim.libertybans.env.bungee;
 
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.core.importing.PlatformImportSource;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
@@ -58,6 +59,10 @@ public class BungeeBindModule {
 
 	public AddressReporter reporter(StandardAddressReporter reporter) {
 		return reporter;
+	}
+
+	public PlatformImportSource platformImportSource() {
+		throw new UnsupportedOperationException("PlatformImportSource not available");
 	}
 
 }

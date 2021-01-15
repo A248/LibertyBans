@@ -18,31 +18,31 @@
  */
 package space.arim.libertybans.core.commands;
 
+import space.arim.api.chat.SendableMessage;
+import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.DraftPunishment;
+import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.core.commands.extra.DurationParser;
+import space.arim.libertybans.core.commands.extra.DurationPermissionCheck;
+import space.arim.libertybans.core.commands.extra.ReasonsConfig;
+import space.arim.libertybans.core.config.AdditionsSection;
+import space.arim.libertybans.core.config.AdditionsSection.ExclusivePunishmentAddition;
+import space.arim.libertybans.core.config.AdditionsSection.PunishmentAdditionWithDurationPerm;
+import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.env.EnvEnforcer;
+import space.arim.libertybans.core.event.PostPunishEventImpl;
+import space.arim.libertybans.core.event.PunishEventImpl;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
-
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.api.chat.SendableMessage;
-
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.api.punish.DraftPunishment;
-import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.punish.PunishmentDrafter;
-import space.arim.libertybans.core.config.AdditionsSection;
-import space.arim.libertybans.core.config.AdditionsSection.ExclusivePunishmentAddition;
-import space.arim.libertybans.core.config.AdditionsSection.PunishmentAdditionWithDurationPerm;
-import space.arim.libertybans.core.config.InternalFormatter;
-import space.arim.libertybans.core.config.MainConfig;
-import space.arim.libertybans.core.env.CmdSender;
-import space.arim.libertybans.core.env.EnvEnforcer;
-import space.arim.libertybans.core.event.PostPunishEventImpl;
-import space.arim.libertybans.core.event.PunishEventImpl;
 
 abstract class PunishCommands extends AbstractSubCommandGroup implements PunishUnpunishCommands {
 
@@ -121,43 +121,20 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 		}
 
 		private CompletionStage<Punishment> performEnact(Victim victim, String targetArg) {
-			/*
-			 * Parse duration. Duration.ZERO represents permanent duration
-			 */
-			final Duration duration;
-			if (type() != PunishmentType.KICK && command().hasNext()) {
-				String time = command().peek();
-				duration = new DurationParser(time, messages().formatting().permanentArguments()).parse();
-				if (!duration.isZero()) {
-					command().next();
-				}
-			} else {
-				duration = Duration.ZERO;
-			}
+			// Parse duration, uses Duration.ZERO for permanent
+			Duration duration = parseDuration();
 
-			/*
-			 * Duration permissions
-			 */
-			Duration greatestPermission;
-			if (type() != PunishmentType.KICK // kicks are always permanent
-					&& config().durationPermissions().enable() // Duration permissions enabled
-					&& !(greatestPermission = getGreatestPermittedDuration()).isZero() // sender does not have permanent permission
-					&& (duration.isZero() || greatestPermission.compareTo(duration) < 0)) { // sender does not have enough permissions
-
+			// Check duration permissions
+			if (!new DurationPermissionCheck(sender(), config()).isDurationPermitted(type(), duration)) {
+				// Sender does not have enough duration permissions
 				String durationFormatted = formatter.formatDuration(duration);
 				PunishmentAdditionWithDurationPerm sectionWithDurationPerm = ((PunishmentAdditionWithDurationPerm) section);
 				sender().sendMessage(sectionWithDurationPerm.permissionDuration().replaceText("%DURATION%", durationFormatted));
 				return completedFuture(null);
 			}
-			String reason;
-			MainConfig.Reasons reasonsConfig;
-			if (command().hasNext()) {
-				reason = command().allRemaining();
-			} else if ((reasonsConfig = config().reasons()).permitBlank()) {
-				reason = "";
-			} else {
-				reason = reasonsConfig.defaultReason();
-			}
+			// Parse reason
+			String reason = parseReason();
+
 			DraftPunishment draftPunishment = drafter.draftBuilder()
 					.type(type()).victim(victim).operator(sender().getOperator())
 					.reason(reason).duration(duration)
@@ -176,28 +153,34 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 				});
 			});
 		}
-		
-		// Duration permissions
-		
-		/**
-		 * Gets the sender's greatest duration permission, or zero for permanent
-		 * @return the greatest duration permission or zero for permanent
+
+		/*
+		 * Argument parsing
 		 */
-		private Duration getGreatestPermittedDuration() {
-			Duration greatestPermission = Duration.ofNanos(-1L);
-			for (String durationPerm : config().durationPermissions().permissionsToCheck()) {
-				if (!sender().hasPermission(durationPerm)) {
-					continue;
-				}
-				Duration thisDurationPerm = new DurationParser(durationPerm).parse();
-				if (thisDurationPerm.isZero()) {
-					return Duration.ZERO;
-				}
-				if (thisDurationPerm.compareTo(greatestPermission) > 0) {
-					greatestPermission = thisDurationPerm;
+
+		private Duration parseDuration() {
+			if (type() == PunishmentType.KICK) {
+				return Duration.ZERO; // Always permanent
+			}
+			if (command().hasNext()) {
+				String time = command().peek();
+				Duration parsed = new DurationParser(messages().formatting().permanentArguments()).parse(time);
+				if (!parsed.isNegative()) {
+					// Successful parse; consume this argument
+					command().next();
+					return parsed;
 				}
 			}
-			return greatestPermission;
+			// Fallback to permanent if unable to parse
+			return Duration.ZERO;
+		}
+
+		private String parseReason() {
+			if (command().hasNext()) {
+				return command().allRemaining();
+			}
+			ReasonsConfig reasonsConfig = config().reasons();
+			return (reasonsConfig.permitBlank()) ? "" : reasonsConfig.defaultReason();
 		}
 
 		// Outcomes

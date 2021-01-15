@@ -21,6 +21,7 @@ package space.arim.libertybans.core.config;
 import java.util.concurrent.CompletableFuture;
 
 import space.arim.libertybans.core.Part;
+import space.arim.libertybans.core.importing.ImportConfig;
 
 public interface Configs extends Part {
 
@@ -29,6 +30,8 @@ public interface Configs extends Part {
 	MessagesConfig getMessagesConfig();
 	
 	SqlConfig getSqlConfig();
+
+	ImportConfig getImportConfig();
 	
 	CompletableFuture<Boolean> reloadConfigs();
 	

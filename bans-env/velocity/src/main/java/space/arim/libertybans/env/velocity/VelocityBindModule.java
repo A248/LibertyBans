@@ -20,6 +20,7 @@ package space.arim.libertybans.env.velocity;
 
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.core.importing.PlatformImportSource;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
@@ -55,6 +56,10 @@ public class VelocityBindModule {
 
 	public EnvUserResolver resolver(VelocityUserResolver resolver) {
 		return resolver;
+	}
+
+	public PlatformImportSource platformImportSource() {
+		throw new UnsupportedOperationException("PlatformImportSource not available");
 	}
 
 }
