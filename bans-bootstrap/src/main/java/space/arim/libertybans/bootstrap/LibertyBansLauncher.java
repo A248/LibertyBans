@@ -145,7 +145,7 @@ public class LibertyBansLauncher {
 	 */
 	private void addApiDeps(DependencyLoaderBuilder loader) {
 		CompletableFuture<Dependency> selfApi = readDependency("self-api");
-		if (classForName("space.arim.omnibus.Omnibus") != null) {
+		if (classForName("space.arim.omnibus.Omnibus") == null) {
 			loader.addDependencyPair(readDependency0("omnibus"), Repositories.ARIM_LESSER_GPL3);
 		}
 		if (!skipSelfDependencies()) {
