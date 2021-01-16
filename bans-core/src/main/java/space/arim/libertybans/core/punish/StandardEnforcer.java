@@ -20,12 +20,16 @@ package space.arim.libertybans.core.punish;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -63,6 +67,8 @@ public class StandardEnforcer implements Enforcer {
 	private final MuteCache muteCache;
 	private final EnvEnforcer envEnforcer;
 	private final PlatformHandle envHandle;
+
+	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
 	@Inject
 	public StandardEnforcer(Configs configs, FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider,
@@ -190,7 +196,16 @@ public class StandardEnforcer implements Enforcer {
 				return completedFuture(null);
 			}
 			return formatter.getPunishmentMessage(ban);
-		});
+
+		}).exceptionally((ex) -> {
+			logger.error("Unable to execute incoming connection", ex);
+			return null;
+			/*
+			 * Using copy() ensures that the previous future is not affected by a timeout,
+			 * and therefore prevents exceptions from selector.executeAndCheckConnection
+			 * from being swallowed.
+			 */
+		}).copy().orTimeout(10, TimeUnit.SECONDS);
 	}
 	
 	@Override
