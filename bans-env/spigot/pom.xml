@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>space.arim.libertybans</groupId>
 		<artifactId>bans-env</artifactId>
-		<version>0.6.1</version>
+		<version>0.7.0</version>
 	</parent>
 	
 	<artifactId>bans-env-spigot</artifactId>
