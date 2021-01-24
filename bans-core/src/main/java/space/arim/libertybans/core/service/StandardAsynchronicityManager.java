@@ -31,6 +31,7 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import space.arim.api.env.PlatformHandle;
@@ -40,6 +41,7 @@ import space.arim.libertybans.bootstrap.ShutdownException;
 @Singleton
 public class StandardAsynchronicityManager implements AsynchronicityManager {
 
+	private final Omnibus omnibus;
 	private final PlatformHandle envHandle;
 
 	/**
@@ -52,7 +54,8 @@ public class StandardAsynchronicityManager implements AsynchronicityManager {
 	private FactoryOfTheFuture futuresFactory;
 
 	@Inject
-	public StandardAsynchronicityManager(PlatformHandle envHandle) {
+	public StandardAsynchronicityManager(Omnibus omnibus, PlatformHandle envHandle) {
+		this.omnibus = omnibus;
 		this.envHandle = envHandle;
 	}
 
@@ -78,7 +81,8 @@ public class StandardAsynchronicityManager implements AsynchronicityManager {
 
 	@Override
 	public void startup() {
-		futuresFactory = envHandle.createFuturesFactory();
+		var registeredFactory = omnibus.getRegistry().getProvider(FactoryOfTheFuture.class);
+		this.futuresFactory = registeredFactory.orElseGet(envHandle::createFuturesFactory);
 	}
 
 	@Override

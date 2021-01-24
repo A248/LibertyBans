@@ -26,7 +26,7 @@
 		<!-- Bumping dependency versions requires modification of dependency hashes -->
 		
 		<!-- API dependencies -->
-		<omnibus.version>1.0.0-RC6</omnibus.version>
+		<omnibus.version>1.0.0</omnibus.version>
 		
 		<!-- Internal dependencies -->
 		<jakarta-inject.version>2.0.0</jakarta-inject.version>
@@ -39,7 +39,7 @@
 		<mariadb-connector.version>2.7.0</mariadb-connector.version>
 		<caffeine.version>2.8.5</caffeine.version>
 		<flyway.version>7.0.4</flyway.version>
-		<arimapi.version>0.21.2-SNAPSHOT</arimapi.version>
+		<arimapi.version>0.22.0-SNAPSHOT</arimapi.version>
 		<morepaperlib.version>0.2.0-SNAPSHOT</morepaperlib.version>
 		
 		<!-- Plugin variables -->

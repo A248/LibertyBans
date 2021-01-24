@@ -46,11 +46,7 @@ public class WikiExamples {
 	
 	private static LibertyBans findLibertyBansInstance() {
 		 Omnibus omnibus = OmnibusProvider.getOmnibus();
-		 LibertyBans instance = omnibus.getRegistry().getProvider(LibertyBans.class);
-		 if (instance == null) {
-			 throw new IllegalStateException("LibertyBans not found");
-		 }
-		 return instance;
+		 return omnibus.getRegistry().getProvider(LibertyBans.class).orElseThrow();
 	}
 	
 	private final Logger logger = LoggerFactory.getLogger(ThisClass.get());
