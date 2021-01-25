@@ -31,15 +31,23 @@ import space.arim.injector.InjectorBuilder;
 
 import org.bukkit.Server;
 import org.bukkit.plugin.java.JavaPlugin;
+import space.arim.omnibus.Omnibus;
+import space.arim.omnibus.OmnibusProvider;
 
 public class SpigotLauncher implements PlatformLauncher {
 
 	private final JavaPlugin plugin;
 	private final Path folder;
+	private final Omnibus omnibus;
 
 	public SpigotLauncher(JavaPlugin plugin, Path folder) {
+		this(plugin, folder, OmnibusProvider.getOmnibus());
+	}
+
+	public SpigotLauncher(JavaPlugin plugin, Path folder, Omnibus omnibus) {
 		this.plugin = plugin;
 		this.folder = folder;
+		this.omnibus = omnibus;
 	}
 
 	@Override
@@ -48,6 +56,7 @@ public class SpigotLauncher implements PlatformLauncher {
 				.bindInstance(JavaPlugin.class, plugin)
 				.bindInstance(Server.class, plugin.getServer())
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(Omnibus.class, omnibus)
 				.addBindModules(
 						new ApiBindModule(),
 						new PillarOneBindModule(),

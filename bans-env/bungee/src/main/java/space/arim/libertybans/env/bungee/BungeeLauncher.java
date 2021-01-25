@@ -31,15 +31,23 @@ import space.arim.injector.InjectorBuilder;
 
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
+import space.arim.omnibus.Omnibus;
+import space.arim.omnibus.OmnibusProvider;
 
 public class BungeeLauncher implements PlatformLauncher {
 
 	private final Plugin plugin;
 	private final Path folder;
+	private final Omnibus omnibus;
 
 	public BungeeLauncher(Plugin plugin, Path folder) {
+		this(plugin, folder, OmnibusProvider.getOmnibus());
+	}
+
+	public BungeeLauncher(Plugin plugin, Path folder, Omnibus omnibus) {
 		this.plugin = plugin;
 		this.folder = folder;
+		this.omnibus = omnibus;
 	}
 
 	@Override
@@ -48,6 +56,7 @@ public class BungeeLauncher implements PlatformLauncher {
 				.bindInstance(Plugin.class, plugin)
 				.bindInstance(ProxyServer.class, plugin.getProxy())
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(Omnibus.class, omnibus)
 				.addBindModules(
 						new ApiBindModule(),
 						new PillarOneBindModule(),

@@ -19,26 +19,15 @@
 package space.arim.libertybans.env.bungee;
 
 import jakarta.inject.Singleton;
-
-import space.arim.libertybans.core.importing.PlatformImportSource;
-import space.arim.omnibus.Omnibus;
-import space.arim.omnibus.OmnibusProvider;
-
+import net.md_5.bungee.api.plugin.Plugin;
 import space.arim.api.env.BungeePlatformHandle;
 import space.arim.api.env.PlatformHandle;
-
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.env.Environment;
-
-import net.md_5.bungee.api.plugin.Plugin;
+import space.arim.libertybans.core.importing.PlatformImportSource;
 
 public class BungeeBindModule {
-
-	@Singleton
-	public Omnibus omnibus() {
-		return OmnibusProvider.getOmnibus();
-	}
 
 	@Singleton
 	public PlatformHandle handle(Plugin plugin) {

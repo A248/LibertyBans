@@ -19,26 +19,15 @@
 package space.arim.libertybans.env.spigot;
 
 import jakarta.inject.Singleton;
-
-import space.arim.libertybans.core.importing.PlatformImportSource;
-import space.arim.omnibus.Omnibus;
-import space.arim.omnibus.OmnibusProvider;
-
+import org.bukkit.plugin.java.JavaPlugin;
 import space.arim.api.env.BukkitPlatformHandle;
 import space.arim.api.env.PlatformHandle;
-
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.env.Environment;
-
-import org.bukkit.plugin.java.JavaPlugin;
+import space.arim.libertybans.core.importing.PlatformImportSource;
 
 public class SpigotBindModule {
-
-	@Singleton
-	public Omnibus omnibus() {
-		return OmnibusProvider.getOmnibus();
-	}
 
 	@Singleton
 	public PlatformHandle handle(JavaPlugin plugin) {

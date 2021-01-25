@@ -33,23 +33,34 @@ import space.arim.injector.SpecificationSupport;
 
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.ProxyServer;
+import space.arim.omnibus.Omnibus;
+import space.arim.omnibus.OmnibusProvider;
 
 public class VelocityLauncher implements PlatformLauncher {
 
-	private final Entry<PluginContainer, ProxyServer> pluginAndServer;
+	private final PluginContainer plugin;
+	private final ProxyServer server;
 	private final Path folder;
+	private final Omnibus omnibus;
 
 	public VelocityLauncher(Entry<PluginContainer, ProxyServer> pluginAndServer, Path folder) {
-		this.pluginAndServer = pluginAndServer;
+		this(pluginAndServer.getKey(), pluginAndServer.getValue(), folder, OmnibusProvider.getOmnibus());
+	}
+
+	public VelocityLauncher(PluginContainer plugin, ProxyServer server, Path folder, Omnibus omnibus) {
+		this.plugin = plugin;
+		this.server = server;
 		this.folder = folder;
+		this.omnibus = omnibus;
 	}
 
 	@Override
 	public BaseFoundation launch() {
 		return new InjectorBuilder()
-				.bindInstance(PluginContainer.class, pluginAndServer.getKey())
-				.bindInstance(ProxyServer.class, pluginAndServer.getValue())
+				.bindInstance(PluginContainer.class, plugin)
+				.bindInstance(ProxyServer.class, server)
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(Omnibus.class, omnibus)
 				.addBindModules(
 						new ApiBindModule(),
 						new PillarOneBindModule(),
