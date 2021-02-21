@@ -110,7 +110,7 @@ class DatabaseSettings {
 	private Flyway createFlyway(HikariDataSource hikariDataSource) {
 		List<String> locations = new ArrayList<>();
 		locations.add("classpath:sql-migrations/common");
-		//locations.add("classpath:sql-migrations/" + vendor);
+		locations.add("classpath:sql-migrations/" + vendor);
 		if (refresherEvent) {
 			locations.add("classpath:sql-migrations/refresher-event");
 		}
