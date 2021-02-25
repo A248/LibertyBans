@@ -49,7 +49,7 @@ public class SpigotUserResolver implements EnvUserResolver {
 
 	@Override
 	public Optional<UUID> lookupUUID(String name) {
-		return getSync(() -> Optional.ofNullable(server.getPlayer(name)).map(Player::getUniqueId));
+		return getSync(() -> Optional.ofNullable(server.getPlayerExact(name)).map(Player::getUniqueId));
 	}
 
 	@Override
@@ -60,7 +60,7 @@ public class SpigotUserResolver implements EnvUserResolver {
 	@Override
 	public InetAddress getAddressOfOnlinePlayer(String playerName) {
 		return getSync(() -> {
-			Player player = server.getPlayer(playerName);
+			Player player = server.getPlayerExact(playerName);
 			return (player == null) ? null : player.getAddress().getAddress();
 		});
 	}
