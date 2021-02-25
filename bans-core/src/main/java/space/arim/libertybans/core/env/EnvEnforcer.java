@@ -34,7 +34,8 @@ import space.arim.api.env.annote.PlatformPlayer;
 public interface EnvEnforcer {
 	
 	/**
-	 * For all players with the specified permission, sends the message
+	 * For all players with the specified permission, sends the message. <br>
+	 * Automatically prefixes the given message.
 	 * 
 	 * @param permission the permission
 	 * @param message the message

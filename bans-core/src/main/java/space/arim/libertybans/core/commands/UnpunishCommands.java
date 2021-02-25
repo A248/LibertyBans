@@ -187,8 +187,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 				sender().sendMessage(futureMessage.join());
 
 				envEnforcer.sendToThoseWithPermission(
-						"libertybans." + type() + ".unnotify",
-						formatter.prefix(futureNotify.join()));
+						"libertybans." + type() + ".unnotify", futureNotify.join());
 			});
 			postFuture(fireWithTimeout(new PostPardonEventImpl(sender().getOperator(), punishment)));
 			return completion;

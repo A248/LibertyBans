@@ -207,8 +207,7 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 				sender().sendMessage(futureMessage.join());
 
 				envEnforcer.sendToThoseWithPermission(
-						"libertybans." + type() + ".notify",
-						formatter.prefix(futureNotify.join()));
+						"libertybans." + type() + ".notify", futureNotify.join());
 			});
 			postFuture(fireWithTimeout(new PostPunishEventImpl(punishment)));
 			return completion;
