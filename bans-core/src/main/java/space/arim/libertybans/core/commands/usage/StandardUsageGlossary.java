@@ -31,7 +31,6 @@ public class StandardUsageGlossary implements UsageGlossary {
 	@Inject
 	public StandardUsageGlossary(Configs configs) {
 		this.configs = configs;
-		java.net.URLClassLoader.class.getModule().addOpens("java.net", getClass().getModule());
 	}
 
 	@Override
