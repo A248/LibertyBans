@@ -25,7 +25,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
-import space.arim.api.util.web.UUIDUtil;
 import space.arim.jdbcaesar.JdbCaesar;
 import space.arim.jdbcaesar.JdbCaesarBuilder;
 import space.arim.libertybans.api.NetworkAddress;
@@ -33,6 +32,7 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.scope.ScopeImpl;
+import space.arim.omnibus.util.UUIDUtil;
 
 import javax.sql.DataSource;
 import java.net.InetAddress;

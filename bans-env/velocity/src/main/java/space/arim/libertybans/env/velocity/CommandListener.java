@@ -53,8 +53,8 @@ public class CommandListener extends VelocityParallelisedListener<CommandExecute
 	}
 
 	@Override
-	protected boolean filter(CommandExecuteEvent event) {
-		return event.getCommandSource() instanceof Player;
+	protected boolean skipEvent(CommandExecuteEvent event) {
+		return !(event.getCommandSource() instanceof Player);
 	}
 
 	@Override

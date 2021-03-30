@@ -65,7 +65,7 @@ abstract class VelocityParallelisedListener<E extends ResultedEvent<?>, R> exten
 	}
 
 	/** Can be overridden to skip events */
-	protected boolean filter(E event) {
+	protected boolean skipEvent(E event) {
 		return true;
 	}
 
@@ -77,7 +77,7 @@ abstract class VelocityParallelisedListener<E extends ResultedEvent<?>, R> exten
 
 		@Override
 		public void execute(E event) {
-			if (!filter(event)) {
+			if (skipEvent(event)) {
 				return;
 			}
 			if (!event.getResult().isAllowed()) {
@@ -94,7 +94,7 @@ abstract class VelocityParallelisedListener<E extends ResultedEvent<?>, R> exten
 
 		@Override
 		public void execute(E event) {
-			if (!filter(event)) {
+			if (skipEvent(event)) {
 				return;
 			}
 			R result = withdraw(event);

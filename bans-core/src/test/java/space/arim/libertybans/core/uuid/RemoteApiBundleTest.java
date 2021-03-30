@@ -24,7 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.api.util.web.RemoteApiResult;
 import space.arim.api.util.web.RemoteNameHistoryApi;
-import space.arim.api.util.web.UUIDUtil;
+import space.arim.omnibus.util.UUIDUtil;
 
 import java.util.List;
 import java.util.UUID;

@@ -22,12 +22,12 @@ package space.arim.libertybans.core.importing;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import space.arim.api.util.web.UUIDUtil;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.UUIDUtil;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

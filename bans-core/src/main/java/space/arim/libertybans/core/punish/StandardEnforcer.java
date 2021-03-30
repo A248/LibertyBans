@@ -30,13 +30,13 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.UUIDUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.annote.PlatformPlayer;
-import space.arim.api.util.web.UUIDUtil;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.NetworkAddress;

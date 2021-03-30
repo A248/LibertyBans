@@ -33,12 +33,11 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.HikariDataSource;
 
 import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.UUIDUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.DelayCalculators;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
 import space.arim.omnibus.util.concurrent.ScheduledTask;
-
-import space.arim.api.util.web.UUIDUtil;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.Operator;

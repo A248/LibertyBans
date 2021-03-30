@@ -22,9 +22,8 @@ import java.util.UUID;
 
 import jakarta.inject.Provider;
 
+import space.arim.omnibus.util.UUIDUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.api.util.web.UUIDUtil;
 
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.database.InternalDatabase;

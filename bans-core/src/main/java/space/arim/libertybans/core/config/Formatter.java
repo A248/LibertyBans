@@ -22,7 +22,6 @@ import jakarta.inject.Inject;
 import space.arim.api.chat.SendableMessage;
 import space.arim.api.chat.manipulator.SendableMessageManipulator;
 import space.arim.api.chat.serialiser.JsonSkSerialiser;
-import space.arim.api.util.web.UUIDUtil;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
@@ -35,6 +34,7 @@ import space.arim.libertybans.core.service.Time;
 import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.scope.InternalScopeManager;
 import space.arim.libertybans.core.uuid.UUIDManager;
+import space.arim.omnibus.util.UUIDUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 

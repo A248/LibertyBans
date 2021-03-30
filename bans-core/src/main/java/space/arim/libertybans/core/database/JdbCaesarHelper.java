@@ -23,8 +23,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.UUID;
 
-import space.arim.api.util.web.UUIDUtil;
-
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.NetworkAddress;
@@ -39,6 +37,7 @@ import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.scope.InternalScopeManager;
 
 import space.arim.jdbcaesar.adapter.DataTypeAdapter;
+import space.arim.omnibus.util.UUIDUtil;
 
 class JdbCaesarHelper {
 	

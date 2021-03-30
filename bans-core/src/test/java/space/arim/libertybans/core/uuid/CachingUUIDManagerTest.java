@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import space.arim.api.util.web.UUIDUtil;
+import space.arim.omnibus.util.UUIDUtil;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MainConfig;
