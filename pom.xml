@@ -5,7 +5,7 @@
 	
 	<groupId>space.arim.libertybans</groupId>
 	<artifactId>bans-parent</artifactId>
-	<version>0.7.1</version>
+	<version>0.7.2</version>
 	<packaging>pom</packaging>
 	
 	<name>LibertyBans</name>
@@ -15,7 +15,7 @@
 	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.build.outputTimestamp>2020-10-17T0:40:06Z</project.build.outputTimestamp>
+		<project.build.outputTimestamp>2020-4-1T0:40:06Z</project.build.outputTimestamp>
 		
 		<!-- Testing dependencies -->
 		<junit.version>5.7.1</junit.version>
