@@ -23,26 +23,18 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<createDependencyReducedPom>false</createDependencyReducedPom>
-							<artifactSet>
-								<includes>
-									<include>space.arim.licenser:licenser-agpl3</include>
-									<include>space.arim.libertybans:bans-core</include>
-									<include>space.arim.libertybans:bans-env-spigot</include>
-									<include>space.arim.libertybans:bans-env-bungee</include>
-									<include>space.arim.libertybans:bans-env-velocity</include>
-								</includes>
-							</artifactSet>
-						</configuration>
-					</execution>
-				</executions>
+				<configuration>
+					<createDependencyReducedPom>false</createDependencyReducedPom>
+					<artifactSet>
+						<includes>
+							<include>space.arim.licenser:licenser-agpl3</include>
+							<include>space.arim.libertybans:bans-core</include>
+							<include>space.arim.libertybans:bans-env-spigot</include>
+							<include>space.arim.libertybans:bans-env-bungee</include>
+							<include>space.arim.libertybans:bans-env-velocity</include>
+						</includes>
+					</artifactSet>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

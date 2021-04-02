@@ -27,6 +27,12 @@
 						</goals>
 						<configuration>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
+							<artifactSet>
+								<excludes>
+									<!-- Already shaded by bans-bootstrap -->
+									<exclude>space.arim.libertybans:bans-bootstrap-logger</exclude>
+								</excludes>
+							</artifactSet>
 						</configuration>
 					</execution>
 				</executions>
