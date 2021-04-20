@@ -38,6 +38,7 @@ enum InternalDependency {
 	
 	JDBCAESAR("jdbcaesar", Repositories.ARIM_LESSER_GPL3),
 	ARIMAPI("arimapi", Repositories.ARIM_GPL3),
+	MANAGED_WAITS("managed-waits", Repositories.ARIM_GPL3),
 	MOREPAPERLIB("morepaperlib", Repositories.ARIM_LESSER_GPL3),
 	
 	SELF_CORE("self-core", Repositories.ARIM_AFFERO_GPL3);
