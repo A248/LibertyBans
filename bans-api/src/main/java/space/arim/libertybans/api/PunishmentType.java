@@ -43,7 +43,12 @@ public enum PunishmentType {
 	public boolean isSingular() {
 		return this == BAN || this == MUTE;
 	}
-	
+
+	/**
+	 * Gets the type as a string. Same as {@code name().toLowerCase(Locale.ROOT)}
+	 *
+	 * @return the name lowercased using the root locale
+	 */
 	@Override
 	public String toString() {
 		return name().toLowerCase(Locale.ROOT);
