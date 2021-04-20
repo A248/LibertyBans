@@ -46,7 +46,7 @@ The be-all, end-all of discipline.
 
 ### Why Java 11?
 
-There have been several major improvements to Java for developers and server owners. Newer Java versions are faster for server owners and easier to develop with. I would strongly recommend updating to Java 11 or 14.
+There have been several major improvements to Java for developers and server owners. Newer Java versions are faster for server owners and easier to develop with. I would strongly recommend updating to Java 11 or the latest version. (Java 11 is not the latest version by far)
 
 [Read more here](https://github.com/A248/LibertyBans/wiki/Why-Java-11%3F)
 
