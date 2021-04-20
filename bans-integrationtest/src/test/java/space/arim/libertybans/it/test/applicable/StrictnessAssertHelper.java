@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.it.test.applicable;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -36,18 +37,23 @@ import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.it.env.platform.QuackPlatform;
+import space.arim.libertybans.it.env.platform.QuackPlayer;
+import space.arim.libertybans.it.env.platform.QuackPlayerBuilder;
 
 public class StrictnessAssertHelper {
 
 	private final PunishmentDrafter drafter;
 	private final PunishmentSelector selector;
 	private final Enforcer enforcer;
+	private final QuackPlatform platform;
 
 	@Inject
-	public StrictnessAssertHelper(PunishmentDrafter drafter, PunishmentSelector selector, Enforcer enforcer) {
+	public StrictnessAssertHelper(PunishmentDrafter drafter, PunishmentSelector selector, Enforcer enforcer, QuackPlatform platform) {
 		this.drafter = drafter;
 		this.selector = selector;
 		this.enforcer = enforcer;
+		this.platform = platform;
 	}
 
 	private SendableMessage connectAndGetMessage(UUID uuid, String name, InetAddress address) {
@@ -80,7 +86,12 @@ public class StrictnessAssertHelper {
 	}
 
 	void assertBanned(UUID uuid, InetAddress address, String assertion) {
-		assertNotNull(getBan(uuid, address), assertion);
+		Punishment punishment = getBan(uuid, address);
+		assertNotNull(punishment, assertion);
+
+		QuackPlayer player = new QuackPlayerBuilder(platform).buildRandomName(uuid, address);
+		enforcer.enforce(punishment).join();
+		assertFalse(player.isStillOnline(), assertion);
 	}
 
 	void assertNotBanned(UUID uuid, InetAddress address, String assertion) {

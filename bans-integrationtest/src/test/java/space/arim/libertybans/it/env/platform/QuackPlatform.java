@@ -57,6 +57,10 @@ public class QuackPlatform {
 		return players.values();
 	}
 
+	void addPlayer(QuackPlayer player) {
+		players.put(player.getUniqueId(), player);
+	}
+
 	void remove(QuackPlayer player, SendableMessage msg) {
 		players.values().remove(player);
 		logger.info("{} was kicked for '{}'", player.getName(), toDisplay(msg));

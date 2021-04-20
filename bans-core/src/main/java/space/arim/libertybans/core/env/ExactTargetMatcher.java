@@ -44,4 +44,10 @@ public class ExactTargetMatcher extends AbstractTargetMatcher {
 		return this.address.equals(address);
 	}
 
+	@Override
+	public String toString() {
+		return "ExactTargetMatcher{" +
+				"address=" + address +
+				'}';
+	}
 }

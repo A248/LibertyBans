@@ -38,5 +38,11 @@ public class UUIDTargetMatcher extends AbstractTargetMatcher {
 	public boolean matches(UUID uuid, InetAddress address) {
 		return uuids.contains(uuid);
 	}
-	
+
+	@Override
+	public String toString() {
+		return "UUIDTargetMatcher{" +
+				"uuids=" + uuids +
+				'}';
+	}
 }

@@ -155,6 +155,11 @@ public class StandardEnforcer implements Enforcer {
 		default:
 			throw MiscUtil.unknownAddressStrictness(strictness);
 		}
+		if (logger.isDebugEnabled()) {
+			futureMatcher.thenAccept((matcher) -> {
+				logger.debug("Enforcing {} address punishment with matcher {}", strictness, matcher);
+			});
+		}
 		return futureMatcher.thenAccept(envEnforcer::enforceMatcher);
 	}
 
@@ -176,9 +181,12 @@ public class StandardEnforcer implements Enforcer {
 		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
 			Set<UUID> uuids = database.jdbCaesar().query(
-					"SELECT `links`.`uuid2` FROM `libertybans_strict_links` `links` WHERE `links`.`uuid1` = ?")
+					"SELECT `links`.`uuid2` FROM `libertybans_strict_links` `links` " +
+							"INNER JOIN `libertybans_addresses` `addrs` " +
+							"ON `links`.`uuid1` = `addrs`.`uuid` " +
+							"WHERE `addrs`.`address` = ?")
 					.params(address)
-					.setResult((resultSet) -> UUIDUtil.fromByteArray(resultSet.getBytes("uuid")))
+					.setResult((resultSet) -> UUIDUtil.fromByteArray(resultSet.getBytes("uuid2")))
 					.execute();
 			return new UUIDTargetMatcher(uuids, enforcementCallback(punishment, message));
 		});

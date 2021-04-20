@@ -18,50 +18,34 @@
  */
 package space.arim.libertybans.it.env.platform;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
-import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import space.arim.api.chat.SendableMessage;
 import space.arim.omnibus.util.ThisClass;
 
-import space.arim.api.chat.SendableMessage;
+import java.net.InetAddress;
+import java.util.Set;
+import java.util.UUID;
 
 public class QuackPlayer {
 
 	private final QuackPlatform platform;
-	private final UUID uuid = UUID.randomUUID();
+	private final UUID uuid;
 	private final String name;
 	private final InetAddress address;
 	
 	private final Set<String> permissions;
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-	
-	public QuackPlayer(QuackPlatform platform, String...permissions) {
+
+	QuackPlayer(QuackPlatform platform,
+					   UUID uuid, String name, InetAddress address,
+					   Set<String> permissions) {
 		this.platform = platform;
-
-		Random random = ThreadLocalRandom.current();
-
-		name = new String(randomBytes(random, 16), StandardCharsets.UTF_8);
-		try {
-			address = InetAddress.getByAddress(randomBytes(random, 4));
-		} catch (UnknownHostException ex) {
-			throw new IllegalStateException(ex);
-		}
-		this.permissions = Set.of(permissions);
-	}
-	
-	private static byte[] randomBytes(Random random, int length) {
-		byte[] bytes = new byte[length];
-		random.nextBytes(bytes);
-		return bytes;
+		this.uuid = uuid;
+		this.name = name;
+		this.address = address;
+		this.permissions = permissions;
 	}
 	
 	public UUID getUniqueId() {
@@ -74,6 +58,10 @@ public class QuackPlayer {
 	
 	public InetAddress getAddress() {
 		return address;
+	}
+
+	public boolean isStillOnline() {
+		return platform.getPlayer(uuid) != null;
 	}
 	
 	public boolean hasPermission(String permission) {

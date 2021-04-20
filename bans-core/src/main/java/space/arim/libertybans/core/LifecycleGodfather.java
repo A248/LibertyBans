@@ -21,6 +21,8 @@ package space.arim.libertybans.core;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import space.arim.omnibus.registry.Registration;
 import space.arim.omnibus.registry.RegistryPriorities;
 
@@ -29,6 +31,7 @@ import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.database.DatabaseManager;
 import space.arim.libertybans.core.env.EnvironmentManager;
 import space.arim.libertybans.core.service.AsynchronicityManager;
+import space.arim.omnibus.util.ThisClass;
 
 @Singleton
 public class LifecycleGodfather extends AbstractBaseFoundation {
@@ -40,6 +43,8 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 
 	private final LibertyBans api;
 	private Registration<LibertyBans> apiRegistration;
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ThisClass.get());
 
 	@Inject
 	public LifecycleGodfather(AsynchronicityManager asyncManager, Configs configs, DatabaseManager databaseManager,
@@ -61,6 +66,9 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 
 		apiRegistration = api.getOmnibus().getRegistry()
 				.register(LibertyBans.class, RegistryPriorities.LOWEST, api, "Reference impl");
+
+		LOGGER.debug("Debug logging enabled");
+		LOGGER.trace("Trace logging enabled");
 	}
 
 	@Override
