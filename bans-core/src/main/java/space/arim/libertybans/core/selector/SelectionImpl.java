@@ -67,6 +67,9 @@ public class SelectionImpl {
 	private static String getColumns(InternalSelectionOrder selection) {
 		StringJoiner columns = new StringJoiner(", ");
 		columns.add("`id`");
+		if (selection.getTypeNullable() == null) {
+			columns.add("`type`");
+		}
 		if (selection.getVictimNullable() == null) {
 			columns.add("`victim`");
 			columns.add("`victim_type`");
@@ -104,25 +107,26 @@ public class SelectionImpl {
 			predicates.add("`scope` = ?");
 			params.add(scope);
 		}
+		PunishmentType type = selection.getTypeNullable();
 		if (selection.selectActiveOnly()) {
 			predicates.add("(`end` = 0 OR `end` > ?)");
 			params.add(MiscUtil.currentTime());
-		} else {
+		} else if (type != null) {
 			predicates.add("`type` = ?");
-			params.add(selection.getType());
+			params.add(type);
 		}
 		return Map.entry(predicates.toString(), params.toArray());
 	}
 
 	private Punishment fromResultSetAndSelection(InternalDatabase database, ResultSet resultSet,
 			InternalSelectionOrder selection) throws SQLException {
-		PunishmentType type = selection.getType();
+		PunishmentType type = selection.getTypeNullable();
 		Victim victim = selection.getVictimNullable();
 		Operator operator = selection.getOperatorNullable();
 		ServerScope scope = selection.getScopeNullable();
 		return creator.createPunishment(
 				resultSet.getInt("id"),
-				type,
+				(type == null) ? database.getTypeFromResult(resultSet) : type,
 				(victim == null) ? database.getVictimFromResult(resultSet) : victim,
 				(operator == null) ? database.getOperatorFromResult(resultSet) : operator,
 				database.getReasonFromResult(resultSet),
@@ -136,15 +140,19 @@ public class SelectionImpl {
 		Map.Entry<String, Object[]> predication = getPredication(selection);
 
 		StringBuilder statementBuilder = new StringBuilder("SELECT ");
-		statementBuilder.append(columns).append(" FROM `libertybans_");
+		statementBuilder.append(columns).append(" FROM `libertybans_simple_");
 
-		PunishmentType type = selection.getType();
+		PunishmentType type = selection.getTypeNullable();
 		if (selection.selectActiveOnly()) {
 			assert type != PunishmentType.KICK : type;
-			statementBuilder.append("simple_").append(type.toString()).append('s');
+			if (type != null) {
+				statementBuilder.append(type).append('s');
+			} else {
+				statementBuilder.append("active");
+			}
 		} else {
 			// getPredication will be responsible for narrowing the type selected
-			statementBuilder.append("simple_history");
+			statementBuilder.append("history");
 		}
 		statementBuilder.append('`');
 
@@ -155,13 +163,13 @@ public class SelectionImpl {
 		statementBuilder.append(" ORDER BY `start` DESC");
 		int maximumToRetrieve = selection.maximumToRetrieve();
 		if (maximumToRetrieve != 0) {
-			statementBuilder.append(" LIMIT ").append(Integer.toString(maximumToRetrieve));
+			statementBuilder.append(" LIMIT ").append(maximumToRetrieve);
 		}
 		return Map.entry(statementBuilder.toString(), predication.getValue());
 	}
 	
 	CentralisedFuture<Punishment> getFirstSpecificPunishment(InternalSelectionOrder selection) {
-		if (selection.selectActiveOnly() && selection.getType() == PunishmentType.KICK) {
+		if (selection.selectActiveOnly() && selection.getTypeNullable() == PunishmentType.KICK) {
 			// Kicks cannot possibly be active. They are all history
 			return futuresFactory.completedFuture(null);
 		}
@@ -178,7 +186,7 @@ public class SelectionImpl {
 	}
 	
 	ReactionStage<List<Punishment>> getSpecificPunishments(InternalSelectionOrder selection) {
-		if (selection.selectActiveOnly() && selection.getType() == PunishmentType.KICK) {
+		if (selection.selectActiveOnly() && selection.getTypeNullable() == PunishmentType.KICK) {
 			// Kicks cannot possibly be active. They are all history
 			return futuresFactory.completedFuture(List.of());
 		}

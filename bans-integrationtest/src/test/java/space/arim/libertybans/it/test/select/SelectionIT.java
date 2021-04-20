@@ -60,6 +60,7 @@ public class SelectionIT {
 	private final ScopeManager scopeManager;
 
 	private static final Duration ONE_SECOND = Duration.ofSeconds(1L);
+	private static final Duration TWO_SECONDS = ONE_SECOND.multipliedBy(2L);
 
 	public SelectionIT(PunishmentDrafter drafter, PunishmentSelector selector,
 			ScopeManager scopeManager) {
@@ -86,7 +87,10 @@ public class SelectionIT {
 	}
 
 	@TestTemplate
-	public void testSelectNothing(@DontInject PunishmentType type, @DontInject Victim victim, @DontInject Operator operator) {
+	public void selectNothing(@DontInject PunishmentType type, @DontInject Victim victim, @DontInject Operator operator) {
+		assertEmpty(selector.selectionBuilder());
+		assertEmpty(selector.selectionBuilder().operator(operator));
+		assertEmpty(selector.selectionBuilder().victim(victim));
 		assertEmpty(selectionBuilder(type));
 		assertEmpty(selectionBuilder(type).operator(operator));
 		assertEmpty(selectionBuilder(type).victim(victim));
@@ -113,7 +117,6 @@ public class SelectionIT {
 			throw Assertions.<RuntimeException>fail("Drafting punishment to later select failed", ex);
 			//throw new TestAbortedException("Drafting punishment to later select failed", ex);
 		}
-		//assumeTrue
 		assertTrue(optPunishment.isPresent(), "Drafting punishment to later select failed");
 		return optPunishment.get();
 	}
@@ -126,7 +129,7 @@ public class SelectionIT {
 	}
 
 	@TestTemplate
-	public void testSelectMultipleWarnsForVictim(@DontInject Victim victim) {
+	public void selectMultipleWarnsForVictim(@DontInject Victim victim) {
 		// Kicks would not be considered active, whereas bans and mutes are singular
 		final PunishmentType type = PunishmentType.WARN;
 
@@ -154,21 +157,22 @@ public class SelectionIT {
 	}
 
 	@TestTemplate
-	public void testSelectHistoricalBansMutes(@DontInject @SingularPunishment PunishmentType type,
+	public void selectHistoricalBansMutes(@DontInject @SingularPunishment PunishmentType type,
 			@DontInject Victim victim) {
-		Duration twoSeconds = Duration.ofSeconds(2L);
-
 		Punishment expired1 = getPunishment(
 				draftBuilder(type, victim, "the first punishment").duration(ONE_SECOND));
-		TestingUtil.sleepUnchecked(twoSeconds);
+		TestingUtil.sleepUnchecked(TWO_SECONDS);
 
 		Punishment expired2 = getPunishment(
 				draftBuilder(type, victim, "the second punishment").duration(ONE_SECOND));
-		TestingUtil.sleepUnchecked(twoSeconds);
+		TestingUtil.sleepUnchecked(TWO_SECONDS);
 
 		Punishment active = getPunishment(
 				draftBuilder(type, victim, "the third punishment"));
 
+		assertEquals(
+				List.of(active),
+				getPunishments(selector.selectionBuilder().victim(victim)));
 		assertEquals(
 				List.of(active),
 				getPunishments(selectionBuilder(type).victim(victim)));
@@ -181,6 +185,26 @@ public class SelectionIT {
 		assertEquals(
 				List.of(active, expired2),
 				getPunishments(selectionBuilder(type).victim(victim).selectAll().maximumToRetrieve(2)));
+	}
+
+	@TestTemplate
+	public void selectBlame(@DontInject Victim victim1, @DontInject Victim victim2,
+							@DontInject Operator operator1, @DontInject Operator operator2) {
+		Punishment banFromOp1 = getPunishment(
+				draftBuilder(PunishmentType.BAN, victim1, "banhammer").operator(operator1));
+		Punishment warnFromOp2 = getPunishment(
+				draftBuilder(PunishmentType.WARN, victim1, "warning").operator(operator2));
+		TestingUtil.sleepUnchecked(ONE_SECOND);
+
+		Punishment muteOfVictim2FromOp1 = getPunishment(
+				draftBuilder(PunishmentType.MUTE, victim2, "muted").operator(operator1));
+
+		assertEquals(
+				List.of(muteOfVictim2FromOp1, banFromOp1),
+				getPunishments(selector.selectionBuilder().operator(operator1)));
+		assertEquals(
+				List.of(warnFromOp2),
+				getPunishments(selector.selectionBuilder().operator(operator2)));
 	}
 
 }

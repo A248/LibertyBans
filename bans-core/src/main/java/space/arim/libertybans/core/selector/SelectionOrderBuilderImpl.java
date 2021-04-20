@@ -91,11 +91,8 @@ class SelectionOrderBuilderImpl implements SelectionOrderBuilder {
 
 	@Override
 	public SelectionOrder build() {
-		if (type == null) {
-			throw new IllegalStateException("Builder details have not been set");
-		}
-		return new SelectionOrderImpl(selector, type, victim, operator, scope, selectActiveOnly, skipCount,
-				maximumToRetrieve);
+		return new SelectionOrderImpl(selector, type, victim, operator, scope,
+				selectActiveOnly, skipCount, maximumToRetrieve);
 	}
 	
 }

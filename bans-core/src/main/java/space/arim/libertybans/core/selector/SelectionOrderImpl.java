@@ -47,7 +47,7 @@ class SelectionOrderImpl implements InternalSelectionOrder {
 			int skipCount, int maximumToRetrieve) {
 		this.selector = selector;
 
-		this.type = Objects.requireNonNull(type, "type");
+		this.type = type;
 		this.victim = victim;
 		this.operator = operator;
 		this.scope = scope;
@@ -57,7 +57,12 @@ class SelectionOrderImpl implements InternalSelectionOrder {
 	}
 
 	@Override
-	public PunishmentType getType() {
+	public Optional<PunishmentType> getType() {
+		return Optional.ofNullable(type);
+	}
+
+	@Override
+	public PunishmentType getTypeNullable() {
 		return type;
 	}
 

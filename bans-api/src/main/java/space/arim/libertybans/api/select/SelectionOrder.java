@@ -42,11 +42,11 @@ import space.arim.libertybans.api.scope.ServerScope;
 public interface SelectionOrder {
 
 	/**
-	 * Gets the punishment type matched
+	 * Gets the punishment type matched, or none to match all types
 	 * 
-	 * @return the punishment type
+	 * @return the punishment type, or none for all types
 	 */
-	PunishmentType getType();
+	Optional<PunishmentType> getType();
 
 	/**
 	 * Gets the victim matched, or none to match all victims

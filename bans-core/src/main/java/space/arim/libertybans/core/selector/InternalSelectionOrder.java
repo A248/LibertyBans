@@ -19,11 +19,14 @@
 package space.arim.libertybans.core.selector;
 
 import space.arim.libertybans.api.Operator;
+import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.SelectionOrder;
 
 public interface InternalSelectionOrder extends SelectionOrder {
+
+	PunishmentType getTypeNullable();
 
 	Victim getVictimNullable();
 

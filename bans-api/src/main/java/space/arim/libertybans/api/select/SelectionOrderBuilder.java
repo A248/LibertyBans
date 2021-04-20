@@ -24,7 +24,7 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.scope.ServerScope;
 
 /**
- * Builder of {@link SelectionOrder}s. Only the punishment type is required.
+ * Builder of {@link SelectionOrder}s. No required details
  * 
  * @author A248
  *
@@ -32,16 +32,17 @@ import space.arim.libertybans.api.scope.ServerScope;
 public interface SelectionOrderBuilder {
 
 	/**
-	 * Sets the punishment type matched. Required operation
+	 * Sets the punishment type matched. Use {@code null} to match all types, which is
+	 * the default behavior
 	 * 
-	 * @param type the punishment type
+	 * @param type the punishment type or {@code null} for all types
 	 * @return this builder
 	 */
 	SelectionOrderBuilder type(PunishmentType type);
 
 	/**
 	 * Sets the victim matched. Use {@code null} to match all victims, which is the
-	 * default behaviour
+	 * default behavior
 	 * 
 	 * @param victim the victim or {@code null} for all victims
 	 * @return this builder
@@ -50,7 +51,7 @@ public interface SelectionOrderBuilder {
 
 	/**
 	 * Sets the operator matched. Use {@code null} to match all operators, which is
-	 * the default behaviour
+	 * the default behavior
 	 * 
 	 * @param operator the operator or {@code null} for all operators
 	 * @return this builder
@@ -59,7 +60,7 @@ public interface SelectionOrderBuilder {
 
 	/**
 	 * Sets the scope matched. Use {@code null} to match all scopes, which is the
-	 * default behaviour
+	 * default behavior
 	 * 
 	 * @param scope the scope or {@code null} for all scopes
 	 * @return this builder
