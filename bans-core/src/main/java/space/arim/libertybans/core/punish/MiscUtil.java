@@ -61,9 +61,7 @@ public final class MiscUtil {
 	 * Uses <code>System.currentTimeMillis()</code>
 	 * 
 	 * @return the current unix timestamp
-	 * @deprecated Handicaps testing by making it difficult to mock/set the current time.
 	 */
-	@Deprecated
 	public static long currentTime() {
 		return System.currentTimeMillis() / 1_000L;
 	}
