@@ -18,7 +18,6 @@
  */
 package space.arim.libertybans.it.resolver;
 
-import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -36,8 +35,8 @@ public class RandomOperatorResolver extends TypeBasedParameterResolver<Operator>
 	@Override
 	public Operator resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
-		Random random = ThreadLocalRandom.current();
-		if (random.nextBoolean()) {
+		if (!parameterContext.isAnnotated(NotConsole.class)
+				&& ThreadLocalRandom.current().nextBoolean()) {
 			return ConsoleOperator.INSTANCE;
 		}
 		return PlayerOperator.of(UUID.randomUUID());

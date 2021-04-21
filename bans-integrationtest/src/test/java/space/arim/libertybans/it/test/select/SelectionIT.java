@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import space.arim.libertybans.it.resolver.NotConsole;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.libertybans.api.Operator;
@@ -189,7 +190,7 @@ public class SelectionIT {
 
 	@TestTemplate
 	public void selectBlame(@DontInject Victim victim1, @DontInject Victim victim2,
-							@DontInject Operator operator1, @DontInject Operator operator2) {
+							@DontInject Operator operator1, @DontInject @NotConsole Operator operator2) {
 		Punishment banFromOp1 = getPunishment(
 				draftBuilder(PunishmentType.BAN, victim1, "banhammer").operator(operator1));
 		Punishment warnFromOp2 = getPunishment(
