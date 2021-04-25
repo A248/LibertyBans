@@ -41,11 +41,17 @@ import com.velocitypowered.api.proxy.ProxyServer;
 public class ConnectionListener extends VelocityParallelisedListener<LoginEvent, SendableMessage> {
 	
 	private final Enforcer enforcer;
+	private final AdventureTextConverter textConverter;
 	
 	@Inject
 	public ConnectionListener(PluginContainer plugin, ProxyServer server, Enforcer enforcer) {
+		this(plugin, server, enforcer, new AdventureTextConverter());
+	}
+
+	ConnectionListener(PluginContainer plugin, ProxyServer server, Enforcer enforcer, AdventureTextConverter textConverter) {
 		super(plugin, server);
 		this.enforcer = enforcer;
+		this.textConverter = textConverter;
 	}
 
 	@Override
@@ -64,7 +70,7 @@ public class ConnectionListener extends VelocityParallelisedListener<LoginEvent,
 
 	@Override
 	protected void executeNonNullResult(LoginEvent event, SendableMessage message) {
-		event.setResult(ComponentResult.denied(new AdventureTextConverter().convert(message)));
+		event.setResult(ComponentResult.denied(textConverter.convert(message)));
 	}
 
 }

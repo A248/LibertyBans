@@ -41,6 +41,11 @@
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-junit-jupiter</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>net.kyori</groupId>
+			<artifactId>adventure-text-serializer-plain</artifactId>
+			<scope>test</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>

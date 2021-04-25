@@ -34,8 +34,9 @@ abstract class VelocityParallelisedListener<E extends ResultedEvent<?>, R> exten
 	private final PluginContainer plugin;
 	private final ProxyServer server;
 
-	private final EarlyHandler earlyHandler = new EarlyHandler();
-	private final LateHandler lateHandler = new LateHandler();
+	// Visible for testing
+	final EarlyHandler earlyHandler = new EarlyHandler();
+	final LateHandler lateHandler = new LateHandler();
 	
 	VelocityParallelisedListener(PluginContainer plugin, ProxyServer server) {
 		this.plugin = plugin;
@@ -66,14 +67,15 @@ abstract class VelocityParallelisedListener<E extends ResultedEvent<?>, R> exten
 
 	/** Can be overridden to skip events */
 	protected boolean skipEvent(E event) {
-		return true;
+		return false;
 	}
 
 	protected abstract CentralisedFuture<R> beginComputation(E event);
 
 	protected abstract void executeNonNullResult(E event, R result);
 
-	private class EarlyHandler implements EventHandler<E> {
+	// Visible for testing
+	class EarlyHandler implements EventHandler<E> {
 
 		@Override
 		public void execute(E event) {
@@ -90,7 +92,8 @@ abstract class VelocityParallelisedListener<E extends ResultedEvent<?>, R> exten
 
 	}
 
-	private class LateHandler implements EventHandler<E> {
+	// Visible for testing
+	class LateHandler implements EventHandler<E> {
 
 		@Override
 		public void execute(E event) {
