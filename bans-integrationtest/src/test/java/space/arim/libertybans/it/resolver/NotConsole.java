@@ -19,8 +19,13 @@
 
 package space.arim.libertybans.it.resolver;
 
+import java.lang.annotation.Retention;
+
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 /**
  * When used on a parameter provided by {@code RandomOperatorResolver},
  * prevents the console operator from being used
  */
+@Retention(RUNTIME)
 public @interface NotConsole {}
