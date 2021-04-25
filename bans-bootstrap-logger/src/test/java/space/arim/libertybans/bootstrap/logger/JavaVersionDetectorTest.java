@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 public class JavaVersionDetectorTest {
 
 	@Test
-	public void testCorrectJdk() {
+	public void correctJdk() {
 		JavaVersionDetection detection = new JavaVersionDetection(new Slf4jBootstrapLogger(LoggerFactory.getLogger(getClass())));
 		assertTrue(detection.detectVersion());
 	}

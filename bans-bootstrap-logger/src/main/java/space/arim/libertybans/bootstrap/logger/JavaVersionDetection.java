@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.bootstrap.logger;
 
+import java.util.Collection;
 import java.util.List;
 
 public class JavaVersionDetection {
@@ -30,18 +31,18 @@ public class JavaVersionDetection {
 
 	public boolean detectVersion() {
 		try {
-			List.of();
-		} catch (NoSuchMethodError java8) {
+			List.class.getDeclaredMethod("of");
+		} catch (NoSuchMethodException java8) {
 			return wrongVersion(8);
 		}
 		try {
-			List.copyOf(List.of());
-		} catch (NoSuchMethodError java9) {
+			List.class.getDeclaredMethod("copyOf", Collection.class);
+		} catch (NoSuchMethodException java9) {
 			return wrongVersion(9);
 		}
 		try {
-			"".isBlank();
-		} catch (NoSuchMethodError java10) {
+			String.class.getDeclaredMethod("isBlank");
+		} catch (NoSuchMethodException java10) {
 			return wrongVersion(10);
 		}
 		return true;
