@@ -37,6 +37,28 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>compile-java8</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+						<configuration>
+							<release>8</release>
+							<compileSourceRoots>
+								<compileSourceRoot>${project.basedir}/src/main/java8</compileSourceRoot>
+							</compileSourceRoots>
+						</configuration>
+					</execution>
+					<execution>
+						<id>default-compile</id>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
 					<archive>
@@ -78,10 +100,11 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-simple</artifactId>
 		</dependency>
-
+		<!-- Not guaranteed to be present in all environments -->
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-bootstrap-logger</artifactId>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 </project>

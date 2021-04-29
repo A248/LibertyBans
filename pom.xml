@@ -154,7 +154,6 @@
 	
 	<modules>
 		<module>bans-api</module>
-		<module>bans-bootstrap-logger</module>
 		<module>bans-bootstrap</module>
 		<module>bans-core</module>
 		<module>bans-env</module>
@@ -185,11 +184,6 @@
 			<dependency>
 				<groupId>space.arim.libertybans</groupId>
 				<artifactId>bans-bootstrap</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>space.arim.libertybans</groupId>
-				<artifactId>bans-bootstrap-logger</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
