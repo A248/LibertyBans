@@ -10,60 +10,65 @@
 	</parent>
 	
 	<artifactId>bans-distribution</artifactId>
-	<description>Shaded combination of main plugin classes, and launcher.</description>
+	<packaging>pom</packaging>
+	<description>Parent pom for distribution-related modules.</description>
 	
 	<build>
-		<sourceDirectory>src/main/java</sourceDirectory>
-		<finalName>LibertyBans_${project.version}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<createDependencyReducedPom>false</createDependencyReducedPom>
-							<artifactSet>
-								<excludes>
-									<!-- Already shaded by bans-bootstrap -->
-									<exclude>space.arim.libertybans:bans-bootstrap-logger</exclude>
-								</excludes>
-							</artifactSet>
-						</configuration>
-					</execution>
-				</executions>
+				<configuration>
+					<filters>
+						<filter>
+							<artifact>*:*</artifact>
+							<excludes>
+								<exclude>**/module-info.class</exclude>
+							</excludes>
+						</filter>
+					</filters>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
+
+	<modules>
+		<module>download</module>
+		<module>distributable</module>
+		<module>executable</module>
+	</modules>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-distributable</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-download</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hsqldb</groupId>
+				<artifactId>hsqldb</artifactId>
+				<version>${hsqldb.version}</version>
+				<scope>runtime</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mariadb.jdbc</groupId>
+				<artifactId>mariadb-java-client</artifactId>
+				<version>${mariadb-connector.version}</version>
+				<scope>runtime</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	
 	<dependencies>
 		<dependency>
 			<groupId>space.arim.licenser</groupId>
 			<artifactId>licenser-agpl3</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-bootstrap</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-env-spigotplugin</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-env-bungeeplugin</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-env-velocityplugin</artifactId>
-			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 </project>

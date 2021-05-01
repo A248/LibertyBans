@@ -1,4 +1,0 @@
-org.mariadb.jdbc
-mariadb-java-client
-${mariadb-connector.version}
-1ede3e5a9f5ef8b9a3e7e386d60f9deac18632de19d927ec639156724361f364e823b198c83872cf32f64bd66412b8d779cb915cc6ae6ee7678ebc72f233fd02

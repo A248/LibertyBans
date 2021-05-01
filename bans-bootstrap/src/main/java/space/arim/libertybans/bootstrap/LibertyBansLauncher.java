@@ -18,29 +18,17 @@
  */
 package space.arim.libertybans.bootstrap;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.lang.reflect.InaccessibleObjectException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.charset.StandardCharsets;
+import space.arim.libertybans.bootstrap.depend.BootstrapLauncher;
+import space.arim.libertybans.bootstrap.depend.DependencyLoader;
+import space.arim.libertybans.bootstrap.depend.DependencyLoaderBuilder;
+import space.arim.libertybans.bootstrap.depend.LocatableDependency;
+import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
+
 import java.nio.file.Path;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-
-import space.arim.libertybans.bootstrap.depend.BootstrapException;
-import space.arim.libertybans.bootstrap.depend.BootstrapLauncher;
-import space.arim.libertybans.bootstrap.depend.Dependency;
-import space.arim.libertybans.bootstrap.depend.DependencyLoaderBuilder;
-import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 
 public class LibertyBansLauncher {
 
@@ -54,38 +42,13 @@ public class LibertyBansLauncher {
 			CulpritFinder culpritFinder) {
 		this.logger = logger;
 		this.platform = platform;
-		libsFolder = folder.resolve("libs");
+		libsFolder = folder.resolve("libraries");
 		this.executor = executor;
 		this.culpritFinder = culpritFinder;
 	}
 	
 	public LibertyBansLauncher(BootstrapLogger logger, DependencyPlatform platform, Path folder, Executor executor) {
 		this(logger, platform, folder, executor, (clazz) -> "");
-	}
-	
-	protected void addUrlsToExternalClassLoader(ClassLoader apiClassLoader, Set<Path> paths) {
-		if (!(apiClassLoader instanceof URLClassLoader)) {
-			throw new IllegalArgumentException(
-					"To use the default LibertyBansLauncher, the plugin must be loaded through a URLClassLoader");
-		}
-		logger.info(
-				"You may receive a warning about illegal reflective access to URLClassLoader#addURL. "
-				+ "This is harmless but unavoidable. See https://github.com/A248/LibertyBans/wiki/URLClassLoader%23addURL-warning");
-		Method addUrlMethod;
-		try {
-			addUrlMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-			addUrlMethod.setAccessible(true);
-		} catch (NoSuchMethodException | SecurityException | InaccessibleObjectException ex) {
-			throw new BootstrapException("Failed to attach dependencies to API ClassLoader (locate method)", ex);
-		}
-		try {
-			for (Path path : paths) {
-				URL url = path.toUri().toURL();
-				addUrlMethod.invoke(apiClassLoader, url);
-			}
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | MalformedURLException ex) {
-			throw new BootstrapException("Failed to attach dependencies to API ClassLoader (invoke method)", ex);
-		}
 	}
 	
 	private static Class<?> classForName(String clazzName) {
@@ -111,109 +74,49 @@ public class LibertyBansLauncher {
 		}
 		String pluginName = findCulpritWhoFailedToRelocate(libClass);
 		logger.warn("Plugin '" + pluginName + "' has shaded the library '"
-				+ libName + "' but did not relocate it. This may or may not pose any problems. "
+				+ libName + "' but did not relocate it. This may or may not pose problems. "
 				+ "Contact the author of this plugin and tell them to relocate their dependencies. "
 				+ "Unrelocated class detected was " + libClass.getName());
 	}
-
-	private Dependency readDependency0(String simpleDependencyName) {
-		String resourcePath = "dependencies/" + simpleDependencyName;
-		URL url = getClass().getClassLoader().getResource(resourcePath);
-		Objects.requireNonNull(url, "internal error, missing " + resourcePath);
-		try (InputStream inputStream = url.openStream()) {
-
-			String fullString = new String(inputStream.readAllBytes(), StandardCharsets.US_ASCII);
-			String[] lines = fullString.lines().toArray(String[]::new);
-			if (lines.length < 4) {
-				throw new IllegalArgumentException("Dependency file for " + simpleDependencyName + " is malformatted");
-			}
-			return Dependency.of(lines[0], lines[1], lines[2], lines[3]);
-
-		} catch (IOException ex) {
-			throw new UncheckedIOException(ex);
-		}
-	}
 	
-	private CompletableFuture<Dependency> readDependency(String simpleDependencyName) {
-		return CompletableFuture.supplyAsync(() -> readDependency0(simpleDependencyName), executor);
-	}
-	
-	/*
-	 * Dependencies here are publicly exposed, but cannot be relocated, because
-	 * they are part of the API.
-	 * 
-	 */
-	private void addApiDeps(DependencyLoaderBuilder loader) {
-		CompletableFuture<Dependency> selfApi = readDependency("self-api");
-		if (classForName("space.arim.omnibus.Omnibus") == null) {
-			loader.addDependencyPair(readDependency0("omnibus"), Repositories.ARIM_LESSER_GPL3);
-		}
-		if (!skipSelfDependencies()) {
-			loader.addDependencyPair(selfApi.join(), Repositories.ARIM_AFFERO_GPL3);
-		}
-	}
-	
-	/*
-	 * Other dependencies, those internal, are added to the isolated ClassLoader used by
-	 * the core implementation. They do not need to be relocated.
-	 * 
-	 */
-	
-	private Map<InternalDependency, CompletableFuture<Dependency>> addInternalDepsStart() {
-		Map<InternalDependency, CompletableFuture<Dependency>> internalDeps = new EnumMap<>(InternalDependency.class);
-		for (InternalDependency internalDep : InternalDependency.values()) {
-			internalDeps.put(internalDep, readDependency(internalDep.id));
-		}
-		return internalDeps;
-	}
-	
-	private void addInternalDepsFinish(DependencyLoaderBuilder loader,
-			Map<InternalDependency, CompletableFuture<Dependency>> internalDeps) {
-
+	private DependencyLoader createDependencyLoader() {
+		DependencyLoaderBuilder loader = new DependencyLoaderBuilder()
+				.executor(executor)
+				.outputDirectory(libsFolder);
+		Set<CompletableFuture<LocatableDependency>> jarsToDownload = new HashSet<>();
 		if (!platform.hasSlf4jSupport()) {
 			warnRelocation("Slf4j", "org.slf4j.Logger");
-			CompletableFuture<Dependency> slf4jApi = readDependency("slf4j-api");
-			CompletableFuture<Dependency> slf4jJdk14 = readDependency("slf4j-jdk14");
-			loader.addDependencyPair(slf4jApi.join(), Repositories.CENTRAL_REPO);
-			loader.addDependencyPair(slf4jJdk14.join(), Repositories.CENTRAL_REPO);
+			jarsToDownload.add(locate(InternalDependency.SLF4J_API));
+			jarsToDownload.add(locate(InternalDependency.SLF4J_JUL));
 		}
-		for (InternalDependency internalDep : InternalDependency.values()) {
-			if (internalDep.clazz != null) {
-				warnRelocation(internalDep.name, internalDep.clazz);
-			}
-			if (skipSelfDependencies() && internalDep == InternalDependency.SELF_CORE) {
-				continue;
-			}
-			loader.addDependencyPair(internalDeps.get(internalDep).join(), internalDep.repo);
+		if (!skipSelfDependencies()) {
+			jarsToDownload.add(locate(InternalDependency.SELF_IMPLEMENTATION));
 		}
+		for (InternalDependency checkForUnrelocation : InternalDependency.values()) {
+			checkForUnrelocation.classPresence().ifPresent((classPresence) -> {
+				warnRelocation(classPresence.dependencyName(), classPresence.className());
+			});
+		}
+		for (CompletableFuture<LocatableDependency> download : jarsToDownload) {
+			LocatableDependency locatedDependency = download.join();
+			loader.addDependencyPair(locatedDependency.dependency(), locatedDependency.repository());
+		}
+		return loader.build();
 	}
-	
-	/* Used in testing */
-	protected boolean skipSelfDependencies() {
-		return false;
+
+	private CompletableFuture<LocatableDependency> locate(InternalDependency dependency) {
+		return dependency.locateUsing(executor);
 	}
-	
-	private DependencyLoaderBuilder loaderBuilder(String subFolder) {
-		return new DependencyLoaderBuilder().executor(executor).outputDirectory(libsFolder.resolve(subFolder));
+
+	boolean skipSelfDependencies() {
+		return getClass().getResource("/abort_self-dependency_download") != null;
 	}
 
 	public CompletableFuture<ClassLoader> attemptLaunch() {
-		DependencyLoaderBuilder apiDepLoader = loaderBuilder("api");
-		DependencyLoaderBuilder internalDepLoader = loaderBuilder("internal");
-
-		Map<InternalDependency, CompletableFuture<Dependency>> internalDeps = addInternalDepsStart();
-		addApiDeps(apiDepLoader);
-		addInternalDepsFinish(internalDepLoader, internalDeps);
-
-		BootstrapLauncher launcher = new BootstrapLauncher("LibertyBans", getClass().getClassLoader(),
-				apiDepLoader.build(), internalDepLoader.build()) {
-
-					@Override
-					public void addUrlsToExternal(ClassLoader apiClassLoader, Set<Path> paths) {
-						LibertyBansLauncher.this.addUrlsToExternalClassLoader(apiClassLoader, paths);
-					}
-		};
-		return launcher.loadAll().thenApply((ignore) -> launcher.getInternalClassLoader());
+		BootstrapLauncher launcher = BootstrapLauncher.create(
+				"LibertyBans", getClass().getClassLoader(),
+				createDependencyLoader());
+		return launcher.load().thenApply((ignore) -> launcher.getClassLoader());
 	}
 	
 }

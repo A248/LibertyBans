@@ -18,24 +18,21 @@
  */
 package space.arim.libertybans.bootstrap;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import java.nio.file.Path;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-
 import org.slf4j.LoggerFactory;
-
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 import space.arim.libertybans.bootstrap.logger.Slf4jBootstrapLogger;
+
+import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DownloadDependenciesIT {
 	
@@ -55,13 +52,7 @@ public class DownloadDependenciesIT {
 		BootstrapLogger logger = new Slf4jBootstrapLogger(LoggerFactory.getLogger(getClass()));
 		LibertyBansLauncher launcher = new LibertyBansLauncher(logger, platform, folder, executor) {
 			@Override
-			protected void addUrlsToExternalClassLoader(ClassLoader apiClassLoader, Set<Path> paths) {
-				for (Path path : paths) {
-					logger.info("Downloaded to " + path.getFileName());
-				}
-			}
-			@Override
-			protected boolean skipSelfDependencies() {
+			boolean skipSelfDependencies() {
 				return true;
 			}
 		};

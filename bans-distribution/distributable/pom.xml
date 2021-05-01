@@ -1,0 +1,41 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>space.arim.libertybans</groupId>
+		<artifactId>bans-distribution</artifactId>
+		<version>0.7.3</version>
+	</parent>
+	
+	<artifactId>bans-distributable</artifactId>
+	<description>Shaded combination of API, main plugin classes, and bootstrap launcher.</description>
+	
+	<build>
+		<finalName>LibertyBans_${project.version}</finalName>
+	</build>
+	
+	<dependencies>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-bootstrap</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-env-spigotplugin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-env-bungeeplugin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-env-velocityplugin</artifactId>
+		</dependency>
+	</dependencies>
+</project>

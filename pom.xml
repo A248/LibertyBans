@@ -23,8 +23,6 @@
 		<mockito.version>3.6.28</mockito.version>
 		<h2.version>1.4.199</h2.version>
 		
-		<!-- Bumping dependency versions requires modification of dependency hashes -->
-		
 		<!-- API dependencies -->
 		<omnibus.version>1.1.0-M2</omnibus.version>
 		
@@ -157,7 +155,6 @@
 		<module>bans-bootstrap</module>
 		<module>bans-core</module>
 		<module>bans-env</module>
-		<module>bans-dl</module>
 		<module>bans-distribution</module>
 		<module>bans-integrationtest</module>
 	</modules>
@@ -204,6 +201,21 @@
 			<dependency>
 				<groupId>space.arim.libertybans</groupId>
 				<artifactId>bans-env-velocity</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-env-spigotplugin</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-env-bungeeplugin</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-env-velocityplugin</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			

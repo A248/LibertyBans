@@ -25,12 +25,14 @@ import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 
 import space.arim.libertybans.bootstrap.BaseFoundation;
+import space.arim.libertybans.bootstrap.DependencyPlatform;
 import space.arim.libertybans.bootstrap.Instantiator;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
 
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.scheduler.Scheduler;
+import space.arim.libertybans.bootstrap.logger.Slf4jBootstrapLogger;
 
 class BaseWrapper {
 
@@ -57,7 +59,9 @@ class BaseWrapper {
 			Scheduler scheduler = server.getScheduler();
 			Executor executor = (cmd) -> scheduler.buildTask(plugin, cmd).schedule();
 
-			LibertyBansLauncher launcher = new LibertyBansLauncherVelocity(velocityPlugin, executor);
+			LibertyBansLauncher launcher = new LibertyBansLauncher(
+					new Slf4jBootstrapLogger(velocityPlugin.logger), DependencyPlatform.VELOCITY,
+					velocityPlugin.folder, executor);
 			ClassLoader launchLoader = launcher.attemptLaunch().join();
 
 			if (launchLoader == null) {

@@ -28,7 +28,7 @@ import java.util.Objects;
  * @author A248
  *
  */
-public class Dependency {
+public final class Dependency {
 
 	private final String groupId;
 	private final String artifactId;

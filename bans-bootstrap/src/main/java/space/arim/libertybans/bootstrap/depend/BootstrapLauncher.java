@@ -30,44 +30,31 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 /**
- * Composition of 2 {@link DependencyLoader}s used to add dependencies to an external URLClassLoader and
- * internal AddableURLClassLoader. The external URLClassLoader may require reflection to access its {@code addURL}
- * method. {@code addUrlsToExternalClassLoader} may be overriden to change this behaviour.
+ * Composition of a {@link DependencyLoader} used to add dependencies to
+ * an AddableURLClassLoader.
  * 
  * @author A248
  *
  */
-public abstract class BootstrapLauncher {
-	
-	private final ClassLoader apiClassLoader;
-	private final AddableURLClassLoader internalClassLoader;
-	
-	private final DependencyLoader apiDepLoader;
-	private final DependencyLoader internalDepLoader;
-	
-	public BootstrapLauncher(String programName, ClassLoader apiClassLoader,
-			DependencyLoader apiDepLoader, DependencyLoader internalDepLoader) {
-		this.apiClassLoader = apiClassLoader;
-		internalClassLoader = new AddableURLClassLoader(programName, apiClassLoader);
+public final class BootstrapLauncher {
 
-		this.apiDepLoader = apiDepLoader;
-		this.internalDepLoader = internalDepLoader;
+	private final AddableURLClassLoader classLoader;
+	private final DependencyLoader dependencyLoader;
+
+	private BootstrapLauncher(AddableURLClassLoader classLoader, DependencyLoader dependencyLoader) {
+		this.classLoader = classLoader;
+		this.dependencyLoader = dependencyLoader;
 	}
-	
-	public DependencyLoader getApiDepLoader() {
-		return apiDepLoader;
+
+	public static BootstrapLauncher create(String programName, ClassLoader parentClassLoader,
+			DependencyLoader dependencyLoader) {
+		return new BootstrapLauncher(
+				new AddableURLClassLoader(programName, parentClassLoader),
+				dependencyLoader);
 	}
-	
-	public DependencyLoader getInternalDepLoader() {
-		return internalDepLoader;
-	}
-	
-	public ClassLoader getApiClassLoader() {
-		return apiClassLoader;
-	}
-	
-	public AddableURLClassLoader getInternalClassLoader() {
-		return internalClassLoader;
+
+	public ClassLoader getClassLoader() {
+		return classLoader;
 	}
 	
 	private CompletableFuture<Set<Path>> loadJarPaths(DependencyLoader loader) {
@@ -124,26 +111,16 @@ public abstract class BootstrapLauncher {
 		});
 	}
 
-	private CompletableFuture<Void> loadApi() {
-		return loadJarPaths(apiDepLoader).thenAccept((paths) -> addUrlsToExternal(apiClassLoader, paths));
-	}
-
-	public abstract void addUrlsToExternal(ClassLoader apiClassLoader, Set<Path> paths);
-
-	private CompletableFuture<Void> loadInternal() {
-		return loadJarPaths(internalDepLoader).thenAccept((paths) -> {
+	public CompletableFuture<Void> load() {
+		return loadJarPaths(dependencyLoader).thenAccept((paths) -> {
 			try {
 				for (Path path : paths) {
-					internalClassLoader.addURL(path.toUri().toURL());
+					classLoader.addURL(path.toUri().toURL());
 				}
 			} catch (MalformedURLException ex) {
 				throw new BootstrapException("Unable to convert Path to URL", ex);
 			}
 		});
-	}
-
-	public CompletableFuture<Void> loadAll() {
-		return CompletableFuture.allOf(loadApi(), loadInternal());
 	}
 
 }
