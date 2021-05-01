@@ -178,7 +178,7 @@ public interface ListSection {
 		@Override
 		@ConfKey("layout.body")
 		@DefaultStrings({"&7[&e%ID%&7] &r&7/ &7%TYPE%",
-				"&7%OPERATOR% &8/ &7REASON% &8/ &7%START_DATE%",
+				"&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%",
 				"&7"})
 		SendableMessageManipulator layoutBody();
 		
@@ -265,7 +265,7 @@ public interface ListSection {
 		
 		@Override
 		@ConfKey("layout.body")
-		@DefaultStrings({"&7[&e%ID%&7] &e&o%SUBJECT% &r&8 / &7%TYPE%",
+		@DefaultStrings({"&7[&e%ID%&7] &e&o%VICTIM% &r&8 / &7%TYPE%",
 				"&7%REASON% &8/ &7%START_DATE%",
 				"&7"})
 		SendableMessageManipulator layoutBody();
