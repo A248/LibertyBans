@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import space.arim.libertybans.core.config.SqlConfig;
 import space.arim.omnibus.util.UUIDUtil;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.config.Configs;
@@ -73,6 +74,13 @@ public class CachingUUIDManagerTest {
 
 	@BeforeEach
 	public void setup() {
+		SqlConfig sqlConfig = mock(SqlConfig.class);
+		SqlConfig.MuteCaching muteCaching = mock(SqlConfig.MuteCaching.class);
+		when(configs.getSqlConfig()).thenReturn(sqlConfig);
+		when(sqlConfig.muteCaching()).thenReturn(muteCaching);
+		when(muteCaching.expirationSemantic()).thenReturn(SqlConfig.MuteCaching.ExpirationSemantic.EXPIRE_AFTER_WRITE);
+		when(muteCaching.expirationTimeSeconds()).thenReturn(60);
+		uuidManager.startup();
 		lenient().when(nameValidator.validateNameArgument(name)).thenReturn(true);
 	}
 

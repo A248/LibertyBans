@@ -20,12 +20,13 @@ package space.arim.libertybans.core.uuid;
 
 import java.util.UUID;
 
+import space.arim.libertybans.core.Part;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.user.UserResolver;
 
-public interface UUIDManager extends UserResolver {
+public interface UUIDManager extends UserResolver, Part {
 
 	void addCache(UUID uuid, String name);
 

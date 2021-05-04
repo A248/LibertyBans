@@ -33,6 +33,8 @@ import jakarta.inject.Singleton;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import space.arim.libertybans.core.config.SqlConfig;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -53,8 +55,8 @@ public final class CachingUUIDManager implements UUIDManager {
 	private final EnvUserResolver envResolver;
 	private final QueryingImpl queryingImpl;
 
-	private final Cache<String, UUID> nameToUuidCache;
-	private final Cache<UUID, String> uuidToNameCache;
+	private Cache<@NonNull String, @NonNull UUID> nameToUuidCache;
+	private Cache<@NonNull UUID, @NonNull String> uuidToNameCache;
 
 	@Inject
 	public CachingUUIDManager(Configs configs, FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider,
@@ -69,11 +71,36 @@ public final class CachingUUIDManager implements UUIDManager {
 		this.nameValidator = nameValidator;
 		this.envResolver = envResolver;
 		this.queryingImpl = queryingImpl;
-
-		Duration expiration = Duration.ofSeconds(20L);
-		nameToUuidCache = Caffeine.newBuilder().expireAfterAccess(expiration).build();
-		uuidToNameCache = Caffeine.newBuilder().expireAfterAccess(expiration).build();
 	}
+
+	@Override
+	public void startup() {
+		SqlConfig.MuteCaching muteCaching = configs.getSqlConfig().muteCaching();
+		Duration expiration = Duration.ofSeconds(muteCaching.expirationTimeSeconds());
+		var semantic = muteCaching.expirationSemantic();
+		nameToUuidCache = createCache(expiration, semantic);
+		uuidToNameCache = createCache(expiration, semantic);
+	}
+
+	private static <K, V> Cache<@NonNull K, @NonNull V> createCache(Duration expiration,
+																	SqlConfig.MuteCaching.ExpirationSemantic semantic) {
+		switch (semantic) {
+		case EXPIRE_AFTER_ACCESS:
+			return Caffeine.newBuilder().expireAfterAccess(expiration).build();
+		case EXPIRE_AFTER_WRITE:
+			return Caffeine.newBuilder().expireAfterWrite(expiration).build();
+		default:
+			throw new IllegalStateException("Unknown expiration semantic " + semantic);
+		}
+	}
+
+	@Override
+	public void restart() {
+		startup();
+	}
+
+	@Override
+	public void shutdown() { }
 	
 	@Override
 	public void addCache(UUID uuid, String name) {

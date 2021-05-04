@@ -154,5 +154,46 @@ public interface SqlConfig {
 	@ConfComments("Legacy option. Don't touch this unless you understand it or you're told to enable it.")
 	@DefaultBoolean(false)
 	boolean useTraditionalJdbcUrl();
+
+	@ConfKey("mute-caching")
+	@SubSection
+	MuteCaching muteCaching();
+
+	@ConfHeader({"LibertyBans stores all punishments fully in the database, with one exception.",
+			"Mutes are cached for a small period of time so that players chatting does not ",
+			"flood your database with queries.",
+			"",
+			"Note: It is possible, even likely, you do not need to touch this.",
+			"Among the servers which do configure a MariaDB database, an even fewer share of them ",
+			"will need to touch the mute cache settings."})
+	interface MuteCaching {
+
+		@ConfKey("expiration-time-seconds")
+		@ConfComments({"How long it takes a mute to expire"})
+		@DefaultInteger(60)
+		int expirationTimeSeconds();
+
+		@ConfKey("expiration-semantics")
+		@ConfComments({"How the expiration time should be used. EXPIRE_AFTER_ACCESS is the default,",
+				"which means that a cached mute's expiration time will be reset each time it is used.",
+				"",
+				"Set this to EXPIRE_AFTER_WRITE if there is any program or other instance of LibertyBans",
+				"which may modify mutes in the database outside of this instance of LibertyBans.",
+				"Examples: multi-proxy networks running multiple LibertyBans instances,",
+				"setups where LibertyBans is installed on multiple backend servers,",
+				"using a third-party tool which can delete or add mutes.",
+				"EXPIRE_AFTER_WRITE is the correct semantic in these cases.",
+				"",
+				"EXPIRE_AFTER_WRITE will expire the cached mute after a fixed time has elapsed",
+				"since the mute was fetched (unlike with EXPIRE_AFTER_ACCESS, the expiration time",
+				"will not refresh each time the mute is used)."})
+		@DefaultString("EXPIRE_AFTER_ACCESS")
+		ExpirationSemantic expirationSemantic();
+
+		enum ExpirationSemantic {
+			EXPIRE_AFTER_ACCESS,
+			EXPIRE_AFTER_WRITE
+		}
+	}
 	
 }

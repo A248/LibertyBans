@@ -23,6 +23,7 @@ import jakarta.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.omnibus.registry.Registration;
 import space.arim.omnibus.registry.RegistryPriorities;
 
@@ -39,6 +40,7 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 	private final AsynchronicityManager asyncManager;
 	private final Configs configs;
 	private final DatabaseManager databaseManager;
+	private final UUIDManager uuidManager;
 	private final EnvironmentManager envManager;
 
 	private final LibertyBans api;
@@ -48,10 +50,11 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 
 	@Inject
 	public LifecycleGodfather(AsynchronicityManager asyncManager, Configs configs, DatabaseManager databaseManager,
-			EnvironmentManager envManager, LibertyBans api) {
+							  UUIDManager uuidManager, EnvironmentManager envManager, LibertyBans api) {
 		this.asyncManager = asyncManager;
 		this.configs = configs;
 		this.databaseManager = databaseManager;
+		this.uuidManager = uuidManager;
 		this.envManager = envManager;
 
 		this.api = api;
@@ -62,6 +65,7 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 		asyncManager.startup();
 		configs.startup();
 		databaseManager.startup();
+		uuidManager.startup();
 		envManager.startup();
 
 		apiRegistration = api.getOmnibus().getRegistry()
@@ -77,12 +81,14 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 		asyncManager.restart();
 		configs.restart();
 		databaseManager.restart();
+		uuidManager.restart();
 		envManager.startup();
 	}
 
 	@Override
 	void shutdown0() {
 		envManager.shutdown();
+		uuidManager.shutdown();
 		configs.shutdown();
 		databaseManager.shutdown();
 		asyncManager.shutdown();
