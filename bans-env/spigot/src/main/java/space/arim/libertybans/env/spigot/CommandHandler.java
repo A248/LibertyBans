@@ -28,7 +28,7 @@ import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.env.AbstractCmdSender;
 import space.arim.omnibus.util.ArraysUtil;
 
-import space.arim.api.env.util.command.BukkitCommandSkeleton;
+import space.arim.api.env.bukkit.BukkitCommandSkeleton;
 
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
 import space.arim.libertybans.core.commands.Commands;

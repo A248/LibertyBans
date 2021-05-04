@@ -20,7 +20,7 @@ package space.arim.libertybans.env.spigot;
 
 import jakarta.inject.Singleton;
 import org.bukkit.plugin.java.JavaPlugin;
-import space.arim.api.env.BukkitPlatformHandle;
+import space.arim.api.env.bukkit.BukkitPlatformHandle;
 import space.arim.api.env.PlatformHandle;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.EnvUserResolver;
@@ -31,7 +31,7 @@ public class SpigotBindModule {
 
 	@Singleton
 	public PlatformHandle handle(JavaPlugin plugin) {
-		return new BukkitPlatformHandle(plugin);
+		return BukkitPlatformHandle.create(plugin);
 	}
 
 	public Environment environment(SpigotEnv env) {

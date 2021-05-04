@@ -20,7 +20,7 @@ package space.arim.libertybans.env.bungee;
 
 import jakarta.inject.Singleton;
 import net.md_5.bungee.api.plugin.Plugin;
-import space.arim.api.env.BungeePlatformHandle;
+import space.arim.api.env.bungee.BungeePlatformHandle;
 import space.arim.api.env.PlatformHandle;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.EnvUserResolver;
@@ -31,7 +31,7 @@ public class BungeeBindModule {
 
 	@Singleton
 	public PlatformHandle handle(Plugin plugin) {
-		return new BungeePlatformHandle(plugin);
+		return BungeePlatformHandle.create(plugin);
 	}
 
 	public Environment environment(BungeeEnv env) {
