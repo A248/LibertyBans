@@ -22,6 +22,8 @@ import java.util.List;
 
 import jakarta.inject.Inject;
 
+import space.arim.libertybans.core.commands.CommandPackage;
+import space.arim.libertybans.core.env.AbstractCmdSender;
 import space.arim.omnibus.util.ArraysUtil;
 
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
@@ -37,48 +39,56 @@ import com.velocitypowered.api.proxy.ProxyServer;
 
 public class CommandHandler implements SimpleCommand, PlatformListener {
 
-	private final DependencyPackage dependencies;
+	private final CommandHelper commandHelper;
 	private final String name;
 	private final boolean alias;
 	
-	CommandHandler(DependencyPackage dependencies, String name, boolean alias) {
-		this.dependencies = dependencies;
+	CommandHandler(CommandHelper commandHelper, String name, boolean alias) {
+		this.commandHelper = commandHelper;
 		this.name = name;
 		this.alias = alias;
 	}
 	
-	public static class DependencyPackage {
+	public static class CommandHelper {
 		
-		final VelocityCmdSender.CmdSenderDependencies parentDependencies;
-		final Commands commands;
+		private final AbstractCmdSender.CmdSenderHelper senderHelper;
+		private final Commands commands;
 		final ProxyServer server;
 		
 		@Inject
-		public DependencyPackage(VelocityCmdSender.CmdSenderDependencies parentDependencies, Commands commands,
-				ProxyServer server) {
-			this.parentDependencies = parentDependencies;
+		public CommandHelper(AbstractCmdSender.CmdSenderHelper senderHelper, Commands commands,
+							 ProxyServer server) {
+			this.senderHelper = senderHelper;
 			this.commands = commands;
 			this.server = server;
+		}
+
+		private CmdSender adaptSender(CommandSource platformSender) {
+			if (platformSender instanceof Player) {
+				return new VelocityCmdSender.PlayerSender(senderHelper, (Player) platformSender);
+			}
+			return new VelocityCmdSender.ConsoleSender(senderHelper, platformSender, server);
+		}
+
+		void execute(CommandSource platformSender, CommandPackage command) {
+			commands.execute(adaptSender(platformSender), command);
+		}
+
+		List<String> suggest(CommandSource platformSender, String[] args) {
+			return commands.suggest(adaptSender(platformSender), args);
 		}
 	}
 	
 	@Override
 	public void register() {
-		CommandManager cmdManager = dependencies.server.getCommandManager();
+		CommandManager cmdManager = commandHelper.server.getCommandManager();
 		cmdManager.register(cmdManager.metaBuilder(name).build(), this);
 	}
 
 	@Override
 	public void unregister() {
-		CommandManager cmdManager = dependencies.server.getCommandManager();
+		CommandManager cmdManager = commandHelper.server.getCommandManager();
 		cmdManager.unregister(name);
-	}
-	
-	private CmdSender adaptSender(CommandSource platformSender) {
-		VelocityCmdSender.CmdSenderDependencies parentDependencies = dependencies.parentDependencies;
-		return (platformSender instanceof Player) ?
-				new VelocityCmdSender.PlayerSender(parentDependencies, (Player) platformSender)
-				: new VelocityCmdSender.ConsoleSender(parentDependencies, platformSender);
 	}
 	
 	private String[] adaptArgs(String[] args) {
@@ -92,14 +102,14 @@ public class CommandHandler implements SimpleCommand, PlatformListener {
 	public void execute(Invocation invocation) {
 		CommandSource platformSender = invocation.source();
 		String[] args = invocation.arguments();
-		dependencies.commands.execute(adaptSender(platformSender), new ArrayCommandPackage(name, adaptArgs(args)));
+		commandHelper.execute(platformSender, new ArrayCommandPackage(name, adaptArgs(args)));
 	}
 	
 	@Override
 	public List<String> suggest(Invocation invocation) {
 		CommandSource platformSender = invocation.source();
 		String[] args = invocation.arguments();
-		return dependencies.commands.suggest(adaptSender(platformSender), adaptArgs(args));
+		return commandHelper.suggest(platformSender, adaptArgs(args));
 	}
 	
 }

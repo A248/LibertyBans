@@ -18,48 +18,29 @@
  */
 package space.arim.libertybans.env.spigot;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
-import jakarta.inject.Inject;
-
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
-
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.core.env.AbstractCmdSender;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public abstract class SpigotCmdSender extends AbstractCmdSender {
 
-	private final FactoryOfTheFuture futuresFactory;
 	private final JavaPlugin plugin;
+	private final FactoryOfTheFuture futuresFactory;
 	
-	SpigotCmdSender(CmdSenderDependencies dependencies, CommandSender sender, Operator operator) {
-		super(dependencies.abstractDependencies, sender, operator);
-		this.futuresFactory = dependencies.futuresFactory;
-		this.plugin = dependencies.plugin;
-	}
-	
-	public static class CmdSenderDependencies {
-		
-		final AbstractCmdSender.AbstractDependencies abstractDependencies;
-		final FactoryOfTheFuture futuresFactory;
-		final JavaPlugin plugin;
-		
-		@Inject
-		public CmdSenderDependencies(AbstractCmdSender.AbstractDependencies abstractDependencies,
-				FactoryOfTheFuture futuresFactory, JavaPlugin plugin) {
-			this.abstractDependencies = abstractDependencies;
-			this.futuresFactory = futuresFactory;
-			this.plugin = plugin;
-		}
-		
+	SpigotCmdSender(CmdSenderHelper senderHelper, CommandSender sender, Operator operator,
+					JavaPlugin plugin, FactoryOfTheFuture futuresFactory) {
+		super(senderHelper, sender, operator);
+		this.plugin = plugin;
+		this.futuresFactory = futuresFactory;
 	}
 
 	@Override
@@ -87,9 +68,11 @@ public abstract class SpigotCmdSender extends AbstractCmdSender {
 		
 		private final FactoryOfTheFuture futuresFactory;
 
-		PlayerSender(CmdSenderDependencies dependencies, Player player) {
-			super(dependencies, player, PlayerOperator.of(player.getUniqueId()));
-			this.futuresFactory = dependencies.futuresFactory;
+		PlayerSender(CmdSenderHelper senderHelper, Player player,
+					 JavaPlugin plugin, FactoryOfTheFuture futuresFactory) {
+			super(senderHelper, player, PlayerOperator.of(player.getUniqueId()),
+					plugin, futuresFactory);
+			this.futuresFactory = futuresFactory;
 		}
 		
 		@Override
@@ -101,8 +84,10 @@ public abstract class SpigotCmdSender extends AbstractCmdSender {
 
 	static class ConsoleSender extends SpigotCmdSender {
 
-		ConsoleSender(CmdSenderDependencies dependencies, CommandSender sender) {
-			super(dependencies, sender, ConsoleOperator.INSTANCE);
+		ConsoleSender(CmdSenderHelper senderHelper, CommandSender sender,
+					  JavaPlugin plugin, FactoryOfTheFuture futuresFactory) {
+			super(senderHelper, sender, ConsoleOperator.INSTANCE,
+					plugin, futuresFactory);
 		}
 		
 		@Override

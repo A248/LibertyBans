@@ -20,6 +20,8 @@ package space.arim.libertybans.env.bungee;
 
 import jakarta.inject.Inject;
 
+import space.arim.libertybans.core.commands.CommandPackage;
+import space.arim.libertybans.core.env.AbstractCmdSender;
 import space.arim.omnibus.util.ArraysUtil;
 
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
@@ -35,46 +37,54 @@ import net.md_5.bungee.api.plugin.TabExecutor;
 
 public class CommandHandler extends Command implements TabExecutor, PlatformListener {
 
-	private final DependencyPackage dependencies;
+	private final CommandHelper commandHelper;
 	private final boolean alias;
 	
-	CommandHandler(DependencyPackage dependencies, String command, boolean alias) {
+	CommandHandler(CommandHelper commandHelper, String command, boolean alias) {
 		super(command);
-		this.dependencies = dependencies;
+		this.commandHelper = commandHelper;
 		this.alias = alias;
 	}
 	
-	public static class DependencyPackage {
-		
-		final BungeeCmdSender.CmdSenderDependencies parentDependencies;
-		final Commands commands;
+	public static class CommandHelper {
+
+		private final AbstractCmdSender.CmdSenderHelper senderHelper;
+		private final Commands commands;
 		final Plugin plugin;
 		
 		@Inject
-		public DependencyPackage(BungeeCmdSender.CmdSenderDependencies parentDependencies, Commands commands,
-				Plugin plugin) {
-			this.parentDependencies = parentDependencies;
+		public CommandHelper(AbstractCmdSender.CmdSenderHelper senderHelper, Commands commands,
+							 Plugin plugin) {
+			this.senderHelper = senderHelper;
 			this.commands = commands;
 			this.plugin = plugin;
+		}
+
+		private CmdSender adaptSender(CommandSender platformSender) {
+			if (platformSender instanceof ProxiedPlayer) {
+				return new BungeeCmdSender.PlayerSender(senderHelper, (ProxiedPlayer) platformSender);
+			}
+			return new BungeeCmdSender.ConsoleSender(senderHelper, platformSender, plugin);
+		}
+
+		void execute(CommandSender platformSender, CommandPackage command) {
+			commands.execute(adaptSender(platformSender), command);
+		}
+
+		Iterable<String> onTabComplete(CommandSender platformSender, String[] args) {
+			return commands.suggest(adaptSender(platformSender), args);
 		}
 	}
 	
 	@Override
 	public void register() {
-		Plugin plugin = dependencies.plugin;
+		Plugin plugin = commandHelper.plugin;
 		plugin.getProxy().getPluginManager().registerCommand(plugin, this);
 	}
 	
 	@Override
 	public void unregister() {
-		dependencies.plugin.getProxy().getPluginManager().unregisterCommand(this);
-	}
-	
-	private CmdSender adaptSender(CommandSender platformSender) {
-		BungeeCmdSender.CmdSenderDependencies parentDependencies = dependencies.parentDependencies;
-		return (platformSender instanceof ProxiedPlayer) ?
-				new BungeeCmdSender.PlayerSender(parentDependencies, (ProxiedPlayer) platformSender)
-				: new BungeeCmdSender.ConsoleSender(parentDependencies, platformSender);
+		commandHelper.plugin.getProxy().getPluginManager().unregisterCommand(this);
 	}
 	
 	private String[] adaptArgs(String[] args) {
@@ -86,12 +96,12 @@ public class CommandHandler extends Command implements TabExecutor, PlatformList
 
 	@Override
 	public void execute(CommandSender platformSender, String[] args) {
-		dependencies.commands.execute(adaptSender(platformSender), new ArrayCommandPackage(getName(), adaptArgs(args)));
+		commandHelper.execute(platformSender, new ArrayCommandPackage(getName(), adaptArgs(args)));
 	}
 
 	@Override
 	public Iterable<String> onTabComplete(CommandSender platformSender, String[] args) {
-		return dependencies.commands.suggest(adaptSender(platformSender), adaptArgs(args));
+		return commandHelper.onTabComplete(platformSender, adaptArgs(args));
 	}
 	
 }

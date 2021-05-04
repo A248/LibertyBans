@@ -34,16 +34,16 @@ public class VelocityEnv implements Environment {
 	private final Provider<ConnectionListener> connectionListenerProvider;
 	private final Provider<ChatListener> chatListenerProvider;
 	private final Provider<CommandListener> commandListenerProvider;
-	private final CommandHandler.DependencyPackage commandDependencies;
+	private final CommandHandler.CommandHelper commandHelper;
 
 	@Inject
 	public VelocityEnv(Provider<ConnectionListener> connectionListenerProvider,
 			Provider<ChatListener> chatListenerProvider, Provider<CommandListener> commandListenerProvider,
-			CommandHandler.DependencyPackage commandDependencies) {
+			CommandHandler.CommandHelper commandHelper) {
 		this.connectionListenerProvider = connectionListenerProvider;
 		this.chatListenerProvider = chatListenerProvider;
 		this.commandListenerProvider = commandListenerProvider;
-		this.commandDependencies = commandDependencies;
+		this.commandHelper = commandHelper;
 	}
 
 	@Override
@@ -52,12 +52,12 @@ public class VelocityEnv implements Environment {
 				connectionListenerProvider.get(),
 				chatListenerProvider.get(),
 				commandListenerProvider.get(),
-				new CommandHandler(commandDependencies, Commands.BASE_COMMAND_NAME, false));
+				new CommandHandler(commandHelper, Commands.BASE_COMMAND_NAME, false));
 	}
 
 	@Override
 	public PlatformListener createAliasCommand(String command) {
-		return new CommandHandler(commandDependencies, command, true);
+		return new CommandHandler(commandHelper, command, true);
 	}
 
 }

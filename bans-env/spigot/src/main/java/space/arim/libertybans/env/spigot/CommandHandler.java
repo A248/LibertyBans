@@ -24,6 +24,8 @@ import java.util.Map;
 
 import jakarta.inject.Inject;
 
+import space.arim.libertybans.core.commands.CommandPackage;
+import space.arim.libertybans.core.env.AbstractCmdSender;
 import space.arim.omnibus.util.ArraysUtil;
 
 import space.arim.api.env.util.command.BukkitCommandSkeleton;
@@ -38,49 +40,67 @@ import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 public class CommandHandler extends BukkitCommandSkeleton implements PlatformListener {
 
-	private final DependencyPackage dependencies;
+	private final CommandHelper commandHelper;
 	private final boolean alias;
 	
-	CommandHandler(DependencyPackage dependencies, String command, boolean alias) {
+	CommandHandler(CommandHelper commandHelper, String command, boolean alias) {
 		super(command);
-		this.dependencies = dependencies;
+		this.commandHelper = commandHelper;
 		this.alias = alias;
 	}
 	
-	public static class DependencyPackage {
+	public static class CommandHelper {
 		
-		final SpigotCmdSender.CmdSenderDependencies parentDependencies;
-		final Commands commands;
+		private final AbstractCmdSender.CmdSenderHelper senderHelper;
+		private final Commands commands;
 		final JavaPlugin plugin;
+		private final FactoryOfTheFuture futuresFactory;
 		final CommandMapHelper commandMapHelper;
 		
 		@Inject
-		public DependencyPackage(SpigotCmdSender.CmdSenderDependencies parentDependencies, Commands commands,
-				JavaPlugin plugin, CommandMapHelper commandMapHelper) {
-			this.parentDependencies = parentDependencies;
+		public CommandHelper(AbstractCmdSender.CmdSenderHelper senderHelper, Commands commands,
+							 JavaPlugin plugin, FactoryOfTheFuture futuresFactory, CommandMapHelper commandMapHelper) {
+			this.senderHelper = senderHelper;
 			this.commands = commands;
 			this.plugin = plugin;
+			this.futuresFactory = futuresFactory;
 			this.commandMapHelper = commandMapHelper;
+		}
+
+		private CmdSender adaptSender(CommandSender platformSender) {
+			if (platformSender instanceof Player) {
+				return new SpigotCmdSender.PlayerSender(senderHelper, (Player) platformSender, plugin, futuresFactory);
+			}
+			return new SpigotCmdSender.ConsoleSender(senderHelper, platformSender, plugin, futuresFactory);
+		}
+
+		void execute(CommandSender platformSender, CommandPackage command) {
+			commands.execute(adaptSender(platformSender), command);
+		}
+
+		List<String> suggest(CommandSender platformSender, String[] args) {
+			return commands.suggest(adaptSender(platformSender), args);
 		}
 		
 	}
 	
 	@Override
 	public void register() {
-		CommandMapHelper commandMapHelper = dependencies.commandMapHelper;
+		CommandMapHelper commandMapHelper = commandHelper.commandMapHelper;
 		CommandMap commandMap = commandMapHelper.getCommandMap();
 		if (commandMapHelper.getKnownCommands(commandMap) == null && alias) {
 			return;
 		}
-		commandMap.register(getName(), dependencies.plugin.getName().toLowerCase(Locale.ENGLISH), this);
+		commandMap.register(getName(), commandHelper.plugin.getName().toLowerCase(Locale.ENGLISH), this);
 	}
 
 	@Override
 	public void unregister() {
-		CommandMapHelper commandMapHelper = dependencies.commandMapHelper;
+		CommandMapHelper commandMapHelper = commandHelper.commandMapHelper;
 		CommandMap commandMap = commandMapHelper.getCommandMap();
 		Map<String, Command> knownCommands = commandMapHelper.getKnownCommands(commandMap);
 		if (knownCommands == null) {
@@ -89,13 +109,6 @@ public class CommandHandler extends BukkitCommandSkeleton implements PlatformLis
 		while (knownCommands.values().remove(this)) {
 			// Remove from map
 		}
-	}
-
-	private CmdSender adaptSender(CommandSender platformSender) {
-		SpigotCmdSender.CmdSenderDependencies parentDependencies = dependencies.parentDependencies;
-		return (platformSender instanceof Player) ?
-				new SpigotCmdSender.PlayerSender(parentDependencies, (Player) platformSender)
-				: new SpigotCmdSender.ConsoleSender(parentDependencies, platformSender);
 	}
 
 	private String[] adaptArgs(String[] args) {
@@ -107,12 +120,12 @@ public class CommandHandler extends BukkitCommandSkeleton implements PlatformLis
 
 	@Override
 	protected void execute(CommandSender platformSender, String[] args) {
-		dependencies.commands.execute(adaptSender(platformSender), new ArrayCommandPackage(getName(), adaptArgs(args)));
+		commandHelper.execute(platformSender, new ArrayCommandPackage(getName(), adaptArgs(args)));
 	}
 
 	@Override
 	protected List<String> suggest(CommandSender platformSender, String[] args) {
-		return dependencies.commands.suggest(adaptSender(platformSender), adaptArgs(args));
+		return commandHelper.suggest(platformSender, adaptArgs(args));
 	}
 
 }

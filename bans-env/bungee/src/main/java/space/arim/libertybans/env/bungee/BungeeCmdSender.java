@@ -18,39 +18,23 @@
  */
 package space.arim.libertybans.env.bungee;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
-import jakarta.inject.Inject;
-
+import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.api.connection.Server;
+import net.md_5.bungee.api.plugin.Plugin;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.core.env.AbstractCmdSender;
 
-import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.connection.Server;
-import net.md_5.bungee.api.plugin.Plugin;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public abstract class BungeeCmdSender extends AbstractCmdSender {
 
-	BungeeCmdSender(CmdSenderDependencies dependencies, CommandSender sender, Operator operator) {
-		super(dependencies.abstractDependencies, sender, operator);
-	}
-	
-	public static class CmdSenderDependencies {
-		
-		final AbstractCmdSender.AbstractDependencies abstractDependencies;
-		final Plugin plugin;
-		
-		@Inject
-		public CmdSenderDependencies(AbstractCmdSender.AbstractDependencies abstractDependencies, Plugin plugin) {
-			this.abstractDependencies = abstractDependencies;
-			this.plugin = plugin;
-		}
-		
+	BungeeCmdSender(CmdSenderHelper senderHelper, CommandSender sender, Operator operator) {
+		super(senderHelper, sender, operator);
 	}
 	
 	@Override
@@ -76,8 +60,8 @@ public abstract class BungeeCmdSender extends AbstractCmdSender {
 	
 	static class PlayerSender extends BungeeCmdSender {
 
-		PlayerSender(CmdSenderDependencies dependencies, ProxiedPlayer player) {
-			super(dependencies, player, PlayerOperator.of(player.getUniqueId()));
+		PlayerSender(CmdSenderHelper senderHelper, ProxiedPlayer player) {
+			super(senderHelper, player, PlayerOperator.of(player.getUniqueId()));
 		}
 		
 		@Override
@@ -101,9 +85,9 @@ public abstract class BungeeCmdSender extends AbstractCmdSender {
 
 		private final Plugin plugin;
 		
-		ConsoleSender(CmdSenderDependencies dependencies, CommandSender sender) {
-			super(dependencies, sender, ConsoleOperator.INSTANCE);
-			this.plugin = dependencies.plugin;
+		ConsoleSender(CmdSenderHelper senderHelper, CommandSender sender, Plugin plugin) {
+			super(senderHelper, sender, ConsoleOperator.INSTANCE);
+			this.plugin = plugin;
 		}
 
 		@Override

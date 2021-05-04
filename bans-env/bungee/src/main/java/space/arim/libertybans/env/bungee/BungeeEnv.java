@@ -33,14 +33,14 @@ public class BungeeEnv implements Environment {
 
 	private final Provider<ConnectionListener> connectionListenerProvider;
 	private final Provider<ChatListener> chatListenerProvider;
-	private final CommandHandler.DependencyPackage commandDependencies;
+	private final CommandHandler.CommandHelper commandHelper;
 
 	@Inject
 	public BungeeEnv(Provider<ConnectionListener> connectionListenerProvider,
-			Provider<ChatListener> chatListenerProvider, CommandHandler.DependencyPackage commandDependencies) {
+			Provider<ChatListener> chatListenerProvider, CommandHandler.CommandHelper commandHelper) {
 		this.connectionListenerProvider = connectionListenerProvider;
 		this.chatListenerProvider = chatListenerProvider;
-		this.commandDependencies = commandDependencies;
+		this.commandHelper = commandHelper;
 	}
 
 	@Override
@@ -48,12 +48,12 @@ public class BungeeEnv implements Environment {
 		return Set.of(
 				connectionListenerProvider.get(),
 				chatListenerProvider.get(),
-				new CommandHandler(commandDependencies, Commands.BASE_COMMAND_NAME, false));
+				new CommandHandler(commandHelper, Commands.BASE_COMMAND_NAME, false));
 	}
 
 	@Override
 	public PlatformListener createAliasCommand(String command) {
-		return new CommandHandler(commandDependencies, command, true);
+		return new CommandHandler(commandHelper, command, true);
 	}
 
 }

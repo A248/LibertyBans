@@ -35,22 +35,9 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 
 public abstract class VelocityCmdSender extends AbstractCmdSender {
-	
-	VelocityCmdSender(CmdSenderDependencies dependencies, CommandSource sender, Operator operator) {
-		super(dependencies.abstractDependencies, sender, operator);
-	}
-	
-	public static class CmdSenderDependencies {
-		
-		final AbstractCmdSender.AbstractDependencies abstractDependencies;
-		final ProxyServer server;
-		
-		@Inject
-		public CmdSenderDependencies(AbstractCmdSender.AbstractDependencies abstractDependencies, ProxyServer server) {
-			this.abstractDependencies = abstractDependencies;
-			this.server = server;
-		}
-		
+
+	VelocityCmdSender(CmdSenderHelper senderHelper, CommandSource sender, Operator operator) {
+		super(senderHelper, sender, operator);
 	}
 
 	@Override
@@ -76,8 +63,8 @@ public abstract class VelocityCmdSender extends AbstractCmdSender {
 	
 	static class PlayerSender extends VelocityCmdSender {
 
-		PlayerSender(CmdSenderDependencies dependencies, Player player) {
-			super(dependencies, player, PlayerOperator.of(player.getUniqueId()));
+		PlayerSender(CmdSenderHelper senderHelper, Player player) {
+			super(senderHelper, player, PlayerOperator.of(player.getUniqueId()));
 		}
 		
 		@Override
@@ -102,9 +89,9 @@ public abstract class VelocityCmdSender extends AbstractCmdSender {
 
 		private final ProxyServer server;
 		
-		ConsoleSender(CmdSenderDependencies dependencies, CommandSource sender) {
-			super(dependencies, sender, ConsoleOperator.INSTANCE);
-			this.server = dependencies.server;
+		ConsoleSender(CmdSenderHelper senderHelper, CommandSource sender, ProxyServer server) {
+			super(senderHelper, sender, ConsoleOperator.INSTANCE);
+			this.server = server;
 		}
 		
 		@Override
