@@ -20,17 +20,17 @@
 		<!-- Testing dependencies -->
 		<junit.version>5.7.1</junit.version>
 		<mariadb4j.version>2.4.0</mariadb4j.version>
-		<mockito.version>3.6.28</mockito.version>
+		<mockito.version>3.9.0</mockito.version>
 		<h2.version>1.4.199</h2.version>
 		
 		<!-- API dependencies -->
-		<omnibus.version>1.1.0-M2</omnibus.version>
+		<omnibus.version>1.1.0-RC1</omnibus.version>
 		
 		<!-- Internal dependencies -->
 		<jakarta-inject.version>2.0.0</jakarta-inject.version>
 		<solidinjector.version>1.0.0</solidinjector.version>
-		<jdbcaesar.version>1.0.0-SNAPSHOT</jdbcaesar.version>
-		<dazzleconf.version>1.2.0-RC1</dazzleconf.version>
+		<jdbcaesar.version>1.0.0</jdbcaesar.version>
+		<dazzleconf.version>1.2.0</dazzleconf.version>
 		<slf4j.version>1.7.30</slf4j.version>
 		<hikari.version>4.0.3</hikari.version>
 		<hsqldb.version>2.5.1</hsqldb.version>
@@ -38,9 +38,9 @@
 		<caffeine.version>3.0.1</caffeine.version>
 		<flyway.version>7.7.1</flyway.version>
 		<adventure.version>4.7.0</adventure.version>
-		<arimapi.version>0.22.0-SNAPSHOT</arimapi.version>
+		<arimapi.version>0.23.1</arimapi.version>
 		<managedwaits.version>0.1.3</managedwaits.version>
-		<morepaperlib.version>0.2.0-SNAPSHOT</morepaperlib.version>
+		<morepaperlib.version>0.2.0</morepaperlib.version>
 		
 		<!-- Plugin variables -->
 		<plugin.name>LibertyBans</plugin.name>
@@ -312,7 +312,17 @@
 			</dependency>
 			<dependency>
 				<groupId>space.arim.api</groupId>
-				<artifactId>arimapi-all</artifactId>
+				<artifactId>arimapi-chat</artifactId>
+				<version>${arimapi.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.api</groupId>
+				<artifactId>arimapi-env</artifactId>
+				<version>${arimapi.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.api</groupId>
+				<artifactId>arimapi-util-web</artifactId>
 				<version>${arimapi.version}</version>
 			</dependency>
 			<!-- JDBC drivers -->
@@ -333,7 +343,7 @@
 			<dependency>
 				<groupId>space.arim.licenser</groupId>
 				<artifactId>licenser-agpl3</artifactId>
-				<version>0.2.0-SNAPSHOT</version>
+				<version>0.2.1</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

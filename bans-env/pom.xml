@@ -13,7 +13,7 @@
 	<packaging>pom</packaging>
 	
 	<properties>
-		<spigot.version>1.8.8-R0.1-SNAPSHOT</spigot.version>
+		<spigot.version>1.8.8-R0.1-20160221.082514-43</spigot.version>
 		<bungeecord.version>1.16-R0.4</bungeecord.version>
 		<velocity.version>1.1.0</velocity.version>
 	</properties>

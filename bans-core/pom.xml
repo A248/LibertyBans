@@ -37,6 +37,7 @@
 	</build>
 	
 	<dependencies>
+		<!-- Testing dependencies -->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
@@ -58,6 +59,7 @@
 			<artifactId>h2</artifactId>
 		</dependency>
 
+		<!-- Internal dependencies -->
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-api</artifactId>
@@ -100,8 +102,17 @@
 		</dependency>
 		<dependency>
 			<groupId>space.arim.api</groupId>
-			<artifactId>arimapi-all</artifactId>
+			<artifactId>arimapi-chat</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>space.arim.api</groupId>
+			<artifactId>arimapi-env</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.api</groupId>
+			<artifactId>arimapi-util-web</artifactId>
+		</dependency>
+		<!-- JDBC drivers -->
 		<dependency>
 			<groupId>org.mariadb.jdbc</groupId>
 			<artifactId>mariadb-java-client</artifactId>
