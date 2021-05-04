@@ -51,13 +51,5 @@
 			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-env-velocity</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.hsqldb</groupId>
-			<artifactId>hsqldb</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.mariadb.jdbc</groupId>
-			<artifactId>mariadb-java-client</artifactId>
-		</dependency>
 	</dependencies>
 </project>
