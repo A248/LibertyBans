@@ -147,7 +147,6 @@
 		<module>bans-core</module>
 		<module>bans-env</module>
 		<module>bans-distribution</module>
-		<module>bans-integrationtest</module>
 	</modules>
 	
 	<distributionManagement>
