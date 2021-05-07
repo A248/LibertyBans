@@ -25,13 +25,14 @@ import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 
 import space.arim.libertybans.bootstrap.BaseFoundation;
-import space.arim.libertybans.bootstrap.DependencyPlatform;
 import space.arim.libertybans.bootstrap.Instantiator;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
 
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.scheduler.Scheduler;
+import space.arim.libertybans.bootstrap.Platform;
+import space.arim.libertybans.bootstrap.Platforms;
 import space.arim.libertybans.bootstrap.logger.Slf4jBootstrapLogger;
 
 class BaseWrapper {
@@ -43,14 +44,19 @@ class BaseWrapper {
 	}
 	
 	static class Creator {
-		
+
 		private final VelocityPlugin velocityPlugin;
 		
 		Creator(VelocityPlugin velocityPlugin) {
 			this.velocityPlugin = velocityPlugin;
 		}
 
+		Platform detectPlatform() {
+			return Platforms.velocity();
+		}
+
 		BaseWrapper create() {
+			Platform platform = detectPlatform();
 			ProxyServer server = velocityPlugin.server;
 			Path folder = velocityPlugin.folder;
 			Logger logger = velocityPlugin.logger;
@@ -60,7 +66,7 @@ class BaseWrapper {
 			Executor executor = (cmd) -> scheduler.buildTask(plugin, cmd).schedule();
 
 			LibertyBansLauncher launcher = new LibertyBansLauncher(
-					new Slf4jBootstrapLogger(velocityPlugin.logger), DependencyPlatform.VELOCITY,
+					new Slf4jBootstrapLogger(velocityPlugin.logger), platform,
 					velocityPlugin.folder, executor);
 			ClassLoader launchLoader = launcher.attemptLaunch().join();
 

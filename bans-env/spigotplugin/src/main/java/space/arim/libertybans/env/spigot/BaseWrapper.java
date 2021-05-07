@@ -22,11 +22,13 @@ import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.bukkit.entity.Player;
 import space.arim.libertybans.bootstrap.BaseFoundation;
 import space.arim.libertybans.bootstrap.CulpritFinder;
-import space.arim.libertybans.bootstrap.DependencyPlatform;
+import space.arim.libertybans.bootstrap.Platform;
 import space.arim.libertybans.bootstrap.Instantiator;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
+import space.arim.libertybans.bootstrap.Platforms;
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -49,10 +51,25 @@ class BaseWrapper {
 			this.plugin = plugin;
 			this.logger = logger;
 		}
+
+		private boolean detectAdventure() {
+			try {
+				Class<?> audienceClass = Class.forName("net.kyori.adventure.audience.Audience");
+				return audienceClass.isAssignableFrom(Player.class);
+			} catch (ClassNotFoundException ex) {
+				return false;
+			}
+		}
+
+		Platform detectPlatform() {
+			return Platform.forCategory(Platform.Category.BUKKIT)
+					.slf4jSupport(Platforms.detectGetSlf4jLoggerMethod(plugin))
+					.kyoriAdventureSupport(detectAdventure())
+					.build(plugin.getServer().getVersion());
+		}
 		
 		BaseWrapper create() {
-			DependencyPlatform platform = DependencyPlatform.detectGetSlf4jLoggerMethod(plugin) ?
-					DependencyPlatform.PAPER : DependencyPlatform.SPIGOT;
+			Platform platform = detectPlatform();
 			Path folder = plugin.getDataFolder().toPath();
 			ExecutorService executor = Executors.newCachedThreadPool();
 			ClassLoader launchLoader;

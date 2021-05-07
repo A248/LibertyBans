@@ -18,19 +18,39 @@
  */
 package space.arim.libertybans.env.spigot;
 
-import java.nio.file.Path;
-
 import org.bukkit.Server;
 import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.java.JavaPluginLoader;
 
-class BareJavaPlugin extends JavaPlugin {
+import java.nio.file.Path;
+import java.util.function.Consumer;
+import java.util.logging.Logger;
 
-	@SuppressWarnings("deprecation")
-	BareJavaPlugin(PluginLoader loader, Server server, Path dataFolder) {
-		super(loader, server, new PluginDescriptionFile("bareplugin", null, null),
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+
+public final class MockJavaPlugin extends JavaPlugin {
+
+	private MockJavaPlugin(JavaPluginLoader loader, Path dataFolder) {
+		super(loader, new PluginDescriptionFile("bareplugin", null, null),
 				dataFolder.toFile(), dataFolder.resolve("plugin.jar").toFile());
+	}
+
+	public static JavaPlugin create(Path dataFolder) {
+		return create(dataFolder, (server) -> {});
+	}
+
+	public static JavaPlugin create(Path dataFolder, Consumer<Server> configureMockServer) {
+		Logger serverLogger = Logger.getLogger(MockJavaPlugin.class.getName());
+		Server server = mock(Server.class);
+		// Lenient because some Paper versions do not require this stub
+		lenient().when(server.getLogger()).thenReturn(serverLogger);
+		configureMockServer.accept(server);
+		@SuppressWarnings("deprecation")
+		JavaPluginLoader loader = new JavaPluginLoader(server);
+
+		return new MockJavaPlugin(loader, dataFolder);
 	}
 
 }

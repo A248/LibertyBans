@@ -13,8 +13,6 @@
 	<description>Bootstrapping dependency loader for LibertyBans</description>
 	
 	<build>
-		<sourceDirectory>src/main/java</sourceDirectory>
-		<finalName>${project.name}_v${project.version}</finalName>
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
@@ -68,18 +66,6 @@
 					</archive>
 				</configuration>
 			</plugin>
-			<!-- Shade bootstrap-logger -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<configuration>
-					<artifactSet>
-						<includes>
-							<include>space.arim.libertybans:*</include>
-						</includes>
-					</artifactSet>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
@@ -91,10 +77,6 @@
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-params</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>

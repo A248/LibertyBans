@@ -39,7 +39,7 @@ public class VelocityLauncherTest {
 	public Path tempDir;
 
 	@Test
-	public void testAllBindings() {
+	public void allBindings() {
 		ProxyServer proxyServer = mock(ProxyServer.class);
 		PluginContainer pluginContainer = mock(PluginContainer.class);
 

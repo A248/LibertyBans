@@ -1,0 +1,21 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>space.arim.libertybans</groupId>
+		<artifactId>bans-distribution</artifactId>
+		<version>0.7.4</version>
+	</parent>
+	
+	<artifactId>bans-kyori-bundle</artifactId>
+	<description>Shaded combination of Kyori Adventure and its dependencies.</description>
+	
+	<dependencies>
+		<dependency>
+			<groupId>net.kyori</groupId>
+			<artifactId>adventure-api</artifactId>
+		</dependency>
+	</dependencies>
+</project>

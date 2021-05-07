@@ -18,19 +18,20 @@
  */
 package space.arim.libertybans.bootstrap;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DynamicNode;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 import space.arim.libertybans.bootstrap.logger.Slf4jBootstrapLogger;
 
 import java.nio.file.Path;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -38,19 +39,31 @@ public class DownloadDependenciesIT {
 	
 	@TempDir
 	public Path folder;
-	
-	private ExecutorService executor;
-	
-	@BeforeEach
-	public void setup() {
-		executor = Executors.newCachedThreadPool();
+	private final AtomicInteger folderUniqueifier = new AtomicInteger();
+
+	@TestFactory
+	public Stream<DynamicNode> downloadDependencies() {
+		Set<Platform> platforms = new HashSet<>();
+		for (Platform.Category category : new Platform.Category[] {Platform.Category.BUKKIT, Platform.Category.BUNGEE}) {
+			for (boolean slf4j : new boolean[] {true, false}) {
+				for (boolean adventure : new boolean[] {true, false}) {
+					platforms.add(Platform.forCategory(category)
+							.slf4jSupport(slf4j).kyoriAdventureSupport(adventure)
+							.build("test"));
+				}
+			}
+		}
+		platforms.add(Platforms.velocity());
+		return platforms.stream().map((platform) -> {
+			return DynamicTest.dynamicTest("For platform " + platform, () -> runDownloadDependencies(platform));
+		});
 	}
 
-	@ParameterizedTest
-	@EnumSource(DependencyPlatform.class)
-	public void testDownloadAllDependencies(DependencyPlatform platform) {
+	private void runDownloadDependencies(Platform platform) {
+		Path subFolder = folder.resolve("" + folderUniqueifier.getAndIncrement());
 		BootstrapLogger logger = new Slf4jBootstrapLogger(LoggerFactory.getLogger(getClass()));
-		LibertyBansLauncher launcher = new LibertyBansLauncher(logger, platform, folder, executor) {
+		LibertyBansLauncher launcher = new LibertyBansLauncher(
+				logger, platform, subFolder, ForkJoinPool.commonPool()) {
 			@Override
 			boolean skipSelfDependencies() {
 				return true;
@@ -58,12 +71,6 @@ public class DownloadDependenciesIT {
 		};
 		ClassLoader classLoader = launcher.attemptLaunch().join();
 		assertNotNull(classLoader, "Failed to download dependencies");
-	}
-	
-	@AfterEach
-	public void tearDown() throws InterruptedException {
-		executor.shutdown();
-		executor.awaitTermination(3, TimeUnit.SECONDS);
 	}
 	
 }

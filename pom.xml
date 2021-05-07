@@ -2,6 +2,12 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>space.arim.parent</groupId>
+		<artifactId>common-parent</artifactId>
+		<version>0.2.5</version>
+	</parent>
 	
 	<groupId>space.arim.libertybans</groupId>
 	<artifactId>bans-parent</artifactId>
@@ -53,6 +59,10 @@
 		<!-- Database revision table -->
 		<dbrevision.major>2</dbrevision.major>
 		<dbrevision.minor>0</dbrevision.minor>
+
+		<!-- Skip javadocs and sources by default -->
+		<common-parent.skipJavadoc>true</common-parent.skipJavadoc>
+		<common-parent.skipSources>true</common-parent.skipSources>
 	</properties>
 	
 	<licenses>
@@ -90,7 +100,6 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-shade-plugin</artifactId>
-					<version>3.2.4</version>
 					<executions>
 						<execution>
 							<phase>package</phase>
@@ -102,13 +111,7 @@
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-jar-plugin</artifactId>
-					<version>3.2.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
-					<version>3.0.0-M5</version>
 					<configuration>
 						<trimStackTrace>false</trimStackTrace>
 						<argLine>-XX:TieredStopAtLevel=1 -XX:-TieredCompilation</argLine>
@@ -125,18 +128,6 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-failsafe-plugin</artifactId>
-					<version>3.0.0-M5</version>
-					<configuration>
-						<trimStackTrace>false</trimStackTrace>
-					</configuration>
-					<executions>
-						<execution>
-							<goals>
-								<goal>integration-test</goal>
-								<goal>verify</goal>
-							</goals>
-						</execution>
-					</executions>
 					<dependencies>
 						<dependency>
 							<groupId>org.junit.jupiter</groupId>
@@ -309,6 +300,11 @@
 				<groupId>com.github.ben-manes.caffeine</groupId>
 				<artifactId>caffeine</artifactId>
 				<version>${caffeine.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.kyori</groupId>
+				<artifactId>adventure-api</artifactId>
+				<version>${adventure.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>space.arim.api</groupId>

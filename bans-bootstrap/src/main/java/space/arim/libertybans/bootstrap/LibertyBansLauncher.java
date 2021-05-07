@@ -33,13 +33,13 @@ import java.util.concurrent.Executor;
 public class LibertyBansLauncher {
 
 	private final BootstrapLogger logger;
-	private final DependencyPlatform platform;
+	private final Platform platform;
 	private final Path libsFolder;
 	private final Executor executor;
 	private final CulpritFinder culpritFinder;
 	
-	public LibertyBansLauncher(BootstrapLogger logger, DependencyPlatform platform, Path folder, Executor executor,
-			CulpritFinder culpritFinder) {
+	public LibertyBansLauncher(BootstrapLogger logger, Platform platform, Path folder, Executor executor,
+							   CulpritFinder culpritFinder) {
 		this.logger = logger;
 		this.platform = platform;
 		libsFolder = folder.resolve("libraries");
@@ -47,7 +47,7 @@ public class LibertyBansLauncher {
 		this.culpritFinder = culpritFinder;
 	}
 	
-	public LibertyBansLauncher(BootstrapLogger logger, DependencyPlatform platform, Path folder, Executor executor) {
+	public LibertyBansLauncher(BootstrapLogger logger, Platform platform, Path folder, Executor executor) {
 		this(logger, platform, folder, executor, (clazz) -> "");
 	}
 	
@@ -62,9 +62,9 @@ public class LibertyBansLauncher {
 	private String findCulpritWhoFailedToRelocate(Class<?> libClass) {
 		String pluginName = culpritFinder.findCulprit(libClass);
 		if (pluginName == null || pluginName.isEmpty()) {
-			return "Unknown";
+			return "An unknown plugin";
 		}
-		return pluginName;
+		return "Plugin '" + pluginName + '\'';
 	}
 	
 	private void warnRelocation(String libName, String clazzName) {
@@ -73,7 +73,7 @@ public class LibertyBansLauncher {
 			return;
 		}
 		String pluginName = findCulpritWhoFailedToRelocate(libClass);
-		logger.warn("Plugin '" + pluginName + "' has shaded the library '"
+		logger.warn(pluginName + " has shaded the library '"
 				+ libName + "' but did not relocate it. This may or may not pose problems. "
 				+ "Contact the author of this plugin and tell them to relocate their dependencies. "
 				+ "Unrelocated class detected was " + libClass.getName());
@@ -89,7 +89,15 @@ public class LibertyBansLauncher {
 			jarsToDownload.add(locate(InternalDependency.SLF4J_API));
 			jarsToDownload.add(locate(InternalDependency.SLF4J_JUL));
 		}
-		if (!skipSelfDependencies()) {
+		boolean downloadSelfDependencies = !skipSelfDependencies();
+		if (!platform.hasKyoriAdventureSupport()) {
+			warnRelocation("Kyori-Adventure", "net.kyori.adventure.audience.Audience");
+			warnRelocation("Kyori-Examination", "net.kyori.examination.Examinable");
+			if (downloadSelfDependencies) {
+				jarsToDownload.add(locate(InternalDependency.KYORI_BUNDLE));
+			}
+		}
+		if (downloadSelfDependencies) {
 			jarsToDownload.add(locate(InternalDependency.SELF_IMPLEMENTATION));
 		}
 		for (InternalDependency checkForUnrelocation : InternalDependency.values()) {

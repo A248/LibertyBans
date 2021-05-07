@@ -18,21 +18,15 @@
  */
 package space.arim.libertybans.env.spigot;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.nio.file.Path;
-import java.util.logging.Logger;
-
+import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import org.bukkit.Server;
-import org.bukkit.plugin.PluginLoader;
-import org.bukkit.plugin.java.JavaPlugin;
+import java.nio.file.Path;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ExtendWith(MockitoExtension.class)
 public class SpigotLauncherTest {
@@ -41,11 +35,8 @@ public class SpigotLauncherTest {
 	public Path tempDir;
 
 	@Test
-	public void testAllBindings() {
-		PluginLoader loader = mock(PluginLoader.class);
-		Server server = when(mock(Server.class).getLogger()).thenReturn(Logger.getLogger(getClass().getName())).getMock();
-
-		JavaPlugin plugin = new BareJavaPlugin(loader, server, tempDir);
+	public void allBindings() {
+		JavaPlugin plugin = MockJavaPlugin.create(tempDir);
 		assertNotNull(new SpigotLauncher(plugin, tempDir).launch());
 	}
 

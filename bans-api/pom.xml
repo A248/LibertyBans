@@ -11,14 +11,15 @@
 	
 	<artifactId>bans-api</artifactId>
 	<description>API for LibertyBans</description>
+
+	<properties>
+		<common-parent.skipJavadoc>false</common-parent.skipJavadoc>
+		<common-parent.skipSources>false</common-parent.skipSources>
+		<!-- Prevents javadocs 'Error fetching link' -->
+		<maven.compiler.release>11</maven.compiler.release>
+	</properties>
 	
 	<build>
-		<sourceDirectory>src/main/java</sourceDirectory>
-
-		<!-- This is the same name format used by the dependency downloader -->
-		<!-- For quick testing, drag and drop the output jar to LibertyBans/libs/api/ -->
-		<finalName>${project.groupId}.${project.name}_${project.version}</finalName>
-
 		<plugins>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -43,33 +44,6 @@
 						</manifestEntries>
 					</archive>
 				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>3.2.0</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.2.0</version>
-				<executions>
-					<execution>
-						<id>attach-javadocs</id>
-						<goals>
-							<goal>javadoc</goal>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 		</plugins>
 	</build>

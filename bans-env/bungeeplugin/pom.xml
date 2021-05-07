@@ -11,8 +11,6 @@
 	
 	<artifactId>bans-env-bungeeplugin</artifactId>
 	<build>
-		<sourceDirectory>src/main/java</sourceDirectory>
-		<finalName>${project.name}_${project.version}</finalName>
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
@@ -21,9 +19,17 @@
 		</resources>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<release>8</release>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-invoker-plugin</artifactId>
+				<configuration>
+					<settingsFile>src/it/settings.xml</settingsFile>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -31,20 +37,32 @@
 	
 	<dependencies>
 		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-env-bungee</artifactId>
+			<version>${project.version}</version>
+			<classifier>tests</classifier>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-bootstrap</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>net.md-5</groupId>
 			<artifactId>bungeecord-api</artifactId>
-			<scope>provided</scope>
 		</dependency>
 	</dependencies>
-	
-	<repositories>
-		<repository>
-       		<id>bungeecord-repo</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-   		</repository>
-	</repositories>
 </project>

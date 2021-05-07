@@ -21,11 +21,13 @@ package space.arim.libertybans.env.bungee;
 import java.nio.file.Path;
 import java.util.concurrent.Executor;
 
+import net.md_5.bungee.api.ProxyServer;
 import space.arim.libertybans.bootstrap.BaseFoundation;
 import space.arim.libertybans.bootstrap.CulpritFinder;
-import space.arim.libertybans.bootstrap.DependencyPlatform;
+import space.arim.libertybans.bootstrap.Platform;
 import space.arim.libertybans.bootstrap.Instantiator;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
+import space.arim.libertybans.bootstrap.Platforms;
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 
 import net.md_5.bungee.api.plugin.Plugin;
@@ -49,10 +51,16 @@ class BaseWrapper {
 			this.plugin = plugin;
 			this.logger = logger;
 		}
+
+		Platform detectPlatform() {
+			ProxyServer server = plugin.getProxy();
+			return Platform.forCategory(Platform.Category.BUNGEE)
+					.slf4jSupport(Platforms.detectGetSlf4jLoggerMethod(plugin))
+					.build(server.getName() + " " + server.getVersion());
+		}
 		
 		BaseWrapper create() {
-			DependencyPlatform platform = DependencyPlatform.detectGetSlf4jLoggerMethod(plugin) ?
-					DependencyPlatform.WATERFALL : DependencyPlatform.BUNGEE;
+			Platform platform = detectPlatform();
 			Path folder = plugin.getDataFolder().toPath();
 			TaskScheduler scheduler = plugin.getProxy().getScheduler();
 			Executor executor = (cmd) -> scheduler.runAsync(plugin, cmd);

@@ -58,7 +58,9 @@ enum InternalDependency {
 	SELF_IMPLEMENTATION("self-implementation", Repositories.ARIM_AFFERO_GPL3),
 
 	SLF4J_API("slf4j-api", Repositories.CENTRAL_REPO),
-	SLF4J_JUL("slf4j-jdk14", Repositories.CENTRAL_REPO);
+	SLF4J_JUL("slf4j-jdk14", Repositories.CENTRAL_REPO),
+
+	KYORI_BUNDLE("kyori-bundle", Repositories.ARIM_AFFERO_GPL3);
 
 	private final ClassPresence classPresence;
 	private final String id;

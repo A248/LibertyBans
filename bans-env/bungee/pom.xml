@@ -11,8 +11,19 @@
 	
 	<artifactId>bans-env-bungee</artifactId>
 	<build>
-		<sourceDirectory>src/main/java</sourceDirectory>
-		<finalName>${project.name}_${project.version}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 	
 	<dependencies>
@@ -36,14 +47,6 @@
 		<dependency>
 			<groupId>net.md-5</groupId>
 			<artifactId>bungeecord-api</artifactId>
-			<scope>provided</scope>
 		</dependency>
 	</dependencies>
-	
-	<repositories>
-		<repository>
-       		<id>bungeecord-repo</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-   		</repository>
-	</repositories>
 </project>

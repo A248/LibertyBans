@@ -18,19 +18,14 @@
  */
 package space.arim.libertybans.env.bungee;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.*;
-
-import java.nio.file.Path;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.plugin.Plugin;
-import net.md_5.bungee.api.plugin.PluginDescription;
+import java.nio.file.Path;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ExtendWith(MockitoExtension.class)
 public class BungeeLauncherTest {
@@ -39,11 +34,8 @@ public class BungeeLauncherTest {
 	public Path tempDir;
 
 	@Test
-	public void testAllBindings() {
-		ProxyServer server = mock(ProxyServer.class);
-		Plugin plugin = new Plugin(server, new PluginDescription()) {};
-
-		assertNotNull(new BungeeLauncher(plugin, tempDir).launch());
+	public void allBindings() {
+		assertNotNull(new BungeeLauncher(MockPlugin.create(), tempDir).launch());
 	}
 
 }

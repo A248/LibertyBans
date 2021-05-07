@@ -11,12 +11,17 @@
 	
 	<artifactId>bans-env-spigot</artifactId>
 	<build>
-		<sourceDirectory>src/main/java</sourceDirectory>
-		<finalName>${project.name}_${project.version}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
 				<configuration>
 					<archive>
 						<manifestEntries>
@@ -49,7 +54,6 @@
 		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
-			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.morepaperlib</groupId>

@@ -11,8 +11,6 @@
 	
 	<artifactId>bans-env-velocity</artifactId>
 	<build>
-		<sourceDirectory>src/main/java</sourceDirectory>
-		<finalName>${project.name}_${project.version}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -54,7 +52,6 @@
 		<dependency>
 			<groupId>com.velocitypowered</groupId>
 			<artifactId>velocity-api</artifactId>
-			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 	

@@ -25,6 +25,7 @@
 							<exclude>org.slf4j:slf4j-api</exclude>
 							<exclude>org.yaml:snakeyaml</exclude>
 							<exclude>com.google.code.gson:gson</exclude>
+							<exclude>net.kyori:*</exclude>
 						</excludes>
 					</artifactSet>
 				</configuration>
