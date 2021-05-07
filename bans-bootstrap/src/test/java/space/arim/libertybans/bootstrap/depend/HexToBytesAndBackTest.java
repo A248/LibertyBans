@@ -37,7 +37,7 @@ public class HexToBytesAndBackTest {
 	}
 	
 	@Test
-	public void testConversions() {
+	public void conversions() {
 		String asHex = Dependency.bytesToHex(bytes);
 		byte[] backToBytes = Dependency.hexStringToByteArray(asHex);
 		assertArrayEquals(bytes, backToBytes);
