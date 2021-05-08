@@ -20,6 +20,7 @@ The be-all, end-all of discipline.
     * /mute, /ipmute, /unmute, /unmuteip - mutes or unmutes a player or IP address
     * /warn, /ipwarn, /unwarn, /unwarnip - warns or unwarns a player or IP address
     * /kick, /ipkick - kicks a player or IP address
+* Temporary versions of bans, mutes, and warns
 * All player data is stored using UUIDs. This isn't a silly plugin which stores data by player name.
 * List punishments:
     * /banlist - shows all bans
