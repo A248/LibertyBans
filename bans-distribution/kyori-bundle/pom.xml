@@ -10,12 +10,48 @@
 	</parent>
 	
 	<artifactId>bans-kyori-bundle</artifactId>
-	<description>Shaded combination of Kyori Adventure and its dependencies.</description>
+	<description>Shaded combination of Kyori Adventure and related dependencies.</description>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<configuration>
+					<artifactSet>
+						<excludes>
+							<exclude>org.checkerframework:checker-qual</exclude>
+							<exclude>org.jetbrains:annotations</exclude>
+							<exclude>com.google.code.gson:gson</exclude>
+							<exclude>space.arim.licenser:*</exclude>
+						</excludes>
+					</artifactSet>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-invoker-plugin</artifactId>
+				<configuration>
+					<settingsFile>src/it/settings.xml</settingsFile>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 	
 	<dependencies>
 		<dependency>
 			<groupId>net.kyori</groupId>
 			<artifactId>adventure-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.kyori</groupId>
+			<artifactId>adventure-text-serializer-gson</artifactId>
+			<version>${adventure.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>net.kyori</groupId>
+			<artifactId>adventure-text-serializer-legacy</artifactId>
+			<version>${adventure.version}</version>
 		</dependency>
 	</dependencies>
 </project>
