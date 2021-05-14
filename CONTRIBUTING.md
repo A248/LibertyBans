@@ -37,13 +37,13 @@ The bootstrap module downloads the implementation jar at runtime. The implementa
 
 ### Compiling and running the current source
 
-The jar at `bans-distribution/executable/LibertyBans-Executable_version.jar` can be run as a plugin on any supported platform.
+The jar at `bans-distribution/executable/target/LibertyBans-Executable_version.jar` can be run as a plugin on any supported platform.
 
 This jar does NOT relocate shaded dependencies, so it should NOT be used on a production server. It's meant for easy testing and development.
 
 ### Compiling and running the latest released version
 
-Use the jar at `bans-distribution/distributable/LibertyBans_version.jar`. This is the same jar which is uploaded to release pages like Github Releases.
+Use the jar at `bans-distribution/distributable/target/LibertyBans_version.jar`. This is the same jar which is uploaded to release pages like Github Releases.
 
 This jar will downloaded the released version it corresponds to at runtime.
 
@@ -66,3 +66,14 @@ If you would prefer not to run the integration tests yourself, simply let the CI
 ### Manual testing
 
 See the section "Compiling and running the current source"
+
+### Making a release
+
+I make releases with a few steps:
+
+1. `mvn versions:set -DnewVersion={theNextVersion}`
+2. `build/check-hashes.sh` to see the new dependency hashes for internal dependencies
+3. Update the dependency hashes in the parent pom
+4. Perform the deployment with `mvn clean deploy -Pcheck-hash`
+
+The maven-release-plugin does not fit this project unfortunately. I do recommend it for nearly everything else however.
