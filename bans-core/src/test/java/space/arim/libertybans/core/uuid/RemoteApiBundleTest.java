@@ -44,13 +44,11 @@ public class RemoteApiBundleTest {
 	private final String name = "A248";
 
 	private <T> CompletableFuture<RemoteApiResult<T>> completedResult(T value) {
-		return CompletableFuture.completedFuture(new RemoteApiResult<>(
-				value, RemoteApiResult.ResultType.FOUND, null));
+		return CompletableFuture.completedFuture(RemoteApiResult.found(value));
 	}
 
 	private <T> CompletableFuture<RemoteApiResult<T>> emptyResult() {
-		return CompletableFuture.completedFuture(new RemoteApiResult<>(
-				null, RemoteApiResult.ResultType.NOT_FOUND, null));
+		return CompletableFuture.completedFuture(RemoteApiResult.notFound());
 	}
 
 	@Test

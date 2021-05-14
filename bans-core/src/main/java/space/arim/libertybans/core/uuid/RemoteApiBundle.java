@@ -58,7 +58,6 @@ public class RemoteApiBundle {
 			break;
 		case RATE_LIMITED:
 		case ERROR:
-		case UNKNOWN:
 		default:
 			Exception ex = remoteApiResult.getException();
 			if (ex == null) {
@@ -95,9 +94,9 @@ public class RemoteApiBundle {
 	}
 	
 	private enum RemoteType {
-		ASHCON(HttpAshconApi::new),
-		MCHEADS(HttpMcHeadsApi::new),
-		MOJANG(HttpMojangApi::new);
+		ASHCON(HttpAshconApi::create),
+		MCHEADS(HttpMcHeadsApi::create),
+		MOJANG(HttpMojangApi::create);
 		
 		final Function<HttpClient, RemoteNameHistoryApi> creator;
 		

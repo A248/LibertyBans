@@ -18,34 +18,34 @@
  */
 package space.arim.libertybans.core.config;
 
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.concurrent.CompletableFuture;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import space.arim.omnibus.util.ThisClass;
-
 import space.arim.dazzleconf.AuxiliaryKeys;
 import space.arim.dazzleconf.ConfigurationFactory;
 import space.arim.dazzleconf.ConfigurationOptions;
 import space.arim.dazzleconf.error.ConfigFormatSyntaxException;
 import space.arim.dazzleconf.error.InvalidConfigException;
+import space.arim.dazzleconf.ext.snakeyaml.CommentMode;
 import space.arim.dazzleconf.ext.snakeyaml.SnakeYamlConfigurationFactory;
 import space.arim.dazzleconf.ext.snakeyaml.SnakeYamlOptions;
+import space.arim.omnibus.util.ThisClass;
+
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 class ConfigHolder<C> {
 
-	private final ConfigurationFactory<C> factory;
+	private final Class<C> configClass;
 	
 	private volatile C instance;
 	
 	private static final ConfigurationOptions CONFIG_OPTIONS;
-	private static final SnakeYamlOptions YAML_OPTIONS = new SnakeYamlOptions.Builder().useCommentingWriter(true).build();
+	private static final SnakeYamlOptions YAML_OPTIONS;
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
 	static {
@@ -53,10 +53,12 @@ class ConfigHolder<C> {
 				.setCreateSingleElementCollections(true);
 		ConfigSerialisers.addTo(optionsBuilder);
 		CONFIG_OPTIONS = optionsBuilder.build();
+
+		YAML_OPTIONS = new SnakeYamlOptions.Builder().commentMode(CommentMode.alternativeWriter()).build();
 	}
 	
 	ConfigHolder(Class<C> configClass) {
-		factory = new SnakeYamlConfigurationFactory<>(configClass, CONFIG_OPTIONS, YAML_OPTIONS);
+		this.configClass = Objects.requireNonNull(configClass);
 	}
 	
 	C getConfigData() {
@@ -78,6 +80,7 @@ class ConfigHolder<C> {
 	}
 	
 	private C reload0(Path path) throws IOException {
+		ConfigurationFactory<C> factory = SnakeYamlConfigurationFactory.create(configClass, CONFIG_OPTIONS, YAML_OPTIONS);
 		C defaults = factory.loadDefaults();
 		if (!Files.exists(path)) {
 			try (FileChannel fileChannel = FileChannel.open(path,
