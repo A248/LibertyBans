@@ -11,12 +11,17 @@
 	
 	<artifactId>bans-download</artifactId>
 	<description>Implementation jar with dependencies shaded. Downloaded at runtime.</description>
+
+	<properties>
+		<bans-distribution.can-deploy>false</bans-distribution.can-deploy>
+		<bans-distribution.module-hash>${self-implementation.hash}</bans-distribution.module-hash>
+	</properties>
 	
 	<build>
 		<!-- This is the same name format used by the dependency downloader -->
 		<!-- For quick testing, drag and drop the output jar to LibertyBans/libs/ -->
 		<finalName>implementation_${project.version}</finalName>
-		
+
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -41,6 +46,30 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>check-hash</id>
+			<properties>
+				<bans-distribution.can-deploy>true</bans-distribution.can-deploy>
+			</properties>
+			<build>
+				<plugins>
+					<!-- Check hash of own jar -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-enforcer-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>verify-hash</id>
+								<phase>verify</phase>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 	
 	<dependencies>
 		<dependency>

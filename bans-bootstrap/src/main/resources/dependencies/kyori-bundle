@@ -1,4 +1,4 @@
 space.arim.libertybans
 bans-kyori-bundle
 ${project.version}
-33b87b18b463e2301a357abefc4277d2d0620923d914be58d5897f080a122e95001a3a700f063eedc9a0180cd9c3220acb82255d48443c2dc9492e6b712df2c9
+${kyori-bundle.hash}

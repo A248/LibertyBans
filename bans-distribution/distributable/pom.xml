@@ -14,6 +14,32 @@
 	
 	<build>
 		<finalName>LibertyBans_${project.version}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>enforce-file-size</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireFilesSize>
+									<minsize>1</minsize>
+									<maxsize>3000000</maxsize> <!-- 3MB -->
+									<files>
+										<file>${project.build.directory}/${project.build.finalName}.jar</file>
+									</files>
+								</requireFilesSize>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 	
 	<dependencies>

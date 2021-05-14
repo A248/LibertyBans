@@ -12,6 +12,11 @@
 	<artifactId>bans-distribution</artifactId>
 	<packaging>pom</packaging>
 	<description>Parent pom for distribution-related modules.</description>
+
+	<properties>
+		<bans-distribution.can-deploy>true</bans-distribution.can-deploy>
+		<bans-distribution.module-hash/>
+	</properties>
 	
 	<build>
 		<plugins>
@@ -28,6 +33,46 @@
 						</filter>
 					</filters>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.0.0-M3</version>
+				<executions>
+					<execution>
+						<!-- Ensure the check-hash profile is active on deploy -->
+						<id>enforce-check-hash</id>
+						<phase>install</phase>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireProperty>
+									<property>bans-distribution.can-deploy</property>
+									<regex>true</regex>
+									<regexMessage>You need to have the check-hash profile enabled during release</regexMessage>
+								</requireProperty>
+							</rules>
+						</configuration>
+					</execution>
+					<execution>
+						<id>verify-hash</id>
+						<phase>none</phase> <!-- Disable by default -->
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireFileChecksum>
+									<file>${project.build.directory}/${project.build.finalName}.jar</file>
+									<checksum>${bans-distribution.module-hash}</checksum>
+									<type>sha512</type>
+								</requireFileChecksum>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
