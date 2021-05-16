@@ -37,9 +37,9 @@ The bootstrap module downloads the implementation jar at runtime. The implementa
 
 ### Compiling and running the current source
 
-The jar at `bans-distribution/executable/target/LibertyBans-Executable_version.jar` can be run as a plugin on any supported platform.
+Use `mvn package`.
 
-This jar does NOT relocate shaded dependencies, so it should NOT be used on a production server. It's meant for easy testing and development.
+The jar at `bans-distribution/executable/target/LibertyBans-Executable_version.jar` can be run as a plugin on any supported platform. This jar does NOT relocate shaded dependencies, so it should NOT be used on a production server. It's meant for easy testing and development.
 
 ### Compiling and running the latest released version
 
@@ -59,7 +59,7 @@ Unit tests are run as part of the Maven build. `mvn test` will execute them.
 
 Using `mvn verify` will build and run all tests, including integration tests. This is the same command used by the Github Actions workflow (CI).
 
-The integration tests rely on [MariaDB4j](https://github.com/vorburger/MariaDB4j). Sometimes MariaDB4j is a little clumsy and requires extra setup on MacOS.
+The integration tests rely on [MariaDB4j](https://github.com/vorburger/MariaDB4j). Sometimes MariaDB4j is a little clumsy; it requires extra setup on MacOS and is not friendly with firewalls.
 
 If you would prefer not to run the integration tests yourself, simply let the CI take care of it.
 
