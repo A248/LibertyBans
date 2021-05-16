@@ -55,7 +55,7 @@ public class DatabaseManager implements Part {
 		this.scopeManager = scopeManager;
 	}
 	
-	Path folder() {
+	public Path folder() {
 		return folder;
 	}
 	
@@ -86,8 +86,8 @@ public class DatabaseManager implements Part {
 	@Override
 	public void startup() {
 		DatabaseResult dbResult = new DatabaseSettings(this).create();
-		StandardDatabase database = dbResult.database;
-		if (!dbResult.success) {
+		StandardDatabase database = dbResult.database();
+		if (!dbResult.success()) {
 			database.closeCompletely();
 			throw new StartupException("Database initialisation failed");
 		}
@@ -100,8 +100,8 @@ public class DatabaseManager implements Part {
 		StandardDatabase currentDatabase = this.database;
 
 		DatabaseResult dbResult = new DatabaseSettings(this).create();
-		StandardDatabase database = dbResult.database;
-		if (!dbResult.success) {
+		StandardDatabase database = dbResult.database();
+		if (!dbResult.success()) {
 			database.close();
 			throw new StartupException("Database restart failed");
 		}

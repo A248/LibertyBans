@@ -18,14 +18,22 @@
  */
 package space.arim.libertybans.core.database;
 
-final class DatabaseResult {
+public final class DatabaseResult {
 
-	final StandardDatabase database;
-	final boolean success;
+	private final StandardDatabase database;
+	private final boolean success;
 	
 	DatabaseResult(StandardDatabase database, boolean success) {
 		this.database = database;
 		this.success = success;
+	}
+
+	public StandardDatabase database() {
+		return database;
+	}
+
+	public boolean success() {
+		return success;
 	}
 
 	@Override

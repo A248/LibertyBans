@@ -48,7 +48,7 @@ import space.arim.libertybans.core.punish.MiscUtil;
  * @author A248
  *
  */
-class DatabaseSettings {
+public class DatabaseSettings {
 
 	private final DatabaseManager manager;
 
@@ -64,7 +64,7 @@ class DatabaseSettings {
 		System.setProperty("hsqldb.reconfig_logging", "false");
 	}
 
-	DatabaseSettings(DatabaseManager manager) {
+	public DatabaseSettings(DatabaseManager manager) {
 		this.manager = manager;
 	}
 	
@@ -83,7 +83,7 @@ class DatabaseSettings {
 	 * @param config the config accessor
 	 * @return a database result, which should be checked for success or failure
 	 */
-	DatabaseResult create(SqlConfig config) {
+	public DatabaseResult create(SqlConfig config) {
 		this.config = config;
 		vendor = config.vendor();
 		hikariConf = new HikariConfig();
@@ -98,7 +98,9 @@ class DatabaseSettings {
 
 		Flyway flyway = createFlyway(hikariDataSource);
 		try {
-			flyway.migrate();
+			// Run using context ClassLoader
+			// https://github.com/flyway/flyway/issues/3168
+			runWithContextLoaderSet(flyway::migrate);
 		} catch (FlywayException ex) {
 			logger.error("Unable to migrate your database. Please create a backup of your database "
 					+ "and promptly report this issue.", ex);
@@ -258,11 +260,15 @@ class DatabaseSettings {
 	 * @param driverClassName the driver class name
 	 */
 	private void setDriverClassName(String driverClassName) {
+		runWithContextLoaderSet(() -> hikariConf.setDriverClassName(driverClassName));
+	}
+
+	private void runWithContextLoaderSet(Runnable action) {
 		Thread currentThread = Thread.currentThread();
 		ClassLoader initialContextLoader = currentThread.getContextClassLoader();
+		currentThread.setContextClassLoader(getClass().getClassLoader());
 		try {
-			currentThread.setContextClassLoader(getClass().getClassLoader());
-			hikariConf.setDriverClassName(driverClassName);
+			action.run();
 		} finally {
 			currentThread.setContextClassLoader(initialContextLoader);
 		}
