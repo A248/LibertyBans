@@ -110,6 +110,23 @@
 							</rules>
 						</configuration>
 					</execution>
+					<execution>
+						<id>enforce-no-snapshots</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireReleaseDeps>
+									<message>Snapshots lead to unstable builds. Use release versions.</message>
+									<searchTransitive>false</searchTransitive>
+									<excludes>
+										<exclude>org.spigotmc:spigot-api</exclude>
+									</excludes>
+								</requireReleaseDeps>
+							</rules>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 		</plugins>
