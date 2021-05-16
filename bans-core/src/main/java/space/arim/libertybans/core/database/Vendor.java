@@ -48,7 +48,7 @@ public enum Vendor {
 		return displayName;
 	}
 	
-	String driverClassName() {
+	public String driverClassName() {
 		return driverClassName;
 	}
 	
