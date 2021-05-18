@@ -55,7 +55,6 @@ public class DatabaseSettings {
 	private SqlConfig config;
 	private Vendor vendor;
 	private HikariConfig hikariConf;
-	private boolean refresherEvent;
 
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
@@ -76,27 +75,37 @@ public class DatabaseSettings {
 	DatabaseResult create() {
 		return create(manager.configs().getSqlConfig());
 	}
-	
+
 	/**
-	 * Creates an accessible database
-	 * 
-	 * @param config the config accessor
-	 * @return a database result, which should be checked for success or failure
+	 * Creates a data source connection pool
+	 *
+	 * @param config the config
+	 * @return the data source
 	 */
-	public DatabaseResult create(SqlConfig config) {
+	public HikariDataSource createDataSource(SqlConfig config) {
 		this.config = config;
 		vendor = config.vendor();
 		hikariConf = new HikariConfig();
 
 		setHikariConfig();
+		return new HikariDataSource(hikariConf);
+	}
 
-		HikariDataSource hikariDataSource = new HikariDataSource(hikariConf);
-		refresherEvent = vendor == Vendor.MARIADB && config.mariaDb().useEventScheduler();
+	/**
+	 * Creates an accessible database
+	 * 
+	 * @param config the config
+	 * @return a database result, which should be checked for success or failure
+	 */
+	public DatabaseResult create(SqlConfig config) {
+		HikariDataSource hikariDataSource = createDataSource(config);
+
+		boolean refresherEvent = vendor == Vendor.MARIADB && config.mariaDb().useEventScheduler();
 
 		StandardDatabase database = StandardDatabase.create(
 				manager, vendor, hikariDataSource, hikariConf.getMaximumPoolSize(), refresherEvent);
 
-		Flyway flyway = createFlyway(hikariDataSource);
+		Flyway flyway = createFlyway(hikariDataSource, refresherEvent);
 		try {
 			// Run using context ClassLoader
 			// https://github.com/flyway/flyway/issues/3168
@@ -109,7 +118,7 @@ public class DatabaseSettings {
 		return new DatabaseResult(database, true);
 	}
 	
-	private Flyway createFlyway(HikariDataSource hikariDataSource) {
+	private Flyway createFlyway(HikariDataSource hikariDataSource, boolean refresherEvent) {
 		List<String> locations = new ArrayList<>();
 		locations.add("classpath:sql-migrations/common");
 		locations.add("classpath:sql-migrations/" + vendor);
@@ -176,12 +185,7 @@ public class DatabaseSettings {
 		}
 	}
 
-	/**
-	 * Visible for testing
-	 *
-	 * @return the base JDBC url
-	 */
-	public String getBaseUrl(Vendor vendor) {
+	private String getBaseUrl() {
 		String url;
 		switch (vendor) {
 

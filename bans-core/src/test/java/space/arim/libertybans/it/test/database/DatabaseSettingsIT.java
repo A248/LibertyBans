@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.it.test.database;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -35,7 +36,6 @@ import space.arim.libertybans.it.util.FlywayResetStaticStateExtension;
 
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -85,12 +85,12 @@ public class DatabaseSettingsIT {
 	@Test
 	public void createWithExistingTablePresent() throws SQLException {
 		DatabaseSettings databaseSettings = createDatabaseSettings();
-		String url = databaseSettings.getBaseUrl(Vendor.HSQLDB);
-		try (Connection conn = DriverManager.getConnection(url, "SA", "");
-				PreparedStatement prepStmt = conn.prepareStatement("CREATE TABLE myTable (id INT NOT NULL)")) {
+		SqlConfig sqlConfig = createSqlConfig();
+		try (HikariDataSource tempPool = databaseSettings.createDataSource(sqlConfig);
+			 Connection conn = tempPool.getConnection();
+			 PreparedStatement prepStmt = conn.prepareStatement("CREATE TABLE myTable (id INT NOT NULL)")) {
 			prepStmt.execute();
 		}
-		SqlConfig sqlConfig = createSqlConfig();
 		DatabaseResult dbResult = assertDoesNotThrow(() -> databaseSettings.create(sqlConfig));
 		assertTrue(dbResult.success(), "Database creation failed");
 	}
