@@ -181,7 +181,7 @@ public class DatabaseSettings {
 	 *
 	 * @return the base JDBC url
 	 */
-	public String getBaseUrl() {
+	public String getBaseUrl(Vendor vendor) {
 		String url;
 		switch (vendor) {
 

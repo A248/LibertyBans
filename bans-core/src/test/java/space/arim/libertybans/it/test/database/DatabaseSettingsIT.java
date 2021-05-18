@@ -81,12 +81,11 @@ public class DatabaseSettingsIT {
 		return sqlConfig;
 	}
 
-	// Database initialization fails on a non-empty database
-	// https://github.com/A248/LibertyBans/issues/31
+	// Database initialization with a non-empty database
 	@Test
 	public void createWithExistingTablePresent() throws SQLException {
 		DatabaseSettings databaseSettings = createDatabaseSettings();
-		String url = databaseSettings.getBaseUrl();
+		String url = databaseSettings.getBaseUrl(Vendor.HSQLDB);
 		try (Connection conn = DriverManager.getConnection(url, "SA", "");
 				PreparedStatement prepStmt = conn.prepareStatement("CREATE TABLE myTable (id INT NOT NULL)")) {
 			prepStmt.execute();
