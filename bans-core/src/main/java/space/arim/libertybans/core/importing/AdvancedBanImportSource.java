@@ -37,6 +37,7 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 public class AdvancedBanImportSource implements ImportSource {
@@ -92,14 +93,14 @@ public class AdvancedBanImportSource implements ImportSource {
 
 		@Override
 		public Optional<PortablePunishment> mapRow(ResultSet resultSet) throws SQLException {
-			return mapKnownDetails(resultSet).map((knownDetails) -> {
+			return mapType(resultSet).map((advancedBanType) -> {
 				try {
 					Integer id = resultSet.getInt("id");
 					logger.trace("Mapping row with AdvancedBan punishment ID {}", id);
 					return new PortablePunishment(
 							id,
-							knownDetails,
-							mapVictimInfo(resultSet),
+							mapKnownDetails(resultSet, advancedBanType),
+							mapVictimInfo(resultSet, advancedBanType),
 							mapOperatorInfo(resultSet),
 							active);
 				} catch (SQLException ex) {
@@ -108,17 +109,11 @@ public class AdvancedBanImportSource implements ImportSource {
 			});
 		}
 
-		/*
-		 * Nearly every column retrieval has to account for the possibility of NULL values,
-		 * because AdvancedBan's schema has incredibly poor integrity.
-		 * ThirdPartyCorruptDataException is thrown in these cases.
-		 */
-
-		private Optional<PortablePunishment.KnownDetails> mapKnownDetails(ResultSet resultSet) throws SQLException {
+		private Optional<AdvancedBanPunishmentType> mapType(ResultSet resultSet) throws SQLException {
 			String punishmentType = getNonnullString(resultSet, "punishmentType");
-			AdvancedBanPunishmentType advancedBanPunishmentType;
+			AdvancedBanPunishmentType advancedBanType;
 			try {
-				advancedBanPunishmentType = AdvancedBanPunishmentType.valueOf(punishmentType);
+				advancedBanType = AdvancedBanPunishmentType.valueOf(punishmentType);
 			} catch (IllegalArgumentException typeNotRecognised) {
 
 				// LibertyBans does not have AdvancedBan's NOTE
@@ -126,6 +121,16 @@ public class AdvancedBanImportSource implements ImportSource {
 				logger.info("Skipping punishment type {} which is not supported by LibertyBans", punishmentType);
 				return Optional.empty();
 			}
+			return Optional.of(advancedBanType);
+		}
+
+		/*
+		 * Nearly every column retrieval has to account for the possibility of NULL values,
+		 * because AdvancedBan's schema lacks constraints.
+		 */
+
+		private PortablePunishment.KnownDetails mapKnownDetails(
+				ResultSet resultSet, AdvancedBanPunishmentType advancedBanType) throws SQLException {
 			// AdvancedBan's start and end times have milliseconds precision
 			long startMillis = resultSet.getLong("start");
 			if (startMillis == 0L) { // SQL NULL -> 0L
@@ -145,31 +150,36 @@ public class AdvancedBanImportSource implements ImportSource {
 				end = Instant.ofEpochMilli(endMillis);
 			}
 			String reason = getNonnullString(resultSet, "reason");
-			return Optional.of(new PortablePunishment.KnownDetails(
-					advancedBanPunishmentType.type,
+			return new PortablePunishment.KnownDetails(
+					advancedBanType.type(),
 					reason,
 					scopeManager.globalScope(), // AdvancedBan does not support scopes
-					start, end));
+					start, end);
 		}
 
-		private PortablePunishment.VictimInfo mapVictimInfo(ResultSet resultSet) throws SQLException {
-			// Despite the AdvancedBan column name 'uuid', this can also be an IP address
+		private PortablePunishment.VictimInfo mapVictimInfo(
+				ResultSet resultSet, AdvancedBanPunishmentType type) throws SQLException {
+			// Despite the column name 'uuid', this can also be an IP address OR a username
 			String victimId = getNonnullString(resultSet, "uuid");
-			// AdvancedBan uses trimmed UUIDs, which are always of length 32
-			boolean isUuid = victimId.length() == 32;
-			NetworkAddress address;
-			if (isUuid) {
-				address = null;
-			} else {
+			String name = getNonnullString(resultSet, "name");
+			if (type.isIpAddressBased()) {
+				NetworkAddress address;
 				try {
 					address = NetworkAddress.of(InetAddress.getByName(victimId));
 				} catch (UnknownHostException ex) {
 					throw new ImportException("Unable to parse AdvancedBan IP address", ex);
 				}
+				return new PortablePunishment.VictimInfo(null, name, address);
 			}
-			String name = getNonnullString(resultSet, "name");
-			return new PortablePunishment.VictimInfo(
-					(isUuid) ? UUIDUtil.fromShortString(victimId) : null, name, address);
+			// AdvancedBan uses trimmed UUIDs, which are always of length 32
+			if (victimId.length() == 32) {
+				UUID uuid = UUIDUtil.fromShortString(victimId);
+				return new PortablePunishment.VictimInfo(uuid, name, null);
+			}
+			// Assume victimId is a name
+			// In this case the uuid and name columns should have the same value
+			assert victimId.equals(name) : "Victim ID " + victimId + " should equal " + name;
+			return new PortablePunishment.VictimInfo(null, name, null);
 		}
 
 		private PortablePunishment.OperatorInfo mapOperatorInfo(ResultSet resultSet) throws SQLException {
@@ -206,10 +216,18 @@ public class AdvancedBanImportSource implements ImportSource {
 		// NOTE(null); - purposefully omitted; see above
 		;
 
-		final PunishmentType type;
+		private final PunishmentType type;
 
 		private AdvancedBanPunishmentType(PunishmentType type) {
 			this.type = type;
+		}
+
+		PunishmentType type() {
+			return type;
+		}
+
+		boolean isIpAddressBased() {
+			return name().contains("IP_");
 		}
 	}
 

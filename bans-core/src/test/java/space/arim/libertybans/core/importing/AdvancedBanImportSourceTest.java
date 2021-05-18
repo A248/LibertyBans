@@ -26,7 +26,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.jdbcaesar.JdbCaesar;
-import space.arim.jdbcaesar.JdbCaesarBuilder;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.scope.ScopeManager;
@@ -34,7 +33,6 @@ import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.scope.ScopeImpl;
 import space.arim.omnibus.util.UUIDUtil;
 
-import javax.sql.DataSource;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
@@ -47,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(LocalDatabaseSetup.class)
@@ -109,7 +106,7 @@ public class AdvancedBanImportSourceTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings= {"BAN", "TEMP_BAN", "IP_BAN"})
+	@ValueSource(strings= {"BAN", "TEMP_BAN"})
 	public void activeReplacesHistorical(String punishmentType) {
 		String uuidString = "394aef836e3f482b9988933cabe3b1cd";
 		UUID uuid = UUIDUtil.fromShortString(uuidString);
@@ -175,6 +172,24 @@ public class AdvancedBanImportSourceTest {
 						Instant.ofEpochMilli(startTime), PortablePunishment.KnownDetails.PERMANENT),
 				new PortablePunishment.VictimInfo(
 						null, victimName, NetworkAddress.of(InetAddress.getByName(victimIp))),
+				new PortablePunishment.OperatorInfo(
+						false, null, "Ecotastic"),
+				true);
+		assertEquals(Set.of(expectedPunishment), sourcePunishments());
+	}
+
+	@Test
+	public void namesInUuidColumn() {
+		// AdvancedBan uses names in the UUID column on offline-mode servers
+		String victimName = "Whoever";
+		String reason = "Some reason";
+		long startTime = 1593013804802L;
+		insertActive(victimName, victimName, reason, "Ecotastic", "BAN", startTime, -1L);
+		PortablePunishment expectedPunishment = new PortablePunishment(0,
+				new PortablePunishment.KnownDetails(
+						PunishmentType.BAN, reason, globalScope,
+						Instant.ofEpochMilli(startTime), PortablePunishment.KnownDetails.PERMANENT),
+				new PortablePunishment.VictimInfo(null, victimName, null),
 				new PortablePunishment.OperatorInfo(
 						false, null, "Ecotastic"),
 				true);
