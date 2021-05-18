@@ -30,6 +30,7 @@ import space.arim.libertybans.core.punish.PunishmentCreator;
 import space.arim.omnibus.util.ThisClass;
 
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -61,7 +62,7 @@ public class ImportExecutor {
 			} catch (Throwable ex) {
 				future.completeExceptionally(ex);
 			}
-		}, "libertybans-importer").start();
+		}, "LibertyBans-Importer").start();
 		return future;
 	}
 
@@ -111,7 +112,7 @@ public class ImportExecutor {
 	}
 
 	private void addImplicitNameAddressRecord(ImportSink importSink, PortablePunishment punishment) {
-		long startTime = punishment.knownDetails().start();
+		Instant startTime = punishment.knownDetails().start();
 		PortablePunishment.VictimInfo victimInfo = punishment.victimInfo();
 		victimInfo.uuid().ifPresent((uuid) -> {
 			importSink.addNameAddressRecord(new NameAddressRecord(

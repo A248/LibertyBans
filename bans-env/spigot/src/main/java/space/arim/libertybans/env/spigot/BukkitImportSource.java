@@ -32,6 +32,8 @@ import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Instant;
+import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -84,8 +86,9 @@ public class BukkitImportSource implements PlatformImportSource {
 	private Set<PortablePunishment> sourcePunishmentsMainThread(BanList.Type banListType, BanListTypeHelper helper) {
 		return server.getBanList(banListType).getBanEntries().stream().map((entry) -> {
 			String reason = Optional.ofNullable(entry.getReason()).orElse("");
-			long start = entry.getCreated().toInstant().getEpochSecond();
-			long end = Optional.ofNullable(entry.getExpiration()).map((expiration) -> expiration.toInstant().getEpochSecond()).orElse(0L);
+			Instant start = entry.getCreated().toInstant();
+			Instant end = Optional.ofNullable(entry.getExpiration())
+					.map(Date::toInstant).orElse(PortablePunishment.KnownDetails.PERMANENT);
 			return new PortablePunishment(
 					null,
 					new PortablePunishment.KnownDetails(

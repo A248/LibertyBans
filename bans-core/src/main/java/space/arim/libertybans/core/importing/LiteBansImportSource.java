@@ -35,6 +35,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Optional;
@@ -58,18 +59,22 @@ public class LiteBansImportSource implements ImportSource {
 		this.scopeManager = scopeManager;
 	}
 
-	@Override
-	public Stream<PortablePunishment> sourcePunishments() {
-		DatabaseStream databaseStream = new DatabaseStream(
+	private DatabaseStream databaseStream() {
+		return new DatabaseStream(
 				config.litebans().toConnectionSource(), config.retrievalSize());
-		return Arrays.stream(LiteBansTable.values()).map(RowMapper::new).flatMap(databaseStream::streamRows);
 	}
 
-	private class RowMapper implements SchemaRowMapper<PortablePunishment> {
+	@Override
+	public Stream<PortablePunishment> sourcePunishments() {
+		DatabaseStream databaseStream = databaseStream();
+		return Arrays.stream(LiteBansTable.values()).map(PunishmentRowMapper::new).flatMap(databaseStream::streamRows);
+	}
+
+	private class PunishmentRowMapper implements SchemaRowMapper<PortablePunishment> {
 
 		private final LiteBansTable table;
 
-		RowMapper(LiteBansTable table) {
+		PunishmentRowMapper(LiteBansTable table) {
 			this.table = table;
 		}
 
@@ -82,7 +87,7 @@ public class LiteBansImportSource implements ImportSource {
 		public Optional<PortablePunishment> mapRow(ResultSet resultSet) throws SQLException {
 			Integer id = resultSet.getInt("id");
 			if (resultSet.getBoolean("ipban_wildcard")) {
-				logger.info("Skipped LiteBans wildcard IP ban {} which is not supported by LibertyBans", id);
+				logger.warn("Skipped LiteBans wildcard IP ban {} which is not supported by LibertyBans", id);
 				return Optional.empty();
 			}
 			boolean active = table != LiteBansTable.KICKS && resultSet.getBoolean("active");
@@ -104,14 +109,19 @@ public class LiteBansImportSource implements ImportSource {
 			if (reason.length() > 256) {
 				// LiteBans permits longer reasons
 				reason = reason.substring(0, 256);
-				logger.info("Trimmed reason of excessively long LiteBans punishment");
+				logger.info("Trimmed reason of excessively long LiteBans punishment. New reason is {}", reason);
 			}
 			// LiteBans' start and end times have milliseconds precision
-			long start = resultSet.getLong("time") / 1_000L;
+			Instant start = Instant.ofEpochMilli(resultSet.getLong("time"));
 
 			long liteBansUntil = resultSet.getLong("until");
 			// Sometimes LiteBans uses 0 for permanent punishments, sometimes -1
-			long end = (liteBansUntil == -1L) ? 0L : liteBansUntil / 1_000L;
+			Instant end;
+			if (liteBansUntil == -1L || liteBansUntil == 0L) {
+				end = PortablePunishment.KnownDetails.PERMANENT;
+			} else {
+				end = Instant.ofEpochMilli(liteBansUntil);
+			}
 
 			String liteBansScope = resultSet.getString("server_scope");
 			ServerScope scope = (liteBansScope == null || liteBansScope.equals("*")) ?
@@ -187,4 +197,38 @@ public class LiteBansImportSource implements ImportSource {
 			return name().toLowerCase(Locale.ROOT);
 		}
 	}
+
+	@Override
+	public Stream<NameAddressRecord> sourceNameAddressHistory() {
+		return databaseStream().streamRows(new HistoryRowMapper());
+	}
+
+	private class HistoryRowMapper implements SchemaRowMapper<NameAddressRecord> {
+
+		@Override
+		public String selectStatement() {
+			return "SELECT uuid, name, ip, date FROM " + config.litebans().tablePrefix() + "history";
+		}
+
+		@Override
+		public Optional<NameAddressRecord> mapRow(ResultSet resultSet) throws SQLException {
+			String ipString = resultSet.getString("ip");
+			// LiteBans uses # as the console's IP address
+			if (ipString.equals("#offline#") || ipString.equals("#")) {
+				logger.debug("Skipping IP address {} in address history", ipString);
+				return Optional.empty();
+			}
+			UUID uuid = UUID.fromString(resultSet.getString("uuid"));
+			String username = resultSet.getString("name");
+			NetworkAddress address;
+			try {
+				address = NetworkAddress.of(InetAddress.getByName(ipString));
+			} catch (UnknownHostException ex) {
+				throw new ImportException("Unable to parse LiteBans IP address", ex);
+			}
+			Instant timeRecorded = resultSet.getTimestamp("date").toInstant();
+			return Optional.of(new NameAddressRecord(uuid, username, address, timeRecorded));
+		}
+	}
+
 }

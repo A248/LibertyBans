@@ -21,6 +21,7 @@ package space.arim.libertybans.core.importing;
 
 import space.arim.libertybans.api.NetworkAddress;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,13 +31,13 @@ public class NameAddressRecord {
 	private final UUID uuid;
 	private final String name;
 	private final NetworkAddress address;
-	private final long timeRecorded;
+	private final Instant timeRecorded;
 
-	public NameAddressRecord(UUID uuid, String name, NetworkAddress address, long timeRecorded) {
-		this.uuid = Objects.requireNonNull(uuid);
+	public NameAddressRecord(UUID uuid, String name, NetworkAddress address, Instant timeRecorded) {
+		this.uuid = Objects.requireNonNull(uuid, "uuid");
 		this.name = name;
 		this.address = address;
-		this.timeRecorded = timeRecorded;
+		this.timeRecorded = Objects.requireNonNull(timeRecorded, "timeRecorded");
 	}
 
 	public UUID uuid() {
@@ -51,7 +52,7 @@ public class NameAddressRecord {
 		return Optional.ofNullable(address);
 	}
 
-	public long timeRecorded() {
+	public Instant timeRecorded() {
 		return timeRecorded;
 	}
 
@@ -60,7 +61,8 @@ public class NameAddressRecord {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		NameAddressRecord that = (NameAddressRecord) o;
-		return timeRecorded == that.timeRecorded && uuid.equals(that.uuid) && Objects.equals(name, that.name) && Objects.equals(address, that.address);
+		return uuid.equals(that.uuid) && Objects.equals(name, that.name)
+				&& Objects.equals(address, that.address) && timeRecorded.equals(that.timeRecorded);
 	}
 
 	@Override
@@ -68,7 +70,7 @@ public class NameAddressRecord {
 		int result = uuid.hashCode();
 		result = 31 * result + (name != null ? name.hashCode() : 0);
 		result = 31 * result + (address != null ? address.hashCode() : 0);
-		result = 31 * result + (int) (timeRecorded ^ (timeRecorded >>> 32));
+		result = 31 * result + timeRecorded.hashCode();
 		return result;
 	}
 

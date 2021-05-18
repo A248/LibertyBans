@@ -60,7 +60,7 @@ public class ImportFunction {
 		return Optional.of(new Enaction.OrderDetails(
 				knownDetails.type(), victim, operator,
 				knownDetails.reason(), knownDetails.scope(),
-				knownDetails.start(), knownDetails.end()));
+				knownDetails.start().getEpochSecond(), knownDetails.end()));
 	}
 
 	private Victim toVictim(PortablePunishment.VictimInfo victimInfo) {

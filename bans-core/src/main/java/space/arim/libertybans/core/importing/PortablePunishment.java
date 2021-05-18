@@ -24,6 +24,7 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.scope.ServerScope;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -103,15 +104,18 @@ public final class PortablePunishment {
 		private final PunishmentType type;
 		private final String reason;
 		private final ServerScope scope;
-		private final long start;
-		private final long end;
+		private final Instant start;
+		private final Instant end;
 
-		public KnownDetails(PunishmentType type, String reason, ServerScope scope, long start, long end) {
-			this.type = Objects.requireNonNull(type);
-			this.reason = Objects.requireNonNull(reason);
-			this.scope = Objects.requireNonNull(scope);
-			this.start = start;
-			this.end = end;
+		public static final Instant PERMANENT = Instant.MAX;
+
+		public KnownDetails(PunishmentType type, String reason, ServerScope scope,
+							Instant start, Instant end) {
+			this.type = Objects.requireNonNull(type, "type");
+			this.reason = Objects.requireNonNull(reason, "reason");
+			this.scope = Objects.requireNonNull(scope, "scope");
+			this.start = Objects.requireNonNull(start, "start");
+			this.end = Objects.requireNonNull(end, "end");
 		}
 
 		public PunishmentType type() {
@@ -126,12 +130,15 @@ public final class PortablePunishment {
 			return scope;
 		}
 
-		public long start() {
+		public Instant start() {
 			return start;
 		}
 
 		public long end() {
-			return end;
+			if (end.equals(PERMANENT)) {
+				return 0L;
+			}
+			return end.getEpochSecond();
 		}
 
 		@Override
@@ -139,10 +146,8 @@ public final class PortablePunishment {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 			KnownDetails that = (KnownDetails) o;
-			return type == that.type
-					&& reason.equals(that.reason)
-					&& scope.equals(that.scope)
-					&& start == that.start && end == that.end;
+			return type == that.type && reason.equals(that.reason) && scope.equals(that.scope)
+					&& start.equals(that.start) && end.equals(that.end);
 		}
 
 		@Override
@@ -150,8 +155,8 @@ public final class PortablePunishment {
 			int result = type.hashCode();
 			result = 31 * result + reason.hashCode();
 			result = 31 * result + scope.hashCode();
-			result = 31 * result + (int) (start ^ (start >>> 32));
-			result = 31 * result + (int) (end ^ (end >>> 32));
+			result = 31 * result + start.hashCode();
+			result = 31 * result + end.hashCode();
 			return result;
 		}
 

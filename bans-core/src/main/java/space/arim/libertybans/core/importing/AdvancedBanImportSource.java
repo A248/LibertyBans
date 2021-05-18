@@ -33,6 +33,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -126,18 +127,23 @@ public class AdvancedBanImportSource implements ImportSource {
 				return Optional.empty();
 			}
 			// AdvancedBan's start and end times have milliseconds precision
-			long start = resultSet.getLong("start") / 1_000L;
-			if (start == 0L) { // SQL NULL -> 0L
+			long startMillis = resultSet.getLong("start");
+			if (startMillis == 0L) { // SQL NULL -> 0L
 				throw nullColumn("start");
 			}
+			Instant start = Instant.ofEpochMilli(startMillis);
 
-			long advancedBanEnd = resultSet.getLong("end");
-			if (advancedBanEnd == 0L) { // SQL NULL -> 0L
+			long endMillis = resultSet.getLong("end");
+			if (endMillis == 0L) { // SQL NULL -> 0L
 				throw nullColumn("end");
 			}
 			// AdvancedBan uses -1 for permanent punishments
-			long end = (advancedBanEnd == -1L) ? 0L : advancedBanEnd / 1_000L;
-
+			Instant end;
+			if (endMillis == -1L) {
+				end = PortablePunishment.KnownDetails.PERMANENT;
+			} else {
+				end = Instant.ofEpochMilli(endMillis);
+			}
 			String reason = getNonnullString(resultSet, "reason");
 			return Optional.of(new PortablePunishment.KnownDetails(
 					advancedBanPunishmentType.type,

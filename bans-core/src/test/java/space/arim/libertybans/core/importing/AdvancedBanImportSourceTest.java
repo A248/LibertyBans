@@ -38,6 +38,7 @@ import javax.sql.DataSource;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -121,7 +122,7 @@ public class AdvancedBanImportSourceTest {
 		PortablePunishment historicalPunishment = new PortablePunishment(0,
 				new PortablePunishment.KnownDetails(
 						PunishmentType.BAN, "bug exploit", globalScope,
-						startTime / 1_000L, endTime / 1_000L),
+						Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)),
 				new PortablePunishment.VictimInfo(uuid, "creeperfreddy", null),
 				new PortablePunishment.OperatorInfo(true, null, null),
 				false);
@@ -171,7 +172,7 @@ public class AdvancedBanImportSourceTest {
 		PortablePunishment expectedPunishment = new PortablePunishment(0,
 				new PortablePunishment.KnownDetails(
 						PunishmentType.BAN, "No reason stated.", globalScope,
-						startTime / 1_000L, 0L),
+						Instant.ofEpochMilli(startTime), PortablePunishment.KnownDetails.PERMANENT),
 				new PortablePunishment.VictimInfo(
 						null, victimName, NetworkAddress.of(InetAddress.getByName(victimIp))),
 				new PortablePunishment.OperatorInfo(

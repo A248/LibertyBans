@@ -63,7 +63,7 @@ class ImportSink {
 	void addNameAddressRecord(NameAddressRecord nameAddressRecord) {
 		batchExecutor.runOperation((querySource, connection) -> {
 			Association association = new Association(nameAddressRecord.uuid(), querySource);
-			long timeRecorded = nameAddressRecord.timeRecorded();
+			long timeRecorded = nameAddressRecord.timeRecorded().getEpochSecond();
 			nameAddressRecord.name().ifPresent((name) -> association.associatePastName(name, timeRecorded));
 			nameAddressRecord.address().ifPresent((address) -> association.associatePastAddress(address, timeRecorded));
 		});

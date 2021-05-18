@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -95,26 +96,30 @@ public class LiteBansImportSourceTest {
 		UUID uuid = UUID.fromString(uuidString);
 		String ipString = "173.79.156.19";
 		NetworkAddress address = NetworkAddress.of(InetAddress.getByName(ipString));
+		long kickOneDate = 1587336004000L;
 		insertLiteBans(
 				"kicks", uuidString, ipString, "test", "CONSOLE", "Console",
-				1587336004000L, 0, "kitpvp", false);
+				kickOneDate, 0, "kitpvp", false);
 
 		PortablePunishment kickByConsole = new PortablePunishment(1,
 				new PortablePunishment.KnownDetails(
-						PunishmentType.KICK, "test", kitpvpScope, 1587336004L, 0L),
+						PunishmentType.KICK, "test", kitpvpScope,
+						Instant.ofEpochMilli(kickOneDate), PortablePunishment.KnownDetails.PERMANENT),
 				new PortablePunishment.VictimInfo(uuid, null, address, PlayerVictim.of(uuid)),
 				new PortablePunishment.OperatorInfo(true, null, null),
 				false);
 		assertEquals(Set.of(kickByConsole), sourcePunishments());
 
 		UUID ecotasticUUID = UUID.fromString("00140fe8-de08-41e9-ab79-e53b9f3f0fbd");
+		long kickTwoDate = 1587336011000L;
 		insertLiteBans(
 				"kicks", uuidString, ipString, "test2",
 				ecotasticUUID.toString(), "Ecotastic",
-				1587336011000L, 0, "*", false);
+				kickTwoDate, 0, "*", false);
 		PortablePunishment kickByEcotastic = new PortablePunishment(2,
 				new PortablePunishment.KnownDetails(
-						PunishmentType.KICK, "test2", globalScope, 1587336011L, 0L),
+						PunishmentType.KICK, "test2", globalScope,
+						Instant.ofEpochMilli(kickTwoDate), PortablePunishment.KnownDetails.PERMANENT),
 				new PortablePunishment.VictimInfo(uuid, null, address, PlayerVictim.of(uuid)),
 				new PortablePunishment.OperatorInfo(false, ecotasticUUID, "Ecotastic"),
 				false);
@@ -134,7 +139,7 @@ public class LiteBansImportSourceTest {
 		PortablePunishment expectedPunishment = new PortablePunishment(1,
 				new PortablePunishment.KnownDetails(
 						PunishmentType.BAN, "No reason stated.", lobbyScope,
-						startTime / 1_000L, 0L),
+						Instant.ofEpochMilli(startTime), PortablePunishment.KnownDetails.PERMANENT),
 				new PortablePunishment.VictimInfo(
 						victimUUID, null, victimAddress, AddressVictim.of(victimAddress)),
 				new PortablePunishment.OperatorInfo(
