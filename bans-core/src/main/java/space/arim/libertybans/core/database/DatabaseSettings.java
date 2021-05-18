@@ -120,6 +120,8 @@ public class DatabaseSettings {
 				.dataSource(hikariDataSource).table("libertybans_flyway")
 				.locations(locations.toArray(String[]::new))
 				.ignoreFutureMigrations(false).validateMigrationNaming(true).group(true)
+				// Allows usage with existing tables, i.e. from other software
+				.baselineOnMigrate(true).baselineVersion("0.0")
 				.load();
 	}
 	
@@ -173,8 +175,13 @@ public class DatabaseSettings {
 			hikariConf.addDataSourceProperty("url", jdbcUrl);
 		}
 	}
-	
-	private String getBaseUrl() {
+
+	/**
+	 * Visible for testing
+	 *
+	 * @return the base JDBC url
+	 */
+	public String getBaseUrl() {
 		String url;
 		switch (vendor) {
 

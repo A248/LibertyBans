@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.it.test.database;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,7 +34,12 @@ import space.arim.libertybans.it.util.ContextClassLoaderAction;
 import space.arim.libertybans.it.util.FlywayResetStaticStateExtension;
 
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -52,8 +58,17 @@ public class DatabaseSettingsIT {
 	}
 
 	private void startDb() {
+		DatabaseResult dbResult = createDatabaseSettings().create(createSqlConfig());
+		assertTrue(dbResult.success(), "Database creation failed");
+	}
+
+	private DatabaseSettings createDatabaseSettings() {
 		DatabaseManager dbManager = mock(DatabaseManager.class);
 		when(dbManager.folder()).thenReturn(databaseDir);
+		return new DatabaseSettings(dbManager);
+	}
+
+	private SqlConfig createSqlConfig() {
 		SqlConfig sqlConfig = mock(SqlConfig.class);
 		when(sqlConfig.authDetails()).thenReturn(mock(SqlConfig.AuthDetails.class));
 		when(sqlConfig.vendor()).thenReturn(Vendor.HSQLDB);
@@ -63,8 +78,22 @@ public class DatabaseSettingsIT {
 		when(timeouts.connectionTimeoutSeconds()).thenReturn(30);
 		when(timeouts.maxLifetimeMinutes()).thenReturn(15);
 		when(sqlConfig.timeouts()).thenReturn(timeouts);
+		return sqlConfig;
+	}
 
-		DatabaseResult dbResult = new DatabaseSettings(dbManager).create(sqlConfig);
+	// Database initialization fails on a non-empty database
+	// https://github.com/A248/LibertyBans/issues/31
+	@Test
+	public void createWithExistingTablePresent() throws SQLException {
+		DatabaseSettings databaseSettings = createDatabaseSettings();
+		String url = databaseSettings.getBaseUrl();
+		try (Connection conn = DriverManager.getConnection(url, "SA", "");
+				PreparedStatement prepStmt = conn.prepareStatement("CREATE TABLE myTable (id INT NOT NULL)")) {
+			prepStmt.execute();
+		}
+		SqlConfig sqlConfig = createSqlConfig();
+		DatabaseResult dbResult = assertDoesNotThrow(() -> databaseSettings.create(sqlConfig));
 		assertTrue(dbResult.success(), "Database creation failed");
 	}
+
 }
