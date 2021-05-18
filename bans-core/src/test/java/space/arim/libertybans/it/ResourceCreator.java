@@ -84,7 +84,8 @@ class ResourceCreator {
 
 	private static void createDatabase(int port, String database) {
 		try (Connection conn = DriverManager.getConnection("jdbc:mariadb://localhost:" + port + '/', "root", "");
-				PreparedStatement prepStmt = conn.prepareStatement("CREATE DATABASE " + database)) {
+				PreparedStatement prepStmt = conn.prepareStatement("CREATE DATABASE " + database
+						+ " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")) {
 
 			prepStmt.execute();
 		} catch (SQLException ex) {
