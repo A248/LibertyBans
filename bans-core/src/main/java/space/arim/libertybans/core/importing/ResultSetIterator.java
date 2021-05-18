@@ -78,6 +78,9 @@ class ResultSetIterator<T> implements Iterator<T>, AutoCloseable {
 		if (endOfResult) {
 			return false;
 		}
+		if (totalCount > 0) {
+			logger.info("Iterated over " + totalCount + " rows so far. Iterating further...");
+		}
 		buffer.clear();
 		try {
 			for (int count = retrievalSize; count > 0; count--) {
@@ -95,9 +98,6 @@ class ResultSetIterator<T> implements Iterator<T>, AutoCloseable {
 		if (buffer.isEmpty()) {
 			logger.trace("buffer is empty; received no rows");
 			return false;
-		}
-		if (totalCount > 0) {
-			logger.info("Iterated over " + totalCount + " rows so far. Iterating further...");
 		}
 		totalCount += buffer.size();
 		bufferIterator = buffer.iterator();

@@ -53,7 +53,7 @@ import static org.mockito.Mockito.when;
 @LocalDatabaseSetup.Hsqldb
 public class AdvancedBanImportSourceTest {
 
-	private AdvancedBanImportSource importSource;
+	private ImportSource importSource;
 	private JdbCaesar jdbCaesar;
 
 	private ServerScope globalScope = ScopeImpl.GLOBAL;
@@ -64,19 +64,11 @@ public class AdvancedBanImportSourceTest {
 		globalScope = mock(ServerScope.class);
 		lenient().when(scopeManager.globalScope()).thenReturn(globalScope);
 
-		ImportConfig importConfig = mock(ImportConfig.class);
-		ImportConfig.AdvancedBanSettings advancedBanSettings = mock(ImportConfig.AdvancedBanSettings.class);
-		when(importConfig.retrievalSize()).thenReturn(200);
-		when(importConfig.advancedBan()).thenReturn(advancedBanSettings);
-		when(advancedBanSettings.toConnectionSource()).thenReturn(connectionSource);
+		PluginDatabaseSetup pluginDatabaseSetup = new PluginDatabaseSetup(connectionSource);
+		importSource = pluginDatabaseSetup.createAdvancedBanImportSource(scopeManager);
+		jdbCaesar = pluginDatabaseSetup.createJdbCaesar();
 
-		importSource = new AdvancedBanImportSource(importConfig, scopeManager);
-
-		DataSource dataSource = mock(DataSource.class);
-		lenient().when(dataSource.getConnection()).thenAnswer((invocation) -> connectionSource.openConnection());
-		jdbCaesar = new JdbCaesarBuilder().dataSource(dataSource).build();
-
-		new Schemas(jdbCaesar).setupAdvancedBan();
+		pluginDatabaseSetup.initAdvancedBanSchema();
 	}
 
 	private void insertAdvancedBan(String table,

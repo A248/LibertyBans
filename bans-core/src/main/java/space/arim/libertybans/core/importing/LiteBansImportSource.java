@@ -26,7 +26,6 @@ import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.config.Configs;
@@ -87,11 +86,15 @@ public class LiteBansImportSource implements ImportSource {
 				return Optional.empty();
 			}
 			boolean active = table != LiteBansTable.KICKS && resultSet.getBoolean("active");
-			logger.trace("Mapping row with LiteBans punishment ID {}", id);
+			logger.trace("Mapping row from table {} with ID {}", table, id);
+			Optional<PortablePunishment.VictimInfo> victimInfo = mapVictimInfo(resultSet);
+			if (victimInfo.isEmpty()) {
+				return Optional.empty();
+			}
 			return Optional.of(new PortablePunishment(
 					id,
 					mapKnownDetails(resultSet),
-					mapVictimInfo(resultSet),
+					victimInfo.get(),
 					mapOperatorInfo(resultSet),
 					active));
 		}
@@ -117,25 +120,40 @@ public class LiteBansImportSource implements ImportSource {
 			return new PortablePunishment.KnownDetails(table.type, reason, scope, start, end);
 		}
 
-		private PortablePunishment.VictimInfo mapVictimInfo(ResultSet resultSet) throws SQLException {
+		private Optional<PortablePunishment.VictimInfo> mapVictimInfo(ResultSet resultSet) throws SQLException {
 			String uuidString = getNonnullString(resultSet, "uuid");
 			String ipString = getNonnullString(resultSet, "ip");
 			UUID uuid = UUID.fromString(uuidString);
+			boolean ipban = resultSet.getBoolean("ipban");
+			if (!ipban) {
+				return Optional.of(
+						new PortablePunishment.VictimInfo(uuid, null, null, PlayerVictim.of(uuid)));
+			}
+			if (ipString.equals("#offline#")) {
+				logger.warn("Skipping punishment which is an IP-ban but the LiteBans-recorded IP is \"#offline#\".");
+				return Optional.empty();
+			}
 			NetworkAddress address;
 			try {
 				address = NetworkAddress.of(InetAddress.getByName(ipString));
 			} catch (UnknownHostException ex) {
 				throw new ImportException("Unable to parse LiteBans IP address", ex);
 			}
-			boolean ipban = resultSet.getBoolean("ipban");
-			Victim victim = (ipban) ? AddressVictim.of(address) : PlayerVictim.of(uuid);
-			return new PortablePunishment.VictimInfo(uuid, null, address, victim);
+			return Optional.of(
+					new PortablePunishment.VictimInfo(uuid, null, address, AddressVictim.of(address)));
 		}
 
 		private PortablePunishment.OperatorInfo mapOperatorInfo(ResultSet resultSet) throws SQLException {
 			String operatorId = getNonnullString(resultSet, "banned_by_uuid");
 			if (operatorId.equals("CONSOLE")) {
 				return new PortablePunishment.OperatorInfo(true, null, null);
+			}
+			if (operatorId.length() != 36) {
+				// LiteBans occasionally records a name in the banned_by_uuid column
+				logger.warn("Found operator UUID '{}' with incorrect length (should be 36 characters). " +
+								"LibertyBans will rely on the name in banned_by_name instead.", operatorId);
+				String operatorName = getNonnullString(resultSet, "banned_by_name");
+				return new PortablePunishment.OperatorInfo(false, null, operatorName);
 			}
 			return new PortablePunishment.OperatorInfo(false, UUID.fromString(operatorId),
 					resultSet.getString("banned_by_name")); // okay if banned_by_name is null

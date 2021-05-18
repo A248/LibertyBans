@@ -75,3 +75,11 @@ CREATE TABLE litebans_kicks (
   ipban_wildcard bit(1) NOT NULL,
   active bit(1) NOT NULL
 );
+
+CREATE TABLE litebans_history (
+  id bigint(20) IDENTITY PRIMARY KEY,
+  date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  name varchar(16) NOT NULL,
+  uuid varchar(36) NOT NULL,
+  ip varchar(45) NOT NULL
+);

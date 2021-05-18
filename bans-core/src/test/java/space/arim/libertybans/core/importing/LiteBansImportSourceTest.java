@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.jdbcaesar.JdbCaesar;
-import space.arim.jdbcaesar.JdbCaesarBuilder;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
@@ -33,7 +32,6 @@ import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.scope.ScopeImpl;
 
-import javax.sql.DataSource;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -45,14 +43,13 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(LocalDatabaseSetup.class)
 @LocalDatabaseSetup.H2
 public class LiteBansImportSourceTest {
 
-	private LiteBansImportSource importSource;
+	private ImportSource importSource;
 	private JdbCaesar jdbCaesar;
 
 	private final ServerScope globalScope = ScopeImpl.GLOBAL;
@@ -66,20 +63,11 @@ public class LiteBansImportSourceTest {
 		lenient().when(scopeManager.specificScope("kitpvp")).thenReturn(kitpvpScope);
 		lenient().when(scopeManager.specificScope("lobby")).thenReturn(lobbyScope);
 
-		ImportConfig importConfig = mock(ImportConfig.class);
-		ImportConfig.LiteBansSettings liteBansSettings = mock(ImportConfig.LiteBansSettings.class);
-		when(importConfig.retrievalSize()).thenReturn(200);
-		when(importConfig.litebans()).thenReturn(liteBansSettings);
-		when(liteBansSettings.tablePrefix()).thenReturn("litebans_");
-		when(liteBansSettings.toConnectionSource()).thenReturn(connectionSource);
+		PluginDatabaseSetup pluginDatabaseSetup = new PluginDatabaseSetup(connectionSource);
+		importSource = pluginDatabaseSetup.createLiteBansImportSource(scopeManager);
+		jdbCaesar = pluginDatabaseSetup.createJdbCaesar();
 
-		importSource = new LiteBansImportSource(importConfig, scopeManager);
-
-		DataSource dataSource = mock(DataSource.class);
-		lenient().when(dataSource.getConnection()).thenAnswer((invocation) -> connectionSource.openConnection());
-		jdbCaesar = new JdbCaesarBuilder().dataSource(dataSource).build();
-
-		new Schemas(jdbCaesar).setupLiteBans();
+		pluginDatabaseSetup.initLiteBansSchema();
 	}
 
 	private Set<PortablePunishment> sourcePunishments() {

@@ -35,9 +35,9 @@ class BatchOperationExecutor implements AutoCloseable {
 
 	private Connection connection;
 	private QuerySource<?> querySource;
-	private int countInThisTransaction;
+	private int countInThisConnection;
 
-	private static final int OPERATIONS_PER_TRANSACTION = 30;
+	private static final int OPERATIONS_PER_CONNECTION = 50;
 
 	BatchOperationExecutor(InternalDatabase database) {
 		this.database = database;
@@ -60,10 +60,15 @@ class BatchOperationExecutor implements AutoCloseable {
 		openConnectionIfNecessary();
 
 		operation.run(querySource, connection);
+		/*
+		 * Committing every time is a necessity. Queries cannot be batched together
+		 * because otherwise the open transaction leads to deadlocks with other
+		 * queries, such as UUID lookups for name-based operators.
+		 */
+		connection.commit();
 
-		if (++countInThisTransaction == OPERATIONS_PER_TRANSACTION) {
-			countInThisTransaction = 0;
-			connection.commit();
+		if (++countInThisConnection == OPERATIONS_PER_CONNECTION) {
+			countInThisConnection = 0;
 			closeConnection();
 		}
 	}
