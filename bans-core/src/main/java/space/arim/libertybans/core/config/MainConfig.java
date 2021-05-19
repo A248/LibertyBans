@@ -75,11 +75,11 @@ public interface MainConfig {
 	DurationPermissionsConfig durationPermissions();
 	
 	@SubSection
-	EnforcementConfig enforcement(); // Sensitive name used in integration testing
+	EnforcementConfig enforcement(); // Sensitive method name
 	
 	@ConfKey("player-uuid-resolution")
 	@SubSection
-	UUIDResolutionConfig uuidResolution();
+	UUIDResolutionConfig uuidResolution(); // Sensitive method name
 	
 	@SubSection
 	Commands commands();

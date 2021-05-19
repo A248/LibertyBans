@@ -16,29 +16,33 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.it;
 
-import space.arim.libertybans.core.database.Vendor;
-import space.arim.libertybans.core.selector.AddressStrictness;
+import space.arim.libertybans.core.uuid.ServerType;
 
-import java.util.Set;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-class ConfigConstraints {
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-	private final Set<AddressStrictness> strictnesses;
-	private final Set<Vendor> vendors;
+@Retention(RUNTIME)
+@Target(METHOD)
+public @interface SetServerType {
 
-	ConfigConstraints(Set<AddressStrictness> strictnesses, Set<Vendor> vendors) {
-		this.strictnesses = strictnesses;
-		this.vendors = vendors;
-	}
+	/**
+	 * Sets the server types
+	 *
+	 * @return the server types to test
+	 */
+	ServerType[] value() default {};
 
-	Set<AddressStrictness> strictnesses() {
-		return strictnesses;
-	}
-
-	Set<Vendor> vendors() {
-		return vendors;
-	}
+	/**
+	 * Whether to use all server types. Overrides {@code value}
+	 *
+	 * @return true to use all server types
+	 */
+	boolean all() default false;
 
 }

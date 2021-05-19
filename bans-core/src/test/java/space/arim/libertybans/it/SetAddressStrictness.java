@@ -21,17 +21,27 @@ package space.arim.libertybans.it;
 import space.arim.libertybans.core.selector.AddressStrictness;
 
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
+import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Retention(RUNTIME)
+@Target(METHOD)
 public @interface SetAddressStrictness {
 
 	/**
-	 * Sets the address strictnesses. Empty to use all of them
+	 * Sets the address strictnesses
 	 * 
 	 * @return the address strictnesses to test
 	 */
-	AddressStrictness[] value();
+	AddressStrictness[] value() default {};
+
+	/**
+	 * Whether to use all address strictnesses. Overrides {@code value}
+	 *
+	 * @return true to use all strictnesses
+	 */
+	boolean all() default false;
 
 }

@@ -21,7 +21,11 @@ package space.arim.libertybans.core.config;
 import jakarta.inject.Inject;
 import space.arim.libertybans.core.importing.ImportConfig;
 import space.arim.libertybans.core.selector.EnforcementConfig;
+import space.arim.libertybans.core.uuid.RemoteApiBundle;
+import space.arim.libertybans.core.uuid.ServerType;
+import space.arim.libertybans.core.uuid.UUIDResolutionConfig;
 import space.arim.libertybans.it.ConfigSpec;
+import space.arim.libertybans.it.DatabaseInfo;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -29,11 +33,13 @@ public class SpecifiedConfigs implements Configs {
 
 	private final StandardConfigs delegate;
 	private final ConfigSpec spec;
+	private final DatabaseInfo databaseInfo;
 
 	@Inject
-	public SpecifiedConfigs(StandardConfigs delegate, ConfigSpec spec) {
+	public SpecifiedConfigs(StandardConfigs delegate, ConfigSpec spec, DatabaseInfo databaseInfo) {
 		this.delegate = delegate;
 		this.spec = spec;
+		this.databaseInfo = databaseInfo;
 	}
 	
 	@Override
@@ -42,7 +48,7 @@ public class SpecifiedConfigs implements Configs {
 			@Override
 			Object replacementFor(SqlConfig original, String methodName) {
 				if (methodName.equals("vendor")) {
-					return spec.getVendor();
+					return spec.vendor();
 				}
 				if (methodName.equals("authDetails")) {
 					return new SqlConfig.AuthDetails() {
@@ -52,11 +58,11 @@ public class SpecifiedConfigs implements Configs {
 						}
 						@Override
 						public int port() {
-							return spec.getPort();
+							return databaseInfo.port();
 						}
 						@Override
 						public String database() {
-							return spec.getDatabase();
+							return databaseInfo.database();
 						}
 						@Override
 						public String username() {
@@ -81,6 +87,9 @@ public class SpecifiedConfigs implements Configs {
 				if (methodName.equals("enforcement")) {
 					return enforcement(original);
 				}
+				if (methodName.equals("uuidResolution")) {
+					return uuidResolution(original);
+				}
 				return null;
 			}
 			private EnforcementConfig enforcement(MainConfig original) {
@@ -88,11 +97,24 @@ public class SpecifiedConfigs implements Configs {
 					@Override
 					Object replacementFor(EnforcementConfig original, String methodName) {
 						if (methodName.equals("addressStrictness")) {
-							return spec.getAddressStrictness();
+							return spec.addressStrictness();
 						}
 						return null;
 					}
 				}.proxy();
+			}
+			private UUIDResolutionConfig uuidResolution(MainConfig original) {
+				return new UUIDResolutionConfig() {
+					@Override
+					public ServerType serverType() {
+						return spec.serverType();
+					}
+
+					@Override
+					public RemoteApiBundle remoteApis() {
+						return original.uuidResolution().remoteApis();
+					}
+				};
 			}
 			
 		}.proxy();

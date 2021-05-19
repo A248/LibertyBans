@@ -27,7 +27,6 @@ import space.arim.injector.Injector;
 import space.arim.omnibus.util.ThisClass;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
 
 public class InjectionInvocationContextProvider implements TestTemplateInvocationContextProvider {
@@ -41,9 +40,11 @@ public class InjectionInvocationContextProvider implements TestTemplateInvocatio
 
 	@Override
 	public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
-		Set<ConfigSpec> possibilities = new ConfigSpecPossiblities().getAllFiltered(context.getElement().orElse(null));
 		ResourceCreator creator = new ResourceCreator(context.getRoot().getStore(NAMESPACE));
-		return possibilities.stream().map((spec) -> creator.create(spec)).map(InjectorInvocationContext::new);
+		return new ConfigSpecPossiblities(context.getElement().orElse(null))
+				.getAll()
+				.map(creator::create)
+				.map(InjectorInvocationContext::new);
 	}
 
 	private static class InjectorInvocationContext implements TestTemplateInvocationContext {

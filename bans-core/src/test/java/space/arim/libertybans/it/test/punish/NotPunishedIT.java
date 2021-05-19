@@ -61,7 +61,7 @@ public class NotPunishedIT {
 	}
 
 	@TestTemplate
-	@SetAddressStrictness({})
+	@SetAddressStrictness(all = true)
 	public void testNotPunished() {
 		final UUID uuid = UUID.randomUUID();
 		final String name = RandomUtil.randomString(16);

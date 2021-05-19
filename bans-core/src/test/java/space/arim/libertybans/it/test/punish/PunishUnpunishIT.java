@@ -76,7 +76,7 @@ public class PunishUnpunishIT {
 	}
 
 	@TestTemplate
-	@SetAddressStrictness({})
+	@SetAddressStrictness(all = true)
 	public void testPunishThenUndo() {
 		DraftPunishment draft = drafter.draftBuilder().type(type).victim(victim)
 				.operator(operator).reason(reason).build();

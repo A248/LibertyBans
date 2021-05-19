@@ -38,7 +38,7 @@ public class NotYetBannedIT {
 	}
 
 	@TestTemplate
-	@SetAddressStrictness({})
+	@SetAddressStrictness(all = true)
 	public void testNoOneIsBanned() {
 		InetAddress commonAddress = RandomUtil.randomAddress();
 

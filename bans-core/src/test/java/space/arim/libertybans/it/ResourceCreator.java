@@ -53,14 +53,17 @@ class ResourceCreator {
 
 	Injector create(ConfigSpec specification) {
 
-		int mariaDbPort = computeMariaDbPort(specification.getVendor());
+		int mariaDbPort = computeMariaDbPort(specification.vendor());
 
 		return store.getOrComputeIfAbsent(specification, (spec) -> {
 
-			if (spec.getVendor() == Vendor.MARIADB) {
+			DatabaseInfo databaseInfo;
+			if (spec.vendor() == Vendor.MARIADB) {
 				String database = "libertybans_it_" + DB_NAME_COUNTER.incrementAndGet();
 				createDatabase(mariaDbPort, database);
-				spec = new ConfigSpec(spec.getVendor(), spec.getAddressStrictness(), mariaDbPort, database);
+				databaseInfo = new DatabaseInfo(mariaDbPort, database);
+			} else {
+				databaseInfo = new DatabaseInfo();
 			}
 
 			Path tempDirectory = createTempDirectory();
@@ -68,6 +71,7 @@ class ResourceCreator {
 			Injector injector = new InjectorBuilder()
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), tempDirectory)
 				.bindInstance(ConfigSpec.class, spec)
+				.bindInstance(DatabaseInfo.class, databaseInfo)
 				.addBindModules(
 						new ApiBindModule(),
 						new PillarOneReplacementModule(),

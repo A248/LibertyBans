@@ -18,7 +18,6 @@
  */
 package space.arim.libertybans.core;
 
-import space.arim.libertybans.core.PillarOneBindModuleMinusConfigs;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.SpecifiedConfigs;
 

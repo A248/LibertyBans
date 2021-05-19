@@ -20,77 +20,56 @@ package space.arim.libertybans.it;
 
 import space.arim.libertybans.core.database.Vendor;
 import space.arim.libertybans.core.selector.AddressStrictness;
+import space.arim.libertybans.core.uuid.ServerType;
 
 import java.util.Objects;
-import java.util.Set;
 
-public class ConfigSpec {
+public final class ConfigSpec {
 	
 	private final Vendor vendor;
 	private final AddressStrictness addressStrictness;
-	private final int port;
-	private final String database;
+	private final ServerType serverType;
 	
-	ConfigSpec(Vendor vendor, AddressStrictness addressStrictness) {
-		this(vendor, addressStrictness, -1, "");
-	}
-	
-	ConfigSpec(Vendor vendor, AddressStrictness addressStrictness, int port, String database) {
+	ConfigSpec(Vendor vendor, AddressStrictness addressStrictness, ServerType serverType) {
 		this.vendor = Objects.requireNonNull(vendor, "vendor");
 		this.addressStrictness = Objects.requireNonNull(addressStrictness, "addressStrictness");
-		this.port = port;
-		this.database = database;
+		this.serverType = Objects.requireNonNull(serverType, "serverType");
 	}
 	
-	public Vendor getVendor() {
+	public Vendor vendor() {
 		return vendor;
 	}
 	
-	public AddressStrictness getAddressStrictness() {
+	public AddressStrictness addressStrictness() {
 		return addressStrictness;
 	}
-	
-	public int getPort() {
-		return port;
-	}
-	
-	public String getDatabase() {
-		return database;
-	}
-	
-	boolean agrees(ConfigConstraints constraints) {
-		return containsOrEmpty(constraints.vendors(), vendor)
-				&& containsOrEmpty(constraints.strictnesses(), addressStrictness);
+
+	public ServerType serverType() {
+		return serverType;
 	}
 
-	private static <T extends Enum<T>> boolean containsOrEmpty(Set<T> set, T element) {
-		return set.isEmpty() || set.contains(element);
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		ConfigSpec that = (ConfigSpec) o;
+		return vendor == that.vendor && addressStrictness == that.addressStrictness && serverType == that.serverType;
 	}
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + addressStrictness.hashCode();
-		result = prime * result + vendor.hashCode();
+		int result = vendor.hashCode();
+		result = 31 * result + addressStrictness.hashCode();
+		result = 31 * result + serverType.hashCode();
 		return result;
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (!(obj instanceof ConfigSpec)) {
-			return false;
-		}
-		ConfigSpec other = (ConfigSpec) obj;
-		return addressStrictness == other.addressStrictness && vendor == other.vendor;
-	}
-
-	@Override
 	public String toString() {
-		return "ConfigSpec [vendor=" + vendor + ", addressStrictness=" + addressStrictness + "]";
+		return "ConfigSpec{" +
+				"vendor=" + vendor +
+				", addressStrictness=" + addressStrictness +
+				", serverType=" + serverType +
+				'}';
 	}
-	
 }

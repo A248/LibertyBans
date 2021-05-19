@@ -20,39 +20,87 @@ package space.arim.libertybans.it;
 
 import space.arim.libertybans.core.database.Vendor;
 import space.arim.libertybans.core.selector.AddressStrictness;
+import space.arim.libertybans.core.uuid.ServerType;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 class ConfigSpecPossiblities {
 
-	Set<ConfigSpec> getAll() {
+	private final AnnotatedElement element;
+
+	ConfigSpecPossiblities(AnnotatedElement element) {
+		this.element = element;
+	}
+
+	private Stream<ConfigSpec> getAllPossible() {
 		Set<ConfigSpec> possibilities = new HashSet<>();
 		for (Vendor vendor : Vendor.values()) {
 			for (AddressStrictness addressStrictness : AddressStrictness.values()) {
-				possibilities.add(new ConfigSpec(vendor, addressStrictness));
+				for (ServerType serverType : ServerType.values()) {
+					possibilities.add(new ConfigSpec(vendor, addressStrictness, serverType));
+				}
 			}
 		}
-		return possibilities;
+		return possibilities.stream();
 	}
 
-	private ConfigConstraints getConstraints(AnnotatedElement element) {
-		SetAddressStrictness strictnessConstraint = element.getAnnotation(SetAddressStrictness.class);
-		if (strictnessConstraint != null) {
-			return new ConfigConstraints(Set.of(strictnessConstraint.value()), Set.of());
+	private ConfigConstraints getConstraints() {
+		Set<AddressStrictness> addressStrictnesses;
+		{
+			SetAddressStrictness strictnessConstraint = element.getAnnotation(SetAddressStrictness.class);
+			if (strictnessConstraint == null) {
+				addressStrictnesses = Set.of(AddressStrictness.NORMAL);
+			} else if (strictnessConstraint.all()) {
+				addressStrictnesses = Set.of(AddressStrictness.values());
+			} else {
+				addressStrictnesses = Set.of(strictnessConstraint.value());
+			}
 		}
-		return new ConfigConstraints(Set.of(AddressStrictness.NORMAL), Set.of());
+		Set<ServerType> serverTypes;
+		{
+			SetServerType serverTypeConstraint = element.getAnnotation(SetServerType.class);
+			if (serverTypeConstraint == null) {
+				serverTypes = Set.of(ServerType.ONLINE);
+			} else if (serverTypeConstraint.all()) {
+				serverTypes = Set.of(ServerType.values());
+			} else {
+				serverTypes = Set.of(serverTypeConstraint.value());
+			}
+		}
+		return new ConfigConstraints(Set.of(Vendor.values()), addressStrictnesses, serverTypes);
 	}
 
-	Set<ConfigSpec> getAllFiltered(AnnotatedElement element) {
-		Set<ConfigSpec> possibilities = getAll();
+	private static class ConfigConstraints {
 
-		if (element != null) {
-			ConfigConstraints constraints = getConstraints(element);
-			possibilities.removeIf((possibility) -> !possibility.agrees(constraints));
+		private final Set<AddressStrictness> strictnesses;
+		private final Set<Vendor> vendors;
+		private final Set<ServerType> serverTypes;
+
+		ConfigConstraints(Set<Vendor> vendors, Set<AddressStrictness> strictnesses, Set<ServerType> serverTypes) {
+
+			this.vendors = vendors;
+			this.strictnesses = strictnesses;
+			this.serverTypes = serverTypes;
 		}
-		return possibilities;
+
+		boolean allows(ConfigSpec configSpec) {
+			return vendors.contains(configSpec.vendor())
+					&& strictnesses.contains(configSpec.addressStrictness())
+					&& serverTypes.contains(configSpec.serverType());
+		}
+
+	}
+
+	Stream<ConfigSpec> getAll() {
+		Stream<ConfigSpec> configurations = getAllPossible();
+		if (element == null) {
+			return configurations;
+		}
+		ConfigConstraints constraints = getConstraints();
+		return configurations.filter(constraints::allows);
 	}
 
 }
