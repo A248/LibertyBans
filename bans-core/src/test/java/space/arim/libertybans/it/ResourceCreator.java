@@ -51,11 +51,11 @@ class ResourceCreator {
 		this.store = store;
 	}
 
-	Injector create(ConfigSpec specification) {
+	Injector create(ConfigSpec configSpec) {
 
-		int mariaDbPort = computeMariaDbPort(specification.vendor());
+		int mariaDbPort = computeMariaDbPort(configSpec.vendor());
 
-		return store.getOrComputeIfAbsent(specification, (spec) -> {
+		return store.getOrComputeIfAbsent(configSpec, (spec) -> {
 
 			DatabaseInfo databaseInfo;
 			if (spec.vendor() == Vendor.MARIADB) {

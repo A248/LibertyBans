@@ -32,9 +32,10 @@ import space.arim.libertybans.core.importing.ImportStatistics;
 import space.arim.libertybans.core.importing.LocalDatabaseSetup;
 import space.arim.libertybans.core.importing.PluginDatabaseSetup;
 import space.arim.libertybans.core.scope.ScopeImpl;
+import space.arim.libertybans.core.uuid.ServerType;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
-import space.arim.libertybans.it.SetTime;
+import space.arim.libertybans.it.SetServerType;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -46,40 +47,43 @@ import static org.mockito.Mockito.when;
 @ExtendWith(InjectionInvocationContextProvider.class)
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(LocalDatabaseSetup.class)
-@LocalDatabaseSetup.H2
-public class LiteBansImportIT {
+@LocalDatabaseSetup.Hsqldb
+public class AdvancedBanImportIT {
 
 	private final ImportExecutor importExecutor;
 	private PluginDatabaseSetup pluginDatabaseSetup;
 
 	@Inject
-	public LiteBansImportIT(ImportExecutor importExecutor) {
+	public AdvancedBanImportIT(ImportExecutor importExecutor) {
 		this.importExecutor = importExecutor;
 	}
 
 	@BeforeEach
 	public void setup(@DontInject ConnectionSource connectionSource) {
 		PluginDatabaseSetup pluginDatabaseSetup = new PluginDatabaseSetup(connectionSource);
-		pluginDatabaseSetup.initLiteBansSchema();
-		pluginDatabaseSetup.runSqlFromResource("import-data/litebans.sql");
+		pluginDatabaseSetup.initAdvancedBanSchema();
 		this.pluginDatabaseSetup = pluginDatabaseSetup;
 	}
 
 	private ScopeManager createScopeManager() {
 		ScopeManager scopeManager = mock(ScopeManager.class);
-		// Specific server scopes not covered by this IT
 		when(scopeManager.globalScope()).thenReturn(ScopeImpl.GLOBAL);
 		return scopeManager;
 	}
 
-	@TestTemplate
-	@SetTime(unixTime = 1621390560)
-	public void importEverything() {
+	private void importFrom(String dataFile, ImportStatistics expectedStatistics) {
+		pluginDatabaseSetup.runSqlFromResource("import-data/advancedban/" + dataFile + ".sql");
 		ScopeManager scopeManager = createScopeManager();
-		ImportSource importSource = pluginDatabaseSetup.createLiteBansImportSource(scopeManager);
+		ImportSource importSource = pluginDatabaseSetup.createAdvancedBanImportSource(scopeManager);
 		CompletableFuture<ImportStatistics> futureImport = importExecutor.performImport(importSource);
 		assertDoesNotThrow(futureImport::join, "Import failed: error");
-		assertEquals(new ImportStatistics(71, 1625, 34211), futureImport.join(),
+		assertEquals(expectedStatistics, futureImport.join(),
 				"Import failed: unexpected import statistics");
+	}
+
+	@TestTemplate
+	@SetServerType(ServerType.OFFLINE)
+	public void importOffline() {
+		importFrom("offline", new ImportStatistics(103, 332, 0));
 	}
 }

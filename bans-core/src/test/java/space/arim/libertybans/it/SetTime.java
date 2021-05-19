@@ -16,21 +16,26 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core;
 
-import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.config.SpecifiedConfigs;
+package space.arim.libertybans.it;
+
 import space.arim.libertybans.core.service.Time;
-import space.arim.libertybans.it.ConfigSpec;
 
-public class PillarOneReplacementModule extends PillarOneBindModuleMinusConfigs {
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-	public Configs configs(SpecifiedConfigs configs) {
-		return configs;
-	}
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-	public Time time(ConfigSpec configSpec) {
-		return Time.fixed(configSpec.unixTime());
-	}
+@Retention(RUNTIME)
+@Target({TYPE, METHOD})
+public @interface SetTime {
 
+	/**
+	 * Sets the current unix time which will be used by {@link Time}
+	 *
+	 * @return the unix time to use for tests
+	 */
+	long unixTime();
 }

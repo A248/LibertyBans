@@ -88,6 +88,10 @@ public class CachingUUIDManagerTest {
 		return uuidManager.lookupUUID(name).join().orElse(null);
 	}
 
+	private UUID lookupUUIDExact(String name) {
+		return uuidManager.lookupUUIDFromExactName(name).join().orElse(null);
+	}
+
 	private String lookupName(UUID uuid) {
 		return uuidManager.lookupName(uuid).join().orElse(null);
 	}
@@ -107,6 +111,7 @@ public class CachingUUIDManagerTest {
 
 		assertEquals(uuid, lookupUUID(name));
 		assertEquals(uuid, lookupUUID(name), "UUID should be cached");
+		assertEquals(uuid, lookupUUIDExact(name));
 
 		verify(envUserResolver).lookupUUID(name);
 	}
@@ -137,6 +142,7 @@ public class CachingUUIDManagerTest {
 
 		assertEquals(uuid, lookupUUID(name));
 		assertEquals(uuid, lookupUUID(name), "UUID should be cached");
+		assertEquals(uuid, lookupUUIDExact(name));
 
 		verify(queryingImpl).resolve(name);
 	}
@@ -160,34 +166,35 @@ public class CachingUUIDManagerTest {
 		verify(queryingImpl).resolveAddress(name);
 	}
 
-	private RemoteApiBundle mockRemoteApiBundle() {
+	private void mockConfig(ServerType serverType, RemoteApiBundle remoteApiBundle) {
 		MainConfig mainConfig = mock(MainConfig.class);
 		UUIDResolutionConfig uuidResolution = mock(UUIDResolutionConfig.class);
-		RemoteApiBundle remoteApiBundle = mock(RemoteApiBundle.class);
 		when(configs.getMainConfig()).thenReturn(mainConfig);
 		when(mainConfig.uuidResolution()).thenReturn(uuidResolution);
-		when(uuidResolution.serverType()).thenReturn(ServerType.ONLINE);
-		when(uuidResolution.remoteApis()).thenReturn(remoteApiBundle);
-		return remoteApiBundle;
+		when(uuidResolution.serverType()).thenReturn(serverType);
+		lenient().when(uuidResolution.remoteApis()).thenReturn(remoteApiBundle);
 	}
 
 	@Test
 	public void resolveUUIDWebLookup() {
 		when(queryingImpl.resolve(name)).thenReturn(completedFuture(null));
 
-		RemoteApiBundle remoteApiBundle = mockRemoteApiBundle();
+		RemoteApiBundle remoteApiBundle = mock(RemoteApiBundle.class);
+		mockConfig(ServerType.ONLINE, remoteApiBundle);
 		when(remoteApiBundle.lookup(any())).thenReturn(
 				completedFuture(uuid), completedFuture(null));
 
 		assertEquals(uuid, lookupUUID(name));
 		assertEquals(uuid, lookupUUID(name), "UUID should be cached");
+		assertEquals(uuid, lookupUUIDExact(name));
 	}
 
 	@Test
 	public void resolveNameWebLookup() {
 		when(queryingImpl.resolve(uuid)).thenReturn(completedFuture(null));
 
-		RemoteApiBundle remoteApiBundle = mockRemoteApiBundle();
+		RemoteApiBundle remoteApiBundle = mock(RemoteApiBundle.class);
+		mockConfig(ServerType.ONLINE, remoteApiBundle);
 		when(remoteApiBundle.lookup(any())).thenReturn(
 				completedFuture(name), completedFuture(null));
 
@@ -196,10 +203,24 @@ public class CachingUUIDManagerTest {
 	}
 
 	@Test
+	public void resolveUUIDComputeOffline() {
+		when(queryingImpl.resolve(name)).thenReturn(completedFuture(null));
+
+		RemoteApiBundle remoteApiBundle = mock(RemoteApiBundle.class);
+		mockConfig(ServerType.OFFLINE, remoteApiBundle);
+
+		UUID uuid = OfflineUUID.computeOfflineUuid(name);
+		assertNull(lookupUUID(name), "Inexact lookup cannot compute offline UUID");
+		assertEquals(uuid, lookupUUIDExact(name));
+		assertEquals(uuid, lookupUUID(name), "UUID should be cached");
+	}
+
+	@Test
 	public void resolveUUIDExplicitlyCached() {
 		uuidManager.addCache(uuid, name);
 
 		assertEquals(uuid, lookupUUID(name));
+		assertEquals(uuid, lookupUUIDExact(name));
 	}
 
 	@Test
@@ -215,9 +236,10 @@ public class CachingUUIDManagerTest {
 		when(nameValidator.validateNameArgument(badName)).thenReturn(false);
 
 		assertNull(lookupUUID(badName));
+		assertNull(lookupUUIDExact(badName));
 		assertNull(lookupAddress(badName));
 
-		verify(nameValidator, times(2)).validateNameArgument(badName);
+		verify(nameValidator, times(3)).validateNameArgument(badName);
 	}
 
 }

@@ -81,6 +81,10 @@ class SqlFromResource {
 					currentQuery.append(line).append('\n');
 				}
 			}
+			String lastQuery = currentQuery.toString();
+			if (!lastQuery.isBlank()) {
+				runQuery(lastQuery);
+			}
 		} catch (IOException ex) {
 			throw new UncheckedIOException(ex);
 		}

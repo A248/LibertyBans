@@ -78,7 +78,7 @@ public class ImportFunction {
 		}
 		String name = victimInfo.name()
 				.orElseThrow(() -> new ImportException("Victim name must be present if UUID is not"));
-		UUID foundUUID = uuidManager.lookupUUID(name).join().orElse(null);
+		UUID foundUUID = uuidManager.lookupUUIDFromExactName(name).join().orElse(null);
 		if (foundUUID == null) {
 			logger.warn("Skipping punishment because victim UUID could not be found for name {}", victimInfo.name());
 			return null;
@@ -96,7 +96,7 @@ public class ImportFunction {
 		}
 		String name = operatorInfo.name()
 				.orElseThrow(() -> new ImportException("Operator name must be present if UUID is not"));
-		UUID foundUUID = uuidManager.lookupUUID(name).join().orElse(null);
+		UUID foundUUID = uuidManager.lookupUUIDFromExactName(name).join().orElse(null);
 		if (foundUUID == null) {
 			logger.warn("Skipping punishment because operator UUID could not be found for name {}", name);
 			return null;

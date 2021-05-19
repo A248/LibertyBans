@@ -16,21 +16,17 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core;
 
-import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.config.SpecifiedConfigs;
-import space.arim.libertybans.core.service.Time;
-import space.arim.libertybans.it.ConfigSpec;
+package space.arim.libertybans.core.uuid;
 
-public class PillarOneReplacementModule extends PillarOneBindModuleMinusConfigs {
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
-	public Configs configs(SpecifiedConfigs configs) {
-		return configs;
+final class OfflineUUID {
+
+	private OfflineUUID() {}
+
+	static UUID computeOfflineUuid(String name) {
+		return UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(StandardCharsets.UTF_8));
 	}
-
-	public Time time(ConfigSpec configSpec) {
-		return Time.fixed(configSpec.unixTime());
-	}
-
 }

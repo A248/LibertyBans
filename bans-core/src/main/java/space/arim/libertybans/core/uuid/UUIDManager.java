@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.core.uuid;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import space.arim.libertybans.core.Part;
@@ -37,5 +38,16 @@ public interface UUIDManager extends UserResolver, Part {
 	 * @return a future which yields the address or {@code null} if none was found
 	 */
 	CentralisedFuture<NetworkAddress> lookupAddress(String name);
+
+	/**
+	 * Performs a full lookup of a UUID from an exact player name. <br>
+	 * Differs from {@link #lookupUUID(String)} in that this method
+	 * assumes the name to be exactly cased, in order that offline UUIDs
+	 * may be calculated from it
+	 *
+	 * @param name the exact player name. Must be correctly cased
+	 * @return a future yielding the UUID or an empty optional if not found
+	 */
+	CentralisedFuture<Optional<UUID>> lookupUUIDFromExactName(String name);
 	
 }

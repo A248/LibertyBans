@@ -19,6 +19,7 @@
 package space.arim.libertybans.it;
 
 import space.arim.libertybans.core.database.Vendor;
+import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.selector.AddressStrictness;
 import space.arim.libertybans.core.uuid.ServerType;
 
@@ -35,12 +36,12 @@ class ConfigSpecPossiblities {
 		this.element = element;
 	}
 
-	private Stream<ConfigSpec> getAllPossible() {
+	private Stream<ConfigSpec> getAllPossible(long time) {
 		Set<ConfigSpec> possibilities = new HashSet<>();
 		for (Vendor vendor : Vendor.values()) {
 			for (AddressStrictness addressStrictness : AddressStrictness.values()) {
 				for (ServerType serverType : ServerType.values()) {
-					possibilities.add(new ConfigSpec(vendor, addressStrictness, serverType));
+					possibilities.add(new ConfigSpec(vendor, addressStrictness, serverType, time));
 				}
 			}
 		}
@@ -95,10 +96,16 @@ class ConfigSpecPossiblities {
 	}
 
 	Stream<ConfigSpec> getAll() {
-		Stream<ConfigSpec> configurations = getAllPossible();
+		long defaultTime = 1621440745L;
 		if (element == null) {
-			return configurations;
+			return getAllPossible(defaultTime);
 		}
+		long time = defaultTime;
+		SetTime setTime = element.getAnnotation(SetTime.class);
+		if (setTime != null) {
+			time = setTime.unixTime();
+		}
+		Stream<ConfigSpec> configurations = getAllPossible(time);
 		ConfigConstraints constraints = getConstraints();
 		return configurations.filter(constraints::allows);
 	}

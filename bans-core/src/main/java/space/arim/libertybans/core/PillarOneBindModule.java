@@ -20,11 +20,16 @@ package space.arim.libertybans.core;
 
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.StandardConfigs;
+import space.arim.libertybans.core.service.Time;
 
 public class PillarOneBindModule extends PillarOneBindModuleMinusConfigs {
 
 	public Configs configs(StandardConfigs configs) {
 		return configs;
+	}
+
+	public Time time() {
+		return Time.live();
 	}
 
 }

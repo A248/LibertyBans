@@ -176,9 +176,9 @@ public class AdvancedBanImportSource implements ImportSource {
 				UUID uuid = UUIDUtil.fromShortString(victimId);
 				return new PortablePunishment.VictimInfo(uuid, name, null);
 			}
-			// Assume victimId is a name
 			// In this case the uuid and name columns should have the same value
-			assert victimId.equals(name) : "Victim ID " + victimId + " should equal " + name;
+			// Note well: The 'name' column is correctly cased, the 'uuid' column is not
+			assert victimId.equalsIgnoreCase(name) : "Victim ID " + victimId + " should equal " + name;
 			return new PortablePunishment.VictimInfo(null, name, null);
 		}
 

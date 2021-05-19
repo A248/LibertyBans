@@ -16,21 +16,22 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core;
 
-import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.config.SpecifiedConfigs;
-import space.arim.libertybans.core.service.Time;
-import space.arim.libertybans.it.ConfigSpec;
+package space.arim.libertybans.core.uuid;
 
-public class PillarOneReplacementModule extends PillarOneBindModuleMinusConfigs {
+import org.junit.jupiter.api.Test;
 
-	public Configs configs(SpecifiedConfigs configs) {
-		return configs;
-	}
+import java.util.UUID;
 
-	public Time time(ConfigSpec configSpec) {
-		return Time.fixed(configSpec.unixTime());
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class OfflineUUIDTest {
+
+	@Test
+	public void computeOfflineUuid() {
+		assertEquals(
+				UUID.fromString("0b58c22d-56f5-3296-87b8-c0155a071d4d"),
+				OfflineUUID.computeOfflineUuid("McStorm_MlyK11qF"));
 	}
 
 }

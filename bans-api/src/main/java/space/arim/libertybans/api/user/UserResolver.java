@@ -36,7 +36,7 @@ public interface UserResolver {
 	 * external APIs such as the Mojang API.
 	 * 
 	 * @param name the player name
-	 * @return a future yielding the UUID or if it was found
+	 * @return a future yielding the UUID or an empty optional if not found
 	 */
 	CentralisedFuture<Optional<UUID>> lookupUUID(String name);
 
@@ -45,7 +45,7 @@ public interface UserResolver {
 	 * external APIs such as the Mojang API.
 	 * 
 	 * @param uuid the uuid
-	 * @return a future yielding the player name if it was found
+	 * @return a future yielding the player name or an empty optional if not found
 	 */
 	CentralisedFuture<Optional<String>> lookupName(UUID uuid);
 

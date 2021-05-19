@@ -112,6 +112,10 @@ public final class CachingUUIDManager implements UUIDManager {
 		return futuresFactory.completedFuture(value);
 	}
 
+	private UUIDResolutionConfig uuidResolution() {
+		return configs.getMainConfig().uuidResolution();
+	}
+
 	/*
 	 * UUID resolution works as follows:
 	 * 
@@ -119,10 +123,20 @@ public final class CachingUUIDManager implements UUIDManager {
 	 * 2. Check online players
 	 * 3. Check own database
 	 * 4. If online server, check Mojang API and third party web APIs where configured.
+	 * If offline server and exact name provided, compute offline UUID.
 	 */
 	
 	@Override
 	public CentralisedFuture<Optional<UUID>> lookupUUID(String name) {
+		return lookupUUIDExactOrNot(name, false);
+	}
+
+	@Override
+	public CentralisedFuture<Optional<UUID>> lookupUUIDFromExactName(String name) {
+		return lookupUUIDExactOrNot(name, true);
+	}
+
+	private CentralisedFuture<Optional<UUID>> lookupUUIDExactOrNot(String name, boolean exact) {
 		if (!nameValidator.validateNameArgument(name)) {
 			return completedFuture(Optional.empty());
 		}
@@ -130,7 +144,8 @@ public final class CachingUUIDManager implements UUIDManager {
 		if (cachedResolve != null) {
 			return completedFuture(Optional.of(cachedResolve));
 		}
-		return lookupUUIDUncached(name).thenApply((optExternalUuid) -> {
+		boolean canComputeOffline = exact && uuidResolution().serverType() == ServerType.OFFLINE;
+		return lookupUUIDUncached(name, canComputeOffline).thenApply((optExternalUuid) -> {
 			if (optExternalUuid.isPresent()) {
 				addCache(optExternalUuid.get(), name);
 			}
@@ -138,7 +153,7 @@ public final class CachingUUIDManager implements UUIDManager {
 		});
 	}
 
-	private CentralisedFuture<Optional<UUID>> lookupUUIDUncached(String name) {
+	private CentralisedFuture<Optional<UUID>> lookupUUIDUncached(String name, boolean canComputeOffline) {
 		Optional<UUID> envResolve = envResolver.lookupUUID(name);
 		if (envResolve.isPresent()) {
 			return completedFuture(envResolve);
@@ -147,6 +162,12 @@ public final class CachingUUIDManager implements UUIDManager {
 			if (queriedUuid != null) {
 				return completedFuture(Optional.of(queriedUuid));
 			}
+			if (canComputeOffline) {
+				// Offline server and exact lookup
+				UUID offlineUuid = OfflineUUID.computeOfflineUuid(name);
+				return completedFuture(Optional.of(offlineUuid));
+			}
+			// Online or mixed mode server, or inexact lookup
 			return webLookup((remoteApi) -> remoteApi.lookupUUID(name));
 		});
 	}
@@ -179,7 +200,7 @@ public final class CachingUUIDManager implements UUIDManager {
 	}
 	
 	private <T> CompletableFuture<Optional<T>> webLookup(Function<RemoteNameUUIDApi, CompletableFuture<RemoteApiResult<T>>> resultFunction) {
-		UUIDResolutionConfig uuidResolution = configs.getMainConfig().uuidResolution();
+		UUIDResolutionConfig uuidResolution = uuidResolution();
 		if (uuidResolution.serverType() != ServerType.ONLINE) {
 			return futuresFactory.completedFuture(Optional.empty());
 		}
