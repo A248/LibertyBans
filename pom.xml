@@ -142,6 +142,14 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-shade-plugin</artifactId>
+					<configuration>
+						<relocations>
+						<relocation>
+							<pattern>org.hsqldb</pattern>
+							<shadedPattern>dev.tommasobenatti.relocate.hsqldb</shadedPattern>
+						</relocation>
+						</relocations>
+					</configuration>
 					<executions>
 						<execution>
 							<phase>package</phase>
