@@ -54,8 +54,8 @@ public class ImportExecutor {
 		this.time = time;
 	}
 
-	public CompletableFuture<Boolean> performImport(ImportSource importSource) {
-		CompletableFuture<Boolean> future = new CompletableFuture<>();
+	public CompletableFuture<ImportStatistics> performImport(ImportSource importSource) {
+		CompletableFuture<ImportStatistics> future = new CompletableFuture<>();
 		new Thread(() -> {
 			try {
 				future.complete(runImport(importSource));
@@ -66,24 +66,25 @@ public class ImportExecutor {
 		return future;
 	}
 
-	private boolean runImport(ImportSource importSource) {
+	private ImportStatistics runImport(ImportSource importSource) {
+		ImportStatistics statistics = new ImportStatistics();
 		try (BatchOperationExecutor batchExecutor = new BatchOperationExecutor(dbProvider.get())) {
 
-			ImportSink importSink = new ImportSink(batchExecutor);
+			ImportSink importSink = new ImportSink(batchExecutor, statistics);
 			transferPunishments(importSource, importSink);
 			transferExplicitNameAddressRecords(importSource, importSink);
 
 			batchExecutor.finish();
-			logger.info("Import completed successfully.");
-			return true;
+			logger.info("Import completed successfully. {}", statistics);
 
 		} catch (ImportException | SQLException ex) {
 			logger.error(
 					"Unable to complete import successfully. It is recommended to remove " +
 							"the partially completed data, investigate the cause of failure, and " +
 							"try again when you are sure the problem has been corrected.", ex);
-			return false;
+			statistics.markFailed();
 		}
+		return statistics;
 	}
 
 	private void transferPunishments(ImportSource importSource, ImportSink importSink) {

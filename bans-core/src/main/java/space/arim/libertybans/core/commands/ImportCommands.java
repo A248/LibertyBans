@@ -27,6 +27,7 @@ import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.importing.AdvancedBanImportSource;
 import space.arim.libertybans.core.importing.ImportExecutor;
 import space.arim.libertybans.core.importing.ImportSource;
+import space.arim.libertybans.core.importing.ImportStatistics;
 import space.arim.libertybans.core.importing.LiteBansImportSource;
 import space.arim.libertybans.core.importing.PlatformImportSource;
 
@@ -109,9 +110,10 @@ public class ImportCommands extends AbstractSubCommandGroup {
 				return;
 			}
 			ImportSource importSource = importSourceProviders.get(sourceType).get();
-			var future = executor.performImport(importSource).thenAccept((success) -> {
-				if (success) {
+			var future = executor.performImport(importSource).thenAccept((ImportStatistics statistics) -> {
+				if (statistics.success()) {
 					sender().sendMessage(importMessages().complete());
+					sender().sendLiteralMessage(statistics.toString());
 				} else {
 					sender().sendMessage(importMessages().failure());
 				}

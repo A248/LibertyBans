@@ -29,19 +29,23 @@ import space.arim.omnibus.util.ThisClass;
 class ImportSink {
 
 	private final BatchOperationExecutor batchExecutor;
+	private final ImportStatistics statistics;
 
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
-	ImportSink(BatchOperationExecutor batchExecutor) {
+	ImportSink(BatchOperationExecutor batchExecutor, ImportStatistics statistics) {
 		this.batchExecutor = batchExecutor;
+		this.statistics = statistics;
 	}
 
 	void addActivePunishment(Enaction enaction) {
 		addPunishment(enaction, true);
+		statistics.transferredActive();
 	}
 
 	void addHistoricalPunishment(Enaction enaction) {
 		addPunishment(enaction, false);
+		statistics.transferredHistorical();
 	}
 
 	private void addPunishment(Enaction enaction, boolean active) {
@@ -67,6 +71,7 @@ class ImportSink {
 			nameAddressRecord.name().ifPresent((name) -> association.associatePastName(name, timeRecorded));
 			nameAddressRecord.address().ifPresent((address) -> association.associatePastAddress(address, timeRecorded));
 		});
+		statistics.transferredNameAddressRecord();
 	}
 
 }

@@ -28,6 +28,7 @@ import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.core.importing.ConnectionSource;
 import space.arim.libertybans.core.importing.ImportExecutor;
 import space.arim.libertybans.core.importing.ImportSource;
+import space.arim.libertybans.core.importing.ImportStatistics;
 import space.arim.libertybans.core.importing.LocalDatabaseSetup;
 import space.arim.libertybans.core.importing.PluginDatabaseSetup;
 import space.arim.libertybans.core.scope.ScopeImpl;
@@ -37,7 +38,7 @@ import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -74,8 +75,9 @@ public class LiteBansImportIT {
 	public void importEverything() {
 		ScopeManager scopeManager = createScopeManager();
 		ImportSource importSource = pluginDatabaseSetup.createLiteBansImportSource(scopeManager);
-		CompletableFuture<Boolean> futureImport = importExecutor.performImport(importSource);
+		CompletableFuture<ImportStatistics> futureImport = importExecutor.performImport(importSource);
 		assertDoesNotThrow(futureImport::join, "Import failed: error");
-		assertTrue(futureImport.join(), "Import failed: unsuccessful");
+		assertEquals(new ImportStatistics(71, 1625, 34211), futureImport.join(),
+				"Import failed: unexpected import statistics");
 	}
 }
