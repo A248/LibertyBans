@@ -106,7 +106,7 @@ public class LiteBansImportSourceTest {
 						PunishmentType.KICK, "test", kitpvpScope,
 						Instant.ofEpochMilli(kickOneDate), PortablePunishment.KnownDetails.PERMANENT),
 				new PortablePunishment.VictimInfo(uuid, null, address, PlayerVictim.of(uuid)),
-				new PortablePunishment.OperatorInfo(true, null, null),
+				PortablePunishment.OperatorInfo.createConsole(),
 				false);
 		assertEquals(Set.of(kickByConsole), sourcePunishments());
 
@@ -121,7 +121,7 @@ public class LiteBansImportSourceTest {
 						PunishmentType.KICK, "test2", globalScope,
 						Instant.ofEpochMilli(kickTwoDate), PortablePunishment.KnownDetails.PERMANENT),
 				new PortablePunishment.VictimInfo(uuid, null, address, PlayerVictim.of(uuid)),
-				new PortablePunishment.OperatorInfo(false, ecotasticUUID, "Ecotastic"),
+				PortablePunishment.OperatorInfo.createUser(ecotasticUUID, "Ecotastic"),
 				false);
 		assertEquals(Set.of(kickByConsole, kickByEcotastic), sourcePunishments());
 	}
@@ -142,8 +142,7 @@ public class LiteBansImportSourceTest {
 						Instant.ofEpochMilli(startTime), PortablePunishment.KnownDetails.PERMANENT),
 				new PortablePunishment.VictimInfo(
 						victimUUID, null, victimAddress, AddressVictim.of(victimAddress)),
-				new PortablePunishment.OperatorInfo(
-						false, ecotasticUUID, "Ecotastic"),
+				PortablePunishment.OperatorInfo.createUser(ecotasticUUID, "Ecotastic"),
 				true);
 		assertEquals(Set.of(expectedPunishment), sourcePunishments());
 	}

@@ -94,7 +94,7 @@ public class BukkitImportSource implements PlatformImportSource {
 					new PortablePunishment.KnownDetails(
 							PunishmentType.BAN, reason, scopeManager.globalScope(), start, end),
 					helper.getVictim(Objects.requireNonNull(entry.getTarget())),
-					new PortablePunishment.OperatorInfo(false, null, entry.getSource()),
+					PortablePunishment.OperatorInfo.createUser(null, entry.getSource()),
 					true);
 		}).collect(Collectors.toUnmodifiableSet());
 	}

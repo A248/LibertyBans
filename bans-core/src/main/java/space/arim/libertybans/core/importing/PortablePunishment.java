@@ -258,12 +258,20 @@ public final class PortablePunishment {
 		private final String name;
 
 		public OperatorInfo(boolean console, UUID uuid, String name) {
-			if (!console && uuid == null & name == null) {
-				throw new IllegalArgumentException("If !console, one of uuid or name must be nonnull");
-			}
 			this.console = console;
 			this.uuid = uuid;
 			this.name = name;
+		}
+
+		public static OperatorInfo createConsole() {
+			return new OperatorInfo(true, null, null);
+		}
+
+		public static OperatorInfo createUser(UUID uuid, String name) {
+			if (uuid == null & name == null) {
+				throw new IllegalArgumentException("One of uuid or name must be nonnull");
+			}
+			return new OperatorInfo(false, uuid, name);
 		}
 
 		public boolean console() {

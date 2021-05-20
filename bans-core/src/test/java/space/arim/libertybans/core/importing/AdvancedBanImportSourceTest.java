@@ -121,7 +121,7 @@ public class AdvancedBanImportSourceTest {
 						PunishmentType.BAN, "bug exploit", globalScope,
 						Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)),
 				new PortablePunishment.VictimInfo(uuid, "creeperfreddy", null),
-				new PortablePunishment.OperatorInfo(true, null, null),
+				PortablePunishment.OperatorInfo.createConsole(),
 				false);
 		assertEquals(Set.of(historicalPunishment), sourcePunishments());
 
@@ -172,8 +172,7 @@ public class AdvancedBanImportSourceTest {
 						Instant.ofEpochMilli(startTime), PortablePunishment.KnownDetails.PERMANENT),
 				new PortablePunishment.VictimInfo(
 						null, victimName, NetworkAddress.of(InetAddress.getByName(victimIp))),
-				new PortablePunishment.OperatorInfo(
-						false, null, "Ecotastic"),
+				PortablePunishment.OperatorInfo.createUser(null, "Ecotastic"),
 				true);
 		assertEquals(Set.of(expectedPunishment), sourcePunishments());
 	}
@@ -190,8 +189,7 @@ public class AdvancedBanImportSourceTest {
 						PunishmentType.BAN, reason, globalScope,
 						Instant.ofEpochMilli(startTime), PortablePunishment.KnownDetails.PERMANENT),
 				new PortablePunishment.VictimInfo(null, victimName, null),
-				new PortablePunishment.OperatorInfo(
-						false, null, "Ecotastic"),
+				PortablePunishment.OperatorInfo.createUser(null, "Ecotastic"),
 				true);
 		assertEquals(Set.of(expectedPunishment), sourcePunishments());
 	}

@@ -156,16 +156,16 @@ public class LiteBansImportSource implements ImportSource {
 		private PortablePunishment.OperatorInfo mapOperatorInfo(ResultSet resultSet) throws SQLException {
 			String operatorId = getNonnullString(resultSet, "banned_by_uuid");
 			if (operatorId.equals("CONSOLE")) {
-				return new PortablePunishment.OperatorInfo(true, null, null);
+				return PortablePunishment.OperatorInfo.createConsole();
 			}
 			if (operatorId.length() != 36) {
 				// LiteBans occasionally records a name in the banned_by_uuid column
 				logger.warn("Found operator UUID '{}' with incorrect length (should be 36 characters). " +
 								"LibertyBans will rely on the name in banned_by_name instead.", operatorId);
 				String operatorName = getNonnullString(resultSet, "banned_by_name");
-				return new PortablePunishment.OperatorInfo(false, null, operatorName);
+				return PortablePunishment.OperatorInfo.createUser(null, operatorName);
 			}
-			return new PortablePunishment.OperatorInfo(false, UUID.fromString(operatorId),
+			return PortablePunishment.OperatorInfo.createUser(UUID.fromString(operatorId),
 					resultSet.getString("banned_by_name")); // okay if banned_by_name is null
 		}
 

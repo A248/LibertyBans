@@ -185,9 +185,9 @@ public class AdvancedBanImportSource implements ImportSource {
 		private PortablePunishment.OperatorInfo mapOperatorInfo(ResultSet resultSet) throws SQLException {
 			String operatorName = getNonnullString(resultSet, "operator");
 			if (operatorName.equals("CONSOLE")) {
-				return new PortablePunishment.OperatorInfo(true, null, null);
+				return PortablePunishment.OperatorInfo.createConsole();
 			}
-			return new PortablePunishment.OperatorInfo(false, null, operatorName);
+			return PortablePunishment.OperatorInfo.createUser(null, operatorName);
 		}
 	}
 
