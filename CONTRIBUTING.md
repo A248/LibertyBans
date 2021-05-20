@@ -35,17 +35,13 @@ Because of hosting limits, LibertyBans uses some tricks to ensure the distribute
 
 The bootstrap module downloads the implementation jar at runtime. The implementation jar is shaded with all dependencies at compile time and placed in an isolated classloader at runtime.
 
-### Compiling and running the current source
+### Compiling and running from source
 
-Use `mvn package`.
+Use `mvn clean package`.
 
-The jar at `bans-distribution/executable/target/LibertyBans-Executable_version.jar` can be run as a plugin on any supported platform. This jar does NOT relocate shaded dependencies, so it should NOT be used on a production server. It's meant for easy testing and development.
+The jar at `bans-distribution/executable/target/LibertyBans-Executable_version.jar` can be run as a plugin on any supported platform.
 
-### Compiling and running the latest released version
-
-Use the jar at `bans-distribution/distributable/target/LibertyBans_version.jar`. This is the same jar which is uploaded to release pages like Github Releases.
-
-This jar will downloaded the released version it corresponds to at runtime.
+This jar is fully ready for use. It packages dependencies using a nested jar format, and it will use the sources and libraries you compiled it with.
 
 ## Testing
 
@@ -57,11 +53,11 @@ Unit tests are run as part of the Maven build. `mvn test` will execute them.
 
 ### Integration tests
 
-Using `mvn verify` will build and run all tests, including integration tests. This is the same command used by the Github Actions workflow (CI).
+Using `mvn clean verify` will build and run all tests, including integration tests. This is the same command used by the Github Actions workflow (CI).
 
 The integration tests rely on [MariaDB4j](https://github.com/vorburger/MariaDB4j). Sometimes MariaDB4j is a little clumsy; it requires extra setup on MacOS and is not friendly with firewalls.
 
-If you would prefer not to run the integration tests yourself, simply let the CI take care of it.
+If you would prefer not to run the integration tests yourself, that's fine. Simply let the CI take care of it.
 
 ### Manual testing
 

@@ -10,8 +10,7 @@
 	</parent>
 	
 	<artifactId>bans-executable</artifactId>
-	<description>Runnable plugin jar useful for quick testing and recompilation.
-		NOT made for non-development use because it does NOT relocate dependencies.</description>
+	<description>Runnable plugin jar which uses the latest sources</description>
 	
 	<build>
 		<finalName>LibertyBans-Executable_${project.version}</finalName>
