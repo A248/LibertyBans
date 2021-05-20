@@ -103,7 +103,11 @@ public class Enaction {
 				"INSERT INTO `libertybans_history` (`id`, `victim`, `victim_type`) VALUES (?, ?, ?)")
 				.params(id, victim, victim.getType())
 				.voidResult().execute();
-		return creator.createPunishment(id, type, victim, operator, reason, scope, start, end);
+		Punishment punishment = creator.createPunishment(id, type, victim, operator, reason, scope, start, end);
+		if (punishment == null) { // Shouldn't happen
+			throw new IllegalStateException("Internal error: Unable to create punishment for id " + id);
+		}
+		return punishment;
 	}
 
 	public static final class OrderDetails {
@@ -177,6 +181,26 @@ public class Enaction {
 			result = 31 * result + (int) (end ^ (end >>> 32));
 			return result;
 		}
+
+		@Override
+		public String toString() {
+			return "Enaction.OrderDetails{" +
+					"type=" + type +
+					", victim=" + victim +
+					", operator=" + operator +
+					", reason='" + reason + '\'' +
+					", scope=" + scope +
+					", start=" + start +
+					", end=" + end +
+					'}';
+		}
 	}
 
+	@Override
+	public String toString() {
+		return "Enaction{" +
+				"orderDetails=" + orderDetails +
+				", creator=" + creator +
+				'}';
+	}
 }

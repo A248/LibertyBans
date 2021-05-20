@@ -53,10 +53,9 @@ class ImportSink {
 			if (active) {
 				Punishment enacted = enaction.enactActive(querySource, connection::rollback);
 				if (enacted == null) {
-					logger.warn("Unable to import punishment with details {}. " +
-							"It is likely there is a conflicting active punishment, for example " +
-							"two bans for the same user. The conflicting punishment will be added to the " +
-							"user's history, but it will not be enforced actively.", enaction.orderDetails());
+					logger.warn("There is a conflicting active punishment for {}. for example, " +
+							"two bans for the same user. This is harmless in most cases. The punishment will be " +
+							"added to the  user's history but not be enforced actively.", enaction.orderDetails());
 				}
 			} else {
 				enaction.enactHistorical(querySource);
