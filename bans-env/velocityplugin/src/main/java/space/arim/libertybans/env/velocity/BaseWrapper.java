@@ -65,9 +65,10 @@ class BaseWrapper {
 			Scheduler scheduler = server.getScheduler();
 			Executor executor = (cmd) -> scheduler.buildTask(plugin, cmd).schedule();
 
+			Path jarFile = plugin.getDescription().getSource().get();
 			LibertyBansLauncher launcher = new LibertyBansLauncher(
 					new Slf4jBootstrapLogger(velocityPlugin.logger), platform,
-					velocityPlugin.folder, executor);
+					velocityPlugin.folder, executor, jarFile);
 			ClassLoader launchLoader = launcher.attemptLaunch().join();
 
 			if (launchLoader == null) {

@@ -23,7 +23,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 /**
- * An immutable dependency.
+ * A dependency, with both identifying details and some related information
  * 
  * @author A248
  *
@@ -34,24 +34,30 @@ public final class Dependency {
 	private final String artifactId;
 	private final String version;
 	private transient final byte[] sha512hash;
+	private transient final DownloadProcessor downloadProcessor;
 	
 	/**
 	 * Creates a dependency
-	 * 
 	 * @param groupId the group ID
 	 * @param artifactId the artifact ID
 	 * @param version the version
 	 * @param sha512hash the SHA 512 hash, null to disable hash checking
+	 * @param downloadProcessor the download processor
 	 */
-	public Dependency(String groupId, String artifactId, String version, byte[] sha512hash) {
-		this.groupId = Objects.requireNonNull(groupId);
-		this.artifactId = Objects.requireNonNull(artifactId);
-		this.version = Objects.requireNonNull(version);
+	public Dependency(String groupId, String artifactId, String version, byte[] sha512hash,
+					  DownloadProcessor downloadProcessor) {
+		this.groupId = Objects.requireNonNull(groupId, "groupId");
+		this.artifactId = Objects.requireNonNull(artifactId, "artifactId");
+		this.version = Objects.requireNonNull(version, "version");
 		this.sha512hash = sha512hash.clone();
+		this.downloadProcessor = Objects.requireNonNull(downloadProcessor, "downloadProcessor");
 	}
 	
-	public static Dependency of(String groupId, String artifactId, String version, String hexHash) {
-		return new Dependency(groupId, artifactId, version, hexStringToByteArray(hexHash.toLowerCase(Locale.ROOT)));
+	public static Dependency of(String groupId, String artifactId, String version, String hexHash,
+								DownloadProcessor downloadProcessor) {
+		return new Dependency(groupId, artifactId, version,
+				hexStringToByteArray(hexHash.toLowerCase(Locale.ROOT)),
+				downloadProcessor);
 	}
 	
 	// https://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
@@ -94,6 +100,10 @@ public final class Dependency {
 	public byte[] getSha512Hash() {
 		return sha512hash.clone();
 	}
+
+	public DownloadProcessor downloadProcessor() {
+		return downloadProcessor;
+	}
 	
 	public boolean matchesHash(byte[] otherSha512Hash) {
 		return Arrays.equals(sha512hash, otherSha512Hash);
@@ -118,6 +128,13 @@ public final class Dependency {
 		return result;
 	}
 
+	/**
+	 * A dependency is considered equal to another depending on the groupId,
+	 * artifactId, and version
+	 *
+	 * @param object the other object
+	 * @return true if the objects are equal, false otherwise
+	 */
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {

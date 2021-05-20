@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -40,27 +41,31 @@ public final class BootstrapLauncher {
 
 	private final AddableURLClassLoader classLoader;
 	private final DependencyLoader dependencyLoader;
+	private final Set<ExistingDependency> existingDependencies;
 
-	private BootstrapLauncher(AddableURLClassLoader classLoader, DependencyLoader dependencyLoader) {
+	private BootstrapLauncher(AddableURLClassLoader classLoader, DependencyLoader dependencyLoader,
+							  Set<ExistingDependency> existingDependencies) {
 		this.classLoader = classLoader;
-		this.dependencyLoader = dependencyLoader;
+		this.dependencyLoader = Objects.requireNonNull(dependencyLoader, "dependencyLoader");
+		this.existingDependencies = Set.copyOf(existingDependencies);
 	}
 
 	public static BootstrapLauncher create(String programName, ClassLoader parentClassLoader,
-			DependencyLoader dependencyLoader) {
+			DependencyLoader dependencyLoader, Set<ExistingDependency> existingDependencies) {
 		return new BootstrapLauncher(
 				new AddableURLClassLoader(programName, parentClassLoader),
-				dependencyLoader);
-	}
-
-	public ClassLoader getClassLoader() {
-		return classLoader;
+				dependencyLoader, existingDependencies);
 	}
 	
 	private CompletableFuture<Set<Path>> loadJarPaths(DependencyLoader loader) {
+		Path targetDirectory = loader.getOutputDirectory();
 		return loader.execute().thenApply((results) -> {
 
+			// JARs which will be used on the classpath/modulepath
 			Set<Path> jarPaths = new HashSet<>(results.size());
+			// JARs present which should not be deleted. Includes jarPaths
+			Set<Path> dontDelete = new HashSet<>(results.size());
+
 			Set<BootstrapException> failures = new HashSet<>();
 			for (Map.Entry<Dependency, DownloadResult> entry : results.entrySet()) {
 
@@ -81,7 +86,11 @@ public final class BootstrapLauncher {
 				default:
 					break;
 				}
-				jarPaths.add(entry.getValue().getJarFile());
+				Path jarFile = result.getJarFile();
+				// Keep downloaded JARs so they don't need to be re-downloaded
+				dontDelete.add(jarFile);
+				jarPaths.addAll(
+						dependency.downloadProcessor().onDependencyDownload(dependency, jarFile, targetDirectory));
 			}
 			if (!failures.isEmpty()) {
 				if (failures.size() == 1) {
@@ -93,11 +102,18 @@ public final class BootstrapLauncher {
 				}
 				throw ex;
 			}
+			for (ExistingDependency existingDependency : existingDependencies) {
+				// Keep existing external dependencies
+				dontDelete.add(existingDependency.jarPath());
+				jarPaths.addAll(existingDependency.onDependencyDownload(targetDirectory));
+			}
+			// Don't delete immediately-needed JARs
+			dontDelete.addAll(jarPaths);
 			/*
-			 * Cleanup previously downloaded but now-unused dependencies (old versions)
+			 * Cleanup previous but now-unused jars
 			 */
-			try (Stream<Path> fileStream = Files.list(loader.getOutputDirectory())) {
-				fileStream.filter((file) -> !jarPaths.contains(file)).forEach((toDelete) -> {
+			try (Stream<Path> fileStream = Files.list(targetDirectory)) {
+				fileStream.filter((file) -> !dontDelete.contains(file)).forEach((toDelete) -> {
 					try {
 						Files.delete(toDelete);
 					} catch (IOException ex) {
@@ -111,8 +127,8 @@ public final class BootstrapLauncher {
 		});
 	}
 
-	public CompletableFuture<Void> load() {
-		return loadJarPaths(dependencyLoader).thenAccept((paths) -> {
+	public CompletableFuture<ClassLoader> load() {
+		return loadJarPaths(dependencyLoader).thenApply((paths) -> {
 			try {
 				for (Path path : paths) {
 					classLoader.addURL(path.toUri().toURL());
@@ -120,6 +136,7 @@ public final class BootstrapLauncher {
 			} catch (MalformedURLException ex) {
 				throw new BootstrapException("Unable to convert Path to URL", ex);
 			}
+			return classLoader;
 		});
 	}
 

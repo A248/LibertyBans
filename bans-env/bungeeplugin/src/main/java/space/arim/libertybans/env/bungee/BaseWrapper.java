@@ -73,7 +73,8 @@ class BaseWrapper {
 				}
 				return null;
 			});
-			LibertyBansLauncher launcher = new LibertyBansLauncher(logger, platform, folder, executor, culpritFinder);
+			LibertyBansLauncher launcher = new LibertyBansLauncher(logger, platform, folder, executor,
+					plugin.getFile().toPath(), culpritFinder);
 			ClassLoader launchLoader = launcher.attemptLaunch().join();
 
 			if (launchLoader == null) {

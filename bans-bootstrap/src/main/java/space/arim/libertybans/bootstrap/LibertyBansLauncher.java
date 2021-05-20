@@ -21,11 +21,14 @@ package space.arim.libertybans.bootstrap;
 import space.arim.libertybans.bootstrap.depend.BootstrapLauncher;
 import space.arim.libertybans.bootstrap.depend.DependencyLoader;
 import space.arim.libertybans.bootstrap.depend.DependencyLoaderBuilder;
+import space.arim.libertybans.bootstrap.depend.ExistingDependency;
+import space.arim.libertybans.bootstrap.depend.JarWithinJarDownloadProcessor;
 import space.arim.libertybans.bootstrap.depend.LocatableDependency;
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -36,19 +39,22 @@ public class LibertyBansLauncher {
 	private final Platform platform;
 	private final Path libsFolder;
 	private final Executor executor;
+	private final Path jarFile;
 	private final CulpritFinder culpritFinder;
 	
 	public LibertyBansLauncher(BootstrapLogger logger, Platform platform, Path folder, Executor executor,
-							   CulpritFinder culpritFinder) {
-		this.logger = logger;
-		this.platform = platform;
+							   Path jarFile, CulpritFinder culpritFinder) {
+		this.logger = Objects.requireNonNull(logger, "logger");
+		this.platform = Objects.requireNonNull(platform, "platform");
 		libsFolder = folder.resolve("libraries");
-		this.executor = executor;
-		this.culpritFinder = culpritFinder;
+		this.executor = Objects.requireNonNull(executor, "executor");
+		this.jarFile = Objects.requireNonNull(jarFile, "jarFile");
+		this.culpritFinder = Objects.requireNonNull(culpritFinder, "culpritFinder");
 	}
 	
-	public LibertyBansLauncher(BootstrapLogger logger, Platform platform, Path folder, Executor executor) {
-		this(logger, platform, folder, executor, (clazz) -> "");
+	public LibertyBansLauncher(BootstrapLogger logger, Platform platform, Path folder, Executor executor,
+							   Path jarFile) {
+		this(logger, platform, folder, executor, jarFile, (clazz) -> "");
 	}
 	
 	private static Class<?> classForName(String clazzName) {
@@ -79,7 +85,7 @@ public class LibertyBansLauncher {
 				+ "Unrelocated class detected was " + libClass.getName());
 	}
 	
-	private DependencyLoader createDependencyLoader() {
+	private DependencyLoader createDependencyLoader(DistributionMode distributionMode) {
 		DependencyLoaderBuilder loader = new DependencyLoaderBuilder()
 				.executor(executor)
 				.outputDirectory(libsFolder);
@@ -89,7 +95,7 @@ public class LibertyBansLauncher {
 			jarsToDownload.add(locate(InternalDependency.SLF4J_API));
 			jarsToDownload.add(locate(InternalDependency.SLF4J_JUL));
 		}
-		boolean downloadSelfDependencies = !skipSelfDependencies();
+		boolean downloadSelfDependencies = distributionMode == DistributionMode.DEPLOY_AND_DOWNLOAD;
 		if (!platform.hasKyoriAdventureSupport()) {
 			warnRelocation("Kyori-Adventure", "net.kyori.adventure.audience.Audience");
 			warnRelocation("Kyori-Examination", "net.kyori.examination.Examinable");
@@ -116,15 +122,26 @@ public class LibertyBansLauncher {
 		return dependency.locateUsing(executor);
 	}
 
-	boolean skipSelfDependencies() {
-		return getClass().getResource("/abort_self-dependency_download") != null;
+	public DistributionMode distributionMode() {
+		if (getClass().getResource("/bans-executable_identifier") != null) {
+			return DistributionMode.JAR_OF_JARS;
+		}
+		return DistributionMode.DEPLOY_AND_DOWNLOAD;
 	}
 
 	public CompletableFuture<ClassLoader> attemptLaunch() {
+		DistributionMode distributionMode = distributionMode();
+		Set<ExistingDependency> existingDependencies;
+		if (distributionMode == DistributionMode.JAR_OF_JARS) {
+			existingDependencies = Set.of(new ExistingDependency(
+					jarFile, new JarWithinJarDownloadProcessor("jars").replaceExisting(true)));
+		} else {
+			existingDependencies = Set.of();
+		}
 		BootstrapLauncher launcher = BootstrapLauncher.create(
 				"LibertyBans", getClass().getClassLoader(),
-				createDependencyLoader());
-		return launcher.load().thenApply((ignore) -> launcher.getClassLoader());
+				createDependencyLoader(distributionMode), existingDependencies);
+		return launcher.load();
 	}
 	
 }

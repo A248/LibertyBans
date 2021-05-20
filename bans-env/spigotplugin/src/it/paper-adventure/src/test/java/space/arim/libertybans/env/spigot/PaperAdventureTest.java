@@ -46,7 +46,7 @@ public class PaperAdventureTest {
 			when(server.getVersion()).thenReturn("version");
 		});
 		BootstrapLogger logger = new Slf4jBootstrapLogger(LoggerFactory.getLogger(getClass()));
-		Platform platform = new BaseWrapper.Creator(plugin, logger).detectPlatform();
+		Platform platform = new BaseWrapper.Creator(plugin, logger, dataFolder).detectPlatform();
 		assertTrue(platform.hasSlf4jSupport());
 		assertTrue(platform.hasKyoriAdventureSupport());
 	}

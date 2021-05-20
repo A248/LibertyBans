@@ -18,16 +18,29 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.3.0</version>
+				<executions>
+					<execution>
+						<id>assemble</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptors>
+								<descriptor>src/assembly/assemble.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-invoker-plugin</artifactId>
 				<configuration>
-					<artifactSet>
-						<excludes>
-							<exclude>org.slf4j:slf4j-api</exclude>
-							<exclude>org.yaml:snakeyaml</exclude>
-							<exclude>com.google.code.gson:gson</exclude>
-							<exclude>net.kyori:*</exclude>
-						</excludes>
-					</artifactSet>
+					<settingsFile>src/it/settings.xml</settingsFile>
 				</configuration>
 			</plugin>
 		</plugins>

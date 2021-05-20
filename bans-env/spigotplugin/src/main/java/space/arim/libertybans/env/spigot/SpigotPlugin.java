@@ -36,7 +36,7 @@ public class SpigotPlugin extends JavaPlugin {
 		if (wrapper != null) {
 			throw new IllegalStateException("Plugin enabled twice?");
 		}
-		wrapper = new BaseWrapper.Creator(this, logger).create();
+		wrapper = new BaseWrapper.Creator(this, logger, getFile().toPath()).create();
 	}
 	
 	@Override

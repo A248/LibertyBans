@@ -18,10 +18,6 @@
 	</properties>
 	
 	<build>
-		<!-- This is the same name format used by the dependency downloader -->
-		<!-- For quick testing, drag and drop the output jar to LibertyBans/libs/ -->
-		<finalName>implementation_${project.version}</finalName>
-
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

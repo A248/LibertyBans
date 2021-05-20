@@ -19,6 +19,8 @@
 package space.arim.libertybans.bootstrap;
 
 import space.arim.libertybans.bootstrap.depend.Dependency;
+import space.arim.libertybans.bootstrap.depend.DownloadProcessor;
+import space.arim.libertybans.bootstrap.depend.JarWithinJarDownloadProcessor;
 import space.arim.libertybans.bootstrap.depend.LocatableDependency;
 import space.arim.libertybans.bootstrap.depend.Repository;
 
@@ -55,29 +57,30 @@ enum InternalDependency {
 	MOREPAPERLIB("morepaperlib", Repositories.ARIM_LESSER_GPL3),
 	*/
 	
-	SELF_IMPLEMENTATION("self-implementation", Repositories.ARIM_AFFERO_GPL3),
+	SELF_IMPLEMENTATION("self-implementation", Repositories.ARIM_AFFERO_GPL3, false),
+	KYORI_BUNDLE("kyori-bundle", Repositories.ARIM_AFFERO_GPL3, false),
 
-	SLF4J_API("slf4j-api", Repositories.CENTRAL_REPO),
-	SLF4J_JUL("slf4j-jdk14", Repositories.CENTRAL_REPO),
-
-	KYORI_BUNDLE("kyori-bundle", Repositories.ARIM_AFFERO_GPL3);
+	SLF4J_API("slf4j-api", Repositories.CENTRAL_REPO, false),
+	SLF4J_JUL("slf4j-jdk14", Repositories.CENTRAL_REPO, false);
 
 	private final ClassPresence classPresence;
 	private final String id;
+	private final boolean jarsInJar;
 	private final Repository repository;
 	
-	private InternalDependency(ClassPresence classPresence, String id, Repository repository) {
+	private InternalDependency(ClassPresence classPresence, String id, boolean jarsInJar, Repository repository) {
 		this.classPresence = classPresence;
 		this.id = id;
+		this.jarsInJar = jarsInJar;
 		this.repository = repository;
 	}
 	
 	private InternalDependency(String name, String clazz, String id) {
-		this(new ClassPresence(clazz, name), id, Repositories.CENTRAL_REPO);
+		this(new ClassPresence(clazz, name), id, false, Repositories.CENTRAL_REPO);
 	}
 	
-	private InternalDependency(String id, Repository repository) {
-		this(null, id, repository);
+	private InternalDependency(String id, Repository repository, boolean jarsInJar) {
+		this(null, id, jarsInJar, repository);
 	}
 
 	Optional<ClassPresence> classPresence() {
@@ -87,6 +90,13 @@ enum InternalDependency {
 	CompletableFuture<LocatableDependency> locateUsing(Executor executor) {
 		return CompletableFuture.supplyAsync(this::readDependency, executor)
 				.thenApply((dependency) -> new LocatableDependency(dependency, repository));
+	}
+
+	private DownloadProcessor downloadProcessor() {
+		if (jarsInJar) {
+			return new JarWithinJarDownloadProcessor("jars");
+		}
+		return DownloadProcessor.simple();
 	}
 
 	private Dependency readDependency() {
@@ -100,7 +110,7 @@ enum InternalDependency {
 			if (lines.length < 4) {
 				throw new IllegalArgumentException("Dependency file for " + id + " is malformatted");
 			}
-			return Dependency.of(lines[0], lines[1], lines[2], lines[3]);
+			return Dependency.of(lines[0], lines[1], lines[2], lines[3], downloadProcessor());
 
 		} catch (IOException ex) {
 			throw new UncheckedIOException(ex);

@@ -46,7 +46,7 @@ public class BaseWrapperTest {
 			when(server.getVersion()).thenReturn("version");
 		});
 		BootstrapLogger logger = new Slf4jBootstrapLogger(LoggerFactory.getLogger(getClass()));
-		Platform platform = new BaseWrapper.Creator(plugin, logger).detectPlatform();
+		Platform platform = new BaseWrapper.Creator(plugin, logger, dataFolder).detectPlatform();
 		assertFalse(platform.hasSlf4jSupport());
 		assertFalse(platform.hasKyoriAdventureSupport());
 	}

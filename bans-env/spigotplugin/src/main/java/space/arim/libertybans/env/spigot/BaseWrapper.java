@@ -46,10 +46,12 @@ class BaseWrapper {
 		
 		private final JavaPlugin plugin;
 		private final BootstrapLogger logger;
+		private final Path jarFile;
 		
-		Creator(JavaPlugin plugin, BootstrapLogger logger) {
+		Creator(JavaPlugin plugin, BootstrapLogger logger, Path jarFile) {
 			this.plugin = plugin;
 			this.logger = logger;
+			this.jarFile = jarFile;
 		}
 
 		private boolean detectAdventure() {
@@ -86,7 +88,7 @@ class BaseWrapper {
 					return description.getName() + " " + description.getVersion();
 				});
 				LibertyBansLauncher launcher = new LibertyBansLauncher(logger,
-						platform, folder, executor, culpritFinder);
+						platform, folder, executor, jarFile, culpritFinder);
 				launchLoader = launcher.attemptLaunch().join();
 			} finally {
 				executor.shutdown();

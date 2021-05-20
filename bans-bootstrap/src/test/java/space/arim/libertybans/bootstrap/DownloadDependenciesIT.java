@@ -63,10 +63,10 @@ public class DownloadDependenciesIT {
 		Path subFolder = folder.resolve("" + folderUniqueifier.getAndIncrement());
 		BootstrapLogger logger = new Slf4jBootstrapLogger(LoggerFactory.getLogger(getClass()));
 		LibertyBansLauncher launcher = new LibertyBansLauncher(
-				logger, platform, subFolder, ForkJoinPool.commonPool()) {
+				logger, platform, subFolder, ForkJoinPool.commonPool(), Path.of("jar")) {
 			@Override
-			boolean skipSelfDependencies() {
-				return true;
+			public DistributionMode distributionMode() {
+				return DistributionMode.TESTING;
 			}
 		};
 		ClassLoader classLoader = launcher.attemptLaunch().join();

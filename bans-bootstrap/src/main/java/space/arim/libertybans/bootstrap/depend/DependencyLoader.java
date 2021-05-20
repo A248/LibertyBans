@@ -30,7 +30,12 @@ public interface DependencyLoader {
 	Map<Dependency, Repository> getDependencyPairs();
 	
 	Path getOutputDirectory();
-	
+
+	/**
+	 * Executes all dependency downloads
+	 *
+	 * @return a future result detailing the outcome for each dependency
+	 */
 	CompletableFuture<Map<Dependency, DownloadResult>> execute();
 	
 }
