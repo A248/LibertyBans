@@ -22,6 +22,8 @@ import java.util.List;
 
 import jakarta.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.env.AbstractCmdSender;
 import space.arim.omnibus.util.ArraysUtil;
@@ -36,12 +38,15 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import space.arim.omnibus.util.ThisClass;
 
 public class CommandHandler implements SimpleCommand, PlatformListener {
 
 	private final CommandHelper commandHelper;
 	private final String name;
 	private final boolean alias;
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ThisClass.get());
 	
 	CommandHandler(CommandHelper commandHelper, String name, boolean alias) {
 		this.commandHelper = commandHelper;
@@ -109,7 +114,10 @@ public class CommandHandler implements SimpleCommand, PlatformListener {
 	public List<String> suggest(Invocation invocation) {
 		CommandSource platformSender = invocation.source();
 		String[] args = invocation.arguments();
-		return commandHelper.suggest(platformSender, adaptArgs(args));
+		List<String> suggestions = commandHelper.suggest(platformSender, adaptArgs(args));
+		LOGGER.debug("Calculated suggestions for invocation {} sent by {} are {}",
+				invocation, platformSender, suggestions);
+		return suggestions;
 	}
 	
 }
