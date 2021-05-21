@@ -11,7 +11,7 @@
 	
 	<groupId>space.arim.libertybans</groupId>
 	<artifactId>bans-parent</artifactId>
-	<version>0.7.5-pre3</version>
+	<version>0.7.5</version>
 	<packaging>pom</packaging>
 	
 	<name>LibertyBans</name>
@@ -49,8 +49,8 @@
 		<morepaperlib.version>0.2.0</morepaperlib.version>
 
 		<!-- Internal hashes -->
-		<self-implementation.hash>ddaead6379cb0836f9ed97aaa0e0521ae5ac3a4425ec5529d924b57e3038aec84713c188a675b7e91fbb136869ae328e1bee0b6c2c1fe13fa204ea9dc652d0ef</self-implementation.hash>
-		<kyori-bundle.hash>d7101d5aa4d5093599dcaac3137c0b5397dc70ac73cd43b63c5c1e2034cab85aaad01605a3ebb0ba237d056ff8b689526c121cc54b7869fd000a08df0f633752</kyori-bundle.hash>
+		<self-implementation.hash>dc91e69c19546a6dc8cabf57a7cf1ac601a9a2e437322c124e60d379863c9330dd470b16a65dcbed361ef5f628749214bf92c30c7c3435a440194e71dd4e5fbf</self-implementation.hash>
+		<kyori-bundle.hash>e7fcfcb8fdf78de9066ce8886e0bee38edcce215ec3c5d9001256e01868cea14124eddf84fe0daa801485ba0c21d63e8fb8e5c73ec69416de42d41e6b9a90397</kyori-bundle.hash>
 		
 		<!-- Plugin variables -->
 		<plugin.name>LibertyBans</plugin.name>
