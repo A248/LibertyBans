@@ -128,7 +128,7 @@ public class DatabaseSettings {
 		return Flyway.configure(getClass().getClassLoader())
 				.dataSource(hikariDataSource).table("libertybans_flyway")
 				.locations(locations.toArray(String[]::new))
-				.ignoreFutureMigrations(false).validateMigrationNaming(true).group(true)
+				.validateMigrationNaming(true).group(true)
 				// Allows usage with existing tables, i.e. from other software
 				.baselineOnMigrate(true).baselineVersion("0.0")
 				.load();
