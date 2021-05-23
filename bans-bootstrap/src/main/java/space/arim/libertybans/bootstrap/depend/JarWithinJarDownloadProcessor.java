@@ -28,6 +28,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.jar.JarFile;
 
 /**
@@ -39,31 +40,44 @@ import java.util.jar.JarFile;
 public final class JarWithinJarDownloadProcessor implements DownloadProcessor {
 
 	private final String jarDirectory;
-	private final boolean replaceExisting;
+	private final Predicate<? super String> replaceExisting;
 
-	private JarWithinJarDownloadProcessor(String jarDirectory, boolean replaceExisting) {
+	private JarWithinJarDownloadProcessor(String jarDirectory, Predicate<? super String> replaceExisting) {
 		this.jarDirectory = Objects.requireNonNull(jarDirectory, "jarDirectory");
-		this.replaceExisting = replaceExisting;
+		this.replaceExisting = Objects.requireNonNull(replaceExisting, "replaceExisting");
 	}
 
 	/**
 	 * Creates from the directory where the nested jars are located. <br>
 	 * <br>
-	 * Will <b>not</b> replace existing jars when unpacking the mega jar.
+	 * Will <b>not</b> replace any existing jars when unpacking the mega jar.
 	 *
 	 * @param jarDirectory the directory of nested jars
 	 */
 	public JarWithinJarDownloadProcessor(String jarDirectory) {
-		this(jarDirectory, false);
+		this(jarDirectory, (jarName) -> false);
 	}
 
 	/**
-	 * Sets whether to replace existing jars. False by default
+	 * Sets whether to replace any existing jars. False by default
 	 *
 	 * @param replaceExisting true to replace existing jars
 	 * @return a download processor which replaces existing jars
 	 */
 	public JarWithinJarDownloadProcessor replaceExisting(boolean replaceExisting) {
+		return new JarWithinJarDownloadProcessor(jarDirectory, (jarName) -> replaceExisting);
+	}
+
+	/**
+	 * Sets whether to replace existing jars according to a predicate. <br>
+	 * <br>
+	 * The predicate is given the name of the jar file.
+	 * If the predicate returns {@code true}, the existing jar is replaced.
+	 *
+	 * @param replaceExisting true to replace existing jars
+	 * @return a download processor which replaces existing jars
+	 */
+	public JarWithinJarDownloadProcessor replaceExisting(Predicate<? super String> replaceExisting) {
 		return new JarWithinJarDownloadProcessor(jarDirectory, replaceExisting);
 	}
 
@@ -83,7 +97,8 @@ public final class JarWithinJarDownloadProcessor implements DownloadProcessor {
 				}
 				Path destination = targetDirectory.resolve(targetJarName);
 				outputPaths.add(destination);
-				if (replaceExisting || !Files.exists(destination)) {
+
+				if (replaceExisting.test(targetJarName) || !Files.exists(destination)) {
 					try (InputStream inputStream = jar.getInputStream(entry)) {
 						Files.copy(inputStream, destination, StandardCopyOption.REPLACE_EXISTING);
 					} catch (IOException ex) {

@@ -21,6 +21,7 @@ package space.arim.libertybans.bootstrap;
 import space.arim.libertybans.bootstrap.depend.BootstrapLauncher;
 import space.arim.libertybans.bootstrap.depend.DependencyLoader;
 import space.arim.libertybans.bootstrap.depend.DependencyLoaderBuilder;
+import space.arim.libertybans.bootstrap.depend.DownloadProcessor;
 import space.arim.libertybans.bootstrap.depend.ExistingDependency;
 import space.arim.libertybans.bootstrap.depend.JarWithinJarDownloadProcessor;
 import space.arim.libertybans.bootstrap.depend.LocatableDependency;
@@ -133,8 +134,11 @@ public class LibertyBansLauncher {
 		DistributionMode distributionMode = distributionMode();
 		Set<ExistingDependency> existingDependencies;
 		if (distributionMode == DistributionMode.JAR_OF_JARS) {
-			existingDependencies = Set.of(new ExistingDependency(
-					jarFile, new JarWithinJarDownloadProcessor("jars").replaceExisting(true)));
+			// Replace existing jars if file name belongs to our artifacts
+			// Allows deploying a new version without having to constantly re-copy dependencies
+			DownloadProcessor jarProcessor = new JarWithinJarDownloadProcessor("jars")
+					.replaceExisting((jarName) -> jarName.contains("bans"));
+			existingDependencies = Set.of(new ExistingDependency(jarFile, jarProcessor));
 		} else {
 			existingDependencies = Set.of();
 		}
