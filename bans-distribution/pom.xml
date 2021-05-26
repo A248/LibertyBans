@@ -34,6 +34,7 @@
 						</goals>
 						<configuration>
 							<rules>
+								<!-- MENFORCER-257: Switch to requireActiveProfile once 3.0.0-M4 is released -->
 								<requireProperty>
 									<property>bans-distribution.can-deploy</property>
 									<regex>true</regex>
