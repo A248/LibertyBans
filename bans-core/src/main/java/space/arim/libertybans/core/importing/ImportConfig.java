@@ -129,8 +129,7 @@ public interface ImportConfig {
 			"",
 			"Therefore, if using H2 or Postgres, you will need to attach the relevant JDBC driver to the",
 			"classpath of your server. This is done by downloading the driver jar, and starting",
-			"your server with the -cp option. For more information, join the discord for support",
-			"or see https://stackoverflow.com/questions/8084926/including-jar-files-in-class-path",})
+			"your server with the -cp option. The wiki has a tutorial on how to do this."})
 	interface LiteBansSettings {
 
 		@ConfKey("jdbc-url")
