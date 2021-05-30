@@ -19,11 +19,14 @@
 package space.arim.libertybans.core.uuid;
 
 import space.arim.dazzleconf.annote.ConfComments;
+import space.arim.dazzleconf.annote.ConfDefault;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultString;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultStrings;
 import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.ConfSerialisers;
+
+import java.util.regex.Pattern;
 
 @ConfHeader({"Options relating to finding UUIDs from names, and vice-versa",
 	"LibertyBans will first check its own caches before using these resources"})
@@ -33,11 +36,13 @@ public interface UUIDResolutionConfig {
 	@ConfKey("server-type")
 	@ConfComments({"",
 		"What kind of UUIDs do your players have?",
-		"Available options are ONLINE, OFFLINE, MIXED",
+		"Available options are ONLINE, OFFLINE, MIXED, and GEYSER",
 		"",
 		"For most servers this will be 'ONLINE'",
-		"If you are running an offline server you should know whether you are using OFFLINE or MIXED UUIDs",
-		""
+		"For offline servers where all players have offline UUIDs, use OFFLINE",
+		"For offline servers where some players have online and some have offline UUIDs, use MIXED",
+		"",
+		"For Geyser/Floodgate users: Set this to GEYSER"
 		})
 	@DefaultString("ONLINE")
 	ServerType serverType();
@@ -49,5 +54,24 @@ public interface UUIDResolutionConfig {
 		"(If the server is not in ONLINE mode, this option is ignored)"})
 	@DefaultStrings("MOJANG")
 	RemoteApiBundle remoteApis();
+
+	@ConfKey("geyser-name-prefix")
+	@ConfComments({
+			"If using Geyser, set this to the prefix in front of bedrock players' names.",
+			"Geyser users should also set the server-type option to MIXED"})
+	@ConfDefault.DefaultString("")
+	String geyserNamePrefix();
+
+	default NameValidator nameValidator() {
+		String geyserNamePrefix = geyserNamePrefix();
+		String quotedPrefix;
+		if (geyserNamePrefix.isEmpty()) {
+			quotedPrefix = ""; // Avoid quoting empty strings (bad regex practice)
+		} else {
+			quotedPrefix = "(" + Pattern.quote(geyserNamePrefix) + ")?";
+		}
+		String validNameRegex = quotedPrefix + "[a-zA-Z0-9_]*+";
+		return new StandardNameValidator(Pattern.compile(validNameRegex));
+	}
 	
 }

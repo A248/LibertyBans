@@ -68,18 +68,25 @@ public class CachingUUIDManagerTest {
 		this.envUserResolver = envUserResolver;
 		this.queryingImpl = queryingImpl;
 
-		uuidManager = new CachingUUIDManager(configs, futuresFactory,
-				nameValidator, envUserResolver, queryingImpl);
+		uuidManager = new CachingUUIDManager(configs, futuresFactory, envUserResolver, queryingImpl);
 	}
 
 	@BeforeEach
 	public void setup() {
+		{
+			MainConfig mainConfig = mock(MainConfig.class);
+			UUIDResolutionConfig uuidResolution = mock(UUIDResolutionConfig.class);
+			when(configs.getMainConfig()).thenReturn(mainConfig);
+			when(mainConfig.uuidResolution()).thenReturn(uuidResolution);
+			when(uuidResolution.nameValidator()).thenReturn(nameValidator);
+		}
 		SqlConfig sqlConfig = mock(SqlConfig.class);
 		SqlConfig.MuteCaching muteCaching = mock(SqlConfig.MuteCaching.class);
 		when(configs.getSqlConfig()).thenReturn(sqlConfig);
 		when(sqlConfig.muteCaching()).thenReturn(muteCaching);
 		when(muteCaching.expirationSemantic()).thenReturn(SqlConfig.MuteCaching.ExpirationSemantic.EXPIRE_AFTER_WRITE);
 		when(muteCaching.expirationTimeSeconds()).thenReturn(60);
+
 		uuidManager.startup();
 		lenient().when(nameValidator.validateNameArgument(name)).thenReturn(true);
 	}

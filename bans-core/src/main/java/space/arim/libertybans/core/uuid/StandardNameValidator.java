@@ -18,15 +18,21 @@
  */
 package space.arim.libertybans.core.uuid;
 
+import java.util.Objects;
 import java.util.regex.Pattern;
 
-public class StandardNameValidator implements NameValidator {
+public final class StandardNameValidator implements NameValidator {
 
-	private static final Pattern VALID_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]*+");
-	
+	private final Pattern validNamePattern;
+
+	public StandardNameValidator(Pattern validNamePattern) {
+		this.validNamePattern = Objects.requireNonNull(validNamePattern);
+	}
+
 	@Override
 	public boolean validateNameArgument(String name) {
-		return name.length() <= 16 && VALID_NAME_PATTERN.matcher(name).matches();
+		// Geyser/Floodgate ensures player names are less than 16 characters
+		return name.length() <= 16 && validNamePattern.matcher(name).matches();
 	}
 	
 }

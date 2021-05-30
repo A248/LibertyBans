@@ -114,6 +114,11 @@ public class SpecifiedConfigs implements Configs {
 					public RemoteApiBundle remoteApis() {
 						return original.uuidResolution().remoteApis();
 					}
+
+					@Override
+					public String geyserNamePrefix() {
+						return original.uuidResolution().geyserNamePrefix();
+					}
 				};
 			}
 			

@@ -51,24 +51,23 @@ public final class CachingUUIDManager implements UUIDManager {
 
 	private final Configs configs;
 	private final FactoryOfTheFuture futuresFactory;
-	private final NameValidator nameValidator;
 	private final EnvUserResolver envResolver;
 	private final QueryingImpl queryingImpl;
 
 	private Cache<@NonNull String, @NonNull UUID> nameToUuidCache;
 	private Cache<@NonNull UUID, @NonNull String> uuidToNameCache;
+	private NameValidator nameValidator;
 
 	@Inject
-	public CachingUUIDManager(Configs configs, FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider,
-			NameValidator nameValidator, EnvUserResolver envResolver) {
-		this(configs, futuresFactory, nameValidator, envResolver, new QueryingImpl(dbProvider));
+	public CachingUUIDManager(Configs configs, FactoryOfTheFuture futuresFactory,
+							  Provider<InternalDatabase> dbProvider, EnvUserResolver envResolver) {
+		this(configs, futuresFactory, envResolver, new QueryingImpl(dbProvider));
 	}
 
-	CachingUUIDManager(Configs configs, FactoryOfTheFuture futuresFactory, NameValidator nameValidator,
+	CachingUUIDManager(Configs configs, FactoryOfTheFuture futuresFactory,
 					   EnvUserResolver envResolver, QueryingImpl queryingImpl) {
 		this.configs = configs;
 		this.futuresFactory = futuresFactory;
-		this.nameValidator = nameValidator;
 		this.envResolver = envResolver;
 		this.queryingImpl = queryingImpl;
 	}
@@ -80,6 +79,7 @@ public final class CachingUUIDManager implements UUIDManager {
 		var semantic = muteCaching.expirationSemantic();
 		nameToUuidCache = createCache(expiration, semantic);
 		uuidToNameCache = createCache(expiration, semantic);
+		nameValidator = uuidResolution().nameValidator();
 	}
 
 	private static <K, V> Cache<@NonNull K, @NonNull V> createCache(Duration expiration,

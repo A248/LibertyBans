@@ -38,8 +38,6 @@ import space.arim.libertybans.core.service.AsynchronicityManager;
 import space.arim.libertybans.core.service.FuturePoster;
 import space.arim.libertybans.core.service.StandardAsynchronicityManager;
 import space.arim.libertybans.core.uuid.CachingUUIDManager;
-import space.arim.libertybans.core.uuid.NameValidator;
-import space.arim.libertybans.core.uuid.StandardNameValidator;
 import space.arim.libertybans.core.uuid.UUIDManager;
 
 public class PillarTwoBindModule {
@@ -75,10 +73,6 @@ public class PillarTwoBindModule {
 
 	public ArgumentParser argumentParser(StandardArgumentParser argumentParser) {
 		return argumentParser;
-	}
-
-	public NameValidator nameValidator(StandardNameValidator nameValidator) {
-		return nameValidator;
 	}
 
 	public UsageGlossary usage(StandardUsageGlossary usage) {

@@ -22,6 +22,7 @@ public enum ServerType {
 	
 	ONLINE,
 	OFFLINE,
-	MIXED
+	MIXED,
+	GEYSER
 	
 }
