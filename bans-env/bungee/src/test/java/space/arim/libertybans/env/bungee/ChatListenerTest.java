@@ -38,6 +38,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNotNull;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -86,8 +89,10 @@ public class ChatListenerTest {
 		String message = "hello";
 		ChatEvent chatEvent = new ChatEvent(sender, receiver, message);
 		SendableMessage denyMessage = SendableMessage.empty();
-		when(enforcer.checkChat(any(), (InetAddress) any(), any()))
+		when(enforcer.checkChat(any(), (InetAddress) any(), isNull()))
 				.thenReturn(futuresFactory.completedFuture(denyMessage));
+		lenient().when(enforcer.checkChat(any(), (InetAddress) any(), isNotNull()))
+				.thenReturn(futuresFactory.completedFuture(null));
 
 		fire(chatEvent);
 		assertTrue(chatEvent.isCancelled());

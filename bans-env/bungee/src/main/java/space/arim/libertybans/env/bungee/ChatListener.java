@@ -75,7 +75,7 @@ public class ChatListener extends ParallelisedListener<ChatEvent, SendableMessag
 		}
 		ProxiedPlayer player = (ProxiedPlayer) sender;
 		InetAddress address = addressReporter.getAddress(player);
-		String command = (event.isCommand()) ? event.getMessage().substring(1) : event.getMessage();
+		String command = (event.isCommand()) ? event.getMessage().substring(1) : null;
 		begin(event, enforcer.checkChat(player.getUniqueId(), address, command));
 	}
 
