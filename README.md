@@ -57,10 +57,6 @@ For more advanced setups (multi-proxy or installing on the backend servers), see
 
 The developer API is extensive. LibertyBans does not recommend developers mess with the database as a first recourse. [More information here](https://github.com/A248/LibertyBans/wiki/Developer-API)
 
-## Other Information
-
-I am also a contributor to AdvancedBan. If you absolutely need Java 8 support I would recommend you use it. AdvancedBan has some problems with its design, and although I helped to improve it, there are some choices I needed to make differently in this plugin.
-
 ### License
 
 LibertyBans is licensed under the GNU AGPL v3. See the license file for more information.
