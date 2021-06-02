@@ -45,11 +45,13 @@ The be-all, end-all of discipline.
 * BungeeCord
 * Velocity
 
-### Why Java 11?
+### Installation
 
-There have been several major improvements to Java for developers and server owners. Newer Java versions are faster for server owners and easier to develop with. I would strongly recommend updating to Java 11 or the latest version. (Java 11 is not the latest version by far)
+LibertyBans will work out-of-the-box for most users.
 
-[Read more here](https://github.com/A248/LibertyBans/wiki/Why-Java-11%3F)
+When using a proxy, it is recommend to install LibertyBans on the proxy itself. Do not install LibertyBans on both the backend servers and the proxy at the same time.
+
+For more advanced setups (multi-proxy or installing on the backend servers), see the wiki for additional information.
 
 ## Developer API
 
