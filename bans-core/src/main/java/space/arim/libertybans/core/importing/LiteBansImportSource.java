@@ -132,15 +132,15 @@ public class LiteBansImportSource implements ImportSource {
 
 		private Optional<PortablePunishment.VictimInfo> mapVictimInfo(ResultSet resultSet) throws SQLException {
 			String uuidString = getNonnullString(resultSet, "uuid");
-			String ipString = getNonnullString(resultSet, "ip");
 			UUID uuid = UUID.fromString(uuidString);
 			boolean ipban = resultSet.getBoolean("ipban");
 			if (!ipban) {
 				return Optional.of(
 						new PortablePunishment.VictimInfo(uuid, null, null, PlayerVictim.of(uuid)));
 			}
-			if (ipString.equals("#offline#")) {
-				logger.warn("Skipping punishment which is an IP-ban but the LiteBans-recorded IP is \"#offline#\".");
+			String ipString = resultSet.getString("ip");
+			if (ipString == null || ipString.equals("#offline#")) {
+				logger.warn("Skipping punishment which is an IP-ban but the LiteBans-recorded IP is \"{}\"", ipString);
 				return Optional.empty();
 			}
 			NetworkAddress address;

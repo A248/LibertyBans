@@ -134,7 +134,7 @@ public interface ImportConfig {
 
 		@ConfKey("jdbc-url")
 		@ConfComments("The default value here is set for H2.")
-		@ConfDefault.DefaultString("jdbc:h2:./plugins/LiteBans/litebans.mv.db")
+		@ConfDefault.DefaultString("jdbc:h2:./plugins/LiteBans/litebans")
 		String jdbcUrl();
 
 		@ConfDefault.DefaultString("sa")
