@@ -131,7 +131,18 @@ public class LiteBansImportSource implements ImportSource {
 		}
 
 		private Optional<PortablePunishment.VictimInfo> mapVictimInfo(ResultSet resultSet) throws SQLException {
+			/*
+			 * For user bans, the IP can be null, properly defined, or the magic string "#offline#".
+			 * For some IP-bans, the UUID is "#offline#" and the IP is the name of the player.
+			 * In other IP-bans, the UUID is well-defined, but the IP is "#offline#".
+			 * Presumably some of this is to support banning players who have never joined,
+			 * but in practice it is quite absurd.
+			 */
 			String uuidString = getNonnullString(resultSet, "uuid");
+			if (uuidString.equals("#offline#")) {
+				logger.warn("Skipping punishment where the LiteBans-recorded UUID is \"{}\"", uuidString);
+				return Optional.empty();
+			}
 			UUID uuid = UUID.fromString(uuidString);
 			boolean ipban = resultSet.getBoolean("ipban");
 			if (!ipban) {
@@ -140,7 +151,7 @@ public class LiteBansImportSource implements ImportSource {
 			}
 			String ipString = resultSet.getString("ip");
 			if (ipString == null || ipString.equals("#offline#")) {
-				logger.warn("Skipping punishment which is an IP-ban but the LiteBans-recorded IP is \"{}\"", ipString);
+				logger.warn("Skipping IP-ban where the LiteBans-recorded IP is \"{}\"", ipString);
 				return Optional.empty();
 			}
 			NetworkAddress address;

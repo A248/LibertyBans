@@ -85,16 +85,16 @@ public class AdvancedBanImportIT {
 
 	@TestTemplate
 	@SetServerType(ServerType.OFFLINE)
-	public void importOffline() {
-		importFrom("offline", new ImportStatistics(103, 332, 0));
+	public void sampleOneOffline() {
+		importFrom("sample-one-offline", new ImportStatistics(103, 332, 0));
 	}
 
 	@TestTemplate
 	@SetServerType(ServerType.ONLINE)
-	public void importOnline(UUIDManager uuidManager) {
+	public void sampleTwoOnline(UUIDManager uuidManager) {
 		uuidManager.addCache(UUIDUtil.fromShortString("840d1667a0e24934a3bd1a7ebbbc0732"), "Cxleos");
 		uuidManager.addCache(UUIDUtil.fromShortString("ed5f12cd600745d9a4b9940524ddaecf"), "Aerodactyl_");
 		uuidManager.addCache(UUIDUtil.fromShortString("db2bc8bc1aaf4b8b9d56df3793045951"), "GooseLaugh");
-		importFrom("online", new ImportStatistics(83, 109, 189));
+		importFrom("sample-two-online", new ImportStatistics(83, 109, 189));
 	}
 }

@@ -137,7 +137,7 @@ public interface ImportConfig {
 		@ConfDefault.DefaultString("jdbc:h2:./plugins/LiteBans/litebans")
 		String jdbcUrl();
 
-		@ConfDefault.DefaultString("sa")
+		@ConfDefault.DefaultString("")
 		String username();
 
 		@ConfDefault.DefaultString("")

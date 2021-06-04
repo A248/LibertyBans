@@ -268,7 +268,7 @@ public final class PortablePunishment {
 		}
 
 		public static OperatorInfo createUser(UUID uuid, String name) {
-			if (uuid == null & name == null) {
+			if (uuid == null && name == null) {
 				throw new IllegalArgumentException("One of uuid or name must be nonnull");
 			}
 			return new OperatorInfo(false, uuid, name);

@@ -59,10 +59,7 @@ public class LiteBansImportIT {
 
 	@BeforeEach
 	public void setup(@DontInject ConnectionSource connectionSource) {
-		PluginDatabaseSetup pluginDatabaseSetup = new PluginDatabaseSetup(connectionSource);
-		pluginDatabaseSetup.initLiteBansSchema();
-		pluginDatabaseSetup.runSqlFromResource("import-data/litebans.sql");
-		this.pluginDatabaseSetup = pluginDatabaseSetup;
+		this.pluginDatabaseSetup = new PluginDatabaseSetup(connectionSource);
 	}
 
 	private ScopeManager createScopeManager() {
@@ -72,14 +69,28 @@ public class LiteBansImportIT {
 		return scopeManager;
 	}
 
-	@TestTemplate
-	@SetTime(unixTime = 1621390560)
-	public void importEverything() {
+	private void importFrom(String dataFile, ImportStatistics expectedStatistics) {
+		pluginDatabaseSetup.runSqlFromResource("import-data/litebans/" + dataFile + ".sql");
 		ScopeManager scopeManager = createScopeManager();
 		ImportSource importSource = pluginDatabaseSetup.createLiteBansImportSource(scopeManager);
 		CompletableFuture<ImportStatistics> futureImport = importExecutor.performImport(importSource);
 		assertDoesNotThrow(futureImport::join, "Import failed: error");
-		assertEquals(new ImportStatistics(71, 1625, 34211), futureImport.join(),
+		assertEquals(expectedStatistics, futureImport.join(),
 				"Import failed: unexpected import statistics");
 	}
+
+	@TestTemplate
+	@SetTime(unixTime = 1621390560)
+	public void sampleOne() {
+		pluginDatabaseSetup.initLiteBansSchema();
+		importFrom("sample-one", new ImportStatistics(71, 1625, 34211));
+	}
+
+	@TestTemplate
+	@SetTime(unixTime = 1622836000)
+	public void sampleTwo() {
+		// This sample already contains the schema definition
+		importFrom("sample-two", new ImportStatistics(348, 336, 2087));
+	}
+
 }
