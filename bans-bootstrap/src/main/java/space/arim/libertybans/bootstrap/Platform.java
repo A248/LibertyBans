@@ -26,13 +26,15 @@ public final class Platform {
 	private final String platformName;
 	private final boolean slf4j;
 	private final boolean kyoriAdventure;
+	private final boolean caffeine;
 	
 	Platform(Category category, String platformName,
-			 boolean slf4j, boolean kyoriAdventure) {
+			 boolean slf4j, boolean kyoriAdventure, boolean caffeine) {
 		this.category = Objects.requireNonNull(category, "category");
 		this.platformName = Objects.requireNonNull(platformName, "platformName");
 		this.slf4j = slf4j;
 		this.kyoriAdventure = kyoriAdventure;
+		this.caffeine = caffeine;
 	}
 
 	public Category category() {
@@ -51,6 +53,10 @@ public final class Platform {
 		return kyoriAdventure;
 	}
 
+	public boolean isCaffeineProvided() {
+		return caffeine;
+	}
+
 	public static Builder forCategory(Category category) {
 		return new Builder(category);
 	}
@@ -59,6 +65,7 @@ public final class Platform {
 
 		private boolean slf4j;
 		private boolean kyoriAdventure;
+		private boolean caffeine;
 		private final Category category;
 
 		private Builder(Category category) {
@@ -75,8 +82,13 @@ public final class Platform {
 			return this;
 		}
 
+		public Builder caffeineProvided(boolean caffeine) {
+			this.caffeine = caffeine;
+			return this;
+		}
+
 		public Platform build(String platformName) {
-			return new Platform(category, platformName, slf4j, kyoriAdventure);
+			return new Platform(category, platformName, slf4j, kyoriAdventure, caffeine);
 		}
 	}
 	

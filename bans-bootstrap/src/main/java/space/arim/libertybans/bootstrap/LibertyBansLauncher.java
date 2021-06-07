@@ -96,8 +96,13 @@ public class LibertyBansLauncher {
 		Set<CompletableFuture<LocatableDependency>> jarsToDownload = new HashSet<>();
 		if (!platform.hasSlf4jSupport()) {
 			warnRelocation("Slf4j", "org.slf4j.Logger");
+			warnRelocation("Slf4j-Simple", "org.slf4j.simple.SimpleLogger");
 			jarsToDownload.add(locate(InternalDependency.SLF4J_API));
 			jarsToDownload.add(locate(InternalDependency.SLF4J_JUL));
+		}
+		if (!platform.isCaffeineProvided()) {
+			warnRelocation("Caffeine", "com.github.benmanes.caffeine.cache.Caffeine");
+			jarsToDownload.add(locate(InternalDependency.CAFFEINE));
 		}
 		boolean downloadSelfDependencies = distributionMode == DistributionMode.DEPLOY_AND_DOWNLOAD;
 		if (!platform.hasKyoriAdventureSupport()) {

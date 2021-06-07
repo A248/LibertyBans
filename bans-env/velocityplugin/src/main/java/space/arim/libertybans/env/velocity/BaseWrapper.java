@@ -52,7 +52,10 @@ class BaseWrapper {
 		}
 
 		Platform detectPlatform() {
-			return Platforms.velocity();
+			String caffeineClass = "com.github.benmanes.caffeine.cache.Caffeine";
+			boolean caffeine = Platforms.detectLibrary(caffeineClass,
+					ProxyServer.class.getClassLoader(), velocityPlugin.server.getClass().getClassLoader());
+			return Platforms.velocity(caffeine);
 		}
 
 		BaseWrapper create() {

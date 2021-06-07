@@ -59,7 +59,7 @@ public class UnpackTest {
 		Path jarFile = getJarFile();
 		LibertyBansLauncher launcher = new LibertyBansLauncher(
 				new Slf4jBootstrapLogger(LoggerFactory.getLogger(getClass())),
-				Platforms.velocity(), // Supports slf4j and adventure
+				Platforms.velocity(true), // Supports slf4j, adventure, and caffeine
 				Path.of("target/folder"),
 				ForkJoinPool.commonPool(),
 				jarFile);

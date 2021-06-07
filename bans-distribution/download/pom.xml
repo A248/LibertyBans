@@ -36,6 +36,7 @@
 							<exclude>com.google.errorprone:error_prone_annotations</exclude>
 							<exclude>net.kyori:*</exclude>
 							<exclude>org.jetbrains:annotations</exclude>
+							<exclude>com.github.ben-manes.caffeine:caffeine</exclude>
 						</excludes>
 					</artifactSet>
 				</configuration>

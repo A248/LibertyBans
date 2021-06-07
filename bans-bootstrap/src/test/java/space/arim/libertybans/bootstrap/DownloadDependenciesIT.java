@@ -53,7 +53,8 @@ public class DownloadDependenciesIT {
 				}
 			}
 		}
-		platforms.add(Platforms.velocity());
+		platforms.add(Platforms.velocity(true));
+		platforms.add(Platforms.velocity(false));
 		return platforms.stream().map((platform) -> {
 			return DynamicTest.dynamicTest("For platform " + platform, () -> runDownloadDependencies(platform));
 		});

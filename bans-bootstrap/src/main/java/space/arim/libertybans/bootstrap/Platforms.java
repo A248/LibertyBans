@@ -19,6 +19,8 @@
 
 package space.arim.libertybans.bootstrap;
 
+import java.util.List;
+
 public final class Platforms {
 
 	private Platforms() {}
@@ -32,9 +34,27 @@ public final class Platforms {
 		}
 	}
 
-	public static Platform velocity() {
+	/**
+	 * Determines whether a library is present in any of the given classloaders
+	 *
+	 * @param className a class in the library
+	 * @param expectedClassLoaders the classloaders, may contain duplicates
+	 * @return true if the library is present in any of the classloaders
+	 */
+	public static boolean detectLibrary(String className, ClassLoader...expectedClassLoaders) {
+		Class<?> libClass;
+		try {
+			libClass = Class.forName(className);
+		} catch (ClassNotFoundException ex) {
+			return false;
+		}
+		return List.of(expectedClassLoaders).contains(libClass.getClassLoader());
+	}
+
+	public static Platform velocity(boolean caffeine) {
 		return Platform.forCategory(Platform.Category.VELOCITY)
-				.slf4jSupport(true).kyoriAdventureSupport(true).build("Velocity");
+				.slf4jSupport(true).kyoriAdventureSupport(true).caffeineProvided(caffeine)
+				.build("Velocity");
 	}
 
 }

@@ -41,7 +41,6 @@ enum InternalDependency {
 	
 	HIKARICP("HikariCP", "com.zaxxer.hikari.HikariConfig", "hikaricp"),
 	FLYWAY("Flyway", "org.flywaydb.core.Flyway", "flyway"),
-	CAFFEINE("Caffeine", "com.github.benmanes.caffeine.cache.Caffeine", "caffeine"),
 	
 	DAZZLECONF_CORE("DazzleConf-Core", "space.arim.dazzleconf.ConfigurationFactory", "dazzleconf-core"),
 	DAZZLECONF_EXT_SNAKEYAML("DazzleConf-SnakeYaml",
@@ -61,7 +60,9 @@ enum InternalDependency {
 	KYORI_BUNDLE("kyori-bundle", Repositories.ARIM_AFFERO_GPL3, false),
 
 	SLF4J_API("slf4j-api", Repositories.CENTRAL_REPO, false),
-	SLF4J_JUL("slf4j-jdk14", Repositories.CENTRAL_REPO, false);
+	SLF4J_JUL("slf4j-jdk14", Repositories.CENTRAL_REPO, false),
+
+	CAFFEINE("caffeine", Repositories.CENTRAL_REPO, false);
 
 	private final ClassPresence classPresence;
 	private final String id;

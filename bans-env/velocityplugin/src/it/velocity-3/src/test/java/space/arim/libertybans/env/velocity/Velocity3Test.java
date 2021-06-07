@@ -27,11 +27,10 @@ import space.arim.libertybans.bootstrap.Platform;
 
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-public class BaseWrapperTest {
+public class Velocity3Test {
 
 	@TempDir
 	public Path dataFolder;
@@ -43,6 +42,6 @@ public class BaseWrapperTest {
 		Platform platform = new BaseWrapper.Creator(plugin).detectPlatform();
 		assertTrue(platform.hasSlf4jSupport());
 		assertTrue(platform.hasKyoriAdventureSupport());
-		assertFalse(platform.isCaffeineProvided());
+		assertTrue(platform.isCaffeineProvided());
 	}
 }
