@@ -107,9 +107,7 @@ public class DatabaseSettings {
 
 		Flyway flyway = createFlyway(hikariDataSource, refresherEvent);
 		try {
-			// Run using context ClassLoader
-			// https://github.com/flyway/flyway/issues/3168
-			runWithContextLoaderSet(flyway::migrate);
+			flyway.migrate();
 		} catch (FlywayException ex) {
 			logger.error("Unable to migrate your database. Please create a backup of your database "
 					+ "and promptly report this issue.", ex);
@@ -266,20 +264,16 @@ public class DatabaseSettings {
 	}
 	
 	/**
-	 * Sets the driver class name utilising the context classloader
+	 * Sets the driver class name utilizing the context classloader
 	 * 
 	 * @param driverClassName the driver class name
 	 */
 	private void setDriverClassName(String driverClassName) {
-		runWithContextLoaderSet(() -> hikariConf.setDriverClassName(driverClassName));
-	}
-
-	private void runWithContextLoaderSet(Runnable action) {
 		Thread currentThread = Thread.currentThread();
 		ClassLoader initialContextLoader = currentThread.getContextClassLoader();
 		currentThread.setContextClassLoader(getClass().getClassLoader());
 		try {
-			action.run();
+			hikariConf.setDriverClassName(driverClassName);
 		} finally {
 			currentThread.setContextClassLoader(initialContextLoader);
 		}
