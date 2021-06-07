@@ -80,10 +80,13 @@ public class LibertyBansLauncher {
 			return;
 		}
 		String pluginName = findCulpritWhoFailedToRelocate(libClass);
-		logger.warn(pluginName + " has shaded the library '"
+		String line = "*******************************************";
+		logger.warn(line + '\n'
+				+ pluginName + " has shaded the library '"
 				+ libName + "' but did not relocate it. This may or may not pose problems. "
 				+ "Contact the author of this plugin and tell them to relocate their dependencies. "
-				+ "Unrelocated class detected was " + libClass.getName());
+				+ "Unrelocated class detected was " + libClass.getName()
+				+ '\n' + line);
 	}
 	
 	private DependencyLoader createDependencyLoader(DistributionMode distributionMode) {
