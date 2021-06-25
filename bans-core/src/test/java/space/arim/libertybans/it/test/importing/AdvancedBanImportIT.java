@@ -37,6 +37,7 @@ import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetServerType;
+import space.arim.libertybans.it.SetTime;
 import space.arim.omnibus.util.UUIDUtil;
 
 import java.util.concurrent.CompletableFuture;
@@ -84,12 +85,14 @@ public class AdvancedBanImportIT {
 	}
 
 	@TestTemplate
+	@SetTime(unixTime = 1622852000)
 	@SetServerType(ServerType.OFFLINE)
 	public void sampleOneOffline() {
 		importFrom("sample-one-offline", new ImportStatistics(103, 332, 0));
 	}
 
 	@TestTemplate
+	@SetTime(unixTime = 1622852000)
 	@SetServerType(ServerType.ONLINE)
 	public void sampleTwoOnline(UUIDManager uuidManager) {
 		uuidManager.addCache(UUIDUtil.fromShortString("840d1667a0e24934a3bd1a7ebbbc0732"), "Cxleos");
