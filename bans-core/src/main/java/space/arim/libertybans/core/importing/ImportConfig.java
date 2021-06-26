@@ -44,18 +44,19 @@ import space.arim.dazzleconf.annote.SubSection;
 		"",
 		"--- WARNING when importing from AdvancedBan and Vanilla ---",
 		"AdvancedBan/Vanilla does not store the UUID of the operator who made a punishment.",
-		"To work around this, LibertyBans will attempt to lookup the operator UUID. However,",
-		"if you have the Mojang API configured as the sole web api resolver in the config.yml,",
-		"you may spam the Mojang API with requests, and your server might be rate limited.",
-		"If you are rate limited, your server cannot lookup the UUIDs of new players joining.",
-		"To prevent this, add another service to your web api resolvers before importing."})
+		"To work around this, LibertyBans will attempt to lookup the operator UUID. By default",
+		"this uses the Mojang API. However, if your server sends the Mojang API too many requests,",
+		"your server might be rate limited (which you do NOT want to happen).",
+		"To prevent this, add another service to your web-api-resolvers, in the config.yml",
+		"before importing.",
+		""})
 public interface ImportConfig {
 
 	@ConfKey("retrieval-size")
 	@ConfComments({
 			"How many punishments to retrieve at once from the import source.",
-			"You may be surprised to find out your server is capable of retrieving hundreds," +
-			"even thousands of punishments, into memory without much trouble. However," +
+			"You may be surprised to find out your server is capable of retrieving hundreds,",
+			"even thousands of punishments, into memory without much trouble. However,",
 			"this is set to 250 as a reasonable conservative estimate."})
 	@ConfDefault.DefaultInteger(250)
 	@IntegerRange(min = 1)
@@ -113,7 +114,7 @@ public interface ImportConfig {
 			"",
 			"--- Config Options Explained ---",
 			"The jdbc-url depends on the storage mode you are using LiteBans with.",
-			"- Using H2, it should be 'jdbc:h2:plugins/LiteBans/litebans.mv.db'",
+			"- Using H2, it should be 'jdbc:h2:./plugins/LiteBans/litebans'",
 			"- Using MySQL/MariaDB, it should be 'jdbc:mariadb://<host>:<port>/<database>' with <host>,",
 			"<port>, and <database> replaced with the correct values.",
 			"- Using PostgreSQL, it should be 'jdbc:postgresql://<host>:<port>/<database>' with <host>,",
