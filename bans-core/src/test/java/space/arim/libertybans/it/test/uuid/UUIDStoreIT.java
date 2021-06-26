@@ -65,21 +65,13 @@ public class UUIDStoreIT {
 	}
 
 	@TestTemplate
-	public void testNoStoredUuid() {
+	public void noStoredUuid() {
 		assertNull(fullLookupName(UUID.randomUUID()));
 		assertNull(fullLookupUUID(randomName()));
 	}
 
 	@TestTemplate
-	public void testWebLookupKnownProfile() {
-		String name = "A248";
-		UUID uuid = UUID.fromString("ed5f12cd-6007-45d9-a4b9-940524ddaecf");
-		assertEquals(name, fullLookupName(uuid));
-		assertEquals(uuid, fullLookupUUID(name));
-	}
-
-	@TestTemplate
-	public void testStoreJoiningUuid(Enforcer enforcer) {
+	public void storeJoiningUuid(Enforcer enforcer) {
 		UUID uuid = UUID.randomUUID();
 		String name = randomName();
 		NetworkAddress address = randomAddress();
@@ -92,7 +84,7 @@ public class UUIDStoreIT {
 	}
 
 	@TestTemplate
-	public void testUseLatestName(Enforcer enforcer) {
+	public void useLatestName(Enforcer enforcer) {
 		UUID uuid = UUID.randomUUID();
 		String name = randomName();
 		NetworkAddress address = randomAddress();

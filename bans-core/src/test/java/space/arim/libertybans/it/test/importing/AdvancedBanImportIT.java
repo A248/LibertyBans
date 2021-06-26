@@ -40,6 +40,7 @@ import space.arim.libertybans.it.SetServerType;
 import space.arim.libertybans.it.SetTime;
 import space.arim.omnibus.util.UUIDUtil;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -54,11 +55,13 @@ import static org.mockito.Mockito.when;
 public class AdvancedBanImportIT {
 
 	private final ImportExecutor importExecutor;
+	private final UUIDManager uuidManager;
 	private PluginDatabaseSetup pluginDatabaseSetup;
 
 	@Inject
-	public AdvancedBanImportIT(ImportExecutor importExecutor) {
+	public AdvancedBanImportIT(ImportExecutor importExecutor, UUIDManager uuidManager) {
 		this.importExecutor = importExecutor;
+		this.uuidManager = uuidManager;
 	}
 
 	@BeforeEach
@@ -85,19 +88,31 @@ public class AdvancedBanImportIT {
 	}
 
 	@TestTemplate
-	@SetTime(unixTime = 1622852000)
+	@SetTime(unixTime = SetTime.DEFAULT_TIME)
 	@SetServerType(ServerType.OFFLINE)
 	public void sampleOneOffline() {
 		importFrom("sample-one-offline", new ImportStatistics(103, 332, 0));
 	}
 
 	@TestTemplate
-	@SetTime(unixTime = 1622852000)
+	@SetTime(unixTime = SetTime.DEFAULT_TIME)
 	@SetServerType(ServerType.ONLINE)
 	public void sampleTwoOnline(UUIDManager uuidManager) {
-		uuidManager.addCache(UUIDUtil.fromShortString("840d1667a0e24934a3bd1a7ebbbc0732"), "Cxleos");
-		uuidManager.addCache(UUIDUtil.fromShortString("ed5f12cd600745d9a4b9940524ddaecf"), "Aerodactyl_");
-		uuidManager.addCache(UUIDUtil.fromShortString("db2bc8bc1aaf4b8b9d56df3793045951"), "GooseLaugh");
+		addToCache("ed5f12cd600745d9a4b9940524ddaecf", "A248", "Aerodactyl_");
+		addToCache("840d1667a0e24934a3bd1a7ebbbc0732", "Cxleos");
+		addToCache("00140fe8de0841e9ab79e53b9f3f0fbd", "Ecotastic");
+		addToCache("db2bc8bc1aaf4b8b9d56df3793045951", "GooseLaugh");
+		addToCache("4b5d2e63db0a4c9a99d9ed3797d12bb6", "innr", "plxyer");
+		addToCache("1a49201da06a4e459877c5aa5493a16a", "jecode");
+
 		importFrom("sample-two-online", new ImportStatistics(83, 109, 189));
+	}
+
+	private void addToCache(String uuidString, String username, String...extraUsernames) {
+		UUID uuid = UUIDUtil.fromShortString(uuidString);
+		uuidManager.addCache(uuid, username);
+		for (String extraUsername : extraUsernames) {
+			uuidManager.addCache(uuid, extraUsername);
+		}
 	}
 }

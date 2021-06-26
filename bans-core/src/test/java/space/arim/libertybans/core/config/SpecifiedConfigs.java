@@ -27,6 +27,7 @@ import space.arim.libertybans.core.uuid.UUIDResolutionConfig;
 import space.arim.libertybans.it.ConfigSpec;
 import space.arim.libertybans.it.DatabaseInfo;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class SpecifiedConfigs implements Configs {
@@ -112,7 +113,7 @@ public class SpecifiedConfigs implements Configs {
 
 					@Override
 					public RemoteApiBundle remoteApis() {
-						return original.uuidResolution().remoteApis();
+						return new RemoteApiBundle(List.of());
 					}
 
 					@Override

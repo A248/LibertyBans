@@ -96,7 +96,7 @@ class ConfigSpecPossiblities {
 	}
 
 	Stream<ConfigSpec> getAll() {
-		long defaultTime = 1621440745L;
+		long defaultTime = SetTime.DEFAULT_TIME;
 		if (element == null) {
 			return getAllPossible(defaultTime);
 		}

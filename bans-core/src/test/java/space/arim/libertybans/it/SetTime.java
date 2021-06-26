@@ -38,4 +38,10 @@ public @interface SetTime {
 	 * @return the unix time to use for tests
 	 */
 	long unixTime();
+
+	/**
+	 * The default time if this annotation is not specified
+	 *
+	 */
+	long DEFAULT_TIME = 1621440000L;
 }

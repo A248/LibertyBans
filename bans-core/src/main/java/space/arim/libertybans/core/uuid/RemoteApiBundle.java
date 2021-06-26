@@ -47,7 +47,7 @@ public class RemoteApiBundle {
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
-	RemoteApiBundle(List<RemoteNameHistoryApi> remotes) {
+	public RemoteApiBundle(List<RemoteNameHistoryApi> remotes) {
 		this.remotes = List.copyOf(remotes);
 	}
 
