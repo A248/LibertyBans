@@ -45,6 +45,11 @@ The be-all, end-all of discipline.
 * BungeeCord
 * Velocity
 
+### Compatibility With
+
+* Velocity 3.0, an upcoming version of Velocity (as of 26 June 2021).
+* Geyser/Floodgate usernames.
+
 ### Installation
 
 LibertyBans will work out-of-the-box for most users.
