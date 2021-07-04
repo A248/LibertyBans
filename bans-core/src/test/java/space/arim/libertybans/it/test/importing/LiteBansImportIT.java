@@ -83,7 +83,7 @@ public class LiteBansImportIT {
 	@SetTime(unixTime = 1621390560)
 	public void sampleOne() {
 		pluginDatabaseSetup.initLiteBansSchema();
-		importFrom("sample-one", new ImportStatistics(71, 1625, 34211));
+		importFrom("sample-one", new ImportStatistics(71, 1625, 34235));
 	}
 
 	@TestTemplate

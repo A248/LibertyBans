@@ -225,19 +225,22 @@ public class LiteBansImportSource implements ImportSource {
 		public Optional<NameAddressRecord> mapRow(ResultSet resultSet) throws SQLException {
 			String ipString = resultSet.getString("ip");
 			// LiteBans uses # as the console's IP address
-			if (ipString.equals("#offline#") || ipString.equals("#")) {
+			if (ipString.equals("#")) {
 				logger.debug("Skipping IP address {} in address history", ipString);
 				return Optional.empty();
 			}
 			UUID uuid = UUID.fromString(resultSet.getString("uuid"));
 			String username = resultSet.getString("name");
+			Instant timeRecorded = resultSet.getTimestamp("date").toInstant();
+			if (ipString.equals("#offline#") || ipString.equals("#undefined#")) {
+				return Optional.of(new NameAddressRecord(uuid, username, null, timeRecorded));
+			}
 			NetworkAddress address;
 			try {
 				address = NetworkAddress.of(InetAddress.getByName(ipString));
 			} catch (UnknownHostException ex) {
 				throw new ImportException("Unable to parse LiteBans IP address", ex);
 			}
-			Instant timeRecorded = resultSet.getTimestamp("date").toInstant();
 			return Optional.of(new NameAddressRecord(uuid, username, address, timeRecorded));
 		}
 	}

@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
@@ -145,5 +146,18 @@ public class LiteBansImportSourceTest {
 				PortablePunishment.OperatorInfo.createUser(ecotasticUUID, "Ecotastic"),
 				true);
 		assertEquals(Set.of(expectedPunishment), sourcePunishments());
+	}
+
+	@Test
+	public void undefinedIpAddressInHistory() {
+		UUID uuid = UUID.fromString("a14a251d-9621-446a-9b8a-812a582c1245");
+		String username = "SkyDoesMlnecraft";
+		Instant date = Instant.now();
+		jdbCaesar.query(
+				"INSERT INTO litebans_history (id, date, name, uuid, ip) VALUES (?, ?, ?, ?, ?)")
+				.params(30827, Timestamp.from(date), username, uuid.toString(), "#undefined#")
+				.voidResult().execute();
+		assertEquals(Set.of(new NameAddressRecord(uuid, username, null, date)),
+				importSource.sourceNameAddressHistory().collect(Collectors.toUnmodifiableSet()));
 	}
 }
