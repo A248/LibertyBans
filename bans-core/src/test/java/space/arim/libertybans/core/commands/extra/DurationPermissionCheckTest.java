@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.commands.extra;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -54,8 +55,8 @@ public class DurationPermissionCheckTest {
 		return check.isDurationPermitted(PunishmentType.BAN, duration);
 	}
 
-	@Test
-	public void isDurationPermitted() {
+	@BeforeEach
+	public void registerPermissions() {
 		DurationPermissionsConfig durationPermissions = mock(DurationPermissionsConfig.class);
 		when(config.durationPermissions()).thenReturn(durationPermissions);
 		when(durationPermissions.enable()).thenReturn(true);
@@ -63,7 +64,10 @@ public class DurationPermissionCheckTest {
 				new DurationPermission("1m", Duration.ofMinutes(1L)),
 				new DurationPermission("4h", Duration.ofHours(4L)),
 				new DurationPermission("perm", Duration.ZERO)));
+	}
 
+	@Test
+	public void isDurationPermittedLegacyPermissions() {
 		assertFalse(isBanPermitted(Duration.ofHours(3L)), "User has no permissions");
 
 		when(sender.hasPermission("libertybans.dur.ban.1m")).thenReturn(true);
@@ -75,6 +79,23 @@ public class DurationPermissionCheckTest {
 		assertFalse(isBanPermitted(Duration.ofDays(1L)), "User does not have sufficient permission for 1 day");
 
 		when(sender.hasPermission("libertybans.dur.ban.perm")).thenReturn(true);
+		assertTrue(isBanPermitted(Duration.ofDays(30L)), "User can ban permanently so 30 days is acceptable");
+		assertTrue(isBanPermitted(Duration.ZERO), "User can ban permanently");
+	}
+
+	@Test
+	public void isDurationPermitted() {
+		assertFalse(isBanPermitted(Duration.ofHours(3L)), "User has no permissions");
+
+		when(sender.hasPermission("libertybans.ban.dur.1m")).thenReturn(true);
+		assertFalse(isBanPermitted(Duration.ofHours(3L)), "User does not have sufficient permission");
+		assertFalse(isBanPermitted(Duration.ZERO), "User cannot ban permanently");
+
+		when(sender.hasPermission("libertybans.ban.dur.4h")).thenReturn(true);
+		assertTrue(isBanPermitted(Duration.ofHours(3L)), "User has permission for 4h which is greater than 3h");
+		assertFalse(isBanPermitted(Duration.ofDays(1L)), "User does not have sufficient permission for 1 day");
+
+		when(sender.hasPermission("libertybans.ban.dur.perm")).thenReturn(true);
 		assertTrue(isBanPermitted(Duration.ofDays(30L)), "User can ban permanently so 30 days is acceptable");
 		assertTrue(isBanPermitted(Duration.ZERO), "User can ban permanently");
 	}
