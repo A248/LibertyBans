@@ -65,13 +65,9 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 
 	@Override
 	public final Collection<String> suggest(CmdSender sender, String arg, int argIndex) {
-		switch (argIndex) {
-		case 0:
-			return getMatches();
-		case 1:
+		System.out.println("Arg index is " + argIndex);
+		if (argIndex == 0) {
 			return sender.getOtherPlayersOnSameServer();
-		default:
-			break;
 		}
 		return Set.of();
 	}

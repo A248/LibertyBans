@@ -60,17 +60,11 @@ public class ListCommands extends AbstractSubCommandGroup {
 	
 	@Override
 	public Collection<String> suggest(CmdSender sender, String arg, int argIndex) {
-		switch (argIndex) {
-		case 0:
-			return getMatches();
-		case 1:
+		if (argIndex == 0) {
 			ListType listType = ListType.valueOf(arg.toUpperCase(Locale.ROOT));
 			if (listType.requiresTarget()) {
 				return sender.getOtherPlayersOnSameServer();
 			}
-			break;
-		default:
-			break;
 		}
 		return Set.of();
 	}

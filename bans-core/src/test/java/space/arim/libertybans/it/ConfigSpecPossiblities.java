@@ -19,7 +19,6 @@
 package space.arim.libertybans.it;
 
 import space.arim.libertybans.core.database.Vendor;
-import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.selector.AddressStrictness;
 import space.arim.libertybans.core.uuid.ServerType;
 
@@ -49,6 +48,10 @@ class ConfigSpecPossiblities {
 	}
 
 	private ConfigConstraints getConstraints() {
+		if (element.getAnnotation(NoDbAccess.class) != null) {
+			return new ConfigConstraints(
+					Set.of(Vendor.HSQLDB), Set.of(AddressStrictness.NORMAL), Set.of(ServerType.ONLINE));
+		}
 		Set<AddressStrictness> addressStrictnesses;
 		{
 			SetAddressStrictness strictnessConstraint = element.getAnnotation(SetAddressStrictness.class);

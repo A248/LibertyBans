@@ -65,13 +65,8 @@ public class ImportCommands extends AbstractSubCommandGroup {
 
 	@Override
 	public Collection<String> suggest(CmdSender sender, String arg, int argIndex) {
-		switch (argIndex) {
-		case 0:
-			return getMatches();
-		case 1:
+		if (argIndex == 0) {
 			return List.of("advancedban", "litebans");
-		default:
-			break;
 		}
 		return List.of();
 	}

@@ -38,7 +38,7 @@ public class CommandsCore implements Commands {
 	
 	private final List<SubCommandGroup> subCommands;
 	
-	static final String BASE_COMMAND_PERMISSION = "libertybans.commands";
+	public static final String BASE_COMMAND_PERMISSION = "libertybans.commands";
 
 	CommandsCore(Configs configs, UsageGlossary usage, List<SubCommandGroup> subCommands) {
 		this.configs = configs;
@@ -105,18 +105,10 @@ public class CommandsCore implements Commands {
 			return List.of();
 		}
 		int argIndex = args.length - 1;
-		Collection<String> unfiltered = subCommand.suggest(sender, firstArg, argIndex);
-		return filterAndSort(unfiltered, args[argIndex]);
-	}
-	
-	private List<String> filterAndSort(Collection<String> unfilteredSuggestions, String argument) {
-		if (unfilteredSuggestions.isEmpty()) {
-			return List.of();
-		}
-		List<String> filtered = new ArrayList<>(unfilteredSuggestions);
-		filtered.removeIf((suggestion) -> !suggestion.startsWith(argument));
-		filtered.sort(null);
-		return List.copyOf(filtered);
+		Collection<String> unsorted = subCommand.suggest(sender, firstArg, argIndex);
+		List<String> sorted = new ArrayList<>(unsorted);
+		sorted.sort(null);
+		return sorted;
 	}
 	
 }

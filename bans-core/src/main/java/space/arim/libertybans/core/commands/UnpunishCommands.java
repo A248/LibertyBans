@@ -62,17 +62,11 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 	
 	@Override
 	public final Collection<String> suggest(CmdSender sender, String arg, int argIndex) {
-		switch (argIndex) {
-		case 0:
-			return getMatches();
-		case 1:
+		if (argIndex == 0) {
 			PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
 			if (type == PunishmentType.MUTE || type == PunishmentType.WARN) {
 				return sender.getOtherPlayersOnSameServer();
 			}
-			break;
-		default:
-			break;
 		}
 		return Set.of();
 	}

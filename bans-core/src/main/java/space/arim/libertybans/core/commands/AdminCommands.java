@@ -64,12 +64,7 @@ public class AdminCommands extends AbstractSubCommandGroup {
 	
 	@Override
 	public Collection<String> suggest(CmdSender sender, String arg, int argIndex) {
-		switch (argIndex) {
-		case 0:
-			return getMatches();
-		default:
-			return Set.of();
-		}
+		return Set.of();
 	}
 	
 	private enum Type {
