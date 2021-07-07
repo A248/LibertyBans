@@ -91,6 +91,10 @@ public class StandardArgumentParser implements ArgumentParser {
 	
 	@Override
 	public CentralisedFuture<Victim> parseVictimByName(CmdSender sender, String targetArg) {
+		NetworkAddress parsedAddress = AddressParser.parseIpv4(targetArg);
+		if (parsedAddress != null) {
+			return completedFuture(AddressVictim.of(parsedAddress));
+		}
 		return parseOrLookupUUID(sender, targetArg).thenApply((uuid) -> {
 			return (uuid == null) ? null : PlayerVictim.of(uuid);
 		});
@@ -108,9 +112,9 @@ public class StandardArgumentParser implements ArgumentParser {
 	
 	@Override
 	public CentralisedFuture<Victim> parseAddressVictim(CmdSender sender, String targetArg) {
-		byte[] parsedAddress = parseIpv4(targetArg);
+		NetworkAddress parsedAddress = AddressParser.parseIpv4(targetArg);
 		if (parsedAddress != null) {
-			return completedFuture(AddressVictim.of(NetworkAddress.of(parsedAddress)));
+			return completedFuture(AddressVictim.of(parsedAddress));
 		}
 		return uuidManager.lookupAddress(targetArg).thenApply((address) -> {
 			if (address == null) {
@@ -121,26 +125,4 @@ public class StandardArgumentParser implements ArgumentParser {
 		});
 	}
 
-	private static byte[] parseIpv4(String targetArg) {
-		String[] octetStrings = targetArg.split("\\.");
-		if (octetStrings.length != 4) {
-			return null;
-		}
-		byte[] ipv4 = new byte[4];
-		for (int n = 0; n < 4; n++) {
-			String octetString = octetStrings[n];
-			int octet;
-			try {
-				octet = Integer.parseUnsignedInt(octetString);
-			} catch (NumberFormatException ex) {
-				return null;
-			}
-			if (octet < 0 || octet > 255) {
-				return null;
-			}
-			ipv4[n] = (byte) octet;
-		}
-		return ipv4;
-	}
-	
 }

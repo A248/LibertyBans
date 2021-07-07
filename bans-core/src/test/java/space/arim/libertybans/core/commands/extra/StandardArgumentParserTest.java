@@ -19,6 +19,7 @@
 package space.arim.libertybans.core.commands.extra;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -41,13 +42,9 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -96,164 +93,157 @@ public class StandardArgumentParserTest {
 		return futuresFactory.completedFuture(value);
 	}
 
-	/*
-	 * parseVictimByName testing
-	 */
+	@Nested
+	public class ParseVictimByName {
 
-	private Victim parseVictimByName(String targetArg) {
-		return argumentParser.parseVictimByName(sender, targetArg).join();
-	}
-
-	@Test
-	public void directPlayerVictim() {
-		UUID uuid = UUID.randomUUID();
-
-		assertEquals(PlayerVictim.of(uuid), parseVictimByName(uuid.toString()));
-		assertEquals(PlayerVictim.of(uuid), parseVictimByName(uuid.toString().replace("-", "")));
-
-		verify(sender, never()).sendMessage(any());
-	}
-
-	@Test
-	public void lookupPlayerVictim() {
-		UUID uuid = UUID.randomUUID();
-		String name = "ObsidianWolf_";
-		when(uuidManager.lookupUUID(name)).thenReturn(completedFuture(Optional.of(uuid)));
-
-		assertEquals(PlayerVictim.of(uuid), parseVictimByName(name));
-
-		verify(uuidManager).lookupUUID(name);
-		verify(sender, never()).sendMessage(any());
-	}
-
-	@Test
-	public void unknownPlayerVictimForName() {
-		String name = "A248";
-		when(uuidManager.lookupUUID(name)).thenReturn(completedFuture(Optional.empty()));
-		when(notFound.player()).thenReturn(SendableMessageManipulator.create(notFoundMessage));
-
-		assertNull(parseVictimByName(name));
-
-		verify(uuidManager).lookupUUID(name);
-		verify(sender).sendMessage(notFoundMessage);
-	}
-
-	/*
-	 * parseOperatorByName testing
-	 */
-
-	private Operator parseOperatorByName(String targetArg) {
-		return argumentParser.parseOperatorByName(sender, targetArg).join();
-	}
-
-	private void mockConsoleArguments(Set<String> consoleArguments) {
-		MessagesConfig.Formatting formatting = mock(MessagesConfig.Formatting.class);
-		when(messagesConfig.formatting()).thenReturn(formatting);
-		when(formatting.consoleArguments()).thenReturn(consoleArguments);
-	}
-
-	@Test
-	public void directPlayerOperator() {
-		UUID uuid = UUID.randomUUID();
-		mockConsoleArguments(Set.of());
-
-		assertEquals(PlayerOperator.of(uuid), parseOperatorByName(uuid.toString()));
-		assertEquals(PlayerOperator.of(uuid), parseOperatorByName(uuid.toString().replace("-", "")));
-
-		verify(sender, never()).sendMessage(any());
-	}
-
-	@Test
-	public void lookupPlayerOperator() {
-		UUID uuid = UUID.randomUUID();
-		String name = "ObsidianWolf_";
-		mockConsoleArguments(Set.of());
-		when(uuidManager.lookupUUID(name)).thenReturn(completedFuture(Optional.of(uuid)));
-
-		assertEquals(PlayerOperator.of(uuid), parseOperatorByName(name));
-
-		verify(uuidManager).lookupUUID(name);
-		verify(sender, never()).sendMessage(any());
-	}
-
-	@Test
-	public void unknownPlayerOperatorForName() {
-		String name = "A248";
-		mockConsoleArguments(Set.of());
-		when(uuidManager.lookupUUID(name)).thenReturn(completedFuture(Optional.empty()));
-		when(notFound.player()).thenReturn(SendableMessageManipulator.create(notFoundMessage));
-
-		assertNull(parseOperatorByName(name));
-
-		verify(uuidManager).lookupUUID(name);
-		verify(sender).sendMessage(notFoundMessage);
-	}
-
-	@Test
-	public void directConsoleOperator() {
-		mockConsoleArguments(Set.of("console"));
-
-		assertEquals(ConsoleOperator.INSTANCE, parseOperatorByName("console"));
-	}
-
-	/*
-	 * parseAddressVictim testing
-	 */
-
-	private Victim parseAddressVictim(String targetArg) {
-		return argumentParser.parseAddressVictim(sender, targetArg).join();
-	}
-
-	@Test
-	public void parseFixedIpv4() {
-		NetworkAddress address = NetworkAddress.of(new byte[] {
-				(byte) 127, (byte) 0, (byte) 255, (byte) 38});
-		assertEquals(AddressVictim.of(address), parseAddressVictim("127.0.255.38"));
-		verify(uuidManager, never()).lookupAddress(any());
-		verify(sender, never()).sendMessage(any());
-	}
-	
-	private static NetworkAddress randomIpv4() {
-		Random random = ThreadLocalRandom.current();
-		byte[] result = new byte[4];
-		random.nextBytes(result);
-		return NetworkAddress.of(result);
-	}
-	
-	@Test
-	public void parseRandomIpv4() {
-		NetworkAddress address = randomIpv4();
-		List<String> octets = new ArrayList<>(4);
-		for (byte octet : address.getRawAddress()) {
-			octets.add(Integer.toString(Byte.toUnsignedInt(octet)));
+		private Victim parseVictimByName(String targetArg) {
+			return argumentParser.parseVictimByName(sender, targetArg).join();
 		}
-		assertEquals(AddressVictim.of(address), parseAddressVictim(String.join(".", octets)));
-		verify(uuidManager, never()).lookupAddress(any());
-		verify(sender, never()).sendMessage(any());
+
+		@Test
+		public void explicitPlayerUuid() {
+			UUID uuid = UUID.randomUUID();
+
+			assertEquals(PlayerVictim.of(uuid), parseVictimByName(uuid.toString()));
+			assertEquals(PlayerVictim.of(uuid), parseVictimByName(uuid.toString().replace("-", "")));
+
+			verify(sender, never()).sendMessage(any());
+		}
+
+		@Test
+		public void explicitIpv4Address() {
+			NetworkAddress address = NetworkAddress.of(new byte[] {
+					(byte) 127, (byte) 0, (byte) 255, (byte) 38});
+			assertEquals(AddressVictim.of(address), parseVictimByName("127.0.255.38"));
+			verify(uuidManager, never()).lookupAddress(any());
+			verify(sender, never()).sendMessage(any());
+		}
+
+		@Test
+		public void lookupPlayerVictim() {
+			UUID uuid = UUID.randomUUID();
+			String name = "ObsidianWolf_";
+			when(uuidManager.lookupUUID(name)).thenReturn(completedFuture(Optional.of(uuid)));
+
+			assertEquals(PlayerVictim.of(uuid), parseVictimByName(name));
+
+			verify(uuidManager).lookupUUID(name);
+			verify(sender, never()).sendMessage(any());
+		}
+
+		@Test
+		public void unknownPlayerVictimForName() {
+			String name = "A248";
+			when(uuidManager.lookupUUID(name)).thenReturn(completedFuture(Optional.empty()));
+			when(notFound.player()).thenReturn(SendableMessageManipulator.create(notFoundMessage));
+
+			assertNull(parseVictimByName(name));
+
+			verify(uuidManager).lookupUUID(name);
+			verify(sender).sendMessage(notFoundMessage);
+		}
+
 	}
 
-	@Test
-	public void lookupAddressVictim() {
-		String name = "A248";
-		NetworkAddress address = randomIpv4();
-		when(uuidManager.lookupAddress(name)).thenReturn(completedFuture(address));
+	@Nested
+	public class ParseOperatorByName {
 
-		assertEquals(AddressVictim.of(address), parseAddressVictim(name));
+		private Operator parseOperatorByName(String targetArg) {
+			return argumentParser.parseOperatorByName(sender, targetArg).join();
+		}
 
-		verify(uuidManager).lookupAddress(name);
-		verify(sender, never()).sendMessage(any());
+		private void mockConsoleArguments(Set<String> consoleArguments) {
+			MessagesConfig.Formatting formatting = mock(MessagesConfig.Formatting.class);
+			when(messagesConfig.formatting()).thenReturn(formatting);
+			when(formatting.consoleArguments()).thenReturn(consoleArguments);
+		}
+
+		@Test
+		public void explicitPlayerUuid() {
+			UUID uuid = UUID.randomUUID();
+			mockConsoleArguments(Set.of());
+
+			assertEquals(PlayerOperator.of(uuid), parseOperatorByName(uuid.toString()));
+			assertEquals(PlayerOperator.of(uuid), parseOperatorByName(uuid.toString().replace("-", "")));
+
+			verify(sender, never()).sendMessage(any());
+		}
+
+		@Test
+		public void lookupPlayerOperator() {
+			UUID uuid = UUID.randomUUID();
+			String name = "ObsidianWolf_";
+			mockConsoleArguments(Set.of());
+			when(uuidManager.lookupUUID(name)).thenReturn(completedFuture(Optional.of(uuid)));
+
+			assertEquals(PlayerOperator.of(uuid), parseOperatorByName(name));
+
+			verify(uuidManager).lookupUUID(name);
+			verify(sender, never()).sendMessage(any());
+		}
+
+		@Test
+		public void unknownPlayerOperatorForName() {
+			String name = "A248";
+			mockConsoleArguments(Set.of());
+			when(uuidManager.lookupUUID(name)).thenReturn(completedFuture(Optional.empty()));
+			when(notFound.player()).thenReturn(SendableMessageManipulator.create(notFoundMessage));
+
+			assertNull(parseOperatorByName(name));
+
+			verify(uuidManager).lookupUUID(name);
+			verify(sender).sendMessage(notFoundMessage);
+		}
+
+		@Test
+		public void explicitConsoleOperator() {
+			mockConsoleArguments(Set.of("console"));
+
+			assertEquals(ConsoleOperator.INSTANCE, parseOperatorByName("console"));
+		}
+
 	}
 
-	@Test
-	public void unknownAddressVictimForName() {
-		String name = "A248";
-		when(uuidManager.lookupAddress(name)).thenReturn(completedFuture(null));
-		when(notFound.playerOrAddress()).thenReturn(SendableMessageManipulator.create(notFoundMessage));
+	@Nested
+	public class ParseAddressVictim {
 
-		assertNull(parseAddressVictim(name));
+		private Victim parseAddressVictim(String targetArg) {
+			return argumentParser.parseAddressVictim(sender, targetArg).join();
+		}
 
-		verify(uuidManager).lookupAddress(name);
-		verify(sender).sendMessage(notFoundMessage);
+		@Test
+		public void parseIpv4() {
+			NetworkAddress address = NetworkAddress.of(new byte[] {
+					(byte) 127, (byte) 0, (byte) 255, (byte) 38});
+			assertEquals(AddressVictim.of(address), parseAddressVictim("127.0.255.38"));
+			verify(uuidManager, never()).lookupAddress(any());
+			verify(sender, never()).sendMessage(any());
+		}
+
+		@Test
+		public void lookupAddressVictim() {
+			String name = "A248";
+			NetworkAddress address = AddressParserTest.randomIpv4();
+			when(uuidManager.lookupAddress(name)).thenReturn(completedFuture(address));
+
+			assertEquals(AddressVictim.of(address), parseAddressVictim(name));
+
+			verify(uuidManager).lookupAddress(name);
+			verify(sender, never()).sendMessage(any());
+		}
+
+		@Test
+		public void unknownAddressVictimForName() {
+			String name = "A248";
+			when(uuidManager.lookupAddress(name)).thenReturn(completedFuture(null));
+			when(notFound.playerOrAddress()).thenReturn(SendableMessageManipulator.create(notFoundMessage));
+
+			assertNull(parseAddressVictim(name));
+
+			verify(uuidManager).lookupAddress(name);
+			verify(sender).sendMessage(notFoundMessage);
+		}
+
 	}
 	
 }

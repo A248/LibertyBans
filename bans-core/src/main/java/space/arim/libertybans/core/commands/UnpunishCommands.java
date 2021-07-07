@@ -64,6 +64,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 	public final Collection<String> suggest(CmdSender sender, String arg, int argIndex) {
 		if (argIndex == 0) {
 			PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
+			// Online players are not banned, so only tab-complete their names for mutes and warns
 			if (type == PunishmentType.MUTE || type == PunishmentType.WARN) {
 				return sender.getOtherPlayersOnSameServer();
 			}

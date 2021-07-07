@@ -32,9 +32,9 @@ public class PardonEventImpl extends AbstractCancellable implements PardonEvent 
 	private final PunishmentType type;
 
 	public PardonEventImpl(Operator operator, Victim victim, PunishmentType type) {
-		this.operator = Objects.requireNonNull(operator);
-		this.victim = Objects.requireNonNull(victim);
-		this.type = Objects.requireNonNull(type);
+		this.operator = Objects.requireNonNull(operator, "operator");
+		this.victim = Objects.requireNonNull(victim, "victim");
+		this.type = Objects.requireNonNull(type, "type");
 	}
 
 	@Override
