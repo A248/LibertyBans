@@ -22,24 +22,22 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.connection.Server;
 import net.md_5.bungee.api.plugin.Plugin;
+import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
+import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractCmdSender;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class BungeeCmdSender extends AbstractCmdSender {
+public abstract class BungeeCmdSender extends AbstractCmdSender<CommandSender> {
 
-	BungeeCmdSender(CmdSenderHelper senderHelper, CommandSender sender, Operator operator) {
-		super(senderHelper, sender, operator);
-	}
-	
-	@Override
-	public CommandSender getRawSender() {
-		return (CommandSender) super.getRawSender();
+	BungeeCmdSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
+					CommandSender sender, Operator operator) {
+		super(formatter, audienceRepresenter, sender, operator);
 	}
 
 	@Override
@@ -60,8 +58,10 @@ public abstract class BungeeCmdSender extends AbstractCmdSender {
 	
 	static class PlayerSender extends BungeeCmdSender {
 
-		PlayerSender(CmdSenderHelper senderHelper, ProxiedPlayer player) {
-			super(senderHelper, player, PlayerOperator.of(player.getUniqueId()));
+		PlayerSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
+					 ProxiedPlayer player) {
+			super(formatter, audienceRepresenter,
+					player, PlayerOperator.of(player.getUniqueId()));
 		}
 		
 		@Override
@@ -85,8 +85,9 @@ public abstract class BungeeCmdSender extends AbstractCmdSender {
 
 		private final Plugin plugin;
 		
-		ConsoleSender(CmdSenderHelper senderHelper, CommandSender sender, Plugin plugin) {
-			super(senderHelper, sender, ConsoleOperator.INSTANCE);
+		ConsoleSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
+					  CommandSender sender, Plugin plugin) {
+			super(formatter, audienceRepresenter, sender, ConsoleOperator.INSTANCE);
 			this.plugin = plugin;
 		}
 

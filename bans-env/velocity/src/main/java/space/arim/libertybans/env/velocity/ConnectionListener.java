@@ -24,10 +24,8 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import net.kyori.adventure.text.Component;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.env.chat.AdventureTextConverter;
 
 import space.arim.libertybans.core.punish.Enforcer;
 
@@ -38,20 +36,14 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 
 @Singleton
-public class ConnectionListener extends VelocityParallelisedListener<LoginEvent, SendableMessage> {
+public class ConnectionListener extends VelocityParallelisedListener<LoginEvent, Component> {
 	
 	private final Enforcer enforcer;
-	private final AdventureTextConverter textConverter;
 	
 	@Inject
 	public ConnectionListener(PluginContainer plugin, ProxyServer server, Enforcer enforcer) {
-		this(plugin, server, enforcer, new AdventureTextConverter());
-	}
-
-	ConnectionListener(PluginContainer plugin, ProxyServer server, Enforcer enforcer, AdventureTextConverter textConverter) {
 		super(plugin, server);
 		this.enforcer = enforcer;
-		this.textConverter = textConverter;
 	}
 
 	@Override
@@ -60,7 +52,7 @@ public class ConnectionListener extends VelocityParallelisedListener<LoginEvent,
 	}
 
 	@Override
-	protected CentralisedFuture<SendableMessage> beginComputation(LoginEvent event) {
+	protected CentralisedFuture<Component> beginComputation(LoginEvent event) {
 		Player player = event.getPlayer();
 		UUID uuid = player.getUniqueId();
 		String name = player.getUsername();
@@ -69,8 +61,8 @@ public class ConnectionListener extends VelocityParallelisedListener<LoginEvent,
 	}
 
 	@Override
-	protected void executeNonNullResult(LoginEvent event, SendableMessage message) {
-		event.setResult(ComponentResult.denied(textConverter.convert(message)));
+	protected void executeNonNullResult(LoginEvent event, Component message) {
+		event.setResult(ComponentResult.denied(message));
 	}
 
 }

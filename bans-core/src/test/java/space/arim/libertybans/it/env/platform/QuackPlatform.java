@@ -19,10 +19,10 @@
 package space.arim.libertybans.it.env.platform;
 
 import jakarta.inject.Singleton;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.serialiser.LegacyCodeSerialiser;
 import space.arim.omnibus.util.ThisClass;
 
 import java.util.Collection;
@@ -58,13 +58,13 @@ public class QuackPlatform {
 		players.put(player.getUniqueId(), player);
 	}
 
-	void remove(QuackPlayer player, SendableMessage msg) {
+	void remove(QuackPlayer player, Component message) {
 		players.values().remove(player);
-		logger.info("{} was kicked for '{}'", player.getName(), toDisplay(msg));
+		logger.info("{} was kicked for '{}'", player.getName(), toDisplay(message));
 	}
 
-	String toDisplay(SendableMessage msg) {
-		return LegacyCodeSerialiser.getInstance('&').serialise(msg);
+	String toDisplay(Component message) {
+		return PlainComponentSerializer.plain().serialize(message);
 	}
 
 }

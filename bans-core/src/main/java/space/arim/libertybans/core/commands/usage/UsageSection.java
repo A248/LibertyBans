@@ -20,9 +20,9 @@ package space.arim.libertybans.core.commands.usage;
 
 import java.util.Locale;
 
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.serialiser.LegacyCodeSerialiser;
-import space.arim.api.chat.serialiser.SendableMessageSerialiser;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import space.arim.api.jsonchat.adventure.ChatMessageComponentSerializer;
 
 enum UsageSection {
 
@@ -43,19 +43,19 @@ enum UsageSection {
 			"&e/libertybans &7restart - perform a full restart, reloads everything including database connections",
 			"&e/libertybans &7debug - outputs debug information");
 	
-	private final SendableMessage content;
+	private final Component content;
 	
 	UsageSection(String...commands) {
 		String name = name();
 		String headerString = "&b" + name.charAt(0) + name.substring(1).toLowerCase(Locale.ROOT) + " commands:";
 
-		SendableMessageSerialiser serialiser = LegacyCodeSerialiser.getInstance('&');
-		SendableMessage header = serialiser.deserialise(headerString);
-		SendableMessage body = serialiser.deserialise("\n" + String.join("\n", commands));
-		content = header.concatenate(body);
+		ChatMessageComponentSerializer serialiser = new ChatMessageComponentSerializer();
+		Component header = serialiser.deserialize(headerString);
+		Component body = serialiser.deserialize("\n" + String.join("\n", commands));
+		content = TextComponent.ofChildren(header, body);
 	}
 	
-	SendableMessage content() {
+	Component content() {
 		return content;
 	}
 	

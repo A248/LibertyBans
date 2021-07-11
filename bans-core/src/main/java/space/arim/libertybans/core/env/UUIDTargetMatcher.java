@@ -18,18 +18,18 @@
  */
 package space.arim.libertybans.core.env;
 
+import space.arim.api.env.annote.PlatformPlayer;
+
 import java.net.InetAddress;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import space.arim.api.env.annote.PlatformPlayer;
-
-public class UUIDTargetMatcher extends AbstractTargetMatcher {
+public class UUIDTargetMatcher<@PlatformPlayer P> extends AbstractTargetMatcher<P> {
 
 	private final Set<UUID> uuids;
 	
-	public UUIDTargetMatcher(Set<UUID> uuids, Consumer<@PlatformPlayer Object> callback) {
+	public UUIDTargetMatcher(Set<UUID> uuids, Consumer<P> callback) {
 		super(callback);
 		this.uuids = Set.copyOf(uuids);
 	}

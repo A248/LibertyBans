@@ -22,8 +22,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Set;
 
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.manipulator.SendableMessageManipulator;
+import net.kyori.adventure.text.Component;
+import space.arim.api.jsonchat.adventure.util.ComponentText;
 
 import space.arim.libertybans.api.PunishmentType;
 
@@ -79,17 +79,17 @@ public interface MessagesConfig {
 		@ConfKey("prefix.value")
 		@ConfComments("The prefix to use")
 		@DefaultString("&6&lLibertyBans &r&8»&7 ")
-		SendableMessage rawPrefix();
-		
-		default SendableMessage prefix() {
-			return (enablePrefix()) ? rawPrefix() : SendableMessage.empty();
+		Component rawPrefix();
+
+		default Component prefix() {
+			return (enablePrefix()) ? rawPrefix() : Component.empty();
 		}
 		
 		@ConfKey("base-permission-message")
 		@ConfComments("If a player types /libertybans but does not have the permission 'libertybans.commands', "
 				+ "this is the denial message")
 		@DefaultString("&cYou may not use this.")
-		SendableMessage basePermissionMessage();
+		Component basePermissionMessage();
 		
 		@ConfKey("not-found")
 		@ConfComments("When issuing commands, if the specified player or IP was not found, what should the error message be?")
@@ -99,18 +99,18 @@ public interface MessagesConfig {
 		interface NotFound {
 			
 			@DefaultString("&c&o%TARGET%&r&7 was not found online or offline.")
-			SendableMessageManipulator player();
+			ComponentText player();
 			
 			@DefaultString("&c&o%TARGET%&r&7 is not a valid UUID.")
-			SendableMessageManipulator uuid();
+			ComponentText uuid();
 			
 			@DefaultString("&c&o%TARGET%&r&7 was not found online or offline, and is not a valid IP address.")
-			SendableMessageManipulator playerOrAddress();
+			ComponentText playerOrAddress();
 			
 		}
 		
 		@DefaultString("&cUnknown sub command. Displaying usage:")
-		SendableMessage usage();
+		Component usage();
 		
 	}
 	
@@ -121,16 +121,16 @@ public interface MessagesConfig {
 		
 		@ConfKey("no-permission")
 		@DefaultString("&cSorry, you cannot use this.")
-		SendableMessage noPermission();
+		Component noPermission();
 		
 		@DefaultString("&a...")
-		SendableMessage ellipses();
+		Component ellipses();
 		
 		@DefaultString("&aReloaded")
-		SendableMessage reloaded();
+		Component reloaded();
 		
 		@DefaultString("&aRestarted")
-		SendableMessage restarted();
+		Component restarted();
 
 		@SubSection
 		Importing importing();
@@ -140,19 +140,19 @@ public interface MessagesConfig {
 			@ConfKey("in-progress")
 			@ConfComments("To prevent mistakes, it is not allowed to import multiple times at once.")
 			@DefaultString("&cThere is already an import in progress.")
-			SendableMessage inProgress();
+			Component inProgress();
 
 			@DefaultString("&7Import has started. View your server console for details and progress.")
-			SendableMessage started();
+			Component started();
 
 			@DefaultString("&cUsage: /libertybans import <advancedban|litebans|vanilla>")
-			SendableMessage usage();
+			Component usage();
 
 			@DefaultString("&7Import completed.")
-			SendableMessage complete();
+			Component complete();
 
 			@DefaultString("&cImport failed. View the server console for details.")
-			SendableMessage failure();
+			Component failure();
 
 		}
 
@@ -237,12 +237,12 @@ public interface MessagesConfig {
 		
 		@ConfKey("unknown-error")
 		@DefaultString("&cAn unknown error occurred.")
-		SendableMessage unknownError();
+		Component unknownError();
 		
 		@ConfKey("sync-chat-denial-message")
 		@ConfComments("Only applicable if synchronous enforcement strategy is DENY in the main config")
 		@DefaultString("&cSynchronous chat denied. &7Please try again.")
-		SendableMessage syncDenialMessage();
+		Component syncDenialMessage();
 		
 		@SubSection
 		@ConfComments("Concerns formatting of relative times and durations")

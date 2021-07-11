@@ -27,16 +27,13 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
+import net.kyori.adventure.text.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.UUIDUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
-
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.env.PlatformHandle;
-import space.arim.api.env.annote.PlatformPlayer;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.NetworkAddress;
@@ -65,43 +62,29 @@ public class StandardEnforcer implements Enforcer {
 	private final InternalFormatter formatter;
 	private final UUIDManager uuidManager;
 	private final MuteCache muteCache;
-	private final EnvEnforcer envEnforcer;
-	private final PlatformHandle envHandle;
+	private final EnvEnforcer<?> envEnforcer;
 
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
 	@Inject
 	public StandardEnforcer(Configs configs, FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider,
-			InternalSelector selector, InternalFormatter formatter, EnvEnforcer envEnforcer,
-			PlatformHandle envHandle, UUIDManager uuidManager, MuteCache muteCache) {
+			InternalSelector selector, InternalFormatter formatter, EnvEnforcer<?> envEnforcer,
+			UUIDManager uuidManager, MuteCache muteCache) {
 		this.configs = configs;
 		this.futuresFactory = futuresFactory;
 		this.dbProvider = dbProvider;
 		this.selector = selector;
 		this.formatter = formatter;
 		this.envEnforcer = envEnforcer;
-		this.envHandle = envHandle;
 		this.uuidManager = uuidManager;
 		this.muteCache = muteCache;
 	}
 
 	@Override
 	public CentralisedFuture<?> enforce(Punishment punishment) {
-		CentralisedFuture<SendableMessage> futureMessage = formatter.getPunishmentMessage(punishment);
-		switch (punishment.getVictim().getType()) {
-		case PLAYER:
-			UUID uuid = ((PlayerVictim) punishment.getVictim()).getUUID();
-			CentralisedFuture<?> enforceFuture = futureMessage.thenAccept((message) -> {
-				envEnforcer.doForPlayerIfOnline(uuid, enforcementCallback(punishment, message));
-			});
-			return enforceFuture;
-		case ADDRESS:
-			return futureMessage.thenCompose((message) -> enforceAddressPunishment(punishment, message));
-		default:
-			throw MiscUtil.unknownVictimType(punishment.getVictim().getType());
-		}
+		return new Parameterized<>(envEnforcer).enforce(punishment);
 	}
-	
+
 	private static boolean shouldKick(PunishmentType type) {
 		switch (type) {
 		case BAN:
@@ -114,82 +97,107 @@ public class StandardEnforcer implements Enforcer {
 			throw MiscUtil.unknownType(type);
 		}
 	}
-	
-	private Consumer<@PlatformPlayer Object> enforcementCallback(Punishment punishment, SendableMessage message) {
-		PunishmentType type = punishment.getType();
-		boolean shouldKick = shouldKick(type);
-		return (playerObj) -> {
 
-			if (shouldKick) {
-				envHandle.disconnectUser(playerObj, message);
-			} else {
-				envHandle.sendMessage(playerObj, message);
+	private class Parameterized<P> {
 
-				/*
-				 * Mute enforcement must additionally take into account the mute cache
-				 */
-				if (type == PunishmentType.MUTE) {
-					UUID uuid = envEnforcer.getUniqueIdFor(playerObj);
-					NetworkAddress address = NetworkAddress.of(envEnforcer.getAddressFor(playerObj));
-					muteCache.setCachedMute(uuid, address, punishment);
-				}
-			}
-		};
-	}
-	
-	private CentralisedFuture<?> enforceAddressPunishment(Punishment punishment, SendableMessage message) {
-		NetworkAddress address = ((AddressVictim) punishment.getVictim()).getAddress();
-		CentralisedFuture<TargetMatcher> futureMatcher;
-		AddressStrictness strictness = configs.getMainConfig().enforcement().addressStrictness();
-		switch (strictness) {
-		case LENIENT:
-			futureMatcher = completedFuture(
-					new ExactTargetMatcher(address, enforcementCallback(punishment, message)));
-			break;
-		case NORMAL:
-			futureMatcher = matchAddressPunishmentNormal(address, punishment, message);
-			break;
-		case STRICT:
-			futureMatcher = matchAddressPunishmentStrict(address, punishment, message);
-			break;
-		default:
-			throw MiscUtil.unknownAddressStrictness(strictness);
+		private final EnvEnforcer<P> envEnforcer;
+
+		Parameterized(EnvEnforcer<P> envEnforcer) {
+			this.envEnforcer = envEnforcer;
 		}
-		if (logger.isDebugEnabled()) {
-			futureMatcher.thenAccept((matcher) -> {
-				logger.debug("Enforcing {} address punishment with matcher {}", strictness, matcher);
+
+		CentralisedFuture<?> enforce(Punishment punishment) {
+			CentralisedFuture<Component> futureMessage = formatter.getPunishmentMessage(punishment);
+			switch (punishment.getVictim().getType()) {
+			case PLAYER:
+				UUID uuid = ((PlayerVictim) punishment.getVictim()).getUUID();
+				CentralisedFuture<?> enforceFuture = futureMessage.thenAccept((message) -> {
+					envEnforcer.doForPlayerIfOnline(uuid, enforcementCallback(punishment, message));
+				});
+				return enforceFuture;
+			case ADDRESS:
+				return futureMessage.thenCompose((message) -> enforceAddressPunishment(punishment, message));
+			default:
+				throw MiscUtil.unknownVictimType(punishment.getVictim().getType());
+			}
+		}
+
+		private Consumer<P> enforcementCallback(Punishment punishment, Component message) {
+			PunishmentType type = punishment.getType();
+			boolean shouldKick = shouldKick(type);
+			return (player) -> {
+
+				if (shouldKick) {
+					envEnforcer.kickPlayer(player, message);
+				} else {
+					envEnforcer.sendMessage(player, message);
+
+					/*
+					 * Mute enforcement must additionally take into account the mute cache
+					 */
+					if (type == PunishmentType.MUTE) {
+						UUID uuid = envEnforcer.getUniqueIdFor(player);
+						NetworkAddress address = NetworkAddress.of(envEnforcer.getAddressFor(player));
+						muteCache.setCachedMute(uuid, address, punishment);
+					}
+				}
+			};
+		}
+
+		private CentralisedFuture<?> enforceAddressPunishment(Punishment punishment, Component message) {
+			NetworkAddress address = ((AddressVictim) punishment.getVictim()).getAddress();
+			CentralisedFuture<TargetMatcher<P>> futureMatcher;
+			AddressStrictness strictness = configs.getMainConfig().enforcement().addressStrictness();
+			switch (strictness) {
+			case LENIENT:
+				futureMatcher = completedFuture(
+						new ExactTargetMatcher<>(address, enforcementCallback(punishment, message)));
+				break;
+			case NORMAL:
+				futureMatcher = matchAddressPunishmentNormal(address, punishment, message);
+				break;
+			case STRICT:
+				futureMatcher = matchAddressPunishmentStrict(address, punishment, message);
+				break;
+			default:
+				throw MiscUtil.unknownAddressStrictness(strictness);
+			}
+			if (logger.isDebugEnabled()) {
+				futureMatcher.thenAccept((matcher) -> {
+					logger.debug("Enforcing {} address punishment with matcher {}", strictness, matcher);
+				});
+			}
+			return futureMatcher.thenAccept(envEnforcer::enforceMatcher);
+		}
+
+		private CentralisedFuture<TargetMatcher<P>> matchAddressPunishmentNormal(
+				NetworkAddress address, Punishment punishment, Component message) {
+			InternalDatabase database = dbProvider.get();
+			return database.selectAsync(() -> {
+				Set<UUID> uuids = database.jdbCaesar().query(
+						"SELECT `uuid` FROM `libertybans_addresses` WHERE `address` = ?")
+						.params(address)
+						.setResult((resultSet) -> UUIDUtil.fromByteArray(resultSet.getBytes("uuid")))
+						.execute();
+				return new UUIDTargetMatcher<>(uuids, enforcementCallback(punishment, message));
 			});
 		}
-		return futureMatcher.thenAccept(envEnforcer::enforceMatcher);
-	}
 
-	private CentralisedFuture<TargetMatcher> matchAddressPunishmentNormal(NetworkAddress address, Punishment punishment,
-			SendableMessage message) {
-		InternalDatabase database = dbProvider.get();
-		return database.selectAsync(() -> {
-			Set<UUID> uuids = database.jdbCaesar().query(
-					"SELECT `uuid` FROM `libertybans_addresses` WHERE `address` = ?")
-					.params(address)
-					.setResult((resultSet) -> UUIDUtil.fromByteArray(resultSet.getBytes("uuid")))
-					.execute();
-			return new UUIDTargetMatcher(uuids, enforcementCallback(punishment, message));
-		});
-	}
-
-	private CentralisedFuture<TargetMatcher> matchAddressPunishmentStrict(NetworkAddress address, Punishment punishment,
-			SendableMessage message) {
-		InternalDatabase database = dbProvider.get();
-		return database.selectAsync(() -> {
-			Set<UUID> uuids = database.jdbCaesar().query(
-					"SELECT `links`.`uuid2` FROM `libertybans_strict_links` `links` " +
-							"INNER JOIN `libertybans_addresses` `addrs` " +
-							"ON `links`.`uuid1` = `addrs`.`uuid` " +
-							"WHERE `addrs`.`address` = ?")
-					.params(address)
-					.setResult((resultSet) -> UUIDUtil.fromByteArray(resultSet.getBytes("uuid2")))
-					.execute();
-			return new UUIDTargetMatcher(uuids, enforcementCallback(punishment, message));
-		});
+		private CentralisedFuture<TargetMatcher<P>> matchAddressPunishmentStrict(
+				NetworkAddress address, Punishment punishment, Component message) {
+			InternalDatabase database = dbProvider.get();
+			return database.selectAsync(() -> {
+				Set<UUID> uuids = database.jdbCaesar().query(
+						"SELECT `links`.`uuid2` FROM `libertybans_strict_links` `links` " +
+								"INNER JOIN `libertybans_addresses` `addrs` " +
+								"ON `links`.`uuid1` = `addrs`.`uuid` " +
+								"WHERE `addrs`.`address` = ?")
+						.params(address)
+						.setResult((resultSet) -> UUIDUtil.fromByteArray(resultSet.getBytes("uuid2")))
+						.execute();
+				return new UUIDTargetMatcher<>(uuids, enforcementCallback(punishment, message));
+			});
+		}
 	}
 	
 	private <T> CentralisedFuture<T> completedFuture(T value) {
@@ -197,7 +205,7 @@ public class StandardEnforcer implements Enforcer {
 	}
 	
 	@Override
-	public CentralisedFuture<SendableMessage> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address) {
+	public CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address) {
 		uuidManager.addCache(uuid, name);
 		return selector.executeAndCheckConnection(uuid, name, address).thenCompose((ban) -> {
 			if (ban == null) {
@@ -217,7 +225,7 @@ public class StandardEnforcer implements Enforcer {
 	}
 	
 	@Override
-	public CentralisedFuture<SendableMessage> checkChat(UUID uuid, NetworkAddress address, String command) {
+	public CentralisedFuture<Component> checkChat(UUID uuid, NetworkAddress address, String command) {
 		if (command != null && !blockForMuted(command)) {
 			return completedFuture(null);
 		}
@@ -230,39 +238,39 @@ public class StandardEnforcer implements Enforcer {
 	}
 	
 	private boolean blockForMuted(String command) {
-        String[] words = command.split(" ");
-        // Handle commands with colons
-        if (words[0].indexOf(':') != -1) {
-            words[0] = words[0].split(":", 2)[1];
-        }
-        for (String muteCommand : configs.getMainConfig().enforcement().muteCommands()) {
-            if (muteCommandMatches(words, muteCommand)) {
-                return true;
-            }
-        }
-        return false;
+		String[] words = command.split(" ");
+		// Handle commands with colons
+		if (words[0].indexOf(':') != -1) {
+			words[0] = words[0].split(":", 2)[1];
+		}
+		for (String muteCommand : configs.getMainConfig().enforcement().muteCommands()) {
+			if (muteCommandMatches(words, muteCommand)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private static boolean muteCommandMatches(String[] commandWords, String muteCommand) {
-        // Basic equality check
-        if (commandWords[0].equalsIgnoreCase(muteCommand)) {
-            return true;
-        }
-        // Advanced equality check
-        // Essentially a case-insensitive "startsWith" for arrays
-        if (muteCommand.indexOf(' ') != -1) {
-            String[] muteCommandWords = muteCommand.split(" ");
-            if (muteCommandWords.length > commandWords.length) {
-                return false;
-            }
-            for (int n = 0; n < muteCommandWords.length; n++) {
-                if (!muteCommandWords[n].equalsIgnoreCase(commandWords[n])) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
+		// Basic equality check
+		if (commandWords[0].equalsIgnoreCase(muteCommand)) {
+			return true;
+		}
+		// Advanced equality check
+		// Essentially a case-insensitive "startsWith" for arrays
+		if (muteCommand.indexOf(' ') != -1) {
+			String[] muteCommandWords = muteCommand.split(" ");
+			if (muteCommandWords.length > commandWords.length) {
+				return false;
+			}
+			for (int n = 0; n < muteCommandWords.length; n++) {
+				if (!muteCommandWords[n].equalsIgnoreCase(commandWords[n])) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
     }
 	
 }

@@ -20,18 +20,16 @@ package space.arim.libertybans.core.env;
 
 import java.util.function.Consumer;
 
-import space.arim.api.env.annote.PlatformPlayer;
+abstract class AbstractTargetMatcher<P> implements TargetMatcher<P> {
 
-abstract class AbstractTargetMatcher implements TargetMatcher {
+	private final Consumer<P> callback;
 
-	private final Consumer<@PlatformPlayer Object> callback;
-	
-	AbstractTargetMatcher(Consumer<@PlatformPlayer Object> callback) {
+	AbstractTargetMatcher(Consumer<P> callback) {
 		this.callback = callback;
 	}
 	
 	@Override
-	public final Consumer<@PlatformPlayer Object> callback() {
+	public final Consumer<P> callback() {
 		return callback;
 	}
 	

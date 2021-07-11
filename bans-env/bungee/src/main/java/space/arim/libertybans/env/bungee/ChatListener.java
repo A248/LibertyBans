@@ -23,8 +23,9 @@ import java.net.InetAddress;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.env.PlatformHandle;
+import net.kyori.adventure.text.Component;
+import net.md_5.bungee.api.CommandSender;
+import space.arim.api.env.AudienceRepresenter;
 
 import space.arim.libertybans.core.env.ParallelisedListener;
 import space.arim.libertybans.core.punish.Enforcer;
@@ -38,19 +39,19 @@ import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 
 @Singleton
-public class ChatListener extends ParallelisedListener<ChatEvent, SendableMessage> implements Listener {
+public class ChatListener extends ParallelisedListener<ChatEvent, Component> implements Listener {
 
 	private final Plugin plugin;
 	private final Enforcer enforcer;
 	private final AddressReporter addressReporter;
-	private final PlatformHandle handle;
+	private final AudienceRepresenter<CommandSender> audienceRepresenter;
 	
 	@Inject
-	public ChatListener(Plugin plugin, Enforcer enforcer, AddressReporter addressReporter, PlatformHandle handle) {
+	public ChatListener(Plugin plugin, Enforcer enforcer, AddressReporter addressReporter, AudienceRepresenter<CommandSender> audienceRepresenter) {
 		this.plugin = plugin;
 		this.enforcer = enforcer;
 		this.addressReporter = addressReporter;
-		this.handle = handle;
+		this.audienceRepresenter = audienceRepresenter;
 	}
 	
 	@Override
@@ -86,16 +87,17 @@ public class ChatListener extends ParallelisedListener<ChatEvent, SendableMessag
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onChatHigh(ChatEvent event) {
-		if (!(event.getSender() instanceof ProxiedPlayer)) {
+		Connection sender = event.getSender();
+		if (!(sender instanceof ProxiedPlayer)) {
 			return;
 		}
-		SendableMessage message = withdraw(event);
+		Component message = withdraw(event);
 		if (message == null) {
 			debugResultPermitted(event);
 			return;
 		}
 		event.setCancelled(true);
-		handle.sendMessage(event.getSender(), message);
+		audienceRepresenter.toAudience((ProxiedPlayer) sender).sendMessage(message);
 	}
 	
 }

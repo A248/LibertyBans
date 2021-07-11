@@ -18,33 +18,26 @@
  */
 package space.arim.libertybans.env.velocity;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.env.PlatformHandle;
-
-import space.arim.libertybans.core.punish.Enforcer;
-
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent.ChatResult;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import net.kyori.adventure.text.Component;
+import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 @Singleton
-public class ChatListener extends VelocityParallelisedListener<PlayerChatEvent, SendableMessage> {
+public class ChatListener extends VelocityParallelisedListener<PlayerChatEvent, Component> {
 
 	private final Enforcer enforcer;
-	private final PlatformHandle handle;
 
 	@Inject
-	public ChatListener(PluginContainer plugin, ProxyServer server, Enforcer enforcer, PlatformHandle handle) {
+	public ChatListener(PluginContainer plugin, ProxyServer server, Enforcer enforcer) {
 		super(plugin, server);
 		this.enforcer = enforcer;
-		this.handle = handle;
 	}
 
 	@Override
@@ -53,15 +46,15 @@ public class ChatListener extends VelocityParallelisedListener<PlayerChatEvent, 
 	}
 
 	@Override
-	protected CentralisedFuture<SendableMessage> beginComputation(PlayerChatEvent event) {
+	protected CentralisedFuture<Component> beginComputation(PlayerChatEvent event) {
 		Player player = event.getPlayer();
 		return enforcer.checkChat(player.getUniqueId(), player.getRemoteAddress().getAddress(), null);
 	}
 
 	@Override
-	protected void executeNonNullResult(PlayerChatEvent event, SendableMessage message) {
+	protected void executeNonNullResult(PlayerChatEvent event, Component message) {
 		event.setResult(ChatResult.denied());
-		handle.sendMessage(event.getPlayer(), message);
+		event.getPlayer().sendMessage(message);
 	}
 
 }

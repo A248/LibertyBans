@@ -20,8 +20,8 @@ package space.arim.libertybans.core.config;
 
 import java.util.Locale;
 
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.manipulator.SendableMessageManipulator;
+import net.kyori.adventure.text.Component;
+import space.arim.api.jsonchat.adventure.util.ComponentText;
 
 import space.arim.dazzleconf.annote.ConfDefault.DefaultInteger;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultString;
@@ -36,21 +36,21 @@ public interface ListSection {
 
 	interface PunishmentList {
 		
-		SendableMessage usage();
+		Component usage();
 		
 		int perPage();
 		
-		SendableMessageManipulator noPages();
+		ComponentText noPages();
 		
-		SendableMessageManipulator maxPages();
+		ComponentText maxPages();
 		
-		SendableMessage permissionCommand();
+		Component permissionCommand();
 		
-		SendableMessageManipulator layoutHeader();
+		ComponentText layoutHeader();
 		
-		SendableMessageManipulator layoutBody();
+		ComponentText layoutBody();
 		
-		SendableMessageManipulator layoutFooter();
+		ComponentText layoutFooter();
 		
 	}
 	
@@ -58,7 +58,7 @@ public interface ListSection {
 		
 		@Override
 		@DefaultString("&cUsage: /banlist &e[page]")
-		SendableMessage usage();
+		Component usage();
 		
 		@Override
 		@IntegerRange(min = 1)
@@ -67,35 +67,35 @@ public interface ListSection {
 		
 		@Override
 		@DefaultString("&7There are no active bans.")
-		SendableMessageManipulator noPages();
+		ComponentText noPages();
 		
 		@Override
 		@DefaultString("&7Page &e%PAGE%&7 does not exist.")
-		SendableMessageManipulator maxPages();
+		ComponentText maxPages();
 		
 		@Override
 		@ConfKey("permission.command")
 		@DefaultString("&7You may not view the banlist.")
-		SendableMessage permissionCommand();
+		Component permissionCommand();
 		
 		@Override
 		@ConfKey("layout.header")
 		@DefaultStrings({"&7[&eID&7] &e&oSubject",
 				"&7Operator &8/ &7Reason &8/ &7Time Remaining",
 				"&7"})
-		SendableMessageManipulator layoutHeader();
+		ComponentText layoutHeader();
 		
 		@Override
 		@ConfKey("layout.body")
 		@DefaultStrings({"&7[&e%ID%&7] &e&o%VICTIM%",
 				"&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%",
 				"&7"})
-		SendableMessageManipulator layoutBody();
+		ComponentText layoutBody();
 		
 		@Override
 		@ConfKey("layout.footer")
 		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans banlist %NEXTPAGE%"})
-		SendableMessageManipulator layoutFooter();
+		ComponentText layoutFooter();
 		
 	}
 	
@@ -103,7 +103,7 @@ public interface ListSection {
 		
 		@Override
 		@DefaultString("&cUsage: /mutelist &e[page]")
-		SendableMessage usage();
+		Component usage();
 		
 		@Override
 		@IntegerRange(min = 1)
@@ -112,35 +112,35 @@ public interface ListSection {
 		
 		@Override
 		@DefaultString("&7There are no active mutes.")
-		SendableMessageManipulator noPages();
+		ComponentText noPages();
 		
 		@Override
 		@DefaultString("&7Page &e%PAGE%&7 does not exist.")
-		SendableMessageManipulator maxPages();
+		ComponentText maxPages();
 		
 		@Override
 		@ConfKey("permission.command")
 		@DefaultString("&7You may not view the mutelist.")
-		SendableMessage permissionCommand();
+		Component permissionCommand();
 		
 		@Override
 		@ConfKey("layout.header")
 		@DefaultStrings({"&7[&eID&7] &e&oSubject",
 				"&7Operator &8/ &7Reason &8/ &7Time Remaining",
 				"&7"})
-		SendableMessageManipulator layoutHeader();
+		ComponentText layoutHeader();
 		
 		@Override
 		@ConfKey("layout.body")
 		@DefaultStrings({"&7[&e%ID%&7] &e&o%VICTIM%",
 				"&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%",
 				"&7"})
-		SendableMessageManipulator layoutBody();
+		ComponentText layoutBody();
 		
 		@Override
 		@ConfKey("layout.footer")
 		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans mutelist %NEXTPAGE%"})
-		SendableMessageManipulator layoutFooter();
+		ComponentText layoutFooter();
 		
 	}
 	
@@ -148,7 +148,7 @@ public interface ListSection {
 		
 		@Override
 		@DefaultString("&cUsage: /history &e<player> [page]")
-		SendableMessage usage();
+		Component usage();
 		
 		@Override
 		@IntegerRange(min = 1)
@@ -157,35 +157,35 @@ public interface ListSection {
 		
 		@Override
 		@DefaultString("&c&o%TARGET%&r&7 has no history.")
-		SendableMessageManipulator noPages();
+		ComponentText noPages();
 		
 		@Override
 		@DefaultString("&7Page &e%PAGE%&7 does not exist.")
-		SendableMessageManipulator maxPages();
+		ComponentText maxPages();
 		
 		@Override
 		@ConfKey("permission.command")
 		@DefaultString("&7You may not view history.")
-		SendableMessage permissionCommand();
+		Component permissionCommand();
 		
 		@Override
 		@ConfKey("layout.header")
 		@DefaultStrings({"&7[&eID&7] &r&8/ &7Punishment Type",
 				"&7Operator &8/ &7Reason &8/ &7Date Enacted",
 				"&7"})
-		SendableMessageManipulator layoutHeader();
+		ComponentText layoutHeader();
 		
 		@Override
 		@ConfKey("layout.body")
 		@DefaultStrings({"&7[&e%ID%&7] &r&7/ &7%TYPE%",
 				"&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%",
 				"&7"})
-		SendableMessageManipulator layoutBody();
+		ComponentText layoutBody();
 		
 		@Override
 		@ConfKey("layout.footer")
 		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans history %TARGET% %NEXTPAGE%"})
-		SendableMessageManipulator layoutFooter();
+		ComponentText layoutFooter();
 		
 	}
 	
@@ -193,7 +193,7 @@ public interface ListSection {
 		
 		@Override
 		@DefaultString("&cUsage: /warns &e<player> [page]")
-		SendableMessage usage();
+		Component usage();
 		
 		@Override
 		@IntegerRange(min = 1)
@@ -202,33 +202,33 @@ public interface ListSection {
 		
 		@Override
 		@DefaultString("&c&o%TARGET%&r&7 has no warns.")
-		SendableMessageManipulator noPages();
+		ComponentText noPages();
 		
 		@Override
 		@DefaultString("&7Page &e%PAGE%&7 does not exist.")
-		SendableMessageManipulator maxPages();
+		ComponentText maxPages();
 		
 		@Override
 		@ConfKey("permission.command")
 		@DefaultString("&7You may not view warns.")
-		SendableMessage permissionCommand();
+		Component permissionCommand();
 		
 		@Override
 		@ConfKey("layout.header")
 		@DefaultStrings({"&7[&eID&7] Operator &8/ &7Reason &8/ &7Time Remaining",
 				"&7"})
-		SendableMessageManipulator layoutHeader();
+		ComponentText layoutHeader();
 		
 		@Override
 		@ConfKey("layout.body")
 		@DefaultStrings({"&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%",
 				"&7"})
-		SendableMessageManipulator layoutBody();
+		ComponentText layoutBody();
 		
 		@Override
 		@ConfKey("layout.footer")
 		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE%"})
-		SendableMessageManipulator layoutFooter();
+		ComponentText layoutFooter();
 		
 	}
 	
@@ -236,7 +236,7 @@ public interface ListSection {
 		
 		@Override
 		@DefaultString("&cUsage: /blame &e<player> [page]")
-		SendableMessage usage();
+		Component usage();
 		
 		@Override
 		@IntegerRange(min = 1)
@@ -245,35 +245,35 @@ public interface ListSection {
 		
 		@Override
 		@DefaultString("&c&o%TARGET%&r&7 has not punished any players.")
-		SendableMessageManipulator noPages();
+		ComponentText noPages();
 		
 		@Override
 		@DefaultString("&7Page &e%PAGE%&7 does not exist.")
-		SendableMessageManipulator maxPages();
+		ComponentText maxPages();
 		
 		@Override
 		@ConfKey("permission.command")
 		@DefaultString("&7You may not use blame.")
-		SendableMessage permissionCommand();
+		Component permissionCommand();
 		
 		@Override
 		@ConfKey("layout.header")
 		@DefaultStrings({"&7[&eID&7] &e&oSubject &r&8/ &7Punishment Type",
 				"&7Reason &8/ &7Date Enacted",
 				"&7"})
-		SendableMessageManipulator layoutHeader();
+		ComponentText layoutHeader();
 		
 		@Override
 		@ConfKey("layout.body")
 		@DefaultStrings({"&7[&e%ID%&7] &e&o%VICTIM% &r&8 / &7%TYPE%",
 				"&7%REASON% &8/ &7%START_DATE%",
 				"&7"})
-		SendableMessageManipulator layoutBody();
+		ComponentText layoutBody();
 		
 		@Override
 		@ConfKey("layout.footer")
 		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE%"})
-		SendableMessageManipulator layoutFooter();
+		ComponentText layoutFooter();
 		
 	}
 	

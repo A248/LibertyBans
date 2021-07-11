@@ -18,8 +18,8 @@
  */
 package space.arim.libertybans.core.config;
 
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.manipulator.SendableMessageManipulator;
+import net.kyori.adventure.text.Component;
+import space.arim.api.jsonchat.adventure.util.ComponentText;
 
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.punish.MiscUtil;
@@ -40,29 +40,29 @@ public interface AdditionsSection {
 
 	interface PunishmentAddition {
 		
-		SendableMessage usage();
+		Component usage();
 		
-		SendableMessage permissionCommand();
+		Component permissionCommand();
 		
-		SendableMessage permissionIpAddress();
+		Component permissionIpAddress();
 		
-		SendableMessageManipulator successMessage();
+		ComponentText successMessage();
 		
-		SendableMessageManipulator successNotification();
+		ComponentText successNotification();
 		
-		SendableMessageManipulator layout();
+		ComponentText layout();
 		
 	}
 	
 	interface PunishmentAdditionWithDurationPerm extends PunishmentAddition {
 		
-		SendableMessageManipulator permissionDuration();
+		ComponentText permissionDuration();
 		
 	}
 	
 	interface ExclusivePunishmentAddition extends PunishmentAdditionWithDurationPerm {
 		
-		SendableMessageManipulator conflicting();
+		ComponentText conflicting();
 		
 	}
 	
@@ -70,36 +70,36 @@ public interface AdditionsSection {
 		
 		@Override
 		@DefaultString("&cUsage: /ban &e<player> [time] <reason>&c.")
-		SendableMessage usage();
+		Component usage();
 		
 		@Override
 		@ConfKey("permission.command")
 		@DefaultString("&cYou may not ban other players.")
-		SendableMessage permissionCommand();
+		Component permissionCommand();
 		
 		@Override
 		@ConfKey("permission.ip-address")
 		@DefaultString("&cYou may not ban by IP address.")
-		SendableMessage permissionIpAddress();
+		Component permissionIpAddress();
 		
 		@Override
 		@ConfKey("permission.duration")
 		@DefaultString("&cYou may not ban other players for &e%DURATION%&c.")
-		SendableMessageManipulator permissionDuration();
+		ComponentText permissionDuration();
 
 		@Override
 		@DefaultString("&c&o%TARGET%&r&7 is already banned.")
-		SendableMessageManipulator conflicting();
+		ComponentText conflicting();
 		
 		@Override
 		@ConfKey("success.message")
 		@DefaultString("&aBanned &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.")
-		SendableMessageManipulator successMessage();
+		ComponentText successMessage();
 		
 		@Override
 		@ConfKey("success.notification")
 		@DefaultString("&c&o%OPERATOR%&r&7 banned &c&o%VICTIM%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.")
-		SendableMessageManipulator successNotification();
+		ComponentText successNotification();
 		
 		@Override
 		@DefaultStrings({
@@ -112,7 +112,7 @@ public interface AdditionsSection {
 				"&3&lAppeal Your Punishment",
 				"&cWebsite: &7website",
 				"&cDiscord: &7discord"})
-		SendableMessageManipulator layout();
+		ComponentText layout();
 		
 	}
 	
@@ -120,36 +120,36 @@ public interface AdditionsSection {
 		
 		@Override
 		@DefaultString("&cUsage: /mute &e<player> [time] <reason>&c.")
-		SendableMessage usage();
+		Component usage();
 		
 		@Override
 		@ConfKey("permission.command")
 		@DefaultString("&cYou may not mute other players.")
-		SendableMessage permissionCommand();
+		Component permissionCommand();
 		
 		@Override
 		@ConfKey("permission.ip-address")
 		@DefaultString("&cYou may not mute by IP address.")
-		SendableMessage permissionIpAddress();
+		Component permissionIpAddress();
 		
 		@Override
 		@ConfKey("permission.duration")
 		@DefaultString("&cYou may not mute other players for &e%DURATION%&c.")
-		SendableMessageManipulator permissionDuration();
+		ComponentText permissionDuration();
 
 		@Override
 		@DefaultString("&c&o%TARGET%&r&7 is already muted.")
-		SendableMessageManipulator conflicting();
+		ComponentText conflicting();
 		
 		@Override
 		@ConfKey("success.message")
 		@DefaultString("&aMuted &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.")
-		SendableMessageManipulator successMessage();
+		ComponentText successMessage();
 		
 		@Override
 		@ConfKey("success.notification")
 		@DefaultString("&c&o%OPERATOR%&r&7 muted &c&o%VICTIM%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.")
-		SendableMessageManipulator successNotification();
+		ComponentText successNotification();
 		
 		@Override
 		@DefaultStrings({
@@ -158,7 +158,7 @@ public interface AdditionsSection {
 				"&7",
 				"&c&lReason",
 				"&7%REASON%"})
-		SendableMessageManipulator layout();
+		ComponentText layout();
 		
 	}
 	
@@ -166,32 +166,32 @@ public interface AdditionsSection {
 		
 		@Override
 		@DefaultString("&cUsage: /warn &e<player> [time] <reason>&c.")
-		SendableMessage usage();
+		Component usage();
 		
 		@Override
 		@ConfKey("permission.command")
 		@DefaultString("&cYou may not warn other players.")
-		SendableMessage permissionCommand();
+		Component permissionCommand();
 		
 		@Override
 		@ConfKey("permission.ip-address")
 		@DefaultString("&cYou may not warn by IP address.")
-		SendableMessage permissionIpAddress();
+		Component permissionIpAddress();
 		
 		@Override
 		@ConfKey("permission.duration")
 		@DefaultString("&cYou may not warn other players for &e%DURATION%&c.")
-		SendableMessageManipulator permissionDuration();
+		ComponentText permissionDuration();
 		
 		@Override
 		@ConfKey("success.message")
 		@DefaultString("&aWarned &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.")
-		SendableMessageManipulator successMessage();
+		ComponentText successMessage();
 		
 		@Override
 		@ConfKey("success.notification")
 		@DefaultString("&c&o%OPERATOR%&r&7 warned &c&o%VICTIM%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.")
-		SendableMessageManipulator successNotification();
+		ComponentText successNotification();
 		
 		@Override
 		@DefaultStrings({
@@ -200,7 +200,7 @@ public interface AdditionsSection {
 				"&7",
 				"&c&lReason",
 				"&7%REASON%"})
-		SendableMessageManipulator layout();
+		ComponentText layout();
 		
 	}
 	
@@ -208,27 +208,27 @@ public interface AdditionsSection {
 		
 		@Override
 		@DefaultString("&cUsage: /kick &e<player> <reason>&c.")
-		SendableMessage usage();
+		Component usage();
 		
 		@Override
 		@ConfKey("permission.command")
 		@DefaultString("&cYou may not kick other players.")
-		SendableMessage permissionCommand();
+		Component permissionCommand();
 		
 		@Override
 		@ConfKey("permission.ip-address")
 		@DefaultString("&cYou may not kick by IP address.")
-		SendableMessage permissionIpAddress();
+		Component permissionIpAddress();
 		
 		@Override
 		@ConfKey("success.message")
 		@DefaultString("&aKicked &c&o%VICTIM%&r&a because of &e&o%REASON%&r&a.")
-		SendableMessageManipulator successMessage();
+		ComponentText successMessage();
 		
 		@Override
 		@ConfKey("success.notification")
 		@DefaultString("&c&o%OPERATOR%&r&7 kicked &c&o%VICTIM%&r&7 because of &e&o%REASON%&r&7.")
-		SendableMessageManipulator successNotification();
+		ComponentText successNotification();
 		
 		@Override
 		@DefaultStrings({
@@ -236,7 +236,7 @@ public interface AdditionsSection {
 				"&7",
 				"&c&lReason",
 				"&7%REASON%"})
-		SendableMessageManipulator layout();
+		ComponentText layout();
 		
 	}
 	

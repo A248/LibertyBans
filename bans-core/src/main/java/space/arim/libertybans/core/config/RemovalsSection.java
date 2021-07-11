@@ -18,8 +18,8 @@
  */
 package space.arim.libertybans.core.config;
 
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.manipulator.SendableMessageManipulator;
+import net.kyori.adventure.text.Component;
+import space.arim.api.jsonchat.adventure.util.ComponentText;
 
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.punish.MiscUtil;
@@ -34,17 +34,17 @@ public interface RemovalsSection {
 
 	interface PunishmentRemoval {
 		
-		SendableMessage usage();
+		Component usage();
 		
-		SendableMessage permissionCommand();
+		Component permissionCommand();
 		
-		SendableMessage permissionIpAddress();
+		Component permissionIpAddress();
 		
-		SendableMessageManipulator notFound();
+		ComponentText notFound();
 		
-		SendableMessageManipulator successMessage();
+		ComponentText successMessage();
 		
-		SendableMessageManipulator successNotification();
+		ComponentText successNotification();
 		
 	}
 	
@@ -52,32 +52,32 @@ public interface RemovalsSection {
 		
 		@Override
 		@DefaultString("&cUsage: /unban &e<player>&c.")
-		SendableMessage usage();
+		Component usage();
 		
 		@Override
 		@ConfKey("permission.command")
 		@DefaultString("&cYou may not unban other players.")
-		SendableMessage permissionCommand();
+		Component permissionCommand();
 		
 		@Override
 		@ConfKey("permission.ip-address")
 		@DefaultString("&cYou may not unban IP addresses.")
-		SendableMessage permissionIpAddress();
+		Component permissionIpAddress();
 		
 		@Override
 		@ConfKey("not-found")
 		@DefaultString("&c&o%TARGET%&r&7 is not banned.")
-		SendableMessageManipulator notFound();
+		ComponentText notFound();
 		
 		@Override
 		@ConfKey("success.message")
 		@DefaultString("&7Unbanned &c&o%VICTIM%&r&7.")
-		SendableMessageManipulator successMessage();
+		ComponentText successMessage();
 		
 		@Override
 		@ConfKey("success.notification")
 		@DefaultString("&c&o%UNOPERATOR%&r&7 unbanned &c&o%VICTIM%&r&7.")
-		SendableMessageManipulator successNotification();
+		ComponentText successNotification();
 		
 	}
 	
@@ -85,32 +85,32 @@ public interface RemovalsSection {
 		
 		@Override
 		@DefaultString("&cUsage: /unmute &e<player>&c.")
-		SendableMessage usage();
+		Component usage();
 		
 		@Override
 		@ConfKey("permission.command")
 		@DefaultString("&cYou may not unmute other players.")
-		SendableMessage permissionCommand();
+		Component permissionCommand();
 		
 		@Override
 		@ConfKey("permission.ip-address")
 		@DefaultString("&cYou may not unmute IP addresses.")
-		SendableMessage permissionIpAddress();
+		Component permissionIpAddress();
 		
 		@Override
 		@ConfKey("not-found")
 		@DefaultString("&c&o%TARGET%&r&7 is not muted.")
-		SendableMessageManipulator notFound();
+		ComponentText notFound();
 		
 		@Override
 		@ConfKey("success.message")
 		@DefaultString("&7Unmuted &c&o%VICTIM%&r&7.")
-		SendableMessageManipulator successMessage();
+		ComponentText successMessage();
 		
 		@Override
 		@ConfKey("success.notification")
 		@DefaultString("&c&o%UNOPERATOR%&r&7 unmuted &c&o%VICTIM%&r&7.")
-		SendableMessageManipulator successNotification();
+		ComponentText successNotification();
 		
 	}
 	
@@ -118,36 +118,36 @@ public interface RemovalsSection {
 		
 		@Override
 		@DefaultString("&cUsage: /unwarn &e<player> <id>&c.")
-		SendableMessage usage();
+		Component usage();
 		
 		@Override
 		@ConfKey("permission.command")
 		@DefaultString("&cYou may not unwarn other players.")
-		SendableMessage permissionCommand();
+		Component permissionCommand();
 		
 		@Override
 		@ConfKey("permission.ip-address")
 		@DefaultString("&cYou may not unwarn IP addresses.")
-		SendableMessage permissionIpAddress();
+		Component permissionIpAddress();
 		
 		@Override
 		@ConfKey("not-found")
 		@DefaultString("&c&o%TARGET%&r&7 does not have a warn by &c&o%ID%&r&7.")
-		SendableMessageManipulator notFound();
+		ComponentText notFound();
 		
 		@ConfKey("not-a-number")
 		@DefaultString("&c&o%ID_ARG%&r&7 is not a number.")
-		SendableMessageManipulator notANumber();
+		ComponentText notANumber();
 		
 		@Override
 		@ConfKey("success.message")
 		@DefaultString("&7Unwarned &c&o%VICTIM%&r&7.")
-		SendableMessageManipulator successMessage();
+		ComponentText successMessage();
 		
 		@Override
 		@ConfKey("success.notification")
 		@DefaultString("&c&o%UNOPERATOR%&r&7 unwarned &c&o%VICTIM%&r&7.")
-		SendableMessageManipulator successNotification();
+		ComponentText successNotification();
 		
 	}
 	

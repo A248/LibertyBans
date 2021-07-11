@@ -26,16 +26,16 @@ import space.arim.api.env.annote.PlatformPlayer;
 
 import space.arim.libertybans.api.NetworkAddress;
 
-public class ExactTargetMatcher extends AbstractTargetMatcher {
+public class ExactTargetMatcher<@PlatformPlayer P> extends AbstractTargetMatcher<P> {
 
 	private final InetAddress address;
 	
-	public ExactTargetMatcher(InetAddress address, Consumer<@PlatformPlayer Object> callback) {
+	public ExactTargetMatcher(InetAddress address, Consumer<P> callback) {
 		super(callback);
 		this.address = address;
 	}
 
-	public ExactTargetMatcher(NetworkAddress address, Consumer<@PlatformPlayer Object> callback) {
+	public ExactTargetMatcher(NetworkAddress address, Consumer<P> callback) {
 		this(address.toInetAddress(), callback);
 	}
 

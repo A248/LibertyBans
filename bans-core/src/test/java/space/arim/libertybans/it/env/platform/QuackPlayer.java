@@ -18,16 +18,20 @@
  */
 package space.arim.libertybans.it.env.platform;
 
+import net.kyori.adventure.audience.MessageType;
+import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import space.arim.api.chat.SendableMessage;
+import space.arim.api.jsonchat.adventure.implementor.MessageOnlyAudience;
 import space.arim.omnibus.util.ThisClass;
 
 import java.net.InetAddress;
 import java.util.Set;
 import java.util.UUID;
 
-public class QuackPlayer {
+public class QuackPlayer implements MessageOnlyAudience {
 
 	private final QuackPlatform platform;
 	private final UUID uuid;
@@ -38,9 +42,8 @@ public class QuackPlayer {
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
-	QuackPlayer(QuackPlatform platform,
-					   UUID uuid, String name, InetAddress address,
-					   Set<String> permissions) {
+	QuackPlayer(QuackPlatform platform, UUID uuid, String name, InetAddress address,
+				Set<String> permissions) {
 		this.platform = platform;
 		this.uuid = uuid;
 		this.name = name;
@@ -68,12 +71,22 @@ public class QuackPlayer {
 		return permissions.contains(permission);
 	}
 	
-	public void sendMessage(SendableMessage msg) {
-		logger.info("{} received '{}'", name, platform.toDisplay(msg));
+	public void kickPlayer(Component message) {
+		platform.remove(this, message);
 	}
-	
-	public void kickPlayer(SendableMessage msg) {
-		platform.remove(this, msg);
+
+	@Override
+	public void sendMessage(@NonNull Identity source, @NonNull Component message, @NonNull MessageType type) {
+		String displayMessage = platform.toDisplay(message);
+		if (source.equals(Identity.nil())) {
+			logger.info("{} received {} '{}'", name, type, displayMessage);
+		} else {
+			logger.info("{} received {} '{}' from {}", name, type, displayMessage, source);
+		}
 	}
-	
+
+	@Override
+	public UnsupportedOperationException notSupportedException() {
+		return new UnsupportedOperationException("Not supported");
+	}
 }

@@ -18,33 +18,31 @@
  */
 package space.arim.libertybans.env.spigot;
 
-import java.net.InetAddress;
-import java.util.UUID;
-
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.serialiser.LegacyCodeSerialiser;
-
-import space.arim.libertybans.core.punish.Enforcer;
-
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 import org.bukkit.plugin.java.JavaPlugin;
+import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.morepaperlib.adventure.MorePaperLibAdventure;
+
+import java.net.InetAddress;
+import java.util.UUID;
 
 @Singleton
-public class ConnectionListener extends SpigotParallelisedListener<AsyncPlayerPreLoginEvent, SendableMessage> {
+public class ConnectionListener extends SpigotParallelisedListener<AsyncPlayerPreLoginEvent, Component> {
 	
 	private final Enforcer enforcer;
+	private final MorePaperLibAdventure morePaperLibAdventure;
 	
 	@Inject
-	public ConnectionListener(JavaPlugin plugin, Enforcer enforcer) {
+	public ConnectionListener(JavaPlugin plugin, Enforcer enforcer, MorePaperLibAdventure morePaperLibAdventure) {
 		super(plugin);
 		this.enforcer = enforcer;
+		this.morePaperLibAdventure = morePaperLibAdventure;
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
@@ -66,12 +64,12 @@ public class ConnectionListener extends SpigotParallelisedListener<AsyncPlayerPr
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onConnectHigh(AsyncPlayerPreLoginEvent event) {
-		SendableMessage message = withdraw(event);
+		Component message = withdraw(event);
 		if (message == null) {
 			debugResultPermitted(event);
 			return;
 		}
-		event.disallow(Result.KICK_BANNED, LegacyCodeSerialiser.getInstance(ChatColor.COLOR_CHAR).serialise(message));
+		morePaperLibAdventure.disallowPreLoginEvent(event, Result.KICK_BANNED, message);
 	}
 	
 }

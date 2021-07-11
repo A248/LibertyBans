@@ -18,53 +18,53 @@
  */
 package space.arim.libertybans.env.velocity;
 
-import java.net.InetAddress;
-import java.util.UUID;
-import java.util.function.Consumer;
-
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.env.PlatformHandle;
-import space.arim.api.env.annote.PlatformPlayer;
-
+import net.kyori.adventure.text.Component;
+import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.TargetMatcher;
 
-import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ProxyServer;
+import java.net.InetAddress;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 @Singleton
-public class VelocityEnforcer extends AbstractEnvEnforcer {
+public class VelocityEnforcer extends AbstractEnvEnforcer<CommandSource, Player> {
 
-	private final PlatformHandle handle;
 	private final ProxyServer server;
 	
 	@Inject
-	public VelocityEnforcer(InternalFormatter formatter, PlatformHandle handle, ProxyServer server) {
-		super(formatter, handle);
-		this.handle = handle;
+	public VelocityEnforcer(InternalFormatter formatter, ProxyServer server) {
+		super(formatter, AudienceRepresenter.identity());
 		this.server = server;
 	}
 
 	@Override
-	protected void sendToThoseWithPermission0(String permission, SendableMessage message) {
+	protected void sendToThoseWithPermissionNoPrefix(String permission, Component message) {
 		for (Player player : server.getAllPlayers()) {
 			if (player.hasPermission(permission)) {
-				handle.sendMessage(player, message);
+				player.sendMessage(message);
 			}
 		}
 	}
 
 	@Override
-	public void doForPlayerIfOnline(UUID uuid, Consumer<@PlatformPlayer Object> callback) {
+	public void kickPlayer(Player player, Component message) {
+		player.disconnect(message);
+	}
+
+	@Override
+	public void doForPlayerIfOnline(UUID uuid, Consumer<Player> callback) {
 		server.getPlayer(uuid).ifPresent(callback);
 	}
 
 	@Override
-	public void enforceMatcher(TargetMatcher matcher) {
+	public void enforceMatcher(TargetMatcher<Player> matcher) {
 		for (Player player : server.getAllPlayers()) {
 			if (matcher.matches(player.getUniqueId(), player.getRemoteAddress().getAddress())) {
 				matcher.callback().accept(player);
@@ -73,13 +73,13 @@ public class VelocityEnforcer extends AbstractEnvEnforcer {
 	}
 
 	@Override
-	public UUID getUniqueIdFor(@PlatformPlayer Object player) {
-		return ((Player) player).getUniqueId();
+	public UUID getUniqueIdFor(Player player) {
+		return player.getUniqueId();
 	}
 
 	@Override
-	public InetAddress getAddressFor(@PlatformPlayer Object player) {
-		return ((Player) player).getRemoteAddress().getAddress();
+	public InetAddress getAddressFor(Player player) {
+		return player.getRemoteAddress().getAddress();
 	}
 
 }

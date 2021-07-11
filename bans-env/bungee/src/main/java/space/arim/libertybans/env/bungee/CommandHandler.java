@@ -19,21 +19,19 @@
 package space.arim.libertybans.env.bungee;
 
 import jakarta.inject.Inject;
-
-import space.arim.libertybans.core.commands.CommandPackage;
-import space.arim.libertybans.core.env.AbstractCmdSender;
-import space.arim.omnibus.util.ArraysUtil;
-
-import space.arim.libertybans.core.commands.ArrayCommandPackage;
-import space.arim.libertybans.core.commands.Commands;
-import space.arim.libertybans.core.env.CmdSender;
-import space.arim.libertybans.core.env.PlatformListener;
-
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.TabExecutor;
+import space.arim.api.env.AudienceRepresenter;
+import space.arim.libertybans.core.commands.ArrayCommandPackage;
+import space.arim.libertybans.core.commands.CommandPackage;
+import space.arim.libertybans.core.commands.Commands;
+import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.env.PlatformListener;
+import space.arim.omnibus.util.ArraysUtil;
 
 public class CommandHandler extends Command implements TabExecutor, PlatformListener {
 
@@ -48,23 +46,25 @@ public class CommandHandler extends Command implements TabExecutor, PlatformList
 	
 	public static class CommandHelper {
 
-		private final AbstractCmdSender.CmdSenderHelper senderHelper;
+		private final InternalFormatter formatter;
+		private final AudienceRepresenter<CommandSender> audienceRepresenter;
 		private final Commands commands;
 		final Plugin plugin;
 		
 		@Inject
-		public CommandHelper(AbstractCmdSender.CmdSenderHelper senderHelper, Commands commands,
-							 Plugin plugin) {
-			this.senderHelper = senderHelper;
+		public CommandHelper(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
+							 Commands commands, Plugin plugin) {
+			this.formatter = formatter;
+			this.audienceRepresenter = audienceRepresenter;
 			this.commands = commands;
 			this.plugin = plugin;
 		}
 
 		private CmdSender adaptSender(CommandSender platformSender) {
 			if (platformSender instanceof ProxiedPlayer) {
-				return new BungeeCmdSender.PlayerSender(senderHelper, (ProxiedPlayer) platformSender);
+				return new BungeeCmdSender.PlayerSender(formatter, audienceRepresenter, (ProxiedPlayer) platformSender);
 			}
-			return new BungeeCmdSender.ConsoleSender(senderHelper, platformSender, plugin);
+			return new BungeeCmdSender.ConsoleSender(formatter, audienceRepresenter, platformSender, plugin);
 		}
 
 		void execute(CommandSender platformSender, CommandPackage command) {

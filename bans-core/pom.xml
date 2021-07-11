@@ -64,6 +64,11 @@
 			<artifactId>mockito-junit-jupiter</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>net.kyori</groupId>
+			<artifactId>adventure-text-serializer-plain</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 		</dependency>
@@ -120,6 +125,10 @@
 		<dependency>
 			<groupId>space.arim.api</groupId>
 			<artifactId>arimapi-env</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.api</groupId>
+			<artifactId>arimapi-util-dazzleconf</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.api</groupId>

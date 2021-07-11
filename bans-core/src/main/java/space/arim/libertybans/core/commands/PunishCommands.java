@@ -18,7 +18,8 @@
  */
 package space.arim.libertybans.core.commands;
 
-import space.arim.api.chat.SendableMessage;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.DraftPunishment;
@@ -181,7 +182,7 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 		// Outcomes
 
 		private void sendConflict(String targetArg) {
-			SendableMessage message;
+			ComponentLike message;
 			if (type().isSingular()) {
 				message = ((ExclusivePunishmentAddition) section).conflicting().replaceText("%TARGET%", targetArg);
 			} else {
@@ -193,9 +194,9 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 		private CentralisedFuture<?> enforceAndSendSuccess(Punishment punishment) {
 
 			CentralisedFuture<?> enforcement = punishment.enforcePunishment().toCompletableFuture();
-			CentralisedFuture<SendableMessage> futureMessage = formatter.formatWithPunishment(
+			CentralisedFuture<Component> futureMessage = formatter.formatWithPunishment(
 					section.successMessage(), punishment);
-			CentralisedFuture<SendableMessage> futureNotify = formatter.formatWithPunishment(
+			CentralisedFuture<Component> futureNotify = formatter.formatWithPunishment(
 					section.successNotification(), punishment);
 
 			var completion = futuresFactory().allOf(enforcement, futureMessage, futureNotify).thenRun(() -> {

@@ -18,15 +18,15 @@
  */
 package space.arim.libertybans.core.commands.extra;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.manipulator.SendableMessageManipulator;
-import space.arim.api.chat.serialiser.LegacyCodeSerialiser;
+import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.NetworkAddress;
@@ -34,6 +34,7 @@ import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.core.commands.ComponentMatcher;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.env.CmdSender;
@@ -49,6 +50,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -68,7 +70,7 @@ public class StandardArgumentParserTest {
 	private final MessagesConfig messagesConfig;
 	private final MessagesConfig.All.NotFound notFound;
 
-	private final SendableMessage notFoundMessage = LegacyCodeSerialiser.getInstance('&').deserialise("&cNot found");
+	private final Component notFoundMessage = Component.text("Not found", NamedTextColor.RED);
 
 	public StandardArgumentParserTest(@Mock Configs configs, @Mock UUIDManager uuidManager, @Mock CmdSender sender,
 									  @Mock MessagesConfig messagesConfig, @Mock MessagesConfig.All.NotFound notFound) {
@@ -135,12 +137,12 @@ public class StandardArgumentParserTest {
 		public void unknownPlayerVictimForName() {
 			String name = "A248";
 			when(uuidManager.lookupUUID(name)).thenReturn(completedFuture(Optional.empty()));
-			when(notFound.player()).thenReturn(SendableMessageManipulator.create(notFoundMessage));
+			when(notFound.player()).thenReturn(ComponentText.create(notFoundMessage));
 
 			assertNull(parseVictimByName(name));
 
 			verify(uuidManager).lookupUUID(name);
-			verify(sender).sendMessage(notFoundMessage);
+			verify(sender).sendMessage(argThat(new ComponentMatcher<>(notFoundMessage)));
 		}
 
 	}
@@ -187,12 +189,12 @@ public class StandardArgumentParserTest {
 			String name = "A248";
 			mockConsoleArguments(Set.of());
 			when(uuidManager.lookupUUID(name)).thenReturn(completedFuture(Optional.empty()));
-			when(notFound.player()).thenReturn(SendableMessageManipulator.create(notFoundMessage));
+			when(notFound.player()).thenReturn(ComponentText.create(notFoundMessage));
 
 			assertNull(parseOperatorByName(name));
 
 			verify(uuidManager).lookupUUID(name);
-			verify(sender).sendMessage(notFoundMessage);
+			verify(sender).sendMessage(argThat(new ComponentMatcher<>(notFoundMessage)));
 		}
 
 		@Test
@@ -236,12 +238,12 @@ public class StandardArgumentParserTest {
 		public void unknownAddressVictimForName() {
 			String name = "A248";
 			when(uuidManager.lookupAddress(name)).thenReturn(completedFuture(null));
-			when(notFound.playerOrAddress()).thenReturn(SendableMessageManipulator.create(notFoundMessage));
+			when(notFound.playerOrAddress()).thenReturn(ComponentText.create(notFoundMessage));
 
 			assertNull(parseAddressVictim(name));
 
 			verify(uuidManager).lookupAddress(name);
-			verify(sender).sendMessage(notFoundMessage);
+			verify(sender).sendMessage(argThat(new ComponentMatcher<>(notFoundMessage)));
 		}
 
 	}

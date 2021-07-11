@@ -20,8 +20,7 @@ package space.arim.libertybans.core.env;
 
 import java.util.Set;
 
-import space.arim.api.chat.SendableMessage;
-
+import net.kyori.adventure.text.ComponentLike;
 import space.arim.libertybans.api.Operator;
 
 public interface CmdSender {
@@ -30,15 +29,13 @@ public interface CmdSender {
 	
 	boolean hasPermission(String permission);
 	
-	void sendMessageNoPrefix(SendableMessage message);
+	void sendMessageNoPrefix(ComponentLike message);
 	
-	void sendMessage(SendableMessage message);
+	void sendMessage(ComponentLike message);
 	
 	void sendLiteralMessageNoPrefix(String messageToParse);
 	
 	void sendLiteralMessage(String messageToParse);
-	
-	Object getRawSender();
 	
 	/**
 	 * Gets the names of other players on the same server as this player. <br>

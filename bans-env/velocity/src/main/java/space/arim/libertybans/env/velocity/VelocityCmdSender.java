@@ -22,11 +22,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.inject.Inject;
-
+import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
+import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractCmdSender;
 
 import com.velocitypowered.api.command.CommandSource;
@@ -34,15 +34,10 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 
-public abstract class VelocityCmdSender extends AbstractCmdSender {
+public abstract class VelocityCmdSender extends AbstractCmdSender<CommandSource> {
 
-	VelocityCmdSender(CmdSenderHelper senderHelper, CommandSource sender, Operator operator) {
-		super(senderHelper, sender, operator);
-	}
-
-	@Override
-	public CommandSource getRawSender() {
-		return (CommandSource) super.getRawSender();
+	VelocityCmdSender(InternalFormatter formatter, CommandSource sender, Operator operator) {
+		super(formatter, AudienceRepresenter.identity(), sender, operator);
 	}
 	
 	@Override
@@ -63,8 +58,8 @@ public abstract class VelocityCmdSender extends AbstractCmdSender {
 	
 	static class PlayerSender extends VelocityCmdSender {
 
-		PlayerSender(CmdSenderHelper senderHelper, Player player) {
-			super(senderHelper, player, PlayerOperator.of(player.getUniqueId()));
+		PlayerSender(InternalFormatter formatter, Player player) {
+			super(formatter, player, PlayerOperator.of(player.getUniqueId()));
 		}
 		
 		@Override
@@ -89,8 +84,8 @@ public abstract class VelocityCmdSender extends AbstractCmdSender {
 
 		private final ProxyServer server;
 		
-		ConsoleSender(CmdSenderHelper senderHelper, CommandSource sender, ProxyServer server) {
-			super(senderHelper, sender, ConsoleOperator.INSTANCE);
+		ConsoleSender(InternalFormatter formatter, CommandSource sender, ProxyServer server) {
+			super(formatter, sender, ConsoleOperator.INSTANCE);
 			this.server = server;
 		}
 		
