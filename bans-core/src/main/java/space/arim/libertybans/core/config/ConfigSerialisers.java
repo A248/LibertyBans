@@ -45,7 +45,6 @@ final class ConfigSerialisers {
 	static void addTo(ConfigurationOptions.Builder builder) {
 		builder.addSerialisers(
 				new ComponentValueSerializer(new ChatMessageComponentSerializer()),
-				new TextComponentValueSerializer(),
 				new ComponentTextSerializer(),
 				new DateTimeFormatterSerialiser(),
 				new ZoneIdSerialiser());
@@ -90,28 +89,6 @@ final class ConfigSerialisers {
 			return lines;
 		}
 		
-	}
-
-	private static class TextComponentValueSerializer implements ValueSerialiser<TextComponent> {
-
-		@Override
-		public Class<TextComponent> getTargetClass() {
-			return TextComponent.class;
-		}
-
-		@Override
-		public TextComponent deserialise(FlexibleType flexibleType) throws BadValueException {
-			Component deserialized = flexibleType.getObject(Component.class);
-			if (!(deserialized instanceof TextComponent)) {
-				throw flexibleType.badValueExceptionBuilder().message("Component " + deserialized + " is not a text component").build();
-			}
-			return (TextComponent) deserialized;
-		}
-
-		@Override
-		public Object serialise(TextComponent value, Decomposer decomposer) {
-			return decomposer.decompose(Component.class, value);
-		}
 	}
 	
 	private static class DateTimeFormatterSerialiser implements ValueSerialiser<DateTimeFormatterWithPattern> {

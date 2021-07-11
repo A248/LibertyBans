@@ -20,10 +20,11 @@ package space.arim.libertybans.core.env;
 
 import net.kyori.adventure.text.ComponentLike;
 import space.arim.api.env.AudienceRepresenter;
+import space.arim.api.env.annote.PlatformCommandSender;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.core.config.InternalFormatter;
 
-public abstract class AbstractCmdSender<C> implements CmdSender {
+public abstract class AbstractCmdSender<@PlatformCommandSender C> implements CmdSender {
 	
 	private final InternalFormatter formatter;
 	private final AudienceRepresenter<C> audienceRepresenter;

@@ -72,7 +72,7 @@ public class Formatter implements InternalFormatter {
 	}
 
 	Formatter(FactoryOfTheFuture futuresFactory, Configs configs, InternalScopeManager scopeManager,
-					 UUIDManager uuidManager, Time time, ComponentSerializer<Component, ? extends Component, String> messageParser) {
+			  UUIDManager uuidManager, Time time, ComponentSerializer<Component, ? extends Component, String> messageParser) {
 		this.futuresFactory = futuresFactory;
 		this.configs = configs;
 		this.scopeManager = scopeManager;
@@ -118,7 +118,6 @@ public class Formatter implements InternalFormatter {
 
 	private CentralisedFuture<Component> formatWithPunishment(ComponentText componentText,
 															  Punishment punishment, Operator unOperator) {
-
 		Map<FutureReplaceable, CentralisedFuture<String>> futureReplacements = new EnumMap<>(FutureReplaceable.class);
 		for (FutureReplaceable futureReplaceable : FutureReplaceable.values()) {
 
