@@ -49,10 +49,16 @@ enum UsageSection {
 		String name = name();
 		String headerString = "&b" + name.charAt(0) + name.substring(1).toLowerCase(Locale.ROOT) + " commands:";
 
-		ChatMessageComponentSerializer serialiser = new ChatMessageComponentSerializer();
-		Component header = serialiser.deserialize(headerString);
-		Component body = serialiser.deserialize("\n" + String.join("\n", commands));
-		content = TextComponent.ofChildren(header, body);
+		ChatMessageComponentSerializer serializer = new ChatMessageComponentSerializer();
+		Component[] components = new Component[1 + (2 * commands.length)];
+		components[0] = serializer.deserialize(headerString);
+		int n = 1;
+		for (String command : commands) {
+			components[n] = Component.newline();
+			components[n + 1] = serializer.deserialize(command);
+			n += 2;
+		}
+		content = TextComponent.ofChildren(components);
 	}
 	
 	Component content() {

@@ -65,6 +65,11 @@
 		</dependency>
 		<dependency>
 			<groupId>net.kyori</groupId>
+			<artifactId>adventure-text-serializer-legacy</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.kyori</groupId>
 			<artifactId>adventure-text-serializer-plain</artifactId>
 			<scope>test</scope>
 		</dependency>
