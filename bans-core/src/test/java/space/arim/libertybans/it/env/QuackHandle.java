@@ -18,21 +18,13 @@
  */
 package space.arim.libertybans.it.env;
 
-import space.arim.api.chat.SendableMessage;
 import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.PlatformPluginInfo;
-import space.arim.api.env.annote.PlatformCommandSender;
-import space.arim.api.env.annote.PlatformPlayer;
-import space.arim.api.env.realexecutor.RealExecutorFinder;
 import space.arim.libertybans.it.env.platform.QuackPlatform;
-import space.arim.libertybans.it.env.platform.QuackPlayer;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.SimplifiedEnhancedExecutor;
-
-import java.util.concurrent.Executor;
-import java.util.function.Consumer;
 
 public class QuackHandle implements PlatformHandle {
 	
@@ -40,28 +32,6 @@ public class QuackHandle implements PlatformHandle {
 	
 	QuackHandle(QuackPlatform platform) {
 		this.platform = platform;
-	}
-
-	@Override
-	public void sendMessage(@PlatformCommandSender Object recipient, SendableMessage message) {
-		((QuackPlayer) recipient).sendMessage(message);
-	}
-
-	@Override
-	public void disconnectUser(@PlatformPlayer Object user, SendableMessage reason) {
-		((QuackPlayer) user).kickPlayer(reason);
-	}
-
-	@Override
-	public RealExecutorFinder getRealExecutorFinder() {
-		return new RealExecutorFinder() {
-
-			@Override
-			public Executor findExecutor(Consumer<Exception> exceptionHandler) {
-				return null;
-			}
-			
-		};
 	}
 
 	@Override
@@ -82,6 +52,11 @@ public class QuackHandle implements PlatformHandle {
 				new Thread(command).start();
 			}
 		};
+	}
+
+	@Override
+	public String getPlatformVersion() {
+		return "QuackPlatform-SNAPSHOT";
 	}
 
 }

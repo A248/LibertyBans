@@ -23,10 +23,10 @@ import java.net.InetAddress;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import net.kyori.adventure.text.Component;
+import org.bukkit.command.CommandSender;
+import space.arim.api.env.AudienceRepresenter;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.env.PlatformHandle;
 
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.punish.Enforcer;
@@ -44,21 +44,21 @@ import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 @Singleton
-public class ChatListener extends SpigotParallelisedListener<PlayerEvent, SendableMessage> {
+public class ChatListener extends SpigotParallelisedListener<PlayerEvent, Component> {
 
 	private final FuturePoster futurePoster;
 	private final Enforcer enforcer;
 	private final Configs configs;
-	private final PlatformHandle handle;
+	private final AudienceRepresenter<CommandSender> audienceRepresenter;
 
 	@Inject
 	public ChatListener(JavaPlugin plugin, FuturePoster futurePoster, Enforcer enforcer,
-			Configs configs, PlatformHandle handle) {
+			Configs configs, AudienceRepresenter<CommandSender> audienceRepresenter) {
 		super(plugin);
 		this.futurePoster = futurePoster;
 		this.enforcer = enforcer;
 		this.configs = configs;
-		this.handle = handle;
+		this.audienceRepresenter = audienceRepresenter;
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
@@ -98,12 +98,12 @@ public class ChatListener extends SpigotParallelisedListener<PlayerEvent, Sendab
 	}
 	
 	private <E extends PlayerEvent & Cancellable> void combinedWithdraw(E event) {
-		CentralisedFuture<SendableMessage> futureMessage = withdrawRaw(event);
+		CentralisedFuture<Component> futureMessage = withdrawRaw(event);
 		if (futureMessage == null) {
 			absentFutureHandler(event);
 			return;
 		}
-		SendableMessage message;
+		Component message;
 		if (event.isAsynchronous() || futureMessage.isDone()) {
 			message = futureMessage.join();
 		} else {
@@ -128,7 +128,7 @@ public class ChatListener extends SpigotParallelisedListener<PlayerEvent, Sendab
 			return;
 		}
 		event.setCancelled(true);
-		handle.sendMessage(event.getPlayer(), message);
+		audienceRepresenter.toAudience(event.getPlayer()).sendMessage(message);
 	}
 	
 }

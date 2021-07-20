@@ -19,13 +19,18 @@
 package space.arim.libertybans.env.spigot;
 
 import jakarta.inject.Singleton;
+import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
+import space.arim.api.env.AudienceRepresenter;
+import space.arim.api.env.bukkit.BukkitAudienceRepresenter;
 import space.arim.api.env.bukkit.BukkitPlatformHandle;
 import space.arim.api.env.PlatformHandle;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.importing.PlatformImportSource;
+import space.arim.morepaperlib.MorePaperLib;
+import space.arim.morepaperlib.adventure.MorePaperLibAdventure;
 
 public class SpigotBindModule {
 
@@ -34,11 +39,15 @@ public class SpigotBindModule {
 		return BukkitPlatformHandle.create(plugin);
 	}
 
+	public AudienceRepresenter<CommandSender> audienceRepresenter() {
+		return new BukkitAudienceRepresenter();
+	}
+
 	public Environment environment(SpigotEnv env) {
 		return env;
 	}
 
-	public EnvEnforcer enforcer(SpigotEnforcer enforcer) {
+	public EnvEnforcer<?> enforcer(SpigotEnforcer enforcer) {
 		return enforcer;
 	}
 
@@ -49,6 +58,16 @@ public class SpigotBindModule {
 	@Singleton
 	public CommandMapHelper commandMapHelper(SimpleCommandMapHelper scmh) {
 		return new CachingCommandMapHelper(scmh);
+	}
+
+	@Singleton
+	public MorePaperLib morePaperLib(JavaPlugin plugin) {
+		return new MorePaperLib(plugin);
+	}
+
+	@Singleton
+	public MorePaperLibAdventure morePaperLibAdventure(MorePaperLib morePaperLib) {
+		return new MorePaperLibAdventure(morePaperLib);
 	}
 
 	public PlatformImportSource platformImportSource(BukkitImportSource importSource) {

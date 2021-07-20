@@ -25,16 +25,12 @@ import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.serialiser.SimpleTextSerialiser;
-import space.arim.api.env.chat.AdventureTextConverter;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.punish.Enforcer;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -61,14 +57,12 @@ public class ConnectionListenerTest {
 	private final PluginContainer plugin;
 	private final ProxyServer server;
 	private final Enforcer enforcer;
-	private final AdventureTextConverter textConverter;
 
 	public ConnectionListenerTest(@Mock PluginContainer plugin, @Mock ProxyServer server,
-								  @Mock Enforcer enforcer, @Mock AdventureTextConverter textConverter) {
+								  @Mock Enforcer enforcer) {
 		this.plugin = plugin;
 		this.server = server;
 		this.enforcer = enforcer;
-		this.textConverter = textConverter;
 	}
 
 	@BeforeEach
@@ -90,19 +84,18 @@ public class ConnectionListenerTest {
 		return mock;
 	}
 
-	private void fixedResult(SendableMessage message, TextComponent component) {
+	private void fixedResult(Component message) {
 		var future = futuresFactory.completedFuture(message);
 		when(enforcer.executeAndCheckConnection(any(), any(), (InetAddress) any())).thenReturn(future);
 		when(enforcer.executeAndCheckConnection(any(), any(), (NetworkAddress) any())).thenReturn(future);
-		when(textConverter.convert((SendableMessage) any())).thenReturn(component);
 	}
 
 	private void allowedResult() {
-		fixedResult(null, null);
+		fixedResult(null);
 	}
 
 	private void deniedResult(String text) {
-		fixedResult(SimpleTextSerialiser.getInstance().deserialise(text), Component.text(text));
+		fixedResult(Component.text(text));
 	}
 
 	@Test
@@ -159,7 +152,7 @@ public class ConnectionListenerTest {
 
 	@Test
 	public void deniedAndReallowedBySomeonesBrokenPlugin() {
-		deniedResult("denied entry"); // Should be irrelevant
+		deniedResult("denied entry");
 		Player player = mockPlayer();
 		LoginEvent event = new LoginEvent(player);
 		var denial = ResultedEvent.ComponentResult.denied(Component.text("denial"));

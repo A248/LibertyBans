@@ -39,7 +39,7 @@ public class VelocityBindModule {
 		return env;
 	}
 
-	public EnvEnforcer enforcer(VelocityEnforcer enforcer) {
+	public EnvEnforcer<?> enforcer(VelocityEnforcer enforcer) {
 		return enforcer;
 	}
 

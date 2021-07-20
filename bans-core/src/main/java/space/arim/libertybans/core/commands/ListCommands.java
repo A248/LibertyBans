@@ -29,11 +29,12 @@ import java.util.function.UnaryOperator;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.manipulator.SendableMessageManipulator;
+import space.arim.api.jsonchat.adventure.util.ComponentText;
 
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
@@ -178,8 +179,8 @@ public class ListCommands extends AbstractSubCommandGroup {
 
 		private void noPunishmentsOnThisPage(int page) {
 			if (page == 0) { // No pages whatsoever
-				SendableMessageManipulator noPages = section.noPages();
-				SendableMessage message = (target == null) ? noPages.getMessage() : noPages.replaceText("%TARGET%", target);
+				ComponentText noPages = section.noPages();
+				ComponentLike message = (target == null) ? noPages : noPages.replaceText("%TARGET%", target);
 				sender().sendMessage(message);
 
 			} else { // Page does not exist
@@ -197,8 +198,8 @@ public class ListCommands extends AbstractSubCommandGroup {
 				return completedFuture(null);
 			}
 
-			SendableMessageManipulator body = section.layoutBody();
-			Map<Punishment, CentralisedFuture<SendableMessage>> entries = new HashMap<>(punishments.size());
+			ComponentText body = section.layoutBody();
+			Map<Punishment, CentralisedFuture<Component>> entries = new HashMap<>(punishments.size());
 			for (Punishment punishment : punishments) {
 				entries.put(punishment, formatter.formatWithPunishment(body, punishment));
 			}
@@ -214,8 +215,8 @@ public class ListCommands extends AbstractSubCommandGroup {
 				}
 			}
 			UnaryOperator<String> headerFooterReplacer = new HeaderFooterReplacer();
-			SendableMessage header = section.layoutHeader().replaceText(headerFooterReplacer);
-			SendableMessage footer = section.layoutFooter().replaceText(headerFooterReplacer);
+			ComponentLike header = section.layoutHeader().replaceText(headerFooterReplacer);
+			ComponentLike footer = section.layoutFooter().replaceText(headerFooterReplacer);
 
 			return futuresFactory().allOf(entries.values()).thenRun(() -> {
 				sender().sendMessage(header);

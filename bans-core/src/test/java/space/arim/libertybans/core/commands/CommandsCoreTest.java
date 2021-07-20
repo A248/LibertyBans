@@ -19,12 +19,11 @@
 
 package space.arim.libertybans.core.commands;
 
+import net.kyori.adventure.text.Component;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.serialiser.SimpleTextSerialiser;
 import space.arim.libertybans.core.commands.usage.UsageGlossary;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MessagesConfig;
@@ -56,7 +55,7 @@ public class CommandsCoreTest {
 
 	@Test
 	public void noPermission() {
-		SendableMessage noPermMessage = SimpleTextSerialiser.getInstance().deserialise("No permission");
+		Component noPermMessage = Component.text("No permission");
 
 		MessagesConfig messagesConfig = mock(MessagesConfig.class);
 		MessagesConfig.All all = mock(MessagesConfig.All.class);

@@ -18,40 +18,39 @@
  */
 package space.arim.libertybans.env.spigot;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Server;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import space.arim.api.env.AudienceRepresenter;
+import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.env.AbstractEnvEnforcer;
+import space.arim.libertybans.core.env.TargetMatcher;
+import space.arim.morepaperlib.adventure.MorePaperLibAdventure;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
+
 import java.net.InetAddress;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
-
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.env.PlatformHandle;
-import space.arim.api.env.annote.PlatformPlayer;
-
-import space.arim.libertybans.core.config.InternalFormatter;
-import space.arim.libertybans.core.env.AbstractEnvEnforcer;
-import space.arim.libertybans.core.env.TargetMatcher;
-
-import org.bukkit.Server;
-import org.bukkit.entity.Player;
-
 @Singleton
-public class SpigotEnforcer extends AbstractEnvEnforcer {
-	
+public class SpigotEnforcer extends AbstractEnvEnforcer<CommandSender, Player> {
+
 	private final FactoryOfTheFuture futuresFactory;
-	private final PlatformHandle handle;
 	private final Server server;
+	private final MorePaperLibAdventure morePaperLibAdventure;
 
 	@Inject
-	public SpigotEnforcer(InternalFormatter formatter, PlatformHandle handle, FactoryOfTheFuture futuresFactory,
-			Server server) {
-		super(formatter, handle);
+	public SpigotEnforcer(InternalFormatter formatter,
+						  AudienceRepresenter<CommandSender> audienceRepresenter,
+						  FactoryOfTheFuture futuresFactory, Server server,
+						  MorePaperLibAdventure morePaperLibAdventure) {
+		super(formatter, audienceRepresenter);
 		this.futuresFactory = futuresFactory;
-		this.handle = handle;
 		this.server = server;
+		this.morePaperLibAdventure = morePaperLibAdventure;
 	}
 	
 	private void runSyncNow(Runnable command) {
@@ -59,18 +58,23 @@ public class SpigotEnforcer extends AbstractEnvEnforcer {
 	}
 	
 	@Override
-	protected void sendToThoseWithPermission0(String permission, SendableMessage message) {
+	protected void sendToThoseWithPermissionNoPrefix(String permission, Component message) {
 		runSyncNow(() -> {
 			for (Player player : server.getOnlinePlayers()) {
 				if (player.hasPermission(permission)) {
-					handle.sendMessage(player, message);
+					audienceRepresenter().toAudience(player).sendMessage(message);
 				}
 			}
 		});
 	}
-	
+
 	@Override
-	public void doForPlayerIfOnline(UUID uuid, Consumer<@PlatformPlayer Object> callback) {
+	public void kickPlayer(Player player, Component message) {
+		morePaperLibAdventure.kickPlayer(player, message);
+	}
+
+	@Override
+	public void doForPlayerIfOnline(UUID uuid, Consumer<Player> callback) {
 		runSyncNow(() -> {
 			Player player = server.getPlayer(uuid);
 			if (player != null) {
@@ -80,7 +84,7 @@ public class SpigotEnforcer extends AbstractEnvEnforcer {
 	}
 
 	@Override
-	public void enforceMatcher(TargetMatcher matcher) {
+	public void enforceMatcher(TargetMatcher<Player> matcher) {
 		runSyncNow(() -> {
 			for (Player player : server.getOnlinePlayers()) {
 				if (matcher.matches(player.getUniqueId(), player.getAddress().getAddress())) {
@@ -91,13 +95,13 @@ public class SpigotEnforcer extends AbstractEnvEnforcer {
 	}
 
 	@Override
-	public UUID getUniqueIdFor(@PlatformPlayer Object player) {
-		return ((Player) player).getUniqueId();
+	public UUID getUniqueIdFor(Player player) {
+		return player.getUniqueId();
 	}
 
 	@Override
-	public InetAddress getAddressFor(@PlatformPlayer Object player) {
-		return ((Player) player).getAddress().getAddress();
+	public InetAddress getAddressFor(Player player) {
+		return player.getAddress().getAddress();
 	}
 
 }

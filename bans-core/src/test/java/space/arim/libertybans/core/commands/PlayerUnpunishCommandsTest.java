@@ -19,14 +19,13 @@
 
 package space.arim.libertybans.core.commands;
 
+import net.kyori.adventure.text.Component;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.manipulator.SendableMessageManipulator;
-import space.arim.api.chat.serialiser.JsonSkSerialiser;
+import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.NetworkAddress;
@@ -48,6 +47,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -59,12 +59,12 @@ public class PlayerUnpunishCommandsTest {
 	private PlayerUnpunishCommands commands;
 	private final PunishmentRevoker revoker;
 	private final InternalFormatter formatter;
-	private final EnvEnforcer envEnforcer;
+	private final EnvEnforcer<?> envEnforcer;
 	private final FactoryOfTheFuture futuresFactory = new IndifferentFactoryOfTheFuture();
 
 	public PlayerUnpunishCommandsTest(@Mock PunishmentRevoker revoker,
 									  @Mock InternalFormatter formatter,
-									  @Mock EnvEnforcer envEnforcer) {
+									  @Mock EnvEnforcer<?> envEnforcer) {
 		this.revoker = revoker;
 		this.formatter = formatter;
 		this.envEnforcer = envEnforcer;
@@ -87,10 +87,10 @@ public class PlayerUnpunishCommandsTest {
 		when(sender.hasPermission(any())).thenReturn(true);
 		when(argParser.parseVictimByName(sender, address)).thenReturn(futuresFactory.completedFuture(victim));
 		when(configs.getMessagesConfig()).thenReturn(messagesConfig);
-		SendableMessage notFoundMsg = JsonSkSerialiser.getInstance().deserialise("Not found");
+		Component notFoundMsg = Component.text("Not found");
 		{
 			RemovalsSection.PunishmentRemoval punishmentRemoval = mock(RemovalsSection.PunishmentRemoval.class);
-			when(punishmentRemoval.notFound()).thenReturn(SendableMessageManipulator.create(notFoundMsg));
+			when(punishmentRemoval.notFound()).thenReturn(ComponentText.create(notFoundMsg));
 			RemovalsSection removalsSection = mock(RemovalsSection.class);
 			when(removalsSection.forType(PunishmentType.BAN)).thenReturn(punishmentRemoval);
 			when(messagesConfig.removals()).thenReturn(removalsSection);
@@ -100,6 +100,6 @@ public class PlayerUnpunishCommandsTest {
 
 		commands.execute(sender, new ArrayCommandPackage("libertybans", address), "unban").execute();
 		verify(revoker).revokeByTypeAndVictim(PunishmentType.BAN, victim);
-		verify(sender).sendMessage(notFoundMsg);
+		verify(sender).sendMessage(argThat(new ComponentMatcher<>(notFoundMsg)));
 	}
 }

@@ -19,9 +19,9 @@
 package space.arim.libertybans.it.env;
 
 import jakarta.inject.Inject;
-import space.arim.api.chat.SendableMessage;
+import net.kyori.adventure.text.Component;
+import space.arim.api.env.AudienceRepresenter;
 import space.arim.api.env.PlatformHandle;
-import space.arim.api.env.annote.PlatformPlayer;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.TargetMatcher;
@@ -32,18 +32,18 @@ import java.net.InetAddress;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public class QuackEnforcer extends AbstractEnvEnforcer {
+public class QuackEnforcer extends AbstractEnvEnforcer<QuackPlayer, QuackPlayer> {
 
 	private final QuackPlatform platform;
 
 	@Inject
 	public QuackEnforcer(InternalFormatter formatter, PlatformHandle handle, QuackPlatform platform) {
-		super(formatter, handle);
+		super(formatter, AudienceRepresenter.identity());
 		this.platform = platform;
 	}
 
 	@Override
-	protected void sendToThoseWithPermission0(String permission, SendableMessage message) {
+	protected void sendToThoseWithPermissionNoPrefix(String permission, Component message) {
 		for (QuackPlayer player : platform.getAllPlayers()) {
 			if (player.hasPermission(permission)) {
 				player.sendMessage(message);
@@ -52,7 +52,7 @@ public class QuackEnforcer extends AbstractEnvEnforcer {
 	}
 
 	@Override
-	public void doForPlayerIfOnline(UUID uuid, Consumer<@PlatformPlayer Object> callback) {
+	public void doForPlayerIfOnline(UUID uuid, Consumer<QuackPlayer> callback) {
 		QuackPlayer player = platform.getPlayer(uuid);
 		if (player != null) {
 			callback.accept(player);
@@ -60,7 +60,12 @@ public class QuackEnforcer extends AbstractEnvEnforcer {
 	}
 
 	@Override
-	public void enforceMatcher(TargetMatcher matcher) {
+	public void kickPlayer(QuackPlayer player, Component message) {
+		player.kickPlayer(message);
+	}
+
+	@Override
+	public void enforceMatcher(TargetMatcher<QuackPlayer> matcher) {
 		for (QuackPlayer player : platform.getAllPlayers()) {
 			if (matcher.matches(player.getUniqueId(), player.getAddress())) {
 				matcher.callback().accept(player);
@@ -69,13 +74,13 @@ public class QuackEnforcer extends AbstractEnvEnforcer {
 	}
 
 	@Override
-	public UUID getUniqueIdFor(@PlatformPlayer Object player) {
-		return ((QuackPlayer) player).getUniqueId();
+	public UUID getUniqueIdFor(QuackPlayer player) {
+		return player.getUniqueId();
 	}
 
 	@Override
-	public InetAddress getAddressFor(@PlatformPlayer Object player) {
-		return ((QuackPlayer) player).getAddress();
+	public InetAddress getAddressFor(QuackPlayer player) {
+		return player.getAddress();
 	}
 
 }

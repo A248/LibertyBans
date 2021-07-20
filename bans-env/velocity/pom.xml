@@ -53,6 +53,10 @@
 			<groupId>com.velocitypowered</groupId>
 			<artifactId>velocity-api</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>space.arim.api</groupId>
+			<artifactId>arimapi-env-velocity</artifactId>
+		</dependency>
 	</dependencies>
 	
 	<repositories>

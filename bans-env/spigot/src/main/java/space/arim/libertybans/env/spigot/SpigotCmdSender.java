@@ -21,9 +21,11 @@ package space.arim.libertybans.env.spigot;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
+import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractCmdSender;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -31,21 +33,17 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class SpigotCmdSender extends AbstractCmdSender {
+public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 
 	private final JavaPlugin plugin;
 	private final FactoryOfTheFuture futuresFactory;
 	
-	SpigotCmdSender(CmdSenderHelper senderHelper, CommandSender sender, Operator operator,
+	SpigotCmdSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
+					CommandSender sender, Operator operator,
 					JavaPlugin plugin, FactoryOfTheFuture futuresFactory) {
-		super(senderHelper, sender, operator);
+		super(formatter, audienceRepresenter, sender, operator);
 		this.plugin = plugin;
 		this.futuresFactory = futuresFactory;
-	}
-
-	@Override
-	public CommandSender getRawSender() {
-		return (CommandSender) super.getRawSender();
 	}
 	
 	@Override
@@ -68,10 +66,10 @@ public abstract class SpigotCmdSender extends AbstractCmdSender {
 		
 		private final FactoryOfTheFuture futuresFactory;
 
-		PlayerSender(CmdSenderHelper senderHelper, Player player,
-					 JavaPlugin plugin, FactoryOfTheFuture futuresFactory) {
-			super(senderHelper, player, PlayerOperator.of(player.getUniqueId()),
-					plugin, futuresFactory);
+		PlayerSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
+					 Player player, JavaPlugin plugin, FactoryOfTheFuture futuresFactory) {
+			super(formatter, audienceRepresenter,
+					player, PlayerOperator.of(player.getUniqueId()), plugin, futuresFactory);
 			this.futuresFactory = futuresFactory;
 		}
 		
@@ -84,10 +82,10 @@ public abstract class SpigotCmdSender extends AbstractCmdSender {
 
 	static class ConsoleSender extends SpigotCmdSender {
 
-		ConsoleSender(CmdSenderHelper senderHelper, CommandSender sender,
-					  JavaPlugin plugin, FactoryOfTheFuture futuresFactory) {
-			super(senderHelper, sender, ConsoleOperator.INSTANCE,
-					plugin, futuresFactory);
+		ConsoleSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
+					  CommandSender sender, JavaPlugin plugin, FactoryOfTheFuture futuresFactory) {
+			super(formatter, audienceRepresenter,
+					sender, ConsoleOperator.INSTANCE, plugin, futuresFactory);
 		}
 		
 		@Override

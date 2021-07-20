@@ -27,7 +27,7 @@ import jakarta.inject.Inject;
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
 import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.commands.Commands;
-import space.arim.libertybans.core.env.AbstractCmdSender;
+import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.omnibus.util.ArraysUtil;
@@ -48,23 +48,23 @@ public class CommandHandler implements SimpleCommand, PlatformListener {
 	
 	public static class CommandHelper {
 		
-		private final AbstractCmdSender.CmdSenderHelper senderHelper;
+		private final InternalFormatter formatter;
 		private final Commands commands;
 		final ProxyServer server;
 		
 		@Inject
-		public CommandHelper(AbstractCmdSender.CmdSenderHelper senderHelper, Commands commands,
+		public CommandHelper(InternalFormatter formatter, Commands commands,
 							 ProxyServer server) {
-			this.senderHelper = senderHelper;
+			this.formatter = formatter;
 			this.commands = commands;
 			this.server = server;
 		}
 
 		private CmdSender adaptSender(CommandSource platformSender) {
 			if (platformSender instanceof Player) {
-				return new VelocityCmdSender.PlayerSender(senderHelper, (Player) platformSender);
+				return new VelocityCmdSender.PlayerSender(formatter, (Player) platformSender);
 			}
-			return new VelocityCmdSender.ConsoleSender(senderHelper, platformSender, server);
+			return new VelocityCmdSender.ConsoleSender(formatter, platformSender, server);
 		}
 
 		void execute(CommandSource platformSender, CommandPackage command) {

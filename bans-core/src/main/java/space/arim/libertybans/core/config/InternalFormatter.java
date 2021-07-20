@@ -18,10 +18,10 @@
  */
 package space.arim.libertybans.core.config;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
+import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.manipulator.SendableMessageManipulator;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.formatter.PunishmentFormatter;
@@ -35,7 +35,7 @@ public interface InternalFormatter extends PunishmentFormatter {
 	 * @param messageToParse the message to parse
 	 * @return the message parsed without any prefix
 	 */
-	SendableMessage parseMessageWithoutPrefix(String messageToParse);
+	Component parseMessageWithoutPrefix(String messageToParse);
 	
 	/**
 	 * Prefixes a message and returns the prefixed result
@@ -43,7 +43,7 @@ public interface InternalFormatter extends PunishmentFormatter {
 	 * @param message the message
 	 * @return the message including the prefix
 	 */
-	SendableMessage prefix(SendableMessage message);
+	ComponentLike prefix(ComponentLike message);
 	
 	/**
 	 * Gets, formats, and parses the punishment message for a punishment.
@@ -51,7 +51,7 @@ public interface InternalFormatter extends PunishmentFormatter {
 	 * @param punishment the punishment
 	 * @return a future yielding the formatted sendable message
 	 */
-	CentralisedFuture<SendableMessage> getPunishmentMessage(Punishment punishment);
+	CentralisedFuture<Component> getPunishmentMessage(Punishment punishment);
 	
 	/**
 	 * Parses and formats a message with a punishment
@@ -60,8 +60,8 @@ public interface InternalFormatter extends PunishmentFormatter {
 	 * @param punishment the punishment
 	 * @return a future of the resulting formatted sendable message
 	 */
-	CentralisedFuture<SendableMessage> formatWithPunishment(SendableMessageManipulator manipulator,
-			Punishment punishment);
+	CentralisedFuture<Component> formatWithPunishment(ComponentText manipulator,
+													  Punishment punishment);
 	
 	/**
 	 * Parses and formats a message with a punishment and an undoing operator. Used when punishments are revoked.
@@ -71,7 +71,8 @@ public interface InternalFormatter extends PunishmentFormatter {
 	 * @param unOperator the operator undoing the punishment
 	 * @return a future of the resulting formatted sendable message
 	 */
-	CentralisedFuture<SendableMessage> formatWithPunishmentAndUnoperator(SendableMessageManipulator manipulator,
-			Punishment punishment, Operator unOperator);
+	CentralisedFuture<Component> formatWithPunishmentAndUnoperator(ComponentText manipulator,
+																   Punishment punishment,
+																   Operator unOperator);
 	
 }

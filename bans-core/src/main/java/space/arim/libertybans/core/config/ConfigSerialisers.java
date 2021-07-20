@@ -21,13 +21,17 @@ package space.arim.libertybans.core.config;
 import java.time.DateTimeException;
 import java.time.ZoneId;
 import java.time.zone.ZoneRulesException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.manipulator.SendableMessageManipulator;
-import space.arim.api.chat.serialiser.JsonSkSerialiser;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.serializer.ComponentSerializer;
+import space.arim.api.jsonchat.adventure.ChatMessageComponentSerializer;
 
+import space.arim.api.util.dazzleconf.ComponentTextSerializer;
 import space.arim.dazzleconf.ConfigurationOptions;
 import space.arim.dazzleconf.error.BadValueException;
 import space.arim.dazzleconf.serialiser.Decomposer;
@@ -39,45 +43,45 @@ final class ConfigSerialisers {
 	private ConfigSerialisers() {}
 	
 	static void addTo(ConfigurationOptions.Builder builder) {
-		builder.addSerialisers(new MessageManipulatorSerialiser(), new MessageSerialiser(),
-				new DateTimeFormatterSerialiser(), new ZoneIdSerialiser());
-	}
-
-	private static class MessageManipulatorSerialiser implements ValueSerialiser<SendableMessageManipulator> {
-
-		@Override
-		public Class<SendableMessageManipulator> getTargetClass() {
-			return SendableMessageManipulator.class;
-		}
-
-		@Override
-		public SendableMessageManipulator deserialise(FlexibleType flexibleType) throws BadValueException {
-			return SendableMessageManipulator.create(flexibleType.getObject(SendableMessage.class));
-		}
-
-		@Override
-		public Object serialise(SendableMessageManipulator value, Decomposer decomposer) {
-			return decomposer.decompose(SendableMessage.class, value.getMessage());
-		}
-		
+		builder.addSerialisers(
+				new ComponentValueSerializer(new ChatMessageComponentSerializer()),
+				new ComponentTextSerializer(),
+				new DateTimeFormatterSerialiser(),
+				new ZoneIdSerialiser());
 	}
 	
-	private static class MessageSerialiser implements ValueSerialiser<SendableMessage> {
-		
-		@Override
-		public Class<SendableMessage> getTargetClass() {
-			return SendableMessage.class;
+	private static class ComponentValueSerializer implements ValueSerialiser<Component> {
+
+		private final ComponentSerializer<Component, Component, String> adventureSerializer;
+
+		ComponentValueSerializer(ComponentSerializer<Component, Component, String> adventureSerializer) {
+			this.adventureSerializer = Objects.requireNonNull(adventureSerializer);
 		}
 
 		@Override
-		public SendableMessage deserialise(FlexibleType flexibleType) throws BadValueException {
-			String content = String.join("\n", flexibleType.getList((flexibleElement) -> flexibleElement.getString()));
-			return JsonSkSerialiser.getInstance().deserialise(content);
+		public Class<Component> getTargetClass() {
+			return Component.class;
 		}
 
 		@Override
-		public Object serialise(SendableMessage value, Decomposer decomposer) {
-			String content = JsonSkSerialiser.getInstance().serialise(value);
+		public Component deserialise(FlexibleType flexibleType) throws BadValueException {
+			List<String> lines = flexibleType.getList(FlexibleType::getString);
+			List<Component> components = new ArrayList<>(lines.size());
+			for (String line : lines) {
+				if (!components.isEmpty()) {
+					components.add(Component.newline());
+				}
+				components.add(adventureSerializer.deserialize(line));
+			}
+			if (components.size() == 1) {
+				return components.get(0);
+			}
+			return TextComponent.ofChildren(components.toArray(Component[]::new));
+		}
+
+		@Override
+		public Object serialise(Component value, Decomposer decomposer) {
+			String content = adventureSerializer.serialize(value);
 			List<String> lines = content.lines().collect(Collectors.toList());
 			if (lines.size() == 1) {
 				return lines.get(0);

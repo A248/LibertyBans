@@ -18,16 +18,16 @@
  */
 package space.arim.libertybans.core.env;
 
+import space.arim.api.env.annote.PlatformPlayer;
+
 import java.net.InetAddress;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import space.arim.api.env.annote.PlatformPlayer;
-
-public interface TargetMatcher {
+public interface TargetMatcher<@PlatformPlayer P> {
 
 	boolean matches(UUID uuid, InetAddress address);
 	
-	Consumer<@PlatformPlayer Object> callback();
+	Consumer<P> callback();
 	
 }

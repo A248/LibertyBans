@@ -18,77 +18,52 @@
  */
 package space.arim.libertybans.core.env;
 
-import jakarta.inject.Inject;
-
-import jakarta.inject.Singleton;
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.env.PlatformHandle;
+import net.kyori.adventure.text.ComponentLike;
+import space.arim.api.env.AudienceRepresenter;
 import space.arim.api.env.annote.PlatformCommandSender;
-
 import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 
-public abstract class AbstractCmdSender implements CmdSender {
+public abstract class AbstractCmdSender<@PlatformCommandSender C> implements CmdSender {
 	
-	private final CmdSenderHelper senderHelper;
-	private final Object rawSender;
+	private final InternalFormatter formatter;
+	private final AudienceRepresenter<C> audienceRepresenter;
+	private final C rawSender;
 	private final Operator operator;
 	
-	protected AbstractCmdSender(CmdSenderHelper senderHelper, Object rawSender, Operator operator) {
-		this.senderHelper = senderHelper;
+	protected AbstractCmdSender(InternalFormatter formatter, AudienceRepresenter<C> audienceRepresenter, C rawSender, Operator operator) {
+		this.formatter = formatter;
+		this.audienceRepresenter = audienceRepresenter;
 		this.rawSender = rawSender;
 		this.operator = operator;
-	}
-	
-	@Singleton
-	public static class CmdSenderHelper {
-		
-		private final Configs configs;
-		final InternalFormatter formatter;
-		final PlatformHandle handle;
-		
-		@Inject
-		public CmdSenderHelper(Configs configs, InternalFormatter formatter, PlatformHandle handle) {
-			this.configs = configs;
-			this.formatter = formatter;
-			this.handle = handle;
-		}
-
-		SendableMessage addPrefix(SendableMessage message) {
-			return configs.getMessagesConfig().all().prefix().concatenate(message);
-		}
-		
 	}
 	
 	@Override
 	public Operator getOperator() {
 		return operator;
 	}
-	
+
 	@Override
-	public void sendMessageNoPrefix(SendableMessage message) {
-		senderHelper.handle.sendMessage(rawSender, message);
+	public void sendMessageNoPrefix(ComponentLike message) {
+		audienceRepresenter.toAudience(getRawSender()).sendMessage(message);
 	}
 	
 	@Override
-	public void sendMessage(SendableMessage message) {
-		sendMessageNoPrefix(senderHelper.addPrefix(message));
+	public void sendMessage(ComponentLike message) {
+		sendMessageNoPrefix(formatter.prefix(message));
 	}
 	
 	@Override
 	public void sendLiteralMessageNoPrefix(String message) {
-		sendMessageNoPrefix(senderHelper.formatter.parseMessageWithoutPrefix(message));
+		sendMessageNoPrefix(formatter.parseMessageWithoutPrefix(message));
 	}
 	
 	@Override
 	public void sendLiteralMessage(String message) {
-		sendMessage(senderHelper.formatter.parseMessageWithoutPrefix(message));
+		sendMessage(formatter.parseMessageWithoutPrefix(message));
 	}
-	
-	@Override
-	@PlatformCommandSender
-	public Object getRawSender() {
+
+	protected C getRawSender() {
 		return rawSender;
 	}
 	

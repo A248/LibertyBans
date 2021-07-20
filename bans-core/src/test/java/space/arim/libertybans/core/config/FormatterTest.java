@@ -20,6 +20,8 @@
 
 package space.arim.libertybans.core.config;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,8 +29,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import space.arim.api.chat.manipulator.SendableMessageManipulator;
-import space.arim.api.chat.serialiser.SimpleTextSerialiser;
+import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
@@ -36,8 +37,8 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
-import space.arim.libertybans.core.service.Time;
 import space.arim.libertybans.core.scope.InternalScopeManager;
+import space.arim.libertybans.core.service.Time;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -214,10 +215,9 @@ public class FormatterTest {
 	}
 
 	private String format(Punishment punishment, String layout) {
-		var layoutMessage = SimpleTextSerialiser.getInstance().deserialise(layout);
-		var layoutMessageManipulator = SendableMessageManipulator.create(layoutMessage);
-		var formatFuture = formatter.formatWithPunishment(layoutMessageManipulator, punishment);
-		return SimpleTextSerialiser.getInstance().serialise(formatFuture.join());
+		ComponentText layoutMessage = ComponentText.create(Component.text(layout));
+		var formatFuture = formatter.formatWithPunishment(layoutMessage, punishment);
+		return PlainComponentSerializer.plain().serialize(formatFuture.join());
 	}
 
 	private Punishment punishmentFor(FormatterTestInfo testInfo, Instant start, Instant end) {

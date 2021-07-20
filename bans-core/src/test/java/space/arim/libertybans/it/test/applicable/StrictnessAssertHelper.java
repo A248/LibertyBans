@@ -28,7 +28,7 @@ import java.util.UUID;
 
 import jakarta.inject.Inject;
 
-import space.arim.api.chat.SendableMessage;
+import net.kyori.adventure.text.Component;
 
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.NetworkAddress;
@@ -56,7 +56,7 @@ public class StrictnessAssertHelper {
 		this.platform = platform;
 	}
 
-	private SendableMessage connectAndGetMessage(UUID uuid, String name, InetAddress address) {
+	private Component connectAndGetMessage(UUID uuid, String name, InetAddress address) {
 		return enforcer.executeAndCheckConnection(uuid, name, address).join();
 	}
 
@@ -65,7 +65,7 @@ public class StrictnessAssertHelper {
 	}
 
 	void connectAndAssumeUnbannedUser(UUID uuid, String name, InetAddress address) {
-		SendableMessage banMessage = connectAndGetMessage(uuid, name, address);
+		Component banMessage = connectAndGetMessage(uuid, name, address);
 		assumeTrue(banMessage == null, "User " + uuid + "/" + name + " is not banned yet");
 	}
 

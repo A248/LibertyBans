@@ -19,9 +19,12 @@
 package space.arim.libertybans.core.config;
 
 import jakarta.inject.Inject;
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.chat.manipulator.SendableMessageManipulator;
-import space.arim.api.chat.serialiser.JsonSkSerialiser;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.serializer.ComponentSerializer;
+import space.arim.api.jsonchat.adventure.ChatMessageComponentSerializer;
+import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
@@ -58,17 +61,24 @@ public class Formatter implements InternalFormatter {
 	private final InternalScopeManager scopeManager;
 	private final UUIDManager uuidManager;
 	private final Time time;
+	private final ComponentSerializer<Component, ? extends Component, String> messageParser;
 
 	private static final long MARGIN_OF_INITIATION = 10; // seconds
 	
 	@Inject
 	public Formatter(FactoryOfTheFuture futuresFactory, Configs configs, InternalScopeManager scopeManager,
 					 UUIDManager uuidManager, Time time) {
+		this(futuresFactory, configs, scopeManager, uuidManager, time, new ChatMessageComponentSerializer());
+	}
+
+	Formatter(FactoryOfTheFuture futuresFactory, Configs configs, InternalScopeManager scopeManager,
+			  UUIDManager uuidManager, Time time, ComponentSerializer<Component, ? extends Component, String> messageParser) {
 		this.futuresFactory = futuresFactory;
 		this.configs = configs;
 		this.scopeManager = scopeManager;
 		this.uuidManager = uuidManager;
 		this.time = time;
+		this.messageParser = messageParser;
 	}
 	
 	private MessagesConfig messages() {
@@ -76,49 +86,52 @@ public class Formatter implements InternalFormatter {
 	}
 	
 	@Override
-	public SendableMessage parseMessageWithoutPrefix(String messageToParse) {
-		return JsonSkSerialiser.getInstance().deserialise(messageToParse);
+	public Component parseMessageWithoutPrefix(String messageToParse) {
+		return messageParser.deserialize(messageToParse);
 	}
 	
 	@Override
-	public SendableMessage prefix(SendableMessage message) {
-		return messages().all().prefix().concatenate(message);
+	public ComponentLike prefix(ComponentLike message) {
+		Component prefix = configs.getMessagesConfig().all().prefix();
+		if (prefix instanceof TextComponent && ((TextComponent) prefix).content().isEmpty()) {
+			return message;
+		}
+		return TextComponent.ofChildren(prefix, message);
 	}
 	
 	@Override
-	public CentralisedFuture<SendableMessage> getPunishmentMessage(Punishment punishment) {
+	public CentralisedFuture<Component> getPunishmentMessage(Punishment punishment) {
 		return formatWithPunishment(messages().additions().forType(punishment.getType()).layout(), punishment);
 	}
 	
 	@Override
-	public CentralisedFuture<SendableMessage> formatWithPunishment(SendableMessageManipulator manipulator,
-			Punishment punishment) {
-		return formatWithPunishment(manipulator, punishment, null);
+	public CentralisedFuture<Component> formatWithPunishment(ComponentText componentText,
+															 Punishment punishment) {
+		return formatWithPunishment(componentText, punishment, null);
 	}
 	
 	@Override
-	public CentralisedFuture<SendableMessage> formatWithPunishmentAndUnoperator(SendableMessageManipulator manipulator,
-			Punishment punishment, Operator unOperator) {
-		return formatWithPunishment(manipulator, punishment, Objects.requireNonNull(unOperator, "unOperator"));
+	public CentralisedFuture<Component> formatWithPunishmentAndUnoperator(ComponentText componentText,
+																		  Punishment punishment, Operator unOperator) {
+		return formatWithPunishment(componentText, punishment, Objects.requireNonNull(unOperator, "unOperator"));
 	}
 
-	private CentralisedFuture<SendableMessage> formatWithPunishment(SendableMessageManipulator manipulator,
-			Punishment punishment, Operator unOperator) {
-
+	private CentralisedFuture<Component> formatWithPunishment(ComponentText componentText,
+															  Punishment punishment, Operator unOperator) {
 		Map<FutureReplaceable, CentralisedFuture<String>> futureReplacements = new EnumMap<>(FutureReplaceable.class);
 		for (FutureReplaceable futureReplaceable : FutureReplaceable.values()) {
 
 			if (unOperator == null && futureReplaceable == FutureReplaceable.UNOPERATOR) {
 				continue;
 			}
-			if (manipulator.contains(futureReplaceable.getVariable())) {
+			if (componentText.contains(futureReplaceable.getVariable())) {
 				CentralisedFuture<String> replacement = getFutureReplacement(futureReplaceable, punishment, unOperator);
 				futureReplacements.put(futureReplaceable, replacement);
 			}
 		}
 		return futuresFactory.supplyAsync(() -> getSimpleReplacements(punishment, unOperator))
 				.thenCompose((simpleReplacements) -> {
-			return formatWithPunishment0(manipulator, simpleReplacements, futureReplacements);
+			return formatWithPunishment0(componentText, simpleReplacements, futureReplacements);
 		});
 	}
 	
@@ -203,10 +216,9 @@ public class Formatter implements InternalFormatter {
 		return simpleReplacements;
 	}
 	
-	private CentralisedFuture<SendableMessage> formatWithPunishment0(SendableMessageManipulator manipulator,
-			Map<SimpleReplaceable, String> simpleReplacements,
-			Map<FutureReplaceable, CentralisedFuture<String>> futureReplacements) {
-
+	private CentralisedFuture<Component> formatWithPunishment0(ComponentText componentText,
+															   Map<SimpleReplaceable, String> simpleReplacements,
+															   Map<FutureReplaceable, CentralisedFuture<String>> futureReplacements) {
 		return futuresFactory.allOf(futureReplacements.values()).thenApply((ignore) -> {
 
 			class Replacer implements UnaryOperator<String> {
@@ -225,7 +237,7 @@ public class Formatter implements InternalFormatter {
 					return text;
 				}
 			}
-			return manipulator.replaceText(new Replacer());
+			return componentText.replaceText(new Replacer()).asComponent();
 		});
 	}
 	
@@ -254,7 +266,7 @@ public class Formatter implements InternalFormatter {
 		}
 	}
 	
-	private static final String NAME_UNKNOWN_ERROR = "-UnknownError-";
+	private static final String NAME_UNKNOWN_ERROR = "-NameUnknown-";
 
 	private CentralisedFuture<String> formatVictim(Victim victim) {
 		switch (victim.getType()) {

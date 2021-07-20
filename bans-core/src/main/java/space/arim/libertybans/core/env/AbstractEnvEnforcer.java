@@ -18,38 +18,37 @@
  */
 package space.arim.libertybans.core.env;
 
-import java.util.UUID;
-
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.env.PlatformHandle;
-
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
+import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 
-public abstract class AbstractEnvEnforcer implements EnvEnforcer {
+import java.util.Objects;
+
+public abstract class AbstractEnvEnforcer<C, P extends C> implements EnvEnforcer<P> {
 
 	private final InternalFormatter formatter;
-	private final PlatformHandle handle;
-	
-	protected AbstractEnvEnforcer(InternalFormatter formatter, PlatformHandle handle) {
-		this.formatter = formatter;
-		this.handle = handle;
-	}
-	
-	@Override
-	public final void sendToThoseWithPermission(String permission, SendableMessage message) {
-		sendToThoseWithPermission0(permission, formatter.prefix(message));
-	}
-	
-	protected abstract void sendToThoseWithPermission0(String permission, SendableMessage message);
+	private final AudienceRepresenter<C> audienceRepresenter;
 
-	@Override
-	public void kickByUUID(UUID uuid, SendableMessage message) {
-		doForPlayerIfOnline(uuid, (player) -> handle.disconnectUser(player, message));
+	protected AbstractEnvEnforcer(InternalFormatter formatter, AudienceRepresenter<C> audienceRepresenter) {
+		this.formatter = Objects.requireNonNull(formatter, "formatter");
+		this.audienceRepresenter = Objects.requireNonNull(audienceRepresenter, "audienceRepresenter");
 	}
 
-	@Override
-	public void sendMessageByUUID(UUID uuid, SendableMessage message) {
-		doForPlayerIfOnline(uuid, (player) -> handle.sendMessage(player, message));
+	protected AudienceRepresenter<C> audienceRepresenter() {
+		return audienceRepresenter;
 	}
 	
+	@Override
+	public final void sendToThoseWithPermission(String permission, ComponentLike message) {
+		sendToThoseWithPermissionNoPrefix(permission, formatter.prefix(message).asComponent());
+	}
+	
+	protected abstract void sendToThoseWithPermissionNoPrefix(String permission, Component message);
+
+	@Override
+	public void sendMessage(P player, ComponentLike message) {
+		audienceRepresenter.toAudience(player).sendMessage(message);
+	}
+
 }

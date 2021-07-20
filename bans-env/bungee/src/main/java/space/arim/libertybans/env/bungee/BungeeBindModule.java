@@ -19,7 +19,11 @@
 package space.arim.libertybans.env.bungee;
 
 import jakarta.inject.Singleton;
+import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
+import space.arim.api.env.AudienceRepresenter;
+import space.arim.api.env.bungee.BungeeAudienceRepresenter;
 import space.arim.api.env.bungee.BungeePlatformHandle;
 import space.arim.api.env.PlatformHandle;
 import space.arim.libertybans.core.env.EnvEnforcer;
@@ -34,11 +38,15 @@ public class BungeeBindModule {
 		return BungeePlatformHandle.create(plugin);
 	}
 
+	public AudienceRepresenter<CommandSender> audienceRepresenter(ProxyServer proxyServer) {
+		return new BungeeAudienceRepresenter(proxyServer);
+	}
+
 	public Environment environment(BungeeEnv env) {
 		return env;
 	}
 
-	public EnvEnforcer enforcer(BungeeEnforcer enforcer) {
+	public EnvEnforcer<?> enforcer(BungeeEnforcer enforcer) {
 		return enforcer;
 	}
 

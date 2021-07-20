@@ -47,11 +47,7 @@ public class SimpleCommandMapHelper implements CommandMapHelper {
 			+ "command aliases will not be registered, and the main /libertybans command will not be unregistered.";
 	
 	@Inject
-	public SimpleCommandMapHelper(JavaPlugin plugin) {
-		this(new MorePaperLib(plugin));
-	}
-
-	private SimpleCommandMapHelper(MorePaperLib morePaperLib) {
+	public SimpleCommandMapHelper(MorePaperLib morePaperLib) {
 		this.morePaperLib = morePaperLib;
 	}
 

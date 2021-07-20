@@ -18,29 +18,24 @@
  */
 package space.arim.libertybans.env.bungee;
 
-import java.net.InetAddress;
-import java.util.UUID;
-
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import space.arim.omnibus.util.ThisClass;
-
-import space.arim.api.env.chat.BungeeComponentConverter;
-
-import space.arim.libertybans.core.env.PlatformListener;
-import space.arim.libertybans.core.punish.Enforcer;
-
-import net.md_5.bungee.api.chat.BaseComponent;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import space.arim.libertybans.core.env.PlatformListener;
+import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.omnibus.util.ThisClass;
+
+import java.net.InetAddress;
+import java.util.UUID;
 
 @Singleton
 public class ConnectionListener implements Listener, PlatformListener {
@@ -86,7 +81,8 @@ public class ConnectionListener implements Listener, PlatformListener {
 				logger.trace("Event {} will be permitted", event);
 			} else {
 				event.setCancelled(true);
-				event.setCancelReason(new BungeeComponentConverter().convert(message).toArray(BaseComponent[]::new));
+				event.setCancelReason(TextComponent.fromLegacyText(
+						LegacyComponentSerializer.legacySection().serialize(message)));
 			}
 		}).whenComplete((ignore, ex) -> {
 			if (ex != null) {

@@ -22,16 +22,16 @@ import java.net.InetAddress;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import space.arim.api.chat.SendableMessage;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import space.arim.api.env.annote.PlatformPlayer;
 
 /**
  * Platform specific enforcer
  * 
- * @author A248
- *
+ * @param <P> the player object type
  */
-public interface EnvEnforcer {
+public interface EnvEnforcer<@PlatformPlayer P> {
 	
 	/**
 	 * For all players with the specified permission, sends the message. <br>
@@ -40,7 +40,7 @@ public interface EnvEnforcer {
 	 * @param permission the permission
 	 * @param message the message
 	 */
-	void sendToThoseWithPermission(String permission, SendableMessage message);
+	void sendToThoseWithPermission(String permission, ComponentLike message);
 	
 	/**
 	 * Searches for a player with the given UUID, if found, invokes the callback
@@ -48,7 +48,7 @@ public interface EnvEnforcer {
 	 * @param uuid the uuid
 	 * @param callback the callback
 	 */
-	void doForPlayerIfOnline(UUID uuid, Consumer<@PlatformPlayer Object> callback);
+	void doForPlayerIfOnline(UUID uuid, Consumer<P> callback);
 
 	/**
 	 * Searches for a player with the given UUID, if found, kicks the player with the given message
@@ -56,7 +56,9 @@ public interface EnvEnforcer {
 	 * @param uuid the uuid
 	 * @param message the kick message
 	 */
-	void kickByUUID(UUID uuid, SendableMessage message);
+	default void kickByUUID(UUID uuid, Component message) {
+		doForPlayerIfOnline(uuid, (player) -> kickPlayer(player, message));
+	}
 	
 	/**
 	 * Searches for a player with the given UUID, if found, sends the player the given message
@@ -64,14 +66,32 @@ public interface EnvEnforcer {
 	 * @param uuid the uuid
 	 * @param message the message
 	 */
-	void sendMessageByUUID(UUID uuid, SendableMessage message);
+	default void sendMessageByUUID(UUID uuid, ComponentLike message) {
+		doForPlayerIfOnline(uuid, (player) -> sendMessage(player, message));
+	}
+
+	/**
+	 * Kicks the given player
+	 *
+	 * @param player the player to kick
+	 * @param message the kick message
+	 */
+	void kickPlayer(P player, Component message);
+
+	/**
+	 * Sends a message to the given player
+	 *
+	 * @param player the player
+	 * @param message the message to send
+	 */
+	void sendMessage(P player, ComponentLike message);
 	
 	/**
 	 * Enforces a target matcher, invoking its callback for players matching its UUID or address set
 	 * 
 	 * @param matcher the target matcher
 	 */
-	void enforceMatcher(TargetMatcher matcher);
+	void enforceMatcher(TargetMatcher<P> matcher);
 	
 	/**
 	 * Gets the UUID of a player
@@ -79,7 +99,7 @@ public interface EnvEnforcer {
 	 * @param player the player
 	 * @return the UUID
 	 */
-	UUID getUniqueIdFor(@PlatformPlayer Object player);
+	UUID getUniqueIdFor(P player);
 	
 	/**
 	 * Gets the address of a player
@@ -87,6 +107,6 @@ public interface EnvEnforcer {
 	 * @param player the player
 	 * @return the address
 	 */
-	InetAddress getAddressFor(@PlatformPlayer Object player);
+	InetAddress getAddressFor(P player);
 	
 }

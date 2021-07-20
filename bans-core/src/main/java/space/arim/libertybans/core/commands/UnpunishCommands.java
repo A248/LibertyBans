@@ -24,9 +24,9 @@ import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.api.chat.SendableMessage;
 
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
@@ -161,7 +161,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 		private void sendNotFound(String targetArg, int id) {
 			boolean isWarn = type() == PunishmentType.WARN;
 			String idString = (isWarn) ? Integer.toString(id) : null;
-			SendableMessage notFound = section.notFound().replaceText((str) -> {
+			ComponentLike notFound = section.notFound().replaceText((str) -> {
 				if (isWarn) {
 					str = str.replace("%ID%", idString);
 				}
@@ -173,9 +173,9 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 		private CentralisedFuture<?> sendSuccess(Punishment punishment) {
 
 			CentralisedFuture<?> unenforcement = punishment.unenforcePunishment().toCompletableFuture();
-			CentralisedFuture<SendableMessage> futureMessage = formatter.formatWithPunishment(
+			CentralisedFuture<Component> futureMessage = formatter.formatWithPunishment(
 					section.successMessage(), punishment);
-			CentralisedFuture<SendableMessage> futureNotify = formatter.formatWithPunishmentAndUnoperator(
+			CentralisedFuture<Component> futureNotify = formatter.formatWithPunishmentAndUnoperator(
 					section.successNotification(), punishment, sender().getOperator());
 
 			var completion = futuresFactory().allOf(unenforcement, futureMessage, futureNotify).thenRun(() -> {

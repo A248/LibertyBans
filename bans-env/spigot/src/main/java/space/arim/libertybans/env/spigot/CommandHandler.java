@@ -18,29 +18,26 @@
  */
 package space.arim.libertybans.env.spigot;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
 import jakarta.inject.Inject;
-
-import space.arim.libertybans.core.commands.CommandPackage;
-import space.arim.libertybans.core.env.AbstractCmdSender;
-import space.arim.omnibus.util.ArraysUtil;
-
-import space.arim.api.env.bukkit.BukkitCommandSkeleton;
-
-import space.arim.libertybans.core.commands.ArrayCommandPackage;
-import space.arim.libertybans.core.commands.Commands;
-import space.arim.libertybans.core.env.CmdSender;
-import space.arim.libertybans.core.env.PlatformListener;
-
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import space.arim.api.env.AudienceRepresenter;
+import space.arim.api.env.bukkit.BukkitCommandSkeleton;
+import space.arim.libertybans.core.commands.ArrayCommandPackage;
+import space.arim.libertybans.core.commands.CommandPackage;
+import space.arim.libertybans.core.commands.Commands;
+import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.env.PlatformListener;
+import space.arim.omnibus.util.ArraysUtil;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 public class CommandHandler extends BukkitCommandSkeleton implements PlatformListener {
 
@@ -55,16 +52,19 @@ public class CommandHandler extends BukkitCommandSkeleton implements PlatformLis
 	
 	public static class CommandHelper {
 		
-		private final AbstractCmdSender.CmdSenderHelper senderHelper;
+		private final InternalFormatter formatter;
+		private final AudienceRepresenter<CommandSender> audienceRepresenter;
 		private final Commands commands;
 		final JavaPlugin plugin;
 		private final FactoryOfTheFuture futuresFactory;
 		final CommandMapHelper commandMapHelper;
 		
 		@Inject
-		public CommandHelper(AbstractCmdSender.CmdSenderHelper senderHelper, Commands commands,
-							 JavaPlugin plugin, FactoryOfTheFuture futuresFactory, CommandMapHelper commandMapHelper) {
-			this.senderHelper = senderHelper;
+		public CommandHelper(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
+							 Commands commands, JavaPlugin plugin,
+							 FactoryOfTheFuture futuresFactory, CommandMapHelper commandMapHelper) {
+			this.formatter = formatter;
+			this.audienceRepresenter = audienceRepresenter;
 			this.commands = commands;
 			this.plugin = plugin;
 			this.futuresFactory = futuresFactory;
@@ -73,9 +73,11 @@ public class CommandHandler extends BukkitCommandSkeleton implements PlatformLis
 
 		private CmdSender adaptSender(CommandSender platformSender) {
 			if (platformSender instanceof Player) {
-				return new SpigotCmdSender.PlayerSender(senderHelper, (Player) platformSender, plugin, futuresFactory);
+				return new SpigotCmdSender.PlayerSender(formatter, audienceRepresenter,
+						(Player) platformSender, plugin, futuresFactory);
 			}
-			return new SpigotCmdSender.ConsoleSender(senderHelper, platformSender, plugin, futuresFactory);
+			return new SpigotCmdSender.ConsoleSender(formatter, audienceRepresenter,
+					platformSender, plugin, futuresFactory);
 		}
 
 		void execute(CommandSender platformSender, CommandPackage command) {

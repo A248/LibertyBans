@@ -56,6 +56,10 @@
 			<artifactId>spigot-api</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>space.arim.api</groupId>
+			<artifactId>arimapi-env-bukkit</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>space.arim.morepaperlib</groupId>
 			<artifactId>morepaperlib</artifactId>
 		</dependency>

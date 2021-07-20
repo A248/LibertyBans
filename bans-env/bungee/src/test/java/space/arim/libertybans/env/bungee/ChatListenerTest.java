@@ -19,6 +19,9 @@
 
 package space.arim.libertybans.env.bungee;
 
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
+import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,13 +29,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import space.arim.api.chat.SendableMessage;
-import space.arim.api.env.PlatformHandle;
+import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.punish.Enforcer;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -50,21 +53,21 @@ public class ChatListenerTest {
 
 	private final Enforcer enforcer;
 	private final AddressReporter addressReporter;
-	private final PlatformHandle handle;
+	private final AudienceRepresenter<CommandSender> audienceRepresenter;
 
 	private ChatListener chatListener;
 	private final FactoryOfTheFuture futuresFactory = new IndifferentFactoryOfTheFuture();
 
 	public ChatListenerTest(@Mock Enforcer enforcer, @Mock AddressReporter addressReporter,
-							@Mock PlatformHandle handle) {
+							@Mock AudienceRepresenter<CommandSender> audienceRepresenter) {
 		this.enforcer = enforcer;
 		this.addressReporter = addressReporter;
-		this.handle = handle;
+		this.audienceRepresenter = audienceRepresenter;
 	}
 
 	@BeforeEach
-	public void setup() {
-		chatListener = new ChatListener(MockPlugin.create(), enforcer, addressReporter, handle);
+	public void setup() throws UnknownHostException {
+		chatListener = new ChatListener(MockPlugin.create(), enforcer, addressReporter, audienceRepresenter);
 	}
 
 	private void fire(ChatEvent event) {
@@ -73,29 +76,34 @@ public class ChatListenerTest {
 	}
 
 	@Test
-	public void allowNotMuted(@Mock ProxiedPlayer sender, @Mock ProxiedPlayer receiver) {
+	public void allowNotMuted(@Mock ProxiedPlayer sender, @Mock Audience senderAudience,
+							  @Mock ProxiedPlayer receiver) {
 		String message = "hello";
 		ChatEvent chatEvent = new ChatEvent(sender, receiver, message);
 		when(enforcer.checkChat(any(), (InetAddress) any(), any())).thenReturn(futuresFactory.completedFuture(null));
+		lenient().when(audienceRepresenter.toAudience(sender)).thenReturn(senderAudience);
 
 		fire(chatEvent);
 		assertFalse(chatEvent.isCancelled());
 		assertEquals(chatEvent.getMessage(), message, "Message untampered with");
-		verifyNoMoreInteractions(handle);
+		verifyNoMoreInteractions(senderAudience);
 	}
 
 	@Test
-	public void enforceMuted(@Mock ProxiedPlayer sender, @Mock ProxiedPlayer receiver) {
+	public void enforceMuted(@Mock ProxiedPlayer sender, @Mock Audience senderAudience,
+							 @Mock ProxiedPlayer receiver) {
 		String message = "hello";
 		ChatEvent chatEvent = new ChatEvent(sender, receiver, message);
-		SendableMessage denyMessage = SendableMessage.empty();
+		Component denyMessage = Component.text("Denied");
 		when(enforcer.checkChat(any(), (InetAddress) any(), isNull()))
 				.thenReturn(futuresFactory.completedFuture(denyMessage));
 		lenient().when(enforcer.checkChat(any(), (InetAddress) any(), isNotNull()))
 				.thenReturn(futuresFactory.completedFuture(null));
+		when(audienceRepresenter.toAudience(sender)).thenReturn(senderAudience);
 
 		fire(chatEvent);
 		assertTrue(chatEvent.isCancelled());
-		verify(handle).sendMessage(sender, denyMessage);
+		verify(senderAudience).sendMessage(denyMessage);
+		verifyNoMoreInteractions(senderAudience);
 	}
 }

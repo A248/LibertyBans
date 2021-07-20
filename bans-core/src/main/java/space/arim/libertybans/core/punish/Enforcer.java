@@ -21,9 +21,8 @@ package space.arim.libertybans.core.punish;
 import java.net.InetAddress;
 import java.util.UUID;
 
+import net.kyori.adventure.text.Component;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.api.chat.SendableMessage;
 
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.punish.Punishment;
@@ -49,7 +48,7 @@ public interface Enforcer {
 	 * @param address the player's network address
 	 * @return a future which yields the punishment message if denied, else null if allowed
 	 */
-	CentralisedFuture<SendableMessage> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address);
+	CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address);
 	
 	/**
 	 * Enforces an incoming connection, returning a punishment message if denied, null if allowed. <br>
@@ -62,7 +61,7 @@ public interface Enforcer {
 	 * @param address the player's network address
 	 * @return a future which yields the punishment message if denied, else null if allowed
 	 */
-	default CentralisedFuture<SendableMessage> executeAndCheckConnection(UUID uuid, String name, InetAddress address) {
+	default CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, InetAddress address) {
 		return executeAndCheckConnection(uuid, name, NetworkAddress.of(address));
 	}
 	
@@ -77,7 +76,7 @@ public interface Enforcer {
 	 * @param command the command executed, or {@code null} if this is a chat message
 	 * @return a future which yields the punishment message if denied, else null if allowed
 	 */
-	CentralisedFuture<SendableMessage> checkChat(UUID uuid, NetworkAddress address, String command);
+	CentralisedFuture<Component> checkChat(UUID uuid, NetworkAddress address, String command);
 	
 	/**
 	 * Enforces a chat message or executed command, returning a punishment message if denied, null if allowed. <br>
@@ -90,7 +89,7 @@ public interface Enforcer {
 	 * @param command the command executed, or {@code null} if this is a chat message
 	 * @return a future which yields the punishment message if denied, else null if allowed
 	 */
-	default CentralisedFuture<SendableMessage> checkChat(UUID uuid, InetAddress address, String command) {
+	default CentralisedFuture<Component> checkChat(UUID uuid, InetAddress address, String command) {
 		return checkChat(uuid, NetworkAddress.of(address), command);
 	}
 	
