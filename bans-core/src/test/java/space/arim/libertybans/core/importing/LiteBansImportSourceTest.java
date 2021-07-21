@@ -152,7 +152,7 @@ public class LiteBansImportSourceTest {
 	public void undefinedIpAddressInHistory() {
 		UUID uuid = UUID.fromString("a14a251d-9621-446a-9b8a-812a582c1245");
 		String username = "SkyDoesMlnecraft";
-		Instant date = Instant.now();
+		Instant date = Instant.parse("2021-07-21T01:59:32.000000Z");
 		jdbCaesar.query(
 				"INSERT INTO litebans_history (id, date, name, uuid, ip) VALUES (?, ?, ?, ?, ?)")
 				.params(30827, Timestamp.from(date), username, uuid.toString(), "#undefined#")
