@@ -111,7 +111,7 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 				if (punishment == null) {
 					return completedFuture(null);
 				}
-				return enforceAndSendSuccess(punishment);
+				return enforceAndSendSuccess(punishment, targetArg);
 			});
 			postFuture(future);
 		}
@@ -191,13 +191,13 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 			sender().sendMessage(message);
 		}
 
-		private CentralisedFuture<?> enforceAndSendSuccess(Punishment punishment) {
+		private CentralisedFuture<?> enforceAndSendSuccess(Punishment punishment, String targetArg) {
 
 			CentralisedFuture<?> enforcement = punishment.enforcePunishment().toCompletableFuture();
 			CentralisedFuture<Component> futureMessage = formatter.formatWithPunishment(
-					section.successMessage(), punishment);
+					section.successMessage().replaceText("%TARGET%", targetArg), punishment);
 			CentralisedFuture<Component> futureNotify = formatter.formatWithPunishment(
-					section.successNotification(), punishment);
+					section.successNotification().replaceText("%TARGET%", targetArg), punishment);
 
 			var completion = futuresFactory().allOf(enforcement, futureMessage, futureNotify).thenRun(() -> {
 				sender().sendMessage(futureMessage.join());

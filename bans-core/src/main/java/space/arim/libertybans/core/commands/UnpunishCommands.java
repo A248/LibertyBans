@@ -111,7 +111,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 				if (punishment == null) {
 					return completedFuture(null);
 				}
-				return sendSuccess(punishment);
+				return sendSuccess(punishment, targetArg);
 			});
 			postFuture(future);
 		}
@@ -170,13 +170,13 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 			sender().sendMessage(notFound);
 		}
 
-		private CentralisedFuture<?> sendSuccess(Punishment punishment) {
+		private CentralisedFuture<?> sendSuccess(Punishment punishment, String targetArg) {
 
 			CentralisedFuture<?> unenforcement = punishment.unenforcePunishment().toCompletableFuture();
 			CentralisedFuture<Component> futureMessage = formatter.formatWithPunishment(
-					section.successMessage(), punishment);
+					section.successMessage().replaceText("%TARGET%", targetArg), punishment);
 			CentralisedFuture<Component> futureNotify = formatter.formatWithPunishmentAndUnoperator(
-					section.successNotification(), punishment, sender().getOperator());
+					section.successNotification().replaceText("%TARGET%", targetArg), punishment, sender().getOperator());
 
 			var completion = futuresFactory().allOf(unenforcement, futureMessage, futureNotify).thenRun(() -> {
 				sender().sendMessage(futureMessage.join());
