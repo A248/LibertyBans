@@ -19,13 +19,26 @@
 
 package space.arim.libertybans.core.service;
 
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
 public final class SimpleFuturePoster implements FuturePoster {
 
 	@Override
 	public void postFuture(CompletionStage<?> completionStage) {
-		completionStage.toCompletableFuture().join();
+		try {
+			completionStage.toCompletableFuture().join();
+		} catch (CompletionException ex) {
+			Throwable cause = ex.getCause();
+			if (cause instanceof RuntimeException) {
+				throw (RuntimeException) cause;
+			} else if (cause instanceof Error) {
+				throw (Error) cause;
+			} else {
+				throw ex;
+			}
+		}
+
 	}
 
 }

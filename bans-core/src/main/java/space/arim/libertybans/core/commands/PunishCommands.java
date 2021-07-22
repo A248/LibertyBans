@@ -129,7 +129,28 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 				return completedFuture(null);
 			}
 			// Parse reason
-			String reason = parseReason();
+			String reason;
+			{
+				if (command().hasNext()) {
+					reason = command().allRemaining();
+				} else {
+					ReasonsConfig reasonsConfig = config().reasons();
+					switch (reasonsConfig.effectiveUnspecifiedReasonBehavior()) {
+					case USE_EMPTY_REASON:
+						reason = "";
+						break;
+					case REQUIRE_REASON:
+						sender().sendMessage(section.usage());
+						return completedFuture(null);
+					case SUBSTITUTE_DEFAULT:
+						reason = reasonsConfig.defaultReason();
+						break;
+					default:
+						throw new IllegalArgumentException("Unknown unspecified reason behavior "
+								+ reasonsConfig.effectiveUnspecifiedReasonBehavior());
+					}
+				}
+			}
 
 			DraftPunishment draftPunishment = drafter.draftBuilder()
 					.type(type()).victim(victim).operator(sender().getOperator())
@@ -169,14 +190,6 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 			}
 			// Fallback to permanent if unable to parse
 			return Duration.ZERO;
-		}
-
-		private String parseReason() {
-			if (command().hasNext()) {
-				return command().allRemaining();
-			}
-			ReasonsConfig reasonsConfig = config().reasons();
-			return (reasonsConfig.permitBlank()) ? "" : reasonsConfig.defaultReason();
 		}
 
 		// Outcomes
