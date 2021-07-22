@@ -22,18 +22,16 @@ import java.net.InetAddress;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * User resolved. Name based lookups are case insensitive
+ *
+ */
 public interface EnvUserResolver {
 
 	Optional<UUID> lookupUUID(String name);
 
 	Optional<String> lookupName(UUID uuid);
 
-	/**
-	 * Gets the address of an online player by name
-	 * 
-	 * @param playerName the name of the player to look for
-	 * @return the address of the player or {@code null} if offline
-	 */
-	InetAddress getAddressOfOnlinePlayer(String playerName);
+	Optional<InetAddress> lookupAddress(String name);
 
 }

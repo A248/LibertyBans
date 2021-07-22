@@ -51,26 +51,6 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	void doForPlayerIfOnline(UUID uuid, Consumer<P> callback);
 
 	/**
-	 * Searches for a player with the given UUID, if found, kicks the player with the given message
-	 * 
-	 * @param uuid the uuid
-	 * @param message the kick message
-	 */
-	default void kickByUUID(UUID uuid, Component message) {
-		doForPlayerIfOnline(uuid, (player) -> kickPlayer(player, message));
-	}
-	
-	/**
-	 * Searches for a player with the given UUID, if found, sends the player the given message
-	 * 
-	 * @param uuid the uuid
-	 * @param message the message
-	 */
-	default void sendMessageByUUID(UUID uuid, ComponentLike message) {
-		doForPlayerIfOnline(uuid, (player) -> sendMessage(player, message));
-	}
-
-	/**
 	 * Kicks the given player
 	 *
 	 * @param player the player to kick
@@ -79,12 +59,12 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	void kickPlayer(P player, Component message);
 
 	/**
-	 * Sends a message to the given player
+	 * Sends a message to the given player. Does not include a prefix
 	 *
 	 * @param player the player
 	 * @param message the message to send
 	 */
-	void sendMessage(P player, ComponentLike message);
+	void sendMessageNoPrefix(P player, ComponentLike message);
 	
 	/**
 	 * Enforces a target matcher, invoking its callback for players matching its UUID or address set

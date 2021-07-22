@@ -130,7 +130,7 @@ public class StandardEnforcer implements Enforcer {
 				if (shouldKick) {
 					envEnforcer.kickPlayer(player, message);
 				} else {
-					envEnforcer.sendMessage(player, message);
+					envEnforcer.sendMessageNoPrefix(player, message);
 
 					/*
 					 * Mute enforcement must additionally take into account the mute cache

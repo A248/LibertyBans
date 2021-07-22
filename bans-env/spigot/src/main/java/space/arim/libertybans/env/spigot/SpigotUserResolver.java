@@ -58,11 +58,9 @@ public class SpigotUserResolver implements EnvUserResolver {
 	}
 
 	@Override
-	public InetAddress getAddressOfOnlinePlayer(String playerName) {
-		return getSync(() -> {
-			Player player = server.getPlayerExact(playerName);
-			return (player == null) ? null : player.getAddress().getAddress();
-		});
+	public Optional<InetAddress> lookupAddress(String name) {
+		return getSync(() ->
+				Optional.ofNullable(server.getPlayerExact(name)).map((player) -> player.getAddress().getAddress()));
 	}
 
 }

@@ -47,7 +47,7 @@ public abstract class AbstractEnvEnforcer<C, P extends C> implements EnvEnforcer
 	protected abstract void sendToThoseWithPermissionNoPrefix(String permission, Component message);
 
 	@Override
-	public void sendMessage(P player, ComponentLike message) {
+	public void sendMessageNoPrefix(P player, ComponentLike message) {
 		audienceRepresenter.toAudience(player).sendMessage(message);
 	}
 

@@ -28,6 +28,7 @@ import space.arim.omnibus.util.ThisClass;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Singleton
@@ -37,17 +38,17 @@ public class QuackPlatform {
 
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
-	public QuackPlayer getPlayer(UUID uuid) {
-		return players.get(uuid);
+	public Optional<QuackPlayer> getPlayer(UUID uuid) {
+		return Optional.ofNullable(players.get(uuid));
 	}
 
-	public QuackPlayer getPlayer(String name) {
+	public Optional<QuackPlayer> getPlayer(String name) {
 		for (QuackPlayer player : players.values()) {
 			if (player.getName().equalsIgnoreCase(name)) {
-				return player;
+				return Optional.of(player);
 			}
 		}
-		return null;
+		return Optional.empty();
 	}
 
 	public Collection<? extends QuackPlayer> getAllPlayers() {

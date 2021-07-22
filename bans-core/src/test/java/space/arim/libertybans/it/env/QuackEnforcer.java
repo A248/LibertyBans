@@ -53,10 +53,7 @@ public class QuackEnforcer extends AbstractEnvEnforcer<QuackPlayer, QuackPlayer>
 
 	@Override
 	public void doForPlayerIfOnline(UUID uuid, Consumer<QuackPlayer> callback) {
-		QuackPlayer player = platform.getPlayer(uuid);
-		if (player != null) {
-			callback.accept(player);
-		}
+		platform.getPlayer(uuid).ifPresent(callback);
 	}
 
 	@Override

@@ -214,9 +214,9 @@ public final class CachingUUIDManager implements UUIDManager {
 		if (!nameValidator.validateNameArgument(name)) {
 			return completedFuture(null);
 		}
-		InetAddress quickResolve = envResolver.getAddressOfOnlinePlayer(name);
-		if (quickResolve != null) {
-			return completedFuture(NetworkAddress.of(quickResolve));
+		Optional<InetAddress> quickResolve = envResolver.lookupAddress(name);
+		if (quickResolve.isPresent()) {
+			return completedFuture(NetworkAddress.of(quickResolve.get()));
 		}
 		return queryingImpl.resolveAddress(name);
 	}

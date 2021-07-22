@@ -38,18 +38,17 @@ public class QuackUserResolver implements EnvUserResolver {
 
 	@Override
 	public Optional<UUID> lookupUUID(String name) {
-		return Optional.ofNullable(platform.getPlayer(name)).map(QuackPlayer::getUniqueId);
+		return platform.getPlayer(name).map(QuackPlayer::getUniqueId);
 	}
 
 	@Override
 	public Optional<String> lookupName(UUID uuid) {
-		return Optional.ofNullable(platform.getPlayer(uuid)).map(QuackPlayer::getName);
+		return platform.getPlayer(uuid).map(QuackPlayer::getName);
 	}
 
 	@Override
-	public InetAddress getAddressOfOnlinePlayer(String playerName) {
-		QuackPlayer player = platform.getPlayer(playerName);
-		return (player == null) ? null : player.getAddress();
+	public Optional<InetAddress> lookupAddress(String name) {
+		return platform.getPlayer(name).map(QuackPlayer::getAddress);
 	}
 
 }

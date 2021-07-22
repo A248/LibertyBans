@@ -136,11 +136,11 @@ public class CachingUUIDManagerTest {
 
 	@Test
 	public void resolveAddressFromEnvironment() {
-		when(envUserResolver.getAddressOfOnlinePlayer(name)).thenReturn(address.toInetAddress());
+		when(envUserResolver.lookupAddress(name)).thenReturn(Optional.of(address.toInetAddress()));
 
 		assertEquals(address, lookupAddress(name));
 
-		verify(envUserResolver).getAddressOfOnlinePlayer(name);
+		verify(envUserResolver).lookupAddress(name);
 	}
 
 	@Test

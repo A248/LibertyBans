@@ -49,9 +49,8 @@ public class VelocityUserResolver implements EnvUserResolver {
 	}
 
 	@Override
-	public InetAddress getAddressOfOnlinePlayer(String playerName) {
-		Player player = server.getPlayer(playerName).orElse(null);
-		return (player == null) ? null : player.getRemoteAddress().getAddress();
+	public Optional<InetAddress> lookupAddress(String name) {
+		return server.getPlayer(name).map((player) -> player.getRemoteAddress().getAddress());
 	}
 
 }

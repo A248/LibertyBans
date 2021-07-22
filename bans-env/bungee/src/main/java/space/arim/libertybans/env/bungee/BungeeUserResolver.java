@@ -51,9 +51,8 @@ public class BungeeUserResolver implements EnvUserResolver {
 	}
 
 	@Override
-	public InetAddress getAddressOfOnlinePlayer(String playerName) {
-		ProxiedPlayer player = server.getPlayer(playerName);
-		return (player == null) ? null : addressReporter.getAddress(player);
+	public Optional<InetAddress> lookupAddress(String name) {
+		return Optional.ofNullable(server.getPlayer(name)).map(addressReporter::getAddress);
 	}
 
 }
