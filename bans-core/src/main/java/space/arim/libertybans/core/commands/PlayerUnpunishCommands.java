@@ -38,7 +38,7 @@ public class PlayerUnpunishCommands extends UnpunishCommands {
 
 	@Inject
 	public PlayerUnpunishCommands(Dependencies dependencies,
-			PunishmentRevoker revoker, InternalFormatter formatter, EnvEnforcer envEnforcer) {
+			PunishmentRevoker revoker, InternalFormatter formatter, EnvEnforcer<?> envEnforcer) {
 		super(dependencies, Arrays.stream(MiscUtil.punishmentTypesExcludingKick()).map((type) -> "un" + type),
 				revoker, formatter, envEnforcer);
 	}

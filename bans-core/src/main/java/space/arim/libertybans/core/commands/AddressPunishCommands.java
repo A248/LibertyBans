@@ -36,7 +36,7 @@ public class AddressPunishCommands extends PunishCommands {
 
 	@Inject
 	public AddressPunishCommands(Dependencies dependencies,
-			PunishmentDrafter drafter, InternalFormatter formatter, EnvEnforcer envEnforcer) {
+			PunishmentDrafter drafter, InternalFormatter formatter, EnvEnforcer<?> envEnforcer) {
 		super(dependencies, MiscUtil.punishmentTypes().stream().map((type) -> "ip" + type),
 				drafter, formatter, envEnforcer);
 	}

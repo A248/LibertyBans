@@ -44,7 +44,7 @@ public class QuackBindModule {
 		return env;
 	}
 
-	public EnvEnforcer enforcer(QuackEnforcer enforcer) {
+	public EnvEnforcer<?> enforcer(QuackEnforcer enforcer) {
 		return enforcer;
 	}
 

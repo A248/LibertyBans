@@ -49,10 +49,10 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 
 	private final PunishmentDrafter drafter;
 	private final InternalFormatter formatter;
-	private final EnvEnforcer envEnforcer;
+	private final EnvEnforcer<?> envEnforcer;
 	
 	PunishCommands(Dependencies dependencies, Stream<String> matches,
-			PunishmentDrafter drafter, InternalFormatter formatter, EnvEnforcer envEnforcer) {
+			PunishmentDrafter drafter, InternalFormatter formatter, EnvEnforcer<?> envEnforcer) {
 		super(dependencies, matches);
 		this.drafter = drafter;
 		this.formatter = formatter;

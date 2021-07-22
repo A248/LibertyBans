@@ -38,7 +38,7 @@ public class AddressUnpunishCommands extends UnpunishCommands {
 
 	@Inject
 	public AddressUnpunishCommands(Dependencies dependencies,
-			PunishmentRevoker revoker, InternalFormatter formatter, EnvEnforcer envEnforcer) {
+			PunishmentRevoker revoker, InternalFormatter formatter, EnvEnforcer<?> envEnforcer) {
 		super(dependencies, Arrays.stream(MiscUtil.punishmentTypesExcludingKick()).map((type) -> "un" + type + "ip"),
 				revoker, formatter, envEnforcer);
 	}

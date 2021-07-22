@@ -36,7 +36,7 @@ public class PlayerPunishCommands extends PunishCommands {
 
 	@Inject
 	public PlayerPunishCommands(Dependencies dependencies,
-			PunishmentDrafter drafter, InternalFormatter formatter, EnvEnforcer envEnforcer) {
+			PunishmentDrafter drafter, InternalFormatter formatter, EnvEnforcer<?> envEnforcer) {
 		super(dependencies, MiscUtil.punishmentTypes().stream().map(PunishmentType::toString),
 				drafter, formatter, envEnforcer);
 	}

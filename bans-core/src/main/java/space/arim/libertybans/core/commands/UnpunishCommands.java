@@ -45,10 +45,10 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 	
 	private final PunishmentRevoker revoker;
 	private final InternalFormatter formatter;
-	private final EnvEnforcer envEnforcer;
+	private final EnvEnforcer<?> envEnforcer;
 	
 	UnpunishCommands(Dependencies dependencies, Stream<String> matches,
-			PunishmentRevoker revoker, InternalFormatter formatter, EnvEnforcer envEnforcer) {
+			PunishmentRevoker revoker, InternalFormatter formatter, EnvEnforcer<?> envEnforcer) {
 		super(dependencies, matches);
 		this.revoker = revoker;
 		this.formatter = formatter;
