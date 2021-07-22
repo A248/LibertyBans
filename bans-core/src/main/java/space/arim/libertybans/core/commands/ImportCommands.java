@@ -30,6 +30,7 @@ import space.arim.libertybans.core.importing.ImportSource;
 import space.arim.libertybans.core.importing.ImportStatistics;
 import space.arim.libertybans.core.importing.LiteBansImportSource;
 import space.arim.libertybans.core.importing.PlatformImportSource;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.util.Collection;
 import java.util.List;
@@ -105,7 +106,9 @@ public class ImportCommands extends AbstractSubCommandGroup {
 				return;
 			}
 			ImportSource importSource = importSourceProviders.get(sourceType).get();
-			var future = executor.performImport(importSource).thenAccept((ImportStatistics statistics) -> {
+			CentralisedFuture<ImportStatistics> importFuture = executor.performImport(importSource);
+			sender().sendMessage(importMessages().started());
+			var future = importFuture.thenAccept((ImportStatistics statistics) -> {
 				if (statistics.success()) {
 					sender().sendMessage(importMessages().complete());
 					sender().sendLiteralMessage(statistics.toString());

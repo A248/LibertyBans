@@ -28,16 +28,18 @@ import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.punish.Enaction;
 import space.arim.libertybans.core.punish.PunishmentCreator;
 import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 public class ImportExecutor {
 
+	private final FactoryOfTheFuture futuresFactory;
 	private final ImportFunction importFunction;
 	private final Provider<InternalDatabase> dbProvider;
 	private final PunishmentCreator creator;
@@ -46,16 +48,17 @@ public class ImportExecutor {
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
 	@Inject
-	public ImportExecutor(ImportFunction importFunction, Provider<InternalDatabase> dbProvider,
-						  PunishmentCreator creator, Time time) {
+	public ImportExecutor(FactoryOfTheFuture futuresFactory, ImportFunction importFunction,
+						  Provider<InternalDatabase> dbProvider, PunishmentCreator creator, Time time) {
+		this.futuresFactory = futuresFactory;
 		this.importFunction = importFunction;
 		this.dbProvider = dbProvider;
 		this.creator = creator;
 		this.time = time;
 	}
 
-	public CompletableFuture<ImportStatistics> performImport(ImportSource importSource) {
-		CompletableFuture<ImportStatistics> future = new CompletableFuture<>();
+	public CentralisedFuture<ImportStatistics> performImport(ImportSource importSource) {
+		CentralisedFuture<ImportStatistics> future = futuresFactory.newIncompleteFuture();
 		new Thread(() -> {
 			try {
 				future.complete(runImport(importSource));
