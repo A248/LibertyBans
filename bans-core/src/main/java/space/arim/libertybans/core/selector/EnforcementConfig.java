@@ -21,10 +21,21 @@ package space.arim.libertybans.core.selector;
 import java.util.Set;
 
 import space.arim.dazzleconf.annote.ConfComments;
+import space.arim.dazzleconf.annote.ConfDefault;
+import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultString;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultStrings;
 
+@ConfHeader({"Options related to punishment enforcement and alt account checking",
+		"",
+		"Alt Account Enforcement and Checking:",
+		"There are multiple ways to combat alt accounts in LibertyBans.",
+		"First, you can have the plugin automatically detect alt accounts and prevent them from joining, ",
+		"with the same ban message. This is controlled by the 'address-strictness' setting.",
+		"Second, you can tell your staff members to be on the lookout for alts. They can use ",
+		"the /alts command to manually check players they suspect are alt accounts. Also, you can ",
+		"use 'enable-alts-auto-show' which will notify staff of players who may be using alts."})
 public interface EnforcementConfig {
 	
 	@ConfKey("address-strictness")
@@ -38,6 +49,12 @@ public interface EnforcementConfig {
 		"the punishment applies to the player"})
 	@DefaultString("NORMAL")
 	AddressStrictness addressStrictness(); // Sensitive name used in integration testing
+
+	@ConfComments({"If enabled, runs an alt-check on newly joined players, as if by /alts, ",
+			"the results of which will be shown to staff members with the libertybans.alts.autoshow permission."})
+	@ConfKey("enable-alts-auto-show")
+	@ConfDefault.DefaultBoolean(false)
+	boolean enableAltsAutoShow();
 	
 	@ConfKey("mute-commands")
 	@ConfComments({"",

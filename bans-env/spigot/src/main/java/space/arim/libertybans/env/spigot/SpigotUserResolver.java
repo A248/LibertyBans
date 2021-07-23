@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 
 import jakarta.inject.Inject;
 
+import space.arim.libertybans.core.env.UUIDAndAddress;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import space.arim.libertybans.core.env.EnvUserResolver;
@@ -61,6 +62,12 @@ public class SpigotUserResolver implements EnvUserResolver {
 	public Optional<InetAddress> lookupAddress(String name) {
 		return getSync(() ->
 				Optional.ofNullable(server.getPlayerExact(name)).map((player) -> player.getAddress().getAddress()));
+	}
+
+	@Override
+	public Optional<UUIDAndAddress> lookupPlayer(String name) {
+		return getSync(() -> Optional.ofNullable(server.getPlayerExact(name))
+				.map((player) -> new UUIDAndAddress(player.getUniqueId(), player.getAddress().getAddress())));
 	}
 
 }

@@ -28,6 +28,7 @@ import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.scope.InternalScopeManager;
+import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.time.Duration;
@@ -38,12 +39,15 @@ public class Enactor implements PunishmentDrafter {
 	private final InternalScopeManager scopeManager;
 	private final Provider<InternalDatabase> dbProvider;
 	private final PunishmentCreator creator;
+	private final Time time;
 
 	@Inject
-	public Enactor(InternalScopeManager scopeManager, Provider<InternalDatabase> dbProvider, PunishmentCreator creator) {
+	public Enactor(InternalScopeManager scopeManager, Provider<InternalDatabase> dbProvider,
+				   PunishmentCreator creator, Time time) {
 		this.scopeManager = scopeManager;
 		this.dbProvider = dbProvider;
 		this.creator = creator;
+		this.time = time;
 	}
 
 	@Override
@@ -61,7 +65,7 @@ public class Enactor implements PunishmentDrafter {
 
 			final PunishmentType type = draftPunishment.getType();
 			final Duration duration = draftPunishment.getDuration();
-			final long start = MiscUtil.currentTime();
+			final long start = time.currentTime();
 			final long end = (duration.isZero()) ? 0L : start + duration.toSeconds();
 
 			Enaction enaction = new Enaction(

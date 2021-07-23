@@ -33,6 +33,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static space.arim.libertybans.it.util.RandomUtil.randomName;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
 public class UUIDStoreIT {
@@ -41,11 +42,6 @@ public class UUIDStoreIT {
 
 	public UUIDStoreIT(UUIDManager uuidManager) {
 		this.uuidManager = uuidManager;
-	}
-
-	private static String randomName() {
-		// Names too small tend to be in use
-		return RandomUtil.randomString(12, 16);
 	}
 
 	private static NetworkAddress randomAddress() {

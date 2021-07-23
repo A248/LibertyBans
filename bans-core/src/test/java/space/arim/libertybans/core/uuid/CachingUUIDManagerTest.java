@@ -25,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.core.config.SqlConfig;
+import space.arim.libertybans.core.env.UUIDAndAddress;
 import space.arim.omnibus.util.UUIDUtil;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.config.Configs;
@@ -107,6 +108,10 @@ public class CachingUUIDManagerTest {
 		return uuidManager.lookupAddress(name).join();
 	}
 
+	private UUIDAndAddress lookupPlayer(String name) {
+		return uuidManager.lookupPlayer(name).join().orElse(null);
+	}
+
 	private <T> CentralisedFuture<T> completedFuture(T value) {
 		return futuresFactory.completedFuture(value);
 	}
@@ -144,6 +149,16 @@ public class CachingUUIDManagerTest {
 	}
 
 	@Test
+	public void resolvePlayerFromEnvironment() {
+		UUIDAndAddress userDetails = new UUIDAndAddress(uuid, address);
+		when(envUserResolver.lookupPlayer(name)).thenReturn(Optional.of(userDetails));
+
+		assertEquals(userDetails, lookupPlayer(name));
+
+		verify(envUserResolver).lookupPlayer(name);
+	}
+
+	@Test
 	public void resolveUUIDQueried() {
 		when(queryingImpl.resolve(name)).thenReturn(completedFuture(uuid), completedFuture(null));
 
@@ -171,6 +186,16 @@ public class CachingUUIDManagerTest {
 		assertEquals(address, lookupAddress(name));
 
 		verify(queryingImpl).resolveAddress(name);
+	}
+
+	@Test
+	public void resolvePlayerQueried() {
+		UUIDAndAddress userDetails = new UUIDAndAddress(uuid, address);
+		when(queryingImpl.resolvePlayer(name)).thenReturn(completedFuture(userDetails));
+
+		assertEquals(userDetails, lookupPlayer(name));
+
+		verify(queryingImpl).resolvePlayer(name);
 	}
 
 	private void mockConfig(ServerType serverType, RemoteApiBundle remoteApiBundle) {
@@ -245,8 +270,9 @@ public class CachingUUIDManagerTest {
 		assertNull(lookupUUID(badName));
 		assertNull(lookupUUIDExact(badName));
 		assertNull(lookupAddress(badName));
+		assertNull(lookupPlayer(badName));
 
-		verify(nameValidator, times(3)).validateNameArgument(badName);
+		verify(nameValidator, times(4)).validateNameArgument(badName);
 	}
 
 }

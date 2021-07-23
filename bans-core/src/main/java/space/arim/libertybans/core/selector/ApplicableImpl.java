@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.core.selector;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -26,7 +27,11 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.core.alts.AltDetection;
+import space.arim.libertybans.core.alts.AltNotification;
+import space.arim.libertybans.core.alts.DetectedAlt;
 import space.arim.libertybans.core.punish.Association;
+import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -45,14 +50,21 @@ public class ApplicableImpl {
 	private final FactoryOfTheFuture futuresFactory;
 	private final Provider<InternalDatabase> dbProvider;
 	private final PunishmentCreator creator;
+	private final AltDetection altDetection;
+	private final AltNotification altNotification;
+	private final Time time;
 	
 	@Inject
 	public ApplicableImpl(Configs configs, FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider,
-			PunishmentCreator creator) {
+						  PunishmentCreator creator, AltDetection altDetection, AltNotification altNotification,
+						  Time time) {
 		this.configs = configs;
 		this.futuresFactory = futuresFactory;
 		this.dbProvider = dbProvider;
 		this.creator = creator;
+		this.altDetection = altDetection;
+		this.altNotification = altNotification;
+		this.time = time;
 	}
 	
 	private Map.Entry<String, Object[]> getApplicabilityQuery(UUID uuid, NetworkAddress address, PunishmentType type) {
@@ -93,15 +105,15 @@ public class ApplicableImpl {
 		return database.selectAsync(() -> {
 
 			Map.Entry<String, Object[]> query = getApplicabilityQuery(uuid, address, PunishmentType.BAN);
-			long currentTime = MiscUtil.currentTime();
+			long currentTime = time.currentTime();
 
-			return database.jdbCaesar().transaction().body((querySource, controller) -> {
+			Object banOrDetectedAltsOrNull = database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 				Association association = new Association(uuid, querySource);
 				association.associateCurrentName(name, currentTime);
 				association.associateCurrentAddress(address, currentTime);
 
-				return querySource.query(
+				Punishment ban = querySource.query(
 						query.getKey())
 						.params(query.getValue())
 						.singleResult((resultSet) -> {
@@ -110,7 +122,24 @@ public class ApplicableImpl {
 									database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
 									database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
 						}).execute();
+				if (ban != null) {
+					return ban;
+				}
+				// The player is not banned, but should be checked for alts
+				if (configs.getMainConfig().enforcement().enableAltsAutoShow()) {
+					return altDetection.detectAlts(querySource, uuid, address);
+				}
+				return null;
 			}).execute();
+			if (banOrDetectedAltsOrNull instanceof Punishment) {
+				return (Punishment) banOrDetectedAltsOrNull;
+			}
+			if (banOrDetectedAltsOrNull instanceof List) {
+				@SuppressWarnings("unchecked")
+				List<DetectedAlt> detectedAlts = (List<DetectedAlt>) banOrDetectedAltsOrNull;
+				altNotification.notifyFoundAlts(uuid, name, address, detectedAlts);
+			}
+			return null;
 		});
 	}
 	
