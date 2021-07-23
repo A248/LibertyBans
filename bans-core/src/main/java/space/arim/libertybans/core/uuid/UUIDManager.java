@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import space.arim.libertybans.core.Part;
+import space.arim.libertybans.core.env.UUIDAndAddress;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.libertybans.api.NetworkAddress;
@@ -49,5 +50,13 @@ public interface UUIDManager extends UserResolver, Part {
 	 * @return a future yielding the UUID or an empty optional if not found
 	 */
 	CentralisedFuture<Optional<UUID>> lookupUUIDFromExactName(String name);
+
+	/**
+	 * Looks up player details from a player name
+	 *
+	 * @param name the name of the player
+	 * @return a future yielding the user details or an empty optional if not found
+	 */
+	CentralisedFuture<Optional<UUIDAndAddress>> lookupPlayer(String name);
 	
 }

@@ -16,29 +16,27 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core;
 
-import jakarta.inject.Singleton;
-import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.config.SpecifiedConfigs;
-import space.arim.libertybans.core.service.SettableTime;
-import space.arim.libertybans.core.service.SettableTimeImpl;
-import space.arim.libertybans.core.service.Time;
-import space.arim.libertybans.it.ConfigSpec;
+package space.arim.libertybans.core.service;
 
-public class PillarOneReplacementModule extends PillarOneBindModuleMinusConfigs {
+/**
+ * A live timer, commonly used at runtime
+ *
+ */
+public final class LiveTime implements Time {
 
-	public Configs configs(SpecifiedConfigs configs) {
-		return configs;
+	public static final LiveTime INSTANCE = new LiveTime();
+
+	private LiveTime() {
 	}
 
-	@Singleton
-	public SettableTime time(ConfigSpec configSpec) {
-		return new SettableTimeImpl(configSpec.unixTime());
+	@Override
+	public long currentTime() {
+		return System.currentTimeMillis() / 1_000L;
 	}
 
-	public Time time(SettableTime time) {
-		return time;
+	@Override
+	public String toString() {
+		return "Live.INSTANCE";
 	}
-
 }

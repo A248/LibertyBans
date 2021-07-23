@@ -21,6 +21,7 @@ package space.arim.libertybans.core.database;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.ThisClass;
 
 import space.arim.libertybans.api.PunishmentType;
@@ -30,12 +31,14 @@ class RefreshTaskRunnable implements Runnable {
 
 	private final DatabaseManager manager;
 	private final InternalDatabase database;
+	private final Time time;
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
-	RefreshTaskRunnable(DatabaseManager manager, InternalDatabase database) {
+	RefreshTaskRunnable(DatabaseManager manager, InternalDatabase database, Time time) {
 		this.manager = manager;
 		this.database = database;
+		this.time = time;
 	}
 
 	@Override
@@ -47,7 +50,7 @@ class RefreshTaskRunnable implements Runnable {
 		}
 		database.jdbCaesar().transaction().body((querySource, controller) -> {
 
-			long currentTime = MiscUtil.currentTime();
+			long currentTime = time.currentTime();
 			for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
 				database.clearExpiredPunishments(querySource, type, currentTime);
 			}

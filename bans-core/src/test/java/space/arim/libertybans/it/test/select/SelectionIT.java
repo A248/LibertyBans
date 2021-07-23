@@ -30,6 +30,7 @@ import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
+import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.resolver.NotConsole;
@@ -38,7 +39,6 @@ import space.arim.libertybans.it.resolver.RandomPunishmentTypeResolver;
 import space.arim.libertybans.it.resolver.RandomPunishmentTypeResolver.SingularPunishment;
 import space.arim.libertybans.it.resolver.RandomReasonResolver;
 import space.arim.libertybans.it.resolver.RandomVictimResolver;
-import space.arim.libertybans.it.util.TestingUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.time.Duration;
@@ -57,15 +57,17 @@ public class SelectionIT {
 	private final PunishmentDrafter drafter;
 	private final PunishmentSelector selector;
 	private final ScopeManager scopeManager;
+	private final SettableTime time;
 
 	private static final Duration ONE_SECOND = Duration.ofSeconds(1L);
 	private static final Duration TWO_SECONDS = ONE_SECOND.multipliedBy(2L);
 
 	public SelectionIT(PunishmentDrafter drafter, PunishmentSelector selector,
-			ScopeManager scopeManager) {
+					   ScopeManager scopeManager, SettableTime time) {
 		this.drafter = drafter;
 		this.selector = selector;
 		this.scopeManager = scopeManager;
+		this.time = time;
 	}
 
 	private SelectionOrderBuilder selectionBuilder(PunishmentType type) {
@@ -135,11 +137,11 @@ public class SelectionIT {
 		Punishment pun1 = getPunishment(
 				draftBuilder(type, victim, "and kicked/warned on top of that"));
 		// Required to have punishment start times be correctly ordered
-		TestingUtil.sleepUnchecked(ONE_SECOND);
+		time.advanceBy(ONE_SECOND);
 
 		Punishment pun2 = getPunishment(
 				draftBuilder(type, victim, "Yet another punishment"));
-		TestingUtil.sleepUnchecked(ONE_SECOND);
+		time.advanceBy(ONE_SECOND);
 
 		Punishment pun3 = getPunishment(
 				draftBuilder(type, victim, "More punishments all around"));
@@ -160,11 +162,11 @@ public class SelectionIT {
 			@DontInject Victim victim) {
 		Punishment expired1 = getPunishment(
 				draftBuilder(type, victim, "the first punishment").duration(ONE_SECOND));
-		TestingUtil.sleepUnchecked(TWO_SECONDS);
+		time.advanceBy(TWO_SECONDS);
 
 		Punishment expired2 = getPunishment(
 				draftBuilder(type, victim, "the second punishment").duration(ONE_SECOND));
-		TestingUtil.sleepUnchecked(TWO_SECONDS);
+		time.advanceBy(TWO_SECONDS);
 
 		Punishment active = getPunishment(
 				draftBuilder(type, victim, "the third punishment"));
@@ -193,7 +195,7 @@ public class SelectionIT {
 				draftBuilder(PunishmentType.BAN, victim1, "banhammer").operator(operator1));
 		Punishment warnFromOp2 = getPunishment(
 				draftBuilder(PunishmentType.WARN, victim1, "warning").operator(operator2));
-		TestingUtil.sleepUnchecked(ONE_SECOND);
+		time.advanceBy(ONE_SECOND);
 
 		Punishment muteOfVictim2FromOp1 = getPunishment(
 				draftBuilder(PunishmentType.MUTE, victim2, "muted").operator(operator1));

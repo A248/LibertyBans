@@ -35,6 +35,7 @@ import space.arim.dazzleconf.annote.ConfDefault.DefaultStrings;
 import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.SubSection;
+import space.arim.libertybans.core.alts.AltsSection;
 
 @ConfHeader({
 		"",
@@ -232,6 +233,9 @@ public interface MessagesConfig {
 	
 	@SubSection
 	Misc misc();
+
+	@SubSection
+	AltsSection alts();
 	
 	interface Misc {
 		

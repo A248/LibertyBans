@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import com.zaxxer.hikari.HikariDataSource;
 
+import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.UUIDUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -113,11 +114,11 @@ public final class StandardDatabase implements InternalDatabase {
 	 * Guarded by the global lock on BaseFoundation lifecycle events
 	 */
 	
-	void startRefreshTaskIfNecessary() {
+	void startRefreshTaskIfNecessary(Time time) {
 		if (!refresherEvent) {
 			EnhancedExecutor enhancedExecutor = manager.enhancedExecutorProvider().get();
 			hyperSqlRefreshTask = enhancedExecutor.scheduleRepeating(
-					new RefreshTaskRunnable(manager, this),
+					new RefreshTaskRunnable(manager, this, time),
 					Duration.ofHours(1L), DelayCalculators.fixedDelay());
 		}
 	}

@@ -20,6 +20,7 @@ package space.arim.libertybans.it.env;
 
 import jakarta.inject.Inject;
 import space.arim.libertybans.core.env.EnvUserResolver;
+import space.arim.libertybans.core.env.UUIDAndAddress;
 import space.arim.libertybans.it.env.platform.QuackPlatform;
 import space.arim.libertybans.it.env.platform.QuackPlayer;
 
@@ -49,6 +50,12 @@ public class QuackUserResolver implements EnvUserResolver {
 	@Override
 	public Optional<InetAddress> lookupAddress(String name) {
 		return platform.getPlayer(name).map(QuackPlayer::getAddress);
+	}
+
+	@Override
+	public Optional<UUIDAndAddress> lookupPlayer(String name) {
+		return platform.getPlayer(name)
+				.map((player) -> new UUIDAndAddress(player.getUniqueId(), player.getAddress()));
 	}
 
 }

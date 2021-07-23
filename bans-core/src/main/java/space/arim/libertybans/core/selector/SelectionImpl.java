@@ -29,6 +29,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
@@ -39,7 +40,6 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.database.InternalDatabase;
-import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.punish.PunishmentCreator;
 
 @Singleton
@@ -48,12 +48,15 @@ public class SelectionImpl {
 	private final FactoryOfTheFuture futuresFactory;
 	private final Provider<InternalDatabase> dbProvider;
 	private final PunishmentCreator creator;
+	private final Time time;
 
 	@Inject
-	public SelectionImpl(FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider, PunishmentCreator creator) {
+	public SelectionImpl(FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider,
+						 PunishmentCreator creator, Time time) {
 		this.futuresFactory = futuresFactory;
 		this.dbProvider = dbProvider;
 		this.creator = creator;
+		this.time = time;
 	}
 
 	/*
@@ -87,7 +90,7 @@ public class SelectionImpl {
 		return columns.toString();
 	}
 
-	private static Map.Entry<String, Object[]> getPredication(InternalSelectionOrder selection) {
+	private Map.Entry<String, Object[]> getPredication(InternalSelectionOrder selection) {
 		StringJoiner predicates = new StringJoiner(" AND ");
 		List<Object> params = new ArrayList<>();
 
@@ -110,7 +113,7 @@ public class SelectionImpl {
 		PunishmentType type = selection.getTypeNullable();
 		if (selection.selectActiveOnly()) {
 			predicates.add("(`end` = 0 OR `end` > ?)");
-			params.add(MiscUtil.currentTime());
+			params.add(time.currentTime());
 		} else if (type != null) {
 			predicates.add("`type` = ?");
 			params.add(type);
@@ -135,7 +138,7 @@ public class SelectionImpl {
 				database.getEndFromResult(resultSet));
 	}
 	
-	private static Map.Entry<String, Object[]> getSelectionQuery(InternalSelectionOrder selection) {
+	private Map.Entry<String, Object[]> getSelectionQuery(InternalSelectionOrder selection) {
 		String columns = getColumns(selection);
 		Map.Entry<String, Object[]> predication = getPredication(selection);
 

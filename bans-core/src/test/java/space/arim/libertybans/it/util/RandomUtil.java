@@ -66,6 +66,16 @@ public final class RandomUtil {
 	}
 
 	/**
+	 * Random player username
+	 *
+	 * @return the name
+	 */
+	public static String randomName() {
+		// Names too small tend to be in use
+		return RandomUtil.randomString(12, 16);
+	}
+
+	/**
 	 * Generates a random string
 	 * 
 	 * @param maxLength the maximum length of the string

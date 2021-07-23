@@ -22,6 +22,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -37,12 +38,15 @@ public class IDImpl {
 	private final FactoryOfTheFuture futuresFactory;
 	private final Provider<InternalDatabase> dbProvider;
 	private final PunishmentCreator creator;
+	private final Time time;
 	
 	@Inject
-	public IDImpl(FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider, PunishmentCreator creator) {
+	public IDImpl(FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider,
+				  PunishmentCreator creator, Time time) {
 		this.futuresFactory = futuresFactory;
 		this.dbProvider = dbProvider;
 		this.creator = creator;
+		this.time = time;
 	}
 	
 	CentralisedFuture<Punishment> getActivePunishmentById(int id) {
@@ -50,7 +54,7 @@ public class IDImpl {
 		return database.selectAsync(() -> {
 			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
-				long currentTime = MiscUtil.currentTime();
+				long currentTime = time.currentTime();
 				for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
 
 					Punishment found = querySource.query(
@@ -84,7 +88,7 @@ public class IDImpl {
 					"SELECT `victim`, `victim_type`, `operator`, `reason`, `scope`, `start`, `end` "
 					+ "FROM `libertybans_simple_" + type + "s` "
 					+ "WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
-					.params(id, MiscUtil.currentTime())
+					.params(id, time.currentTime())
 					.singleResult((resultSet) -> {
 						return creator.createPunishment(id, type,
 								database.getVictimFromResult(resultSet), database.getOperatorFromResult(resultSet),

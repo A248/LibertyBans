@@ -35,6 +35,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import space.arim.libertybans.core.config.SqlConfig;
+import space.arim.libertybans.core.env.UUIDAndAddress;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -207,7 +208,7 @@ public final class CachingUUIDManager implements UUIDManager {
 		return uuidResolution.remoteApis().lookup(resultFunction).thenApply(Optional::ofNullable);
 	}
 	
-	// Address lookups
+	// Other lookups
 	
 	@Override
 	public CentralisedFuture<NetworkAddress> lookupAddress(String name) {
@@ -219,6 +220,18 @@ public final class CachingUUIDManager implements UUIDManager {
 			return completedFuture(NetworkAddress.of(quickResolve.get()));
 		}
 		return queryingImpl.resolveAddress(name);
+	}
+
+	@Override
+	public CentralisedFuture<Optional<UUIDAndAddress>> lookupPlayer(String name) {
+		if (!nameValidator.validateNameArgument(name)) {
+			return completedFuture(Optional.empty());
+		}
+		Optional<UUIDAndAddress> quickResolve = envResolver.lookupPlayer(name);
+		if (quickResolve.isPresent()) {
+			return futuresFactory.completedFuture(quickResolve);
+		}
+		return queryingImpl.resolvePlayer(name).thenApply(Optional::ofNullable);
 	}
 	
 }

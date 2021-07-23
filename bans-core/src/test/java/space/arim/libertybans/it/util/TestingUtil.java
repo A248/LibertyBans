@@ -21,11 +21,7 @@ package space.arim.libertybans.it.util;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentBase;
 
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 public final class TestingUtil {
 
@@ -52,20 +48,6 @@ public final class TestingUtil {
 		assertEquals(expected.getID(), actual.getID());
 		assertEquals(expected.getStartDate(), actual.getStartDate());
 		assertEquals(expected.getEndDate(), actual.getEndDate());
-	}
-
-	/**
-	 * Invokes {@code Thread.sleep} for the specified duration
-	 * 
-	 * @param duration the duration to sleep
-	 */
-	public static void sleepUnchecked(Duration duration) {
-		try {
-			TimeUnit.MILLISECONDS.sleep(duration.toMillis());
-		} catch (InterruptedException ex) {
-			Thread.currentThread().interrupt();
-			fail("Failed to sleep", ex);
-		}
 	}
 
 }

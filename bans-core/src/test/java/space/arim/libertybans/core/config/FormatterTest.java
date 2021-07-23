@@ -38,6 +38,7 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.scope.InternalScopeManager;
+import space.arim.libertybans.core.service.FixedTime;
 import space.arim.libertybans.core.service.Time;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -90,7 +91,7 @@ public class FormatterTest {
 		this.globalScope = globalScope;
 
 		formatter = new Formatter(futuresFactory, configs, scopeManager, uuidManager,
-				Time.fixed(INSTANT_2021_01_05));
+				new FixedTime(INSTANT_2021_01_05));
 	}
 
 	@BeforeEach

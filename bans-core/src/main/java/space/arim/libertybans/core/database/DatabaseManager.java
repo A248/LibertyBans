@@ -25,6 +25,7 @@ import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -42,17 +43,20 @@ public class DatabaseManager implements Part {
 	private final Provider<EnhancedExecutor> enhancedExecutorProvider;
 	private final Configs configs;
 	private final InternalScopeManager scopeManager;
+	private final Time time;
 	
 	private volatile StandardDatabase database;
 	
 	@Inject
 	public DatabaseManager(@Named("folder") Path folder, FactoryOfTheFuture futuresFactory,
-			Provider<EnhancedExecutor> enhancedExecutorProvider, Configs configs, InternalScopeManager scopeManager) {
+						   Provider<EnhancedExecutor> enhancedExecutorProvider, Configs configs,
+						   InternalScopeManager scopeManager, Time time) {
 		this.folder = folder;
 		this.futuresFactory = futuresFactory;
 		this.enhancedExecutorProvider = enhancedExecutorProvider;
 		this.configs = configs;
 		this.scopeManager = scopeManager;
+		this.time = time;
 	}
 	
 	public Path folder() {
@@ -91,7 +95,7 @@ public class DatabaseManager implements Part {
 			database.closeCompletely();
 			throw new StartupException("Database initialisation failed");
 		}
-		database.startRefreshTaskIfNecessary();
+		database.startRefreshTaskIfNecessary(time);
 		this.database = database;
 	}
 	
@@ -113,7 +117,7 @@ public class DatabaseManager implements Part {
 			currentDatabase.closeCompletely();
 		}
 
-		database.startRefreshTaskIfNecessary();
+		database.startRefreshTaskIfNecessary(time);
 		this.database = database;
 	}
 

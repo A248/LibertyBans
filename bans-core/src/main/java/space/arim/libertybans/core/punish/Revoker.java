@@ -25,6 +25,7 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -45,16 +46,18 @@ public class Revoker implements InternalRevoker {
 	private final Provider<InternalDatabase> dbProvider;
 	private final PunishmentCreator creator;
 	private final MuteCache muteCache;
+	private final Time time;
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 	
 	@Inject
-	public Revoker(FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider, PunishmentCreator creator,
-			MuteCache muteCache) {
+	public Revoker(FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider,
+				   PunishmentCreator creator, MuteCache muteCache, Time time) {
 		this.futuresFactory = futuresFactory;
 		this.dbProvider = dbProvider;
 		this.creator = creator;
 		this.muteCache = muteCache;
+		this.time = time;
 	}
 	
 	MuteCache muteCache() {
@@ -92,7 +95,7 @@ public class Revoker implements InternalRevoker {
 		}
 		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
-			final long currentTime = MiscUtil.currentTime();
+			final long currentTime = time.currentTime();
 
 			if (database.getVendor().hasDeleteFromJoin()) {
 				return database.jdbCaesar().query(
@@ -133,7 +136,7 @@ public class Revoker implements InternalRevoker {
 		}
 		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
-			final long currentTime = MiscUtil.currentTime();
+			final long currentTime = time.currentTime();
 			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 				Victim victim = querySource.query(
@@ -173,7 +176,7 @@ public class Revoker implements InternalRevoker {
 	CentralisedFuture<Boolean> undoPunishmentById(final int id) {
 		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
-			final long currentTime = MiscUtil.currentTime();
+			final long currentTime = time.currentTime();
 
 			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 				boolean hasDeleteFromJoin = database.getVendor().hasDeleteFromJoin();
@@ -219,7 +222,7 @@ public class Revoker implements InternalRevoker {
 		return database.selectAsync(() -> {
 			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
-				final long currentTime = MiscUtil.currentTime();
+				final long currentTime = time.currentTime();
 				for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
 
 					Victim victim = querySource.query(
@@ -260,7 +263,7 @@ public class Revoker implements InternalRevoker {
 	CentralisedFuture<Boolean> undoPunishmentByTypeAndVictim(final PunishmentType type, final Victim victim) {
 		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
-			final long currentTime = MiscUtil.currentTime();
+			final long currentTime = time.currentTime();
 
 			if (database.getVendor().hasDeleteFromJoin()) {
 				return database.jdbCaesar().query(
@@ -305,7 +308,7 @@ public class Revoker implements InternalRevoker {
 	CentralisedFuture<Punishment> undoAndGetPunishmentByTypeAndVictim(final PunishmentType type, final Victim victim) {
 		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
-			final long currentTime = MiscUtil.currentTime();
+			final long currentTime = time.currentTime();
 			return database.jdbCaesar().transaction().body((querySource, controller) -> {
 
 				Integer id = querySource.query(

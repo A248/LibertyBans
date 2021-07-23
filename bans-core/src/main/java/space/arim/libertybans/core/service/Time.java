@@ -26,81 +26,22 @@ import java.time.Instant;
  * Timer which is very similar to {@link Clock}
  *
  */
-public abstract class Time {
+public interface Time {
 
 	/**
 	 * Retrieves the current time in seconds
 	 *
 	 * @return the current time
 	 */
-	public abstract long currentTime();
+	long currentTime();
 
 	/**
-	 * Gets a live timer. Commonly used during normal operation
+	 * Retrieves the current timestamp
 	 *
-	 * @return a live timer
+	 * @return the current timestamp
 	 */
-	public static Time live() {
-		return Live.INSTANCE;
+	default Instant currentTimestamp() {
+		return Instant.ofEpochSecond(currentTime());
 	}
 
-	/**
-	 * Gets a fixed timer. Useful for testing
-	 *
-	 * @param instant the fixed timestamp
-	 * @return a fixed timer
-	 */
-	public static Time fixed(Instant instant) {
-		return new Fixed(instant.getEpochSecond());
-	}
-
-	private static final class Live extends Time {
-
-		static final Live INSTANCE = new Live();
-		private Live() {}
-
-		@Override
-		public long currentTime() {
-			return System.currentTimeMillis() / 1_000L;
-		}
-
-		@Override
-		public String toString() {
-			return "Live.INSTANCE";
-		}
-	}
-
-	private static class Fixed extends Time {
-
-		private final long timestamp;
-
-		Fixed(long timestamp) {
-			this.timestamp = timestamp;
-		}
-
-		@Override
-		public long currentTime() {
-			return timestamp;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			Fixed fixed = (Fixed) o;
-			return timestamp == fixed.timestamp;
-		}
-
-		@Override
-		public int hashCode() {
-			return (int) (timestamp ^ (timestamp >>> 32));
-		}
-
-		@Override
-		public String toString() {
-			return "Fixed{" +
-					"timestamp=" + timestamp +
-					'}';
-		}
-	}
 }

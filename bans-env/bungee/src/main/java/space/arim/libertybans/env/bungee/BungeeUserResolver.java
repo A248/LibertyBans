@@ -28,6 +28,7 @@ import space.arim.libertybans.core.env.EnvUserResolver;
 
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import space.arim.libertybans.core.env.UUIDAndAddress;
 
 public class BungeeUserResolver implements EnvUserResolver {
 
@@ -53,6 +54,12 @@ public class BungeeUserResolver implements EnvUserResolver {
 	@Override
 	public Optional<InetAddress> lookupAddress(String name) {
 		return Optional.ofNullable(server.getPlayer(name)).map(addressReporter::getAddress);
+	}
+
+	@Override
+	public Optional<UUIDAndAddress> lookupPlayer(String name) {
+		return Optional.ofNullable(server.getPlayer(name))
+				.map((player) -> new UUIDAndAddress(player.getUniqueId(), addressReporter.getAddress(player)));
 	}
 
 }

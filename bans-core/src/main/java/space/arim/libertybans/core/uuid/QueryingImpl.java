@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import jakarta.inject.Provider;
 
+import space.arim.libertybans.core.env.UUIDAndAddress;
 import space.arim.omnibus.util.UUIDUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
@@ -59,7 +60,7 @@ class QueryingImpl {
 	}
 
 	/*
-	 * Address lookups
+	 * Other lookups
 	 */
 
 	CentralisedFuture<NetworkAddress> resolveAddress(String name) {
@@ -72,6 +73,23 @@ class QueryingImpl {
 					.params(name)
 					.singleResult((resultSet) -> NetworkAddress.of(resultSet.getBytes("address")))
 					.execute();
+		});
+	}
+
+	CentralisedFuture<UUIDAndAddress> resolvePlayer(String name) {
+		InternalDatabase database = dbProvider.get();
+		return database.selectAsync(() -> {
+			return database.jdbCaesar().query("SELECT `uuid`, `addrs`.`address` " +
+					"FROM `libertybans_names` `names` " +
+					"INNER JOIN `libertybans_addresses` `addrs` " +
+					"ON `names`.`uuid` = `addrs`.`uuid` " +
+					"WHERE `names`.`name`")
+					.params(name)
+					.singleResult((resultSet) -> {
+						return new UUIDAndAddress(
+								UUIDUtil.fromByteArray(resultSet.getBytes("uuid")),
+								NetworkAddress.of(resultSet.getBytes("address")));
+					}).execute();
 		});
 	}
 

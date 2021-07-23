@@ -57,16 +57,6 @@ public final class MiscUtil {
 	}
 	
 	/**
-	 * Convenience method to return the current unix time in seconds.
-	 * Uses <code>System.currentTimeMillis()</code>
-	 * 
-	 * @return the current unix timestamp
-	 */
-	public static long currentTime() {
-		return System.currentTimeMillis() / 1_000L;
-	}
-	
-	/**
 	 * Checks whether the specified end time is expired based on the current time, i.e.
 	 * {@code end != 0} and {@code end < currentTime}
 	 * 

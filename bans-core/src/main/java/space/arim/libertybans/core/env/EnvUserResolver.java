@@ -34,4 +34,6 @@ public interface EnvUserResolver {
 
 	Optional<InetAddress> lookupAddress(String name);
 
+	Optional<UUIDAndAddress> lookupPlayer(String name);
+
 }

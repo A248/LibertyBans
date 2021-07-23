@@ -28,6 +28,7 @@ import space.arim.libertybans.core.env.EnvUserResolver;
 
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import space.arim.libertybans.core.env.UUIDAndAddress;
 
 public class VelocityUserResolver implements EnvUserResolver {
 
@@ -51,6 +52,12 @@ public class VelocityUserResolver implements EnvUserResolver {
 	@Override
 	public Optional<InetAddress> lookupAddress(String name) {
 		return server.getPlayer(name).map((player) -> player.getRemoteAddress().getAddress());
+	}
+
+	@Override
+	public Optional<UUIDAndAddress> lookupPlayer(String name) {
+		return server.getPlayer(name)
+				.map((player) -> new UUIDAndAddress(player.getUniqueId(), player.getRemoteAddress().getAddress()));
 	}
 
 }

@@ -16,29 +16,10 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core;
 
-import jakarta.inject.Singleton;
-import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.config.SpecifiedConfigs;
-import space.arim.libertybans.core.service.SettableTime;
-import space.arim.libertybans.core.service.SettableTimeImpl;
-import space.arim.libertybans.core.service.Time;
-import space.arim.libertybans.it.ConfigSpec;
+package space.arim.libertybans.core.alts;
 
-public class PillarOneReplacementModule extends PillarOneBindModuleMinusConfigs {
-
-	public Configs configs(SpecifiedConfigs configs) {
-		return configs;
-	}
-
-	@Singleton
-	public SettableTime time(ConfigSpec configSpec) {
-		return new SettableTimeImpl(configSpec.unixTime());
-	}
-
-	public Time time(SettableTime time) {
-		return time;
-	}
-
+public enum DetectionKind {
+	NORMAL,
+	STRICT
 }

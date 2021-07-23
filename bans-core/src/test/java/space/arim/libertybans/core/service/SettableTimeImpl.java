@@ -16,29 +16,34 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core;
 
-import jakarta.inject.Singleton;
-import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.config.SpecifiedConfigs;
-import space.arim.libertybans.core.service.SettableTime;
-import space.arim.libertybans.core.service.SettableTimeImpl;
-import space.arim.libertybans.core.service.Time;
-import space.arim.libertybans.it.ConfigSpec;
+package space.arim.libertybans.core.service;
 
-public class PillarOneReplacementModule extends PillarOneBindModuleMinusConfigs {
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.TemporalAmount;
+import java.util.Objects;
 
-	public Configs configs(SpecifiedConfigs configs) {
-		return configs;
+public final class SettableTimeImpl implements SettableTime {
+
+	private Instant timestamp;
+
+	public SettableTimeImpl(Instant timestamp) {
+		this.timestamp = Objects.requireNonNull(timestamp, "timestamp");
 	}
 
-	@Singleton
-	public SettableTime time(ConfigSpec configSpec) {
-		return new SettableTimeImpl(configSpec.unixTime());
+	@Override
+	public void setTimestamp(Instant timestamp) {
+		this.timestamp = Objects.requireNonNull(timestamp, "timestamp");
 	}
 
-	public Time time(SettableTime time) {
-		return time;
+	@Override
+	public void advanceBy(TemporalAmount progression) {
+		timestamp = timestamp.plus(progression);
 	}
 
+	@Override
+	public long currentTime() {
+		return timestamp.getEpochSecond();
+	}
 }

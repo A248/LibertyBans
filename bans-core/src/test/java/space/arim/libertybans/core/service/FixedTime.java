@@ -16,29 +16,49 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core;
 
-import jakarta.inject.Singleton;
-import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.config.SpecifiedConfigs;
-import space.arim.libertybans.core.service.SettableTime;
-import space.arim.libertybans.core.service.SettableTimeImpl;
-import space.arim.libertybans.core.service.Time;
-import space.arim.libertybans.it.ConfigSpec;
+package space.arim.libertybans.core.service;
 
-public class PillarOneReplacementModule extends PillarOneBindModuleMinusConfigs {
+import java.time.Instant;
 
-	public Configs configs(SpecifiedConfigs configs) {
-		return configs;
+/**
+ * A fixed timer
+ *
+ */
+public final class FixedTime implements Time {
+
+	private final long timestamp;
+
+	private FixedTime(long timestamp) {
+		this.timestamp = timestamp;
 	}
 
-	@Singleton
-	public SettableTime time(ConfigSpec configSpec) {
-		return new SettableTimeImpl(configSpec.unixTime());
+	public FixedTime(Instant timestamp) {
+		this(timestamp.getEpochSecond());
 	}
 
-	public Time time(SettableTime time) {
-		return time;
+	@Override
+	public long currentTime() {
+		return timestamp;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		FixedTime fixed = (FixedTime) o;
+		return timestamp == fixed.timestamp;
+	}
+
+	@Override
+	public int hashCode() {
+		return (int) (timestamp ^ (timestamp >>> 32));
+	}
+
+	@Override
+	public String toString() {
+		return "Fixed{" +
+				"timestamp=" + timestamp +
+				'}';
+	}
 }
