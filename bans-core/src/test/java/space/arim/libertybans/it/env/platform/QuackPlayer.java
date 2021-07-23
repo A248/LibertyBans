@@ -64,7 +64,7 @@ public class QuackPlayer implements MessageOnlyAudience {
 	}
 
 	public boolean isStillOnline() {
-		return platform.getPlayer(uuid) != null;
+		return platform.getPlayer(uuid).isPresent();
 	}
 	
 	public boolean hasPermission(String permission) {

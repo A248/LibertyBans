@@ -91,7 +91,7 @@ public class StrictnessAssertHelper {
 
 		QuackPlayer player = new QuackPlayerBuilder(platform).buildRandomName(uuid, address);
 		enforcer.enforce(punishment).join();
-		assertFalse(player.isStillOnline(), assertion);
+		assertFalse(player.isStillOnline(), assertion + "; Player should have been kicked");
 	}
 
 	void assertNotBanned(UUID uuid, InetAddress address, String assertion) {
