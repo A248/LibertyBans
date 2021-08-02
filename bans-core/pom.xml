@@ -50,6 +50,7 @@
 				<artifactId>maven-invoker-plugin</artifactId>
 				<configuration>
 					<settingsFile>src/it/settings.xml</settingsFile>
+					<parallelThreads>2</parallelThreads>
 				</configuration>
 			</plugin>
 		</plugins>

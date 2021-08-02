@@ -16,41 +16,12 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.it.env;
 
-import jakarta.inject.Singleton;
-import space.arim.api.env.PlatformHandle;
-import space.arim.libertybans.core.env.EnvEnforcer;
-import space.arim.libertybans.core.env.EnvUserResolver;
-import space.arim.libertybans.core.env.Environment;
+package space.arim.libertybans.core.it.jpmscompat;
+
 import space.arim.libertybans.core.importing.PlatformImportSource;
-import space.arim.libertybans.it.env.platform.QuackPlatform;
-import space.arim.omnibus.DefaultOmnibus;
-import space.arim.omnibus.Omnibus;
 
-public class QuackBindModule {
-
-	@Singleton
-	public Omnibus omnibus() {
-		return new DefaultOmnibus();
-	}
-
-	@Singleton
-	public PlatformHandle handle(QuackPlatform platform) {
-		return new QuackHandle(platform);
-	}
-
-	public Environment environment(QuackEnv env) {
-		return env;
-	}
-
-	public EnvEnforcer<?> enforcer(QuackEnforcer enforcer) {
-		return enforcer;
-	}
-
-	public EnvUserResolver resolver(QuackUserResolver resolver) {
-		return resolver;
-	}
+public class JpmsBindModule {
 
 	public PlatformImportSource platformImportSource() {
 		throw new UnsupportedOperationException("PlatformImportSource not available");

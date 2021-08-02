@@ -21,7 +21,7 @@ module space.arim.libertybans.core {
 	exports space.arim.libertybans.core.commands.extra to space.arim.injector;
 	exports space.arim.libertybans.core.commands.usage to space.arim.injector;
 	exports space.arim.libertybans.core.config;
-	exports space.arim.libertybans.core.database to space.arim.injector;
+	exports space.arim.libertybans.core.database to space.arim.dazzleconf, space.arim.injector;
 	exports space.arim.libertybans.core.env;
 	//exports space.arim.libertybans.core.event;
 	exports space.arim.libertybans.core.importing;
@@ -33,7 +33,9 @@ module space.arim.libertybans.core {
 			to space.arim.dazzleconf, space.arim.injector;
 
 	opens space.arim.libertybans.core.alts to space.arim.dazzleconf;
+	opens space.arim.libertybans.core.commands.extra to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.config to space.arim.dazzleconf;
+	opens space.arim.libertybans.core.importing to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.selector to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.uuid to space.arim.dazzleconf;
 }
