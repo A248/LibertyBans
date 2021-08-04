@@ -62,6 +62,9 @@ public class DurationParser {
 		case "MO":
 		case "mo":
 			return Duration.ofDays(30L * number);
+		case "W":
+		case "w":
+			return Duration.ofDays(7L * number);
 		case "D":
 		case "d":
 			return Duration.ofDays(number);
