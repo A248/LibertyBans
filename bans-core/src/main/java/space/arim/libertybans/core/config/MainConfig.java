@@ -105,7 +105,8 @@ public interface MainConfig {
 		    "mutelist",
 		    "history",
 		    "warns",
-		    "blame"
+		    "blame",
+		    "alts"
 		})
 		Set<String> aliases();
 		

@@ -50,9 +50,9 @@ public class CommandsCore implements Commands {
 	public CommandsCore(Configs configs, UsageGlossary usage,
 			PlayerPunishCommands playerPunish, AddressPunishCommands addressPunish,
 			PlayerUnpunishCommands playerUnpunish, AddressUnpunishCommands addressUnpunish,
-			ListCommands list, AdminCommands admin, ImportCommands importing) {
+			ListCommands list, AdminCommands admin, ImportCommands importing, AltCommands alts) {
 		this(configs, usage, List.of(
-				playerPunish, addressPunish, playerUnpunish, addressUnpunish, list, admin, importing));
+				playerPunish, addressPunish, playerUnpunish, addressUnpunish, list, admin, importing, alts));
 	}
 	
 	private SubCommandGroup getMatchingSubCommand(String firstArg) {
