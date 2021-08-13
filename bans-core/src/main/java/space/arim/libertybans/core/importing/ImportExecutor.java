@@ -93,7 +93,7 @@ public class ImportExecutor {
 	private void transferPunishments(ImportSource importSource, ImportSink importSink) {
 		try (Stream<PortablePunishment> punishmentStream = importSource.sourcePunishments()) {
 			punishmentStream.forEach(punishment -> {
-				Optional<Enaction.OrderDetails> enactionOrder = importFunction.createOrder(punishment);
+				Optional<Enaction.OrderDetails> enactionOrder = importFunction.createOrder(punishment, importSink);
 				if (enactionOrder.isEmpty()) {
 					logger.info("Skipped imported punishment with ID {} applying to victim {}",
 							punishment.foreignId(), punishment.victimInfo());

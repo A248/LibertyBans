@@ -30,6 +30,7 @@ import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.punish.Enaction;
+import space.arim.libertybans.core.service.Time;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.omnibus.util.ThisClass;
 
@@ -39,20 +40,22 @@ import java.util.UUID;
 public class ImportFunction {
 
 	private final UUIDManager uuidManager;
+	private final Time time;
 
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
 	@Inject
-	public ImportFunction(UUIDManager uuidManager) {
+	public ImportFunction(UUIDManager uuidManager, Time time) {
 		this.uuidManager = uuidManager;
+		this.time = time;
 	}
 
-	Optional<Enaction.OrderDetails> createOrder(PortablePunishment punishment) {
-		Victim victim = toVictim(punishment.victimInfo());
+	Optional<Enaction.OrderDetails> createOrder(PortablePunishment punishment, ImportSink importSink) {
+		Victim victim = toVictim(punishment.victimInfo(), importSink);
 		if (victim == null) {
 			return Optional.empty();
 		}
-		Operator operator = toOperator(punishment.operatorInfo());
+		Operator operator = toOperator(punishment.operatorInfo(), importSink);
 		if (operator == null) {
 			return Optional.empty();
 		}
@@ -63,7 +66,7 @@ public class ImportFunction {
 				knownDetails.start().getEpochSecond(), knownDetails.end()));
 	}
 
-	private Victim toVictim(PortablePunishment.VictimInfo victimInfo) {
+	private Victim toVictim(PortablePunishment.VictimInfo victimInfo, ImportSink importSink) {
 		Optional<Victim> overrideVictim = victimInfo.overrideVictim();
 		if (overrideVictim.isPresent()) {
 			return overrideVictim.get();
@@ -83,10 +86,11 @@ public class ImportFunction {
 			logger.warn("Skipping punishment because victim UUID could not be found for name {}", victimInfo.name());
 			return null;
 		}
+		importSink.addNameAddressRecord(new NameAddressRecord(foundUUID, name, null, time.currentTimestamp()));
 		return PlayerVictim.of(foundUUID);
 	}
 
-	private Operator toOperator(PortablePunishment.OperatorInfo operatorInfo) {
+	private Operator toOperator(PortablePunishment.OperatorInfo operatorInfo, ImportSink importSink) {
 		if (operatorInfo.console()) {
 			return ConsoleOperator.INSTANCE;
 		}
@@ -101,6 +105,7 @@ public class ImportFunction {
 			logger.warn("Skipping punishment because operator UUID could not be found for name {}", name);
 			return null;
 		}
+		importSink.addNameAddressRecord(new NameAddressRecord(foundUUID, name, null, time.currentTimestamp()));
 		return PlayerOperator.of(foundUUID);
 	}
 }

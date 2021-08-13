@@ -91,7 +91,7 @@ public class AdvancedBanImportIT {
 	@SetTime(unixTime = SetTime.DEFAULT_TIME)
 	@SetServerType(ServerType.OFFLINE)
 	public void sampleOneOffline() {
-		importFrom("sample-one-offline", new ImportStatistics(103, 332, 0));
+		importFrom("sample-one-offline", new ImportStatistics(103, 332, 782));
 	}
 
 	@TestTemplate
@@ -105,7 +105,7 @@ public class AdvancedBanImportIT {
 		addToCache("4b5d2e63db0a4c9a99d9ed3797d12bb6", "innr", "plxyer");
 		addToCache("1a49201da06a4e459877c5aa5493a16a", "jecode");
 
-		importFrom("sample-two-online", new ImportStatistics(83, 109, 189));
+		importFrom("sample-two-online", new ImportStatistics(83, 109, 315));
 	}
 
 	private void addToCache(String uuidString, String username, String...extraUsernames) {
