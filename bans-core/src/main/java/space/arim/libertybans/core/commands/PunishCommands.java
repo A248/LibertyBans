@@ -28,6 +28,7 @@ import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.core.commands.extra.DurationParser;
 import space.arim.libertybans.core.commands.extra.DurationPermissionCheck;
 import space.arim.libertybans.core.commands.extra.ReasonsConfig;
+import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.AdditionsSection;
 import space.arim.libertybans.core.config.AdditionsSection.ExclusivePunishmentAddition;
 import space.arim.libertybans.core.config.AdditionsSection.PunishmentAdditionWithDurationPerm;
@@ -39,9 +40,7 @@ import space.arim.libertybans.core.event.PunishEventImpl;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.time.Duration;
-import java.util.Collection;
 import java.util.Locale;
-import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
 
@@ -50,13 +49,16 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 	private final PunishmentDrafter drafter;
 	private final InternalFormatter formatter;
 	private final EnvEnforcer<?> envEnforcer;
+	private final TabCompletion tabCompletion;
 	
 	PunishCommands(Dependencies dependencies, Stream<String> matches,
-			PunishmentDrafter drafter, InternalFormatter formatter, EnvEnforcer<?> envEnforcer) {
+				   PunishmentDrafter drafter, InternalFormatter formatter,
+				   EnvEnforcer<?> envEnforcer, TabCompletion tabCompletion) {
 		super(dependencies, matches);
 		this.drafter = drafter;
 		this.formatter = formatter;
 		this.envEnforcer = envEnforcer;
+		this.tabCompletion = tabCompletion;
 	}
 
 	@Override
@@ -65,11 +67,16 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 	}
 
 	@Override
-	public final Collection<String> suggest(CmdSender sender, String arg, int argIndex) {
+	public final Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
 		if (argIndex == 0) {
-			return sender.getOtherPlayersOnSameServer();
+			PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
+			if (type == PunishmentType.KICK) {
+				// Can only kick online players
+				return sender.getPlayersOnSameServer();
+			}
+			return tabCompletion.completeOfflinePlayerNames(sender);
 		}
-		return Set.of();
+		return Stream.empty();
 	}
 	
 	private class Execution extends TypeSpecificExecution {

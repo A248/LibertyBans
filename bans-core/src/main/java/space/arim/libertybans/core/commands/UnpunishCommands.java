@@ -18,21 +18,14 @@
  */
 package space.arim.libertybans.core.commands;
 
-import java.util.Collection;
-import java.util.Locale;
-import java.util.Set;
-import java.util.concurrent.CompletionStage;
-import java.util.stream.Stream;
-
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.revoke.PunishmentRevoker;
 import space.arim.libertybans.api.revoke.RevocationOrder;
+import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.RemovalsSection.PunishmentRemoval;
 import space.arim.libertybans.core.config.RemovalsSection.WarnRemoval;
@@ -40,19 +33,29 @@ import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.event.PardonEventImpl;
 import space.arim.libertybans.core.event.PostPardonEventImpl;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+
+import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 abstract class UnpunishCommands extends AbstractSubCommandGroup implements PunishUnpunishCommands {
 	
 	private final PunishmentRevoker revoker;
 	private final InternalFormatter formatter;
 	private final EnvEnforcer<?> envEnforcer;
+	private final TabCompletion tabCompletion;
 	
 	UnpunishCommands(Dependencies dependencies, Stream<String> matches,
-			PunishmentRevoker revoker, InternalFormatter formatter, EnvEnforcer<?> envEnforcer) {
+					 PunishmentRevoker revoker, InternalFormatter formatter,
+					 EnvEnforcer<?> envEnforcer, TabCompletion tabCompletion) {
 		super(dependencies, matches);
 		this.revoker = revoker;
 		this.formatter = formatter;
 		this.envEnforcer = envEnforcer;
+		this.tabCompletion = tabCompletion;
 	}
 
 	@Override
@@ -61,15 +64,18 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 	}
 	
 	@Override
-	public final Collection<String> suggest(CmdSender sender, String arg, int argIndex) {
+	public final Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
 		if (argIndex == 0) {
+			Stream<String> availableNames = tabCompletion.completeOfflinePlayerNames(sender);
 			PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
-			// Online players are not banned, so only tab-complete their names for mutes and warns
-			if (type == PunishmentType.MUTE || type == PunishmentType.WARN) {
-				return sender.getOtherPlayersOnSameServer();
+			if (type == PunishmentType.BAN) {
+				// Online players are not banned, so exclude names of known online players
+				Set<String> knownToBeOnline = sender.getPlayersOnSameServer().collect(Collectors.toUnmodifiableSet());
+				return availableNames.filter((name) -> !knownToBeOnline.contains(name));
 			}
+			return availableNames;
 		}
-		return Set.of();
+		return Stream.empty();
 	}
 	
 	private class Execution extends TypeSpecificExecution {

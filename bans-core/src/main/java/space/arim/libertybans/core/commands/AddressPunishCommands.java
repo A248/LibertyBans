@@ -21,6 +21,7 @@ package space.arim.libertybans.core.commands;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.libertybans.api.PunishmentType;
@@ -36,9 +37,10 @@ public class AddressPunishCommands extends PunishCommands {
 
 	@Inject
 	public AddressPunishCommands(Dependencies dependencies,
-			PunishmentDrafter drafter, InternalFormatter formatter, EnvEnforcer<?> envEnforcer) {
+								 PunishmentDrafter drafter, InternalFormatter formatter,
+								 EnvEnforcer<?> envEnforcer, TabCompletion tabCompletion) {
 		super(dependencies, MiscUtil.punishmentTypes().stream().map((type) -> "ip" + type),
-				drafter, formatter, envEnforcer);
+				drafter, formatter, envEnforcer, tabCompletion);
 	}
 
 	@Override

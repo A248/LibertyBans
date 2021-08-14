@@ -20,6 +20,8 @@ package space.arim.libertybans.core;
 
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.core.commands.extra.StandardTabCompletion;
+import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.commands.usage.StandardUsageGlossary;
 import space.arim.libertybans.core.commands.usage.UsageGlossary;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
@@ -77,5 +79,9 @@ public class PillarTwoBindModule {
 
 	public UsageGlossary usage(StandardUsageGlossary usage) {
 		return usage;
+	}
+
+	public TabCompletion tabCompletion(StandardTabCompletion tabCompletion) {
+		return tabCompletion;
 	}
 }

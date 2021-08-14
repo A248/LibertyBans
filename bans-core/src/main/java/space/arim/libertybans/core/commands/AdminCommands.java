@@ -18,24 +18,21 @@
  */
 package space.arim.libertybans.core.commands;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
-
 import space.arim.api.env.PlatformHandle;
-
 import space.arim.libertybans.bootstrap.BaseFoundation;
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.Environment;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 @Singleton
 public class AdminCommands extends AbstractSubCommandGroup {
@@ -63,8 +60,8 @@ public class AdminCommands extends AbstractSubCommandGroup {
 	}
 	
 	@Override
-	public Collection<String> suggest(CmdSender sender, String arg, int argIndex) {
-		return Set.of();
+	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
+		return Stream.empty();
 	}
 	
 	private enum Type {

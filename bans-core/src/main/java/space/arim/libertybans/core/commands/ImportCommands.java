@@ -32,11 +32,10 @@ import space.arim.libertybans.core.importing.LiteBansImportSource;
 import space.arim.libertybans.core.importing.PlatformImportSource;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 
 @Singleton
 public class ImportCommands extends AbstractSubCommandGroup {
@@ -65,11 +64,11 @@ public class ImportCommands extends AbstractSubCommandGroup {
 	}
 
 	@Override
-	public Collection<String> suggest(CmdSender sender, String arg, int argIndex) {
+	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
 		if (argIndex == 0) {
-			return List.of("advancedban", "litebans");
+			return Stream.of("advancedban", "litebans");
 		}
-		return List.of();
+		return Stream.empty();
 	}
 
 	@Override

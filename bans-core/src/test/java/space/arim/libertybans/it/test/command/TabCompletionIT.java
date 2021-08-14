@@ -32,7 +32,6 @@ import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.NoDbAccess;
 
 import java.util.List;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
@@ -53,7 +52,7 @@ public class TabCompletionIT {
 	public void suggest(@DontInject @Mock CmdSender sender) {
 		when(sender.hasPermission(CommandsCore.BASE_COMMAND_PERMISSION)).thenReturn(true);
 		List<String> onSameServer = List.of("aplayer", "bplayer", "cplayer");
-		when(sender.getOtherPlayersOnSameServer()).thenReturn(Set.copyOf(onSameServer));
+		when(sender.getPlayersOnSameServer()).thenReturn(onSameServer.stream());
 
 		List<String> suggestions = commands.suggest(sender, new String[] {"mute"});
 		assertEquals(onSameServer, suggestions);

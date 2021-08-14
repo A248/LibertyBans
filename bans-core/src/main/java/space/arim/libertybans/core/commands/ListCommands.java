@@ -18,24 +18,11 @@
  */
 package space.arim.libertybans.core.commands;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.UnaryOperator;
-
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-import space.arim.omnibus.util.concurrent.ReactionStage;
-
 import space.arim.api.jsonchat.adventure.util.ComponentText;
-
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.select.PunishmentSelector;
@@ -45,6 +32,15 @@ import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.ListSection;
 import space.arim.libertybans.core.config.ListSection.ListType;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.ReactionStage;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 
 @Singleton
 public class ListCommands extends AbstractSubCommandGroup {
@@ -60,14 +56,14 @@ public class ListCommands extends AbstractSubCommandGroup {
 	}
 	
 	@Override
-	public Collection<String> suggest(CmdSender sender, String arg, int argIndex) {
+	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
 		if (argIndex == 0) {
 			ListType listType = ListType.valueOf(arg.toUpperCase(Locale.ROOT));
 			if (listType.requiresTarget()) {
-				return sender.getOtherPlayersOnSameServer();
+				return sender.getPlayersOnSameServer();
 			}
 		}
-		return Set.of();
+		return Stream.empty();
 	}
 
 	@Override

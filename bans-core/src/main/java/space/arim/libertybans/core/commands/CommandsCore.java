@@ -25,10 +25,9 @@ import space.arim.libertybans.core.commands.usage.UsageGlossary;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.env.CmdSender;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Singleton
 public class CommandsCore implements Commands {
@@ -105,10 +104,7 @@ public class CommandsCore implements Commands {
 			return List.of();
 		}
 		int argIndex = args.length - 1;
-		Collection<String> unsorted = subCommand.suggest(sender, firstArg, argIndex);
-		List<String> sorted = new ArrayList<>(unsorted);
-		sorted.sort(null);
-		return sorted;
+		return subCommand.suggest(sender, firstArg, argIndex).sorted().collect(Collectors.toUnmodifiableList());
 	}
 	
 }

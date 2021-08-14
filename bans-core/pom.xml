@@ -150,6 +150,10 @@
 			<groupId>space.arim.api</groupId>
 			<artifactId>arimapi-util-web</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>space.arim.api</groupId>
+			<artifactId>arimapi-util-testing</artifactId>
+		</dependency>
 		<!-- JDBC drivers -->
 		<dependency>
 			<groupId>org.mariadb.jdbc</groupId>

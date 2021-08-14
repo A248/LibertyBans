@@ -18,7 +18,7 @@
  */
 package space.arim.libertybans.core.env;
 
-import java.util.Set;
+import java.util.stream.Stream;
 
 import net.kyori.adventure.text.ComponentLike;
 import space.arim.libertybans.api.Operator;
@@ -43,6 +43,6 @@ public interface CmdSender {
 	 * 
 	 * @return the names of other players on the same server as this command sender
 	 */
-	Set<String> getOtherPlayersOnSameServer();
+	Stream<String> getPlayersOnSameServer();
 	
 }

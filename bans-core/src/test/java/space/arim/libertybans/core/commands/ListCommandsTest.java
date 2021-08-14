@@ -29,6 +29,7 @@ import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
@@ -54,7 +55,7 @@ public class ListCommandsTest {
 	@Test
 	public void suggest(@Mock CmdSender sender) {
 		Set<String> playerNames = Set.of("player1", "player2");
-		when(sender.getOtherPlayersOnSameServer()).thenReturn(playerNames);
-		assertEquals(playerNames, listCommands.suggest(sender, "history", 0));
+		when(sender.getPlayersOnSameServer()).thenReturn(playerNames.stream());
+		assertEquals(playerNames, listCommands.suggest(sender, "history", 0).collect(Collectors.toUnmodifiableSet()));
 	}
 }

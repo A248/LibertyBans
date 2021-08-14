@@ -27,8 +27,7 @@ import space.arim.libertybans.core.alts.AltsSection;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.uuid.UUIDManager;
 
-import java.util.Collection;
-import java.util.Set;
+import java.util.stream.Stream;
 
 @Singleton
 public class AltCommands extends AbstractSubCommandGroup {
@@ -51,11 +50,11 @@ public class AltCommands extends AbstractSubCommandGroup {
 	}
 
 	@Override
-	public Collection<String> suggest(CmdSender sender, String arg, int argIndex) {
+	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
 		if (argIndex == 0) {
-			return sender.getOtherPlayersOnSameServer();
+			return sender.getPlayersOnSameServer();
 		}
-		return Set.of();
+		return Stream.empty();
 	}
 
 	private AltsSection section() {

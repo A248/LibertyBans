@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.it;
 
+import jakarta.inject.Provider;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
@@ -26,6 +27,10 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 import space.arim.injector.Injector;
 import space.arim.injector.error.InjectorException;
 import space.arim.libertybans.core.database.InternalDatabase;
+
+import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 class LibertyBansIntegrationExtension implements ParameterResolver, AfterEachCallback {
 
@@ -48,8 +53,15 @@ class LibertyBansIntegrationExtension implements ParameterResolver, AfterEachCal
 	@Override
 	public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
+		Class<?> parameterType = parameterContext.getParameter().getType();
 		try {
-			return injector.request(parameterContext.getParameter().getType());
+			if (parameterType.equals(Provider.class)) {
+				Type type = parameterContext.getParameter().getParameterizedType();
+				ParameterizedType parameterizedType = (ParameterizedType) type;
+				Class<?> typeArgument = (Class<?>) parameterizedType.getActualTypeArguments()[0];
+				return (Provider<Object>) () -> injector.request(typeArgument);
+			}
+			return injector.request(parameterType);
 		} catch (InjectorException ex) {
 			throw new ParameterResolutionException("Unable to inject parameter", ex);
 		}

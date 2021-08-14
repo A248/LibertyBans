@@ -29,9 +29,7 @@ import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractCmdSender;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.stream.Stream;
 
 public abstract class BungeeCmdSender extends AbstractCmdSender<CommandSender> {
 
@@ -43,17 +41,6 @@ public abstract class BungeeCmdSender extends AbstractCmdSender<CommandSender> {
 	@Override
 	public boolean hasPermission(String permission) {
 		return getRawSender().hasPermission(permission);
-	}
-	
-	Set<String> playersToNames(Collection<ProxiedPlayer> players, ProxiedPlayer exclude) {
-		Set<String> result = new HashSet<>(players.size());
-		for (ProxiedPlayer player : players) {
-			if (exclude != null && exclude.getUniqueId().equals(player.getUniqueId())) {
-				continue;
-			}
-			result.add(player.getName());
-		}
-		return result;
 	}
 	
 	static class PlayerSender extends BungeeCmdSender {
@@ -70,13 +57,13 @@ public abstract class BungeeCmdSender extends AbstractCmdSender<CommandSender> {
 		}
 
 		@Override
-		public Set<String> getOtherPlayersOnSameServer() {
+		public Stream<String> getPlayersOnSameServer() {
 			ProxiedPlayer player = getRawSender();
 			Server server = player.getServer();
 			if (server == null) { // There is no documented contract whether this is null
-				return Set.of();
+				return Stream.empty();
 			}
-			return playersToNames(server.getInfo().getPlayers(), player);
+			return server.getInfo().getPlayers().stream().map(ProxiedPlayer::getName);
 		}
 		
 	}
@@ -92,8 +79,8 @@ public abstract class BungeeCmdSender extends AbstractCmdSender<CommandSender> {
 		}
 
 		@Override
-		public Set<String> getOtherPlayersOnSameServer() {
-			return playersToNames(plugin.getProxy().getPlayers(), null);
+		public Stream<String> getPlayersOnSameServer() {
+			return plugin.getProxy().getPlayers().stream().map(ProxiedPlayer::getName);
 		}
 
 	}

@@ -18,7 +18,7 @@
  */
 package space.arim.libertybans.core.commands;
 
-import java.util.Collection;
+import java.util.stream.Stream;
 
 import space.arim.libertybans.core.env.CmdSender;
 
@@ -56,6 +56,6 @@ interface SubCommandGroup {
 	 * @param argIndex the index of the furthest subcommand argument
 	 * @return tab complete suggestions
 	 */
-	Collection<String> suggest(CmdSender sender, String arg, int argIndex);
+	Stream<String> suggest(CmdSender sender, String arg, int argIndex);
 	
 }

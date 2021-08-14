@@ -33,6 +33,7 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.revoke.PunishmentRevoker;
 import space.arim.libertybans.core.commands.extra.ArgumentParser;
+import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.MessagesConfig;
@@ -60,19 +61,22 @@ public class PlayerUnpunishCommandsTest {
 	private final PunishmentRevoker revoker;
 	private final InternalFormatter formatter;
 	private final EnvEnforcer<?> envEnforcer;
+	private final TabCompletion tabCompletion;
 	private final FactoryOfTheFuture futuresFactory = new IndifferentFactoryOfTheFuture();
 
 	public PlayerUnpunishCommandsTest(@Mock PunishmentRevoker revoker,
 									  @Mock InternalFormatter formatter,
-									  @Mock EnvEnforcer<?> envEnforcer) {
+									  @Mock EnvEnforcer<?> envEnforcer,
+									  @Mock TabCompletion tabCompletion) {
 		this.revoker = revoker;
 		this.formatter = formatter;
 		this.envEnforcer = envEnforcer;
+		this.tabCompletion = tabCompletion;
 	}
 
 	@BeforeEach
 	public void setPlayerUnpunishCommands(AbstractSubCommandGroup.Dependencies dependencies) {
-		commands = new PlayerUnpunishCommands(dependencies, revoker, formatter, envEnforcer);
+		commands = new PlayerUnpunishCommands(dependencies, revoker, formatter, envEnforcer, tabCompletion);
 	}
 
 	@Test

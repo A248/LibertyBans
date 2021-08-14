@@ -31,7 +31,7 @@ import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
+import java.util.stream.Stream;
 
 public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 
@@ -47,19 +47,16 @@ public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 	}
 	
 	@Override
-	public Set<String> getOtherPlayersOnSameServer() {
+	public Stream<String> getPlayersOnSameServer() {
+		// Make sure not to transfer streams across threads
 		return futuresFactory.supplySync(() -> {
-			CommandSender sender = getRawSender();
 			Collection<? extends Player> players = plugin.getServer().getOnlinePlayers();
-			Set<String> result = new HashSet<>(players.size());
+			Collection<String> names = new HashSet<>(players.size());
 			for (Player player : players) {
-				if (sender instanceof Player && ((Player) sender).getUniqueId().equals(player.getUniqueId())) {
-					continue;
-				}
-				result.add(player.getName());
+				names.add(player.getName());
 			}
-			return result;
-		}).join();
+			return names;
+		}).join().stream();
 	}
 	
 	static class PlayerSender extends SpigotCmdSender {

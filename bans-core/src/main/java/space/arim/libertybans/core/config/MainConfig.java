@@ -27,6 +27,7 @@ import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.SubSection;
 import space.arim.libertybans.core.commands.extra.DurationPermissionsConfig;
 import space.arim.libertybans.core.commands.extra.ReasonsConfig;
+import space.arim.libertybans.core.commands.extra.TabCompletionConfig;
 import space.arim.libertybans.core.selector.EnforcementConfig;
 import space.arim.libertybans.core.uuid.UUIDResolutionConfig;
 
@@ -90,6 +91,10 @@ public interface MainConfig {
 		@ConfComments("Whether to enable tab completion")
 		@DefaultBoolean(true)
 		boolean tabComplete();
+
+		@ConfKey("tab-completion")
+		@SubSection
+		TabCompletionConfig tabCompletion();
 		
 		@ConfComments({"What commands should be registered as aliases for libertybans commands?",
 			"For each command listed here, '/<command>' will be equal to '/libertybans <command>'"})

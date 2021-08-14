@@ -23,6 +23,7 @@ import java.util.Arrays;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.libertybans.api.PunishmentType;
@@ -38,9 +39,10 @@ public class AddressUnpunishCommands extends UnpunishCommands {
 
 	@Inject
 	public AddressUnpunishCommands(Dependencies dependencies,
-			PunishmentRevoker revoker, InternalFormatter formatter, EnvEnforcer<?> envEnforcer) {
+								   PunishmentRevoker revoker, InternalFormatter formatter,
+								   EnvEnforcer<?> envEnforcer, TabCompletion tabCompletion) {
 		super(dependencies, Arrays.stream(MiscUtil.punishmentTypesExcludingKick()).map((type) -> "un" + type + "ip"),
-				revoker, formatter, envEnforcer);
+				revoker, formatter, envEnforcer, tabCompletion);
 	}
 
 	@Override

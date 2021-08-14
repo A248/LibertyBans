@@ -34,6 +34,7 @@ import space.arim.libertybans.core.commands.extra.ArgumentParser;
 import space.arim.libertybans.core.commands.extra.DurationPermission;
 import space.arim.libertybans.core.commands.extra.DurationPermissionsConfig;
 import space.arim.libertybans.core.commands.extra.ReasonsConfig;
+import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.AdditionsSection;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
@@ -61,16 +62,18 @@ public class UnspecifiedReasonsTest {
 	private final PunishmentDrafter drafter;
 	private final InternalFormatter formatter;
 	private final EnvEnforcer<?> envEnforcer;
+	private final TabCompletion tabCompletion;
 	private final AdditionsSection.BanAddition section;
 	private final ReasonsConfig reasonsConfig;
 	private PunishCommands punishCommands;
 
 	public UnspecifiedReasonsTest(@Mock PunishmentDrafter drafter, @Mock InternalFormatter formatter,
-								  @Mock EnvEnforcer<?> envEnforcer, @Mock AdditionsSection.BanAddition section,
-								  @Mock ReasonsConfig reasonsConfig) {
+								  @Mock EnvEnforcer<?> envEnforcer, @Mock TabCompletion tabCompletion,
+								  @Mock AdditionsSection.BanAddition section, @Mock ReasonsConfig reasonsConfig) {
 		this.drafter = drafter;
 		this.formatter = formatter;
 		this.envEnforcer = envEnforcer;
+		this.tabCompletion = tabCompletion;
 		this.section = section;
 		this.reasonsConfig = reasonsConfig;
 	}
@@ -99,7 +102,7 @@ public class UnspecifiedReasonsTest {
 		}
 		when(argParser.parseVictimByName(any(), eq("A248"))).thenReturn(
 				new IndifferentFactoryOfTheFuture().completedFuture(PlayerVictim.of(UUID.randomUUID())));
-		punishCommands = new PlayerPunishCommands(dependencies, drafter, formatter, envEnforcer);
+		punishCommands = new PlayerPunishCommands(dependencies, drafter, formatter, envEnforcer, tabCompletion);
 	}
 
 	private void executeBan(CmdSender sender) {

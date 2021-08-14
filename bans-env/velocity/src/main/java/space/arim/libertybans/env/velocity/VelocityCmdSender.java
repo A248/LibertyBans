@@ -18,10 +18,10 @@
  */
 package space.arim.libertybans.env.velocity;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.ServerConnection;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
@@ -29,10 +29,7 @@ import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractCmdSender;
 
-import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.api.proxy.ServerConnection;
+import java.util.stream.Stream;
 
 public abstract class VelocityCmdSender extends AbstractCmdSender<CommandSource> {
 
@@ -43,17 +40,6 @@ public abstract class VelocityCmdSender extends AbstractCmdSender<CommandSource>
 	@Override
 	public boolean hasPermission(String permission) {
 		return getRawSender().hasPermission(permission);
-	}
-	
-	Set<String> playersToNames(Collection<Player> players, Player exclude) {
-		Set<String> result = new HashSet<>(players.size());
-		for (Player player : players) {
-			if (exclude != null && exclude.getUniqueId().equals(player.getUniqueId())) {
-				continue;
-			}
-			result.add(player.getUsername());
-		}
-		return result;
 	}
 	
 	static class PlayerSender extends VelocityCmdSender {
@@ -68,14 +54,13 @@ public abstract class VelocityCmdSender extends AbstractCmdSender<CommandSource>
 		}
 		
 		@Override
-		public Set<String> getOtherPlayersOnSameServer() {
+		public Stream<String> getPlayersOnSameServer() {
 			Player player = getRawSender();
 			ServerConnection serverConnection = player.getCurrentServer().orElse(null);
 			if (serverConnection == null) {
-				return Set.of();
+				return Stream.empty();
 			}
-			Collection<Player> players = serverConnection.getServer().getPlayersConnected();
-			return playersToNames(players, player);
+			return serverConnection.getServer().getPlayersConnected().stream().map(Player::getUsername);
 		}
 		
 	}
@@ -90,8 +75,8 @@ public abstract class VelocityCmdSender extends AbstractCmdSender<CommandSource>
 		}
 		
 		@Override
-		public Set<String> getOtherPlayersOnSameServer() {
-			return playersToNames(server.getAllPlayers(), null);
+		public Stream<String> getPlayersOnSameServer() {
+			return server.getAllPlayers().stream().map(Player::getUsername);
 		}
 		
 	}
