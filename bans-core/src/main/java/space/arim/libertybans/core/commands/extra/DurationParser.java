@@ -19,6 +19,7 @@
 package space.arim.libertybans.core.commands.extra;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Set;
 
 public class DurationParser {
@@ -55,29 +56,37 @@ public class DurationParser {
 			return Duration.ofNanos(-1L);
 		}
 		long number = Long.parseLong(argument.substring(0, unitIndex));
-		switch (argument.substring(unitIndex)) {
-		case "Y":
-		case "y":
-			return Duration.ofDays(365L * number);
-		case "MO":
-		case "mo":
-			return Duration.ofDays(30L * number);
-		case "W":
-		case "w":
-			return Duration.ofDays(7L * number);
-		case "D":
-		case "d":
-			return Duration.ofDays(number);
-		case "H":
-		case "h":
-			return Duration.ofHours(number);
-		case "M":
-		case "m":
-			return Duration.ofMinutes(number);
-		default:
-			break;
+		ChronoUnit unit = unitFromString(argument.substring(unitIndex));
+		if (unit != null) {
+			// Do not use Duration.of which does not accept estimated durations
+			return unit.getDuration().multipliedBy(number);
 		}
 		return Duration.ZERO;
+	}
+
+	private static ChronoUnit unitFromString(String str) {
+		switch (str) {
+		case "Y":
+		case "y":
+			return ChronoUnit.YEARS;
+		case "MO":
+		case "mo":
+			return ChronoUnit.MONTHS;
+		case "W":
+		case "w":
+			return ChronoUnit.WEEKS;
+		case "D":
+		case "d":
+			return ChronoUnit.DAYS;
+		case "H":
+		case "h":
+			return ChronoUnit.HOURS;
+		case "M":
+		case "m":
+			return ChronoUnit.MINUTES;
+		default:
+			return null;
+		}
 	}
 	
 }

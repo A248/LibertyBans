@@ -39,7 +39,6 @@ import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.scope.InternalScopeManager;
 import space.arim.libertybans.core.service.FixedTime;
-import space.arim.libertybans.core.service.Time;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -119,7 +118,10 @@ public class FormatterTest {
 				ChronoUnit.SECONDS, "%VALUE% seconds",
 				ChronoUnit.MINUTES, "%VALUE% minutes",
 				ChronoUnit.HOURS, "%VALUE% hours",
-				ChronoUnit.DAYS, "%VALUE% days"));
+				ChronoUnit.DAYS, "%VALUE% days",
+				ChronoUnit.WEEKS, "%VALUE% weeks",
+				ChronoUnit.MONTHS, "%VALUE% months",
+				ChronoUnit.YEARS, "%VALUE% years"));
 		lenient().when(timeConf.useComma()).thenReturn(true);
 		lenient().when(timeConf.and()).thenReturn("and ");
 		lenient().when(timeConf.fallbackSeconds()).thenReturn("%VALUE% seconds");
@@ -136,6 +138,8 @@ public class FormatterTest {
 				formatter.formatRelative(4L * 60L * 60L + 15L * 60L + 58L));
 		assertEquals("2 days, 4 minutes, and 40 seconds",
 				formatter.formatRelative(2L * 24L * 60L * 60L + 4L * 60L + 40L));
+		assertEquals("3 years",
+				formatter.formatRelative(ChronoUnit.YEARS.getDuration().multipliedBy(3).getSeconds()));
 	}
 
 	private void setSimpleDateFormatting() {

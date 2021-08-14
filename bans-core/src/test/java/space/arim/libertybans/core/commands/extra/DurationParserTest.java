@@ -27,6 +27,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,8 +49,8 @@ public class DurationParserTest {
 				new DurationPermission("5h", Duration.ofHours(5L)),
 				new DurationPermission("5H", Duration.ofHours(5L)),
 				new DurationPermission("30d", Duration.ofDays(30L)),
-				new DurationPermission("1MO", Duration.ofDays(30L)),
-				new DurationPermission("2y", Duration.ofDays(365L * 2L)),
+				new DurationPermission("1MO", ChronoUnit.MONTHS.getDuration()),
+				new DurationPermission("2y", ChronoUnit.YEARS.getDuration().multipliedBy(2)),
 				new DurationPermission("perm", Duration.ZERO),
 				new DurationPermission("Perm", Duration.ZERO)
 		).map(this::testCorrect);
