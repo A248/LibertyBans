@@ -19,40 +19,21 @@
 
 package space.arim.libertybans.core;
 
-import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ScanResult;
 import org.junit.jupiter.api.Test;
 import space.arim.api.util.testing.InjectableConstructor;
 
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.function.Predicate;
 
 public class LifecycleGodfatherTest {
 
 	@Test
 	public void allDeclared() {
-		Set<Class<?>> classes;
-		{
-			Stream<Class<?>> unfilteredClasses;
-			try (ScanResult scan = new ClassGraph()
-					.enableClassInfo()
-					.scan()) {
-				unfilteredClasses = scan.getClassesImplementing(Part.class.getName())
-						.getNames().stream()
-						.map((className) -> {
-							try {
-								return Class.forName(className);
-							} catch (ClassNotFoundException ex) {
-								throw new RuntimeException(ex);
-							}
-						});
-			}
-			classes = unfilteredClasses.filter((clazz) -> {
-				return clazz.isInterface() ||
-						Set.of(clazz.getInterfaces()).contains(Part.class);
-			}).collect(Collectors.toUnmodifiableSet());
-		}
-		new InjectableConstructor(LifecycleGodfather.class).verifyParametersContain(classes);
+		Predicate<Class<?>> subClassFilter = (subClass) -> {
+			return subClass.isInterface() || Set.of(subClass.getInterfaces()).contains(Part.class);
+		};
+		new InjectableConstructor(LifecycleGodfather.class)
+				.verifyParametersContainSubclassesOf(Part.class, subClassFilter);
 	}
+
 }

@@ -25,7 +25,7 @@ import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.TextComponent;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.config.Formatter;
+import space.arim.libertybans.core.config.InternalFormatter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,10 +33,10 @@ import java.util.List;
 public class AltCheckFormatter {
 
 	private final Configs configs;
-	private final Formatter formatter;
+	private final InternalFormatter formatter;
 
 	@Inject
-	public AltCheckFormatter(Configs configs, Formatter formatter) {
+	public AltCheckFormatter(Configs configs, InternalFormatter formatter) {
 		this.configs = configs;
 		this.formatter = formatter;
 	}

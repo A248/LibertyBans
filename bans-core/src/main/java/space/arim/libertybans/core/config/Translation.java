@@ -18,6 +18,10 @@
  */
 package space.arim.libertybans.core.config;
 
+/**
+ * Translations are located in the lang/ folder in src/main/resources
+ *
+ */
 enum Translation {
-
+	ES,
 }
