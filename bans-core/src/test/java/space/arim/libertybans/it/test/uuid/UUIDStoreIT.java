@@ -21,12 +21,12 @@ package space.arim.libertybans.it.test.uuid;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.core.env.UUIDAndAddress;
 import space.arim.libertybans.core.punish.Enforcer;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.util.RandomUtil;
-import space.arim.libertybans.it.util.TestingUtil;
 
 import java.time.Duration;
 import java.util.UUID;
@@ -49,22 +49,33 @@ public class UUIDStoreIT {
 		return NetworkAddress.of(RandomUtil.randomAddress());
 	}
 
-	private String fullLookupName(UUID uuid) {
+	private String lookupName(UUID uuid) {
 		return uuidManager.lookupName(uuid).join().orElse(null);
 	}
 
-	private UUID fullLookupUUID(String name) {
+	private UUID lookupUUID(String name) {
 		return uuidManager.lookupUUID(name).join().orElse(null);
 	}
 
-	private NetworkAddress fullLookupAddress(String name) {
+	private NetworkAddress lookupAddress(String name) {
 		return uuidManager.lookupAddress(name).join();
+	}
+
+	private UUIDAndAddress lookupPlayer(String name) {
+		return uuidManager.lookupPlayer(name).join().orElse(null);
 	}
 
 	@TestTemplate
 	public void noStoredUuid() {
-		assertNull(fullLookupName(UUID.randomUUID()));
-		assertNull(fullLookupUUID(randomName()));
+		String name = randomName();
+		assertNull(lookupUUID(name));
+		assertNull(lookupAddress(name));
+		assertNull(lookupPlayer(name));
+	}
+
+	@TestTemplate
+	public void noStoredName(){
+		assertNull(lookupName(UUID.randomUUID()));
 	}
 
 	@TestTemplate
@@ -75,9 +86,9 @@ public class UUIDStoreIT {
 
 		assumeTrue(null == enforcer.executeAndCheckConnection(uuid, name, address).join());
 
-		assertEquals(name, fullLookupName(uuid));
-		assertEquals(uuid, fullLookupUUID(name));
-		assertEquals(address, fullLookupAddress(name));
+		assertEquals(name, lookupName(uuid));
+		assertEquals(uuid, lookupUUID(name));
+		assertEquals(address, lookupAddress(name));
 	}
 
 	@TestTemplate
@@ -88,9 +99,9 @@ public class UUIDStoreIT {
 
 		assumeTrue(null == enforcer.executeAndCheckConnection(uuid, name, address).join());
 
-		assumeTrue(name.equals(fullLookupName(uuid)));
-		assumeTrue(uuid.equals(fullLookupUUID(name)));
-		assumeTrue(address.equals(fullLookupAddress(name)));
+		assumeTrue(name.equals(lookupName(uuid)));
+		assumeTrue(uuid.equals(lookupUUID(name)));
+		assumeTrue(address.equals(lookupAddress(name)));
 
 		String recentName = randomName();
 		NetworkAddress recentAddress = randomAddress();
@@ -100,12 +111,12 @@ public class UUIDStoreIT {
 
 		assumeTrue(null == enforcer.executeAndCheckConnection(uuid, recentName, recentAddress).join());
 
-		assertEquals(recentName, fullLookupName(uuid), "Should use most recent name");
-		assertEquals(recentAddress, fullLookupAddress(recentName), "Should use most recent address with most recent name");
-		assertEquals(recentAddress, fullLookupAddress(name), "Should use most recent address with past name");
+		assertEquals(recentName, lookupName(uuid), "Should use most recent name");
+		assertEquals(recentAddress, lookupAddress(recentName), "Should use most recent address with most recent name");
+		assertEquals(recentAddress, lookupAddress(name), "Should use most recent address with past name");
 
-		assertEquals(uuid, fullLookupUUID(recentName));
-		assertEquals(uuid, fullLookupUUID(name), "Should still be able to look up by past name");
+		assertEquals(uuid, lookupUUID(recentName));
+		assertEquals(uuid, lookupUUID(name), "Should still be able to look up by past name");
 	}
 
 }

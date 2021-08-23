@@ -79,11 +79,11 @@ class QueryingImpl {
 	CentralisedFuture<UUIDAndAddress> resolvePlayer(String name) {
 		InternalDatabase database = dbProvider.get();
 		return database.selectAsync(() -> {
-			return database.jdbCaesar().query("SELECT `uuid`, `addrs`.`address` " +
+			return database.jdbCaesar().query("SELECT `addrs`.`uuid`, `addrs`.`address` " +
 					"FROM `libertybans_names` `names` " +
 					"INNER JOIN `libertybans_addresses` `addrs` " +
 					"ON `names`.`uuid` = `addrs`.`uuid` " +
-					"WHERE `names`.`name`")
+					"WHERE `names`.`name` = ?")
 					.params(name)
 					.singleResult((resultSet) -> {
 						return new UUIDAndAddress(

@@ -263,6 +263,23 @@ public class CachingUUIDManagerTest {
 	}
 
 	@Test
+	public void resolveNameNotFound() {
+		when(queryingImpl.resolve(name)).thenReturn(completedFuture(null));
+		when(queryingImpl.resolveAddress(name)).thenReturn(completedFuture(null));
+		when(queryingImpl.resolvePlayer(name)).thenReturn(completedFuture(null));
+		assertNull(lookupUUID(name));
+		assertNull(lookupUUIDExact(name));
+		assertNull(lookupAddress(name));
+		assertNull(lookupPlayer(name));
+	}
+
+	@Test
+	public void resolveUUIDNotFound() {
+		when(queryingImpl.resolve(uuid)).thenReturn(completedFuture(null));
+		assertNull(lookupName(uuid));
+	}
+
+	@Test
 	public void badName() {
 		String badName = "lol_haha_dead";
 		when(nameValidator.validateNameArgument(badName)).thenReturn(false);
