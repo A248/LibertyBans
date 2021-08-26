@@ -33,19 +33,28 @@ import java.util.stream.Stream;
 
 public abstract class VelocityCmdSender extends AbstractCmdSender<CommandSource> {
 
-	VelocityCmdSender(InternalFormatter formatter, CommandSource sender, Operator operator) {
+	private final ProxyServer server;
+
+	VelocityCmdSender(InternalFormatter formatter, CommandSource sender,
+					  Operator operator, ProxyServer server) {
 		super(formatter, AudienceRepresenter.identity(), sender, operator);
+		this.server = server;
 	}
 	
 	@Override
-	public boolean hasPermission(String permission) {
+	public final boolean hasPermission(String permission) {
 		return getRawSender().hasPermission(permission);
+	}
+
+	@Override
+	public final Stream<String> getPlayerNames() {
+		return server.getAllPlayers().stream().map(Player::getUsername);
 	}
 	
 	static class PlayerSender extends VelocityCmdSender {
 
-		PlayerSender(InternalFormatter formatter, Player player) {
-			super(formatter, player, PlayerOperator.of(player.getUniqueId()));
+		PlayerSender(InternalFormatter formatter, Player player, ProxyServer server) {
+			super(formatter, player, PlayerOperator.of(player.getUniqueId()), server);
 		}
 		
 		@Override
@@ -54,7 +63,7 @@ public abstract class VelocityCmdSender extends AbstractCmdSender<CommandSource>
 		}
 		
 		@Override
-		public Stream<String> getPlayersOnSameServer() {
+		public Stream<String> getPlayerNamesOnSameServer() {
 			Player player = getRawSender();
 			ServerConnection serverConnection = player.getCurrentServer().orElse(null);
 			if (serverConnection == null) {
@@ -66,17 +75,14 @@ public abstract class VelocityCmdSender extends AbstractCmdSender<CommandSource>
 	}
 
 	static class ConsoleSender extends VelocityCmdSender {
-
-		private final ProxyServer server;
 		
 		ConsoleSender(InternalFormatter formatter, CommandSource sender, ProxyServer server) {
-			super(formatter, sender, ConsoleOperator.INSTANCE);
-			this.server = server;
+			super(formatter, sender, ConsoleOperator.INSTANCE, server);
 		}
 		
 		@Override
-		public Stream<String> getPlayersOnSameServer() {
-			return server.getAllPlayers().stream().map(Player::getUsername);
+		public Stream<String> getPlayerNamesOnSameServer() {
+			return getPlayerNames();
 		}
 		
 	}

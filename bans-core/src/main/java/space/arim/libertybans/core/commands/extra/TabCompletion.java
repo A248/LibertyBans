@@ -26,6 +26,8 @@ import java.util.stream.Stream;
 
 public interface TabCompletion extends Part {
 
+	Stream<String> completeOnlinePlayerNames(CmdSender sender);
+
 	Stream<String> completeOfflinePlayerNames(CmdSender sender);
 
 }

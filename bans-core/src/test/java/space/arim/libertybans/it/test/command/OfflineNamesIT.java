@@ -74,17 +74,21 @@ public class OfflineNamesIT {
 
 	@TestTemplate
 	@SetTime(unixTime = CURRENT_TIME)
-	public void completeOfflinePlayerNames(@Mock @DontInject TabCompletionConfig config,
-									   @Mock @DontInject CmdSender sender) {
+	public void completeOfflinePlayerNames(
+			@Mock @DontInject TabCompletionConfig.OfflinePlayerNames config,
+			@Mock @DontInject CmdSender sender) {
 		{
 			MainConfig mainConfig = mock(MainConfig.class);
 			MainConfig.Commands commands = mock(MainConfig.Commands.class);
+			TabCompletionConfig tabCompleteConfig = mock(TabCompletionConfig.class);
 			when(configs.getMainConfig()).thenReturn(mainConfig);
 			when(mainConfig.commands()).thenReturn(commands);
-			when(commands.tabCompletion()).thenReturn(config);
+			when(commands.tabCompletion()).thenReturn(tabCompleteConfig);
+			when(tabCompleteConfig.offlinePlayerNames()).thenReturn(config);
 		}
-		when(config.offlinePlayerNames()).thenReturn(true);
-		when(config.offlinePlayerNamesRetentionHours()).thenReturn(3);
+		when(config.enable()).thenReturn(true);
+		when(config.retentionMinutes()).thenReturn(Duration.ofHours(3L).toMinutes());
+		when(config.cacheRefreshSeconds()).thenReturn(Duration.ofMinutes(1L).toSeconds());
 
 		Instant now = Instant.ofEpochSecond(CURRENT_TIME);
 		dbProvider.get().jdbCaesar()
@@ -98,7 +102,6 @@ public class OfflineNamesIT {
 				.voidResult().execute();
 
 		tabCompletion.startup();
-		tabCompletion.completeOfflinePlayerNames(sender);
 
 		assertEquals(Set.of("Sender", "Player1", "Player2"),
 				tabCompletion.completeOfflinePlayerNames(sender).collect(Collectors.toUnmodifiableSet()));

@@ -62,7 +62,7 @@ public class CommandHandler implements SimpleCommand, PlatformListener {
 
 		private CmdSender adaptSender(CommandSource platformSender) {
 			if (platformSender instanceof Player) {
-				return new VelocityCmdSender.PlayerSender(formatter, (Player) platformSender);
+				return new VelocityCmdSender.PlayerSender(formatter, (Player) platformSender, server);
 			}
 			return new VelocityCmdSender.ConsoleSender(formatter, platformSender, server);
 		}

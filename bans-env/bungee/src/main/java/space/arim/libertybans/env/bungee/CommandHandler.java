@@ -62,9 +62,11 @@ public class CommandHandler extends Command implements TabExecutor, PlatformList
 
 		private CmdSender adaptSender(CommandSender platformSender) {
 			if (platformSender instanceof ProxiedPlayer) {
-				return new BungeeCmdSender.PlayerSender(formatter, audienceRepresenter, (ProxiedPlayer) platformSender);
+				return new BungeeCmdSender.PlayerSender(
+						formatter, audienceRepresenter, (ProxiedPlayer) platformSender, plugin);
 			}
-			return new BungeeCmdSender.ConsoleSender(formatter, audienceRepresenter, platformSender, plugin);
+			return new BungeeCmdSender.ConsoleSender(
+					formatter, audienceRepresenter, platformSender, plugin);
 		}
 
 		void execute(CommandSender platformSender, CommandPackage command) {

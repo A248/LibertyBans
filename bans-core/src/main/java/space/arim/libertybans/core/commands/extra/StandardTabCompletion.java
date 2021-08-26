@@ -52,11 +52,12 @@ public final class StandardTabCompletion implements TabCompletion {
 
 	@Override
 	public void startup() {
-		TabCompletionConfig config = configs.getMainConfig().commands().tabCompletion();
-		if (config.offlinePlayerNames()) {
-			Duration retention = Duration.ofHours(config.offlinePlayerNamesRetentionHours());
+		var config = configs.getMainConfig().commands().tabCompletion().offlinePlayerNames();
+		if (config.enable()) {
+			Duration retention = Duration.ofMinutes(config.retentionMinutes());
+			Duration cacheRefresh = Duration.ofSeconds(config.cacheRefreshSeconds());
 			AsyncLoadingCache<Boolean, Set<String>> nameCache = Caffeine.newBuilder()
-					.refreshAfterWrite(Duration.ofMinutes(10L))
+					.refreshAfterWrite(cacheRefresh)
 					.buildAsync((key, executor) -> {
 						InternalDatabase database = dbProvider.get();
 						return database.selectAsync(() -> {
@@ -88,9 +89,17 @@ public final class StandardTabCompletion implements TabCompletion {
 	}
 
 	@Override
+	public Stream<String> completeOnlinePlayerNames(CmdSender sender) {
+		if (configs.getMainConfig().commands().tabCompletion().useOnlyPlayersOnSameServer()) {
+			return sender.getPlayerNamesOnSameServer();
+		}
+		return sender.getPlayerNames();
+	}
+
+	@Override
 	public Stream<String> completeOfflinePlayerNames(CmdSender sender) {
 		if (nameCache == null) {
-			return sender.getPlayersOnSameServer();
+			return completeOnlinePlayerNames(sender);
 		}
 		return nameCache.get(Boolean.TRUE).orTimeout(1L, TimeUnit.MILLISECONDS).join().stream();
 	}

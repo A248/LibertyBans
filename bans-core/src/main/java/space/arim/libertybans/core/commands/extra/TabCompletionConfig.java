@@ -23,6 +23,7 @@ import space.arim.dazzleconf.annote.ConfComments;
 import space.arim.dazzleconf.annote.ConfDefault;
 import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
+import space.arim.dazzleconf.annote.SubSection;
 
 @ConfHeader({
 		"Other options relating to tab completion",
@@ -31,18 +32,41 @@ import space.arim.dazzleconf.annote.ConfKey;
 public interface TabCompletionConfig {
 
 	@ConfKey("offline-player-names")
-	@ConfComments({
-			"Whether to tab complete the names of players who have formerly joined",
+	@SubSection
+	OfflinePlayerNames offlinePlayerNames();
+
+	@ConfHeader({
+			"Regards tab completing the names of players who have formerly joined",
 			"This can be a bit heavy on memory for large servers, so it's disabled by default.",
 			"To tune how long player names are retained for, see offline-player-names-retention-hours"})
-	@ConfDefault.DefaultBoolean(false)
-	boolean offlinePlayerNames();
+	interface OfflinePlayerNames {
 
-	@ConfKey("offline-player-names-retention-hours")
+		@ConfComments("Whether to enable this feature")
+		@ConfDefault.DefaultBoolean(false)
+		boolean enable();
+
+		@ConfKey("retention-minutes")
+		@ConfComments({
+				"What is the period in which recently joining players' names should be completed",
+				"If a player has joined in the last specified amount of minutes, his or her name is tab-completed"})
+		@ConfDefault.DefaultLong(60 * 72)
+		long retentionMinutes();
+
+		@ConfKey("cache-refresh-seconds")
+		@ConfComments({
+				"This feature is implemented using a cache. How often should the cache be refreshed?",
+				"Shorter times mean more accurate tab completion but use slightly more performance"})
+		@ConfDefault.DefaultLong(120)
+		long cacheRefreshSeconds();
+
+	}
+
+	@ConfKey("use-only-players-on-same-server")
 	@ConfComments({
-			"If offline-player-names is enabled, what is the period in which recently joining players' names should be completed",
-			"If a player has joined in the last specified amount of hours, his or her name is tab-completed"})
-	@ConfDefault.DefaultInteger(72)
-	int offlinePlayerNamesRetentionHours();
+			"This option is only relevant when LibertyBans is on a proxy",
+			"If enabled, tab completion of online player names will exclude the names of players",
+			"on different backend servers."})
+	@ConfDefault.DefaultBoolean(true)
+	boolean useOnlyPlayersOnSameServer();
 
 }

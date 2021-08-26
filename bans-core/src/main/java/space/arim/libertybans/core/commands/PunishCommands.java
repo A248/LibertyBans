@@ -72,7 +72,7 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 			PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
 			if (type == PunishmentType.KICK) {
 				// Can only kick online players
-				return sender.getPlayersOnSameServer();
+				return tabCompletion.completeOnlinePlayerNames(sender);
 			}
 			return tabCompletion.completeOfflinePlayerNames(sender);
 		}

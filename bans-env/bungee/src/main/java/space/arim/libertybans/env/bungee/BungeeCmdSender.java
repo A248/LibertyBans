@@ -33,22 +33,30 @@ import java.util.stream.Stream;
 
 public abstract class BungeeCmdSender extends AbstractCmdSender<CommandSender> {
 
+	private final Plugin plugin;
+
 	BungeeCmdSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
-					CommandSender sender, Operator operator) {
+					CommandSender sender, Operator operator, Plugin plugin) {
 		super(formatter, audienceRepresenter, sender, operator);
+		this.plugin = plugin;
 	}
 
 	@Override
-	public boolean hasPermission(String permission) {
+	public final boolean hasPermission(String permission) {
 		return getRawSender().hasPermission(permission);
+	}
+
+	@Override
+	public final Stream<String> getPlayerNames() {
+		return plugin.getProxy().getPlayers().stream().map(ProxiedPlayer::getName);
 	}
 	
 	static class PlayerSender extends BungeeCmdSender {
 
 		PlayerSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
-					 ProxiedPlayer player) {
+					 ProxiedPlayer player, Plugin plugin) {
 			super(formatter, audienceRepresenter,
-					player, PlayerOperator.of(player.getUniqueId()));
+					player, PlayerOperator.of(player.getUniqueId()), plugin);
 		}
 		
 		@Override
@@ -57,7 +65,7 @@ public abstract class BungeeCmdSender extends AbstractCmdSender<CommandSender> {
 		}
 
 		@Override
-		public Stream<String> getPlayersOnSameServer() {
+		public Stream<String> getPlayerNamesOnSameServer() {
 			ProxiedPlayer player = getRawSender();
 			Server server = player.getServer();
 			if (server == null) { // There is no documented contract whether this is null
@@ -65,22 +73,19 @@ public abstract class BungeeCmdSender extends AbstractCmdSender<CommandSender> {
 			}
 			return server.getInfo().getPlayers().stream().map(ProxiedPlayer::getName);
 		}
-		
-	}
-	
-	static class ConsoleSender extends BungeeCmdSender {
 
-		private final Plugin plugin;
+	}
+
+	static class ConsoleSender extends BungeeCmdSender {
 		
 		ConsoleSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
 					  CommandSender sender, Plugin plugin) {
-			super(formatter, audienceRepresenter, sender, ConsoleOperator.INSTANCE);
-			this.plugin = plugin;
+			super(formatter, audienceRepresenter, sender, ConsoleOperator.INSTANCE, plugin);
 		}
 
 		@Override
-		public Stream<String> getPlayersOnSameServer() {
-			return plugin.getProxy().getPlayers().stream().map(ProxiedPlayer::getName);
+		public Stream<String> getPlayerNamesOnSameServer() {
+			return getPlayerNames();
 		}
 
 	}

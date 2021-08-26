@@ -28,6 +28,7 @@ import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.api.select.SelectionOrder;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
+import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.ListSection;
 import space.arim.libertybans.core.config.ListSection.ListType;
@@ -47,12 +48,15 @@ public class ListCommands extends AbstractSubCommandGroup {
 
 	private final PunishmentSelector selector;
 	private final InternalFormatter formatter;
+	private final TabCompletion tabCompletion;
 	
 	@Inject
-	public ListCommands(Dependencies dependencies, PunishmentSelector selector, InternalFormatter formatter) {
+	public ListCommands(Dependencies dependencies, PunishmentSelector selector,
+						InternalFormatter formatter, TabCompletion tabCompletion) {
 		super(dependencies, "banlist", "mutelist", "history", "warns", "blame");
 		this.selector = selector;
 		this.formatter = formatter;
+		this.tabCompletion = tabCompletion;
 	}
 	
 	@Override
@@ -60,7 +64,7 @@ public class ListCommands extends AbstractSubCommandGroup {
 		if (argIndex == 0) {
 			ListType listType = ListType.valueOf(arg.toUpperCase(Locale.ROOT));
 			if (listType.requiresTarget()) {
-				return sender.getPlayersOnSameServer();
+				return tabCompletion.completeOfflinePlayerNames(sender);
 			}
 		}
 		return Stream.empty();

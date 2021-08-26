@@ -70,7 +70,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 			PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
 			if (type == PunishmentType.BAN) {
 				// Online players are not banned, so exclude names of known online players
-				Set<String> knownToBeOnline = sender.getPlayersOnSameServer().collect(Collectors.toUnmodifiableSet());
+				Set<String> knownToBeOnline = sender.getPlayerNames().collect(Collectors.toUnmodifiableSet());
 				return availableNames.filter((name) -> !knownToBeOnline.contains(name));
 			}
 			return availableNames;

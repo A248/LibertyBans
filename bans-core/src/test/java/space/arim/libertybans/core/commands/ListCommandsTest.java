@@ -25,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.select.PunishmentSelector;
+import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
 
@@ -41,21 +42,24 @@ public class ListCommandsTest {
 	private ListCommands listCommands;
 	private final PunishmentSelector selector;
 	private final InternalFormatter formatter;
+	private final TabCompletion tabCompletion;
 
-	public ListCommandsTest(@Mock PunishmentSelector selector, @Mock InternalFormatter formatter) {
+	public ListCommandsTest(@Mock PunishmentSelector selector, @Mock InternalFormatter formatter,
+							@Mock TabCompletion tabCompletion) {
 		this.selector = selector;
 		this.formatter = formatter;
+		this.tabCompletion = tabCompletion;
 	}
 
 	@BeforeEach
 	public void setListCommands(AbstractSubCommandGroup.Dependencies dependencies) {
-		listCommands = new ListCommands(dependencies, selector, formatter);
+		listCommands = new ListCommands(dependencies, selector, formatter, tabCompletion);
 	}
 
 	@Test
 	public void suggest(@Mock CmdSender sender) {
 		Set<String> playerNames = Set.of("player1", "player2");
-		when(sender.getPlayersOnSameServer()).thenReturn(playerNames.stream());
+		when(tabCompletion.completeOfflinePlayerNames(sender)).thenReturn(playerNames.stream());
 		assertEquals(playerNames, listCommands.suggest(sender, "history", 0).collect(Collectors.toUnmodifiableSet()));
 	}
 }

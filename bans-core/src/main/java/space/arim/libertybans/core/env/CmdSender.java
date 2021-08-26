@@ -26,23 +26,30 @@ import space.arim.libertybans.api.Operator;
 public interface CmdSender {
 
 	Operator getOperator();
-	
+
 	boolean hasPermission(String permission);
-	
+
 	void sendMessageNoPrefix(ComponentLike message);
-	
+
 	void sendMessage(ComponentLike message);
-	
+
 	void sendLiteralMessageNoPrefix(String messageToParse);
-	
+
 	void sendLiteralMessage(String messageToParse);
-	
+
 	/**
-	 * Gets the names of other players on the same server as this player. <br>
+	 * Gets the names of other players in memory. Used for tab completions
+	 *
+	 * @return the names of other players
+	 */
+	Stream<String> getPlayerNames();
+
+	/**
+	 * Gets the names of other players on the same server as this player.
 	 * Used for tab completions
 	 * 
 	 * @return the names of other players on the same server as this command sender
 	 */
-	Stream<String> getPlayersOnSameServer();
-	
+	Stream<String> getPlayerNamesOnSameServer();
+
 }

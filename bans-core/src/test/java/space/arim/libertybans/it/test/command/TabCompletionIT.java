@@ -52,7 +52,7 @@ public class TabCompletionIT {
 	public void suggest(@DontInject @Mock CmdSender sender) {
 		when(sender.hasPermission(CommandsCore.BASE_COMMAND_PERMISSION)).thenReturn(true);
 		List<String> onSameServer = List.of("aplayer", "bplayer", "cplayer");
-		when(sender.getPlayersOnSameServer()).thenReturn(onSameServer.stream());
+		when(sender.getPlayerNamesOnSameServer()).thenReturn(onSameServer.stream());
 
 		List<String> suggestions = commands.suggest(sender, new String[] {"mute"});
 		assertEquals(onSameServer, suggestions);

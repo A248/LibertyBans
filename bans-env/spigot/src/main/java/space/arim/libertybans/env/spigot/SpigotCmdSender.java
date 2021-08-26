@@ -45,9 +45,9 @@ public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 		this.plugin = plugin;
 		this.futuresFactory = futuresFactory;
 	}
-	
+
 	@Override
-	public Stream<String> getPlayersOnSameServer() {
+	public final Stream<String> getPlayerNames() {
 		// Make sure not to transfer streams across threads
 		return futuresFactory.supplySync(() -> {
 			Collection<? extends Player> players = plugin.getServer().getOnlinePlayers();
@@ -58,9 +58,14 @@ public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 			return names;
 		}).join().stream();
 	}
-	
+
+	@Override
+	public final Stream<String> getPlayerNamesOnSameServer() {
+		return getPlayerNames();
+	}
+
 	static class PlayerSender extends SpigotCmdSender {
-		
+
 		private final FactoryOfTheFuture futuresFactory;
 
 		PlayerSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
@@ -69,7 +74,7 @@ public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 					player, PlayerOperator.of(player.getUniqueId()), plugin, futuresFactory);
 			this.futuresFactory = futuresFactory;
 		}
-		
+
 		@Override
 		public boolean hasPermission(String permission) {
 			return futuresFactory.supplySync(() -> getRawSender().hasPermission(permission)).join();

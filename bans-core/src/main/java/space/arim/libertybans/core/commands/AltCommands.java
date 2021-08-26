@@ -24,6 +24,7 @@ import jakarta.inject.Singleton;
 import space.arim.libertybans.core.alts.AltCheckFormatter;
 import space.arim.libertybans.core.alts.AltDetection;
 import space.arim.libertybans.core.alts.AltsSection;
+import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.uuid.UUIDManager;
 
@@ -35,13 +36,15 @@ public class AltCommands extends AbstractSubCommandGroup {
 	private final UUIDManager uuidManager;
 	private final AltDetection altDetection;
 	private final AltCheckFormatter altCheckFormatter;
+	private final TabCompletion tabCompletion;
 
 	@Inject
-	public AltCommands(Dependencies dependencies, UUIDManager uuidManager, AltDetection altDetection, AltCheckFormatter altCheckFormatter) {
+	public AltCommands(Dependencies dependencies, UUIDManager uuidManager, AltDetection altDetection, AltCheckFormatter altCheckFormatter, TabCompletion tabCompletion) {
 		super(dependencies, "alts");
 		this.uuidManager = uuidManager;
 		this.altDetection = altDetection;
 		this.altCheckFormatter = altCheckFormatter;
+		this.tabCompletion = tabCompletion;
 	}
 
 	@Override
@@ -52,7 +55,7 @@ public class AltCommands extends AbstractSubCommandGroup {
 	@Override
 	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
 		if (argIndex == 0) {
-			return sender.getPlayersOnSameServer();
+			return tabCompletion.completeOfflinePlayerNames(sender);
 		}
 		return Stream.empty();
 	}
