@@ -188,11 +188,16 @@ public class Formatter implements InternalFormatter {
 			long duration = end - start;
 			durationFormatted = formatRelative(duration);
 
-			// Using a margin of initiation prevents the "29 days, 23 hours, 59 minutes" issue
 			if (timePassed < MARGIN_OF_INITIATION) {
+				// Punishment recently enacted
+				// Using a margin of initiation prevents the "29 days, 23 hours, 59 minutes" issue
 				relativeEndFormatted = durationFormatted;
 
+			} else if (timePassed >= duration) {
+				// Expired punishment
+				relativeEndFormatted = messages().formatting().noTimeRemainingDisplay();
 			} else {
+				// Punishment still active
 				long timeRemaining = end - now;
 				relativeEndFormatted = formatRelative(timeRemaining);
 			}

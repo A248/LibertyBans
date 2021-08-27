@@ -156,8 +156,9 @@ public class FormatterTest {
 		MessagesConfig.Formatting formatting = mock(MessagesConfig.Formatting.class);
 		when(messagesConfig.formatting()).thenReturn(formatting);
 		lenient().when(formatting.consoleDisplay()).thenReturn("Console");
-		when(formatting.globalScopeDisplay()).thenReturn("global");
-		when(formatting.punishmentTypeDisplay()).thenReturn(Map.of());
+		lenient().when(formatting.globalScopeDisplay()).thenReturn("global");
+		lenient().when(formatting.punishmentTypeDisplay()).thenReturn(Map.of());
+		lenient().when(formatting.noTimeRemainingDisplay()).thenReturn("(No time remaining)");
 	}
 
 	private void setupSimpleDefaults() {
@@ -215,6 +216,28 @@ public class FormatterTest {
 				.replace("%START_DATE%", "04/01/2021 23:59")
 				.replace("%END_DATE%", "05/01/2021 02:59")
 				.replace("%TIME_PASSED%", "1 seconds");
+
+		assertEquals(expectedFormat, format(punishment, layout));
+	}
+
+	@Test
+	public void noTimeRemaining() {
+		setupSimpleDefaults();
+
+		FormatterTestInfo testInfo = new FormatterTestInfo(
+				PunishmentType.BAN,
+				DisplayableVictim.ObWolf, DisplayableOperator.CONSOLE,
+				"global", "this ban has expired");
+
+		// Start punishment 4 hours ago and end it 1 hour ago, for a duration of 3 hours
+		Instant start = INSTANT_2021_01_05.minus(Duration.ofHours(4L));
+		Instant end = start.plus(Duration.ofHours(3L));
+		Punishment punishment = punishmentFor(testInfo, start, end);
+
+		String layout = "Remaining time is %TIME_REMAINING%. Time passed is %TIME_PASSED%.";
+		String expectedFormat = testInfo.formatVariables(layout)
+				.replace("%TIME_REMAINING%", "(No time remaining)")
+				.replace("%TIME_PASSED%", "4 hours");
 
 		assertEquals(expectedFormat, format(punishment, layout));
 	}

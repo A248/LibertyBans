@@ -194,6 +194,13 @@ public interface MessagesConfig {
 			String absolute();
 			
 		}
+
+		@ConfKey("no-time-remaining-display")
+		@ConfComments({
+				"When there is no more time remaining in a punishment (the punishment has expired),",
+				"this becomes the value of the %TIME_REMAINING% variable"})
+		@DefaultString("N/A")
+		String noTimeRemainingDisplay();
 		
 		@ConfKey("console-arguments")
 		@ConfComments("When using /blame, how should the console be specified?")
