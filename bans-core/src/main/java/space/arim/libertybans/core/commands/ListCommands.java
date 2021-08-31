@@ -121,19 +121,29 @@ public class ListCommands extends AbstractSubCommandGroup {
 				return;
 			}
 			target = command().next();
-			CentralisedFuture<SelectionOrderBuilder> parseTargetFuture;
 			switch (listType) {
 			case HISTORY:
 			case WARNS:
-				parseTargetFuture = argumentParser().parseVictimByName(sender(), target).thenApply(selectionOrderBuilder::victim);
+				postFuture(argumentParser().parseVictimByName(sender(), target)
+						.thenCompose((victim) -> {
+							if (victim == null) {
+								return completedFuture(null);
+							}
+							return parsePageThenExecuteFuture(selectionOrderBuilder.victim(victim));
+						}));
 				break;
 			case BLAME:
-				parseTargetFuture = argumentParser().parseOperatorByName(sender(), target).thenApply(selectionOrderBuilder::operator);
+				postFuture(argumentParser().parseOperatorByName(sender(), target)
+						.thenCompose((operator) -> {
+							if (operator == null) {
+								return completedFuture(null);
+							}
+							return parsePageThenExecuteFuture(selectionOrderBuilder.operator(operator));
+						}));
 				break;
 			default:
-				throw new IllegalArgumentException("Could not recognise " + listType);
+				throw new IllegalArgumentException("Could not recognize " + listType);
 			}
-			postFuture(parseTargetFuture.thenCompose(this::parsePageThenExecuteFuture));
 		}
 		
 		private void parsePageThenExecute(SelectionOrderBuilder selectionOrderBuilder) {
