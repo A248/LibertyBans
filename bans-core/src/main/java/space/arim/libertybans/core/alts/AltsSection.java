@@ -85,11 +85,11 @@ public interface AltsSection {
 				"Available variables:",
 				"%DETECTION_KIND% - how the account was detected. Will be replaced by the normal or strict options.",
 				"%ADDRESS% - the address in question which led to the detection",
-				"%RELEVANT_USER% - the username of the other account",
+				"%RELEVANT_USER% - the username of the other account, formatted according to the name-display option",
 				"%RELEVANT_USERID% - the UUID of the other account",
 				"%DATE_RECORDED% - the date the alt account was recorded"
 		})
-		@ConfDefault.DefaultString("&e&o%RELEVANT_USER% &r&7(per %ADDRESS%) at %DATE_RECORDED% - %DETECTION_KIND%")
+		@ConfDefault.DefaultString("%RELEVANT_USER% &r&7(per %ADDRESS%) at %DATE_RECORDED% - %DETECTION_KIND%")
 		ComponentText layout();
 
 		@ConfComments("The description for an alt account detected by normal detection.")
@@ -99,6 +99,28 @@ public interface AltsSection {
 		@ConfComments("The description for an alt account detected by strict detection.")
 		@ConfDefault.DefaultString("&eMere possibility")
 		Component strict();
+
+		@ConfKey("name-display")
+		@SubSection
+		NameDisplay nameDisplay();
+
+		@ConfHeader({
+				"In the alt-check layout, the username of the alt may be formatted depending upon whether it is banned",
+				"For example, the usernames of banned alts may be colored red whereas alts not banned are green",
+				"Variables: %USERNAME%"
+		})
+		interface NameDisplay {
+
+			@ConfDefault.DefaultString("&c&o%USERNAME%")
+			ComponentText banned();
+
+			@ConfDefault.DefaultString("&e&o%USERNAME%")
+			ComponentText muted();
+
+			@ConfKey("not-punished")
+			@ConfDefault.DefaultString("&f&o%USERNAME%")
+			ComponentText notPunished();
+		}
 
 	}
 

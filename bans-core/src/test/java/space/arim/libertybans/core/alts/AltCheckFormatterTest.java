@@ -28,9 +28,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.Formatter;
 import space.arim.libertybans.core.config.MessagesConfig;
+import space.arim.libertybans.it.util.RandomUtil;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -40,6 +42,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -72,17 +75,60 @@ public class AltCheckFormatterTest {
 		String username = "AltUser";
 		Instant date = Instant.parse("2021-07-23T02:15:23.000000Z");
 		DetectedAlt alt = new DetectedAlt(DetectionKind.NORMAL,
-				NetworkAddress.of(InetAddress.getByName(address)),
+				null, NetworkAddress.of(InetAddress.getByName(address)),
 				userId, username, date);
-		when(conf.layout()).thenReturn(ComponentText.create(Component.text(
-				"detection_kind: %DETECTION_KIND%, address: %ADDRESS%, username: %RELEVANT_USER%, " +
-						"user_id: %RELEVANT_USERID%, date_recorded: %DATE_RECORDED%")));
-		when(conf.normal()).thenReturn(Component.text("NORMAL"));
-		when(formatter.prefix(any())).thenAnswer((invocation) -> invocation.getArgument(0));
-		when(formatter.formatAbsoluteDate(date)).thenReturn(date.toString());
+
+		{
+			when(conf.layout()).thenReturn(ComponentText.create(Component.text(
+					"detection_kind: %DETECTION_KIND%, address: %ADDRESS%, username: %RELEVANT_USER%, " +
+							"user_id: %RELEVANT_USERID%, date_recorded: %DATE_RECORDED%")));
+			when(conf.normal()).thenReturn(Component.text("NORMAL"));
+			var nameDisplay = mock(AltsSection.Formatting.NameDisplay.class);
+			when(nameDisplay.notPunished()).thenReturn(ComponentText.create(Component.text("%USERNAME%")));
+			when(conf.nameDisplay()).thenReturn(nameDisplay);
+			when(formatter.prefix(any())).thenAnswer((invocation) -> invocation.getArgument(0));
+			when(formatter.formatAbsoluteDate(date)).thenReturn(date.toString());
+		}
 		assertEquals("Alt report for MainUser\n" +
 						"detection_kind: " + alt.detectionKind() + ", address: " + address + ", username: " + username +
 						", " + "user_id: " + userId + ", date_recorded: " + date,
 				PlainComponentSerializer.plain().serialize(altCheckFormatter.formatMessage(header, "MainUser", List.of(alt))));
+	}
+
+	@Test
+	public void formatPunishedAltsWithDetectionKind() throws UnknownHostException {
+		Instant date = Instant.parse("2021-07-23T02:15:23.000000Z");
+		{
+			when(conf.layout()).thenReturn(ComponentText.create(Component.text(
+					"kind: %DETECTION_KIND%, username: %RELEVANT_USER%")));
+			when(conf.normal()).thenReturn(Component.text("NORMAL"));
+			when(conf.strict()).thenReturn(Component.text("STRICT"));
+			when(formatter.prefix(any())).thenAnswer((invocation) -> invocation.getArgument(0));
+			when(formatter.formatAbsoluteDate(any())).thenReturn("date");
+
+			var nameDisplay = mock(AltsSection.Formatting.NameDisplay.class);
+			when(nameDisplay.banned()).thenReturn(ComponentText.create(Component.text("Banned(%USERNAME%)")));
+			when(nameDisplay.muted()).thenReturn(ComponentText.create(Component.text("Muted(%USERNAME%)")));
+			when(nameDisplay.notPunished()).thenReturn(ComponentText.create(Component.text("None(%USERNAME%)")));
+			when(conf.nameDisplay()).thenReturn(nameDisplay);
+		}
+		List<DetectedAlt> alts = List.of(
+				new DetectedAlt(DetectionKind.NORMAL,
+						PunishmentType.BAN, NetworkAddress.of(RandomUtil.randomAddress()),
+						UUID.randomUUID(), "BadUser", date),
+				new DetectedAlt(DetectionKind.STRICT,
+						PunishmentType.MUTE, NetworkAddress.of(RandomUtil.randomAddress()),
+						UUID.randomUUID(), "Misbehaver", date),
+				new DetectedAlt(DetectionKind.NORMAL,
+						null, NetworkAddress.of(RandomUtil.randomAddress()),
+						UUID.randomUUID(), "Saint", date)
+		);
+		Component formattedMessage = altCheckFormatter.formatMessage(
+				ComponentText.create(Component.text("Header")), "MainUser", alts);
+		assertEquals("Header\n" +
+						"kind: NORMAL, username: Banned(BadUser)\n" +
+						"kind: STRICT, username: Muted(Misbehaver)\n" +
+						"kind: NORMAL, username: None(Saint)",
+				PlainComponentSerializer.plain().serialize(formattedMessage));
 	}
 }

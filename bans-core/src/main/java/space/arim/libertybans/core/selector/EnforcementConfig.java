@@ -26,6 +26,8 @@ import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultString;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultStrings;
+import space.arim.dazzleconf.annote.SubSection;
+import space.arim.libertybans.core.alts.WhichAlts;
 
 @ConfHeader({"Options related to punishment enforcement and alt account checking",
 		"",
@@ -50,11 +52,31 @@ public interface EnforcementConfig {
 	@DefaultString("NORMAL")
 	AddressStrictness addressStrictness(); // Sensitive name used in integration testing
 
-	@ConfComments({"If enabled, runs an alt-check on newly joined players, as if by /alts, ",
+	@ConfKey("alts-auto-show")
+	@SubSection
+	AltsAutoShow altsAutoShow();
+
+	@ConfHeader({
+			"Runs an alt-check on newly joined players, as if by /alts, ",
 			"the results of which will be shown to staff members with the libertybans.alts.autoshow permission."})
-	@ConfKey("enable-alts-auto-show")
-	@ConfDefault.DefaultBoolean(false)
-	boolean enableAltsAutoShow();
+	interface AltsAutoShow {
+
+		@ConfComments("Set to true to enable this feature")
+		@ConfDefault.DefaultBoolean(false)
+		boolean enable();
+
+		@ConfKey("show-which-alts")
+		@ConfComments({
+				"Allows determining which alts will be shown by this alt-check",
+				"(This does not affect the alts command, which will always show all alts)",
+				"ALL_ALTS - shows all alts",
+				"BANNED_OR_MUTED_ALTS - shows alts either banned or muted",
+				"BANNED_ALTS - shows only banned alts"
+		})
+		@DefaultString("ALL_ALTS")
+		WhichAlts showWhichAlts();
+
+	}
 	
 	@ConfKey("mute-commands")
 	@ConfComments({"",

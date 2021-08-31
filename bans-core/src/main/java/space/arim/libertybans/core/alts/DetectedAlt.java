@@ -20,22 +20,27 @@
 package space.arim.libertybans.core.alts;
 
 import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.api.PunishmentType;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 public final class DetectedAlt {
 
 	private final DetectionKind detectionKind;
+	private final PunishmentType punishmentType;
 	private final NetworkAddress relevantAddress;
 	private final UUID relevantUserId;
 	private final String relevantUserName;
 	private final Instant dateAccountRecorded;
 
-	public DetectedAlt(DetectionKind detectionKind, NetworkAddress relevantAddress,
-					   UUID relevantUserId, String relevantUserName, Instant dateAccountRecorded) {
+	public DetectedAlt(DetectionKind detectionKind, PunishmentType punishmentType,
+					   NetworkAddress relevantAddress, UUID relevantUserId, String relevantUserName,
+					   Instant dateAccountRecorded) {
 		this.detectionKind = Objects.requireNonNull(detectionKind, "detectionKind");
+		this.punishmentType = punishmentType;
 		this.relevantAddress = Objects.requireNonNull(relevantAddress, "relevantAddress");
 		this.relevantUserId = Objects.requireNonNull(relevantUserId, "relevantUserId");
 		this.relevantUserName = Objects.requireNonNull(relevantUserName, "relevantUserName");
@@ -44,6 +49,10 @@ public final class DetectedAlt {
 
 	public DetectionKind detectionKind() {
 		return detectionKind;
+	}
+
+	public Optional<PunishmentType> punishmentType() {
+		return Optional.ofNullable(punishmentType);
 	}
 
 	public NetworkAddress relevantAddress() {
@@ -67,12 +76,15 @@ public final class DetectedAlt {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		DetectedAlt that = (DetectedAlt) o;
-		return detectionKind == that.detectionKind && relevantAddress.equals(that.relevantAddress) && relevantUserId.equals(that.relevantUserId) && relevantUserName.equals(that.relevantUserName) && dateAccountRecorded.equals(that.dateAccountRecorded);
+		return detectionKind == that.detectionKind && Objects.equals(punishmentType, that.punishmentType)
+				&& relevantAddress.equals(that.relevantAddress) && relevantUserId.equals(that.relevantUserId) && relevantUserName.equals(that.relevantUserName)
+				&& dateAccountRecorded.equals(that.dateAccountRecorded);
 	}
 
 	@Override
 	public int hashCode() {
 		int result = detectionKind.hashCode();
+		result = 31 * result + Objects.hashCode(punishmentType);
 		result = 31 * result + relevantAddress.hashCode();
 		result = 31 * result + relevantUserId.hashCode();
 		result = 31 * result + relevantUserName.hashCode();
@@ -84,6 +96,7 @@ public final class DetectedAlt {
 	public String toString() {
 		return "DetectedAlt{" +
 				"detectionKind=" + detectionKind +
+				", punishmentType=" + punishmentType +
 				", relevantAddress=" + relevantAddress +
 				", relevantUserId=" + relevantUserId +
 				", relevantUserName='" + relevantUserName + '\'' +

@@ -126,8 +126,9 @@ public class ApplicableImpl {
 					return ban;
 				}
 				// The player is not banned, but should be checked for alts
-				if (configs.getMainConfig().enforcement().enableAltsAutoShow()) {
-					return altDetection.detectAlts(querySource, uuid, address);
+				EnforcementConfig.AltsAutoShow altsAutoShow = configs.getMainConfig().enforcement().altsAutoShow();
+				if (altsAutoShow.enable()) {
+					return altDetection.detectAlts(querySource, uuid, address, altsAutoShow.showWhichAlts());
 				}
 				return null;
 			}).execute();

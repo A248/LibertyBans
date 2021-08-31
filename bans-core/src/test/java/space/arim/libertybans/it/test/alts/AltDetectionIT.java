@@ -23,10 +23,15 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.api.PlayerVictim;
+import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.core.alts.AltDetection;
 import space.arim.libertybans.core.alts.DetectedAlt;
 import space.arim.libertybans.core.alts.DetectionKind;
+import space.arim.libertybans.core.alts.WhichAlts;
 import space.arim.libertybans.core.punish.Enforcer;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetTime;
@@ -35,9 +40,14 @@ import space.arim.libertybans.it.util.RandomUtil;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static space.arim.libertybans.core.alts.WhichAlts.ALL_ALTS;
+import static space.arim.libertybans.core.alts.WhichAlts.BANNED_ALTS;
+import static space.arim.libertybans.core.alts.WhichAlts.BANNED_OR_MUTED_ALTS;
 import static space.arim.libertybans.it.util.RandomUtil.randomName;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
@@ -46,34 +56,41 @@ public class AltDetectionIT {
 
 	private final AltDetection altDetection;
 	private final Enforcer enforcer;
+	private final PunishmentDrafter drafter;
 
 	@Inject
-	public AltDetectionIT(AltDetection altDetection, Enforcer enforcer) {
+	public AltDetectionIT(AltDetection altDetection, Enforcer enforcer, PunishmentDrafter drafter) {
 		this.altDetection = altDetection;
 		this.enforcer = enforcer;
+		this.drafter = drafter;
 	}
 
 	private static NetworkAddress randomAddress() {
 		return NetworkAddress.of(RandomUtil.randomAddress());
 	}
 
-	@TestTemplate
-	public void noAlts() {
+	private void testNoAlts(WhichAlts whichAlts) {
 		UUID uuid = UUID.randomUUID();
 		String name = randomName();
 		NetworkAddress address = randomAddress();
 
 		assumeTrue(null == enforcer.executeAndCheckConnection(uuid, name, address).join());
+		assertEquals(List.of(), altDetection.detectAlts(uuid, address, whichAlts).join());
+	}
 
-		assertEquals(List.of(), altDetection.detectAlts(uuid, address).join());
+	@TestTemplate
+	public void noAlts() {
+		for (WhichAlts whichAlts : WhichAlts.values()) {
+			assertDoesNotThrow(() -> testNoAlts(whichAlts), () -> "Using WhichAlts " + whichAlts);
+		}
 	}
 
 	private static final long TIME_NOW = 1627005548L;
+	private static final Instant DATE_NOW = Instant.ofEpochSecond(TIME_NOW);
 
-	@TestTemplate
-	@SetTime(unixTime = TIME_NOW)
-	public void normalAlt() {
-		Instant date = Instant.ofEpochSecond(TIME_NOW);
+	private void testNormalAlt(WhichAlts whichAltsForFirstAltCheck,
+							   PunishmentType expectedPunishmentTypeForFirstAltCheck,
+							   Consumer<UUID> operationOnAltBeforeAltCheck) {
 		NetworkAddress commonAddress = randomAddress();
 		UUID uuid = UUID.randomUUID();
 		String name = randomName();
@@ -83,20 +100,80 @@ public class AltDetectionIT {
 		assumeTrue(null == enforcer.executeAndCheckConnection(uuid, name, commonAddress).join());
 		assumeTrue(null == enforcer.executeAndCheckConnection(uuidTwo, nameTwo, commonAddress).join());
 
+		operationOnAltBeforeAltCheck.accept(uuidTwo);
+
 		assertEquals(List.of(new DetectedAlt(
-				DetectionKind.NORMAL, commonAddress,
-				uuidTwo, nameTwo, date)
-		), altDetection.detectAlts(uuid, commonAddress).join());
+				DetectionKind.NORMAL, expectedPunishmentTypeForFirstAltCheck, commonAddress,
+				uuidTwo, nameTwo, DATE_NOW)
+		), altDetection.detectAlts(uuid, commonAddress, whichAltsForFirstAltCheck).join());
 		assertEquals(List.of(new DetectedAlt(
-				DetectionKind.NORMAL, commonAddress,
-				uuid, name, date)
-		), altDetection.detectAlts(uuidTwo, commonAddress).join());
+				DetectionKind.NORMAL, null, commonAddress,
+				uuid, name, DATE_NOW)
+		), altDetection.detectAlts(uuidTwo, commonAddress, ALL_ALTS).join());
+	}
+
+	@TestTemplate
+	@SetTime(unixTime = TIME_NOW)
+	public void normalAlt() {
+		testNormalAlt(ALL_ALTS, null, (uuid) -> {});
+	}
+
+	private void addPunishment(UUID uuid, PunishmentType type) {
+		drafter.draftBuilder()
+				.type(type)
+				.victim(PlayerVictim.of(uuid))
+				.operator(ConsoleOperator.INSTANCE)
+				.reason("reason")
+				.build()
+				.enactPunishmentWithoutEnforcement().toCompletableFuture().join();
+	}
+
+	@TestTemplate
+	@SetTime(unixTime = TIME_NOW)
+	public void normalBannedAlt() {
+		testNormalAlt(ALL_ALTS, PunishmentType.BAN, (uuid) -> {
+			addPunishment(uuid, PunishmentType.BAN);
+		});
+		testNormalAlt(BANNED_OR_MUTED_ALTS, PunishmentType.BAN, (uuid) -> {
+			addPunishment(uuid, PunishmentType.BAN);
+		});
+		testNormalAlt(BANNED_ALTS, PunishmentType.BAN, (uuid) -> {
+			addPunishment(uuid, PunishmentType.BAN);
+		});
+	}
+
+	@TestTemplate
+	@SetTime(unixTime = TIME_NOW)
+	public void normalMutedAlt() {
+		testNormalAlt(ALL_ALTS, PunishmentType.MUTE, (uuid) -> {
+			addPunishment(uuid, PunishmentType.MUTE);
+		});
+		testNormalAlt(BANNED_OR_MUTED_ALTS, PunishmentType.MUTE, (uuid) -> {
+			addPunishment(uuid, PunishmentType.MUTE);
+		});
+	}
+
+	@TestTemplate
+	@SetTime(unixTime = TIME_NOW)
+	public void normalBannedAndMutedAlt() {
+		// When both banned and muted, ban should take precedence
+		testNormalAlt(ALL_ALTS, PunishmentType.BAN, (uuid) -> {
+			addPunishment(uuid, PunishmentType.BAN);
+			addPunishment(uuid, PunishmentType.MUTE);
+		});
+		testNormalAlt(BANNED_OR_MUTED_ALTS, PunishmentType.BAN, (uuid) -> {
+			addPunishment(uuid, PunishmentType.BAN);
+			addPunishment(uuid, PunishmentType.MUTE);
+		});
+		testNormalAlt(BANNED_ALTS, PunishmentType.BAN, (uuid) -> {
+			addPunishment(uuid, PunishmentType.BAN);
+			addPunishment(uuid, PunishmentType.MUTE);
+		});
 	}
 
 	@TestTemplate
 	@SetTime(unixTime = TIME_NOW)
 	public void strictAlt() {
-		Instant date = Instant.ofEpochSecond(TIME_NOW);
 		NetworkAddress commonPastAddress = randomAddress();
 		UUID uuid = UUID.randomUUID();
 		String name = randomName();
@@ -107,12 +184,12 @@ public class AltDetectionIT {
 		assumeTrue(null == enforcer.executeAndCheckConnection(uuidTwo, nameTwo, commonPastAddress).join());
 
 		assertEquals(List.of(new DetectedAlt(
-				DetectionKind.STRICT, commonPastAddress,
-				uuidTwo, nameTwo, date)
-		), altDetection.detectAlts(uuid, randomAddress()).join());
+				DetectionKind.STRICT, null, commonPastAddress,
+				uuidTwo, nameTwo, DATE_NOW)
+		), altDetection.detectAlts(uuid, randomAddress(), ALL_ALTS).join());
 		assertEquals(List.of(new DetectedAlt(
-				DetectionKind.STRICT, commonPastAddress,
-				uuid, name, date)
-		), altDetection.detectAlts(uuidTwo, randomAddress()).join());
+				DetectionKind.STRICT, null, commonPastAddress,
+				uuid, name, DATE_NOW)
+		), altDetection.detectAlts(uuidTwo, randomAddress(), ALL_ALTS).join());
 	}
 }

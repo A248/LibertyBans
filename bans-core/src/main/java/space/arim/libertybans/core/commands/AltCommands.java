@@ -24,6 +24,7 @@ import jakarta.inject.Singleton;
 import space.arim.libertybans.core.alts.AltCheckFormatter;
 import space.arim.libertybans.core.alts.AltDetection;
 import space.arim.libertybans.core.alts.AltsSection;
+import space.arim.libertybans.core.alts.WhichAlts;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.uuid.UUIDManager;
@@ -86,7 +87,7 @@ public class AltCommands extends AbstractSubCommandGroup {
 					sender().sendMessage(messages().all().notFound().player().replaceText("%TARGET%", target));
 					return completedFuture(null);
 				}
-				return altDetection.detectAlts(userDetails.get()).thenAccept((detectedAlts) -> {
+				return altDetection.detectAlts(userDetails.get(), WhichAlts.ALL_ALTS).thenAccept((detectedAlts) -> {
 					if (detectedAlts.isEmpty()) {
 						sender().sendMessage(section().command().noneFound());
 						return;
