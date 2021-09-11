@@ -60,11 +60,11 @@ public class StrictnessAssertHelper {
 		return enforcer.executeAndCheckConnection(uuid, name, address).join();
 	}
 
-	void connectAndAssertUnbannedUser(UUID uuid, String name, InetAddress address) {
+	public void connectAndAssertUnbannedUser(UUID uuid, String name, InetAddress address) {
 		assertNull(connectAndGetMessage(uuid, name, address), "User " + uuid + "/" + name + " is not banned yet");
 	}
 
-	void connectAndAssumeUnbannedUser(UUID uuid, String name, InetAddress address) {
+	public void connectAndAssumeUnbannedUser(UUID uuid, String name, InetAddress address) {
 		Component banMessage = connectAndGetMessage(uuid, name, address);
 		assumeTrue(banMessage == null, "User " + uuid + "/" + name + " is not banned yet");
 	}

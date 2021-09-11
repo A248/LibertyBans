@@ -123,7 +123,7 @@ public class SelectionIT {
 	}
 
 	@TestTemplate
-	public void testSelectBanMuteForVictim(@DontInject @SingularPunishment PunishmentType type, @DontInject Victim victim) {
+	public void selectBanMuteForVictim(@DontInject @SingularPunishment PunishmentType type, @DontInject Victim victim) {
 		Punishment banOrMute = getPunishment(
 				draftBuilder(type, victim, "some reason").scope(scopeManager.specificScope("someserver")));
 		assertEquals(banOrMute, getSinglePunishment(selectionBuilder(type).victim(victim)));
