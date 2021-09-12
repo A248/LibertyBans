@@ -110,11 +110,12 @@ public class LibertyBansLauncher {
 			warnRelocation("Kyori-Examination", "net.kyori.examination.Examinable");
 			if (downloadSelfDependencies) {
 				jarsToDownload.add(locate(InternalDependency.KYORI_BUNDLE));
+			} else {
+				logger.warn(
+						"Using the LibertyBans_Executable jar requires that you have Kyori-Adventure included on your server. " +
+								"This means you need to use Paper 1.16.5+ or Velocity. " +
+								"If you cannot meet these requirements, you must wait for the next release.");
 			}
-			logger.warn(
-					"Using the LibertyBans_Executable jar requires that you have Kyori-Adventure included on your server. " +
-					"This means you need to use Paper 1.16.5+ or Velocity. " +
-					"If you cannot meet these requirements, you must wait for the next release.");
 		}
 		if (downloadSelfDependencies) {
 			jarsToDownload.add(locate(InternalDependency.SELF_IMPLEMENTATION));
