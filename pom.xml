@@ -11,7 +11,7 @@
 	
 	<groupId>space.arim.libertybans</groupId>
 	<artifactId>bans-parent</artifactId>
-	<version>0.8.0</version>
+	<version>0.8.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	
 	<name>LibertyBans</name>
