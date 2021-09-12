@@ -28,7 +28,10 @@ The be-all, end-all of discipline.
     * /history <player> - shows all punishments for a player
     * /warns <player> - shows all warns for a player
     * /blame <player> - shows all the punishments a staff member has enacted
-* There is no /alts or /dupeip command. Why? Because this functionality is built into the enforcement of punishments. By default, alts are automatically banned from joining if the alt account's IP address matches that of a banned player.
+* Multiple means to block alt accounts:
+  * Automatic enforcement to block alt accounts. *By default, alts are automatically banned from joining if the main account is banned.* This behavior is configurable, and you can even increase the strictness of alt-checking. 
+  * Manual /alts command - shows suspected alt accounts for a player.
+  * Alts notification on join - tells staff members when a player whose suspected alt is banned or muted.
 * Options and behaviour are fully configurable. You can even tweak your connection pool and statement cache settings to fine-tune performance.
 * All dependencies are automatically downloaded with secure SHA-512 hashes used to validate the downloads. Additionally, builds of LibertyBans are reproducible from the source code, meaning checksums can be personally verified.
 
