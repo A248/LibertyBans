@@ -17,19 +17,19 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.kyoribundle;
+package space.arim.libertybans.it.executableunpack;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import space.arim.libertybans.bootstrap.Platform;
 
-public class PlatformHandleInitializationTest {
+import java.util.stream.Stream;
 
-	private final HelperClassLoader helper = new HelperClassLoader();
+public final class PlatformProvider implements ArgumentsProvider {
 
-	@Test
-	public void initializePlatformHandle() {
-		String className = "space.arim.api.env.PlatformHandle";
-		helper.assertNotHasClass(className);
-		helper.classForName(className);
-		helper.assertHasClass(className);
+	@Override
+	public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
+		return Platform.Builder.allPossiblePlatforms("it-unpack").map(Arguments::of);
 	}
 }

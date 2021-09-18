@@ -19,26 +19,31 @@
 
 package space.arim.libertybans.it.executableunpack;
 
-import org.junit.jupiter.api.Assertions;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ScanResult;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.bootstrap.DistributionMode;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
-import space.arim.libertybans.bootstrap.Platforms;
+import space.arim.libertybans.bootstrap.Platform;
 import space.arim.libertybans.bootstrap.logger.Slf4jBootstrapLogger;
 
-import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.security.CodeSource;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class UnpackTest {
 
@@ -54,27 +59,53 @@ public class UnpackTest {
 		}
 	}
 
-	@Test
-	public void unpack() {
+	private ClassLoader unpack(Platform platform, ClassLoader parentClassLoader) {
 		Path jarFile = getJarFile();
 		LibertyBansLauncher launcher = new LibertyBansLauncher(
 				new Slf4jBootstrapLogger(LoggerFactory.getLogger(getClass())),
-				Platforms.velocity(true), // Supports slf4j, adventure, and caffeine
+				platform,
 				Path.of("target/folder"),
 				ForkJoinPool.commonPool(),
 				jarFile);
+		launcher.overrideParentClassLoader(parentClassLoader);
 		assertEquals(DistributionMode.JAR_OF_JARS, launcher.distributionMode());
 		CompletableFuture<ClassLoader> futureClassLoader = launcher.attemptLaunch();
 		futureClassLoader.orTimeout(5L, TimeUnit.SECONDS);
-		ClassLoader classLoader = assertDoesNotThrow(futureClassLoader::join);
-		try {
-			Class<?> databaseSettings = classLoader.loadClass("space.arim.libertybans.core.database.DatabaseSettings");
-			Class<?> databaseManager = classLoader.loadClass("space.arim.libertybans.core.database.DatabaseManager");
-			databaseSettings.getConstructor(databaseManager).newInstance((Object) null);
-		} catch (ClassNotFoundException | NoSuchMethodException | InstantiationException
-				| IllegalAccessException | InvocationTargetException ex) {
-			throw Assertions.<RuntimeException>fail("Could not load, initialize, or use database-related classes", ex);
+		return assertDoesNotThrow(futureClassLoader::join);
+	}
+
+	@ParameterizedTest
+	@ArgumentsSource(PlatformProvider.class)
+	public void unpack(Platform platform) {
+		assertDoesNotThrow(() -> unpack(platform, getClass().getClassLoader()));
+	}
+
+	@Test
+	public void unpackAndLink() {
+		Platform platform = Platform.forCategory(Platform.Category.BUKKIT).build("it-unpack-and-link");
+		ClassLoader classLoader = unpack(platform, new ClassLoader() {});
+
+		List<String> classNames;
+		try (ScanResult scanResult = new ClassGraph()
+				.overrideClassLoaders(classLoader)
+				.enableClassInfo()
+				.scan()) {
+			classNames = scanResult.getAllClasses()
+					.filter(classInfo -> {
+						String className = classInfo.getName();
+						return className.startsWith("space.arim.libertybans")
+								&& !className.startsWith("space.arim.libertybans.env");
+					})
+					.getNames();
 		}
+		assertNotEquals(List.of(), classNames, "Found no classes");
+		classNames.forEach((className) -> {
+			try {
+				Class.forName(className, true, classLoader);
+			} catch (ClassNotFoundException | LinkageError ex) {
+				fail("Unable to find or link class in LibertyBans namespace", ex);
+			}
+		});
 	}
 
 }

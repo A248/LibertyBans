@@ -18,7 +18,10 @@
  */
 package space.arim.libertybans.bootstrap;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Stream;
 
 public final class Platform {
 
@@ -63,10 +66,10 @@ public final class Platform {
 
 	public static final class Builder {
 
+		private final Category category;
 		private boolean slf4j;
 		private boolean kyoriAdventure;
 		private boolean caffeine;
-		private final Category category;
 
 		private Builder(Category category) {
 			this.category = Objects.requireNonNull(category, "category");
@@ -89,6 +92,23 @@ public final class Platform {
 
 		public Platform build(String platformName) {
 			return new Platform(category, platformName, slf4j, kyoriAdventure, caffeine);
+		}
+
+		// Used for testing purposes
+		public static Stream<Platform> allPossiblePlatforms(String platformName) {
+			Set<Platform> platforms = new HashSet<>();
+			for (Platform.Category category : Set.of(Platform.Category.BUKKIT, Platform.Category.BUNGEE)) {
+				for (boolean slf4j : new boolean[] {true, false}) {
+					for (boolean adventure : new boolean[] {true, false}) {
+						platforms.add(Platform.forCategory(category)
+								.slf4jSupport(slf4j).kyoriAdventureSupport(adventure)
+								.build(platformName));
+					}
+				}
+			}
+			platforms.add(Platforms.velocity(true));
+			platforms.add(Platforms.velocity(false));
+			return platforms.stream();
 		}
 	}
 	

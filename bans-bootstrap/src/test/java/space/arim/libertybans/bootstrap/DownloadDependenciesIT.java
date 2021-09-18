@@ -27,8 +27,6 @@ import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 import space.arim.libertybans.bootstrap.logger.Slf4jBootstrapLogger;
 
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -43,19 +41,7 @@ public class DownloadDependenciesIT {
 
 	@TestFactory
 	public Stream<DynamicNode> downloadDependencies() {
-		Set<Platform> platforms = new HashSet<>();
-		for (Platform.Category category : new Platform.Category[] {Platform.Category.BUKKIT, Platform.Category.BUNGEE}) {
-			for (boolean slf4j : new boolean[] {true, false}) {
-				for (boolean adventure : new boolean[] {true, false}) {
-					platforms.add(Platform.forCategory(category)
-							.slf4jSupport(slf4j).kyoriAdventureSupport(adventure)
-							.build("test"));
-				}
-			}
-		}
-		platforms.add(Platforms.velocity(true));
-		platforms.add(Platforms.velocity(false));
-		return platforms.stream().map((platform) -> {
+		return Platform.Builder.allPossiblePlatforms("download test").map((platform) -> {
 			return DynamicTest.dynamicTest("For platform " + platform, () -> runDownloadDependencies(platform));
 		});
 	}

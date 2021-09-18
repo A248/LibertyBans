@@ -35,7 +35,34 @@
             </unpackOptions>
         </dependencySet>
         <dependencySet>
-            <outputDirectory>/jars/</outputDirectory>
+            <outputDirectory>/jars/caffeine/</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <unpack>false</unpack>
+            <useStrictFiltering>true</useStrictFiltering>
+            <includes>
+                <include>com.github.ben-manes.caffeine:caffeine</include>
+            </includes>
+        </dependencySet>
+        <dependencySet>
+            <outputDirectory>/jars/slf4j/</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <unpack>false</unpack>
+            <useStrictFiltering>true</useStrictFiltering>
+            <includes>
+                <include>org.slf4j:*</include>
+            </includes>
+        </dependencySet>
+        <dependencySet>
+            <outputDirectory>/jars/kyori/</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <unpack>false</unpack>
+            <useStrictFiltering>true</useStrictFiltering>
+            <includes>
+                <include>net.kyori:*</include>
+            </includes>
+        </dependencySet>
+        <dependencySet>
+            <outputDirectory>/jars/self-implementation/</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <unpack>false</unpack>
             <useStrictFiltering>true</useStrictFiltering>
@@ -48,7 +75,7 @@
                 <exclude>space.arim.libertybans:bans-env-bungeeplugin</exclude>
                 <exclude>space.arim.licenser:licenser-agpl3</exclude>
 
-                <exclude>org.slf4j:slf4j-api</exclude>
+                <exclude>org.slf4j:*</exclude>
                 <exclude>org.yaml:snakeyaml</exclude>
                 <exclude>com.google.code.gson:gson</exclude>
                 <exclude>org.checkerframework:checker-qual</exclude>

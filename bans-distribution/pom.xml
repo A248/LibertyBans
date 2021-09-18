@@ -84,7 +84,6 @@
 
 	<modules>
 		<module>download</module>
-		<module>kyori-bundle</module>
 		<module>distributable</module>
 		<module>executable</module>
 	</modules>
