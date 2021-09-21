@@ -24,8 +24,11 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import space.arim.libertybans.api.event.PunishEvent;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
+import space.arim.omnibus.events.EventConsumer;
+import space.arim.omnibus.events.ListenerPriorities;
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
@@ -42,11 +45,18 @@ import space.arim.libertybans.api.select.PunishmentSelector;
 
 public class WikiExamples {
 
-	private final LibertyBans libertyBans = findLibertyBansInstance();
-	
-	private static LibertyBans findLibertyBansInstance() {
-		 Omnibus omnibus = OmnibusProvider.getOmnibus();
-		 return omnibus.getRegistry().getProvider(LibertyBans.class).orElseThrow();
+	private final Omnibus omnibus;
+	private final LibertyBans libertyBans;
+
+	public WikiExamples(Omnibus omnibus, LibertyBans libertyBans) {
+		this.omnibus = omnibus;
+		this.libertyBans = libertyBans;
+	}
+
+	public static WikiExamples create() {
+		Omnibus omnibus = OmnibusProvider.getOmnibus();
+		LibertyBans libertyBans = omnibus.getRegistry().getProvider(LibertyBans.class).orElseThrow();
+		return new WikiExamples(omnibus, libertyBans);
 	}
 	
 	private final Logger logger = LoggerFactory.getLogger(ThisClass.get());
@@ -89,6 +99,16 @@ public class WikiExamples {
 				// there was no ban
 			}
 		});
+	}
+
+	public void listenToPunishEvent() {
+		EventConsumer<PunishEvent> listener = new EventConsumer<>() {
+			@Override
+			public void accept(PunishEvent event) {
+				logger.info("Listening to punish event {}", event);
+			}
+		};
+		omnibus.getEventBus().registerListener(PunishEvent.class, ListenerPriorities.NORMAL, listener);
 	}
 
 }
