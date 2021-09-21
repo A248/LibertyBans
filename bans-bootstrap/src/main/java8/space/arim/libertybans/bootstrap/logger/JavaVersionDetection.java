@@ -50,9 +50,18 @@ public class JavaVersionDetection {
 
 	private boolean wrongVersion(int version) {
 		logger.error(
-				"Your version of Java (Detected Java " + version + ") is outdated. Please upgrade to at least JDK 11 "
-				+ "in order for LibertyBans to work properly. To install "
-				+ "Java 11 or any later version, see https://adoptopenjdk.net/");
+				"*****************************************************************\n" +
+				"*****************************************************************\n" +
+				"*********************** ATTENTION *******************************\n" +
+				"Your version of Java is outdated.\n" +
+				"Your Java version: " + version + "\n" +
+				"Required Java version: 11 or newer\n" +
+				"\n" +
+				"Please upgrade to at least Java 11 in order for LibertyBans to work.\n" +
+				"To install Java 11 or any later version, contact your host or download it from https://adoptopenjdk.net/\n" +
+				"*****************************************************************\n" +
+				"*****************************************************************\n" +
+				"*****************************************************************");
 		return false;
 	}
 
