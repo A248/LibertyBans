@@ -29,17 +29,20 @@ The project is split into several Maven modules:
 
 You will want to make sure that your IDE recognizes these modules.
 
-## The distribution mechanism - dependency downloading
+## The distribution mechanism
 
-Because of hosting limits, LibertyBans uses some tricks to ensure the distributed jar is less than 5 MB in size. Sha512 hashes are used to ensure the data is exactly the same as expected.
+### The main distribution which uses dependency downloading
 
-The bootstrap module downloads the implementation jar at runtime. The implementation jar is shaded with all dependencies at compile time and placed in an isolated classloader at runtime.
+Because of hosting limits, LibertyBans uses some tricks to ensure the main distributed jar, on SpigotMC and Github Releases, is less than 5 MB in size.
 
-### Compiling and running from source
+Dependencies are downloaded at runtime and verified against SHA-512 hashes. The implementation jar is shaded with all dependencies at compile time and placed in an isolated classloader at runtime.
 
-Use `mvn clean package`.
+### The distribution for compiling and running from source
 
-The jar at `bans-distribution/executable/target/LibertyBans-Executable_version.jar` can be run as a plugin on any supported platform.
+If you want to collaborate on LibertyBans, or build a jar for your own purposes, follow these steps:
+
+1. Use `mvn clean package`.
+2. The jar at `bans-distribution/executable/target/LibertyBans-Executable_version.jar` can be run as a plugin on any supported platform.
 
 This jar is fully ready for use. It packages dependencies using a nested jar format, and it will use the sources and libraries you compiled it with.
 
