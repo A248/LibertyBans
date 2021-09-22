@@ -13,7 +13,6 @@
 	<description>Implementation jar with dependencies shaded. Downloaded at runtime.</description>
 
 	<properties>
-		<bans-distribution.can-deploy>false</bans-distribution.can-deploy>
 		<bans-distribution.module-hash>${self-implementation.hash}</bans-distribution.module-hash>
 	</properties>
 	
@@ -47,9 +46,6 @@
 	<profiles>
 		<profile>
 			<id>deploy-snapshot</id>
-			<properties>
-				<bans-distribution.can-deploy>true</bans-distribution.can-deploy>
-			</properties>
 			<build>
 				<plugins>
 					<!-- Skip deployment -->
@@ -65,9 +61,6 @@
 		</profile>
 		<profile>
 			<id>check-hash</id>
-			<properties>
-				<bans-distribution.can-deploy>true</bans-distribution.can-deploy>
-			</properties>
 			<build>
 				<plugins>
 					<!-- Check hash of own jar -->

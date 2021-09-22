@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>space.arim.parent</groupId>
 		<artifactId>common-parent</artifactId>
-		<version>0.2.5</version>
+		<version>0.3.0</version>
 	</parent>
 	
 	<groupId>space.arim.libertybans</groupId>
@@ -65,8 +65,8 @@
 		<dbrevision.minor>0</dbrevision.minor>
 
 		<!-- Skip javadocs and sources by default -->
-		<common-parent.skipJavadoc>true</common-parent.skipJavadoc>
-		<common-parent.skipSources>true</common-parent.skipSources>
+		<common-parent.skip-javadoc>true</common-parent.skip-javadoc>
+		<common-parent.skip-sources>true</common-parent.skip-sources>
 	</properties>
 	
 	<licenses>
@@ -222,14 +222,14 @@
 						<artifactId>maven-enforcer-plugin</artifactId>
 						<executions>
 							<execution>
-								<id>enforce-jdk-16</id>
+								<id>enforce-jdk-17</id>
 								<goals>
 									<goal>enforce</goal>
 								</goals>
 								<configuration>
 									<rules>
 										<requireJavaVersion>
-											<version>[16,17)</version>
+											<version>[17,18)</version>
 										</requireJavaVersion>
 									</rules>
 								</configuration>

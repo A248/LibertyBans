@@ -13,8 +13,8 @@
 	<description>API for LibertyBans</description>
 
 	<properties>
-		<common-parent.skipJavadoc>false</common-parent.skipJavadoc>
-		<common-parent.skipSources>false</common-parent.skipSources>
+		<common-parent.skip-javadoc>false</common-parent.skip-javadoc>
+		<common-parent.skip-sources>false</common-parent.skip-sources>
 		<!-- Prevents javadocs 'Error fetching link' -->
 		<maven.compiler.release>11</maven.compiler.release>
 	</properties>

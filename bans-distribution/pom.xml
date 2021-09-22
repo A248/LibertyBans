@@ -23,23 +23,21 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>3.0.0-M3</version>
 				<executions>
 					<execution>
-						<!-- Ensure the check-hash profile is active on deploy -->
-						<id>enforce-check-hash</id>
+						<!-- Ensure either the check-hash or deploy-snapshot profile is active -->
+						<id>enforce-deployment-profile</id>
 						<phase>install</phase>
 						<goals>
 							<goal>enforce</goal>
 						</goals>
 						<configuration>
 							<rules>
-								<!-- MENFORCER-257: Switch to requireActiveProfile once 3.0.0-M4 is released -->
-								<requireProperty>
-									<property>bans-distribution.can-deploy</property>
-									<regex>true</regex>
-									<regexMessage>You need to have the check-hash profile enabled during release</regexMessage>
-								</requireProperty>
+								<requireActiveProfile>
+									<profiles>check-hash,deploy-snapshot</profiles>
+									<all>false</all>
+									<message>You need to enable the deploy-snapshot profile, or the check-hash profile if performing a release</message>
+								</requireActiveProfile>
 							</rules>
 						</configuration>
 					</execution>
