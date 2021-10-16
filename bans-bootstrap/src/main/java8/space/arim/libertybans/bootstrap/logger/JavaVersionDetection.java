@@ -58,7 +58,7 @@ public class JavaVersionDetection {
 				"Required Java version: 11 or newer\n" +
 				"\n" +
 				"Please upgrade to at least Java 11 in order for LibertyBans to work.\n" +
-				"To install Java 11 or any later version, contact your host or download it from https://adoptopenjdk.net/\n" +
+				"To install Java 11 or any later version, contact your host or download it from https://adoptium.net/\n" +
 				"*****************************************************************\n" +
 				"*****************************************************************\n" +
 				"*****************************************************************");
