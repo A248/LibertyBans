@@ -27,6 +27,7 @@ import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.core.commands.extra.DurationParser;
 import space.arim.libertybans.core.commands.extra.DurationPermissionCheck;
+import space.arim.libertybans.core.commands.extra.NotificationMessage;
 import space.arim.libertybans.core.commands.extra.ReasonsConfig;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.AdditionsSection;
@@ -82,10 +83,12 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 	private class Execution extends TypeSpecificExecution {
 
 		private final AdditionsSection.PunishmentAddition section;
+		private final NotificationMessage notificationMessage;
 		
 		Execution(CmdSender sender, CommandPackage command, PunishmentType type) {
 			super(sender, command, type);
 			section = messages().additions().forType(type);
+			notificationMessage = new NotificationMessage(sender, type, NotificationMessage.Mode.DO);
 		}
 
 		@Override
@@ -138,6 +141,9 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 			// Parse reason
 			String reason;
 			{
+				// Evaluate -s before using allRemaining
+				notificationMessage.evaluate(command());
+
 				if (command().hasNext()) {
 					reason = command().allRemaining();
 				} else {
@@ -223,7 +229,7 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 				sender().sendMessage(futureMessage.join());
 
 				envEnforcer.sendToThoseWithPermission(
-						"libertybans." + type() + ".notify", futureNotify.join());
+						notificationMessage.notificationPermission(), futureNotify.join());
 			});
 			postFuture(fireWithTimeout(new PostPunishEventImpl(punishment)));
 			return completion;

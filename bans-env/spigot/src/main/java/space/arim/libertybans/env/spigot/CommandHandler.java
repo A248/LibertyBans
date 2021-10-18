@@ -122,7 +122,7 @@ public class CommandHandler extends BukkitCommandSkeleton implements PlatformLis
 
 	@Override
 	protected void execute(CommandSender platformSender, String[] args) {
-		commandHelper.execute(platformSender, new ArrayCommandPackage(getName(), adaptArgs(args)));
+		commandHelper.execute(platformSender, ArrayCommandPackage.create(adaptArgs(args)));
 	}
 
 	@Override

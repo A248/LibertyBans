@@ -18,8 +18,7 @@
  */
 package space.arim.libertybans.core.commands;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.Test;
 
 import java.util.NoSuchElementException;
 
@@ -29,43 +28,88 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CommandPackageTest {
-	
-	@ParameterizedTest
-	@ArgumentsSource(CommandPackageArgumentsProvider.class)
-	@CommandPackageArgumentsProvider.CommandArgs(cmd = "Cmd", args = {})
-	public void noArguments(CommandPackage cmdPackage) {
-		assertEquals(cmdPackage.getCommand(), "cmd");
-		assertFalse(cmdPackage.hasNext());
-		assertTrue(cmdPackage.allRemaining().isEmpty());
-		assertThrows(NoSuchElementException.class, cmdPackage::next);
+
+	@Test
+	public void noArguments() {
+		CommandPackage cmd = ArrayCommandPackage.create();
+
+		assertFalse(cmd.hasNext());
+		assertEquals("", cmd.allRemaining());
+		assertFalse(cmd.findHiddenArgument("s"));
+		assertThrows(NoSuchElementException.class, cmd::next);
 	}
 
-	@ParameterizedTest
-	@ArgumentsSource(CommandPackageArgumentsProvider.class)
-	@CommandPackageArgumentsProvider.CommandArgs(cmd = "cmd", args = {"arg"})
-	public void oneArgument(CommandPackage cmdPackage) {
-		assertTrue(cmdPackage.hasNext());
-		CommandPackage copy = cmdPackage.copy();
+	@Test
+	public void oneNormalArg() {
+		CommandPackage cmd = ArrayCommandPackage.create("arg");
 
-		assertEquals("arg", cmdPackage.allRemaining());
-		assertThrows(NoSuchElementException.class, cmdPackage::next);
-
-		assertEquals("arg", copy.next());
-		assertThrows(NoSuchElementException.class, copy::next);
+		assertTrue(cmd.hasNext());
+		assertFalse(cmd.findHiddenArgument("g"));
+		assertEquals("arg", cmd.next());
+		assertThrows(NoSuchElementException.class, cmd::next);
 	}
 
-	@ParameterizedTest
-	@ArgumentsSource(CommandPackageArgumentsProvider.class)
-	@CommandPackageArgumentsProvider.CommandArgs(cmd = "cmd", args = {"arg", "second", "another"})
-	public void multipleArguments(CommandPackage cmdPackage) {
-		assertTrue(cmdPackage.hasNext());
-		CommandPackage copy = cmdPackage.copy();
+	@Test
+	public void oneNormalArgAllRemaining() {
+		CommandPackage cmd = ArrayCommandPackage.create("arg");
 
-		assertEquals("arg second another", cmdPackage.allRemaining());
-		assertThrows(NoSuchElementException.class, cmdPackage::next);
+		assertEquals("arg", cmd.allRemaining());
+		assertThrows(NoSuchElementException.class, cmd::next);
+	}
 
-		assertEquals("arg", copy.next());
-		assertEquals("second", copy.next());
+	@Test
+	public void hiddenArgSurroundedByNormalArgsConsume() {
+		CommandPackage cmd = ArrayCommandPackage.create("arg1", "-s", "arg2");
+
+		assertFalse(cmd.findHiddenArgument("s"), "-s is not yet visible");
+		assertFalse(cmd.findHiddenArgument("g"), "No such -g specified");
+
+		assertEquals("arg1", cmd.next());
+
+		assertTrue(cmd.findHiddenArgument("s"), "-s is now visible, having been passed");
+		assertFalse(cmd.findHiddenArgument("g"), "No such -g specified");
+	}
+
+	@Test
+	public void hiddenArgSurroundedByNormalArgsAllRemaining() {
+		CommandPackage cmd = ArrayCommandPackage.create("arg1", "-s", "arg2");
+
+		assertFalse(cmd.findHiddenArgument("s"), "-s is not yet visible");
+		assertFalse(cmd.findHiddenArgument("g"), "No such -g specified");
+
+		assertEquals("arg1 -s arg2", cmd.allRemaining());
+	}
+
+	@Test
+	public void hiddenArgOnlyCanBeFound() {
+		CommandPackage cmd = ArrayCommandPackage.create("-gav");
+
+		assertTrue(cmd.findHiddenArgument("gav"), "Hidden argument can be found even if no normal arguments exist");
+	}
+
+	@Test
+	public void hiddenArgOnlyHasNoNormalArguments() {
+		CommandPackage cmd = ArrayCommandPackage.create("-gav");
+
+		assertFalse(cmd.hasNext(), "Hidden arguments are not visible through iteration");
+		assertEquals("", cmd.allRemaining());
+	}
+
+	@Test
+	public void multipleNormalAndHiddenArgs() {
+		CommandPackage cmd = ArrayCommandPackage.create("user1 -s 30d teaming -green in kitpvp".split(" "));
+
+		assertTrue(cmd.hasNext());
+		assertEquals("user1", cmd.next());
+
+		assertTrue(cmd.hasNext());
+		assertEquals("30d", cmd.next());
+
+		assertTrue(cmd.findHiddenArgument("s"));
+		assertFalse(cmd.findHiddenArgument("green"));
+
+		assertEquals("teaming -green in kitpvp", cmd.allRemaining());
+		assertFalse(cmd.hasNext());
 	}
 	
 }

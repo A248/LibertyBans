@@ -107,7 +107,7 @@ public class UnspecifiedReasonsTest {
 
 	private void executeBan(CmdSender sender) {
 		when(sender.hasPermission(any())).thenReturn(true);
-		punishCommands.execute(sender, new ArrayCommandPackage("ban", "A248"), "ban").execute();
+		punishCommands.execute(sender, ArrayCommandPackage.create("A248"), "ban").execute();
 	}
 
 	private void executeBanSuccessful(CmdSender sender, String reason) {

@@ -25,6 +25,7 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.revoke.PunishmentRevoker;
 import space.arim.libertybans.api.revoke.RevocationOrder;
+import space.arim.libertybans.core.commands.extra.NotificationMessage;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.RemovalsSection.PunishmentRemoval;
@@ -81,10 +82,12 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 	private class Execution extends TypeSpecificExecution {
 		
 		private final PunishmentRemoval section;
+		private final NotificationMessage notificationMessage;
 
 		Execution(CmdSender sender, CommandPackage command, PunishmentType type) {
 			super(sender, command, type);
 			section = messages().removals().forType(type);
+			notificationMessage = new NotificationMessage(sender, type, NotificationMessage.Mode.UNDO);
 		}
 
 		@Override
@@ -178,6 +181,8 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 
 		private CentralisedFuture<?> sendSuccess(Punishment punishment, String targetArg) {
 
+			notificationMessage.evaluate(command()); // Evaluate -s
+
 			CentralisedFuture<?> unenforcement = punishment.unenforcePunishment().toCompletableFuture();
 			CentralisedFuture<Component> futureMessage = formatter.formatWithPunishment(
 					section.successMessage().replaceText("%TARGET%", targetArg), punishment);
@@ -188,7 +193,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 				sender().sendMessage(futureMessage.join());
 
 				envEnforcer.sendToThoseWithPermission(
-						"libertybans." + type() + ".unnotify", futureNotify.join());
+						notificationMessage.notificationPermission(), futureNotify.join());
 			});
 			postFuture(fireWithTimeout(new PostPardonEventImpl(sender().getOperator(), punishment)));
 			return completion;

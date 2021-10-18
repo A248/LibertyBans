@@ -19,53 +19,60 @@
 package space.arim.libertybans.core.commands;
 
 import java.util.Iterator;
-import java.util.Locale;
 
-public abstract class CommandPackage implements Iterator<String> {
+/**
+ * A command argument iterator. Defines several means for accessing
+ * command arguments: <br>
+ * <br>
+ * 1. Iterative methods: next, hasNext, and peek.
+ * 2. Aggregate methods: allRemaining
+ * 3. Hidden argument methods: findHiddenArgument <br>
+ * <br>
+ * Normal command arguments are accessible via normal iteration (next, hasNext, and peek). <br>
+ * <br>
+ * There are also hidden arguments, which are not viewable through
+ * normal iteration methods. If they have not yet been encountered, hidden arguments are
+ * visible through aggregate methods; if they have been encountered, hdiden arguments
+ * can be accessed with {@link #findHiddenArgument(String)}. A hidden argument is considered
+ * "encountered" if the process of iteration has passed the argument in its course.
+ *
+ */
+public interface CommandPackage extends Iterator<String> {
 
-	private final String command;
-	
-	/**
-	 * Creates from the true name of the base command executed
-	 * 
-	 * @param command the true base command executed
-	 */
-	public CommandPackage(String command) {
-		this.command = command;
-	}
-	
-	/**
-	 * Gets the true base command run, always lowercase
-	 * 
-	 * @return the true base command, lowercased
-	 */
-	public String getCommand() {
-		return command.toLowerCase(Locale.ROOT);
-	}
-	
 	/**
 	 * Gets the current argument and advances to the next argument
 	 * 
 	 * @return the current argument
 	 */
 	@Override
-	public abstract String next();
-	
+	String next();
+
 	/**
 	 * Gets the current argument without advancing to the next one
 	 * 
 	 * @return the current argument
 	 */
-	public abstract String peek();
-	
+	String peek();
+
 	/**
 	 * Indicates whether there are more arguments.
 	 * 
 	 * @return true if there are more arguments, false otherwise
 	 */
 	@Override
-	public abstract boolean hasNext();
-	
+	boolean hasNext();
+
+	/**
+	 * Finds a certain hidden argument. See the class javadoc for the meaning of hidden arguments. <br>
+	 * <br>
+	 * The meaning of a hidden argument will depend on the implementation.
+	 * It is typical to use "-" as a special leading character to indicate hidden arguments.
+	 *
+	 * @param argument the hidden argument, excluding any special leading characters. Case insensitive
+	 * @return whether the hidden argument is present in the arguments which have been encountered so far
+	 */
+	boolean findHiddenArgument(String argument);
+
 	/**
 	 * Concatenates the current argument and all remaining arguments. This would
 	 * be equivalent to joining all calls to {@link #next()}, separating with spaces,
@@ -73,13 +80,14 @@ public abstract class CommandPackage implements Iterator<String> {
 	 * 
 	 * @return the concatenated result
 	 */
-	public abstract String allRemaining();
-	
+	String allRemaining();
+
 	/**
 	 * Creates an identical copy of this command package. Mutating this object
 	 * or the produced copy will not affect the other.
-	 * 
+	 *
+	 * @return the copy
 	 */
-	public abstract CommandPackage copy();
-	
+	CommandPackage copy();
+
 }

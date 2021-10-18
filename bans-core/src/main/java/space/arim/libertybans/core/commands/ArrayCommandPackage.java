@@ -21,15 +21,34 @@ package space.arim.libertybans.core.commands;
 import java.util.NoSuchElementException;
 import java.util.StringJoiner;
 
-public final class ArrayCommandPackage extends CommandPackage {
+public final class ArrayCommandPackage implements CommandPackage {
 
 	private final String[] args;
-	
-	private transient int position = 0;
-	
-	public ArrayCommandPackage(String command, String...args) {
-		super(command);
+	/** Position never refers to a hidden command argument */
+	private transient int position;
+
+	private static final String HIDDEN_ARG_PREFIX = "-";
+
+	private ArrayCommandPackage(String[] args) {
 		this.args = args;
+	}
+
+	/**
+	 * Creates from an argument array. The input array is NOT cloned
+	 *
+	 * @param args the argument array, of which no elements can be null
+	 */
+	public static ArrayCommandPackage create(String...args) {
+		ArrayCommandPackage commandPackage = new ArrayCommandPackage(args);
+		commandPackage.movePastHiddenArguments();
+		return commandPackage;
+	}
+
+	// Maintains the guarantee that position never refers to a hidden argument
+	private void movePastHiddenArguments() {
+		while (position < args.length && args[position].startsWith(HIDDEN_ARG_PREFIX)) {
+			position++;
+		}
 	}
 	
 	@Override
@@ -37,7 +56,9 @@ public final class ArrayCommandPackage extends CommandPackage {
 		if (!hasNext()) {
 			throw new NoSuchElementException();
 		}
-		return args[position++];
+		String thisArg = args[position++];
+		movePastHiddenArguments();
+		return thisArg;
 	}
 	
 	@Override
@@ -49,7 +70,18 @@ public final class ArrayCommandPackage extends CommandPackage {
 	public boolean hasNext() {
 		return args.length > position;
 	}
-	
+
+	@Override
+	public boolean findHiddenArgument(String argument) {
+		String searchFor = "-" + argument;
+		for (int n = 0; n < position; n++) {
+			if (args[n].equalsIgnoreCase(searchFor)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@Override
 	public String allRemaining() {
 		StringJoiner joiner = new StringJoiner(" ");
@@ -62,7 +94,7 @@ public final class ArrayCommandPackage extends CommandPackage {
 
 	@Override
 	public CommandPackage copy() {
-		ArrayCommandPackage copy = new ArrayCommandPackage(getCommand(), args);
+		ArrayCommandPackage copy = new ArrayCommandPackage(args);
 		copy.position = position;
 		return copy;
 	}

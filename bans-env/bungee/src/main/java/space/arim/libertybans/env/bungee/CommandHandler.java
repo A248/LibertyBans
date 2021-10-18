@@ -98,7 +98,7 @@ public class CommandHandler extends Command implements TabExecutor, PlatformList
 
 	@Override
 	public void execute(CommandSender platformSender, String[] args) {
-		commandHelper.execute(platformSender, new ArrayCommandPackage(getName(), adaptArgs(args)));
+		commandHelper.execute(platformSender, ArrayCommandPackage.create(adaptArgs(args)));
 	}
 
 	@Override

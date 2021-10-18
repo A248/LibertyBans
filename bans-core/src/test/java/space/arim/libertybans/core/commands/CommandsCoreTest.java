@@ -63,7 +63,7 @@ public class CommandsCoreTest {
 		when(messagesConfig.all()).thenReturn(all);
 		when(all.basePermissionMessage()).thenReturn(noPermMessage);
 
-		CommandPackage dummyCommand = new ArrayCommandPackage("cmd", "args");
+		CommandPackage dummyCommand = ArrayCommandPackage.create("args");
 		newCommandsCore(List.of()).execute(sender, dummyCommand);
 
 		verify(sender).sendMessage(noPermMessage);
@@ -77,7 +77,7 @@ public class CommandsCoreTest {
 	public void usageUnknownCommand() {
 		addBasePermission();
 
-		CommandPackage dummyCommand = new ArrayCommandPackage("cmd", "args");
+		CommandPackage dummyCommand = ArrayCommandPackage.create("args");
 		newCommandsCore(List.of()).execute(sender, dummyCommand);
 
 		verify(usage).sendUsage(sender, dummyCommand, false);
@@ -87,7 +87,7 @@ public class CommandsCoreTest {
 	public void explicitUsage() {
 		addBasePermission();
 
-		CommandPackage dummyCommand = new ArrayCommandPackage("cmd", "help");
+		CommandPackage dummyCommand = ArrayCommandPackage.create("help");
 		newCommandsCore(List.of()).execute(sender, dummyCommand);
 
 		verify(usage).sendUsage(sender, dummyCommand, true);
@@ -103,7 +103,7 @@ public class CommandsCoreTest {
 		when(subCommandOne.execute(any(), any(), any())).thenReturn(subCommandOneExecution);
 		SubCommandGroup subCommandTwo = mock(SubCommandGroup.class);
 
-		CommandPackage commandOne = new ArrayCommandPackage("cmd", "one");
+		CommandPackage commandOne = ArrayCommandPackage.create("one");
 		newCommandsCore(List.of(subCommandOne, subCommandTwo)).execute(sender, commandOne);
 
 		verify(subCommandOne).execute(sender, commandOne, "one");
@@ -117,7 +117,7 @@ public class CommandsCoreTest {
 		SubCommandGroup subCommandOne = mock(SubCommandGroup.class);
 		SubCommandGroup subCommandTwo = mock(SubCommandGroup.class);
 
-		CommandPackage commandNone = new ArrayCommandPackage("cmd", "none");
+		CommandPackage commandNone = ArrayCommandPackage.create("none");
 		newCommandsCore(List.of(subCommandOne, subCommandTwo)).execute(sender, commandNone);
 
 		verify(usage).sendUsage(sender, commandNone, false);

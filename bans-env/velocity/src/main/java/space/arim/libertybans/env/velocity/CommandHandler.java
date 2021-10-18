@@ -99,7 +99,7 @@ public class CommandHandler implements SimpleCommand, PlatformListener {
 	public void execute(Invocation invocation) {
 		CommandSource platformSender = invocation.source();
 		String[] args = invocation.arguments();
-		commandHelper.execute(platformSender, new ArrayCommandPackage(name, adaptArgs(args)));
+		commandHelper.execute(platformSender, ArrayCommandPackage.create(adaptArgs(args)));
 	}
 	
 	@Override

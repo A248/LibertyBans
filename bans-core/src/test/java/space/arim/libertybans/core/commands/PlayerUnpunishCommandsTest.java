@@ -102,7 +102,7 @@ public class PlayerUnpunishCommandsTest {
 
 		when(revoker.revokeByTypeAndVictim(any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory));
 
-		commands.execute(sender, new ArrayCommandPackage("libertybans", address), "unban").execute();
+		commands.execute(sender, ArrayCommandPackage.create(address), "unban").execute();
 		verify(revoker).revokeByTypeAndVictim(PunishmentType.BAN, victim);
 		verify(sender).sendMessage(argThat(new ComponentMatcher<>(notFoundMsg)));
 	}
