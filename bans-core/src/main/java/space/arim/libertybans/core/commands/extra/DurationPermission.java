@@ -20,6 +20,7 @@
 package space.arim.libertybans.core.commands.extra;
 
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.env.CmdSender;
 
 import java.time.Duration;
@@ -42,7 +43,11 @@ public final class DurationPermission {
 		return value;
 	}
 
-	boolean hasPermission(CmdSender sender, PunishmentType type) {
+	boolean hasPermission(MainConfig config, CmdSender sender, PunishmentType type) {
+		return !config.durationPermissions().enable() || hasPermissionExcludingFeatureCheck(sender, type);
+	}
+
+	boolean hasPermissionExcludingFeatureCheck(CmdSender sender, PunishmentType type) {
 		return sender.hasPermission("libertybans." + type + ".dur." + value)
 				// Compatibility with 0.7.6 and earlier. See #51
 				|| sender.hasPermission("libertybans.dur." + type + "." + value);

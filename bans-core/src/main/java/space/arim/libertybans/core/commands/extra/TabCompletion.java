@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.commands.extra;
 
+import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.Part;
 import space.arim.libertybans.core.env.CmdSender;
 
@@ -29,5 +30,7 @@ public interface TabCompletion extends Part {
 	Stream<String> completeOnlinePlayerNames(CmdSender sender);
 
 	Stream<String> completeOfflinePlayerNames(CmdSender sender);
+
+	Stream<String> completePunishmentDurations(CmdSender sender, PunishmentType type);
 
 }

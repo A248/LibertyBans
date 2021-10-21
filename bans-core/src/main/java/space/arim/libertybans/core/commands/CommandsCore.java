@@ -28,6 +28,7 @@ import space.arim.libertybans.core.env.CmdSender;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Singleton
 public class CommandsCore implements Commands {
@@ -94,7 +95,10 @@ public class CommandsCore implements Commands {
 	
 	@Override
 	public List<String> suggest(CmdSender sender, String[] args) {
-		if (args.length == 0 || !sender.hasPermission(BASE_COMMAND_PERMISSION)
+		// A length of 0 means '/libertybans' itself is tab completed
+		// Length 1 means a sub-command name like '/libertybans ban' is tab completed
+		if (args.length == 0 || args.length == 1
+				|| !sender.hasPermission(BASE_COMMAND_PERMISSION)
 				|| !configs.getMainConfig().commands().tabComplete()) {
 			return List.of();
 		}
@@ -103,8 +107,19 @@ public class CommandsCore implements Commands {
 		if (subCommand == null) {
 			return List.of();
 		}
-		int argIndex = args.length - 1;
-		return subCommand.suggest(sender, firstArg, argIndex).sorted().collect(Collectors.toUnmodifiableList());
+		/*
+		Subtract 2 from arguments length to determine argument index
+		'/libertybans ban A248' - argIndex is 0 for the first argument, which is A248
+		'/libertybans ban A248 ' - argIndex is 1 for the second argument, after A248
+		'/libertybans ban A248 30d' - argIndex is 1, again
+		 */
+		int argIndex = args.length - 2;
+		Stream<String> completions = subCommand.suggest(sender, firstArg, argIndex);
+		String lastArg = args[args.length - 1];
+		if (!lastArg.isEmpty()) {
+			completions = completions.filter((completion) -> completion.startsWith(lastArg));
+		}
+		return completions.sorted().collect(Collectors.toUnmodifiableList());
 	}
 	
 }

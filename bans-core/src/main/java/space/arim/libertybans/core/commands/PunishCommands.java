@@ -69,13 +69,16 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 
 	@Override
 	public final Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
+		PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
 		if (argIndex == 0) {
-			PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
 			if (type == PunishmentType.KICK) {
 				// Can only kick online players
 				return tabCompletion.completeOnlinePlayerNames(sender);
 			}
 			return tabCompletion.completeOfflinePlayerNames(sender);
+		}
+		if (argIndex == 1) {
+			return tabCompletion.completePunishmentDurations(sender, type);
 		}
 		return Stream.empty();
 	}

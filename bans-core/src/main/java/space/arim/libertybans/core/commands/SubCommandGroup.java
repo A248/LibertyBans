@@ -49,7 +49,11 @@ interface SubCommandGroup {
 	CommandExecution execute(CmdSender sender, CommandPackage command, String arg);
 	
 	/**
-	 * Gets tab complete suggestions for the subcommand
+	 * Gets tab complete suggestions for the subcommand. <br>
+	 * <br>
+	 * The argIndex determines which tab completions are requested. An argIndex
+	 * of {@code n} means to request the tab completions for the nth argument
+	 * of this command. The index is zero-based.
 	 * 
 	 * @param sender the command sender
 	 * @param arg the argument matched to this sub command group, lowercased

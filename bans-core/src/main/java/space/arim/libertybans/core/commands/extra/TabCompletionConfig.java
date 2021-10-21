@@ -25,6 +25,8 @@ import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.SubSection;
 
+import java.util.Set;
+
 @ConfHeader({
 		"Other options relating to tab completion",
 		"These settings require a restart (/libertybans restart) to take effect"
@@ -68,5 +70,30 @@ public interface TabCompletionConfig {
 			"on different backend servers."})
 	@ConfDefault.DefaultBoolean(true)
 	boolean useOnlyPlayersOnSameServer();
+
+	@ConfKey("punishment-durations")
+	@SubSection
+	PunishmentDurations punishmentDurations();
+
+	@ConfHeader({
+			"Enables tab-completing punishment durations. For example, '30d' in '/ban A248 30d'",
+			""})
+	interface PunishmentDurations {
+
+		@ConfComments("Whether to enable this feature")
+		@ConfDefault.DefaultBoolean(false)
+		boolean enable();
+
+		@ConfKey("durations-to-supply")
+		@ConfComments({
+				"Which duration permissions should be tab-completed?",
+				"Specify all the durations which you want to tab complete.",
+				"",
+				"If duration permissions are enabled, only players who have permission to use a certain duration",
+				"will have that duration tab-completed."})
+		@ConfDefault.DefaultStrings({"perm", "30d", "10d", "4h"})
+		Set<DurationPermission> durationsToSupply();
+
+	}
 
 }

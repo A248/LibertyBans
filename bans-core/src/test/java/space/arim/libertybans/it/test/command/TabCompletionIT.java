@@ -54,7 +54,7 @@ public class TabCompletionIT {
 		List<String> onSameServer = List.of("aplayer", "bplayer", "cplayer");
 		when(sender.getPlayerNamesOnSameServer()).thenReturn(onSameServer.stream());
 
-		List<String> suggestions = commands.suggest(sender, new String[] {"mute"});
+		List<String> suggestions = commands.suggest(sender, new String[] {"mute", ""});
 		assertEquals(onSameServer, suggestions);
 	}
 

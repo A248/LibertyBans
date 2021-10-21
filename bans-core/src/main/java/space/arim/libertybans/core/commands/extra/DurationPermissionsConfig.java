@@ -22,11 +22,9 @@ package space.arim.libertybans.core.commands.extra;
 import space.arim.dazzleconf.annote.ConfComments;
 import space.arim.dazzleconf.annote.ConfDefault;
 import space.arim.dazzleconf.annote.ConfKey;
-import space.arim.dazzleconf.annote.ConfSerialisers;
 
 import java.util.Set;
 
-@ConfSerialisers(DurationPermissionSerialiser.class)
 public interface DurationPermissionsConfig {
 
 	@ConfComments("If disabled, players are not checked for duration permissions.")

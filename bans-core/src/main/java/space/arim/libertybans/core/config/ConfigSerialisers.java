@@ -37,6 +37,7 @@ import space.arim.dazzleconf.error.BadValueException;
 import space.arim.dazzleconf.serialiser.Decomposer;
 import space.arim.dazzleconf.serialiser.FlexibleType;
 import space.arim.dazzleconf.serialiser.ValueSerialiser;
+import space.arim.libertybans.core.commands.extra.DurationPermissionSerialiser;
 
 final class ConfigSerialisers {
 	
@@ -46,6 +47,7 @@ final class ConfigSerialisers {
 		builder.addSerialisers(
 				new ComponentValueSerializer(new ChatMessageComponentSerializer()),
 				new ComponentTextSerializer(),
+				new DurationPermissionSerialiser(),
 				new DateTimeFormatterSerialiser(),
 				new ZoneIdSerialiser());
 	}

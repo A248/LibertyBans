@@ -24,7 +24,9 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
+import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.service.Time;
@@ -102,6 +104,19 @@ public final class StandardTabCompletion implements TabCompletion {
 			return completeOnlinePlayerNames(sender);
 		}
 		return nameCache.get(Boolean.TRUE).orTimeout(1L, TimeUnit.MILLISECONDS).join().stream();
+	}
+
+	@Override
+	public Stream<String> completePunishmentDurations(CmdSender sender, PunishmentType type) {
+		MainConfig config = configs.getMainConfig();
+		var durationsConfig = config.commands().tabCompletion().punishmentDurations();
+		if (durationsConfig.enable()) {
+			return durationsConfig.durationsToSupply()
+					.stream()
+					.filter((durPerm) -> durPerm.hasPermission(config, sender, type))
+					.map(DurationPermission::value);
+		}
+		return Stream.empty();
 	}
 
 }

@@ -88,8 +88,13 @@ public class CommandHandler implements SimpleCommand, PlatformListener {
 		cmdManager.unregister(name);
 	}
 	
-	private String[] adaptArgs(String[] args) {
+	private String[] adaptArgs(String[] args, boolean tabComplete) {
 		if (alias) {
+			if (tabComplete && args.length == 0) {
+				// This fixes tab completion for aliased commands
+				// Tab completion relies on the existence of empty strings
+				return new String[] {name, ""};
+			}
 			return ArraysUtil.expandAndInsert(args, name, 0);
 		}
 		return args;
@@ -99,14 +104,14 @@ public class CommandHandler implements SimpleCommand, PlatformListener {
 	public void execute(Invocation invocation) {
 		CommandSource platformSender = invocation.source();
 		String[] args = invocation.arguments();
-		commandHelper.execute(platformSender, ArrayCommandPackage.create(adaptArgs(args)));
+		commandHelper.execute(platformSender, ArrayCommandPackage.create(adaptArgs(args, false)));
 	}
 	
 	@Override
 	public List<String> suggest(Invocation invocation) {
 		CommandSource platformSender = invocation.source();
 		String[] args = invocation.arguments();
-		return commandHelper.suggest(platformSender, adaptArgs(args));
+		return commandHelper.suggest(platformSender, adaptArgs(args, true));
 	}
 	
 }

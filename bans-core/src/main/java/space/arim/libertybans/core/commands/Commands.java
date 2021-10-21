@@ -27,7 +27,16 @@ public interface Commands {
 	String BASE_COMMAND_NAME = "libertybans";
 
 	void execute(CmdSender sender, CommandPackage command);
-	
+
+	/**
+	 * Requests tab completions
+	 *
+	 * @param sender the command sender
+	 * @param args The argument array. This must include the command name as the first
+	 *             element in the array. This must also include trailing empty elements
+	 *             if the player is tab completing the latest argument in wildcard fashion.
+	 * @return the tab completions
+	 */
 	List<String> suggest(CmdSender sender, String[] args);
 	
 }
