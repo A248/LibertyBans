@@ -7,7 +7,7 @@ You will need:
 
 1. Git
 2. Maven
-3. JDK 11 or greater
+3. JDK 11 or greater (JDK 17 is recommended)
 
 These can be installed through your package manager of choice.
 
@@ -56,9 +56,14 @@ Unit tests are run as part of the Maven build. `mvn test` will execute them.
 
 ### Integration tests
 
-Using `mvn clean verify` will build and run all tests, including integration tests. This is the same command used by the Github Actions workflow (CI).
+Using `mvn clean verify` will build and run all tests, including integration tests. This is the same command used by the Jenkins CI.
 
-The integration tests rely on [MariaDB4j](https://github.com/vorburger/MariaDB4j). Sometimes MariaDB4j is a little clumsy; it requires extra setup on MacOS and is not friendly with firewalls.
+The integration tests optionally rely on docker to start a temporary MariaDB database. Points of note:
+ * If you do not have docker installed, and you do not want to install it, that is entirely fine. The build will gracefully skip the tests which require docker. This does not mean no tests will run; some tests contact in-memory databases (like HSQLDB) which do not require docker.
+ * The presence of docker is automatically detected on UNIX.
+   * If you want to run the tests on Windows, you will need to enable the `docker-enabled` build profile. For example, `mvn clean verify -Pdocker-enabled`.
+   * If you want to disable this automatic detection, you can disable the `docker-enabled` build profile. For example, `mvn clean verify -P-docker-enabled`.
+ * Random ports are selected for use in the range 40,000-50,000. You may need to tweak your firewall settings accordingly; in some cases you may need to enable outgoing connections on port 3306 as well (oddly enough).
 
 If you would prefer not to run the integration tests yourself, that's fine. Simply let the CI take care of it.
 

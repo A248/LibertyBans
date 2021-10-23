@@ -43,7 +43,7 @@ public class InjectionInvocationContextProvider implements TestTemplateInvocatio
 		ResourceCreator creator = new ResourceCreator(context.getRoot().getStore(NAMESPACE));
 		return new ConfigSpecPossiblities(context.getElement().orElse(null))
 				.getAll()
-				.map(creator::create)
+				.flatMap(creator::create)
 				.map(InjectorInvocationContext::new);
 	}
 
