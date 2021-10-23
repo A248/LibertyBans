@@ -55,6 +55,108 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>docker-enabled</id>
+			<activation>
+				<file>
+					<exists>/var/run/docker.sock</exists>
+				</file>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>build-helper-maven-plugin</artifactId>
+						<version>3.2.0</version>
+						<executions>
+							<execution>
+								<id>find-available-ports</id>
+								<phase>pre-integration-test</phase>
+								<goals>
+									<goal>reserve-network-port</goal>
+								</goals>
+								<configuration>
+									<portNames>
+										<portName>it.mariadb.legacy.port</portName>
+										<portName>it.mariadb.modern.port</portName>
+									</portNames>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>io.fabric8</groupId>
+						<artifactId>docker-maven-plugin</artifactId>
+						<version>0.37.0</version>
+						<configuration>
+							<showLogs>true</showLogs>
+							<containerNamePattern>%a</containerNamePattern>
+							<images>
+								<image>
+									<name>mariadb:10.2</name>
+									<alias>mariadb-legacy</alias>
+									<run>
+										<env>
+											<MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>true</MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>
+										</env>
+										<ports>
+											<port>${it.mariadb.legacy.port}:3306</port>
+										</ports>
+										<wait>
+											<log>mysqld: ready for connections</log>
+										</wait>
+									</run>
+								</image>
+								<image>
+									<name>mariadb:10.6</name>
+									<alias>mariadb-modern</alias>
+									<run>
+										<env>
+											<MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>true</MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>
+										</env>
+										<ports>
+											<port>${it.mariadb.modern.port}:3306</port>
+										</ports>
+										<wait>
+											<log>mysqld: ready for connections</log>
+										</wait>
+									</run>
+								</image>
+							</images>
+						</configuration>
+						<executions>
+							<execution>
+								<id>start-database-instances</id>
+								<phase>pre-integration-test</phase>
+								<goals>
+									<goal>start</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>stop-database-instances</id>
+								<phase>post-integration-test</phase>
+								<goals>
+									<goal>stop</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-failsafe-plugin</artifactId>
+						<configuration>
+							<systemPropertyVariables>
+								<libertybans.it.mariadb.legacy.port>${it.mariadb.legacy.port}</libertybans.it.mariadb.legacy.port>
+								<libertybans.it.mariadb.modern.port>${it.mariadb.modern.port}</libertybans.it.mariadb.modern.port>
+							</systemPropertyVariables>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 	
 	<dependencies>
 		<!-- Testing dependencies -->
@@ -87,10 +189,6 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>ch.vorburger.mariaDB4j</groupId>
-			<artifactId>mariaDB4j</artifactId>
 		</dependency>
 
 		<!-- Internal dependencies -->

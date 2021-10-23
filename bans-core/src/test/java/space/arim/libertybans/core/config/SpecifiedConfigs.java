@@ -55,7 +55,7 @@ public class SpecifiedConfigs implements Configs {
 					return new SqlConfig.AuthDetails() {
 						@Override
 						public String host() {
-							return "localhost";
+							return "127.0.0.1";
 						}
 						@Override
 						public int port() {
