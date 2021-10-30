@@ -105,7 +105,8 @@
 											<port>${it.mariadb.legacy.port}:3306</port>
 										</ports>
 										<wait>
-											<log>mysqld: ready for connections</log>
+											<time>60000</time>
+											<log>Server socket created on IP: '::'</log>
 										</wait>
 									</run>
 								</image>
@@ -120,7 +121,8 @@
 											<port>${it.mariadb.modern.port}:3306</port>
 										</ports>
 										<wait>
-											<log>mysqld: ready for connections</log>
+											<time>60000</time>
+											<log>Server socket created on IP: '::'</log>
 										</wait>
 									</run>
 								</image>
