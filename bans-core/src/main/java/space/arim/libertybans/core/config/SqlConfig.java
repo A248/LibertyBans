@@ -40,7 +40,10 @@ import space.arim.dazzleconf.annote.SubSection;
 		"However, for servers wishing to use MariaDB / MySQL, or for large servers wishing to tweak performance,",
 		"further setup is required.",
 		"",
-		"Using MariaDB requires at least MySQL 5.7/8.0 or MariaDB 10.2. Older versions of MySQL/MariaDB are not supported.",
+		"MariaDB / MySQL Requirements",
+		"- Running MariaDB requires MariaDB 10.3 or newer.",
+		"- Running MySQL requires MySQL 8.0 or newer.",
+		"Older versions of MariaDB or MySQL are not supported.",
 		"",
 		"",
 		"Note well:",
@@ -56,7 +59,7 @@ public interface SqlConfig {
 			"What RDMS vendor will you be using?",
 			"Available options:",
 			"'HSQLDB' - Local HyperSQL database. No additional setup required.",
-			"'MARIADB' - Requires a separate database, and at least MySQL 5.7/8.0 or MariaDB 10.2. "})
+			"'MARIADB' - Requires an external database: MariaDB or MySQL. At least MariaDB 10.3 or MySQL 8.0 is required."})
 	@DefaultString("HSQLDB")
 	Vendor vendor(); // Sensitive name used in integration testing
 	

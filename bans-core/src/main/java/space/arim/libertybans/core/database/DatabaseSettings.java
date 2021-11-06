@@ -100,6 +100,8 @@ public class DatabaseSettings {
 	public DatabaseResult create(SqlConfig config) {
 		HikariDataSource hikariDataSource = createDataSource(config);
 
+		new DatabaseVersion(hikariDataSource).checkVersion(vendor);
+
 		boolean refresherEvent = vendor == Vendor.MARIADB && config.mariaDb().useEventScheduler();
 
 		StandardDatabase database = StandardDatabase.create(

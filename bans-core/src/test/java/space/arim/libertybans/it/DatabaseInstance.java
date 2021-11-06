@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-enum DatabaseInstance {
+public enum DatabaseInstance {
 	// See pom.xml for where these port properties come from
 	MARIADB_LEGACY("libertybans.it.mariadb.legacy.port"),
 	MARIADB_MODERN("libertybans.it.mariadb.modern.port"),

@@ -64,6 +64,7 @@ class ResourceCreator {
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), tempDirectory)
 				.bindInstance(ConfigSpec.class, configSpec)
 				.bindInstance(DatabaseInfo.class, databaseInfo)
+				.bindInstance(DatabaseInstance.class, database) // For ITs only
 				.addBindModules(
 						new ApiBindModule(),
 						new PillarOneReplacementModule(),
