@@ -102,7 +102,7 @@
 											<MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>true</MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>
 										</env>
 										<ports>
-											<port>${it.mariadb.legacy.port}:3306</port>
+											<port>127.0.0.1:${it.mariadb.legacy.port}:3306</port>
 										</ports>
 										<wait>
 											<time>60000</time>
@@ -118,7 +118,7 @@
 											<MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>true</MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>
 										</env>
 										<ports>
-											<port>${it.mariadb.modern.port}:3306</port>
+											<port>127.0.0.1:${it.mariadb.modern.port}:3306</port>
 										</ports>
 										<wait>
 											<time>60000</time>
