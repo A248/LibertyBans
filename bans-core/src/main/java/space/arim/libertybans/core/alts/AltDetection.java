@@ -53,18 +53,24 @@ public class AltDetection {
 		List<DetectedAlt> detectedAlts = querySource.query(
 				"SELECT " +
 				"`detected_alt`.`address` `address`, `detected_alt`.`uuid` `uuid`, " +
-				"`names`.`name` `name`, `detected_alt`.`updated` `updated`, " +
+				"`latest_names`.`name` `name`, `detected_alt`.`updated` `updated`, " +
 				"`bans`.`victim` IS NOT NULL `has_ban`, `mutes`.`victim` IS NOT NULL `has_mute` " +
 				"FROM `libertybans_addresses` `addresses` " +
+				// Detect alts
 				"INNER JOIN `libertybans_addresses` `detected_alt` " +
 				"ON `addresses`.`address` = `detected_alt`.`address` AND `addresses`.`uuid` != `detected_alt`.`uuid` " +
-				"INNER JOIN `libertybans_names` `names` " +
-				"ON `names`.`uuid` = `detected_alt`.`uuid` AND `names`.`updated` = `detected_alt`.`updated` " +
+				// Map to names
+				"INNER JOIN `libertybans_latest_names` `latest_names` " +
+				"ON `latest_names`.`uuid` = `detected_alt`.`uuid` " +
+				// Pair with bans
 				"LEFT JOIN `libertybans_simple_bans` `bans` " +
 				"ON `bans`.`victim_type` = 'PLAYER' AND `bans`.`victim` = `detected_alt`.`uuid` AND (`bans`.`end` = 0 OR `bans`.`end` > ?) " +
+				// Pair with mutes
 				"LEFT JOIN `libertybans_simple_mutes` `mutes` " +
 				"ON `mutes`.`victim_type` = 'PLAYER' AND `mutes`.`victim` = `detected_alt`.`uuid` AND (`mutes`.`end` = 0 OR `mutes`.`end` > ?) " +
+				// Select alts for the player in question
 				"WHERE `addresses`.`uuid` = ? " +
+				// Order according to most recent
 				"ORDER BY `updated` DESC")
 				.params(currentTime, currentTime, uuid)
 				.listResult((resultSet) -> {

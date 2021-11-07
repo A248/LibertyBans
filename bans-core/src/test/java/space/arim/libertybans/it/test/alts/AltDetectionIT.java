@@ -33,10 +33,12 @@ import space.arim.libertybans.core.alts.DetectedAlt;
 import space.arim.libertybans.core.alts.DetectionKind;
 import space.arim.libertybans.core.alts.WhichAlts;
 import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetTime;
 import space.arim.libertybans.it.util.RandomUtil;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -131,65 +133,63 @@ public class AltDetectionIT {
 	@TestTemplate
 	@SetTime(unixTime = TIME_NOW)
 	public void normalBannedAlt() {
-		testNormalAlt(ALL_ALTS, PunishmentType.BAN, (uuid) -> {
+		Consumer<UUID> punishment = (uuid) -> {
 			addPunishment(uuid, PunishmentType.BAN);
-		});
-		testNormalAlt(BANNED_OR_MUTED_ALTS, PunishmentType.BAN, (uuid) -> {
-			addPunishment(uuid, PunishmentType.BAN);
-		});
-		testNormalAlt(BANNED_ALTS, PunishmentType.BAN, (uuid) -> {
-			addPunishment(uuid, PunishmentType.BAN);
-		});
+		};
+		testNormalAlt(ALL_ALTS, PunishmentType.BAN, punishment);
+		testNormalAlt(BANNED_OR_MUTED_ALTS, PunishmentType.BAN, punishment);
+		testNormalAlt(BANNED_ALTS, PunishmentType.BAN, punishment);
 	}
 
 	@TestTemplate
 	@SetTime(unixTime = TIME_NOW)
 	public void normalMutedAlt() {
-		testNormalAlt(ALL_ALTS, PunishmentType.MUTE, (uuid) -> {
+		Consumer<UUID> punishment = (uuid) -> {
 			addPunishment(uuid, PunishmentType.MUTE);
-		});
-		testNormalAlt(BANNED_OR_MUTED_ALTS, PunishmentType.MUTE, (uuid) -> {
-			addPunishment(uuid, PunishmentType.MUTE);
-		});
+		};
+		testNormalAlt(ALL_ALTS, PunishmentType.MUTE, punishment);
+		testNormalAlt(BANNED_OR_MUTED_ALTS, PunishmentType.MUTE, punishment);
 	}
 
 	@TestTemplate
 	@SetTime(unixTime = TIME_NOW)
 	public void normalBannedAndMutedAlt() {
+		Consumer<UUID> punishment = (UUID uuid) -> {
+			addPunishment(uuid, PunishmentType.BAN);
+			addPunishment(uuid, PunishmentType.MUTE);
+		};
 		// When both banned and muted, ban should take precedence
-		testNormalAlt(ALL_ALTS, PunishmentType.BAN, (uuid) -> {
-			addPunishment(uuid, PunishmentType.BAN);
-			addPunishment(uuid, PunishmentType.MUTE);
-		});
-		testNormalAlt(BANNED_OR_MUTED_ALTS, PunishmentType.BAN, (uuid) -> {
-			addPunishment(uuid, PunishmentType.BAN);
-			addPunishment(uuid, PunishmentType.MUTE);
-		});
-		testNormalAlt(BANNED_ALTS, PunishmentType.BAN, (uuid) -> {
-			addPunishment(uuid, PunishmentType.BAN);
-			addPunishment(uuid, PunishmentType.MUTE);
-		});
+		PunishmentType expectedPunishment = PunishmentType.BAN;
+		testNormalAlt(ALL_ALTS, expectedPunishment, punishment);
+		testNormalAlt(BANNED_OR_MUTED_ALTS, expectedPunishment, punishment);
+		testNormalAlt(BANNED_ALTS, expectedPunishment, punishment);
 	}
 
 	@TestTemplate
 	@SetTime(unixTime = TIME_NOW)
-	public void strictAlt() {
+	public void strictAlt(SettableTime time) {
 		NetworkAddress commonPastAddress = randomAddress();
 		UUID uuid = UUID.randomUUID();
 		String name = randomName();
+		NetworkAddress newAddress = randomAddress();
 		UUID uuidTwo = UUID.randomUUID();
 		String nameTwo = randomName();
+		NetworkAddress newAddressTwo = randomAddress();
 
 		assumeTrue(null == enforcer.executeAndCheckConnection(uuid, name, commonPastAddress).join());
 		assumeTrue(null == enforcer.executeAndCheckConnection(uuidTwo, nameTwo, commonPastAddress).join());
+		// Detects a bug, now solved, involving reliance on the "updated" database column
+		time.advanceBy(Duration.ofDays(1L));
+		assumeTrue(null == enforcer.executeAndCheckConnection(uuid, name, newAddress).join());
+		assumeTrue(null == enforcer.executeAndCheckConnection(uuidTwo, nameTwo, newAddressTwo).join());
 
 		assertEquals(List.of(new DetectedAlt(
 				DetectionKind.STRICT, null, commonPastAddress,
 				uuidTwo, nameTwo, DATE_NOW)
-		), altDetection.detectAlts(uuid, randomAddress(), ALL_ALTS).join());
+		), altDetection.detectAlts(uuid, newAddress, ALL_ALTS).join());
 		assertEquals(List.of(new DetectedAlt(
 				DetectionKind.STRICT, null, commonPastAddress,
 				uuid, name, DATE_NOW)
-		), altDetection.detectAlts(uuidTwo, randomAddress(), ALL_ALTS).join());
+		), altDetection.detectAlts(uuidTwo, newAddressTwo, ALL_ALTS).join());
 	}
 }

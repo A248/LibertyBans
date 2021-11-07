@@ -24,6 +24,11 @@ import java.time.temporal.TemporalAmount;
 
 public interface SettableTime extends Time {
 
+	/**
+	 * Sets the time to the given timestamp
+	 *
+	 * @param timestamp the timestamp to use
+	 */
 	void setTimestamp(Instant timestamp);
 
 	/**

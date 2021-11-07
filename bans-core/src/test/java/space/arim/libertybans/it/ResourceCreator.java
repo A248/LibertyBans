@@ -32,6 +32,7 @@ import space.arim.libertybans.it.env.QuackBindModule;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -64,7 +65,9 @@ class ResourceCreator {
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), tempDirectory)
 				.bindInstance(ConfigSpec.class, configSpec)
 				.bindInstance(DatabaseInfo.class, databaseInfo)
-				.bindInstance(DatabaseInstance.class, database) // For ITs only
+				// The next two bindings are for ITs only
+				.bindInstance(DatabaseInstance.class, database)
+				.bindInstance(Identifier.ofTypeAndNamed(Instant.class, "testStartTime"), configSpec.unixTime())
 				.addBindModules(
 						new ApiBindModule(),
 						new PillarOneReplacementModule(),
