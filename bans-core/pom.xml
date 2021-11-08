@@ -78,6 +78,8 @@
 									<goal>reserve-network-port</goal>
 								</goals>
 								<configuration>
+									<minPortNumber>40000</minPortNumber>
+									<maxPortNumber>50000</maxPortNumber>
 									<portNames>
 										<portName>it.mariadb.legacy.port</portName>
 										<portName>it.mariadb.modern.port</portName>
