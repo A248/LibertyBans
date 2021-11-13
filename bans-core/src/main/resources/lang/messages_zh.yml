@@ -21,8 +21,8 @@
  # %DURATION% - 最初由操作员设定的处罚有效期
  # %START_DATE% - 创建惩罚的日期
  # %TIME_PASSED% - 自设立惩罚以来的时间
- # %END_DATE% - 惩罚结束的日期，或格式化。永久-显示。绝对用于永久惩罚
- # %TIME_REMAINING% - 直到惩罚结束的时间，或格式化。永久-显示。相对于永久惩罚
+ # %END_DATE% - 惩罚结束的日期，或用 formatting.permanent-display.relative 为永久惩处。
+ # %TIME_REMAINING% - 直到惩罚结束的时间，或用 formatting.permanent-display.relative 来替代永久惩处。
  # 
  # 
 all:
@@ -354,7 +354,7 @@ formatting:
 misc:
   unknown-error: '&c一个未知错误发生了。'
    # Only applicable if synchronous enforcement strategy is DENY in the main config
-  sync-chat-denial-message: '&c同步聊天拒绝。&7请稍后再试。'
+  sync-chat-denial-message: '&c在尝试同步聊天时被拒绝。&7请稍后再试。'
    # Concerns formatting of relative times and durations
   time:
      # Times are formatted to seconds accuracy, but you may not want to display seconds 
@@ -374,6 +374,3 @@ misc:
       MINUTES: '%VALUE% 分'
       WEEKS: '%VALUE% 周'
       DAYS: '%VALUE% 天'
-
-
-
