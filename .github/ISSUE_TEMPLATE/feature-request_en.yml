@@ -1,0 +1,29 @@
+name: ✨ Feature Request
+description: Suggest an improvement or added feature
+title: "[✨ Request]: "
+labels: [ "request" ]
+
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Before creating a feature request, make sure you are using the latest version of [LibertyBans](https://jenkins.hahota.net/job/LibertyBans/) and that it isn't already implemented.
+ 
+  - type: checkboxes
+    id: preliminary
+    attributes:
+      label: I have confirmed that ...
+      options:
+        - label: There is no duplicate Feature Request.
+          required: true
+        - label: This request should *NOT* be out of scope for LibertyBans.
+          required: true
+          
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: >-
+        A clear and concise description of what the improvement or feature entails
+    validations:
+      required: true
