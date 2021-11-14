@@ -1,20 +1,20 @@
 name: 🐞 Bug Report Form
 description: English template for reporting a bug
-title: "[🐞 Report]: "
+title: "[Bug Report]: "
 labels: [ "triage" ]
 
 body:
   - type: markdown
     attributes:
       value: >-
-        Before reporting an error, you'd better contact A248 on [Discord](https://discord.gg/3C4qeG8XhE) for support.
-        Please ensure that there is no similar existing one reported that.
+        If you want to seek support instead of reporting a bug, you'd better contact A248 on [Discord](https://discord.gg/3C4qeG8XhE).
+        <br>Please ensure that this bug has not been reported already.
         <br>Please fill in the following content completely.
   - type: input
     id: version
     attributes:
       label: LibertyBans Version
-      description: Run `/libertybans version` to get it. Latest version may get on [Jenkins CI](https://jenkins.hahota.net/job/LibertyBans/)
+      description: Run `/libertybans` to see this. The latest version (development builds) may be found on [Jenkins CI](https://jenkins.hahota.net/job/LibertyBans/)
       placeholder: LibertyBans 0.8
     validations:
       required: true
@@ -26,17 +26,14 @@ body:
       label: I have confirmed that ...
       options:
         - label: LibertyBans is up to date
-        - label: There is no similar issue that has been reported
+        - label: No similar issue has been reported
           required: true
-        - label: I have read Wiki and ensure this problem not related to my actions.
-          required: true
-      
+          
   - type: dropdown
     attributes:
       label: Platform
       options:
-        - "Spigot"
-        - "Paper"
+        - "Spigot/Paper"
         - "Bungeecord"
         - "Velocity"
       multiple: true
@@ -50,8 +47,7 @@ body:
       description: >-
         Please include as much information as possible. 
         <br>For the description,
-        be as detailed as possible and include a step by step reproduction. 
-        <br>The clearer the description, the higher the report processing priority
+        be as detailed as possible and include a step by step reproduction.
       placeholder: "Detailed information about what should(not) happen"
     validations:
       required: true

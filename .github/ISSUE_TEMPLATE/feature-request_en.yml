@@ -1,13 +1,13 @@
 name: ✨ Feature Request
 description: Suggest an improvement or added feature
-title: "[✨ Request]: "
+title: "[Feature Request]: "
 labels: [ "request" ]
 
 body:
   - type: markdown
     attributes:
       value: >-
-        Before creating a feature request, make sure you are using the latest version of [LibertyBans](https://jenkins.hahota.net/job/LibertyBans/) and that it isn't already implemented.
+        Please consider whether the feature you are requesting is best-implemented by LibertyBans, or if it is outside the scope of LibertyBans and would be better placed in a separate plugin.
  
   - type: checkboxes
     id: preliminary
@@ -15,8 +15,6 @@ body:
       label: I have confirmed that ...
       options:
         - label: There is no duplicate Feature Request.
-          required: true
-        - label: This request should *NOT* be out of scope for LibertyBans.
           required: true
           
   - type: textarea
