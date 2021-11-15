@@ -1,7 +1,7 @@
 name: ✨ Feature Request
-description: Suggest an improvement or added feature
+description: Suggest an improvement or new feature
 title: "[Feature Request]: "
-labels: [ "request" ]
+labels: [ "feature" ]
 
 body:
   - type: markdown
@@ -14,7 +14,7 @@ body:
     attributes:
       label: I have confirmed that ...
       options:
-        - label: There is no duplicate Feature Request.
+        - label: There is no duplicate feature request.
           required: true
           
   - type: textarea

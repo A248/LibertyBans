@@ -1,7 +1,7 @@
 name: 🐞 Bug Report Form
-description: English template for reporting a bug
+description: Report a bug
 title: "[Bug Report]: "
-labels: [ "triage" ]
+labels: [ "bug" ]
 
 body:
   - type: markdown
