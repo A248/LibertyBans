@@ -1,5 +1,31 @@
-# LibertyBans
-The be-all, end-all of discipline.
+<!--suppress HtmlDeprecatedAttribute -->
+<div align="center">
+<img alt="LibertyBans" src="./.github/banner.png" />
+
+<!-- Shields -->
+[Document]:https://img.shields.io/badge/-Document-blue.svg?logo=Wikipedia&style=for-the-badge&logoColor=black
+[Discord]:https://img.shields.io/badge/-Discord-5865F2.svg?logo=discord&style=for-the-badge&logoColor=white
+[Spigot]:https://img.shields.io/badge/-SpigotMC-ef9023.svg?logo=Accenture&style=for-the-badge&logoColor=grey
+
+[SpigotRating]:https://img.shields.io/spiget/rating/81063?style=flat-square
+[GitHubStar]:https://img.shields.io/github/stars/A248/LibertyBans
+[TestedVersion]: https://img.shields.io/spiget/tested-versions/81063?label=Tested%20on&style=flat-square
+[License]:https://img.shields.io/github/license/A248/LibertyBans
+[CodeSize]:https://img.shields.io/github/languages/code-size/A248/LibertyBans
+<!-- Shields -->
+[![Discord]](https://discord.gg/3C4qeG8XhE)
+[![Document]](https://github.com/A248/LibertyBans/wiki/Getting-Started)
+[![Spigot]](https://spigotmc.org/resources/81063)
+<br><br>[![TestedVersion]](https://spigotmc.org/resources/81063) ![SpigotRating]
+<br>![License] ![GitHubStar] ![CodeSize]
+</div>
+
+## Table of Contents
+* [Introduction](#introduction)
+  * [Design](#design)
+  * [Features](#features)
+* [Basic Info](#basic-info)
+* [Developer API](#developer-api)
 
 ## Introduction
 

@@ -1,0 +1,27 @@
+name: ✨ Feature Request
+description: Suggest an improvement or new feature
+title: "[Feature Request]: "
+labels: [ "feature" ]
+
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Please consider whether the feature you are requesting is best-implemented by LibertyBans, or if it is outside the scope of LibertyBans and would be better placed in a separate plugin.
+ 
+  - type: checkboxes
+    id: preliminary
+    attributes:
+      label: I have confirmed that ...
+      options:
+        - label: There is no duplicate feature request.
+          required: true
+          
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: >-
+        A clear and concise description of what the improvement or feature entails
+    validations:
+      required: true

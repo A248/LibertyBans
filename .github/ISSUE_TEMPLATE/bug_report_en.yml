@@ -1,0 +1,53 @@
+name: 🐞 Bug Report Form
+description: Report a bug
+title: "[Bug Report]: "
+labels: [ "bug" ]
+
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        If you want to seek support instead of reporting a bug, you'd better contact A248 on [Discord](https://discord.gg/3C4qeG8XhE).
+        <br>Please ensure that this bug has not been reported already.
+        <br>Please fill in the following content completely.
+  - type: input
+    id: version
+    attributes:
+      label: LibertyBans Version
+      description: Run `/libertybans` to see this. The latest version (development builds) may be found on [Jenkins CI](https://jenkins.hahota.net/job/LibertyBans/)
+      placeholder: LibertyBans 0.8
+    validations:
+      required: true
+      
+ 
+  - type: checkboxes
+    id: preliminary
+    attributes:
+      label: I have confirmed that ...
+      options:
+        - label: LibertyBans is up to date
+        - label: No similar issue has been reported
+          required: true
+          
+  - type: dropdown
+    attributes:
+      label: Platform
+      options:
+        - "Spigot/Paper"
+        - "Bungeecord"
+        - "Velocity"
+      multiple: true
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: >-
+        Please include as much information as possible. 
+        <br>For the description,
+        be as detailed as possible and include a step by step reproduction.
+      placeholder: "Detailed information about what should(not) happen"
+    validations:
+      required: true
