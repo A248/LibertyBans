@@ -53,9 +53,12 @@ public class CommandsCore implements Commands {
 	public CommandsCore(Configs configs, UsageGlossary usage, PluginInfoMessage infoMessage,
 			PlayerPunishCommands playerPunish, AddressPunishCommands addressPunish,
 			PlayerUnpunishCommands playerUnpunish, AddressUnpunishCommands addressUnpunish,
-			ListCommands list, AdminCommands admin, ImportCommands importing, AltCommands alts) {
+			ListCommands list, AdminCommands admin, ImportCommands importing, AltCommands alts,
+			AccountHistoryCommands accountHistory) {
 		this(configs, usage, infoMessage, List.of(
-				playerPunish, addressPunish, playerUnpunish, addressUnpunish, list, admin, importing, alts));
+				playerPunish, addressPunish, playerUnpunish, addressUnpunish,
+				list, admin, importing, alts, accountHistory
+		));
 	}
 	
 	private SubCommandGroup getMatchingSubCommand(String firstArg) {

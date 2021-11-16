@@ -111,7 +111,8 @@ public interface MainConfig {
 		    "history",
 		    "warns",
 		    "blame",
-		    "alts"
+		    "alts",
+			"accounthistory"
 		})
 		Set<String> aliases();
 		

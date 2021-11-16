@@ -35,6 +35,7 @@ import space.arim.dazzleconf.annote.ConfDefault.DefaultStrings;
 import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.SubSection;
+import space.arim.libertybans.core.alts.AccountHistorySection;
 import space.arim.libertybans.core.alts.AltsSection;
 
 @ConfHeader({
@@ -246,7 +247,11 @@ public interface MessagesConfig {
 
 	@SubSection
 	AltsSection alts();
-	
+
+	@ConfKey("account-history")
+	@SubSection
+	AccountHistorySection accountHistory();
+
 	interface Misc {
 		
 		@ConfKey("unknown-error")

@@ -45,6 +45,22 @@ public class AltDetection {
 		this.time = time;
 	}
 
+	/**
+	 * Detects alts for the given account. <br>
+	 * <br>
+	 * The returned alts are sorted with the oldest first. This sort order contrasts with that of
+	 * selecting punishments such as on the banlist, where punishments are sorted by newest first;
+	 * this done because the banlist and similar displays are paginated, whereas alt detection
+	 * and account history are not paginated. In the case of pagination we want the new punishments
+	 * to be readily visible rather than re-showing punishments from the dawn of time, whereas in
+	 * the lack of pagination we want to show a short and linear progression from old to new.
+	 *
+	 * @param querySource the query source with which to contact the database
+	 * @param uuid the user's UUID
+	 * @param address the user's address
+	 * @param whichAlts which alts to detect
+	 * @return the detected alts, sorted in order of oldest first
+	 */
 	public List<DetectedAlt> detectAlts(QuerySource<?> querySource, UUID uuid, NetworkAddress address,
 										WhichAlts whichAlts) {
 		// This implementation relies on strict detection including normal detection
@@ -70,8 +86,8 @@ public class AltDetection {
 				"ON `mutes`.`victim_type` = 'PLAYER' AND `mutes`.`victim` = `detected_alt`.`uuid` AND (`mutes`.`end` = 0 OR `mutes`.`end` > ?) " +
 				// Select alts for the player in question
 				"WHERE `addresses`.`uuid` = ? " +
-				// Order according to most recent
-				"ORDER BY `updated` DESC")
+				// Order with oldest first
+				"ORDER BY `updated` ASC")
 				.params(currentTime, currentTime, uuid)
 				.listResult((resultSet) -> {
 					NetworkAddress detectedAddress = NetworkAddress.of(resultSet.getBytes("address"));

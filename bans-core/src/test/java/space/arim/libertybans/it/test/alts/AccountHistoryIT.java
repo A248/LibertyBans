@@ -1,0 +1,142 @@
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
+ * and navigate to version 3 of the GNU Affero General Public License.
+ */
+
+package space.arim.libertybans.it.test.alts;
+
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import space.arim.libertybans.api.AddressVictim;
+import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.api.PlayerVictim;
+import space.arim.libertybans.core.alts.AccountHistory;
+import space.arim.libertybans.core.alts.KnownAccount;
+import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.service.SettableTime;
+import space.arim.libertybans.it.InjectionInvocationContextProvider;
+import space.arim.libertybans.it.SetTime;
+import space.arim.libertybans.it.util.RandomUtil;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@ExtendWith(InjectionInvocationContextProvider.class)
+@ExtendWith(MockitoExtension.class)
+public class AccountHistoryIT {
+
+	private final AccountHistory accountHistory;
+
+	private static final Duration ONE_DAY = Duration.ofDays(1L);
+
+	@Inject
+	public AccountHistoryIT(AccountHistory accountHistory) {
+		this.accountHistory = accountHistory;
+	}
+
+	@TestTemplate
+	public void listNoAccountHistory() {
+		assertEquals(List.of(),
+				accountHistory.knownAccounts(PlayerVictim.of(UUID.randomUUID())).join());
+		assertEquals(List.of(),
+				accountHistory.knownAccounts(AddressVictim.of(RandomUtil.randomAddress())).join());
+	}
+
+	@TestTemplate
+	@SetTime(unixTime = 1636233200)
+	public void listAccountHistory(Enforcer enforcer, SettableTime time) {
+
+		final Instant startTime = Instant.ofEpochSecond(1636233200);
+		final Instant oneDayLater = startTime.plus(ONE_DAY);
+		final Instant twoDaysLater = oneDayLater.plus(ONE_DAY);
+		final Instant threeDaysLater = twoDaysLater.plus(ONE_DAY);
+
+		UUID playerOne = UUID.randomUUID();
+		String playerOneName = "Player1";
+		UUID playerTwo = UUID.randomUUID();
+		String playerTwoName = "Player2";
+		NetworkAddress playerOneAddress = NetworkAddress.of(RandomUtil.randomAddress());
+		NetworkAddress playerTwoAddress = NetworkAddress.of(RandomUtil.randomAddress());
+		NetworkAddress sharedAddress = NetworkAddress.of(RandomUtil.randomAddress());
+		enforcer.executeAndCheckConnection(playerOne, playerOneName, playerOneAddress).join();
+		time.advanceBy(ONE_DAY);
+		enforcer.executeAndCheckConnection(playerTwo, playerTwoName, playerTwoAddress).join();
+		time.advanceBy(ONE_DAY);
+		enforcer.executeAndCheckConnection(playerOne, playerOneName, sharedAddress).join();
+		time.advanceBy(ONE_DAY);
+		enforcer.executeAndCheckConnection(playerTwo, playerTwoName, sharedAddress).join();
+
+		assertEquals(
+				List.of(new KnownAccount(playerOne, playerOneName, playerOneAddress, startTime),
+						new KnownAccount(playerOne, playerOneName, sharedAddress, twoDaysLater)),
+				accountHistory.knownAccounts(PlayerVictim.of(playerOne)).join());
+		assertEquals(
+				List.of(new KnownAccount(playerTwo, playerTwoName, playerTwoAddress, oneDayLater),
+						new KnownAccount(playerTwo, playerTwoName, sharedAddress, threeDaysLater)),
+				accountHistory.knownAccounts(PlayerVictim.of(playerTwo)).join());
+		assertEquals(
+				List.of(new KnownAccount(playerOne, playerOneName, playerOneAddress, startTime)),
+				accountHistory.knownAccounts(AddressVictim.of(playerOneAddress)).join());
+		assertEquals(
+				List.of(new KnownAccount(playerTwo, playerTwoName, playerTwoAddress, oneDayLater)),
+				accountHistory.knownAccounts(AddressVictim.of(playerTwoAddress)).join());
+		assertEquals(
+				List.of(new KnownAccount(playerOne, playerOneName, sharedAddress, twoDaysLater),
+						new KnownAccount(playerTwo, playerTwoName, sharedAddress, threeDaysLater)),
+				accountHistory.knownAccounts(AddressVictim.of(sharedAddress)).join());
+	}
+
+	@TestTemplate
+	@SetTime(unixTime = 1636233200)
+	public void deleteAccount(Enforcer enforcer, SettableTime time) {
+		final Instant startTime = Instant.ofEpochSecond(1636233200);
+
+		UUID player = UUID.randomUUID();
+		String username = "Player1";
+		NetworkAddress firstAddress = NetworkAddress.of(RandomUtil.randomAddress());
+		NetworkAddress secondAddress = NetworkAddress.of(RandomUtil.randomAddress());
+
+		enforcer.executeAndCheckConnection(player, username, firstAddress).join();
+		time.advanceBy(ONE_DAY);
+		enforcer.executeAndCheckConnection(player, username, secondAddress).join();
+
+		assertFalse(
+				accountHistory.deleteAccount(player, startTime.minus(ONE_DAY)).join(),
+				"No account exists before startTime");
+
+		assertEquals(
+				List.of(new KnownAccount(player, username, firstAddress, startTime),
+						new KnownAccount(player, username, secondAddress, startTime.plus(ONE_DAY))),
+				accountHistory.knownAccounts(PlayerVictim.of(player)).join());
+
+		assertTrue(
+				accountHistory.deleteAccount(player, startTime).join(),
+				"Delete account at startTime");
+
+		assertEquals(
+				List.of(new KnownAccount(player, username, secondAddress, startTime.plus(ONE_DAY))),
+				accountHistory.knownAccounts(PlayerVictim.of(player)).join());
+	}
+}

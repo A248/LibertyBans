@@ -38,17 +38,21 @@ enum UsageSection {
 			"&e/history &7- view a player's history",
 			"&e/warns &7- view a player's warns",
 			"&e/blame &7- view another staff member's punishments"),
+	ALT_MANAGEMENT("&e/alts &7- detect alt accounts",
+			"&e/accounthistory &7- list and modify stored join history"),
 	OTHER("&e/libertybans &7usage - shows this",
 			"&e/libertybans &7about - shows version and plugin information",
 			"&e/libertybans &7reload - reload config.yml and language configuration",
 			"&e/libertybans &7restart - perform a full restart, reloads everything including database connections",
-			"&e/libertybans &7debug - outputs debug information");
+			"&e/libertybans &7debug - outputs debug information",
+			"&e/libertybans &7import - imports from another plugin");
 	
 	private final Component content;
 	
 	UsageSection(String...commands) {
-		String name = name();
-		String headerString = "&b" + name.charAt(0) + name.substring(1).toLowerCase(Locale.ROOT) + " commands:";
+		String name = name().replace("_", " ");
+		String formattedName = name.charAt(0) + name.substring(1).toLowerCase(Locale.ROOT);
+		String headerString = "&b" + formattedName + " commands:";
 
 		ChatMessageComponentSerializer serializer = new ChatMessageComponentSerializer();
 		Component[] components = new Component[1 + (2 * commands.length)];

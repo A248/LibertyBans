@@ -21,8 +21,6 @@ package space.arim.libertybans.api;
 import java.net.InetAddress;
 import java.util.Objects;
 
-import space.arim.libertybans.api.Victim.VictimType;
-
 /**
  * An IP address as the victim of a punishment
  * 

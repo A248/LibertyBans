@@ -31,7 +31,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -102,16 +101,6 @@ public enum DatabaseInstance {
 			prepStmt.execute();
 		} catch (SQLException ex) {
 			throw Assertions.<RuntimeException>fail(ex);
-		}
-	}
-
-	// Sleep to prevent infrequent errors arising from connecting to the database too quickly
-	static {
-		try {
-			TimeUnit.SECONDS.sleep(2L);
-		} catch (InterruptedException ex) {
-			Thread.currentThread().interrupt();
-			throw new ExceptionInInitializerError(ex);
 		}
 	}
 
