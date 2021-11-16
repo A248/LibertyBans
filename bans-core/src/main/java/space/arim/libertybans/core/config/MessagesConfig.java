@@ -64,6 +64,9 @@ import space.arim.libertybans.core.alts.AltsSection;
 		"%END_DATE% - the date the punishment will end, or formatting.permanent-display.absolute for permanent punishments",
 		"%TIME_REMAINING% - the time until the punishment ends, or formatting.permanent-display.relative for permanent punishments",
 		"",
+		"The following variables have limited availability:",
+		"%TARGET% - the original target argument of a command. For example, in '/ipban Player1', %TARGET% is Player1",
+		"",
 		""})
 public interface MessagesConfig {
 	
