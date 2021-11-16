@@ -22,6 +22,7 @@ import jakarta.inject.Singleton;
 
 import space.arim.libertybans.core.commands.extra.StandardTabCompletion;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
+import space.arim.libertybans.core.commands.usage.PluginInfoMessage;
 import space.arim.libertybans.core.commands.usage.StandardUsageGlossary;
 import space.arim.libertybans.core.commands.usage.UsageGlossary;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
@@ -79,6 +80,11 @@ public class PillarTwoBindModule {
 
 	public UsageGlossary usage(StandardUsageGlossary usage) {
 		return usage;
+	}
+
+	@Singleton
+	public PluginInfoMessage pluginInfoMessage() {
+		return PluginInfoMessage.fromResource("contributors");
 	}
 
 	public TabCompletion tabCompletion(StandardTabCompletion tabCompletion) {

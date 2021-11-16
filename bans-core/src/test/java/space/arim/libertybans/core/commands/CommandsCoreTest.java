@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import space.arim.libertybans.core.commands.usage.PluginInfoMessage;
 import space.arim.libertybans.core.commands.usage.UsageGlossary;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MessagesConfig;
@@ -50,7 +51,7 @@ public class CommandsCoreTest {
 	}
 
 	private CommandsCore newCommandsCore(List<SubCommandGroup> subCommands) {
-		return new CommandsCore(configs, usage, subCommands);
+		return new CommandsCore(configs, usage, new PluginInfoMessage(), subCommands);
 	}
 
 	@Test

@@ -20,7 +20,7 @@ package space.arim.libertybans.core.commands;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import space.arim.libertybans.bootstrap.plugin.PluginInfo;
+import space.arim.libertybans.core.commands.usage.PluginInfoMessage;
 import space.arim.libertybans.core.commands.usage.UsageGlossary;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.env.CmdSender;
@@ -35,23 +35,26 @@ public class CommandsCore implements Commands {
 
 	private final Configs configs;
 	private final UsageGlossary usage;
+	private final PluginInfoMessage infoMessage;
 	
 	private final List<SubCommandGroup> subCommands;
 	
 	public static final String BASE_COMMAND_PERMISSION = "libertybans.commands";
 
-	CommandsCore(Configs configs, UsageGlossary usage, List<SubCommandGroup> subCommands) {
+	CommandsCore(Configs configs, UsageGlossary usage, PluginInfoMessage infoMessage,
+				 List<SubCommandGroup> subCommands) {
 		this.configs = configs;
 		this.usage = usage;
+		this.infoMessage = infoMessage;
 		this.subCommands = subCommands;
 	}
 
 	@Inject
-	public CommandsCore(Configs configs, UsageGlossary usage,
+	public CommandsCore(Configs configs, UsageGlossary usage, PluginInfoMessage infoMessage,
 			PlayerPunishCommands playerPunish, AddressPunishCommands addressPunish,
 			PlayerUnpunishCommands playerUnpunish, AddressUnpunishCommands addressUnpunish,
 			ListCommands list, AdminCommands admin, ImportCommands importing, AltCommands alts) {
-		this(configs, usage, List.of(
+		this(configs, usage, infoMessage, List.of(
 				playerPunish, addressPunish, playerUnpunish, addressUnpunish, list, admin, importing, alts));
 	}
 	
@@ -75,11 +78,15 @@ public class CommandsCore implements Commands {
 			return;
 		}
 		if (!command.hasNext()) {
-			sender.sendLiteralMessage(
-					"&7Running LibertyBans &r&e" +  PluginInfo.VERSION + "&7. Use '/libertybans usage' for help");
+			infoMessage.send(sender);
+			sender.sendLiteralMessage("&7Use '/libertybans usage' for help");
 			return;
 		}
 		String firstArg = command.next().toLowerCase(Locale.ROOT);
+		if (firstArg.equals("version") || firstArg.equals("about")) {
+			infoMessage.send(sender);
+			return;
+		}
 		SubCommandGroup subCommand = getMatchingSubCommand(firstArg);
 		if (subCommand == null) {
 			usage.sendUsage(sender, command, firstArg.equals("usage") || firstArg.equals("help"));

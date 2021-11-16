@@ -39,6 +39,7 @@ enum UsageSection {
 			"&e/warns &7- view a player's warns",
 			"&e/blame &7- view another staff member's punishments"),
 	OTHER("&e/libertybans &7usage - shows this",
+			"&e/libertybans &7about - shows version and plugin information",
 			"&e/libertybans &7reload - reload config.yml and language configuration",
 			"&e/libertybans &7restart - perform a full restart, reloads everything including database connections",
 			"&e/libertybans &7debug - outputs debug information");

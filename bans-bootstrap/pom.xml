@@ -10,7 +10,11 @@
 	</parent>
 	
 	<artifactId>bans-bootstrap</artifactId>
-	<description>Bootstrapping dependency loader for LibertyBans</description>
+	<!--
+	Do not add a description here, because PluginInfo.java's source filtering relies
+	on the description property being inherited from the parent pom.xml
+	-->
+	<!-- <description /> -->
 	
 	<build>
 		<resources>
