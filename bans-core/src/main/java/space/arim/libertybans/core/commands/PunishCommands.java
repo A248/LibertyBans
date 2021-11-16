@@ -20,6 +20,7 @@ package space.arim.libertybans.core.commands;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.DraftPunishment;
@@ -100,11 +101,6 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 				sender().sendMessage(section.permissionCommand()); 
 				return;
 			}
-			String additionalPermission = getAdditionalPermission(type());
-			if (!additionalPermission.isEmpty() && !sender().hasPermission(additionalPermission)) {
-				sender().sendMessage(section.permissionIpAddress());
-				return;
-			}
 			if (!command().hasNext()) {
 				sender().sendMessage(section.usage());
 				return;
@@ -116,6 +112,11 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 			String targetArg = command().next();
 			CentralisedFuture<?> future = parseVictim(sender(), targetArg).thenCompose((victim) -> {
 				if (victim == null) {
+					return completedFuture(null);
+				}
+				if (victim instanceof AddressVictim
+						&& !sender().hasPermission("libertybans." + type() + ".ip")) {
+					sender().sendMessage(section.permissionIpAddress());
 					return completedFuture(null);
 				}
 				return performEnact(victim, targetArg);

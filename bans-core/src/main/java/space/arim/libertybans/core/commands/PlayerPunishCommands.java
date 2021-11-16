@@ -53,9 +53,4 @@ public class PlayerPunishCommands extends PunishCommands {
 		return argumentParser().parseVictimByName(sender, targetArg);
 	}
 
-	@Override
-	public String getAdditionalPermission(PunishmentType type) {
-		return "";
-	}
-
 }

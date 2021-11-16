@@ -55,9 +55,4 @@ public class AddressUnpunishCommands extends UnpunishCommands {
 		return argumentParser().parseAddressVictim(sender, targetArg);
 	}
 
-	@Override
-	public String getAdditionalPermission(PunishmentType type) {
-		return "libertybans." + type + ".undoip";
-	}
-
 }

@@ -30,6 +30,4 @@ interface PunishUnpunishCommands {
 
 	CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg);
 
-	String getAdditionalPermission(PunishmentType type);
-
 }

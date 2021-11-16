@@ -53,9 +53,4 @@ public class AddressPunishCommands extends PunishCommands {
 		return argumentParser().parseAddressVictim(sender, targetArg);
 	}
 
-	@Override
-	public String getAdditionalPermission(PunishmentType type) {
-		return "libertybans." + type + ".ip";
-	}
-
 }

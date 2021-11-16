@@ -49,8 +49,10 @@ import java.net.UnknownHostException;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(CommandSetupExtension.class)
@@ -103,7 +105,38 @@ public class PlayerUnpunishCommandsTest {
 		when(revoker.revokeByTypeAndVictim(any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory));
 
 		commands.execute(sender, ArrayCommandPackage.create(address), "unban").execute();
+
 		verify(revoker).revokeByTypeAndVictim(PunishmentType.BAN, victim);
 		verify(sender).sendMessage(argThat(new ComponentMatcher<>(notFoundMsg)));
+	}
+
+	@Test
+	public void unbanExplicitAddressRequiresPermission(@Mock CmdSender sender,
+			/* Mock */ ArgumentParser argParser, /* Mock */ Configs configs,
+									 @Mock MessagesConfig messagesConfig)
+			throws UnknownHostException {
+		String address = "167.65.44.109";
+		Victim victim = AddressVictim.of(NetworkAddress.of(InetAddress.getByName(address)));
+
+		lenient().when(sender.getOperator()).thenReturn(ConsoleOperator.INSTANCE);
+		// User has permission for bans, but not IP bans
+		lenient().when(sender.hasPermission("libertybans.ban.undo")).thenReturn(true);
+		when(argParser.parseVictimByName(sender, address)).thenReturn(futuresFactory.completedFuture(victim));
+		when(configs.getMessagesConfig()).thenReturn(messagesConfig);
+		Component noPermission = Component.text("No permission");
+		{
+			RemovalsSection.PunishmentRemoval punishmentRemoval = mock(RemovalsSection.PunishmentRemoval.class);
+			when(punishmentRemoval.permissionIpAddress()).thenReturn(noPermission);
+			lenient().when(punishmentRemoval.notFound()).thenReturn(ComponentText.create(Component.text("Not found")));
+			RemovalsSection removalsSection = mock(RemovalsSection.class);
+			when(removalsSection.forType(PunishmentType.BAN)).thenReturn(punishmentRemoval);
+			when(messagesConfig.removals()).thenReturn(removalsSection);
+		}
+		lenient().when(revoker.revokeByTypeAndVictim(any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory));
+
+		commands.execute(sender, ArrayCommandPackage.create(address), "unban").execute();
+
+		verify(sender).sendMessage(argThat(new ComponentMatcher<>(noPermission)));
+		verifyNoMoreInteractions(revoker);
 	}
 }
