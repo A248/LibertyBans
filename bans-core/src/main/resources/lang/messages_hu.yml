@@ -1,0 +1,379 @@
+ # 
+ # Messages configuration
+ # 
+ # 
+ # In most cases, the variables inside the default messages are those available
+ # in that specific message. The exception to this is messages which are related
+ # to a certain punishment.
+ # 
+ # When message has an associated punishment, multiple variables are available:
+ # 
+ # %ID% - punishment ID number
+ # %TYPE% - punishment type, e.g. 'Ban'
+ # %VICTIM% - display name of the victim of the punishment
+ # %VICTIM_ID% - internal identifier of victim
+ # %OPERATOR% - display name of the staff member who made the punishment
+ # %OPERATOR_ID% - internal identifier of the operator
+ # %UNOPERATOR% - staff member undoing the punishment. available only when the punishment is undone
+ # %UNOPERATOR_ID% - internal identifier of staff member undoing the punishment
+ # %REASON% - reason for the punishment
+ # %SCOPE% - scope of the punishment
+ # %DURATION% - original duration (how long the punishment was made for)
+ # %START_DATE% - the date the punishment was created
+ # %TIME_PASSED% - the time since the punishment was created
+ # %END_DATE% - the date the punishment will end, or formatting.permanent-display.absolute for permanent punishments
+ # %TIME_REMAINING% - the time until the punishment ends, or formatting.permanent-display.relative for permanent punishments
+ # 
+ # 
+ # Used for /banlist, /mutelist, /history, /warns, /blame
+lists:
+  history:
+    usage: '&cHasználat: /history &e<játékos> [oldal]'
+    noPages: 'A &c&o%TARGET%&7 nevű játékosnak nincs előzménye.'
+    permission:
+      command: '&7Nincs jogod, hogy megnézt az előzményeket.'
+
+    layout:
+      body:
+        - '&7[&e%ID%&7] / %TYPE%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%&f'
+      header:
+        - '&7[&eID&7] &8/ &7Büntetés típusa&f'
+        - '&7Kiosztó &8/ &7Ok &8/ &7Kiosztás napja&f'
+      footer: '&7Oldal: &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans history %TARGET% %NEXTPAGE%'
+
+    perPage: 10
+    maxPages: '&7A(z) &e%PAGE%&7. oldal nem létezik.'
+
+  muteList:
+    usage: '&cHasználat: /mutelist &e[oldal]'
+    noPages: '&7Jelenleg nincs aktív némítás.'
+    permission:
+      command: '&7Nincs jogod, hogy megnéz a némításokat.'
+
+    layout:
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      header:
+        - '&7[&eID&7] &e&oTárgy&f'
+        - '&7Kiosztó &8/ &7Ok &8/ &7Hátralévő Idő&f'
+      footer: '&7Oldal &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans mutelist %NEXTPAGE%'
+
+    perPage: 10
+    maxPages: '&7A(z) &e%PAGE%&7. oldal nem létezik.'
+
+  banList:
+    usage: '&cHasználat: /banlist &e[page]'
+    noPages: '&7Jelenleg nincs aktív kitiltás.'
+    permission:
+      command: '&7Nincs jogod hogy megnézd a tiltólistát.'
+
+    layout:
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      header:
+        - '&7[&eID&7] &e&oSubject&f'
+        - '&7Kiosztó &8/ &7Ok &8/ &7Hátralévő Idő&f'
+      footer: '&7Oldal &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans banlist %NEXTPAGE%'
+
+    perPage: 10
+    maxPages: '&7A(z) &e%PAGE%&7. oldal nem létezik.'
+
+  warns:
+    usage: '&cHasználat: /warns &e<játékos> [oldal]'
+    noPages: '&c&oA(z) &c&o%TARGET%&7 nevű felhasználónak nincs aktív figyelmeztetése.'
+    permission:
+      command: '&7Nincs jogod megnézni a figyelmezetéseket.'
+
+    layout:
+      body: '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      header: '&7[&eID&7] Kiosztó &8/ &7Ok &8/ &7Hátralévő Idő&f'
+      footer: 'Oldal &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+
+    perPage: 10
+    maxPages: '&7A(z) &e%PAGE%&7. oldal nem létezik.'
+
+  blame:
+    usage: '&cHasználat: /blame &e<játékos> [oldal]'
+    noPages: '&c&o%TARGET%&7 nem oszott kis még büntetést.'
+    permission:
+      command: '&7Nincs jogod megnézni a büntetések kiosztóit.'
+
+    layout:
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM% &8 / &7%TYPE%&f'
+        - '&7%REASON% &8/ &7%START_DATE%&f'
+      header:
+        - '&7[&eID&7] &e&oTéma &8/ &7Kioszás Fajtája&f'
+        - '&7Ok &8/ &7Hatályba Lépés Dátuma&f'
+      footer: 'Oldal &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+
+    perPage: 10
+    maxPages: '&7A(z) &e%PAGE%&7. oldal nem létezik.'
+
+
+all:
+  usage: '&cIsmeretlen AL-parancs. Használati módok:'
+   # If a player types /libertybans but does not have the permission 'libertybans.commands', this is the denial message
+  base-permission-message: '&cNincs jogod ezt a parancsot használni.'
+  prefix:
+     # If enabled, all messages will be prefixed
+    enable: true
+     # The prefix to use
+    value: '&6&lLibertyBans &8»&7 '
+
+   # When issuing commands, if the specified player or IP was not found, what should the error message be?
+  not-found:
+    uuid: '&c&oA(z) &c&o%TARGET%&7 nem egy valós UUID.'
+    player: '&c&oA(z) &c&o%TARGET%&7 nevű játékost nem találtuk online se offline.'
+    playerOrAddress: '&c&oA(z) &c&o%TARGET%&7 nevű játékost nem találtuk online se offline, és/vagy a megadott IP cím ismeretlen.'
+
+
+misc:
+   # Concerns formatting of relative times and durations
+  time:
+    grammar:
+       # What should come before the last fragment? Set to empty text to disable
+      and: 'és '
+       # If enabled, places commas after each time fragment, except the last one
+      comma: true
+
+    fragments:
+      MINUTES: '%VALUE% percek'
+      YEARS: '%VALUE% évek'
+      HOURS: '%VALUE% órák'
+      WEEKS: '%VALUE% hetek'
+      DAYS: '%VALUE% napok'
+      MONTHS: '%VALUE% hónapok'
+
+     # Times are formatted to seconds accuracy, but you may not want to display seconds 
+     # for most times. However, for very small durations, you need to display a value in seconds.
+     # If you are using SECONDS in the above section, this value is meaningless.
+    fallback-seconds: '%VALUE% másodpercek'
+
+  unknown-error: '&cEgy ismeretlen hiba történt.'
+   # Only applicable if synchronous enforcement strategy is DENY in the main config
+  sync-chat-denial-message: '&cA(z) egyidejű chat ki van kapcsolva. &7Kérlek próbáld újra.'
+
+ # Messages for alt-checks and alt account notifications
+ # 
+ # Before configuring this section, it is necessary to look at the address-enforcement
+ # settings in the main config.yml and understand the different kinds of alt detection.
+ # There is normal and strict detection.
+alts:
+   # Regarding the /alts command
+  command:
+     # The message to display atop the alt check. Set to an empty string to disable
+    header:
+      - '&7ALT profil jelentés a(z) &c&o%TARGET%&7 nevű játékosra.&f'
+      - '&7Puszta lehetőség - Ugyan az a cím mint egy kitiltott játékos.&f'
+      - '&7Erős lehetőség - Tiltott játékoshoz kapcsolódik egy közös múltbeli cím alapján.'
+    permission: '&cNincs jogod megnézni az ALT-okat.'
+    usage: '&cHasználat: /alts &e<player>&c.'
+    none-found: '&7Nem találtunk ALT profilt.'
+
+  formatting:
+     # The description for an alt account detected by strict detection.
+    strict: '&ePuszta lehetőség'
+     # The description for an alt account detected by normal detection.
+    normal: '&cErős lehetőség'
+     # How a single detected alt should be displayed
+     # Available variables:
+     # %DETECTION_KIND% - how the account was detected. Will be replaced by the normal or strict options.
+     # %ADDRESS% - the address in question which led to the detection
+     # %RELEVANT_USER% - the username of the other account, formatted according to the name-display option
+     # %RELEVANT_USERID% - the UUID of the other account
+     # %DATE_RECORDED% - the date the alt account was recorded
+    layout: '%RELEVANT_USER% &7(per %ADDRESS%) at %DATE_RECORDED% - %DETECTION_KIND%'
+     # In the alt-check layout, the username of the alt may be formatted depending upon whether it is banned
+     # For example, the usernames of banned alts may be colored red whereas alts not banned are green
+     # Variables: %USERNAME%
+    name-display:
+      muted: '&e&o%USERNAME%'
+      banned: '&c&o%USERNAME%'
+      not-punished: '&o%USERNAME%'
+
+
+  auto-show:
+     # The message to display atop the alt check. Set to an empty string to disable
+    header:
+      - '&c&o%TARGET%&7 lehetséges hogy egy ALT profil. A jelentés következik.&f'
+      - '&7Erős lehetőség - Ugyan az a cím mint egy kitiltott játékos.&f'
+      - '&7Puszta lehetpség - Tiltott játékoshoz kapcsolódik egy közös múltbeli cím alapján.'
+
+
+ # Specific formatting options
+formatting:
+   # When using /blame, how should the console be specified?
+  console-arguments:
+    - 'konzol'
+   # How should 'permanent' be displayed as a length of time?
+  permanent-display:
+     # When does a permanent punishment end?
+    absolute: 'Soha'
+     # What do you call a permanent duration?
+    duration: 'Végtelen'
+     # How do you describe the time remaining in a permanent punishment?
+    relative: 'Örök'
+
+   # How should the global scope be displayed?
+  global-scope-display: 'Azt összes szerver'
+   # How should the console be displayed?
+  console-display: 'Konzol'
+   # When there is no more time remaining in a punishment (the punishment has expired),
+   # this becomes the value of the %TIME_REMAINING% variable
+  no-time-remaining-display: 'N/A'
+   # How should punishment types be displayed?
+  punishment-type-display:
+    MUTE: 'Némítás'
+    KICK: 'Kirugás'
+    BAN: 'Kitiltás'
+    WARN: 'Figyelmeztetés'
+
+   # There are 2 ways to make permanent punishments. The first is to not specify a time (/ban <player> <reason>).
+   # The second is to specify a permanent amount of time (/ban <player> perm <reason>).
+   # When typing commands, what time arguments will be counted as permanent?
+  permanent-arguments:
+    - 'örökre'
+    - 'örök'
+    - 'végtelen'
+
+ # 
+ # Messages regarding /ban, /mute, /warn, /kick
+ # Includes punishment layouts
+ # 
+ # 
+additions:
+  kicks:
+    usage: '&cHasználat: /kick &e<player> <reason>&c.'
+    layout:
+      - '&7&lKicked&f'
+      - ''
+      - '&c&lReason&f'
+      - '&7%REASON%'
+    permission:
+      command: '&cYou may not kick other players.'
+      ip-address: '&cYou may not kick by IP address.'
+
+    success:
+      message: '&aKicked &c&o%VICTIM%&a because of &e&o%REASON%&a.'
+      notification: '&c&o%OPERATOR%&7 kicked &c&o%VICTIM%&7 because of &e&o%REASON%&7.'
+
+
+  mutes:
+    usage: '&cHasználat: /mute &e<player> [time] <reason>&c.'
+    layout:
+      - '&7&lMuted&f'
+      - '&cDuration: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&lReason&f'
+      - '&7%REASON%'
+    permission:
+      command: '&cYou may not mute other players.'
+      duration: '&cYou may not mute other players for &e%DURATION%&c.'
+      ip-address: '&cYou may not mute by IP address.'
+
+    conflicting: '&c&o%TARGET%&7 is already muted.'
+    success:
+      message: '&aMuted &c&o%VICTIM%&a for &o%DURATION%&r&a because of &e&o%REASON%&a.'
+      notification: '&c&o%OPERATOR%&7 muted &c&o%VICTIM%&7 for &a&o%DURATION%&7 because of &e&o%REASON%&7.'
+
+
+  warns:
+    usage: '&cHasználat: /warn &e<player> [time] <reason>&c.'
+    layout:
+      - '&7&lWarned&f'
+      - '&cDuration: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&lReason&f'
+      - '&7%REASON%'
+    permission:
+      command: '&cYou may not warn other players.'
+      duration: '&cYou may not warn other players for &e%DURATION%&c.'
+      ip-address: '&cYou may not warn by IP address.'
+
+    success:
+      message: '&aWarned &c&o%VICTIM%&a for &o%DURATION%&r&a because of &e&o%REASON%&a.'
+      notification: '&c&o%OPERATOR%&7 warned &c&o%VICTIM%&7 for &a&o%DURATION%&7 because of &e&o%REASON%&7.'
+
+
+  bans:
+    usage: '&cHasználat: /ban &e<player> [time] <reason>&c.'
+    layout:
+      - '&7&lBanned&f'
+      - '&cDuration: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&lReason&f'
+      - '&7%REASON%&f'
+      - ''
+      - '&3&lAppeal Your Punishment&f'
+      - '&cWebsite: &7website&f'
+      - '&cDiscord: &7discord'
+    permission:
+      command: '&cYou may not ban other players.'
+      duration: '&cYou may not ban other players for &e%DURATION%&c.'
+      ip-address: '&cYou may not ban by IP address.'
+
+    conflicting: '&c&o%TARGET%&7 is already banned.'
+    success:
+      message: '&aBanned &c&o%VICTIM%&a for &o%DURATION%&r&a because of &e&o%REASON%&a.'
+      notification: '&c&o%OPERATOR%&7 banned &c&o%VICTIM%&7 for &a&o%DURATION%&7 because of &e&o%REASON%&7.'
+
+
+
+ # Regards /unban, /unmute, /unwarn
+removals:
+  mutes:
+    usage: '&cHasználat: /unmute &e<player>&c.'
+    permission:
+      command: '&cYou may not unmute other players.'
+      ip-address: '&cYou may not unmute IP addresses.'
+
+    success:
+      message: '&7Unmuted &c&o%VICTIM%&7.'
+      notification: '&c&o%UNOPERATOR%&7 unmuted &c&o%VICTIM%&7.'
+
+    not-found: '&c&o%TARGET%&7 is not muted.'
+
+  warns:
+    usage:'&cHasználat: /unwarn &e<player> <id>&c.'
+    permission:
+      command: '&cYou may not unwarn other players.'
+      ip-address: '&cYou may not unwarn IP addresses.'
+
+    success:
+      message: '&7Unwarned &c&o%VICTIM%&7.'
+      notification: '&c&o%UNOPERATOR%&7 unwarned &c&o%VICTIM%&7.'
+
+    not-a-number: '&c&o%ID_ARG%&7 is not a number.'
+    not-found: '&c&o%TARGET%&7 does not have a warn by &c&o%ID%&7.'
+
+  bans:
+    Használat: '&cHasználat: /unban &e<player>&c.'
+    permission:
+      command: '&cNem szedhetsz le kitiltás(okat) más játékosokról.'
+      ip-address: '&cNem szedhetsz le IP kitiltásokat más játékosokról.'
+
+    success:
+      message: '&7A kitliltás leszedve a(z) &c&o%VICTIM%&7 nevú játékosról.'
+      notification: '&c&o%UNOPERATOR%&7 leszedte a kitliltást a &c&o%VICTIM%&7 nevű játékosról.'
+
+    not-found: '&c&oA(z) &c&o%TARGET%&7 nincs kitiltva.'
+
+
+admin:
+  importing:
+    failure: '&cAz importálás hibába ütközött. Kérlek nézd meg a szerver konzolt a részletekért.'
+    started: '&7Az importálás elkezdődött. Kérlek nézd meg a szerver konzolt a részletekért, és a haladásért.'
+    complete: '&7Az import befejeződött.'
+    usage: '&cHasználat: /libertybans import <advancedban|litebans|vanilla>'
+     # To prevent mistakes, it is not allowed to import multiple times at once.
+    in-progress: '&cEgy importálás már folyamatban van.'
+
+  restarted: '&aÚjraindítva'
+  ellipses: '&a...'
+  reloaded: '&aÚjratöltve'
+  no-permission: '&cSajnos nem használhatod ezt a parancsot.'
+
