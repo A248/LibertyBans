@@ -24,12 +24,15 @@
  # %END_DATE% - the date the punishment will end, or formatting.permanent-display.absolute for permanent punishments
  # %TIME_REMAINING% - the time until the punishment ends, or formatting.permanent-display.relative for permanent punishments
  # 
+ # The following variables have limited availability:
+ # %TARGET% - the original target argument of a command. For example, in '/ipban Player1', %TARGET% is Player1
+ # 
  # 
  # Used for /banlist, /mutelist, /history, /warns, /blame
 lists:
   banList:
-    noPages: '&7No hay suficientes sanciones.'
-    maxPages: '&7Página &e%PAGE%&7 no existe.'
+    noPages: '&7No hay baneos activos.'
+    maxPages: '&7La página &e%PAGE%&7 no existe.'
     permission:
       command: '&7No puedes ver la lista de sanciones.'
 
@@ -43,11 +46,11 @@ lists:
       footer: '&7Páigna &e%PAGE%&7.||ttp:Click para siguiente página||cmd:/libertybans banlist %NEXTPAGE%'
 
     perPage: 10
-    usage: '&cUso: /banlist &e[page]'
+    usage: '&cUso: /banlist &e[página]'
 
   muteList:
     noPages: '&7No hay silencios activos.'
-    maxPages: '&7Pagina &e%PAGE%&7 no existe.'
+    maxPages: '&7La pagina &e%PAGE%&7 no existe.'
     permission:
       command: '&7No puedes ver la lista de silenciados.'
 
@@ -61,11 +64,11 @@ lists:
       footer: '&7Página &e%PAGE%&7.||ttp:Click para la siguiente página||cmd:/libertybans mutelist %NEXTPAGE%'
 
     perPage: 10
-    usage: '&cUso: /mutelist &e[page]'
+    usage: '&cUso: /mutelist &e[página]'
 
   warns:
     noPages: '&c&o%TARGET%&r&7 no tiene advertencias.'
-    maxPages: '&7Página &e%PAGE%&7 no existe.'
+    maxPages: '&7La página &e%PAGE%&7 no existe.'
     permission:
       command: '&7No puedes ver las advertencias.'
 
@@ -75,17 +78,17 @@ lists:
       footer: '&7Página &e%PAGE%&7.||ttp:Click para la siguiente página||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
 
     perPage: 10
-    usage: '&cUso: /warns &e<player> [página]'
+    usage: '&cUso: /warns &e<jugador> [página]'
 
   blame:
-    noPages: '&c&o%TARGET%&r&7 no castigo a nadie aún.'
-    maxPages: '&7Página &e%PAGE%&7 no existe.'
+    noPages: '&c&o%TARGET%&r&7 no ha sancionado a nadie aún.'
+    maxPages: '&7La página &e%PAGE%&7 no existe.'
     permission:
       command: '&7No puedes hacer esto.'
 
     layout:
       header:
-        - '&7[&eID&7] &e&oSujeto &r&8/ &7Tipo de castigo'
+        - '&7[&eID&7] &e&oSujeto &r&8/ &7Tipo de Sanción'
         - 'Razón &8/ &7Fecha de Inicio'
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM% &r&8 / &7%TYPE%'
@@ -93,25 +96,25 @@ lists:
       footer: '&7Página &e%PAGE%&7.||ttp:Click para la siguiente página||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
 
     perPage: 10
-    usage: '&cUso: /blame &e<player> [page]'
+    usage: '&cUso: /blame &e<jugador> [página]'
 
   history:
-    noPages: '&c&o%TARGET%&r&7 no tiene un historial.'
-    maxPages: '&7Página &e%PAGE%&7 no existe.'
+    noPages: '&c&o%TARGET%&r&7 no tiene historial.'
+    maxPages: '&7La página &e%PAGE%&7 no existe.'
     permission:
       command: '&7No puedes ver el historial.'
 
     layout:
       header:
-        - '&7[&eID&7] &8/ &7Tipo de Castigo'
-        - 'Operador &8/ &7Raz´no &8/ &7Fecha de Inicio'
+        - '&7[&eID&7] &8/ &7Tipo de Sanción'
+        - 'Operador &8/ &7Razón &8/ &7Fecha de Inicio'
       body:
         - '&7[&e%ID%&7] / %TYPE%'
         - '%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%'
       footer: '&7Página &e%PAGE%&7.||ttp:Click para la página siguiente||cmd:/libertybans history %TARGET% %NEXTPAGE%'
 
     perPage: 10
-    usage: '&cUso: /history &e<player> [page]'
+    usage: '&cUso: /history &e<jugador> [página]'
 
 
 all:
@@ -119,13 +122,13 @@ all:
      # If enabled, all messages will be prefixed
     enable: true
      # The prefix to use
-    value: '&6&lBans &r&8»&7 '
+    value: '&6&lLibertyBans &r&8»&7 '
 
    # When issuing commands, if the specified player or IP was not found, what should the error message be?
   not-found:
-    playerOrAddress: '&c&o%TARGET%&r&7 no fue encontrado ni online ni offline y no tiene una ip válida.'
-    uuid: '&c&o%TARGET%&r&7no es un UUID válido.'
-    player: '&c&o%TARGET%&r&7 no fue encontrado ni onlnie ni offline.'
+    playerOrAddress: '&c&o%TARGET%&r&7 no fue encontrado online o offline y no es una IP válida.'
+    uuid: '&c&o%TARGET%&r&7no es una UUID válida.'
+    player: '&c&o%TARGET%&r&7 no fue encontrado online ni offline.'
 
    # If a player types /libertybans but does not have the permission 'libertybans.commands', this is the denial message
   base-permission-message: '&cNo puedes hacer esto.'
@@ -139,12 +142,12 @@ all:
 additions:
   kicks:
     permission:
-      command: '&cNo puedes hechar a otros jugadores.'
-      ip-address: '&cNo puedes hechar a esta IP.'
+      command: '&cNo puedes expulsar a otros jugadores.'
+      ip-address: '&cNo puedes expulsar a esta direccion IP.'
 
     success:
-      notification: '&c&o%OPERATOR%&r&7 hecho a &c&o%VICTIM%&r&7 porque &e&o%REASON%&r&7.'
-      message: '&aEl jugador &c&o%VICTIM%&r&a fue hechado porque &e&o%REASON%&r&a.'
+      notification: '&c&o%OPERATOR%&r&7 expulso a &c&o%VICTIM%&r&7 debido a &e&o%REASON%&r&7.'
+      message: '&aEl jugador &c&o%VICTIM%&r&a fue expulsado por &e&o%REASON%&r&a.'
 
     usage: '&cUso: /kick &e<player> <razón>&c.'
     layout:
@@ -156,19 +159,19 @@ additions:
   bans:
     permission:
       command: '&cNo puedes banear otros jugadores.'
-      ip-address: '&cNo puedes banear IPS.'
-      duration: '&cNo puedes banear a otros jugadores en &e%DURATION%&c.'
+      ip-address: '&cNo puedes banear direcciones IP.'
+      duration: '&cNo puedes banear a otros jugadores por &e%DURATION%&c.'
 
     success:
-      notification: '&c&o%OPERATOR%&r&7 baneo a &c&o%VICTIM%&r&7 durante &a&o%DURATION%&r&7 porque &e&o%REASON%&r&7.'
-      message: '&aFue baneado &c&o%VICTIM%&r&a durante &a&o%DURATION%&r&a porque &e&o%REASON%&r&a.'
+      notification: '&c&o%OPERATOR%&r&7 baneo a &c&o%VICTIM%&r&7 durante &a&o%DURATION%&r&7 por &e&o%REASON%&r&7.'
+      message: '&c&o%VICTIM%&r&a fue baneado durante &a&o%DURATION%&r&a por &e&o%REASON%&r&a.'
 
-    conflicting: '&c&o%TARGET%&r&7 ya esta baneado.'
+    conflicting: '&c&o%TARGET%&r&7 ya se encuentra baneado.'
     usage: '&cUso: /ban &e<jugador> [tiempo] <razón>&c.'
     layout:
       - '&0&m--(&r&f &7&lFUISTE BANEADO &0 &r&0&l&m)--'
       - '&cDuración: &e%TIME_REMAINING%'
-      - '&7'
+      - ''
       - '&cRazón'
       - '&7%REASON%'
       - ''
@@ -176,49 +179,50 @@ additions:
       - ''
       - '&cPágina: &7website'
       - '&cDiscord: &7discord'
-      - ''
-      - '&fPuedes cambiar esto linea 90'
 
   mutes:
     permission:
-      command: '&cNo puedes silenciar otros jugadores.'
-      ip-address: '&cNo puedes silenciar otra IP.'
-      duration: '&cNo puedes silenciar a otros jugadores, recien en &e%DURATION%&c.'
+      command: '&cNo puedes silenciar a otros jugadores.'
+      ip-address: '&cNo puedes silenciar direcciones IP.'
+      duration: '&cNo puedes silenciar a otros jugadores por &e%DURATION%&c.'
 
     success:
-      notification: '&c&o%OPERATOR%&r&7 silencio a &c&o%VICTIM%&r&7 durante &a&o%DURATION%&r&7 porque &e&o%REASON%&r&7.'
-      message: '&aEl jugador &c&o%VICTIM%&r&a fue silenciado durante &a&o%DURATION%&r&a porque &e&o%REASON%&r&a.'
+      notification: '&c&o%OPERATOR%&r&7 silencio a &c&o%VICTIM%&r&7 durante &a&o%DURATION%&r&7 por &e&o%REASON%&r&7.'
+      message: '&c&o%VICTIM%&r&a fue silenciado durante &a&o%DURATION%&r&a por &e&o%REASON%&r&a.'
 
-    conflicting: '&c&o%TARGET%&r&7 ya está silenciado.'
+    conflicting: '&c&o%TARGET%&r&7 ya se encuentra silenciado.'
     usage: '&cUso: /mute &e<jugador> [tiempo] <razón>&c.'
     layout:
       - '&0&m--(&r&f &7&lFUISTE SILENCIADO&0 &r&0&l&m)--'
       - '&cDuración: &e%TIME_REMAINING%'
-      - '&7'
-      - '&cRazón:'
+      - ''
+      - '&cRazón'
       - '&7%REASON%'
 
   warns:
     permission:
-      command: '&cNo puedes advertir otros jugadores.'
-      ip-address: '&cNo puedes advertir IPs.'
+      command: '&cNo puedes advertir a otros jugadores.'
+      ip-address: '&cNo puedes advertir direcciones IP.'
       duration: '&cNo puedes advertir a otros jugadores por &e%DURATION%&c.'
 
     success:
-      notification: '&c&o%OPERATOR%&r&7 advirtió a &c&o%VICTIM%&r&7 durante &a&o%DURATION%&r&7 porque &e&o%REASON%&r&7.'
-      message: '&aFue advertido &c&o%VICTIM%&r&a durante &a&o%DURATION%&r&a porque &e&o%REASON%&r&a.'
+      notification: '&c&o%OPERATOR%&r&7 advirtió a &c&o%VICTIM%&r&7 durante &a&o%DURATION%&r&7 por &e&o%REASON%&r&7.'
+      message: '&c&o%VICTIM%&r&a fue advertido durante &a&o%DURATION%&r&a por &e&o%REASON%&r&a.'
 
     usage: '&cUso: /warn &e<jugador> [tiempo] <razón>&c.'
     layout:
       - '&0&m--(&r&f &7&llFUISTE ADVERTIDO&0 &r&0&l&m)--'
       - '&cDuración: &e%TIME_REMAINING%'
-      - '&7'
-      - '&cRazón: '
+      - ''
+      - '&cRazón'
       - '&7%REASON%'
 
 
  # Specific formatting options
 formatting:
+   # When there is no more time remaining in a punishment (the punishment has expired),
+   # this becomes the value of the %TIME_REMAINING% variable
+  no-time-remaining-display: 'N/A'
    # There are 2 ways to make permanent punishments. The first is to not specify a time (/ban <player> <reason>).
    # The second is to specify a permanent amount of time (/ban <player> perm <reason>).
    # When typing commands, what time arguments will be counted as permanent?
@@ -242,27 +246,13 @@ formatting:
   console-display: 'Consola'
    # How should punishment types be displayed?
   punishment-type-display:
-    MUTE: 'Silenciado'
+    MUTE: 'Silencio'
     WARN: 'Advertencia'
-    KICK: 'Hechado'
+    KICK: 'Expulsión'
     BAN: 'Ban'
 
    # How should the global scope be displayed?
-  global-scope-display: 'All servers'
-
-admin:
-  importing:
-    failure: '&cImportación fallida. Mira la consola para detalles.'
-    started: '&7Importación iniciada. Mira la consola para el progreso.'
-    complete: '&7Importación completada.'
-     # To prevent mistakes, it is not allowed to import multiple times at once.
-    in-progress: '&cYa hay una importación en progreso.'
-    usage: '&cUso: /libertybans import <advancedban|litebans|vanilla>'
-
-  no-permission: '&cPerdon, no puedes hacer esto.'
-  reloaded: '&aRecargado'
-  ellipses: '&a...'
-  restarted: '&aReinciando'
+  global-scope-display: 'Global'
 
 misc:
    # Concerns formatting of relative times and durations
@@ -286,19 +276,79 @@ misc:
       DAYS: '%VALUE% días'
 
 
-  unknown-error: '&cUn error raro sucedio.'
+  unknown-error: '&cSe ha producido un error desconocido.'
    # Only applicable if synchronous enforcement strategy is DENY in the main config
   sync-chat-denial-message: '&cChat sincronico detenido, &7Prueba de nuevo.'
+
+admin:
+  importing:
+    failure: '&cImportación fallida. Mira la consola para ver los detalles.'
+    started: '&7Importación iniciada. Mira la consola para ver el progreso.'
+    complete: '&7Importación completada.'
+     # To prevent mistakes, it is not allowed to import multiple times at once.
+    in-progress: '&cYa hay una importe en ejecución.'
+    usage: '&cUso: /libertybans import <advancedban|litebans|vanilla>'
+
+  no-permission: '&cDisculpa, no puedes usar esto.'
+  reloaded: '&aRecargado'
+  ellipses: '&a...'
+  restarted: '&aReiniciando'
+
+ # Messages for alt-checks and alt account notifications
+ # 
+ # Before configuring this section, it is necessary to look at the address-enforcement
+ # settings in the main config.yml and understand the different kinds of alt detection.
+ # There is normal and strict detection.
+alts:
+   # Regarding the /alts command
+  command:
+    permission: '&cNo puedes revisar cuentas alternas.'
+     # The message to display atop the alt check. Set to an empty string to disable
+    header:
+      - '&7Reporte de cuentas alternas de &c&o%TARGET%.&f'
+      - '&7Alta probabilidad - Misma direccion IP que el jugador sancionado.&f'
+      - '&7Mera posibilidad - Cuenta vinculada a una dirección IP común pasada'
+    usage: '&cUso: /alts &e<jugador>&c.'
+    none-found: '&7No se han encontrado cuentas alternas'
+
+  formatting:
+     # The description for an alt account detected by strict detection.
+    strict: '&eAlta probabilidad'
+     # The description for an alt account detected by normal detection.
+    normal: '&cMera posibilidad'
+     # How a single detected alt should be displayed
+     # Available variables:
+     # %DETECTION_KIND% - how the account was detected. Will be replaced by the normal or strict options.
+     # %ADDRESS% - the address in question which led to the detection
+     # %RELEVANT_USER% - the username of the other account, formatted according to the name-display option
+     # %RELEVANT_USERID% - the UUID of the other account
+     # %DATE_RECORDED% - the date the alt account was recorded
+    layout: '%RELEVANT_USER% &7(por %ADDRESS%) en %DATE_RECORDED% - %DETECTION_KIND%'
+     # In the alt-check layout, the username of the alt may be formatted depending upon whether it is banned
+     # For example, the usernames of banned alts may be colored red whereas alts not banned are green
+     # Variables: %USERNAME%
+    name-display:
+      not-punished: '&o%USERNAME%'
+      banned: '&c&o%USERNAME%'
+      muted: '&e&o%USERNAME%'
+
+
+  auto-show:
+     # The message to display atop the alt check. Set to an empty string to disable
+    header:
+      - '&c&o%TARGET%&7 puede ser una cuenta alterna de alguien. Report follows.&f'
+      - '&7Alta probabilidad - Misma direccion IP que el jugador sancionado.&f'
+      - '&7Mera posibilidad - Cuenta vinculada a una dirección IP común pasada'
 
  # Regards /unban, /unmute, /unwarn
 removals:
   bans:
     permission:
-      command: '&cNo puedes desbanear a jugadores.'
-      ip-address: '&cNo puedes desbanear otras IPs.'
+      command: '&cNo puedes desbanear a otros jugadores.'
+      ip-address: '&cNo puedes desbanear a otras direcciones IP.'
 
     success:
-      notification: '&c&o%UNOPERATOR%&r&7 desbaneo a &c&o%VICTIM%&r&7.'
+      notification: '&c&o%UNOPERATOR%&r&7 ha desbaneado a &c&o%VICTIM%&r&7.'
       message: '&7Desbaneo a &c&o%VICTIM%&r&7.'
 
     not-found: '&c&o%TARGET%&r&7 no está baneado.'
@@ -306,24 +356,24 @@ removals:
 
   mutes:
     permission:
-      command: '&cNo puedes desilenciar jugadores.'
-      ip-address: '&cNo puedes silenciar IPs.'
+      command: '&cNo puedes quitar el silencio a otros jugadores.'
+      ip-address: '&cNo puedes quitar el silencio a direcciones IP.'
 
     success:
       notification: '&c&o%UNOPERATOR%&r&7 quito el silencio a &c&o%VICTIM%&r&7.'
-      message: '&7Se quito el silencio a &c&o%VICTIM%&r&7.'
+      message: '&7Se removio el silencio de &c&o%VICTIM%&r&7.'
 
     not-found: '&c&o%TARGET%&r&7 no esta silenciado.'
     usage: '&cUso: /unmute &e<jugador>&c.'
 
   warns:
     permission:
-      command: '&cNo puedes quitar la advertencia a jugadores.'
-      ip-address: '&cNo puedes quitar la advertencia a las IPs.'
+      command: '&cNo puedes quitar advertencias a otros jugadores.'
+      ip-address: '&cNo puedes quitar advertencias a direcciones IP.'
 
     success:
-      notification: '&c&o%UNOPERATOR%&r&7 desadvertió a &c&o%VICTIM%&r&7.'
-      message: '&7Desadvertido &c&o%VICTIM%&r&7.'
+      notification: '&c&o%UNOPERATOR%&r&7 ha removido una advertencia de &c&o%VICTIM%&r&7.'
+      message: '&7Has quitado la advertencia a &c&o%VICTIM%&r&7.'
 
     not-a-number: '&c&o%ID_ARG%&r&7 no es un número.'
     not-found: '&c&o%TARGET%&r&7 no fue advertido por &c&o%ID%&r&7.'
