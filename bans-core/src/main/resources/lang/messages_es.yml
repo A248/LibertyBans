@@ -126,9 +126,9 @@ all:
 
    # When issuing commands, if the specified player or IP was not found, what should the error message be?
   not-found:
-    playerOrAddress: '&c&o%TARGET%&r&7 no fue encontrado online o offline y no es una IP válida.'
+    playerOrAddress: '&c&o%TARGET%&r&7 no fue encontrado en linea o en la base de datos y no es una IP válida.'
     uuid: '&c&o%TARGET%&r&7no es una UUID válida.'
-    player: '&c&o%TARGET%&r&7 no fue encontrado online ni offline.'
+    player: '&c&o%TARGET%&r&7 no fue encontrado en linea o en la base de datos.'
 
    # If a player types /libertybans but does not have the permission 'libertybans.commands', this is the denial message
   base-permission-message: '&cNo puedes hacer esto.'
@@ -313,9 +313,9 @@ alts:
 
   formatting:
      # The description for an alt account detected by strict detection.
-    strict: '&eAlta probabilidad'
+    strict: '&cMera posibilidad'
      # The description for an alt account detected by normal detection.
-    normal: '&cMera posibilidad'
+    normal: '&eAlta probabilidad'
      # How a single detected alt should be displayed
      # Available variables:
      # %DETECTION_KIND% - how the account was detected. Will be replaced by the normal or strict options.
