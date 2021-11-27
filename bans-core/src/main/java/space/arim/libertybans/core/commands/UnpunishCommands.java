@@ -106,7 +106,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 		
 		private void execute0() {
 			String targetArg = command().next();
-			CentralisedFuture<?> future = parseVictim(sender(), targetArg).thenCompose((victim) -> {
+			CentralisedFuture<?> future = parseVictim(sender(), targetArg, type()).thenCompose((victim) -> {
 				if (victim == null) {
 					return completedFuture(null);
 				}

@@ -237,7 +237,11 @@ public interface AdditionsSection {
 				"&c&lReason",
 				"&7%REASON%"})
 		ComponentText layout();
-		
+
+		@ConfKey("must-be-online")
+		@DefaultString("&c&o%TARGET%&r&7 must be online.")
+		ComponentText mustBeOnline();
+
 	}
 	
 	@SubSection

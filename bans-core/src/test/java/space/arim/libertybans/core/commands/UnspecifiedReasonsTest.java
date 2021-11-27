@@ -42,6 +42,7 @@ import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.EnvEnforcer;
+import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
 import java.util.Set;
@@ -80,7 +81,8 @@ public class UnspecifiedReasonsTest {
 
 	@BeforeEach
 	public void setConfigSection(AbstractSubCommandGroup.Dependencies dependencies,
-			/* Mock */ Configs configs, /* Mock */ ArgumentParser argParser) {
+			/* Mock */ Configs configs, /* Mock */ ArgumentParser argParser,
+			@Mock EnvUserResolver envUserResolver) {
 		{
 			MainConfig mainConfig = mock(MainConfig.class);
 			when(configs.getMainConfig()).thenReturn(mainConfig);
@@ -102,7 +104,8 @@ public class UnspecifiedReasonsTest {
 		}
 		when(argParser.parseVictimByName(any(), eq("A248"))).thenReturn(
 				new IndifferentFactoryOfTheFuture().completedFuture(PlayerVictim.of(UUID.randomUUID())));
-		punishCommands = new PlayerPunishCommands(dependencies, drafter, formatter, envEnforcer, tabCompletion);
+
+		punishCommands = new PlayerPunishCommands(dependencies, drafter, formatter, envEnforcer, tabCompletion, envUserResolver);
 	}
 
 	private void executeBan(CmdSender sender) {

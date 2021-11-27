@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import jakarta.inject.Inject;
 
+import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -52,6 +53,10 @@ public class StandardArgumentParser implements ArgumentParser {
 	private <T> CentralisedFuture<T> completedFuture(T value) {
 		return futuresFactory.completedFuture(value);
 	}
+
+	private MessagesConfig.All.NotFound notFound() {
+		return configs.getMessagesConfig().all().notFound();
+	}
 	
 	// UUID from name
 	
@@ -62,7 +67,7 @@ public class StandardArgumentParser implements ArgumentParser {
 			try {
 				uuid = UUID.fromString(targetArg);
 			}  catch (IllegalArgumentException ex) {
-				sender.sendMessage(configs.getMessagesConfig().all().notFound().uuid().replaceText("%TARGET%", targetArg));
+				sender.sendMessage(notFound().uuid().replaceText("%TARGET%", targetArg));
 				return completedFuture(null);
 			}
 			return completedFuture(uuid);
@@ -73,7 +78,7 @@ public class StandardArgumentParser implements ArgumentParser {
 				mostSigBits = Long.parseUnsignedLong(targetArg.substring(0, 16), 16);
 				leastSigBits = Long.parseUnsignedLong(targetArg.substring(16, 32), 16);
 			} catch (NumberFormatException ex) {
-				sender.sendMessage(configs.getMessagesConfig().all().notFound().uuid().replaceText("%TARGET%", targetArg));
+				sender.sendMessage(notFound().uuid().replaceText("%TARGET%", targetArg));
 				return completedFuture(null);
 			}
 			return completedFuture(new UUID(mostSigBits, leastSigBits));
@@ -82,7 +87,7 @@ public class StandardArgumentParser implements ArgumentParser {
 		}
 		return uuidManager.lookupUUID(targetArg).thenApply((uuid) -> {
 			if (uuid.isEmpty()) {
-				sender.sendMessage(configs.getMessagesConfig().all().notFound().player().replaceText("%TARGET%", targetArg));
+				sender.sendMessage(notFound().player().replaceText("%TARGET%", targetArg));
 				return null;
 			}
 			return uuid.get();
@@ -118,7 +123,7 @@ public class StandardArgumentParser implements ArgumentParser {
 		}
 		return uuidManager.lookupAddress(targetArg).thenApply((address) -> {
 			if (address == null) {
-				sender.sendMessage(configs.getMessagesConfig().all().notFound().playerOrAddress().replaceText("%TARGET%", targetArg));
+				sender.sendMessage(notFound().playerOrAddress().replaceText("%TARGET%", targetArg));
 				return null;
 			}
 			return AddressVictim.of(address);

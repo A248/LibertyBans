@@ -28,6 +28,6 @@ interface PunishUnpunishCommands {
 
 	PunishmentType parseType(String arg);
 
-	CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg);
+	CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg, PunishmentType type);
 
 }

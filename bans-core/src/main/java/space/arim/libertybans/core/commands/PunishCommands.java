@@ -110,7 +110,7 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 
 		private void execute0() {
 			String targetArg = command().next();
-			CentralisedFuture<?> future = parseVictim(sender(), targetArg).thenCompose((victim) -> {
+			CentralisedFuture<?> future = parseVictim(sender(), targetArg, type()).thenCompose((victim) -> {
 				if (victim == null) {
 					return completedFuture(null);
 				}

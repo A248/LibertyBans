@@ -51,7 +51,7 @@ public class AddressUnpunishCommands extends UnpunishCommands {
 	}
 
 	@Override
-	public CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg) {
+	public CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg, PunishmentType type) {
 		return argumentParser().parseAddressVictim(sender, targetArg);
 	}
 
