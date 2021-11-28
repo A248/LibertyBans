@@ -26,5 +26,5 @@ enum Translation {
 	ES,
 	RU,
 	ZH,
-    HU
+	HU
 }
