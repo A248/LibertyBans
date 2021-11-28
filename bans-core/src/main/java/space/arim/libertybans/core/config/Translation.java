@@ -25,5 +25,6 @@ package space.arim.libertybans.core.config;
 enum Translation {
 	ES,
 	RU,
-	ZH
+	ZH,
+    HU
 }
