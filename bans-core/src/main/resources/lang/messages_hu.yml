@@ -64,7 +64,7 @@ lists:
     maxPages: '&7A(z) &e%PAGE%&7. oldal nem létezik.'
 
   banList:
-    usage: '&cHasználat: /banlist &e[page]'
+    usage: '&cHasználat: /banlist &e[oldal]'
     noPages: '&7Jelenleg nincs aktív kitiltás.'
     permission:
       command: '&7Nincs jogod hogy megnézd a tiltólistát.'
@@ -115,7 +115,7 @@ lists:
 
 
 all:
-  usage: '&cIsmeretlen AL-parancs. Használati módok:'
+  usage: '&cIsmeretlen alparancs. Használati módok:'
    # If a player types /libertybans but does not have the permission 'libertybans.commands', this is the denial message
   base-permission-message: '&cNincs jogod ezt a parancsot használni.'
   prefix:
@@ -141,17 +141,17 @@ misc:
       comma: true
 
     fragments:
-      MINUTES: '%VALUE% percek'
-      YEARS: '%VALUE% évek'
-      HOURS: '%VALUE% órák'
-      WEEKS: '%VALUE% hetek'
-      DAYS: '%VALUE% napok'
-      MONTHS: '%VALUE% hónapok'
+      MINUTES: '%VALUE% perc'
+      YEARS: '%VALUE% év'
+      HOURS: '%VALUE% óra'
+      WEEKS: '%VALUE% hét'
+      DAYS: '%VALUE% nap'
+      MONTHS: '%VALUE% hónap'
 
      # Times are formatted to seconds accuracy, but you may not want to display seconds 
      # for most times. However, for very small durations, you need to display a value in seconds.
      # If you are using SECONDS in the above section, this value is meaningless.
-    fallback-seconds: '%VALUE% másodpercek'
+    fallback-seconds: '%VALUE% másodperc'
 
   unknown-error: '&cEgy ismeretlen hiba történt.'
    # Only applicable if synchronous enforcement strategy is DENY in the main config
@@ -186,7 +186,7 @@ alts:
      # %RELEVANT_USER% - the username of the other account, formatted according to the name-display option
      # %RELEVANT_USERID% - the UUID of the other account
      # %DATE_RECORDED% - the date the alt account was recorded
-    layout: '%RELEVANT_USER% &7(per %ADDRESS%) at %DATE_RECORDED% - %DETECTION_KIND%'
+    layout: '%RELEVANT_USER% &7(%ADDRESS% által) %DATE_RECORDED% kor - %DETECTION_KIND%'
      # In the alt-check layout, the username of the alt may be formatted depending upon whether it is banned
      # For example, the usernames of banned alts may be colored red whereas alts not banned are green
      # Variables: %USERNAME%
@@ -247,28 +247,28 @@ formatting:
  # 
 additions:
   kicks:
-    usage: '&cHasználat: /kick &e<player> <reason>&c.'
+    usage: '&cHasználat: /kick &e<játékos> <ok>&c.'
     layout:
-      - '&7&lKicked&f'
+      - '&7&lKirúgás&f'
       - ''
-      - '&c&lReason&f'
+      - '&c&lOk&f'
       - '&7%REASON%'
     permission:
-      command: '&cYou may not kick other players.'
-      ip-address: '&cYou may not kick by IP address.'
+      command: '&cNincs jogod hogy kirúgj más játékosokat.'
+      ip-address: '&cNincs jogod hogy kirúgj más játéksokat IP cím szerint.'
 
     success:
-      message: '&aKicked &c&o%VICTIM%&a because of &e&o%REASON%&a.'
-      notification: '&c&o%OPERATOR%&7 kicked &c&o%VICTIM%&7 because of &e&o%REASON%&7.'
+      message: '&aA &c&o%VICTIM%&a newú játékos ki lett rugva &e&o%REASON%&a. &aokkal.'
+      notification: '&c&o%OPERATOR%&7 kirúgta &c&o%VICTIM%&7 nevű játékost &e&o%REASON%&7 &aokkal.'
 
 
   mutes:
-    usage: '&cHasználat: /mute &e<player> [time] <reason>&c.'
+    usage: '&cHasználat: /mute &e<játékos> [idő] <ok>&c.'
     layout:
-      - '&7&lMuted&f'
-      - '&cDuration: &e%TIME_REMAINING%&f'
+      - '&7&lNémítás&f'
+      - '&cIdőtartam: &e%TIME_REMAINING%&f'
       - ''
-      - '&c&lReason&f'
+      - '&c&lOk&f'
       - '&7%REASON%'
     permission:
       command: '&cYou may not mute other players.'
@@ -282,12 +282,12 @@ additions:
 
 
   warns:
-    usage: '&cHasználat: /warn &e<player> [time] <reason>&c.'
+    usage: '&cHasználat: /warn &e<játékos> [idő] <ok>&c.'
     layout:
-      - '&7&lWarned&f'
-      - '&cDuration: &e%TIME_REMAINING%&f'
+      - '&7&lFigyelmeztetés&f'
+      - '&cIdőtartam: &e%TIME_REMAINING%&f'
       - ''
-      - '&c&lReason&f'
+      - '&c&lOk&f'
       - '&7%REASON%'
     permission:
       command: '&cYou may not warn other players.'
@@ -300,55 +300,55 @@ additions:
 
 
   bans:
-    usage: '&cHasználat: /ban &e<player> [time] <reason>&c.'
+    usage: '&cHasználat: /ban &e<játékos> [idő] <ok>&c.'
     layout:
-      - '&7&lBanned&f'
-      - '&cDuration: &e%TIME_REMAINING%&f'
+      - '&7&lKititás&f'
+      - '&cIdőtartam: &e%TIME_REMAINING%&f'
       - ''
-      - '&c&lReason&f'
+      - '&c&lOk&f'
       - '&7%REASON%&f'
       - ''
-      - '&3&lAppeal Your Punishment&f'
-      - '&cWebsite: &7website&f'
+      - '&3&lItt fellebbezheted a büntetésed:&f'
+      - '&cWeboldal: &7website&f'
       - '&cDiscord: &7discord'
     permission:
-      command: '&cYou may not ban other players.'
-      duration: '&cYou may not ban other players for &e%DURATION%&c.'
-      ip-address: '&cYou may not ban by IP address.'
+      command: '&cNincs jogod hogy kitílts más játékosokat.'
+      duration: '&cNincs jogod hogy kitílts más játékosokat &e%DURATION%&c ideig.'
+      ip-address: '&cNincs jogod hogy IP cím alapján kitílts más játékosokat.'
 
-    conflicting: '&c&o%TARGET%&7 is already banned.'
+    conflicting: '&c&o%TARGET%&7 már ki van kitíltva.'
     success:
-      message: '&aBanned &c&o%VICTIM%&a for &o%DURATION%&r&a because of &e&o%REASON%&a.'
-      notification: '&c&o%OPERATOR%&7 banned &c&o%VICTIM%&7 for &a&o%DURATION%&7 because of &e&o%REASON%&7.'
+      message: '&c&o%VICTIM%&a ki lett kitíltva &o%DURATION%&r&a ideig, &e&o%REASON%&a okkal.'
+      notification: '&c&o%OPERATOR%&7 kitíltotta &c&o%VICTIM%&7 -t &a&o%DURATION%&7 ideig, &e&o%REASON%&7 okkal.'
 
 
 
  # Regards /unban, /unmute, /unwarn
 removals:
   mutes:
-    usage: '&cHasználat: /unmute &e<player>&c.'
+    usage: '&cHasználat: /unmute &e<játékos>&c.'
     permission:
-      command: '&cYou may not unmute other players.'
-      ip-address: '&cYou may not unmute IP addresses.'
+      command: '&cNincs jogod hogy leszedd a némítást más játékosokról.'
+      ip-address: '&cNincs jogod hogy lenémíts játékosokat IP cím alapján.'
 
     success:
-      message: '&7Unmuted &c&o%VICTIM%&7.'
-      notification: '&c&o%UNOPERATOR%&7 unmuted &c&o%VICTIM%&7.'
+      message: '&7A némítás le lett szedve a &c&o%VICTIM%&7 nevű játékosról.'
+      notification: '&c&o%UNOPERATOR%&7 levette a némítást a &c&o%VICTIM%&7 nevű játékosról.'
 
-    not-found: '&c&o%TARGET%&7 is not muted.'
+    not-found: '&c&o%TARGET%&7 nincs némítva.'
 
   warns:
-    usage:'&cHasználat: /unwarn &e<player> <id>&c.'
+    usage:'&cHasználat: /unwarn &e<játékos> <id>&c.'
     permission:
-      command: '&cYou may not unwarn other players.'
-      ip-address: '&cYou may not unwarn IP addresses.'
+      command: '&cNincs jogod hogy leszedj figyelmeztetéseket más játékosokról.'
+      ip-address: '&cNincs jogod hogy leszedj  figyelmeztetéseket IP címekről.'
 
     success:
-      message: '&7Unwarned &c&o%VICTIM%&7.'
-      notification: '&c&o%UNOPERATOR%&7 unwarned &c&o%VICTIM%&7.'
+      message: '&7A figyelmeztetés le lett szedve a &c&o%VICTIM%&7 nevű játékosról.'
+      notification: '&c&o%UNOPERATOR%&7 levette a figyelmeztetést a &c&o%VICTIM%&7 nevű játékosról.'
 
-    not-a-number: '&c&o%ID_ARG%&7 is not a number.'
-    not-found: '&c&o%TARGET%&7 does not have a warn by &c&o%ID%&7.'
+    not-a-number: '&7 A &c&o%ID_ARG%&7 karakter nem egy szám.'
+    not-found: '&7 A &c&o%TARGET%&7 nevű játékosnak nincs &c&o%ID%&7 -ú figyelmeztetése.'
 
   bans:
     Használat: '&cHasználat: /unban &e<player>&c.'
@@ -357,7 +357,7 @@ removals:
       ip-address: '&cNem szedhetsz le IP kitiltásokat más játékosokról.'
 
     success:
-      message: '&7A kitliltás leszedve a(z) &c&o%VICTIM%&7 nevú játékosról.'
+      message: '&7A kitliltás leszedve a(z) &c&o%VICTIM%&7 nevű játékosról.'
       notification: '&c&o%UNOPERATOR%&7 leszedte a kitliltást a &c&o%VICTIM%&7 nevű játékosról.'
 
     not-found: '&c&oA(z) &c&o%TARGET%&7 nincs kitiltva.'
