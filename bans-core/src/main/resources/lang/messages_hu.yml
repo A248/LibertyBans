@@ -74,7 +74,7 @@ lists:
         - '&7[&e%ID%&7] &e&o%VICTIM%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
       header:
-        - '&7[&eID&7] &e&oSubject&f'
+        - '&7[&eID&7] &e&oTárgy&f'
         - '&7Kiosztó &8/ &7Ok &8/ &7Hátralévő Idő&f'
       footer: '&7Oldal &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans banlist %NEXTPAGE%'
 
@@ -155,7 +155,7 @@ misc:
 
   unknown-error: '&cEgy ismeretlen hiba történt.'
    # Only applicable if synchronous enforcement strategy is DENY in the main config
-  sync-chat-denial-message: '&cA(z) egyidejű chat ki van kapcsolva. &7Kérlek próbáld újra.'
+  sync-chat-denial-message: '&cA(z) sync chat ki van kapcsolva. &7Kérlek próbáld újra.'
 
  # Messages for alt-checks and alt account notifications
  # 
