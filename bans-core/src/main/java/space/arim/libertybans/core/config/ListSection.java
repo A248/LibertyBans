@@ -321,10 +321,12 @@ public interface ListSection {
 			throw new IllegalArgumentException("Unknown list type " + type);
 		}
 	}
-	
+
+	@ConfKey("ban-list")
 	@SubSection
 	BanList banList();
-	
+
+	@ConfKey("mute-list")
 	@SubSection
 	MuteList muteList();
 	

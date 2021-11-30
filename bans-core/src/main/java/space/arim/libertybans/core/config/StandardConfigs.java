@@ -105,8 +105,8 @@ public class StandardConfigs implements Configs {
 			return reloadMain.join() && reloadMessages.join() && reloadSql.join() && reloadImport.join();
 		});
 	}
-	
-	private CompletableFuture<?> createLangFiles(Path langFolder) {
+
+	CompletableFuture<?> createLangFiles(Path langFolder) {
 		Translation[] translations = Translation.values();
 		Set<CompletableFuture<?>> futureLangFiles = new HashSet<>(translations.length);
 		for (Translation translation : translations) {

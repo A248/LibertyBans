@@ -30,7 +30,7 @@
  # 
  # Used for /banlist, /mutelist, /history, /warns, /blame
 lists:
-  banList:
+  ban-list:
     noPages: '&7No hay baneos activos.'
     maxPages: '&7La página &e%PAGE%&7 no existe.'
     permission:
@@ -48,7 +48,7 @@ lists:
     perPage: 10
     usage: '&cUso: /banlist &e[página]'
 
-  muteList:
+  mute-list:
     noPages: '&7No hay silencios activos.'
     maxPages: '&7La pagina &e%PAGE%&7 no existe.'
     permission:
@@ -126,7 +126,7 @@ all:
 
    # When issuing commands, if the specified player or IP was not found, what should the error message be?
   not-found:
-    playerOrAddress: '&c&o%TARGET%&r&7 no fue encontrado en linea o en la base de datos y no es una IP válida.'
+    player-or-address: '&c&o%TARGET%&r&7 no fue encontrado en linea o en la base de datos y no es una IP válida.'
     uuid: '&c&o%TARGET%&r&7no es una UUID válida.'
     player: '&c&o%TARGET%&r&7 no fue encontrado en linea o en la base de datos.'
 
@@ -142,7 +142,7 @@ all:
 additions:
   kicks:
     permission:
-      command: '&cNo puedes expulsar a otros jugadores.'
+      uuid: '&cNo puedes expulsar a otros jugadores.'
       ip-address: '&cNo puedes expulsar a esta direccion IP.'
 
     success:
@@ -158,7 +158,7 @@ additions:
 
   bans:
     permission:
-      command: '&cNo puedes banear otros jugadores.'
+      uuid: '&cNo puedes banear otros jugadores.'
       ip-address: '&cNo puedes banear direcciones IP.'
       duration: '&cNo puedes banear a otros jugadores por &e%DURATION%&c.'
 
@@ -182,7 +182,7 @@ additions:
 
   mutes:
     permission:
-      command: '&cNo puedes silenciar a otros jugadores.'
+      uuid: '&cNo puedes silenciar a otros jugadores.'
       ip-address: '&cNo puedes silenciar direcciones IP.'
       duration: '&cNo puedes silenciar a otros jugadores por &e%DURATION%&c.'
 
@@ -201,7 +201,7 @@ additions:
 
   warns:
     permission:
-      command: '&cNo puedes advertir a otros jugadores.'
+      uuid: '&cNo puedes advertir a otros jugadores.'
       ip-address: '&cNo puedes advertir direcciones IP.'
       duration: '&cNo puedes advertir a otros jugadores por &e%DURATION%&c.'
 
@@ -344,7 +344,7 @@ alts:
 removals:
   bans:
     permission:
-      command: '&cNo puedes desbanear a otros jugadores.'
+      uuid: '&cNo puedes desbanear a otros jugadores.'
       ip-address: '&cNo puedes desbanear a otras direcciones IP.'
 
     success:
@@ -356,7 +356,7 @@ removals:
 
   mutes:
     permission:
-      command: '&cNo puedes quitar el silencio a otros jugadores.'
+      uuid: '&cNo puedes quitar el silencio a otros jugadores.'
       ip-address: '&cNo puedes quitar el silencio a direcciones IP.'
 
     success:
@@ -368,7 +368,7 @@ removals:
 
   warns:
     permission:
-      command: '&cNo puedes quitar advertencias a otros jugadores.'
+      uuid: '&cNo puedes quitar advertencias a otros jugadores.'
       ip-address: '&cNo puedes quitar advertencias a direcciones IP.'
 
     success:

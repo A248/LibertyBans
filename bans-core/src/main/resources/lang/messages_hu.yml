@@ -45,7 +45,7 @@ lists:
     perPage: 10
     maxPages: '&7A(z) &e%PAGE%&7. oldal nem létezik.'
 
-  muteList:
+  mute-list:
     usage: '&cHasználat: /mutelist &e[oldal]'
     noPages: '&7Jelenleg nincs aktív némítás.'
     permission:
@@ -63,7 +63,7 @@ lists:
     perPage: 10
     maxPages: '&7A(z) &e%PAGE%&7. oldal nem létezik.'
 
-  banList:
+  ban-list:
     usage: '&cHasználat: /banlist &e[oldal]'
     noPages: '&7Jelenleg nincs aktív kitiltás.'
     permission:
@@ -128,7 +128,7 @@ all:
   not-found:
     uuid: '&c&oA(z) &c&o%TARGET%&7 nem egy valós UUID.'
     player: '&c&oA(z) &c&o%TARGET%&7 nevű játékost nem találtuk online se offline.'
-    playerOrAddress: '&c&oA(z) &c&o%TARGET%&7 nevű játékost nem találtuk online se offline, és/vagy a megadott IP cím ismeretlen.'
+    player-or-address: '&c&oA(z) &c&o%TARGET%&7 nevű játékost nem találtuk online se offline, és/vagy a megadott IP cím ismeretlen.'
 
 
 misc:
@@ -254,7 +254,7 @@ additions:
       - '&c&lOk&f'
       - '&7%REASON%'
     permission:
-      command: '&cNincs jogod hogy kirúgj más játékosokat.'
+      uuid: '&cNincs jogod hogy kirúgj más játékosokat.'
       ip-address: '&cNincs jogod hogy kirúgj más játéksokat IP cím szerint.'
 
     success:
@@ -271,7 +271,7 @@ additions:
       - '&c&lOk&f'
       - '&7%REASON%'
     permission:
-      command: '&cYou may not mute other players.'
+      uuid: '&cYou may not mute other players.'
       duration: '&cYou may not mute other players for &e%DURATION%&c.'
       ip-address: '&cYou may not mute by IP address.'
 
@@ -290,7 +290,7 @@ additions:
       - '&c&lOk&f'
       - '&7%REASON%'
     permission:
-      command: '&cYou may not warn other players.'
+      uuid: '&cYou may not warn other players.'
       duration: '&cYou may not warn other players for &e%DURATION%&c.'
       ip-address: '&cYou may not warn by IP address.'
 
@@ -312,7 +312,7 @@ additions:
       - '&cWeboldal: &7website&f'
       - '&cDiscord: &7discord'
     permission:
-      command: '&cNincs jogod hogy kitílts más játékosokat.'
+      uuid: '&cNincs jogod hogy kitílts más játékosokat.'
       duration: '&cNincs jogod hogy kitílts más játékosokat &e%DURATION%&c ideig.'
       ip-address: '&cNincs jogod hogy IP cím alapján kitílts más játékosokat.'
 
@@ -328,7 +328,7 @@ removals:
   mutes:
     usage: '&cHasználat: /unmute &e<játékos>&c.'
     permission:
-      command: '&cNincs jogod hogy leszedd a némítást más játékosokról.'
+      uuid: '&cNincs jogod hogy leszedd a némítást más játékosokról.'
       ip-address: '&cNincs jogod hogy lenémíts játékosokat IP cím alapján.'
 
     success:
@@ -340,7 +340,7 @@ removals:
   warns:
     usage:'&cHasználat: /unwarn &e<játékos> <id>&c.'
     permission:
-      command: '&cNincs jogod hogy leszedj figyelmeztetéseket más játékosokról.'
+      uuid: '&cNincs jogod hogy leszedj figyelmeztetéseket más játékosokról.'
       ip-address: '&cNincs jogod hogy leszedj  figyelmeztetéseket IP címekről.'
 
     success:
@@ -353,7 +353,7 @@ removals:
   bans:
     Használat: '&cHasználat: /unban &e<player>&c.'
     permission:
-      command: '&cNem szedhetsz le kitiltás(okat) más játékosokról.'
+      uuid: '&cNem szedhetsz le kitiltás(okat) más játékosokról.'
       ip-address: '&cNem szedhetsz le IP kitiltásokat más játékosokról.'
 
     success:

@@ -27,7 +27,7 @@
 #
 # Used for /banlist, /mutelist, /history, /warns, /blame
 lists:
-  banList:
+  ban-list:
     noPages: '&7Нету активных банов.'
     maxPages: '&7Страницы &e%PAGE%&7 не существует.'
     permission:
@@ -45,7 +45,7 @@ lists:
     perPage: 10
     usage: '&cИспользование: /banlist &e[страница]'
 
-  muteList:
+  mute-list:
     noPages: '&7Нету активных мутов.'
     maxPages: '&7Страницы &e%PAGE%&7 не существует.'
     permission:
@@ -123,7 +123,7 @@ all:
 
     # When issuing commands, if the specified player or IP was not found, what should the error message be?
   not-found:
-    playerOrAddress: '&c&o%TARGET%&7 не был/было найден(o).'
+    player-or-address: '&c&o%TARGET%&7 не был/было найден(o).'
     uuid: '&c&o%TARGET%&7 - неправильный формат uuid.'
     player: '&c&o%TARGET%&7 не был найден.'
 
@@ -139,7 +139,7 @@ all:
 additions:
   kicks:
     permission:
-      command: '&cВам нельзя кикать других игроков.'
+      uuid: '&cВам нельзя кикать других игроков.'
       ip-address: '&cВам нельзя кикать по ip-адресу.'
 
     success:
@@ -155,7 +155,7 @@ additions:
 
   bans:
     permission:
-      command: '&cТебе нельзя банить других игроков.'
+      uuid: '&cТебе нельзя банить других игроков.'
       ip-address: '&cТебе нельзя банить игроков по ip!.'
       duration: '&cТебе нельзя банить на &e%DURATION%&c.'
 
@@ -177,7 +177,7 @@ additions:
 
   mutes:
     permission:
-      command: '&cВам нельзя мутить других игроков.'
+      uuid: '&cВам нельзя мутить других игроков.'
       ip-address: '&cВам нельзя мутить по ip-адресу.'
       duration: '&cВам нельзя мутить на &e%DURATION%&c.'
 
@@ -196,7 +196,7 @@ additions:
 
   warns:
     permission:
-      command: '&cВам нельзя варнить других игроков.'
+      uuid: '&cВам нельзя варнить других игроков.'
       ip-address: '&cВам нельзя варнить по ip-адресу.'
       duration: '&cВам нельзя варнить игроков на &e%DURATION%&c.'
 
@@ -340,7 +340,7 @@ alts:
 removals:
   bans:
     permission:
-      command: '&cВам нельзя разбанивать игроков!.'
+      uuid: '&cВам нельзя разбанивать игроков!.'
       ip-address: '&cВам нельзя разбанивать по ip-адресу.'
 
     success:
@@ -352,7 +352,7 @@ removals:
 
   mutes:
     permission:
-      command: '&cВам нельзя размучивать других игроков.'
+      uuid: '&cВам нельзя размучивать других игроков.'
       ip-address: '&cВам нельзя размучивать по ip-адрессук.'
 
     success:
@@ -364,7 +364,7 @@ removals:
 
   warns:
     permission:
-      command: '&cВам нельзя снимать варны.'
+      uuid: '&cВам нельзя снимать варны.'
       ip-address: '&cВам нельзя снимать варны с других игроков.'
 
     success:

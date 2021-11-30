@@ -108,10 +108,11 @@ public interface MessagesConfig {
 			
 			@DefaultString("&c&o%TARGET%&r&7 is not a valid UUID.")
 			ComponentText uuid();
-			
+
+			@ConfKey("player-or-address")
 			@DefaultString("&c&o%TARGET%&r&7 was not found online or offline, and is not a valid IP address.")
 			ComponentText playerOrAddress();
-			
+
 		}
 		
 		@DefaultString("&cUnknown sub command. Displaying usage:")

@@ -39,7 +39,7 @@ all:
   not-found:
     uuid: '&c&o%TARGET%&7 不是有效的UUID。'
     player: '&c&o%TARGET%&7 没在上线和离线的玩家列表。'
-    playerOrAddress: '&c&o%TARGET%&7 并没有在上线或离线的玩家中被找到，并且这不是一个有效的 IP。'
+    player-or-address: '&c&o%TARGET%&7 并没有在上线或离线的玩家中被找到，并且这不是一个有效的 IP。'
 
 
  # 
@@ -57,7 +57,7 @@ additions:
       - '&7%REASON%'
     permission:
       duration: '&c您无法的设置有效期为 &e%DURATION%&c 的惩罚。'
-      command: '&c您可能无法警告别的玩家。'
+      uuid: '&c您可能无法警告别的玩家。'
       ip-address: '&c您无法通过 IP 来警告别的玩家。'
 
     usage: '&c用法: /warn &e<player> [有效时长] <理由>&c。'
@@ -74,7 +74,7 @@ additions:
       - '&7%REASON%'
     usage: '&c用法: /kick &e<玩家> <理由>&c。'
     permission:
-      command: '&c您没有权限踢出别的玩家。'
+      uuid: '&c您没有权限踢出别的玩家。'
       ip-address: '&c您没有按 IP 来踢出玩家的权限。'
 
     success:
@@ -96,7 +96,7 @@ additions:
       - '&cDiscord: &7discord&f'
     permission:
       duration: '&c您不能为别的玩家设置时长为 &e%DURATION%&c 的封禁。'
-      command: '&c您没有权限来封禁别的玩家。'
+      uuid: '&c您没有权限来封禁别的玩家。'
       ip-address: '&c您没有通过 IP 封禁别的玩家的权限。'
 
     usage: '&c用法: /ban &e<玩家> [有效时长] <理由>&c。'
@@ -115,7 +115,7 @@ additions:
       - '&7%REASON%'
     permission:
       duration: '&c您无法为别的玩家设置有效时长为 &e%DURATION%&c 的禁言。'
-      command: '&c您没有权限来禁言别的玩家。'
+      uuid: '&c您没有权限来禁言别的玩家。'
       ip-address: '&c您没有通过 IP 来禁言别的玩家的权限。'
 
     usage: '&c用法: /mute &e<玩家> [有效时长] <理由>&c。'
@@ -127,7 +127,7 @@ additions:
 
  # 用于 /banlist, /mutelist, /history, /warns, /blame
 lists:
-  banList:
+  ban-list:
     perPage: 10
     layout:
       header:
@@ -177,7 +177,7 @@ lists:
 
     noPages: '&c&o%TARGET%&7 还没有被惩处过。'
 
-  muteList:
+  mute-list:
     perPage: 10
     layout:
       header:
@@ -281,7 +281,7 @@ removals:
     not-a-number: '&c&o%ID_ARG%&7 不是一个数字。'
     usage: '&c用法: /unwarn &e<玩家> <id>&c。'
     permission:
-      command: '&c您没有权限撤销别的玩家的警告。'
+      uuid: '&c您没有权限撤销别的玩家的警告。'
       ip-address: '&c您没有通过 IP 撤销警告的权限。'
 
     not-found: '&c&o%TARGET%&7 并没有受到 ID 为 &c&o%ID%&7 的警告。'
@@ -293,7 +293,7 @@ removals:
   bans:
     usage: '&c用法: /unban &e<玩家>&c。'
     permission:
-      command: '&c您没有权限撤销别的玩家的封禁。'
+      uuid: '&c您没有权限撤销别的玩家的封禁。'
       ip-address: '&c您没有权限撤销IP封禁。'
 
     not-found: '&c&o%TARGET%&7 还没被封禁。'
@@ -305,7 +305,7 @@ removals:
   mutes:
     usage: '&c用法: /unmute &e<玩家>&c。'
     permission:
-      command: '&c您没有权限撤销禁言。'
+      uuid: '&c您没有权限撤销禁言。'
       ip-address: '&c您没有权限撤销 IP 禁言。'
 
     not-found: '&c&o%TARGET%&7 还没被禁言。'

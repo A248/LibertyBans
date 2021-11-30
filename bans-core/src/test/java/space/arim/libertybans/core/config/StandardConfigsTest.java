@@ -18,21 +18,27 @@
  */
 package space.arim.libertybans.core.config;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
-
-import java.nio.file.Path;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Locale;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class StandardConfigsTest {
 
 	@TempDir
 	public Path folder;
 
-	private Configs configs;
+	private StandardConfigs configs;
 
 	@BeforeEach
 	public void setup() {
@@ -49,5 +55,17 @@ public class StandardConfigsTest {
 		assumeTrue(configs.reloadConfigs().join());
 		assertTrue(configs.reloadConfigs().join());
 	}
-	
+
+	@ParameterizedTest
+	@EnumSource
+	public void copyAndValidateTranslations(Translation translation) throws IOException {
+		Path langFolder = folder.resolve("lang");
+		Files.createDirectories(langFolder);
+		configs.createLangFiles(langFolder).join();
+
+		Path langFile = langFolder.resolve("messages_" + translation.name().toLowerCase(Locale.ROOT) + ".yml");
+		assertTrue(Files.exists(langFile));
+		var configHolder = new ConfigHolder<>(MessagesConfig.class);
+		assertDoesNotThrow(() -> configHolder.reload(langFile));
+	}
 }

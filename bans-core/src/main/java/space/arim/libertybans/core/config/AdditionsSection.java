@@ -52,11 +52,13 @@ public interface AdditionsSection {
 		ComponentText layout();
 		
 	}
-	
+
 	interface PunishmentAdditionWithDurationPerm extends PunishmentAddition {
-		
-		ComponentText permissionDuration();
-		
+
+		@Override
+		@SubSection
+		PunishmentPermissionSectionWithDuration permission();
+
 	}
 	
 	interface ExclusivePunishmentAddition extends PunishmentAdditionWithDurationPerm {
@@ -70,11 +72,6 @@ public interface AdditionsSection {
 		@Override
 		@DefaultString("&cUsage: /ban &e<player> [time] <reason>&c.")
 		Component usage();
-
-		@Override
-		@ConfKey("permission.duration")
-		@DefaultString("&cYou may not ban other players for &e%DURATION%&c.")
-		ComponentText permissionDuration();
 
 		@Override
 		@DefaultString("&c&o%TARGET%&r&7 is already banned.")
@@ -112,11 +109,6 @@ public interface AdditionsSection {
 		Component usage();
 
 		@Override
-		@ConfKey("permission.duration")
-		@DefaultString("&cYou may not mute other players for &e%DURATION%&c.")
-		ComponentText permissionDuration();
-
-		@Override
 		@DefaultString("&c&o%TARGET%&r&7 is already muted.")
 		ComponentText conflicting();
 		
@@ -147,11 +139,6 @@ public interface AdditionsSection {
 		@DefaultString("&cUsage: /warn &e<player> [time] <reason>&c.")
 		Component usage();
 
-		@Override
-		@ConfKey("permission.duration")
-		@DefaultString("&cYou may not warn other players for &e%DURATION%&c.")
-		ComponentText permissionDuration();
-		
 		@Override
 		@ConfKey("success.message")
 		@DefaultString("&aWarned &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.")

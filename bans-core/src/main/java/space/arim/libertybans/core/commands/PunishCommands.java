@@ -142,7 +142,7 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 				// Sender does not have enough duration permissions
 				String durationFormatted = formatter.formatDuration(duration);
 				PunishmentAdditionWithDurationPerm sectionWithDurationPerm = ((PunishmentAdditionWithDurationPerm) section);
-				sender().sendMessage(sectionWithDurationPerm.permissionDuration().replaceText("%DURATION%", durationFormatted));
+				sender().sendMessage(sectionWithDurationPerm.permission().duration().replaceText("%DURATION%", durationFormatted));
 				return completedFuture(null);
 			}
 			// Parse reason
