@@ -51,78 +51,78 @@ public class NotificationMessageTest {
 
 	@Test
 	public void noSilentPermissions(@Mock CmdSender sender) {
-		var message = new NotificationMessage(sender, PunishmentType.BAN, NotificationMessage.Mode.DO);
+		var message = new NotificationMessage(sender, PunishmentType.BAN, Mode.DO);
 
 		when(sender.hasPermission(any())).thenReturn(false);
 		message.evaluate(command);
 		assertFalse(message.isSilent());
-		verify(sender).hasPermission("libertybans.ban.silent");
+		verify(sender).hasPermission("libertybans.ban.do.silent");
 	}
 
 	@Test
 	public void silentPermissionForDifferentType(@Mock CmdSender sender) {
-		var message = new NotificationMessage(sender, PunishmentType.WARN, NotificationMessage.Mode.DO);
+		var message = new NotificationMessage(sender, PunishmentType.WARN, Mode.DO);
 
-		lenient().when(sender.hasPermission("libertybans.mute.silent")).thenReturn(true);
+		lenient().when(sender.hasPermission("libertybans.mute.do.silent")).thenReturn(true);
 		message.evaluate(command);
 		assertFalse(message.isSilent());
-		verify(sender).hasPermission("libertybans.warn.silent");
+		verify(sender).hasPermission("libertybans.warn.do.silent");
 	}
 
 	@Test
 	public void silentPermissionForDifferentMode(@Mock CmdSender sender) {
-		var message = new NotificationMessage(sender, PunishmentType.MUTE, NotificationMessage.Mode.DO);
+		var message = new NotificationMessage(sender, PunishmentType.MUTE, Mode.DO);
 
-		lenient().when(sender.hasPermission("libertybans.mute.silentundo")).thenReturn(true);
+		lenient().when(sender.hasPermission("libertybans.mute.undo.silent")).thenReturn(true);
 		message.evaluate(command);
 		assertFalse(message.isSilent());
-		verify(sender).hasPermission("libertybans.mute.silent");
+		verify(sender).hasPermission("libertybans.mute.do.silent");
 	}
 
 	@Test
 	public void silentPermissionSuccess(@Mock CmdSender sender) {
-		var message = new NotificationMessage(sender, PunishmentType.WARN, NotificationMessage.Mode.UNDO);
+		var message = new NotificationMessage(sender, PunishmentType.WARN, Mode.UNDO);
 
-		when(sender.hasPermission("libertybans.warn.silentundo")).thenReturn(true);
+		when(sender.hasPermission("libertybans.warn.undo.silent")).thenReturn(true);
 		message.evaluate(command);
 		assertTrue(message.isSilent());
-		verify(sender).hasPermission("libertybans.warn.silentundo");
+		verify(sender).hasPermission("libertybans.warn.undo.silent");
 	}
 
 	@Test
 	public void notificationPermissionDo() {
-		var message = new NotificationMessage(mock(CmdSender.class), PunishmentType.WARN, NotificationMessage.Mode.DO);
+		var message = new NotificationMessage(mock(CmdSender.class), PunishmentType.WARN, Mode.DO);
 
-		assertEquals("libertybans.warn.notify", message.notificationPermission());
+		assertEquals("libertybans.warn.do.notify", message.notificationPermission());
 	}
 
 	@Test
 	public void notificationPermissionUndo() {
-		var message = new NotificationMessage(mock(CmdSender.class), PunishmentType.WARN, NotificationMessage.Mode.UNDO);
+		var message = new NotificationMessage(mock(CmdSender.class), PunishmentType.WARN, Mode.UNDO);
 
-		assertEquals("libertybans.warn.unnotify", message.notificationPermission());
+		assertEquals("libertybans.warn.undo.notify", message.notificationPermission());
 	}
 
 	@Test
 	public void notificationPermissionDoSilent(@Mock CmdSender sender) {
-		var message = new NotificationMessage(sender, PunishmentType.WARN, NotificationMessage.Mode.DO);
+		var message = new NotificationMessage(sender, PunishmentType.WARN, Mode.DO);
 
-		when(sender.hasPermission("libertybans.warn.silent")).thenReturn(true);
+		when(sender.hasPermission("libertybans.warn.do.silent")).thenReturn(true);
 		message.evaluate(command);
 		assumeTrue(message.isSilent());
 
-		assertEquals("libertybans.warn.notifysilent", message.notificationPermission());
+		assertEquals("libertybans.warn.do.notifysilent", message.notificationPermission());
 	}
 
 	@Test
 	public void notificationPermissionUndoSilent(@Mock CmdSender sender) {
-		var message = new NotificationMessage(sender, PunishmentType.WARN, NotificationMessage.Mode.UNDO);
+		var message = new NotificationMessage(sender, PunishmentType.WARN, Mode.UNDO);
 
-		when(sender.hasPermission("libertybans.warn.silentundo")).thenReturn(true);
+		when(sender.hasPermission("libertybans.warn.undo.silent")).thenReturn(true);
 		message.evaluate(command);
 		assumeTrue(message.isSilent());
 
-		assertEquals("libertybans.warn.unnotifysilent", message.notificationPermission());
+		assertEquals("libertybans.warn.undo.notifysilent", message.notificationPermission());
 	}
 
 }

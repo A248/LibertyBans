@@ -34,6 +34,7 @@ import space.arim.libertybans.core.service.Time;
 import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @Singleton
@@ -111,9 +112,17 @@ public final class StandardTabCompletion implements TabCompletion {
 		MainConfig config = configs.getMainConfig();
 		var durationsConfig = config.commands().tabCompletion().punishmentDurations();
 		if (durationsConfig.enable()) {
+
+			// Only supply durations for which the sender has permission
+			Predicate<DurationPermission> permissionFilter;
+			if (config.durationPermissions().enable()) {
+				permissionFilter = (durPerm) -> durPerm.hasPermission(sender, type);
+			} else {
+				permissionFilter = (durPerm) -> true;
+			}
 			return durationsConfig.durationsToSupply()
 					.stream()
-					.filter((durPerm) -> durPerm.hasPermission(config, sender, type))
+					.filter(permissionFilter)
 					.map(DurationPermission::value);
 		}
 		return Stream.empty();

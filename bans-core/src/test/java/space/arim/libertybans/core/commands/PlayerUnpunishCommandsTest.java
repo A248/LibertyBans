@@ -37,6 +37,7 @@ import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.MessagesConfig;
+import space.arim.libertybans.core.config.PunishmentPermissionSection;
 import space.arim.libertybans.core.config.RemovalsSection;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.EnvEnforcer;
@@ -119,14 +120,16 @@ public class PlayerUnpunishCommandsTest {
 		Victim victim = AddressVictim.of(NetworkAddress.of(InetAddress.getByName(address)));
 
 		lenient().when(sender.getOperator()).thenReturn(ConsoleOperator.INSTANCE);
-		// User has permission for bans, but not IP bans
-		lenient().when(sender.hasPermission("libertybans.ban.undo")).thenReturn(true);
+		// User has permission for UUID bans, but not IP bans
+		lenient().when(sender.hasPermission("libertybans.ban.do.target.uuid")).thenReturn(true);
 		when(argParser.parseVictimByName(sender, address)).thenReturn(futuresFactory.completedFuture(victim));
 		when(configs.getMessagesConfig()).thenReturn(messagesConfig);
 		Component noPermission = Component.text("No permission");
 		{
 			RemovalsSection.PunishmentRemoval punishmentRemoval = mock(RemovalsSection.PunishmentRemoval.class);
-			when(punishmentRemoval.permissionIpAddress()).thenReturn(noPermission);
+			PunishmentPermissionSection permissionSection = mock(PunishmentPermissionSection.class);
+			when(punishmentRemoval.permission()).thenReturn(permissionSection);
+			when(permissionSection.ipAddress()).thenReturn(noPermission);
 			lenient().when(punishmentRemoval.notFound()).thenReturn(ComponentText.create(Component.text("Not found")));
 			RemovalsSection removalsSection = mock(RemovalsSection.class);
 			when(removalsSection.forType(PunishmentType.BAN)).thenReturn(punishmentRemoval);

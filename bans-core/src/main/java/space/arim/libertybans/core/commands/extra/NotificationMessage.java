@@ -27,27 +27,19 @@ import java.util.Objects;
 
 public final class NotificationMessage {
 
-	private final CmdSender sender;
-	private final PunishmentType type;
-	private final boolean undo;
+	private final PunishmentPermissionCheck permissionCheck;
 	private boolean silent;
 
+	public NotificationMessage(PunishmentPermissionCheck permissionCheck) {
+		this.permissionCheck = Objects.requireNonNull(permissionCheck, "permissionCheck");
+	}
+
 	public NotificationMessage(CmdSender sender, PunishmentType type, Mode mode) {
-		this.sender = Objects.requireNonNull(sender, "sender");
-		this.type = Objects.requireNonNull(type, "type");
-		this.undo = mode.equals(Mode.UNDO);
+		this(new PunishmentPermissionCheck(sender, type, mode));
 	}
 
 	public void evaluate(CommandPackage command) {
-		StringBuilder silentPermission = new StringBuilder();
-
-		silentPermission.append("libertybans.");
-		silentPermission.append(type);
-		silentPermission.append(".silent");
-		if (undo) silentPermission.append("undo");
-
-		silent = sender.hasPermission(silentPermission.toString())
-				&& command.findHiddenArgument("s");
+		silent = permissionCheck.canUseSilence() && command.findHiddenArgument("s");
 	}
 
 	public boolean isSilent() {
@@ -55,20 +47,7 @@ public final class NotificationMessage {
 	}
 
 	public String notificationPermission() {
-		StringBuilder notifyPermission = new StringBuilder();
-
-		notifyPermission.append("libertybans.");
-		notifyPermission.append(type);
-		notifyPermission.append('.');
-		if (undo) notifyPermission.append("un");
-		notifyPermission.append("notify");
-		if (silent) notifyPermission.append("silent");
-
-		return notifyPermission.toString();
+		return permissionCheck.notifyPermission(silent);
 	}
 
-	public enum Mode {
-		DO,
-		UNDO
-	}
 }

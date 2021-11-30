@@ -33,13 +33,12 @@ import space.arim.dazzleconf.annote.SubSection;
 public interface RemovalsSection {
 
 	interface PunishmentRemoval {
-		
+
 		Component usage();
-		
-		Component permissionCommand();
-		
-		Component permissionIpAddress();
-		
+
+		@SubSection
+		PunishmentPermissionSection permission();
+
 		ComponentText notFound();
 		
 		ComponentText successMessage();
@@ -53,17 +52,7 @@ public interface RemovalsSection {
 		@Override
 		@DefaultString("&cUsage: /unban &e<player>&c.")
 		Component usage();
-		
-		@Override
-		@ConfKey("permission.command")
-		@DefaultString("&cYou may not unban other players.")
-		Component permissionCommand();
-		
-		@Override
-		@ConfKey("permission.ip-address")
-		@DefaultString("&cYou may not unban IP addresses.")
-		Component permissionIpAddress();
-		
+
 		@Override
 		@ConfKey("not-found")
 		@DefaultString("&c&o%TARGET%&r&7 is not banned.")
@@ -86,17 +75,7 @@ public interface RemovalsSection {
 		@Override
 		@DefaultString("&cUsage: /unmute &e<player>&c.")
 		Component usage();
-		
-		@Override
-		@ConfKey("permission.command")
-		@DefaultString("&cYou may not unmute other players.")
-		Component permissionCommand();
-		
-		@Override
-		@ConfKey("permission.ip-address")
-		@DefaultString("&cYou may not unmute IP addresses.")
-		Component permissionIpAddress();
-		
+
 		@Override
 		@ConfKey("not-found")
 		@DefaultString("&c&o%TARGET%&r&7 is not muted.")
@@ -119,17 +98,7 @@ public interface RemovalsSection {
 		@Override
 		@DefaultString("&cUsage: /unwarn &e<player> <id>&c.")
 		Component usage();
-		
-		@Override
-		@ConfKey("permission.command")
-		@DefaultString("&cYou may not unwarn other players.")
-		Component permissionCommand();
-		
-		@Override
-		@ConfKey("permission.ip-address")
-		@DefaultString("&cYou may not unwarn IP addresses.")
-		Component permissionIpAddress();
-		
+
 		@Override
 		@ConfKey("not-found")
 		@DefaultString("&c&o%TARGET%&r&7 does not have a warn by &c&o%ID%&r&7.")

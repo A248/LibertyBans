@@ -20,7 +20,6 @@ package space.arim.libertybans.core.commands;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
-import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.DraftPunishment;
@@ -28,7 +27,9 @@ import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.core.commands.extra.DurationParser;
 import space.arim.libertybans.core.commands.extra.DurationPermissionCheck;
+import space.arim.libertybans.core.commands.extra.Mode;
 import space.arim.libertybans.core.commands.extra.NotificationMessage;
+import space.arim.libertybans.core.commands.extra.PunishmentPermissionCheck;
 import space.arim.libertybans.core.commands.extra.ReasonsConfig;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.AdditionsSection;
@@ -65,7 +66,12 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 
 	@Override
 	public final CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
-		return new Execution(sender, command, parseType(arg.toUpperCase(Locale.ROOT)));
+		PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
+		PunishmentPermissionCheck permissionCheck;
+		return new Execution(
+				sender, command, type,
+				(permissionCheck = new PunishmentPermissionCheck(sender, type, Mode.DO)),
+				new NotificationMessage(permissionCheck));
 	}
 
 	@Override
@@ -86,21 +92,20 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 	
 	private class Execution extends TypeSpecificExecution {
 
-		private final AdditionsSection.PunishmentAddition section;
+		private final PunishmentPermissionCheck permissionCheck;
 		private final NotificationMessage notificationMessage;
-		
-		Execution(CmdSender sender, CommandPackage command, PunishmentType type) {
+		private final AdditionsSection.PunishmentAddition section;
+
+		Execution(CmdSender sender, CommandPackage command, PunishmentType type,
+				  PunishmentPermissionCheck permissionCheck, NotificationMessage notificationMessage) {
 			super(sender, command, type);
+			this.permissionCheck = permissionCheck;
+			this.notificationMessage = notificationMessage;
 			section = messages().additions().forType(type);
-			notificationMessage = new NotificationMessage(sender, type, NotificationMessage.Mode.DO);
 		}
 
 		@Override
 		public void execute() {
-			if (!sender().hasPermission("libertybans." + type() + ".command")) {
-				sender().sendMessage(section.permissionCommand()); 
-				return;
-			}
 			if (!command().hasNext()) {
 				sender().sendMessage(section.usage());
 				return;
@@ -114,9 +119,7 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 				if (victim == null) {
 					return completedFuture(null);
 				}
-				if (victim instanceof AddressVictim
-						&& !sender().hasPermission("libertybans." + type() + ".ip")) {
-					sender().sendMessage(section.permissionIpAddress());
+				if (!permissionCheck.checkPermission(victim, section.permission())) {
 					return completedFuture(null);
 				}
 				return performEnact(victim, targetArg);

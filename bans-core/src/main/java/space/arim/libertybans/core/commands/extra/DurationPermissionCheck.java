@@ -58,7 +58,7 @@ public class DurationPermissionCheck {
 	private Duration getGreatestPermittedDuration(PunishmentType type) {
 		Duration greatestPermission = Duration.ofNanos(-1L);
 		for (DurationPermission durationPermission : config.durationPermissions().permissionsToCheck()) {
-			if (!durationPermission.hasPermissionExcludingFeatureCheck(sender, type)) {
+			if (!durationPermission.hasPermission(sender, type)) {
 				continue;
 			}
 			Duration durationValue = durationPermission.duration();

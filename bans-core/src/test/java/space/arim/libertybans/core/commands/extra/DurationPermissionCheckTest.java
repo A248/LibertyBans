@@ -67,23 +67,6 @@ public class DurationPermissionCheckTest {
 	}
 
 	@Test
-	public void isDurationPermittedLegacyPermissions() {
-		assertFalse(isBanPermitted(Duration.ofHours(3L)), "User has no permissions");
-
-		when(sender.hasPermission("libertybans.dur.ban.1m")).thenReturn(true);
-		assertFalse(isBanPermitted(Duration.ofHours(3L)), "User does not have sufficient permission");
-		assertFalse(isBanPermitted(Duration.ZERO), "User cannot ban permanently");
-
-		when(sender.hasPermission("libertybans.dur.ban.4h")).thenReturn(true);
-		assertTrue(isBanPermitted(Duration.ofHours(3L)), "User has permission for 4h which is greater than 3h");
-		assertFalse(isBanPermitted(Duration.ofDays(1L)), "User does not have sufficient permission for 1 day");
-
-		when(sender.hasPermission("libertybans.dur.ban.perm")).thenReturn(true);
-		assertTrue(isBanPermitted(Duration.ofDays(30L)), "User can ban permanently so 30 days is acceptable");
-		assertTrue(isBanPermitted(Duration.ZERO), "User can ban permanently");
-	}
-
-	@Test
 	public void isDurationPermitted() {
 		assertFalse(isBanPermitted(Duration.ofHours(3L)), "User has no permissions");
 

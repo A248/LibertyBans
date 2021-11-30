@@ -20,13 +20,14 @@ package space.arim.libertybans.core.commands;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
-import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.revoke.PunishmentRevoker;
 import space.arim.libertybans.api.revoke.RevocationOrder;
+import space.arim.libertybans.core.commands.extra.Mode;
 import space.arim.libertybans.core.commands.extra.NotificationMessage;
+import space.arim.libertybans.core.commands.extra.PunishmentPermissionCheck;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.RemovalsSection.PunishmentRemoval;
@@ -62,7 +63,12 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 
 	@Override
 	public final CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
-		return new Execution(sender, command, parseType(arg.toUpperCase(Locale.ROOT)));
+		PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
+		PunishmentPermissionCheck permissionCheck;
+		return new Execution(
+				sender, command, type,
+				(permissionCheck = new PunishmentPermissionCheck(sender, type, Mode.UNDO)),
+				new NotificationMessage(permissionCheck));
 	}
 	
 	@Override
@@ -81,22 +87,21 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 	}
 	
 	private class Execution extends TypeSpecificExecution {
-		
-		private final PunishmentRemoval section;
-		private final NotificationMessage notificationMessage;
 
-		Execution(CmdSender sender, CommandPackage command, PunishmentType type) {
+		private final PunishmentPermissionCheck permissionCheck;
+		private final NotificationMessage notificationMessage;
+		private final PunishmentRemoval section;
+
+		Execution(CmdSender sender, CommandPackage command, PunishmentType type,
+				  PunishmentPermissionCheck permissionCheck, NotificationMessage notificationMessage) {
 			super(sender, command, type);
+			this.permissionCheck = permissionCheck;
+			this.notificationMessage = notificationMessage;
 			section = messages().removals().forType(type);
-			notificationMessage = new NotificationMessage(sender, type, NotificationMessage.Mode.UNDO);
 		}
 
 		@Override
 		public void execute() {
-			if (!sender().hasPermission("libertybans." + type() + ".undo")) {
-				sender().sendMessage(section.permissionCommand());
-				return;
-			}
 			if (!command().hasNext()) {
 				sender().sendMessage(section.usage());
 				return;
@@ -110,9 +115,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 				if (victim == null) {
 					return completedFuture(null);
 				}
-				if (victim instanceof AddressVictim
-						&& !sender().hasPermission("libertybans." + type() + ".undoip")) {
-					sender().sendMessage(section.permissionIpAddress());
+				if (!permissionCheck.checkPermission(victim, section.permission())) {
 					return completedFuture(null);
 				}
 				return performUndo(victim, targetArg);

@@ -39,13 +39,12 @@ import space.arim.dazzleconf.annote.SubSection;
 public interface AdditionsSection {
 
 	interface PunishmentAddition {
-		
+
 		Component usage();
-		
-		Component permissionCommand();
-		
-		Component permissionIpAddress();
-		
+
+		@SubSection
+		PunishmentPermissionSection permission();
+
 		ComponentText successMessage();
 		
 		ComponentText successNotification();
@@ -71,17 +70,7 @@ public interface AdditionsSection {
 		@Override
 		@DefaultString("&cUsage: /ban &e<player> [time] <reason>&c.")
 		Component usage();
-		
-		@Override
-		@ConfKey("permission.command")
-		@DefaultString("&cYou may not ban other players.")
-		Component permissionCommand();
-		
-		@Override
-		@ConfKey("permission.ip-address")
-		@DefaultString("&cYou may not ban by IP address.")
-		Component permissionIpAddress();
-		
+
 		@Override
 		@ConfKey("permission.duration")
 		@DefaultString("&cYou may not ban other players for &e%DURATION%&c.")
@@ -121,17 +110,7 @@ public interface AdditionsSection {
 		@Override
 		@DefaultString("&cUsage: /mute &e<player> [time] <reason>&c.")
 		Component usage();
-		
-		@Override
-		@ConfKey("permission.command")
-		@DefaultString("&cYou may not mute other players.")
-		Component permissionCommand();
-		
-		@Override
-		@ConfKey("permission.ip-address")
-		@DefaultString("&cYou may not mute by IP address.")
-		Component permissionIpAddress();
-		
+
 		@Override
 		@ConfKey("permission.duration")
 		@DefaultString("&cYou may not mute other players for &e%DURATION%&c.")
@@ -167,17 +146,7 @@ public interface AdditionsSection {
 		@Override
 		@DefaultString("&cUsage: /warn &e<player> [time] <reason>&c.")
 		Component usage();
-		
-		@Override
-		@ConfKey("permission.command")
-		@DefaultString("&cYou may not warn other players.")
-		Component permissionCommand();
-		
-		@Override
-		@ConfKey("permission.ip-address")
-		@DefaultString("&cYou may not warn by IP address.")
-		Component permissionIpAddress();
-		
+
 		@Override
 		@ConfKey("permission.duration")
 		@DefaultString("&cYou may not warn other players for &e%DURATION%&c.")
@@ -209,17 +178,7 @@ public interface AdditionsSection {
 		@Override
 		@DefaultString("&cUsage: /kick &e<player> <reason>&c.")
 		Component usage();
-		
-		@Override
-		@ConfKey("permission.command")
-		@DefaultString("&cYou may not kick other players.")
-		Component permissionCommand();
-		
-		@Override
-		@ConfKey("permission.ip-address")
-		@DefaultString("&cYou may not kick by IP address.")
-		Component permissionIpAddress();
-		
+
 		@Override
 		@ConfKey("success.message")
 		@DefaultString("&aKicked &c&o%VICTIM%&r&a because of &e&o%REASON%&r&a.")
