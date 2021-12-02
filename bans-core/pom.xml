@@ -110,6 +110,11 @@
 											<time>60000</time>
 											<log>Server socket created on IP: '::'</log>
 										</wait>
+										<volumes>
+											<bind>
+												<volume>libertybans-build</volume>
+											</bind>
+										</volumes>
 									</run>
 								</image>
 								<image>
@@ -126,15 +131,30 @@
 											<time>60000</time>
 											<log>Server socket created on IP: '::'</log>
 										</wait>
+										<volumes>
+											<bind>
+												<volume>libertybans-build</volume>
+											</bind>
+										</volumes>
 									</run>
 								</image>
 							</images>
+							<volumes>
+								<volume>
+									<name>libertybans-build</name>
+									<opts>
+										<type>tmpfs</type>
+										<device>tmpfs</device>
+									</opts>
+								</volume>
+							</volumes>
 						</configuration>
 						<executions>
 							<execution>
 								<id>start-database-instances</id>
 								<phase>pre-integration-test</phase>
 								<goals>
+									<goal>volume-create</goal>
 									<goal>start</goal>
 								</goals>
 							</execution>
@@ -143,6 +163,7 @@
 								<phase>post-integration-test</phase>
 								<goals>
 									<goal>stop</goal>
+									<goal>volume-remove</goal>
 								</goals>
 							</execution>
 						</executions>
