@@ -24,8 +24,7 @@ import javax.inject.Inject;
 
 import org.slf4j.Logger;
 
-import space.arim.libertybans.bootstrap.logger.JavaVersionDetection;
-import space.arim.libertybans.bootstrap.logger.Slf4jBootstrapLogger;
+import space.arim.libertybans.bootstrap.BaseFoundation;
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 
 import com.velocitypowered.api.event.Subscribe;
@@ -42,9 +41,9 @@ public class VelocityPlugin {
 	final ProxyServer server;
 	final Path folder;
 	final Logger logger;
-	
-	private BaseWrapper wrapper;
-	
+
+	private BaseFoundation base;
+
 	@Inject
 	public VelocityPlugin(ProxyServer server, @DataDirectory Path folder, Logger logger) {
 		this.server = server;
@@ -54,24 +53,21 @@ public class VelocityPlugin {
 
 	@Subscribe
 	public synchronized void onProxyInitialize(ProxyInitializeEvent evt) {
-		if (!new JavaVersionDetection(new Slf4jBootstrapLogger(logger)).detectVersion()) {
-			return;
-		}
-		if (wrapper != null) {
+		if (base != null) {
 			throw new IllegalStateException("Proxy initialised twice?");
 		}
-		wrapper = new BaseWrapper.Creator(this).create();
+		base = new VelocityInitializer(this).initialize();
 	}
 
 	@Subscribe
 	public synchronized void onProxyShutdown(ProxyShutdownEvent evt) {
-		BaseWrapper wrapper = this.wrapper;
-		this.wrapper = null;
-		if (wrapper == null) {
+		BaseFoundation base = this.base;
+		this.base = null;
+		if (base == null) {
 			logger.warn("LibertyBans wasn't launched; check your log for a startup error");
 			return;
 		}
-		wrapper.close();
+		base.shutdown();
 	}
-	
+
 }

@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-public class BaseWrapperTest {
+public class VelocityInitializerTest {
 
 	@TempDir
 	public Path dataFolder;
@@ -40,7 +40,7 @@ public class BaseWrapperTest {
 	public void detectPlatform() {
 		VelocityPlugin plugin = new VelocityPlugin(
 				mock(ProxyServer.class), dataFolder, LoggerFactory.getLogger(getClass()));
-		Platform platform = new BaseWrapper.Creator(plugin).detectPlatform();
+		Platform platform = new VelocityInitializer(plugin).detectPlatform();
 		assertTrue(platform.hasSlf4jSupport());
 		assertTrue(platform.hasKyoriAdventureSupport());
 		assertFalse(platform.isCaffeineProvided());
