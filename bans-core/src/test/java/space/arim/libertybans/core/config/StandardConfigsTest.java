@@ -66,6 +66,6 @@ public class StandardConfigsTest {
 		Path langFile = langFolder.resolve("messages_" + translation.name().toLowerCase(Locale.ROOT) + ".yml");
 		assertTrue(Files.exists(langFile));
 		var configHolder = new ConfigHolder<>(MessagesConfig.class);
-		assertDoesNotThrow(() -> configHolder.reload(langFile));
+		assertDoesNotThrow(() -> configHolder.reload(langFile).join());
 	}
 }
