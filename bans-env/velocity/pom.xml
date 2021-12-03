@@ -28,6 +28,19 @@
 	
 	<dependencies>
 		<dependency>
+			<groupId>com.velocitypowered</groupId>
+			<artifactId>velocity-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.api</groupId>
+			<artifactId>arimapi-env-velocity</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
 		</dependency>
@@ -43,19 +56,6 @@
 			<groupId>net.kyori</groupId>
 			<artifactId>adventure-text-serializer-plain</artifactId>
 			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.velocitypowered</groupId>
-			<artifactId>velocity-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>space.arim.api</groupId>
-			<artifactId>arimapi-env-velocity</artifactId>
 		</dependency>
 	</dependencies>
 	

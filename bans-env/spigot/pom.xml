@@ -43,6 +43,23 @@
 	
 	<dependencies>
 		<dependency>
+			<groupId>org.spigotmc</groupId>
+			<artifactId>spigot-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.api</groupId>
+			<artifactId>arimapi-env-bukkit</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.morepaperlib</groupId>
+			<artifactId>morepaperlib</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
 		</dependency>
@@ -53,23 +70,6 @@
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-junit-jupiter</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.spigotmc</groupId>
-			<artifactId>spigot-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>space.arim.api</groupId>
-			<artifactId>arimapi-env-bukkit</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>space.arim.morepaperlib</groupId>
-			<artifactId>morepaperlib</artifactId>
 		</dependency>
 	</dependencies>
 	
