@@ -144,6 +144,7 @@
 									<name>libertybans-build</name>
 									<opts>
 										<type>tmpfs</type>
+										<device>tmpfs</device>
 									</opts>									
 								</volume>
 							</volumes>
