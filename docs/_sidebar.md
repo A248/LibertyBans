@@ -1,10 +1,10 @@
-
 * Configuration
   * [Getting Started](Getting-Started)
   * [Configuration](Configuration)
   * [Permissions](Permissions)
   * [JSON Messages](JSON-Messages)
- trict-ent-Enforcement_-Lenient,-Normal,-and-Strict-ent-Enforcement_-Lenient,-Normal,-and-Strict-ent-Enforcement_-Lenient,-Normal,-and-Strict-settings)
+  * [Hex Colors](Color-Codes)
+  * [Lenient, Normal, and Strict punishment enforcement](Punishment-Enforcement_-Lenient,-Normal,-and-Strict-settings)
   * [Silent Punishments](Silent-Punishments)
 * Advanced Topics / For Developers
   * [Versioning and Support Policy](Versioning-and-Support-Policies)
@@ -17,3 +17,4 @@
   * [Comparison to AdvancedBan](Detailed-Comparison-to-AdvancedBan)
   * [Comparison to LiteBans](Comparison-to-LiteBans)
   * [Quick Plugin Comparison](Quick-Plugin-Comparison)
+  
