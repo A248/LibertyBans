@@ -13,6 +13,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/regular.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css">
+  <link
+  rel="stylesheet"
+  href="//cdn.jsdelivr.net/npm/docsify-print@latest/dist/style.css"
+/>
   <!-- Theme -->
   <link 
     rel="stylesheet"
@@ -30,6 +34,7 @@
       coverpage: false,
 	    loadSidebar: true,
 	    loadNavbar: true,
+	    auto2top: true,
 	    repo: 'https://github.com/A248/LibertyBans',
       name: 'LibertyBans',
       search: {
@@ -51,6 +56,11 @@
       repo: 'A248/LibertyBans',
       // repo: 'https://github.com/cyrilf/docsify-edit-link/edit/master/docs/',
       cssClass: 'docsify-edit-link m-0'
+      },
+      print: {
+        // Quite annoying as it appears in every documents. Just credit them here.
+        // Icon was made by [Freepik](https://www.flaticon.com/authors/freepik).
+        creditIconAuthor: false,
       },
       plugins: [
         function(hook) {
@@ -100,5 +110,8 @@
   <script src="//unpkg.com/docsify-scroll-to-top/dist/docsify-scroll-to-top.min.js"></script>
   <!-- https://github.com/HerbertHe/docsify-progress -->
   <script src="https://cdn.jsdelivr.net/npm/docsify-progress@latest/dist/progress.min.js"></script>
+  <!-- https://github.com/Plugin-contrib/docsify-plugin -->
+  <script src="https://printjs-4de6.kxcdn.com/print.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-print@latest/dist/index.js"></script>
 </body>
 </html>
