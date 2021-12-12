@@ -64,6 +64,12 @@
             return html + footer;
           });
         },
+        function (hook, vm) {
+          // parse twemoji
+          hook.doneEach(function() {
+          twemoji.parse(document);
+          });
+        },
       ],
     }
   </script>
@@ -73,7 +79,8 @@
     src="//cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/index.min.js"
     type="text/javascript">
   </script>
-  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/emoji.min.js"></script>
+  <!-- twemoji -->
+  <script src="cdn.jsdelivr.net/gh/TaQini/docsify-twemoji@master/twemoji.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
   <!-- https://github.com/imyelo/docsify-pagination -->
   <script src="//unpkg.com/docsify-pagination/dist/docsify-pagination.min.js"></script>

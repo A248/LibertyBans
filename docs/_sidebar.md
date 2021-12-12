@@ -4,8 +4,7 @@
   * [Configuration](Configuration)
   * [Permissions](Permissions)
   * [JSON Messages](JSON-Messages)
-  * [Hex Colors](Hex-Colors)
-  * [Lenient, Normal, and Strict punishment enforcement](Punishment-Enforcement:-Lenient,-Normal,-and-Strict-settings)
+ trict-ent-Enforcement_-Lenient,-Normal,-and-Strict-ent-Enforcement_-Lenient,-Normal,-and-Strict-ent-Enforcement_-Lenient,-Normal,-and-Strict-settings)
   * [Silent Punishments](Silent-Punishments)
 * Advanced Topics / For Developers
   * [Versioning and Support Policy](Versioning-and-Support-Policies)

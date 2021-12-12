@@ -28,8 +28,8 @@ Take a look at this:
 ```
 Results in:
 
-![Result_image1](https://forums.skunity.com/proxy.php?image=http%3A%2F%2Fi.imgur.com%2FxlnlX02.png&hash=6ddea201bd1e8d0d7777251e170db8e5)
-![Result_image2](https://forums.skunity.com/proxy.php?image=http%3A%2F%2Fi.imgur.com%2FSAgQUJu.png&hash=139e3eb609502c721866df80d612efb8)
+![Result_image1](https://i.imgur.com/xlnlX02.png)
+![Result_image2](https://i.imgur.com/FSAgQUJu.png)
 
 Note that JSON messages are only for chat. Putting them in kick messages, for example, will have no effect.
 

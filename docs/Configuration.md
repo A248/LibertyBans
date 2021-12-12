@@ -12,7 +12,7 @@ You can reload most of the configuration with:
 /libertybans reload
 ```
 
-You must have the necessary [permissions](https://github.com/A248/LibertyBansBans/wiki/Permissions) to do this.
+You must have the necessary [permissions](Permissions) to do this.
 
 ### Restarting the plugin
 

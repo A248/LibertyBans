@@ -8,7 +8,7 @@ You can use multiple color codes and formatting.
 
 ## All Codes
 
-![Color Codes Image](https://www.startpage.com/av/proxy-image?piurl=https%3A%2F%2Fencrypted-tbn0.gstatic.com%2Fimages%3Fq%3Dtbn%3AANd9GcSeOSXrwgGXl7qIXYVz3XzlENvCNtvEmu8yYqPLy2ksRQIku5s%26s&sp=1622297000Tb774572375086a48abea7bc1f9a4e067980d6dad0d1601956bdd8e016788ddd3)
+![Color Codes Image](https://www.spigotmc.org/attachments/example2-png.188806/)
 
 The &k color code is called *obfuscated* (a.k.a *magic*). It scrambles the text which it formats.
 

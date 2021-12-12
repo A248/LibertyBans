@@ -8,7 +8,7 @@ To start with, you should be on LibertyBans 0.8.2 before you upgrade to 1.0.0.
 
 ## Changes to permissions
 
-Permissions for enacting punishments (banning, muting, warning, kicking) and undoing punishments (unbanning, unmuting, un-warning) follow a more logical pattern, as described on the wiki page: https://github.com/A248/LibertyBans/wiki/Permissions
+Permissions for enacting punishments (banning, muting, warning, kicking) and undoing punishments (unbanning, unmuting, un-warning) follow a more logical pattern, as described on the wiki page: [Permissions](Permissions)
 
 The difference in permissions between 0.8.x and 1.0.0 is more than a simple rename.
   * In 0.8.x, creating an IP-ban requires the permission to IP-ban as well as the permission to ban normally. In 1.0.0, creating an IP-ban only requires the permission to IP-ban.

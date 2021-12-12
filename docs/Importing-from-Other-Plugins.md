@@ -21,9 +21,9 @@ Importing is not a 1-to-1 process, because storage methods vary across plugins.
 
 | Import source  | UUID Support - Victims | UUID Support - Operators |
 | -------------- | ---------------------- | ------------------------ |
-| LiteBans       | <img src="http://clipart-library.com/images_k/green-check-mark-transparent/green-check-mark-transparent-25.png" alt="Yes" width="30" height="30"> | <img src="http://clipart-library.com/images_k/green-check-mark-transparent/green-check-mark-transparent-25.png" alt="Yes" width="30" height="30"> |
-| AdvancedBan    | <img src="http://clipart-library.com/images_k/green-check-mark-transparent/green-check-mark-transparent-25.png" alt="Yes" width="30" height="30"> | <img src="http://clipart-library.com/images_k/red-x-mark-transparent-background/red-x-mark-transparent-background-1.png" alt="No" width="30" height="30"> |
-| Vanilla        | <img src="http://clipart-library.com/images_k/red-x-mark-transparent-background/red-x-mark-transparent-background-1.png" alt="No" width="30" height="30"> | <img src="http://clipart-library.com/images_k/red-x-mark-transparent-background/red-x-mark-transparent-background-1.png" alt="No" width="30" height="30"> |
+| LiteBans       | ✔️ | ✔️ |
+| AdvancedBan    | ✔️ | ❌ |
+| Vanilla        | ❌ | ❌ |
 
 
 

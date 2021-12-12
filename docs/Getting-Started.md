@@ -36,7 +36,7 @@ Examples:
 It is possible to ban players using their name or IP address.
 
 * If you specify a name, LibertyBans bans by UUID, so name changes do not allow players to become unbanned.
-* If you specify an IP address, LibertyBans bans by IP address, which bans all players using that IP address (See also [Punishment Enforcement](Punishment-Enforcement:-Lenient,-Normal,-and-Strict-settings)).
+* If you specify an IP address, LibertyBans bans by IP address, which bans all players using that IP address (See also [Punishment Enforcement](Punishment-Enforcement_-Lenient,-Normal,-and-Strict-settings)).
 
 Banning examples:
 
