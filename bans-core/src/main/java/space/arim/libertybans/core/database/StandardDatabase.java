@@ -1,45 +1,32 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.database;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.Duration;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Supplier;
-
+import com.zaxxer.hikari.HikariDataSource;
+import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.zaxxer.hikari.HikariDataSource;
-
-import space.arim.libertybans.core.service.Time;
-import space.arim.omnibus.util.ThisClass;
-import space.arim.omnibus.util.UUIDUtil;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-import space.arim.omnibus.util.concurrent.DelayCalculators;
-import space.arim.omnibus.util.concurrent.EnhancedExecutor;
-import space.arim.omnibus.util.concurrent.ScheduledTask;
-
+import space.arim.jdbcaesar.JdbCaesar;
+import space.arim.jdbcaesar.JdbCaesarBuilder;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerVictim;
@@ -49,94 +36,79 @@ import space.arim.libertybans.api.Victim.VictimType;
 import space.arim.libertybans.api.database.PunishmentDatabase;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
+import space.arim.libertybans.core.database.execute.QueryExecutor;
+import space.arim.libertybans.core.database.execute.SQLFunction;
+import space.arim.libertybans.core.database.execute.SQLRunnable;
+import space.arim.libertybans.core.database.execute.SQLTransactionalFunction;
+import space.arim.libertybans.core.database.execute.SQLTransactionalRunnable;
+import space.arim.libertybans.core.database.sql.TableForType;
 import space.arim.libertybans.core.punish.MiscUtil;
-import space.arim.libertybans.core.service.SimpleThreadFactory;
+import space.arim.libertybans.core.service.Time;
+import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.UUIDUtil;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.DelayCalculators;
+import space.arim.omnibus.util.concurrent.EnhancedExecutor;
+import space.arim.omnibus.util.concurrent.ScheduledTask;
 
-import space.arim.jdbcaesar.JdbCaesar;
-import space.arim.jdbcaesar.JdbCaesarBuilder;
-import space.arim.jdbcaesar.QuerySource;
-import space.arim.jdbcaesar.adapter.EnumNameAdapter;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
+
+import static space.arim.libertybans.core.schema.Tables.*;
 
 public final class StandardDatabase implements InternalDatabase {
 
 	private final DatabaseManager manager;
 	private final Vendor vendor;
 	private final HikariDataSource dataSource;
-	private final JdbCaesar jdbCaesar;
-	private final ExecutorService executor;
-	private final boolean refresherEvent;
+	private final QueryExecutor queryExecutor;
+	private final ExecutorService threadPool;
 	private final PunishmentDatabase external = new External();
-	
-	private ScheduledTask hyperSqlRefreshTask;
-	
+
+	private ScheduledTask sqlRefreshTask;
+
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-	
-	private static final int MAJOR_REVISION = Integer.parseInt(PluginInfo.DATABASE_REVISION_MAJOR);
-	private static final int MINOR_REVISION = Integer.parseInt(PluginInfo.DATABASE_REVISION_MINOR);
-	
-	private StandardDatabase(DatabaseManager manager, Vendor vendor, HikariDataSource dataSource, JdbCaesar jdbCaesar,
-			ExecutorService executor, boolean refresherEvent) {
+
+	StandardDatabase(DatabaseManager manager, Vendor vendor,
+					 HikariDataSource dataSource, QueryExecutor queryExecutor, ExecutorService threadPool) {
 		this.manager = manager;
 		this.vendor = vendor;
 		this.dataSource = dataSource;
-		this.jdbCaesar = jdbCaesar;
-		this.executor = executor;
-		this.refresherEvent = refresherEvent;
+		this.queryExecutor = queryExecutor;
+		this.threadPool = threadPool;
 	}
-	
-	static StandardDatabase create(DatabaseManager manager, Vendor vendor, HikariDataSource hikariDataSource, int poolSize,
-			boolean refresherEvent) {
 
-		JdbCaesar jdbCaesar = new JdbCaesarBuilder()
-				.dataSource(hikariDataSource)
-				.exceptionHandler((ex) -> {
-					logger.error("Error while executing a database query", ex);
-				})
-				.defaultFetchSize(DatabaseDefaults.FETCH_SIZE)
-				.defaultIsolation(DatabaseDefaults.ISOLATION)
-				.addAdapters(
-						new EnumNameAdapter<>(PunishmentType.class),
-						new JdbCaesarHelper.VictimAdapter(),
-						new EnumNameAdapter<>(Victim.VictimType.class),
-						new JdbCaesarHelper.OperatorAdapter(),
-						new JdbCaesarHelper.ScopeAdapter(manager.scopeManager()),
-						new JdbCaesarHelper.UUIDBytesAdapter(),
-						new JdbCaesarHelper.NetworkAddressAdapter())
-				.build();
-
-		ExecutorService executor = Executors.newFixedThreadPool(poolSize, SimpleThreadFactory.create("Database"));
-		return new StandardDatabase(manager, vendor, hikariDataSource, jdbCaesar, executor, refresherEvent);
-	}
-	
 	/*
 	 * Lifecycle
 	 * 
 	 * Guarded by the global lock on BaseFoundation lifecycle events
 	 */
-	
-	void startRefreshTaskIfNecessary(Time time) {
-		if (!refresherEvent) {
-			EnhancedExecutor enhancedExecutor = manager.enhancedExecutorProvider().get();
-			hyperSqlRefreshTask = enhancedExecutor.scheduleRepeating(
-					new RefreshTaskRunnable(manager, this, time),
-					Duration.ofHours(1L), DelayCalculators.fixedDelay());
-		}
+
+	void startRefreshTask(Time time) {
+		EnhancedExecutor enhancedExecutor = manager.enhancedExecutorProvider().get();
+		sqlRefreshTask = enhancedExecutor.scheduleRepeating(
+				new RefreshTaskRunnable(manager, this, time),
+				Duration.ofHours(1L), DelayCalculators.fixedDelay());
 	}
-	
-	void cancelRefreshTaskIfNecessary() {
-		if (!refresherEvent) {
-			hyperSqlRefreshTask.cancel();
-		}
+
+	void cancelRefreshTask() {
+		sqlRefreshTask.cancel();
 	}
 	
 	void close() {
 		dataSource.close();
-		executor.shutdown();
+		threadPool.shutdown();
 	}
 	
 	void closeCompletely() {
 		if (getVendor() == Vendor.HSQLDB) {
-			jdbCaesar().query("SHUTDOWN").voidResult().execute();
+			execute((context) -> context.query("SHUTDOWN").execute()).join();
 		}
 		close();
 	}
@@ -153,19 +125,34 @@ public final class StandardDatabase implements InternalDatabase {
 	
 	@Override
 	public JdbCaesar jdbCaesar() {
+		JdbCaesar jdbCaesar = new JdbCaesarBuilder()
+				.dataSource(dataSource)
+				.exceptionHandler((ex) -> {
+					logger.error("Error while executing a database query", ex);
+				})
+				.defaultFetchSize(DatabaseDefaults.FETCH_SIZE)
+				.addAdapters(
+						new JdbCaesarHelper.EnumOrdinalAdapter<>(PunishmentType.class),
+						new JdbCaesarHelper.VictimAdapter(),
+						new JdbCaesarHelper.EnumOrdinalAdapter<>(Victim.VictimType.class),
+						new JdbCaesarHelper.OperatorAdapter(),
+						new JdbCaesarHelper.ScopeAdapter(manager.scopeManager()),
+						new JdbCaesarHelper.UUIDBytesAdapter(),
+						new JdbCaesarHelper.NetworkAddressAdapter())
+				.build();
 		return jdbCaesar;
 	}
-	
+
 	@Override
 	public CentralisedFuture<?> executeAsync(Runnable command) {
-		return manager.futuresFactory().runAsync(command, executor);
+		return manager.futuresFactory().runAsync(command, threadPool);
 	}
-	
+
 	@Override
 	public <T> CentralisedFuture<T> selectAsync(Supplier<T> supplier) {
-		return manager.futuresFactory().supplyAsync(supplier, executor);
+		return manager.futuresFactory().supplyAsync(supplier, threadPool);
 	}
-	
+
 	@Override
 	public PunishmentType getTypeFromResult(ResultSet resultSet) throws SQLException {
 		return PunishmentType.valueOf(resultSet.getString("type"));
@@ -213,32 +200,55 @@ public final class StandardDatabase implements InternalDatabase {
 	public long getEndFromResult(ResultSet resultSet) throws SQLException {
 		return resultSet.getLong("end");
 	}
-	
-	@Override
-	public void clearExpiredPunishments(QuerySource<?> querySource, PunishmentType type, long currentTime) {
-		assert type != PunishmentType.KICK;
-		String query;
-		if (getVendor().hasDeleteFromJoin()) {
-			query = "DELETE `thetype` FROM `libertybans_" + type + "s` `thetype` "
-					+ "INNER JOIN `libertybans_punishments` `puns` ON `puns`.`id` = `thetype`.`id` WHERE "
-					+ "`puns`.`end` != 0 AND `puns`.`end` < ?";
 
-		} else {
-			query = "DELETE FROM `libertybans_" + type + "s` WHERE `id` IN "
-					+ "(SELECT `id` FROM `libertybans_punishments` `puns` WHERE `puns`.`end` != 0 AND `puns`.`end` < ?)";
-		}
-		querySource.query(query).params(currentTime).voidResult().execute();
+	@Override
+	public void executeWithExistingConnection(Connection connection, SQLTransactionalRunnable command) throws SQLException {
+		queryExecutor.executeWithExistingConnection(connection, command);
+	}
+
+	@Override
+	public CentralisedFuture<?> execute(SQLRunnable command) {
+		return queryExecutor.execute(command);
+	}
+
+	@Override
+	public <R> CentralisedFuture<R> query(SQLFunction<R> command) {
+		return queryExecutor.query(command);
+	}
+
+	@Override
+	public CentralisedFuture<?> executeWithRetry(int retryCount, SQLTransactionalRunnable command) {
+		return queryExecutor.executeWithRetry(retryCount, command);
+	}
+
+	@Override
+	public <R> CentralisedFuture<R> queryWithRetry(int retryCount, SQLTransactionalFunction<R> command) {
+		return queryExecutor.queryWithRetry(retryCount, command);
+	}
+
+	@Override
+	public void clearExpiredPunishments(DSLContext context, PunishmentType type, Instant currentTime) {
+		assert type != PunishmentType.KICK;
+		var table = new TableForType(type).dataTable();
+		Field<Long> idField = table.newRecord().field1();
+		context
+				.deleteFrom(table)
+				.where(idField.in(context
+						.select(PUNISHMENTS.ID)
+						.from(PUNISHMENTS)
+						.where(PUNISHMENTS.END.notEqual(Instant.MAX))
+						.and(PUNISHMENTS.END.lessThan(currentTime))
+				)).execute();
 	}
 
 	@Override
 	public void truncateAllTables() {
-		String[] tables = new String[] { // Order is significant
-				"names", "addresses", "history", "bans", "mutes", "warns", "punishments"};
-		for (String table : tables) {
-			// TRUNCATE TABLE does not work with foreign key constraints on MySQL
-			String queryCommand = (getVendor() == Vendor.HSQLDB) ? "TRUNCATE TABLE" : "DELETE FROM";
-			jdbCaesar().query(queryCommand + " `libertybans_" + table + "`").voidResult().execute();
-		}
+		execute((context) -> {
+			var tables = new Table[] {NAMES, ADDRESSES, HISTORY, BANS, MUTES, WARNS, PUNISHMENTS, VICTIMS};
+			for (Table<?> table : tables) {
+				context.deleteFrom(table).execute();
+			}
+		}).join();
 	}
 
 	@Override
@@ -256,17 +266,17 @@ public final class StandardDatabase implements InternalDatabase {
 
 		@Override
 		public int getMajorRevision() {
-			return MAJOR_REVISION;
+			return PluginInfo.DATABASE_REVISION_MAJOR;
 		}
 
 		@Override
 		public int getMinorRevision() {
-			return MINOR_REVISION;
+			return PluginInfo.DATABASE_REVISION_MINOR;
 		}
 
 		@Override
 		public Executor getExecutor() {
-			return executor;
+			return threadPool;
 		}
 
 	}

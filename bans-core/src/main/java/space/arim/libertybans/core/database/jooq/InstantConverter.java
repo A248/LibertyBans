@@ -17,31 +17,31 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.it.util;
+package space.arim.libertybans.core.database.jooq;
 
-import org.flywaydb.core.internal.database.DatabaseTypeRegister;
-import org.junit.jupiter.api.extension.AfterEachCallback;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
-import org.junit.jupiter.api.extension.ExtensionContext;
+import org.jetbrains.annotations.NotNull;
+import org.jooq.Converter;
 
-import java.lang.reflect.Field;
+import java.time.Instant;
 
-public final class FlywayResetStaticStateExtension implements BeforeEachCallback, AfterEachCallback {
-
+public final class InstantConverter implements Converter<Long, Instant> {
 	@Override
-	public void beforeEach(ExtensionContext context) throws Exception {
-		resetState();
+	public Instant from(Long databaseObject) {
+		return Instant.ofEpochSecond(databaseObject);
 	}
 
 	@Override
-	public void afterEach(ExtensionContext extensionContext) throws Exception {
-		resetState();
+	public Long to(Instant userObject) {
+		return userObject.getEpochSecond();
 	}
 
-	private void resetState() throws Exception {
-		Field field = DatabaseTypeRegister.class.getDeclaredField("hasRegisteredDatabaseTypes");
-		field.setAccessible(true);
-		field.set(null, false);
+	@Override
+	public @NotNull Class<Long> fromType() {
+		return Long.class;
 	}
 
+	@Override
+	public @NotNull Class<Instant> toType() {
+		return Instant.class;
+	}
 }

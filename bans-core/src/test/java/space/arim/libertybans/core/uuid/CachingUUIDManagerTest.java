@@ -122,7 +122,7 @@ public class CachingUUIDManagerTest {
 				Optional.of(uuid), Optional.empty());
 
 		assertEquals(uuid, lookupUUID(name));
-		assertEquals(uuid, lookupUUID(name), "UUID should be cached");
+		assertEquals(uuid, lookupUUID(name), "uuidField should be cached");
 		assertEquals(uuid, lookupUUIDExact(name));
 
 		verify(envUserResolver).lookupUUID(name);
@@ -163,7 +163,7 @@ public class CachingUUIDManagerTest {
 		when(queryingImpl.resolve(name)).thenReturn(completedFuture(uuid), completedFuture(null));
 
 		assertEquals(uuid, lookupUUID(name));
-		assertEquals(uuid, lookupUUID(name), "UUID should be cached");
+		assertEquals(uuid, lookupUUID(name), "uuidField should be cached");
 		assertEquals(uuid, lookupUUIDExact(name));
 
 		verify(queryingImpl).resolve(name);
@@ -217,7 +217,7 @@ public class CachingUUIDManagerTest {
 				completedFuture(uuid), completedFuture(null));
 
 		assertEquals(uuid, lookupUUID(name));
-		assertEquals(uuid, lookupUUID(name), "UUID should be cached");
+		assertEquals(uuid, lookupUUID(name), "uuidField should be cached");
 		assertEquals(uuid, lookupUUIDExact(name));
 	}
 
@@ -242,9 +242,9 @@ public class CachingUUIDManagerTest {
 		mockConfig(ServerType.OFFLINE, remoteApiBundle);
 
 		UUID uuid = OfflineUUID.computeOfflineUuid(name);
-		assertNull(lookupUUID(name), "Inexact lookup cannot compute offline UUID");
+		assertNull(lookupUUID(name), "Inexact lookup cannot compute offline uuidField");
 		assertEquals(uuid, lookupUUIDExact(name));
-		assertEquals(uuid, lookupUUID(name), "UUID should be cached");
+		assertEquals(uuid, lookupUUID(name), "uuidField should be cached");
 	}
 
 	@Test

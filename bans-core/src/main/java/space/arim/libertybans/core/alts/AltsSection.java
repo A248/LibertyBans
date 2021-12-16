@@ -86,7 +86,7 @@ public interface AltsSection {
 				"%DETECTION_KIND% - how the account was detected. Will be replaced by the normal or strict options.",
 				"%ADDRESS% - the address in question which led to the detection",
 				"%RELEVANT_USER% - the username of the other account, formatted according to the name-display option",
-				"%RELEVANT_USERID% - the UUID of the other account",
+				"%RELEVANT_USERID% - the uuidField of the other account",
 				"%DATE_RECORDED% - the date the alt account was recorded"
 		})
 		@ConfDefault.DefaultString("%RELEVANT_USER% &r&7(per %ADDRESS%) at %DATE_RECORDED% - %DETECTION_KIND%")

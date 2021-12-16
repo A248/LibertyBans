@@ -76,7 +76,7 @@ public class WikiExamples {
 				logger.info("UUID {} is already banned", uuidToBan);
 				return;
 			}
-			logger.info("ID of the enacted punishment is {}", optPunishment.get().getID());
+			logger.info("ID of the enacted punishment is {}", optPunishment.get().getIdentifier());
 		});
 	}
 	

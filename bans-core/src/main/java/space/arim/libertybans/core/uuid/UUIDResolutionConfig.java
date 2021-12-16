@@ -49,7 +49,7 @@ public interface UUIDResolutionConfig {
 	
 	@ConfKey("web-api-resolvers")
 	@ConfComments({"",
-		"As a last resort, when LibertyBans cannot find a UUID or name, it will use an external web API",
+		"As a last resort, when LibertyBans cannot find a uuidField or name, it will use an external web API",
 		"Available options are 'MOJANG', 'ASHCON', and 'MCHEADS'. They will be queried sequentially in the order specified.",
 		"(If the server is not in ONLINE mode, this option is ignored)"})
 	@DefaultStrings("MOJANG")

@@ -59,7 +59,24 @@ class JdbCaesarHelper {
 		}
 		return PlayerOperator.of(UUIDUtil.fromByteArray(operatorBytes));
 	}
-	
+
+	static class EnumOrdinalAdapter<E extends Enum<E>> implements DataTypeAdapter {
+
+		private final Class<E> enumClass;
+
+		EnumOrdinalAdapter(Class<E> enumClass) {
+			this.enumClass = enumClass;
+		}
+
+		@Override
+		public Object adaptObject(Object parameter) {
+			if (enumClass.isInstance(parameter)) {
+				return enumClass.cast(parameter).ordinal();
+			}
+			return parameter;
+		}
+	}
+
 	static class OperatorAdapter implements DataTypeAdapter {
 		
 		@Override

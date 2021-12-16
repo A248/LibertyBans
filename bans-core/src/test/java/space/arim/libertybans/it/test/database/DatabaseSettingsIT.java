@@ -32,7 +32,8 @@ import space.arim.libertybans.core.database.DatabaseResult;
 import space.arim.libertybans.core.database.DatabaseSettings;
 import space.arim.libertybans.core.database.Vendor;
 import space.arim.libertybans.it.util.ContextClassLoaderAction;
-import space.arim.libertybans.it.util.FlywayResetStaticStateExtension;
+import space.arim.libertybans.it.util.FlywayStaticStateManagementExtension;
+import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -45,7 +46,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@ExtendWith(FlywayResetStaticStateExtension.class)
+@ExtendWith(FlywayStaticStateManagementExtension.class)
 public class DatabaseSettingsIT {
 
 	@TempDir
@@ -53,18 +54,19 @@ public class DatabaseSettingsIT {
 
 	@ParameterizedTest
 	@ArgumentsSource(ContextClassLoaderArgumentsProvider.class)
-	public void migrateWithContextClassLoader(ContextClassLoaderAction contextLoader) {
-		contextLoader.assertDoesNotThrowUsingContextLoader(this::startDb);
-	}
-
-	private void startDb() {
-		DatabaseResult dbResult = createDatabaseSettings().create(createSqlConfig());
-		assertTrue(dbResult.success(), "Database creation failed");
+	public void migrateWithContextClassLoader(ContextClassLoaderAction contextLoader,
+											  FlywayStaticStateManagementExtension flywayStateManagement) {
+		contextLoader.assertDoesNotThrowUsingContextLoader(() -> {
+			flywayStateManagement.reinitializeDatabaseTypes();
+			DatabaseResult dbResult = createDatabaseSettings().create(createSqlConfig());
+			assertTrue(dbResult.success(), "Database creation failed");
+		});
 	}
 
 	private DatabaseSettings createDatabaseSettings() {
 		DatabaseManager dbManager = mock(DatabaseManager.class);
 		when(dbManager.folder()).thenReturn(databaseDir);
+		when(dbManager.futuresFactory()).thenReturn(new IndifferentFactoryOfTheFuture());
 		return new DatabaseSettings(dbManager);
 	}
 

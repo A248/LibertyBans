@@ -34,7 +34,7 @@ public class Scoper implements InternalScopeManager {
 	@Override
 	public ServerScope specificScope(String server) {
 		Objects.requireNonNull(server, "server");
-		return ScopeImpl.create(server);
+		return ScopeImpl.specificServer(server);
 	}
 
 	@Override
@@ -49,11 +49,7 @@ public class Scoper implements InternalScopeManager {
 	
 	@Override
 	public String getServer(ServerScope scope, String defaultIfGlobal) {
-		if (!(scope instanceof ScopeImpl)) {
-			throw new IllegalArgumentException("Foreign implementation of Scope: " + scope.getClass());
-		}
-		String server = ((ScopeImpl) scope).server();
-		return server.isEmpty() ? defaultIfGlobal : server;
+		return ScopeImpl.getServer(scope, defaultIfGlobal);
 	}
 	
 	@Override

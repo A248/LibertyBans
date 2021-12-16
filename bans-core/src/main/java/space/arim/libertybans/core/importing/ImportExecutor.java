@@ -23,6 +23,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.core.service.Time;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.punish.Enaction;
@@ -77,7 +78,6 @@ public class ImportExecutor {
 			transferPunishments(importSource, importSink);
 			transferExplicitNameAddressRecords(importSource, importSink);
 
-			batchExecutor.finish();
 			logger.info("Import completed successfully. {}", statistics);
 
 		} catch (ImportException | SQLException ex) {
@@ -106,9 +106,10 @@ public class ImportExecutor {
 	}
 
 	private void addEnaction(ImportSink importSink, PortablePunishment punishment, Enaction enaction) {
-		long end = punishment.knownDetails().end();
+		Instant end = punishment.knownDetails().end();
 		// Check whether active and non-expired
-		if (punishment.active() && (end == 0L || end > time.currentTime())) {
+		if (punishment.active() &&
+				(end.equals(Punishment.PERMANENT_END_DATE) || end.compareTo(time.currentTimestamp()) > 0)) {
 			importSink.addActivePunishment(enaction);
 		} else {
 			importSink.addHistoricalPunishment(enaction);

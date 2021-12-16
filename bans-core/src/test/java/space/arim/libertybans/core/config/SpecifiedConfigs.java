@@ -67,11 +67,11 @@ public class SpecifiedConfigs implements Configs {
 						}
 						@Override
 						public String username() {
-							return "root";
+							return spec.vendor().userForITs();
 						}
 						@Override
 						public String password() {
-							return "";
+							return spec.vendor().passwordForITs();
 						}
 					};
 				}

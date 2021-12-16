@@ -35,10 +35,14 @@ import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.SimplifiedEnhancedExecutor;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Objects;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -95,4 +99,21 @@ public class JpmsTest {
 		assertDoesNotThrow(foundation::startup);
 		assertDoesNotThrow(foundation::shutdown);
 	}
+
+	/*
+	Flyway-3342
+	@Test
+	public void loadFlywayExtensions() {
+		ModuleLayer thisLayer = getClass().getModule().getLayer();
+		Objects.requireNonNull(thisLayer, "Must be running on the module path");
+		ServiceLoader<org.flywaydb.core.extensibility.Plugin> loader = ServiceLoader.load(thisLayer, org.flywaydb.core.extensibility.Plugin.class);
+		long count = loader
+				.stream()
+				.map(ServiceLoader.Provider::get)
+				.filter((plugin) -> plugin.getClass().equals(org.flywaydb.database.MySQLDatabaseExtension.class))
+				.count();
+		assertEquals(1, count, "One MySQLDatabaseExtension should be loaded");
+	}
+
+	 */
 }

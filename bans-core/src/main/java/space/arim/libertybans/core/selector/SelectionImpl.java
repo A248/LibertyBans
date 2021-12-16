@@ -1,46 +1,53 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core.selector;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
+package space.arim.libertybans.core.selector;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
-
-import space.arim.libertybans.core.service.Time;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
-import space.arim.omnibus.util.concurrent.ReactionStage;
-
+import org.jooq.Condition;
+import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.ResultQuery;
+import org.jooq.impl.DSL;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.database.execute.SQLFunction;
+import space.arim.libertybans.core.database.sql.DeserializedVictim;
+import space.arim.libertybans.core.database.sql.EndTimeCondition;
+import space.arim.libertybans.core.database.sql.SerializedVictim;
 import space.arim.libertybans.core.punish.PunishmentCreator;
+import space.arim.libertybans.core.service.Time;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
+import space.arim.omnibus.util.concurrent.ReactionStage;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static space.arim.libertybans.core.schema.tables.SimpleActive.SIMPLE_ACTIVE;
+import static space.arim.libertybans.core.schema.tables.SimpleHistory.SIMPLE_HISTORY;
 
 @Singleton
 public class SelectionImpl {
@@ -67,157 +74,140 @@ public class SelectionImpl {
 	 * the SELECT statement must be qualified by the punishment type
 	 */
 
-	private static String getColumns(InternalSelectionOrder selection) {
-		StringJoiner columns = new StringJoiner(", ");
-		columns.add("`id`");
+	private static List<Field<?>> getColumns(InternalSelectionOrder selection) {
+		List<Field<?>> columns = new ArrayList<>();
+		boolean active = selection.selectActiveOnly();
+		columns.add(active ? SIMPLE_ACTIVE.ID : SIMPLE_HISTORY.ID);
 		if (selection.getTypeNullable() == null) {
-			columns.add("`type`");
+			columns.add(active ? SIMPLE_ACTIVE.TYPE : SIMPLE_HISTORY.TYPE);
 		}
 		if (selection.getVictimNullable() == null) {
-			columns.add("`victim`");
-			columns.add("`victim_type`");
+			columns.add(active ? SIMPLE_ACTIVE.VICTIM_TYPE : SIMPLE_HISTORY.VICTIM_TYPE);
+			columns.add(active ? SIMPLE_ACTIVE.VICTIM_UUID : SIMPLE_HISTORY.VICTIM_UUID);
+			columns.add(active ? SIMPLE_ACTIVE.VICTIM_ADDRESS : SIMPLE_HISTORY.VICTIM_ADDRESS);
 		}
 		if (selection.getOperatorNullable() == null) {
-			columns.add("`operator`");
+			columns.add(active ? SIMPLE_ACTIVE.OPERATOR : SIMPLE_HISTORY.OPERATOR);
 		}
-		columns.add("`reason`");
+		columns.add(active ? SIMPLE_ACTIVE.REASON : SIMPLE_HISTORY.REASON);
 		if (selection.getScopeNullable() == null) {
-			columns.add("`scope`");
+			columns.add(active ? SIMPLE_ACTIVE.SCOPE : SIMPLE_HISTORY.SCOPE);
 		}
-		columns.add("`start`");
-		columns.add("`end`");
+		columns.add(active ? SIMPLE_ACTIVE.START : SIMPLE_HISTORY.START);
+		columns.add(active ? SIMPLE_ACTIVE.END : SIMPLE_HISTORY.END);
 
-		return columns.toString();
+		return columns;
 	}
 
-	private Map.Entry<String, Object[]> getPredication(InternalSelectionOrder selection) {
-		StringJoiner predicates = new StringJoiner(" AND ");
-		List<Object> params = new ArrayList<>();
-
+	private Condition getPredication(InternalSelectionOrder selection) {
+		Condition condition = DSL.noCondition();
+		boolean active = selection.selectActiveOnly();
+		PunishmentType type = selection.getTypeNullable();
+		if (type != null) {
+			condition = condition
+					.and((active ? SIMPLE_ACTIVE.TYPE : SIMPLE_HISTORY.TYPE).eq(type));
+		}
+		if (active) {
+			condition = condition
+					.and(new EndTimeCondition(SIMPLE_ACTIVE.END).isNotExpired(time.currentTimestamp()));
+		}
 		Victim victim = selection.getVictimNullable();
 		if (victim != null) {
-			predicates.add("`victim` = ? AND `victim_type` = ?");
-			params.add(victim);
-			params.add(victim.getType());
+			SerializedVictim serializedVictim = new SerializedVictim(victim);
+			condition = condition
+					.and((active ? SIMPLE_ACTIVE.VICTIM_TYPE : SIMPLE_HISTORY.VICTIM_TYPE).eq(victim.getType()))
+					.and((active ? SIMPLE_ACTIVE.VICTIM_UUID : SIMPLE_HISTORY.VICTIM_UUID).eq(serializedVictim.uuid()))
+					.and((active ? SIMPLE_ACTIVE.VICTIM_ADDRESS : SIMPLE_HISTORY.VICTIM_ADDRESS).eq(serializedVictim.address()));
 		}
 		Operator operator = selection.getOperatorNullable();
 		if (operator != null) {
-			predicates.add("`operator` = ?");
-			params.add(operator);
+			condition = condition
+					.and((active ? SIMPLE_ACTIVE.OPERATOR : SIMPLE_HISTORY.OPERATOR).eq(operator));
 		}
 		ServerScope scope = selection.getScopeNullable();
 		if (scope != null) {
-			predicates.add("`scope` = ?");
-			params.add(scope);
+			condition = condition
+					.and((active ? SIMPLE_ACTIVE.SCOPE : SIMPLE_HISTORY.SCOPE).eq(scope));
 		}
-		PunishmentType type = selection.getTypeNullable();
-		if (selection.selectActiveOnly()) {
-			predicates.add("(`end` = 0 OR `end` > ?)");
-			params.add(time.currentTime());
-		} else if (type != null) {
-			predicates.add("`type` = ?");
-			params.add(type);
-		}
-		return Map.entry(predicates.toString(), params.toArray());
+		return condition;
 	}
 
-	private Punishment fromResultSetAndSelection(InternalDatabase database, ResultSet resultSet,
-			InternalSelectionOrder selection) throws SQLException {
+	private Punishment fromRecordAndSelection(org.jooq.Record record, InternalSelectionOrder selection) {
+		boolean active = selection.selectActiveOnly();
 		PunishmentType type = selection.getTypeNullable();
+		if (type == null) {
+			type = record.get(active ? SIMPLE_ACTIVE.TYPE : SIMPLE_HISTORY.TYPE);
+		}
 		Victim victim = selection.getVictimNullable();
+		if (victim == null) {
+			Victim.VictimType victimType = record.get(active ? SIMPLE_ACTIVE.VICTIM_TYPE : SIMPLE_HISTORY.VICTIM_TYPE);
+			victim = new DeserializedVictim(
+					record.get(active ? SIMPLE_ACTIVE.VICTIM_UUID : SIMPLE_HISTORY.VICTIM_UUID),
+					record.get(active ? SIMPLE_ACTIVE.VICTIM_ADDRESS : SIMPLE_HISTORY.VICTIM_ADDRESS)
+			).victim(victimType);
+		}
 		Operator operator = selection.getOperatorNullable();
+		if (operator == null) {
+			operator = record.get(active ? SIMPLE_ACTIVE.OPERATOR : SIMPLE_HISTORY.OPERATOR);
+		}
 		ServerScope scope = selection.getScopeNullable();
+		if (scope == null) {
+			scope = record.get(active ? SIMPLE_ACTIVE.SCOPE : SIMPLE_HISTORY.SCOPE);
+		}
 		return creator.createPunishment(
-				resultSet.getInt("id"),
-				(type == null) ? database.getTypeFromResult(resultSet) : type,
-				(victim == null) ? database.getVictimFromResult(resultSet) : victim,
-				(operator == null) ? database.getOperatorFromResult(resultSet) : operator,
-				database.getReasonFromResult(resultSet),
-				(scope == null) ? database.getScopeFromResult(resultSet) : scope,
-				database.getStartFromResult(resultSet),
-				database.getEndFromResult(resultSet));
+				record.get(active ? SIMPLE_ACTIVE.ID : SIMPLE_HISTORY.ID),
+				type,
+				victim,
+				operator,
+				record.get(active ? SIMPLE_ACTIVE.REASON : SIMPLE_HISTORY.REASON),
+				scope,
+				record.get(active ? SIMPLE_ACTIVE.START : SIMPLE_HISTORY.START),
+				record.get(active ? SIMPLE_ACTIVE.END : SIMPLE_HISTORY.END));
 	}
-	
-	private Map.Entry<String, Object[]> getSelectionQuery(InternalSelectionOrder selection) {
-		String columns = getColumns(selection);
-		Map.Entry<String, Object[]> predication = getPredication(selection);
 
-		StringBuilder statementBuilder = new StringBuilder("SELECT ");
-		statementBuilder.append(columns).append(" FROM `libertybans_simple_");
-
-		PunishmentType type = selection.getTypeNullable();
-		if (selection.selectActiveOnly()) {
-			assert type != PunishmentType.KICK : type;
-			if (type != null) {
-				statementBuilder.append(type).append('s');
-			} else {
-				statementBuilder.append("active");
-			}
-		} else {
-			// getPredication will be responsible for narrowing the type selected
-			statementBuilder.append("history");
+	private ResultQuery<org.jooq.Record> getSelectionQuery(InternalSelectionOrder selection,
+														   DSLContext context,
+														   boolean singlePunishment) {
+		boolean active = selection.selectActiveOnly();
+		var query = context
+				.select(getColumns(selection))
+				.from(active ? SIMPLE_ACTIVE : SIMPLE_HISTORY)
+				.where(getPredication(selection))
+				.orderBy((active ? SIMPLE_ACTIVE.START : SIMPLE_HISTORY.START).desc())
+				.offset(selection.skipCount());
+		if (singlePunishment) {
+			return query.limit(1);
 		}
-		statementBuilder.append('`');
-
-		String predicates = predication.getKey();
-		if (!predicates.isEmpty()) {
-			statementBuilder.append(" WHERE ").append(predicates);
-		}
-		statementBuilder.append(" ORDER BY `start` DESC");
 		int maximumToRetrieve = selection.maximumToRetrieve();
-		if (maximumToRetrieve != 0) {
-			statementBuilder.append(" LIMIT ").append(maximumToRetrieve);
+		if (maximumToRetrieve == 0) {
+			return query;
+		} else {
+			return query.limit(maximumToRetrieve - selection.skipCount());
 		}
-		return Map.entry(statementBuilder.toString(), predication.getValue());
 	}
-	
+
 	CentralisedFuture<Punishment> getFirstSpecificPunishment(InternalSelectionOrder selection) {
 		if (selection.selectActiveOnly() && selection.getTypeNullable() == PunishmentType.KICK) {
 			// Kicks cannot possibly be active. They are all history
 			return futuresFactory.completedFuture(null);
 		}
 		InternalDatabase database = dbProvider.get();
-		return database.selectAsync(() -> {
-			Map.Entry<String, Object[]> query = getSelectionQuery(selection);
-			return database.jdbCaesar().query(
-					query.getKey())
-					.params(query.getValue())
-					.singleResult((resultSet) -> {
-						return fromResultSetAndSelection(database, resultSet, selection);
-					}).execute();
-		});
+		return database.query(SQLFunction.readOnly((context) -> {
+			return getSelectionQuery(selection, context, true)
+					.fetchOne((record) -> fromRecordAndSelection(record, selection));
+		}));
 	}
-	
+
 	ReactionStage<List<Punishment>> getSpecificPunishments(InternalSelectionOrder selection) {
 		if (selection.selectActiveOnly() && selection.getTypeNullable() == PunishmentType.KICK) {
 			// Kicks cannot possibly be active. They are all history
 			return futuresFactory.completedFuture(List.of());
 		}
 		InternalDatabase database = dbProvider.get();
-		return database.selectAsync(() -> {
-
-			Map.Entry<String, Object[]> query = getSelectionQuery(selection);
-			int skipCount = selection.skipCount();
-
-			List<Punishment> result = database.jdbCaesar().query(
-					query.getKey())
-					.params(query.getValue())
-					.totalResult((resultSet) -> {
-
-						for (int toSkipRemaining = skipCount; toSkipRemaining > 0; toSkipRemaining--) {
-							if (!resultSet.next()) {
-								return List.<Punishment>of();
-							}
-						}
-						List<Punishment> punishments = new ArrayList<>();
-						while (resultSet.next()) {
-							punishments.add(fromResultSetAndSelection(database, resultSet, selection));
-						}
-						return punishments;
-					}).execute();
-
-			return List.copyOf(result);
-		});
+		return database.query(SQLFunction.readOnly((context) -> {
+			return getSelectionQuery(selection, context, false)
+					.fetch((record) -> fromRecordAndSelection(record, selection));
+		}));
 	}
 
 }

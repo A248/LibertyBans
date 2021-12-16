@@ -25,9 +25,13 @@ import org.junit.jupiter.api.extension.support.TypeBasedParameterResolver;
 import space.arim.libertybans.api.PunishmentType;
 
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 public class RandomPunishmentTypeResolver extends TypeBasedParameterResolver<PunishmentType> {
@@ -35,7 +39,7 @@ public class RandomPunishmentTypeResolver extends TypeBasedParameterResolver<Pun
 	@Override
 	public PunishmentType resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
-		Predicate<PunishmentType> acceptability = getAcceptability(parameterContext);
+		Predicate<PunishmentType> acceptability = getAcceptability(parameterContext, extensionContext);
 
 		PunishmentType type;
 		do {
@@ -44,35 +48,51 @@ public class RandomPunishmentTypeResolver extends TypeBasedParameterResolver<Pun
 		return type;
 	}
 
-	private Predicate<PunishmentType> getAcceptability(ParameterContext parameterContext) {
-		if (parameterContext.isAnnotated(NotAKick.class)) {
-			return (type) -> type != PunishmentType.KICK;
-		}
-		if (parameterContext.isAnnotated(SingularPunishment.class)) {
+	private Predicate<PunishmentType> getAcceptability(ParameterContext parameterContext, ExtensionContext extensionContext) {
+		Class<?> clazz = extensionContext.getRequiredTestClass();
+		var method = extensionContext.getTestMethod();
+		// Evaluate SingularPunishment before NotAKick
+		if (parameterContext.isAnnotated(SingularPunishment.class)
+				|| method.isPresent() && method.get().isAnnotationPresent(SingularPunishment.class)
+				|| clazz.isAnnotationPresent(SingularPunishment.class)) {
 			return PunishmentType::isSingular;
 		}
 		if (parameterContext.isAnnotated(NonSingularPunishment.class)) {
 			return (type) -> !type.isSingular();
 		}
+		if (parameterContext.isAnnotated(NotAKick.class)
+				|| method.isPresent() && method.get().isAnnotationPresent(NotAKick.class)
+				|| clazz.isAnnotationPresent(NotAKick.class)) {
+			return (type) -> type != PunishmentType.KICK;
+		}
 		return (type) -> true;
 	}
 
-	private static PunishmentType randomPunishmentType() {
+	public static PunishmentType randomPunishmentType() {
 		PunishmentType[] types = PunishmentType.values();
 		return types[ThreadLocalRandom.current().nextInt(types.length)];
 	}
 
+	/**
+	 * Can be placed on a method, parameter, or a type.
+	 *
+	 * Use of this annotation on a method or parameter overrides a class-level application of {@link NotAKick}.
+	 *
+	 */
 	@Retention(RUNTIME)
+	@Target({METHOD, PARAMETER, TYPE})
 	public @interface SingularPunishment {
 
 	}
 
 	@Retention(RUNTIME)
+	@Target(PARAMETER)
 	public @interface NonSingularPunishment {
 
 	}
 
 	@Retention(RUNTIME)
+	@Target({METHOD, PARAMETER, TYPE})
 	public @interface NotAKick {
 
 	}

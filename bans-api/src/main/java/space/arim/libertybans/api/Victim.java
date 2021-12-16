@@ -53,7 +53,12 @@ public abstract class Victim {
 		 * An IP address
 		 * 
 		 */
-		ADDRESS;
+		ADDRESS,
+		/**
+		 * A combination of a UUID and an IP address
+		 *
+		 */
+		COMPOSITE;
 		
 	}
 	

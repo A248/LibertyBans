@@ -107,8 +107,6 @@ public final class PortablePunishment {
 		private final Instant start;
 		private final Instant end;
 
-		public static final Instant PERMANENT = Instant.MAX;
-
 		public KnownDetails(PunishmentType type, String reason, ServerScope scope,
 							Instant start, Instant end) {
 			this.type = Objects.requireNonNull(type, "type");
@@ -134,11 +132,8 @@ public final class PortablePunishment {
 			return start;
 		}
 
-		public long end() {
-			if (end.equals(PERMANENT)) {
-				return 0L;
-			}
-			return end.getEpochSecond();
+		public Instant end() {
+			return end;
 		}
 
 		@Override

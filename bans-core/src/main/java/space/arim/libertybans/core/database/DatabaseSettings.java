@@ -1,34 +1,33 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.database;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import org.flywaydb.core.Flyway;
-import org.flywaydb.core.api.FlywayException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +35,11 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+import space.arim.libertybans.core.database.flyway.MigrateWithFlyway;
+import space.arim.libertybans.core.database.flyway.MigrationFailedException;
+import space.arim.libertybans.core.database.jooq.JooqContext;
+import space.arim.libertybans.core.database.execute.JooqQueryExecutor;
+import space.arim.libertybans.core.service.SimpleThreadFactory;
 import space.arim.omnibus.util.ThisClass;
 
 import space.arim.libertybans.bootstrap.StartupException;
@@ -57,11 +61,6 @@ public class DatabaseSettings {
 	private HikariConfig hikariConf;
 
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-
-	static {
-		// Prevent HSQLDB from reconfiguring JUL/Log4j2
-		System.setProperty("hsqldb.reconfig_logging", "false");
-	}
 
 	public DatabaseSettings(DatabaseManager manager) {
 		this.manager = manager;
@@ -100,43 +99,45 @@ public class DatabaseSettings {
 	public DatabaseResult create(SqlConfig config) {
 		HikariDataSource hikariDataSource = createDataSource(config);
 
-		new DatabaseVersion(hikariDataSource).checkVersion(vendor);
+		JooqContext jooqContext = new JooqContext(vendor.dialect());
+		ExecutorService threadPool = Executors.newFixedThreadPool(
+				hikariConf.getMaximumPoolSize(),
+				SimpleThreadFactory.create("Database")
+		);
+		StandardDatabase database  = new StandardDatabase(
+				manager, vendor, hikariDataSource,
+				new JooqQueryExecutor(jooqContext, hikariDataSource, manager.futuresFactory(), threadPool),
+				threadPool
+		);
 
-		boolean refresherEvent = vendor == Vendor.MARIADB && config.mariaDb().useEventScheduler();
-
-		StandardDatabase database = StandardDatabase.create(
-				manager, vendor, hikariDataSource, hikariConf.getMaximumPoolSize(), refresherEvent);
-
-		Flyway flyway = createFlyway(hikariDataSource, refresherEvent);
+		MigrateWithFlyway migrateWithFlyway = new MigrateWithFlyway(hikariDataSource, vendor);
 		try {
-			flyway.migrate();
-		} catch (FlywayException ex) {
+			migrateWithFlyway.migrate(jooqContext);
+		} catch (MigrationFailedException ex) {
 			logger.error("Unable to migrate your database. Please create a backup of your database "
 					+ "and promptly report this issue.", ex);
 			return new DatabaseResult(database, false);
 		}
 		return new DatabaseResult(database, true);
 	}
-	
-	private Flyway createFlyway(HikariDataSource hikariDataSource, boolean refresherEvent) {
-		List<String> locations = new ArrayList<>();
-		locations.add("classpath:sql-migrations/common");
-		locations.add("classpath:sql-migrations/" + vendor);
-		if (refresherEvent) {
-			locations.add("classpath:sql-migrations/refresher-event");
-		}
-		return Flyway.configure(getClass().getClassLoader())
-				.dataSource(hikariDataSource).table("libertybans_flyway")
-				.locations(locations.toArray(String[]::new))
-				.validateMigrationNaming(true).group(true)
-				// Allows usage with existing tables, i.e. from other software
-				.baselineOnMigrate(true).baselineVersion("0.0")
-				.load();
-	}
-	
+
 	private void setHikariConfig() {
 		setUsernameAndPassword();
 		setConfiguredDriver();
+
+		// Check database preconditions as soon as we are able
+		// Provide the system property for the benefit of advanced users
+		if (!Boolean.getBoolean("libertybans.database.disablecheck")) {
+			hikariConf.setPoolName("LibertyBansTemporaryPool-" + vendor);
+			try (HikariDataSource temporaryDataSource = new HikariDataSource(hikariConf);
+				 Connection connection = temporaryDataSource.getConnection()) {
+				connection.setReadOnly(true);
+				new DatabaseRequirements(vendor, connection).checkRequirements();
+			} catch (java.sql.SQLException ex) {
+				throw new IllegalStateException(
+						"Unable to connect to database. Please make sure your authentication details are correct.", ex);
+			}
+		}
 
 		// Timeouts
 		SqlConfig.Timeouts timeouts = config.timeouts();
@@ -152,16 +153,19 @@ public class DatabaseSettings {
 
 		// Other settings
 		hikariConf.setAutoCommit(DatabaseDefaults.AUTOCOMMIT);
-		hikariConf.setTransactionIsolation("TRANSACTION_" + DatabaseDefaults.ISOLATION.name());
-		hikariConf.setPoolName("LibertyBans-HikariCP-" + vendor.displayName());
+		hikariConf.setTransactionIsolation("TRANSACTION_REPEATABLE_READ");
+		hikariConf.setPoolName("LibertyBansPool-" + vendor);
+		hikariConf.setConnectionInitSql(vendor.getConnectionInitSql());
+		hikariConf.setIsolateInternalQueries(true);
 	}
-	
+
 	private void setUsernameAndPassword() {
 		SqlConfig.AuthDetails authDetails = config.authDetails();
 		String username = authDetails.username();
 		String password = authDetails.password();
-		if (vendor == Vendor.MARIADB && (username.equals("username") || password.equals("defaultpass"))) {
-			logger.warn("Not using MariaDB/MySQL because authentication details are still default");
+		if (vendor.isRemote() && (username.equals("defaultuser") || password.equals("defaultpass"))) {
+			logger.warn("The database authentication details are still set to the default values - " +
+					"please set the correct credentials. For now, a local database will be used.");
 			vendor = Vendor.HSQLDB;
 		}
 		if (vendor == Vendor.HSQLDB) {
@@ -171,16 +175,17 @@ public class DatabaseSettings {
 		hikariConf.setUsername(username);
 		hikariConf.setPassword(password);
 	}
-	
+
 	private void setConfiguredDriver() {
 		String jdbcUrl = getBaseUrl() + getUrlProperties();
+		JdbcDriver jdbcDriver = vendor.driver();
 
 		if (config.useTraditionalJdbcUrl()) {
-			setDriverClassName(vendor.driverClassName());
+			setDriverClassName(jdbcDriver.driverClassName());
 			hikariConf.setJdbcUrl(jdbcUrl);
 
 		} else {
-			hikariConf.setDataSourceClassName(vendor.dataSourceClassName());
+			hikariConf.setDataSourceClassName(jdbcDriver.dataSourceClassName());
 			hikariConf.addDataSourceProperty("url", jdbcUrl);
 		}
 	}
@@ -190,13 +195,21 @@ public class DatabaseSettings {
 		switch (vendor) {
 
 		case MARIADB:
+		case MYSQL:
+		case POSTGRES:
+		case COCKROACH:
 			SqlConfig.AuthDetails authDetails = config.authDetails();
 			String host = authDetails.host();
 			int port = authDetails.port();
 			String database = authDetails.database();
 
 			hikariConf.addDataSourceProperty("databaseName", database);
-			url = "jdbc:mariadb://" + host + ":" + port + "/" + database;
+			if (vendor.isPostgresLike()) {
+				url = "jdbc:postgresql://" + host + ":" + port + "/" + database;
+			} else {
+				assert vendor.isMySQLLike();
+				url = "jdbc:mariadb://" + host + ":" + port + "/" + database;
+			}
 			break;
 
 		case HSQLDB:
@@ -221,12 +234,10 @@ public class DatabaseSettings {
 
 		switch (vendor) {
 		case HSQLDB:
-			// MySQL syntax compatibility
-			properties.put("sql.syntax_mys", true);
-			// Use case-insensitive comparisons
-			properties.put("sql.ignore_case", true);
 			// Prevent execution of multiple queries in one Statement
 			properties.put("sql.restrict_exec", true);
+			// Make the names of generated indexes the same as the names of the constraints
+			properties.put("sql.sys_index_names", true);
 			/* 
 			 * Enforce SQL standards on
 			 * 1.) table and column names
@@ -242,7 +253,8 @@ public class DatabaseSettings {
 			break;
 
 		case MARIADB:
-			// Set default connection settings
+		case MYSQL:
+			// Performance improvements
 			properties.put("autocommit", DatabaseDefaults.AUTOCOMMIT);
 			properties.put("defaultFetchSize", DatabaseDefaults.FETCH_SIZE);
 
@@ -251,18 +263,33 @@ public class DatabaseSettings {
 			properties.put("includeThreadDumpInDeadlockExceptions", true);
 
 			// https://github.com/brettwooldridge/HikariCP/wiki/Rapid-Recovery#mysql
-			properties.put("socketTimeout", Duration.ofSeconds(30L).toMillis());
+			properties.put("socketTimeout", DatabaseDefaults.SOCKET_TIMEOUT);
 
-			// User-defined additional properties
+			// Properties preceding can be overridden
 			properties.putAll(config.mariaDb().connectionProperties());
+			// Properties following cannot be overridden
 
+			// Needed for use with connection init-SQL (hikariConf.setConnectionInitSql)
+			properties.put("allowMultiQueries", true);
+			break;
+
+		case POSTGRES:
+		case COCKROACH:
+			// Set default connecting settings
+			properties.put("defaultRowFetchSize", DatabaseDefaults.FETCH_SIZE);
+
+			// https://github.com/brettwooldridge/HikariCP/wiki/Rapid-Recovery#postgresql
+			properties.put("socketTimeout", DatabaseDefaults.SOCKET_TIMEOUT);
+
+			// Properties preceding can be overridden
+			properties.putAll(config.postgres().connectionProperties());
 			break;
 
 		default:
 			throw MiscUtil.unknownVendor(vendor);
 		}
 		logger.trace("Using connection properties {}", properties);
-		return vendor.formatConnectionProperties(properties);
+		return vendor.driver().formatConnectionProperties(properties);
 	}
 	
 	/**

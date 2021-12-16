@@ -19,7 +19,7 @@
 
 package space.arim.libertybans.core.importing;
 
-import space.arim.libertybans.core.database.Vendor;
+import space.arim.libertybans.core.database.JdbcDriver;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -42,19 +42,22 @@ public final class JdbcDetails implements ConnectionSource {
 	public Connection openConnection() throws SQLException {
 		// Workaround DriverManager not supporting drivers not loaded through system ClassLoader
 		if (jdbcUrl.startsWith("jdbc:hsqldb")) {
-			initDriver(Vendor.HSQLDB);
+			initDriver(JdbcDriver.HSQLDB);
 		}
 		if (jdbcUrl.startsWith("jdbc:mariadb")) {
-			initDriver(Vendor.MARIADB);
+			initDriver(JdbcDriver.MARIADB_CONNECTOR);
+		}
+		if (jdbcUrl.startsWith("jdbc:postgresql")) {
+			initDriver(JdbcDriver.PG_JDBC);
 		}
 		return DriverManager.getConnection(jdbcUrl, username, password);
 	}
 
-	private void initDriver(Vendor vendor) {
+	private void initDriver(JdbcDriver driver) {
 		try {
-			Class.forName(vendor.driverClassName());
+			Class.forName(driver.driverClassName());
 		} catch (ClassNotFoundException ex) {
-			throw new ImportException("Failed to initialize JDBC driver for " + vendor, ex);
+			throw new ImportException("Failed to initialize JDBC driver " + driver, ex);
 		}
 	}
 

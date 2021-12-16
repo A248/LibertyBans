@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2020 Anand Beh
+ * Copyright © 2021 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,16 +19,31 @@
 
 package space.arim.libertybans.core.punish;
 
-import space.arim.jdbcaesar.QuerySource;
-import space.arim.jdbcaesar.mapper.UpdateCountMapper;
+import org.jooq.DSLContext;
+import org.jooq.Field;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.database.execute.Transaction;
+import space.arim.libertybans.core.database.sql.FixedVictimData;
+import space.arim.libertybans.core.database.sql.SequenceValue;
+import space.arim.libertybans.core.database.sql.SerializedVictim;
+import space.arim.libertybans.core.database.sql.TableForType;
+import space.arim.libertybans.core.database.sql.VictimCondition;
+import space.arim.libertybans.core.database.sql.VictimData;
+import space.arim.libertybans.core.database.sql.VictimTableFields;
 
-import java.sql.SQLException;
-import java.util.Objects;
+import java.time.Instant;
+
+import static java.util.Objects.requireNonNull;
+import static org.jooq.impl.DSL.val;
+import static space.arim.libertybans.core.schema.Sequences.LIBERTYBANS_PUNISHMENT_IDS;
+import static space.arim.libertybans.core.schema.Sequences.LIBERTYBANS_VICTIM_IDS;
+import static space.arim.libertybans.core.schema.tables.History.HISTORY;
+import static space.arim.libertybans.core.schema.tables.Punishments.PUNISHMENTS;
+import static space.arim.libertybans.core.schema.tables.Victims.VICTIMS;
 
 public class Enaction {
 
@@ -44,65 +59,95 @@ public class Enaction {
 		return orderDetails;
 	}
 
-	public interface Rollback {
-		void rollback() throws SQLException;
+	public Punishment enactActive(DSLContext context, Transaction transaction) {
+		return enact(context, requireNonNull(transaction, "transaction"), true);
 	}
 
-	public Punishment enactActive(QuerySource<?> querySource, Rollback rollback) throws SQLException {
-		return enact(querySource, Objects.requireNonNull(rollback), true);
+	public Punishment enactHistorical(DSLContext context) {
+		return enact(context, null, false);
 	}
 
-	public Punishment enactHistorical(QuerySource<?> querySource) throws SQLException {
-		return enact(querySource, null, false);
-	}
-
-	private Punishment enact(QuerySource<?> querySource, Rollback rollback, boolean active)
-			throws SQLException {
+	private Punishment enact(DSLContext context, Transaction transaction, boolean active) {
 
 		final PunishmentType type = orderDetails.type();
 		final Victim victim = orderDetails.victim();
 		final Operator operator = orderDetails.operator();
 		final String reason = orderDetails.reason();
 		final ServerScope scope = orderDetails.scope();
-		final long start = orderDetails.start();
-		final long end = orderDetails.end();
+		final Instant start = orderDetails.start();
+		final Instant end = orderDetails.end();
 
-		int id = querySource.query(
-				"INSERT INTO `libertybans_punishments` (`type`, `operator`, `reason`, `scope`, `start`, `end`) "
-						+ "VALUES (?, ?, ?, ?, ?, ?)")
-				.params(
-						type, operator, reason,
-						scope, start, end)
-				.updateGenKeys((updateCount, genKeys) ->  {
-					if (!genKeys.next()) {
-						throw new IllegalStateException("No punishment ID generated for insertion query");
-					}
-					return genKeys.getInt("id");
-				}).execute();
+		SequenceValue<Long> punishmentIdSequence = new SequenceValue<>(LIBERTYBANS_PUNISHMENT_IDS);
+		SequenceValue<Integer> victimIdSequence = new SequenceValue<>(LIBERTYBANS_VICTIM_IDS);
+		context
+				.insertInto(PUNISHMENTS)
+				.columns(
+						PUNISHMENTS.ID, PUNISHMENTS.TYPE,
+						PUNISHMENTS.OPERATOR, PUNISHMENTS.REASON,
+						PUNISHMENTS.SCOPE, PUNISHMENTS.START, PUNISHMENTS.END)
+				.values(
+						punishmentIdSequence.nextValue(context), val(type, PUNISHMENTS.TYPE),
+						val(operator, PUNISHMENTS.OPERATOR), val(reason, PUNISHMENTS.REASON),
+						val(scope, PUNISHMENTS.SCOPE), val(start, PUNISHMENTS.START), val(end, PUNISHMENTS.END))
+				.execute();
 
-		if (active && type != PunishmentType.KICK) { // Kicks are pure history
-
-			String enactStatement = " INTO `libertybans_" + type + "s` "
-					+ "(`id`, `victim`, `victim_type`) VALUES (?, ?, ?)";
-			Object[] enactArgs = new Object[] {id, victim, victim.getType()};
-
+		Field<Long> punishmentIdField = punishmentIdSequence.lastValueInSession(context);
+		Field<Integer> victimIdField;
+		{
+			VictimData victimData = FixedVictimData.from(new SerializedVictim(victim));
+			Integer existingVictimId = context
+					.select(VICTIMS.ID)
+					.from(VICTIMS)
+					.where(new VictimCondition(new VictimTableFields()).matchesVictim(victimData))
+					.fetchOne(VICTIMS.ID);
+			if (existingVictimId == null) {
+				context
+						.insertInto(VICTIMS)
+						.columns(VICTIMS.ID, VICTIMS.TYPE, VICTIMS.UUID, VICTIMS.ADDRESS)
+						.values(
+								victimIdSequence.nextValue(context),
+								val(victimData.type(), VICTIMS.TYPE),
+								val(victimData.uuid(), VICTIMS.UUID),
+								val(victimData.address(), VICTIMS.ADDRESS)
+						)
+						.execute();
+				victimIdField = victimIdSequence.lastValueInSession(context);
+			} else {
+				victimIdField = val(existingVictimId, VICTIMS.ID);
+			}
+		}
+		if (active && type != PunishmentType.KICK) {
+			var table = new TableForType(type).dataTable();
+			var tableFields = table.newRecord();
 			if (type.isSingular()) {
-				int updateCount = querySource.query("INSERT IGNORE" + enactStatement).params(enactArgs)
-						.updateCount(UpdateCountMapper.identity()).execute();
+				int updateCount = context
+						.insertInto(table)
+						.columns(tableFields.field1(), tableFields.field2())
+						.values(punishmentIdField, victimIdField)
+						.onDuplicateKeyIgnore()
+						.execute();
 				if (updateCount == 0) {
 					// There is already a punishment of this type for this victim
-					rollback.rollback();
+					transaction.rollback();
 					return null;
 				}
 			} else {
-				querySource.query("INSERT" + enactStatement).params(enactArgs).voidResult().execute();
+				context
+						.insertInto(table)
+						.columns(tableFields.field1(), tableFields.field2())
+						.values(punishmentIdField, victimIdField)
+						.execute();
 			}
 		}
-
-		querySource.query(
-				"INSERT INTO `libertybans_history` (`id`, `victim`, `victim_type`) VALUES (?, ?, ?)")
-				.params(id, victim, victim.getType())
-				.voidResult().execute();
+		context
+				.insertInto(HISTORY)
+				.columns(HISTORY.ID, HISTORY.VICTIM)
+				.values(punishmentIdField, victimIdField)
+				.execute();
+		long id = context
+				.select(punishmentIdField)
+				.fetchSingle()
+				.value1();
 		Punishment punishment = creator.createPunishment(id, type, victim, operator, reason, scope, start, end);
 		if (punishment == null) { // Shouldn't happen
 			throw new IllegalStateException("Internal error: Unable to create punishment for id " + id);
@@ -117,18 +162,18 @@ public class Enaction {
 		private final Operator operator;
 		private final String reason;
 		private final ServerScope scope;
-		private final long start;
-		private final long end;
+		private final Instant start;
+		private final Instant end;
 
 		public OrderDetails(PunishmentType type, Victim victim, Operator operator,
-							String reason, ServerScope scope, long start, long end) {
-			this.type = type;
-			this.victim = victim;
-			this.operator = operator;
-			this.reason = reason;
-			this.scope = scope;
-			this.start = start;
-			this.end = end;
+							String reason, ServerScope scope, Instant start, Instant end) {
+			this.type = requireNonNull(type, "type");
+			this.victim = requireNonNull(victim, "victim");
+			this.operator = requireNonNull(operator, "operator");
+			this.reason = requireNonNull(reason, "reason");
+			this.scope = requireNonNull(scope, "scope");
+			this.start = requireNonNull(start, "start");
+			this.end = requireNonNull(end, "end");
 		}
 
 		public PunishmentType type() {
@@ -151,11 +196,11 @@ public class Enaction {
 			return scope;
 		}
 
-		public long start() {
+		public Instant start() {
 			return start;
 		}
 
-		public long end() {
+		public Instant end() {
 			return end;
 		}
 
@@ -167,7 +212,7 @@ public class Enaction {
 			return type == that.type
 					&& victim.equals(that.victim) && operator.equals(that.operator)
 					&& reason.equals(that.reason) && scope.equals(that.scope)
-					&& start == that.start && end == that.end;
+					&& start.equals(that.start) && end.equals(that.end);
 		}
 
 		@Override
@@ -177,8 +222,8 @@ public class Enaction {
 			result = 31 * result + operator.hashCode();
 			result = 31 * result + reason.hashCode();
 			result = 31 * result + scope.hashCode();
-			result = 31 * result + (int) (start ^ (start >>> 32));
-			result = 31 * result + (int) (end ^ (end >>> 32));
+			result = 31 * result + start.hashCode();
+			result = 31 * result + end.hashCode();
 			return result;
 		}
 

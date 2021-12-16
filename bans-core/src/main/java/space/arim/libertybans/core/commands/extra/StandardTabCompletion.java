@@ -28,14 +28,18 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.service.Time;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+
+import static space.arim.libertybans.core.schema.tables.Names.NAMES;
 
 @Singleton
 public final class StandardTabCompletion implements TabCompletion {
@@ -63,15 +67,14 @@ public final class StandardTabCompletion implements TabCompletion {
 					.refreshAfterWrite(cacheRefresh)
 					.buildAsync((key, executor) -> {
 						InternalDatabase database = dbProvider.get();
-						return database.selectAsync(() -> {
-							long currentTimeMinusRetention = time.currentTimestamp().minus(retention).getEpochSecond();
-							return Set.copyOf(database.jdbCaesar()
-									.query("SELECT `name` FROM `libertybans_names`" +
-											"WHERE `updated` > ?")
-									.params(currentTimeMinusRetention)
-									.setResult((resultSet) -> resultSet.getString("name"))
-									.execute());
-						});
+						Instant currentTimeMinusRetention = time.currentTimestamp().minus(retention);
+						return database.query(SQLFunction.readOnly((context) -> {
+							return Set.copyOf(context
+									.select(NAMES.NAME)
+									.from(NAMES)
+									.where(NAMES.UPDATED.greaterThan(currentTimeMinusRetention))
+									.fetchSet(NAMES.NAME));
+						}));
 					});
 			// Load initial value
 			nameCache.get(Boolean.TRUE).join();

@@ -44,7 +44,7 @@ public interface RevocationOrder {
 	 * 
 	 * @return the ID of the punishment to be revoked if there is one
 	 */
-	Optional<Integer> getID();
+	Optional<Long> getID();
 
 	/**
 	 * Gets the punishment type of the punishment which will be revoked, or none if

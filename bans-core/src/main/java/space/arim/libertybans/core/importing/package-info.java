@@ -24,13 +24,13 @@
  * and names. <br>
  * <br>
  * <b>AdvancedBan</b> <br>
- * AdvancedBan has no dedicated persistent UUID/name cache. The plugin does store victim names
- * and UUIDs alongside each punishment. Also, it does not retain the operator UUID, but rather
+ * AdvancedBan has no dedicated persistent uuidField/name cache. The plugin does store victim names
+ * and UUIDs alongside each punishment. Also, it does not retain the operator uuidField, but rather
  * uses operator names. This requires a lookup during the import process. <br>
  * <br>
  * <b>LiteBans</b> <br>
- * LiteBans maintains a UUID and name store in litebans_history.
- * Additionally, it puts the victim name and UUID, and the operator name and UUID,
+ * LiteBans maintains a uuidField and name store in litebans_history.
+ * Additionally, it puts the victim name and uuidField, and the operator name and uuidField,
  * alongside each punishment.
  *
  */

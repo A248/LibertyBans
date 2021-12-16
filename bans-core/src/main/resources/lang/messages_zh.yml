@@ -244,7 +244,7 @@ alts:
      # %DETECTION_KIND% - 如何检测该帐户。将由 正常或 严格选项替代。
      # %ADDRESS% - 导致该账号变检测的地址
      # %RELEVANT_USER% - 另一个帐户的用户名，根据名称显示选项格式化
-     # %RELEVANT_USERID% - 另一个账号的 UUID
+     # %RELEVANT_USERID% - 另一个账号的 uuidField
      # %DATE_RECORDED% - 记录 alt 账号的时间
     layout: '%RELEVANT_USER% &7(每 %ADDRESS%) 于 %DATE_RECORDED% - %DETECTION_KIND%'
      # 当 alt 账号被 普通 检测出来时的信息输出

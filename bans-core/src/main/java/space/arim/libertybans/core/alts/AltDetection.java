@@ -21,18 +21,28 @@ package space.arim.libertybans.core.alts;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
-import space.arim.jdbcaesar.QuerySource;
+import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.impl.DSL;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.database.execute.SQLFunction;
+import space.arim.libertybans.core.database.sql.SimpleViewFields;
 import space.arim.libertybans.core.env.UUIDAndAddress;
+import space.arim.libertybans.core.database.sql.EndTimeCondition;
+import space.arim.libertybans.core.database.sql.VictimCondition;
 import space.arim.libertybans.core.service.Time;
-import space.arim.omnibus.util.UUIDUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+
+import static space.arim.libertybans.core.schema.tables.Addresses.ADDRESSES;
+import static space.arim.libertybans.core.schema.tables.LatestNames.LATEST_NAMES;
+import static space.arim.libertybans.core.schema.tables.SimpleBans.SIMPLE_BANS;
+import static space.arim.libertybans.core.schema.tables.SimpleMutes.SIMPLE_MUTES;
 
 public class AltDetection {
 
@@ -55,68 +65,76 @@ public class AltDetection {
 	 * to be readily visible rather than re-showing punishments from the dawn of time, whereas in
 	 * the lack of pagination we want to show a short and linear progression from old to new.
 	 *
-	 * @param querySource the query source with which to contact the database
-	 * @param uuid the user's UUID
+	 * @param context the query source with which to contact the database
+	 * @param uuid the user's uuidField
 	 * @param address the user's address
 	 * @param whichAlts which alts to detect
 	 * @return the detected alts, sorted in order of oldest first
 	 */
-	public List<DetectedAlt> detectAlts(QuerySource<?> querySource, UUID uuid, NetworkAddress address,
+	public List<DetectedAlt> detectAlts(DSLContext context, UUID uuid, NetworkAddress address,
 										WhichAlts whichAlts) {
 		// This implementation relies on strict detection including normal detection
 		// The detection kind is inferred while processing the results
-		long currentTime = time.currentTime();
-		List<DetectedAlt> detectedAlts = querySource.query(
-				"SELECT " +
-				"`detected_alt`.`address` `address`, `detected_alt`.`uuid` `uuid`, " +
-				"`latest_names`.`name` `name`, `detected_alt`.`updated` `updated`, " +
-				"`bans`.`victim` IS NOT NULL `has_ban`, `mutes`.`victim` IS NOT NULL `has_mute` " +
-				"FROM `libertybans_addresses` `addresses` " +
+		final Instant currentTime = time.currentTimestamp();
+		var detectedAlt = ADDRESSES.as("detected_alt");
+		Field<Boolean> hasBan = DSL.field(SIMPLE_BANS.VICTIM_TYPE.isNotNull()).as("has_ban");
+		Field<Boolean> hasMute = DSL.field(SIMPLE_MUTES.VICTIM_TYPE.isNotNull()).as("has_mute");
+		List<DetectedAlt> detectedAlts = context
+				.select(
+						detectedAlt.ADDRESS, detectedAlt.UUID,
+						LATEST_NAMES.NAME, detectedAlt.UPDATED,
+						hasBan, hasMute
+				)
+				.from(ADDRESSES)
 				// Detect alts
-				"INNER JOIN `libertybans_addresses` `detected_alt` " +
-				"ON `addresses`.`address` = `detected_alt`.`address` AND `addresses`.`uuid` != `detected_alt`.`uuid` " +
+				.innerJoin(detectedAlt)
+				.on(ADDRESSES.ADDRESS.eq(detectedAlt.ADDRESS))
+				.and(ADDRESSES.UUID.notEqual(detectedAlt.UUID))
 				// Map to names
-				"INNER JOIN `libertybans_latest_names` `latest_names` " +
-				"ON `latest_names`.`uuid` = `detected_alt`.`uuid` " +
+				.innerJoin(LATEST_NAMES)
+				.on(LATEST_NAMES.UUID.eq(detectedAlt.UUID))
 				// Pair with bans
-				"LEFT JOIN `libertybans_simple_bans` `bans` " +
-				"ON `bans`.`victim_type` = 'PLAYER' AND `bans`.`victim` = `detected_alt`.`uuid` AND (`bans`.`end` = 0 OR `bans`.`end` > ?) " +
+				.leftJoin(SIMPLE_BANS)
+				.on(new VictimCondition(new SimpleViewFields(SIMPLE_BANS)).matchesUUID(detectedAlt.UUID))
+				.and(new EndTimeCondition(new SimpleViewFields(SIMPLE_BANS)).isNotExpired(currentTime))
 				// Pair with mutes
-				"LEFT JOIN `libertybans_simple_mutes` `mutes` " +
-				"ON `mutes`.`victim_type` = 'PLAYER' AND `mutes`.`victim` = `detected_alt`.`uuid` AND (`mutes`.`end` = 0 OR `mutes`.`end` > ?) " +
+				.leftJoin(SIMPLE_MUTES)
+				.on(new VictimCondition(new SimpleViewFields(SIMPLE_MUTES)).matchesUUID(detectedAlt.UUID))
+				.and(new EndTimeCondition(new SimpleViewFields(SIMPLE_MUTES)).isNotExpired(currentTime))
 				// Select alts for the player in question
-				"WHERE `addresses`.`uuid` = ? " +
+				.where(ADDRESSES.UUID.eq(uuid))
 				// Order with oldest first
-				"ORDER BY `updated` ASC")
-				.params(currentTime, currentTime, uuid)
-				.listResult((resultSet) -> {
-					NetworkAddress detectedAddress = NetworkAddress.of(resultSet.getBytes("address"));
+				.orderBy(detectedAlt.UPDATED.asc())
+				.fetch((record) -> {
+					NetworkAddress detectedAddress = record.get(detectedAlt.ADDRESS);
 					// If this alt can be detected 'normally', then the address will be the same
 					DetectionKind detectionKind = (address.equals(detectedAddress)) ? DetectionKind.NORMAL : DetectionKind.STRICT;
 					// Determine most significant punishment
 					PunishmentType punishmentType;
-					if (resultSet.getBoolean("has_ban")) {
+					if (record.get(hasBan)) {
 						punishmentType = PunishmentType.BAN;
-					} else if (resultSet.getBoolean("has_mute")) {
+					} else if (record.get(hasMute)) {
 						punishmentType = PunishmentType.MUTE;
 					} else {
 						punishmentType = null;
 					}
 					return new DetectedAlt(
 							detectionKind,
-							punishmentType, detectedAddress,
-							UUIDUtil.fromByteArray(resultSet.getBytes("uuid")),
-							resultSet.getString("name"),
-							Instant.ofEpochSecond(resultSet.getLong("updated")));
-				}).execute();
+							punishmentType,
+							detectedAddress,
+							record.get(detectedAlt.UUID),
+							record.get(LATEST_NAMES.NAME),
+							record.get(detectedAlt.UPDATED)
+					);
+				});
 		switch (whichAlts) {
 		case ALL_ALTS:
 			break;
 		case BANNED_OR_MUTED_ALTS:
-			detectedAlts.removeIf((detectedAlt) -> detectedAlt.punishmentType().isEmpty());
+			detectedAlts.removeIf((alt) -> alt.punishmentType().isEmpty());
 			break;
 		case BANNED_ALTS:
-			detectedAlts.removeIf((detectedAlt) -> detectedAlt.punishmentType().orElse(null) != PunishmentType.BAN);
+			detectedAlts.removeIf((alt) -> alt.punishmentType().orElse(null) != PunishmentType.BAN);
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown WhichAlts " + whichAlts);
@@ -126,7 +144,7 @@ public class AltDetection {
 
 	public CentralisedFuture<List<DetectedAlt>> detectAlts(UUID uuid, NetworkAddress address, WhichAlts whichAlts) {
 		InternalDatabase database = dbProvider.get();
-		return database.selectAsync(() -> detectAlts(database.jdbCaesar(), uuid, address, whichAlts));
+		return database.query(SQLFunction.readOnly((context) -> detectAlts(context, uuid, address, whichAlts)));
 	}
 
 	public CentralisedFuture<List<DetectedAlt>> detectAlts(UUIDAndAddress userDetails, WhichAlts whichAlts) {

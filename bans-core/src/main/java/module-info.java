@@ -2,9 +2,12 @@ module space.arim.libertybans.core {
 	requires com.github.benmanes.caffeine;
 	requires com.zaxxer.hikari;
 	requires jakarta.inject;
+	requires static java.compiler;
 	requires net.kyori.adventure;
 	requires net.kyori.examination.api;
 	requires org.flywaydb.core;
+	requires static org.jetbrains.annotations;
+	requires org.jooq;
 	requires org.slf4j;
 	requires space.arim.api.env;
 	requires space.arim.api.jsonchat;
@@ -22,6 +25,7 @@ module space.arim.libertybans.core {
 	exports space.arim.libertybans.core.commands.usage to space.arim.injector;
 	exports space.arim.libertybans.core.config;
 	exports space.arim.libertybans.core.database to space.arim.dazzleconf, space.arim.injector;
+	exports space.arim.libertybans.core.database.flyway to org.flywaydb.core;
 	exports space.arim.libertybans.core.env;
 	//exports space.arim.libertybans.core.event;
 	exports space.arim.libertybans.core.importing;

@@ -37,7 +37,7 @@ public final class EmptyRevocationOrder implements RevocationOrder {
 	}
 
 	@Override
-	public Optional<Integer> getID() {
+	public Optional<Long> getID() {
 		throw new UnsupportedOperationException();
 	}
 

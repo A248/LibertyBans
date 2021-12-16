@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.config;
 
 import java.util.Map;
@@ -37,14 +38,22 @@ import space.arim.dazzleconf.annote.SubSection;
 		"",
 		"For most servers, the default options here are perfect. Most users will not need to bother here.",
 		"",
-		"However, for servers wishing to use MariaDB / MySQL, or for large servers wishing to tweak performance,",
-		"further setup is required.",
+		"However, for servers wishing to use an external database, or for large servers wishing to tweak performance,",
+		"further configuration is made here.",
 		"",
-		"MariaDB / MySQL Requirements",
-		"- Running MariaDB requires MariaDB 10.3 or newer.",
-		"- Running MySQL requires MySQL 8.0 or newer.",
-		"Older versions of MariaDB or MySQL are not supported.",
+		"Database version requirements:",
+		"- MariaDB: Requires MariaDB 10.3 or newer.",
+		"- MySQL: Requires MySQL 8.0 or newer.",
+		"- PostgreSQL: Requires PostgreSQL 12 or newer.",
+		"- CockroachDB: Requires the latest version. Support for this database is experimental.",
 		"",
+		"Older versions of these respective databases are not supported.",
+		"",
+		"Information on character sets and encoding:",
+		"- MariaDB: UTF8 is configured automatically",
+		"- MySQL: UTF8 is configured automatically",
+		"- PostgreSQL: UTF8 is used for the client encoding. It may be necessary to configure the database collation to use UTF8.",
+		"- CockroachDB: This database uses UTF8 regardless.",
 		"",
 		"Note well:",
 		"To apply changes made here, use '/libertybans restart' or restart the server.",
@@ -58,8 +67,12 @@ public interface SqlConfig {
 	@ConfComments({
 			"What RDMS vendor will you be using?",
 			"Available options:",
-			"'HSQLDB' - Local HyperSQL database. No additional setup required.",
-			"'MARIADB' - Requires an external database: MariaDB or MySQL. At least MariaDB 10.3 or MySQL 8.0 is required."})
+			"'HSQLDB' - Local HyperSQL database. No additional requirements.",
+			"'MARIADB' - Requires an external MariaDB database. At least MariaDB 10.3 is required.",
+			"'MYSQL' - Requires an external MySQL database. At least MySQL 8.0 is required.",
+			"'POSTGRES' - Requires an external PostgreSQL database. At least PostgreSQL 12 is required.",
+			"'COCKROACH' - Requires an external CockroachDB database. The latest CockroachDB is required. " +
+					"Warning: this option is strictly experimental."})
 	@DefaultString("HSQLDB")
 	Vendor vendor(); // Sensitive name used in integration testing
 	
@@ -100,9 +113,7 @@ public interface SqlConfig {
 	
 	@ConfKey("auth-details")
 	@SubSection
-	@ConfComments({
-		"MariaDB / MySQL authentication details",
-		"These must be changed to the proper credentials in order to use MariaDB/MySQL"})
+	@ConfComments("Authentication details for remote databases: used for MariaDB, MySQL, PostgreSQL, and CockroachDB.")
 	AuthDetails authDetails();  // Sensitive name used in integration testing
 	
 	interface AuthDetails {
@@ -117,21 +128,21 @@ public interface SqlConfig {
 		String database();
 		
 		@ConfKey("user")
-		@DefaultString("username")
+		@DefaultString("defaultuser")
 		String username();
 		
 		@DefaultString("defaultpass")
 		String password();
 		
 	}
-	
+
 	@ConfKey("mariadb")
-	@ConfComments("The values in this section only apply when using a MariaDB / MySQL database")
+	@ConfComments("The values in this section only apply when using a MariaDB or MySQL database")
 	@SubSection
 	MariaDbConfig mariaDb();
-	
+
 	interface MariaDbConfig {
-		
+
 		@ConfKey("connection-properties")
 		@ConfComments({
 				"Connection properties to be applied to database connections"
@@ -142,17 +153,26 @@ public interface SqlConfig {
 				"useServerPrepStmts", "true",
 				"cachePrepStmts", "true",
 				"prepStmtCacheSize", "25",
-				"prepStmtCacheSqlLimit", "256"})
+				"prepStmtCacheSqlLimit", "1024"})
 		Map<String, String> connectionProperties();
-		
-		@ConfKey("use-event-scheduler")
-		@ConfComments({"Whether to take advantage of the event scheduler to setup an event to clean out expired punishments.",
-			"You must also turn on your database's event scheduler in order to use this."})
-		@DefaultBoolean(false)
-		boolean useEventScheduler();
-		
+
 	}
-	
+
+	@ConfKey("postgres")
+	@ConfComments("The values in this section only apply when using a PostgreSQL or CockroachDB database")
+	@SubSection
+	PostgresConfig postgres();
+
+	interface PostgresConfig {
+
+		@ConfKey("connection-properties")
+		@ConfComments("Connection properties to be applied to database connections")
+		@DefaultMap({
+				"preparedStatementCacheQueries", "25"})
+		Map<String, String> connectionProperties();
+
+	}
+
 	@ConfKey("use-traditional-jdbc-url")
 	@ConfComments("Legacy option. Don't touch this unless you understand it or you're told to enable it.")
 	@DefaultBoolean(false)
@@ -162,13 +182,11 @@ public interface SqlConfig {
 	@SubSection
 	MuteCaching muteCaching();
 
-	@ConfHeader({"LibertyBans stores all punishments fully in the database, with one exception.",
-			"Mutes are cached for a small period of time so that players chatting does not ",
+	@ConfHeader({"All punishments are stored fully in the database, with one exception.",
+			"Mutes are cached for a small period of time so that players' chatting does not ",
 			"flood your database with queries.",
 			"",
-			"Note: It is possible, even likely, you do not need to touch this.",
-			"Among the servers which do configure a MariaDB database, an even fewer share of them ",
-			"will need to touch the mute cache settings."})
+			"Note: It is likely you do not need to touch this."})
 	interface MuteCaching {
 
 		@ConfKey("expiration-time-seconds")
@@ -184,7 +202,7 @@ public interface SqlConfig {
 				"which may modify mutes in the database outside of this instance of LibertyBans.",
 				"Examples: multi-proxy networks running multiple LibertyBans instances,",
 				"setups where LibertyBans is installed on multiple backend servers,",
-				"using a third-party tool which can delete or add mutes.",
+				"or using a third-party tool which can delete or add mutes.",
 				"EXPIRE_AFTER_WRITE is the correct semantic in these cases.",
 				"",
 				"EXPIRE_AFTER_WRITE will expire the cached mute after a fixed time has elapsed",

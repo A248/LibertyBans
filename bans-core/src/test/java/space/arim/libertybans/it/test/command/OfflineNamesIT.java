@@ -47,6 +47,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static space.arim.libertybans.core.schema.tables.Names.NAMES;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
 @ExtendWith(MockitoExtension.class)
@@ -91,15 +92,16 @@ public class OfflineNamesIT {
 		when(config.cacheRefreshSeconds()).thenReturn(Duration.ofMinutes(1L).toSeconds());
 
 		Instant now = Instant.ofEpochSecond(CURRENT_TIME);
-		dbProvider.get().jdbCaesar()
-				.query("INSERT INTO `libertybans_names` (`uuid`, `name`, `updated`) " +
-						"VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?)")
-				.params(
-						UUID.randomUUID(), "Sender", now.getEpochSecond(),
-						UUID.randomUUID(), "Player1", now.getEpochSecond(),
-						UUID.randomUUID(), "Player2", now.minus(Duration.ofHours(1L)).getEpochSecond(),
-						UUID.randomUUID(), "Player3", now.minus(Duration.ofHours(5L)).getEpochSecond())
-				.voidResult().execute();
+		dbProvider.get().execute((context) -> {
+			context
+					.insertInto(NAMES)
+					.columns(NAMES.UUID, NAMES.NAME, NAMES.UPDATED)
+					.values(UUID.randomUUID(), "Sender", now)
+					.values(UUID.randomUUID(), "Player1", now)
+					.values(UUID.randomUUID(), "Player2", now.minus(Duration.ofHours(1L)))
+					.values(UUID.randomUUID(), "Player3", now.minus(Duration.ofHours(5L)))
+					.execute();
+		}).join();
 
 		tabCompletion.startup();
 

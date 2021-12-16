@@ -28,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.jdbcaesar.JdbCaesar;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.scope.ScopeImpl;
@@ -169,7 +170,7 @@ public class AdvancedBanImportSourceTest {
 		PortablePunishment expectedPunishment = new PortablePunishment(0,
 				new PortablePunishment.KnownDetails(
 						PunishmentType.BAN, "No reason stated.", globalScope,
-						Instant.ofEpochMilli(startTime), PortablePunishment.KnownDetails.PERMANENT),
+						Instant.ofEpochMilli(startTime), Punishment.PERMANENT_END_DATE),
 				new PortablePunishment.VictimInfo(
 						null, victimName, NetworkAddress.of(InetAddress.getByName(victimIp))),
 				PortablePunishment.OperatorInfo.createUser(null, "Ecotastic"),
@@ -179,7 +180,7 @@ public class AdvancedBanImportSourceTest {
 
 	@Test
 	public void namesInUuidColumn() {
-		// AdvancedBan uses names in the UUID column on offline-mode servers
+		// AdvancedBan uses names in the uuidField column on offline-mode servers
 		String victimName = "Whoever";
 		String reason = "Some reason";
 		long startTime = 1593013804802L;
@@ -187,7 +188,7 @@ public class AdvancedBanImportSourceTest {
 		PortablePunishment expectedPunishment = new PortablePunishment(0,
 				new PortablePunishment.KnownDetails(
 						PunishmentType.BAN, reason, globalScope,
-						Instant.ofEpochMilli(startTime), PortablePunishment.KnownDetails.PERMANENT),
+						Instant.ofEpochMilli(startTime), Punishment.PERMANENT_END_DATE),
 				new PortablePunishment.VictimInfo(null, victimName, null),
 				PortablePunishment.OperatorInfo.createUser(null, "Ecotastic"),
 				true);

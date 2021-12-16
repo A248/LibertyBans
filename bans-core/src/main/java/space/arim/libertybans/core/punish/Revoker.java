@@ -21,27 +21,33 @@ package space.arim.libertybans.core.punish;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
-
+import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import space.arim.libertybans.core.service.Time;
-import space.arim.omnibus.util.ThisClass;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
-
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.revoke.RevocationOrder;
 import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.database.sql.EndTimeCondition;
+import space.arim.libertybans.core.database.sql.SimpleViewFields;
+import space.arim.libertybans.core.database.sql.TableForType;
+import space.arim.libertybans.core.database.sql.VictimCondition;
 import space.arim.libertybans.core.selector.MuteCache;
+import space.arim.libertybans.core.service.Time;
+import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
-import space.arim.jdbcaesar.query.ResultSetConcurrency;
+import java.time.Instant;
+
+import static space.arim.libertybans.core.schema.tables.Punishments.PUNISHMENTS;
+import static space.arim.libertybans.core.schema.tables.SimpleActive.SIMPLE_ACTIVE;
+import static space.arim.libertybans.core.schema.tables.SimpleHistory.SIMPLE_HISTORY;
 
 @Singleton
 public class Revoker implements InternalRevoker {
-	
+
 	private final FactoryOfTheFuture futuresFactory;
 	private final Provider<InternalDatabase> dbProvider;
 	private final PunishmentCreator creator;
@@ -70,16 +76,16 @@ public class Revoker implements InternalRevoker {
 			// Already expired
 			return futuresFactory.completedFuture(false);
 		}
-		return undoPunishmentByIdAndType(punishment.getID(), punishment.getType());
+		return undoPunishmentByIdAndType(punishment.getIdentifier(), punishment.getType());
 	}
 	
 	@Override
-	public RevocationOrder revokeByIdAndType(int id, PunishmentType type) {
+	public RevocationOrder revokeByIdAndType(long id, PunishmentType type) {
 		return new RevocationOrderImpl(this, id, type);
 	}
 
 	@Override
-	public RevocationOrder revokeById(int id) {
+	public RevocationOrder revokeById(long id) {
 		return new RevocationOrderImpl(this, id);
 	}
 
@@ -87,261 +93,141 @@ public class Revoker implements InternalRevoker {
 	public RevocationOrder revokeByTypeAndVictim(PunishmentType type, Victim victim) {
 		return new RevocationOrderImpl(this, type, victim);
 	}
-	
-	CentralisedFuture<Boolean> undoPunishmentByIdAndType(final int id, final PunishmentType type) {
+
+	private boolean deleteActivePunishmentByIdAndType(DSLContext context,
+													  final long id, final PunishmentType type) {
+		final Instant currentTime = time.currentTimestamp();
+
+		var table = new TableForType(type).dataTable();
+		var fields = table.newRecord();
+
+		int deleteCount = context
+				.deleteFrom(table)
+				.where(fields.field1().eq(id))
+				.execute();
+		logger.trace("deleteCount={} in deleteActivePunishmentByIdAndType", deleteCount);
+		if (deleteCount != 1) {
+			assert deleteCount == 0;
+			return false;
+		}
+		boolean wasNotExpired = context.fetchExists(context
+				.selectFrom(PUNISHMENTS)
+				.where(PUNISHMENTS.ID.eq(id))
+				.and(new EndTimeCondition(PUNISHMENTS.END).isNotExpired(currentTime))
+		);
+		logger.trace("wasNotExpired={} in deleteActivePunishmentByIdAndType", wasNotExpired);
+		return wasNotExpired;
+	}
+
+	private Punishment deleteAndGetActivePunishmentByIdAndType(DSLContext context,
+															   final long id, final PunishmentType type) {
+		final Instant currentTime = time.currentTimestamp();
+
+		var table = new TableForType(type).dataTable();
+		var fields = table.newRecord();
+
+		int deleteCount = context
+				.deleteFrom(table)
+				.where(fields.field1().eq(id))
+				.execute();
+		logger.trace("deleteCount={} in deleteAndGetActivePunishmentByIdAndType", deleteCount);
+		if (deleteCount != 1) {
+			return null;
+		}
+		Punishment result = context
+				.select(
+						SIMPLE_HISTORY.VICTIM_TYPE, SIMPLE_HISTORY.VICTIM_UUID, SIMPLE_HISTORY.VICTIM_ADDRESS,
+						SIMPLE_HISTORY.OPERATOR, SIMPLE_HISTORY.REASON,
+						SIMPLE_HISTORY.SCOPE, SIMPLE_HISTORY.START, SIMPLE_HISTORY.END
+				)
+				.from(SIMPLE_HISTORY)
+				.where(SIMPLE_HISTORY.ID.eq(id))
+				// If the punishment was expired, return null
+				.and(new EndTimeCondition(SIMPLE_HISTORY.END).isNotExpired(currentTime))
+				.fetchOne(creator.punishmentMapper(id, type));
+		logger.trace("result={} in deleteAndGetActivePunishmentByIdAndType", result);
+		return result;
+	}
+
+	CentralisedFuture<Boolean> undoPunishmentByIdAndType(final long id, final PunishmentType type) {
 		if (type == PunishmentType.KICK) {
 			// Kicks are never active
 			return futuresFactory.completedFuture(false);
 		}
 		InternalDatabase database = dbProvider.get();
-		return database.selectAsync(() -> {
-			final long currentTime = time.currentTime();
-
-			if (database.getVendor().hasDeleteFromJoin()) {
-				return database.jdbCaesar().query(
-						"DELETE `thetype` FROM `libertybans_" + type + "s` `thetype` "
-								+ "INNER JOIN `libertybans_punishments` `puns` ON `thetype`.`id` = `puns`.`id` "
-								+ "WHERE `thetype`.`id` = ? AND (`puns`.`end` = 0 OR `puns`.`end` > ?)")
-						.params(id, currentTime)
-						.updateCount((updateCount) -> updateCount == 1)
-						.execute();
-			}
-			return database.jdbCaesar().transaction().body((querySource, controller) -> {
-
-				boolean deleted = querySource.query(
-						"DELETE FROM `libertybans_" + type + "s` WHERE `id` = ?")
-						.params(id)
-						.updateCount((updateCount) -> updateCount == 1)
-						.execute();
-				logger.trace("deleted={} in undoPunishmentByIdAndType", deleted);
-				if (!deleted) {
-					return false;
-				}
-				long end = querySource.query(
-						"SELECT `end` FROM `libertybans_punishments` WHERE `id` = ?")
-						.params(id)
-						.singleResult(database::getEndFromResult).execute();
-				boolean expired = MiscUtil.isExpired(currentTime, end);
-				logger.trace("expired={} in undoPunishmentByIdAndType", expired);
-				return !expired;
-
-			}).execute();
+		return database.queryWithRetry((context, transaction) -> {
+			return deleteActivePunishmentByIdAndType(context, id, type);
 		});
 	}
-	
-	CentralisedFuture<Punishment> undoAndGetPunishmentByIdAndType(final int id, final PunishmentType type) {
+
+	CentralisedFuture<Punishment> undoAndGetPunishmentByIdAndType(final long id, final PunishmentType type) {
 		if (type == PunishmentType.KICK) {
 			// Kicks are never active
 			return futuresFactory.completedFuture(null);
 		}
 		InternalDatabase database = dbProvider.get();
-		return database.selectAsync(() -> {
-			final long currentTime = time.currentTime();
-			return database.jdbCaesar().transaction().body((querySource, controller) -> {
-
-				Victim victim = querySource.query(
-						// MariaDB-Connector requires the primary key to be present for ResultSet#deleteRow
-						"SELECT `id`, `victim`, `victim_type` FROM `libertybans_" + type + "s` "
-						+ "WHERE `id` = ? FOR UPDATE")
-						.params(id)
-						.resultSetConcurrency(ResultSetConcurrency.UPDATABLE)
-
-						.singleResult((resultSet) -> {
-							Victim found = database.getVictimFromResult(resultSet);
-							// Either the punishment is active and will be undone
-							// Or it is expired and may be cleaned out
-							resultSet.deleteRow();
-							return found;
-						}).execute();
-
-				logger.trace("victim={} in undoAndGetPunishmentByIdAndType", victim);
-				if (victim == null) {
-					return null;
-				}
-				Punishment result = querySource.query(
-						"SELECT `operator`, `reason`, `scope`, `start`, `end` FROM `libertybans_punishments` "
-						+ "WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
-						.params(id, currentTime)
-						.singleResult((resultSet) -> {
-							return creator.createPunishment(id, type, victim, database.getOperatorFromResult(resultSet),
-									database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
-									database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
-						}).execute();
-				logger.trace("result={} in undoAndGetPunishmentByIdAndType", result);
-				return result;
-			}).execute();
+		return database.queryWithRetry((context, transaction) -> {
+			return deleteAndGetActivePunishmentByIdAndType(context, id, type);
 		});
 	}
 	
-	CentralisedFuture<Boolean> undoPunishmentById(final int id) {
+	CentralisedFuture<Boolean> undoPunishmentById(final long id) {
 		InternalDatabase database = dbProvider.get();
-		return database.selectAsync(() -> {
-			final long currentTime = time.currentTime();
-
-			return database.jdbCaesar().transaction().body((querySource, controller) -> {
-				boolean hasDeleteFromJoin = database.getVendor().hasDeleteFromJoin();
-
-				for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
-
-					if (hasDeleteFromJoin) {
-						boolean deleted = querySource.query(
-								"DELETE `thetype` FROM `libertybans_" + type + "s` `thetype` "
-										+ "INNER JOIN `libertybans_punishments` `puns` ON `thetype`.`id` = `puns`.`id` "
-										+ "WHERE `thetype`.`id` = ? AND (`end` = 0 OR `end` > ?)")
-								.params(id, currentTime)
-								.updateCount((updateCount) -> updateCount == 1)
-								.execute();
-						if (deleted) {
-							return true;
-						}
-					} else {
-						boolean deleted = querySource.query(
-								"DELETE FROM `libertybans_" + type + "s` WHERE `id` = ?")
-								.params(id)
-								.updateCount((updateCount) -> updateCount == 1)
-								.execute();
-						logger.trace("deleted={} in undoPunishmentById", deleted);
-						if (deleted) {
-							long end = querySource.query(
-									"SELECT `end` FROM `libertybans_punishments` WHERE `id` = ?")
-									.params(id)
-									.singleResult(database::getEndFromResult).execute();
-							boolean expired = MiscUtil.isExpired(currentTime, end);
-							logger.trace("expired={} in undoPunishmentById", expired);
-							return !expired;
-						}
-					}
-				}
-				return false;
-			}).execute();
+		return database.queryWithRetry((context, transaction) -> {
+			PunishmentType type = context
+					.select(SIMPLE_ACTIVE.TYPE)
+					.from(SIMPLE_ACTIVE)
+					.where(SIMPLE_ACTIVE.ID.eq(id))
+					.fetchSingle(SIMPLE_ACTIVE.TYPE);
+			logger.trace("type={} in undoPunishmentById", type);
+			return type != null
+					&& deleteActivePunishmentByIdAndType(context, id, type);
 		});
 	}
-	
-	CentralisedFuture<Punishment> undoAndGetPunishmentById(final int id) {
+
+	CentralisedFuture<Punishment> undoAndGetPunishmentById(final long id) {
 		InternalDatabase database = dbProvider.get();
-		return database.selectAsync(() -> {
-			return database.jdbCaesar().transaction().body((querySource, controller) -> {
-
-				final long currentTime = time.currentTime();
-				for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
-
-					Victim victim = querySource.query(
-							// MariaDB-Connector requires the primary key to be present for ResultSet#deleteRow
-							"SELECT `id`, `victim`, `victim_type` FROM `libertybans_" + type + "s` "
-							+ "WHERE `id` = ? FOR UPDATE")
-							.params(id)
-							.resultSetConcurrency(ResultSetConcurrency.UPDATABLE)
-
-							.singleResult((resultSet) -> {
-								Victim found = database.getVictimFromResult(resultSet);
-								// Either the punishment is active and will be undone
-								// Or it is expired and may be cleaned out
-								resultSet.deleteRow();
-								return found;
-							}).execute();
-
-					logger.trace("victim={} in undoAndGetPunishmentById", victim);
-					if (victim != null) {
-						Punishment result = querySource.query(
-								"SELECT `operator`, `reason`, `scope`, `start`, `end` FROM `libertybans_punishments` "
-								+ "WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
-								.params(id, currentTime)
-								.singleResult((resultSet) -> {
-									return creator.createPunishment(id, type, victim, database.getOperatorFromResult(resultSet),
-											database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
-											database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
-								}).execute();
-						logger.trace("result={} in undoAndGetPunishmentById", result);
-						return result;
-					}
-				}
+		return database.queryWithRetry((context, transaction) -> {
+			PunishmentType type = context
+					.select(SIMPLE_ACTIVE.TYPE)
+					.from(SIMPLE_ACTIVE)
+					.where(SIMPLE_ACTIVE.ID.eq(id))
+					.fetchSingle(SIMPLE_ACTIVE.TYPE);
+			logger.trace("type={} in undoAndGetPunishmentById", type);
+			if (type == null) {
 				return null;
-			}).execute();
+			}
+			return deleteAndGetActivePunishmentByIdAndType(context, id, type);
 		});
 	}
-	
+
 	CentralisedFuture<Boolean> undoPunishmentByTypeAndVictim(final PunishmentType type, final Victim victim) {
+		MiscUtil.checkSingular(type);
 		InternalDatabase database = dbProvider.get();
-		return database.selectAsync(() -> {
-			final long currentTime = time.currentTime();
-
-			if (database.getVendor().hasDeleteFromJoin()) {
-				return database.jdbCaesar().query(
-						"DELETE `thetype` FROM `libertybans_" + type + "s` `thetype` "
-								+ "INNER JOIN `libertybans_punishments` `puns` ON `thetype`.`id` = `puns`.`id` "
-								+ "WHERE `thetype`.`victim` = ? AND `thetype`.`victim_type` = ? "
-								+ "AND (`end` = 0 OR `end` > ?)")
-						.params(victim, victim.getType(), currentTime)
-						.updateCount((updateCount) -> updateCount == 1)
-						.execute();
-			}
-			return database.jdbCaesar().transaction().body((querySource, controller) -> {
-
-				Integer id = querySource.query(
-						"SELECT `id` FROM `libertybans_" + type + "s` "
-						+ "WHERE `victim` = ? AND `victim_type` = ? FOR UPDATE")
-						.params(victim, victim.getType())
-						.resultSetConcurrency(ResultSetConcurrency.UPDATABLE)
-
-						.singleResult((resultSet) -> {
-							// Either the punishment is active and will be undone
-							// Or it is expired and may be cleaned out
-							int foundId = resultSet.getInt("id");
-							resultSet.deleteRow();
-							return foundId;
-						}).execute();
-				logger.trace("id={} in undoPunishmentByTypeAndVictim", id);
-				if (id == null) {
-					return false;
-				}
-				long end = querySource.query(
-						"SELECT `end` FROM `libertybans_punishments` WHERE `id` = ?")
-						.params(id)
-						.singleResult(database::getEndFromResult).execute();
-				boolean expired = MiscUtil.isExpired(currentTime, end);
-				logger.trace("expired={} in undoPunishmentByTypeAndVictim", expired);
-				return !expired;
-			}).execute();
+		return database.queryWithRetry((context, transaction) -> {
+			Long id = context
+					.select(SIMPLE_ACTIVE.ID)
+					.from(SIMPLE_ACTIVE)
+					.where(new VictimCondition(new SimpleViewFields(SIMPLE_ACTIVE)).matchesVictim(victim))
+					.fetchOne(SIMPLE_ACTIVE.ID);
+			logger.trace("id={} in undoPunishmentByTypeAndVictim", id);
+			return id != null && deleteActivePunishmentByIdAndType(context, id, type);
 		});
 	}
 
 	CentralisedFuture<Punishment> undoAndGetPunishmentByTypeAndVictim(final PunishmentType type, final Victim victim) {
 		InternalDatabase database = dbProvider.get();
-		return database.selectAsync(() -> {
-			final long currentTime = time.currentTime();
-			return database.jdbCaesar().transaction().body((querySource, controller) -> {
-
-				Integer id = querySource.query(
-						"SELECT `id` FROM `libertybans_" + type + "s` "
-						+ "WHERE `victim` = ? AND `victim_type` = ? FOR UPDATE")
-						.params(victim, victim.getType())
-						.resultSetConcurrency(ResultSetConcurrency.UPDATABLE)
-
-						.singleResult((resultSet) -> {
-							// Either the punishment is active and will be undone
-							// Or it is expired and may be cleaned out
-							int foundId = resultSet.getInt("id");
-							resultSet.deleteRow();
-							return foundId;
-						}).execute();
-
-				logger.trace("id={} in undoAndGetPunishmentByTypeAndVictim", id);
-				if (id == null) {
-					return null;
-				}
-				Punishment result = querySource.query(
-						"SELECT `operator`, `reason`, `scope`, `start`, `end` FROM `libertybans_punishments` "
-						+ "WHERE `id` = ? AND (`end` = 0 OR `end` > ?)")
-						.params(id, currentTime)
-						.singleResult((resultSet) -> {
-							return creator.createPunishment(id, type,
-									victim, database.getOperatorFromResult(resultSet),
-									database.getReasonFromResult(resultSet), database.getScopeFromResult(resultSet),
-									database.getStartFromResult(resultSet), database.getEndFromResult(resultSet));
-						}).execute();
-				logger.trace("result={} in undoAndGetPunishmentByTypeAndVictim", result);
-				return result;
-			}).execute();
+		return database.queryWithRetry((context, transaction) -> {
+			Long id = context
+					.select(SIMPLE_ACTIVE.ID)
+					.from(SIMPLE_ACTIVE)
+					.where(new VictimCondition(new SimpleViewFields(SIMPLE_ACTIVE)).matchesVictim(victim))
+					.fetchOne(SIMPLE_ACTIVE.ID);
+			logger.trace("id={} in undoAndGetPunishmentByTypeAndVictim", id);
+			if (id == null) {
+				return null;
+			}
+			return deleteAndGetActivePunishmentByIdAndType(context, id, type);
 		});
 	}
 	
