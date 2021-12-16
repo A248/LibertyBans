@@ -41,13 +41,13 @@ public interface UUIDManager extends UserResolver, Part {
 	CentralisedFuture<NetworkAddress> lookupAddress(String name);
 
 	/**
-	 * Performs a full lookup of a UUID from an exact player name. <br>
+	 * Performs a full lookup of a uuidField from an exact player name. <br>
 	 * Differs from {@link #lookupUUID(String)} in that this method
 	 * assumes the name to be exactly cased, in order that offline UUIDs
 	 * may be calculated from it
 	 *
 	 * @param name the exact player name. Must be correctly cased
-	 * @return a future yielding the UUID or an empty optional if not found
+	 * @return a future yielding the uuidField or an empty optional if not found
 	 */
 	CentralisedFuture<Optional<UUID>> lookupUUIDFromExactName(String name);
 

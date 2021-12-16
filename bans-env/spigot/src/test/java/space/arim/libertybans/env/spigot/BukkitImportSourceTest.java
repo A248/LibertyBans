@@ -25,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.core.importing.PortablePunishment;
 import space.arim.libertybans.core.scope.ScopeImpl;
@@ -81,7 +82,7 @@ public class BukkitImportSourceTest {
 						null,
 						new PortablePunishment.KnownDetails(
 								PunishmentType.BAN, reason, ScopeImpl.GLOBAL,
-								start, PortablePunishment.KnownDetails.PERMANENT),
+								start, Punishment.PERMANENT_END_DATE),
 						new PortablePunishment.VictimInfo(null, username, null),
 						PortablePunishment.OperatorInfo.createUser(null, operator),
 						true)),
@@ -104,7 +105,7 @@ public class BukkitImportSourceTest {
 						null,
 						new PortablePunishment.KnownDetails(
 								PunishmentType.BAN, reason, ScopeImpl.GLOBAL,
-								start, PortablePunishment.KnownDetails.PERMANENT),
+								start, Punishment.PERMANENT_END_DATE),
 						new PortablePunishment.VictimInfo(null, null, NetworkAddress.of(address)),
 						PortablePunishment.OperatorInfo.createUser(null, operator),
 						true)),

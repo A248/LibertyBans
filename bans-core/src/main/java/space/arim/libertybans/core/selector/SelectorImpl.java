@@ -78,17 +78,17 @@ public class SelectorImpl implements InternalSelector {
 	 */
 
 	@Override
-	public ReactionStage<Optional<Punishment>> getActivePunishmentById(int id) {
+	public ReactionStage<Optional<Punishment>> getActivePunishmentById(long id) {
 		return idImpl.getActivePunishmentById(id).thenApply(Optional::ofNullable);
 	}
 
 	@Override
-	public ReactionStage<Optional<Punishment>> getActivePunishmentByIdAndType(int id, PunishmentType type) {
+	public ReactionStage<Optional<Punishment>> getActivePunishmentByIdAndType(long id, PunishmentType type) {
 		return idImpl.getActivePunishmentByIdAndType(id, type).thenApply(Optional::ofNullable);
 	}
 
 	@Override
-	public ReactionStage<Optional<Punishment>> getHistoricalPunishmentById(int id) {
+	public ReactionStage<Optional<Punishment>> getHistoricalPunishmentById(long id) {
 		return idImpl.getHistoricalPunishmentById(id).thenApply(Optional::ofNullable);
 	}
 

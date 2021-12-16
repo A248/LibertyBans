@@ -58,7 +58,7 @@ public class StandardArgumentParser implements ArgumentParser {
 		return configs.getMessagesConfig().all().notFound();
 	}
 	
-	// UUID from name
+	// uuidField from name
 	
 	private CentralisedFuture<UUID> parseOrLookupUUID(CmdSender sender, String targetArg) {
 		switch (targetArg.length()) {

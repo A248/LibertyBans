@@ -1,40 +1,30 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.core.punish;
 
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
+package space.arim.libertybans.core.punish;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
-
 import net.kyori.adventure.text.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import space.arim.omnibus.util.ThisClass;
-import space.arim.omnibus.util.UUIDUtil;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
-
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
@@ -43,6 +33,7 @@ import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.ExactTargetMatcher;
 import space.arim.libertybans.core.env.TargetMatcher;
@@ -51,6 +42,16 @@ import space.arim.libertybans.core.selector.AddressStrictness;
 import space.arim.libertybans.core.selector.InternalSelector;
 import space.arim.libertybans.core.selector.MuteCache;
 import space.arim.libertybans.core.uuid.UUIDManager;
+import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
+
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+
+import static space.arim.libertybans.core.schema.tables.Addresses.ADDRESSES;
+import static space.arim.libertybans.core.schema.tables.StrictLinks.STRICT_LINKS;
 
 @Singleton
 public class StandardEnforcer implements Enforcer {
@@ -173,12 +174,13 @@ public class StandardEnforcer implements Enforcer {
 		private CentralisedFuture<TargetMatcher<P>> matchAddressPunishmentNormal(
 				NetworkAddress address, Punishment punishment, Component message) {
 			InternalDatabase database = dbProvider.get();
-			return database.selectAsync(() -> {
-				Set<UUID> uuids = database.jdbCaesar().query(
-						"SELECT `uuid` FROM `libertybans_addresses` WHERE `address` = ?")
-						.params(address)
-						.setResult((resultSet) -> UUIDUtil.fromByteArray(resultSet.getBytes("uuid")))
-						.execute();
+			return database.query(SQLFunction.readOnly((context) -> {
+				return context
+						.select(ADDRESSES.UUID)
+						.from(ADDRESSES)
+						.where(ADDRESSES.ADDRESS.eq(address))
+						.fetchSet(ADDRESSES.UUID);
+			})).thenApply((uuids) -> {
 				return new UUIDTargetMatcher<>(uuids, enforcementCallback(punishment, message));
 			});
 		}
@@ -186,15 +188,15 @@ public class StandardEnforcer implements Enforcer {
 		private CentralisedFuture<TargetMatcher<P>> matchAddressPunishmentStrict(
 				NetworkAddress address, Punishment punishment, Component message) {
 			InternalDatabase database = dbProvider.get();
-			return database.selectAsync(() -> {
-				Set<UUID> uuids = database.jdbCaesar().query(
-						"SELECT `links`.`uuid2` FROM `libertybans_strict_links` `links` " +
-								"INNER JOIN `libertybans_addresses` `addrs` " +
-								"ON `links`.`uuid1` = `addrs`.`uuid` " +
-								"WHERE `addrs`.`address` = ?")
-						.params(address)
-						.setResult((resultSet) -> UUIDUtil.fromByteArray(resultSet.getBytes("uuid2")))
-						.execute();
+			return database.query(SQLFunction.readOnly((context) -> {
+				return context
+						.select(STRICT_LINKS.UUID2)
+						.from(STRICT_LINKS)
+						.innerJoin(ADDRESSES)
+						.on(STRICT_LINKS.UUID1.eq(ADDRESSES.UUID))
+						.where(ADDRESSES.ADDRESS.eq(address))
+						.fetchSet(STRICT_LINKS.UUID2);
+			})).thenApply((uuids) -> {
 				return new UUIDTargetMatcher<>(uuids, enforcementCallback(punishment, message));
 			});
 		}

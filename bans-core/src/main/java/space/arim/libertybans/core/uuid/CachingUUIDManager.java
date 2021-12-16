@@ -118,13 +118,13 @@ public final class CachingUUIDManager implements UUIDManager {
 	}
 
 	/*
-	 * UUID resolution works as follows:
+	 * uuidField resolution works as follows:
 	 * 
 	 * 1. Check caches
 	 * 2. Check online players
 	 * 3. Check own database
 	 * 4. If online server, check Mojang API and third party web APIs where configured.
-	 * If offline server and exact name provided, compute offline UUID.
+	 * If offline server and exact name provided, compute offline uuidField.
 	 */
 	
 	@Override

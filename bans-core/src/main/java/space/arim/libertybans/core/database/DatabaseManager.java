@@ -63,7 +63,7 @@ public class DatabaseManager implements Part {
 		return folder;
 	}
 	
-	FactoryOfTheFuture futuresFactory() {
+	public FactoryOfTheFuture futuresFactory() {
 		return futuresFactory;
 	}
 	
@@ -95,7 +95,7 @@ public class DatabaseManager implements Part {
 			database.closeCompletely();
 			throw new StartupException("Database initialisation failed");
 		}
-		database.startRefreshTaskIfNecessary(time);
+		database.startRefreshTask(time);
 		this.database = database;
 	}
 	
@@ -109,7 +109,7 @@ public class DatabaseManager implements Part {
 			database.close();
 			throw new StartupException("Database restart failed");
 		}
-		currentDatabase.cancelRefreshTaskIfNecessary();
+		currentDatabase.cancelRefreshTask();
 
 		if (currentDatabase.getVendor() == database.getVendor()) {
 			currentDatabase.close();
@@ -117,14 +117,14 @@ public class DatabaseManager implements Part {
 			currentDatabase.closeCompletely();
 		}
 
-		database.startRefreshTaskIfNecessary(time);
+		database.startRefreshTask(time);
 		this.database = database;
 	}
 
 	@Override
 	public void shutdown() {
 		StandardDatabase database = this.database;
-		database.cancelRefreshTaskIfNecessary();
+		database.cancelRefreshTask();
 		database.closeCompletely();
 	}
 	

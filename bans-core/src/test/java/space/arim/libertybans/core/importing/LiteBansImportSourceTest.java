@@ -28,6 +28,7 @@ import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.scope.ScopeImpl;
@@ -55,8 +56,8 @@ public class LiteBansImportSourceTest {
 	private JdbCaesar jdbCaesar;
 
 	private final ServerScope globalScope = ScopeImpl.GLOBAL;
-	private final ServerScope kitpvpScope = ScopeImpl.create("kitpvp");
-	private final ServerScope lobbyScope = ScopeImpl.create("lobby");
+	private final ServerScope kitpvpScope = ScopeImpl.specificServer("kitpvp");
+	private final ServerScope lobbyScope = ScopeImpl.specificServer("lobby");
 
 	@BeforeEach
 	public void setup(ConnectionSource connectionSource) throws SQLException, IOException {
@@ -105,7 +106,7 @@ public class LiteBansImportSourceTest {
 		PortablePunishment kickByConsole = new PortablePunishment(1,
 				new PortablePunishment.KnownDetails(
 						PunishmentType.KICK, "test", kitpvpScope,
-						Instant.ofEpochMilli(kickOneDate), PortablePunishment.KnownDetails.PERMANENT),
+						Instant.ofEpochMilli(kickOneDate), Punishment.PERMANENT_END_DATE),
 				new PortablePunishment.VictimInfo(uuid, null, address, PlayerVictim.of(uuid)),
 				PortablePunishment.OperatorInfo.createConsole(),
 				false);
@@ -120,7 +121,7 @@ public class LiteBansImportSourceTest {
 		PortablePunishment kickByEcotastic = new PortablePunishment(2,
 				new PortablePunishment.KnownDetails(
 						PunishmentType.KICK, "test2", globalScope,
-						Instant.ofEpochMilli(kickTwoDate), PortablePunishment.KnownDetails.PERMANENT),
+						Instant.ofEpochMilli(kickTwoDate), Punishment.PERMANENT_END_DATE),
 				new PortablePunishment.VictimInfo(uuid, null, address, PlayerVictim.of(uuid)),
 				PortablePunishment.OperatorInfo.createUser(ecotasticUUID, "Ecotastic"),
 				false);
@@ -140,7 +141,7 @@ public class LiteBansImportSourceTest {
 		PortablePunishment expectedPunishment = new PortablePunishment(1,
 				new PortablePunishment.KnownDetails(
 						PunishmentType.BAN, "No reason stated.", lobbyScope,
-						Instant.ofEpochMilli(startTime), PortablePunishment.KnownDetails.PERMANENT),
+						Instant.ofEpochMilli(startTime), Punishment.PERMANENT_END_DATE),
 				new PortablePunishment.VictimInfo(
 						victimUUID, null, victimAddress, AddressVictim.of(victimAddress)),
 				PortablePunishment.OperatorInfo.createUser(ecotasticUUID, "Ecotastic"),

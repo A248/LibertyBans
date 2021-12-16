@@ -21,18 +21,22 @@ package space.arim.libertybans.core.alts;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
+import org.jooq.Field;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.punish.MiscUtil;
-import space.arim.omnibus.util.UUIDUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+
+import static space.arim.libertybans.core.schema.tables.Addresses.ADDRESSES;
+import static space.arim.libertybans.core.schema.tables.LatestNames.LATEST_NAMES;
 
 public class AccountHistory {
 
@@ -43,30 +47,29 @@ public class AccountHistory {
 		this.dbProvider = dbProvider;
 	}
 
-	private CentralisedFuture<List<KnownAccount>> knownAccountsWhere(String columnName, Object parameter) {
+	private <P> CentralisedFuture<List<KnownAccount>> knownAccountsWhere(Field<P> field, P parameter) {
 		InternalDatabase database = dbProvider.get();
-		return database.selectAsync(() -> {
-			return database.jdbCaesar()
-					.query("SELECT " +
-							"`addresses`.`uuid`, `addresses`.`address`, `latest_names`.`name`, `addresses`.`updated` " +
-							"FROM `libertybans_addresses` `addresses` " +
-							"INNER JOIN `libertybans_latest_names` `latest_names` " +
-							"ON `addresses`.`uuid` = `latest_names`.`uuid` " +
-							"WHERE `addresses`.`" + columnName + "` = ? " +
-							"ORDER BY `addresses`.`updated` ASC")
-					.params(parameter)
-					.listResult((resultSet) -> {
+		return database.query(SQLFunction.readOnly((context) -> {
+			return context
+					.select(ADDRESSES.UUID, ADDRESSES.ADDRESS, LATEST_NAMES.NAME, ADDRESSES.UPDATED)
+					.from(ADDRESSES)
+					.innerJoin(LATEST_NAMES)
+					.on(ADDRESSES.UUID.eq(LATEST_NAMES.UUID))
+					.where(field.eq(parameter))
+					.orderBy(ADDRESSES.UPDATED.asc())
+					.fetch((record) -> {
 						return new KnownAccount(
-								UUIDUtil.fromByteArray(resultSet.getBytes("uuid")),
-								resultSet.getString("name"),
-								NetworkAddress.of(resultSet.getBytes("address")),
-								Instant.ofEpochSecond(resultSet.getLong("updated")));
-					}).execute();
-		});
+								record.get(ADDRESSES.UUID),
+								record.get(LATEST_NAMES.NAME),
+								record.get(ADDRESSES.ADDRESS),
+								record.get(ADDRESSES.UPDATED)
+						);
+					});
+		}));
 	}
 
 	/**
-	 * Selects known accounts for a UUID or IP address. <br>
+	 * Selects known accounts for a uuidField or IP address. <br>
 	 * <br>
 	 * The returned accounts are sorted with the oldest first. See {@link AltDetection}
 	 * for a description of why this sort order is used.
@@ -78,10 +81,10 @@ public class AccountHistory {
 		switch (victim.getType()) {
 		case PLAYER:
 			UUID uuid = ((PlayerVictim) victim).getUUID();
-			return knownAccountsWhere("uuid", uuid);
+			return knownAccountsWhere(ADDRESSES.UUID, uuid);
 		case ADDRESS:
 			NetworkAddress address = ((AddressVictim) victim).getAddress();
-			return knownAccountsWhere("address", address);
+			return knownAccountsWhere(ADDRESSES.ADDRESS, address);
 		default:
 			throw MiscUtil.unknownVictimType(victim.getType());
 		}
@@ -89,12 +92,12 @@ public class AccountHistory {
 
 	public CentralisedFuture<Boolean> deleteAccount(UUID user, Instant recorded) {
 		InternalDatabase database = dbProvider.get();
-		return database.selectAsync(() -> {
-			int updateCount = database.jdbCaesar()
-					.query("DELETE FROM `libertybans_addresses` " +
-							"WHERE `uuid` = ? AND `updated` = ?")
-					.params(user, recorded.getEpochSecond())
-					.updateCount().execute();
+		return database.queryWithRetry((context, transaction) -> {
+			int updateCount = context
+					.deleteFrom(ADDRESSES)
+					.where(ADDRESSES.UUID.eq(user))
+					.and(ADDRESSES.UPDATED.eq(recorded))
+					.execute();
 			return updateCount != 0;
 		});
 	}

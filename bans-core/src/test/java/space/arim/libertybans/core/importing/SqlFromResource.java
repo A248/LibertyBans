@@ -19,13 +19,8 @@
 
 package space.arim.libertybans.core.importing;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import space.arim.libertybans.core.config.ReadFromResource;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -51,15 +46,10 @@ class SqlFromResource {
 	}
 
 	void runSqlFrom(String resource) {
-		URL resourceUrl = getClass().getResource("/" + resource);
-		assert resourceUrl != null : "Resource " + resource + " not found";
-		try (InputStream sqlStream = resourceUrl.openStream();
-			 InputStreamReader inputReader = new InputStreamReader(sqlStream, StandardCharsets.UTF_8);
-			 BufferedReader bufferedReader = new BufferedReader(inputReader)) {
-
+		new ReadFromResource(resource).readBuffered((reader) -> {
 			StringBuilder currentQuery = new StringBuilder();
 			String line;
-			while ((line = bufferedReader.readLine()) != null) {
+			while ((line = reader.readLine()) != null) {
 				if (line.contains(";")) {
 					String[] split = line.split(";");
 
@@ -85,9 +75,8 @@ class SqlFromResource {
 			if (!lastQuery.isBlank()) {
 				runQuery(lastQuery);
 			}
-		} catch (IOException ex) {
-			throw new UncheckedIOException(ex);
-		}
+			return null;
+		});
 	}
 
 	private void runQuery(CharSequence query) {

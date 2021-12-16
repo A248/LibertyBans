@@ -39,11 +39,26 @@ public final class ScopeImpl implements ServerScope {
 	 * @param server the server name. cannot be empty
 	 * @return the scope
 	 */
-	public static ScopeImpl create(String server) {
+	public static ScopeImpl specificServer(String server) {
 		if (server.isEmpty()) {
 			throw new IllegalArgumentException("Server cannot be empty");
 		}
 		return new ScopeImpl(server);
+	}
+
+	/**
+	 * Gets the server for this scope
+	 *
+	 * @param scope the scope
+	 * @param defaultIfGlobal if the scope turns out to be global, this will be returned instead
+	 * @return the server for this scope, or {@code defaultIfGlobal} if this is the global scope
+	 */
+	public static String getServer(ServerScope scope, String defaultIfGlobal) {
+		if (!(scope instanceof ScopeImpl)) {
+			throw new IllegalArgumentException("Foreign implementation of Scope: " + scope.getClass());
+		}
+		String server = ((ScopeImpl) scope).server();
+		return server.isEmpty() ? defaultIfGlobal : server;
 	}
 
 	String server() {

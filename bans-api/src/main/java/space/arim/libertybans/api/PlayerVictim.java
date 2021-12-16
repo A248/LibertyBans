@@ -30,16 +30,16 @@ import java.util.UUID;
 public final class PlayerVictim extends Victim {
 
 	private final UUID uuid;
-	
+
 	private PlayerVictim(UUID uuid) {
 		this.uuid = Objects.requireNonNull(uuid, "uuid");
 	}
-	
+
 	/**
 	 * Gets a victim from a UUID
 	 * 
 	 * @param uuid the player UUID
-	 * @return the victim representation of the player
+	 * @return a player victim
 	 */
 	public static PlayerVictim of(UUID uuid) {
 		return new PlayerVictim(uuid);
@@ -64,28 +64,22 @@ public final class PlayerVictim extends Victim {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + uuid.hashCode();
-		return result;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		PlayerVictim that = (PlayerVictim) o;
+		return uuid.equals(that.uuid);
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		if (this == object) {
-			return true;
-		}
-		if (!(object instanceof PlayerVictim)) {
-			return false;
-		}
-		PlayerVictim other = (PlayerVictim) object;
-		return uuid.equals(other.uuid);
+	public int hashCode() {
+		return uuid.hashCode();
 	}
 
 	@Override
 	public String toString() {
-		return "PlayerVictim [uuid=" + uuid + "]";
+		return "PlayerVictim{" +
+				"uuid=" + uuid +
+				'}';
 	}
-
 }

@@ -19,8 +19,8 @@
 
 package space.arim.libertybans.core.importing;
 
-import space.arim.jdbcaesar.QuerySource;
 import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.database.execute.SQLTransactionalRunnable;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -34,21 +34,15 @@ class BatchOperationExecutor implements AutoCloseable {
 	private final InternalDatabase database;
 
 	private Connection connection;
-	private QuerySource<?> querySource;
 	private int countInThisConnection;
 
-	private static final int OPERATIONS_PER_CONNECTION = 50;
+	private static final int OPERATIONS_PER_CONNECTION = 200;
 
 	BatchOperationExecutor(InternalDatabase database) {
 		this.database = database;
 	}
 
-	@FunctionalInterface
-	interface SQLOperation {
-		void run(QuerySource<?> querySource, Connection connection) throws SQLException;
-	}
-
-	void runOperation(SQLOperation operation) {
+	void runOperation(SQLTransactionalRunnable operation) {
 		try {
 			runOperationChecked(operation);
 		} catch (SQLException ex) {
@@ -56,16 +50,17 @@ class BatchOperationExecutor implements AutoCloseable {
 		}
 	}
 
-	private void runOperationChecked(SQLOperation operation) throws SQLException {
+	private void runOperationChecked(SQLTransactionalRunnable operation) throws SQLException {
 		openConnectionIfNecessary();
 
-		operation.run(querySource, connection);
 		/*
 		 * Committing every time is a necessity. Queries cannot be batched together
 		 * because otherwise the open transaction leads to deadlocks with other
-		 * queries, such as UUID lookups for name-based operators.
+		 * queries, such as uuidField lookups for name-based operators.
+		 *
+		 * Committing is handled by #executeWithExistingConnection
 		 */
-		connection.commit();
+		database.executeWithExistingConnection(connection, operation);
 
 		if (++countInThisConnection == OPERATIONS_PER_CONNECTION) {
 			countInThisConnection = 0;
@@ -80,7 +75,6 @@ class BatchOperationExecutor implements AutoCloseable {
 	private void openConnectionIfNecessary() throws SQLException {
 		if (connection == null) {
 			connection = database.getConnection();
-			querySource = database.jdbCaesar().assimilate(connection);
 		}
 	}
 
@@ -89,13 +83,6 @@ class BatchOperationExecutor implements AutoCloseable {
 			connection.close();
 		} finally {
 			connection = null;
-			querySource = null;
-		}
-	}
-
-	void finish() throws SQLException {
-		if (connection != null) {
-			connection.commit();
 		}
 	}
 

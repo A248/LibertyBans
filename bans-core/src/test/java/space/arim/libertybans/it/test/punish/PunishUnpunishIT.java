@@ -19,7 +19,6 @@
 package space.arim.libertybans.it.test.punish;
 
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.api.Operator;
@@ -39,25 +38,20 @@ import space.arim.libertybans.it.resolver.RandomPunishmentTypeResolver;
 import space.arim.libertybans.it.resolver.RandomReasonResolver;
 import space.arim.libertybans.it.resolver.RandomReasonResolver.Reason;
 import space.arim.libertybans.it.resolver.RandomVictimResolver;
-import space.arim.libertybans.it.util.RandomUtil;
-import space.arim.libertybans.it.util.TestingUtil;
-import space.arim.omnibus.util.concurrent.ReactionStage;
 
-import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static space.arim.libertybans.it.util.TestingUtil.assertEqualDetails;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
 @ExtendWith({RandomPunishmentTypeResolver.class, RandomOperatorResolver.class,
 	RandomVictimResolver.class, RandomReasonResolver.class})
+@RandomPunishmentTypeResolver.NotAKick
 public class PunishUnpunishIT {
 
 	private final PunishmentDrafter drafter;
 	private final PunishmentRevoker revoker;
 	private final Enforcer enforcer;
-	private final PunishmentType type;
+	private PunishmentType type;
 	private final Operator operator;
 	private final Victim victim;
 	private final String reason;
@@ -75,88 +69,203 @@ public class PunishUnpunishIT {
 		this.reason = reason;
 	}
 
-	@TestTemplate
-	@SetAddressStrictness(all = true)
-	public void testPunishThenUndo() {
-		DraftPunishment draft = drafter.draftBuilder().type(type).victim(victim)
+	private DraftPunishment draftPunishment() {
+		return drafter.draftBuilder().type(type).victim(victim)
 				.operator(operator).reason(reason).build();
-
-		ReactionStage<Optional<Punishment>> enactedFuture;
-		if (RandomUtil.randomBoolean()) {
-			enactedFuture = draft.enactPunishment();
-		} else {
-			enactedFuture = draft.enactPunishmentWithoutEnforcement();
-		}
-		Punishment enacted = enactedFuture.toCompletableFuture().join().orElse(null);
-
-		assertNotNull(enacted, "Initial enactment failed for " + this);
-		TestingUtil.assertEqualDetails(draft, enacted);
-
-		if (type == PunishmentType.KICK) {
-			// Kicks are always history, therefore never applicable, and cannot be undone
-			return;
-		}
-
-		testUndo(enacted);
 	}
 
-	private void testUndo(Punishment enacted) {
-		int randomFrom1To4 = ThreadLocalRandom.current().nextInt(4) + 1;
-		RevocationOrder order;
-
-		switch (randomFrom1To4) {
-
-		case 1: /* Revoke directly */
-			ReactionStage<Boolean> undoFuture;
-			if (RandomUtil.randomBoolean()) {
-				undoFuture = enacted.undoPunishment();
-			} else {
-				undoFuture = enacted.undoPunishmentWithoutUnenforcement();
-			}
-			assertTrue(undoFuture.toCompletableFuture().join());
-			return;
-
-		case 2: /* Revoke by ID */
-			order = revoker.revokeById(enacted.getID());
-			break;
-
-		case 3: /* Revoke by ID and Type */
-			order = revoker.revokeByIdAndType(enacted.getID(), type);
-			break;
-
-		case 4: /* Revoke by Type and Victim if possible */
-			if (type.isSingular()) {
-				order = revoker.revokeByTypeAndVictim(type, enacted.getVictim());
-			} else {
-				order = revoker.revokeByIdAndType(enacted.getID(), type);
-			}
-			break;
-		default:
-			throw Assertions.<RuntimeException>fail("Integration test is broken");
+	private void ensureTypeSingular() {
+		while (!type.isSingular()) {
+			type = RandomPunishmentTypeResolver.randomPunishmentType();
 		}
-		if (RandomUtil.randomBoolean()) { /* Undo and get*/
+	}
 
-			ReactionStage<Optional<Punishment>> retrievedFuture;
-			if (RandomUtil.randomBoolean()) {
-				retrievedFuture = order.undoAndGetPunishment();
-			} else {
-				retrievedFuture = order.undoAndGetPunishmentWithoutUnenforcement();
-			}
-			Punishment retrieved = retrievedFuture.toCompletableFuture().join().orElse(null);
+	// Simple enact and revoke
 
-			assertNotNull(retrieved, "Undoing and retrieving of enacted punishment failed for " + this);
-			TestingUtil.assertEqualDetails(enacted, retrieved);
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void simpleEnactAndUndo() {
+		var draft = draftPunishment();
+		assertTrue(draft.enactPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new)
+				.undoPunishment()
+				.toCompletableFuture()
+				.join());
+	}
 
-		} else { /* Simple undo */
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void simpleEnactWithoutEnforcementAndUndo() {
+		var draft = draftPunishment();
+		assertTrue(draft.enactPunishmentWithoutEnforcement().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new)
+				.undoPunishment()
+				.toCompletableFuture()
+				.join());
+	}
 
-			ReactionStage<Boolean> result;
-			if (RandomUtil.randomBoolean()) {
-				result = order.undoPunishment();
-			} else {
-				result = order.undoPunishmentWithoutUnenforcement();
-			}
-			assertTrue(result.toCompletableFuture().join(), "Undoing of enacted punishment failed for " + this);
-		}
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void simpleEnactAndUndoWithoutUnenforcement() {
+		var draft = draftPunishment();
+		assertTrue(draft.enactPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new)
+				.undoPunishmentWithoutUnenforcement()
+				.toCompletableFuture()
+				.join());
+	}
+
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void simpleEnactWithoutEnforcementAndUndoWithoutUnenforcement() {
+		var draft = draftPunishment();
+		assertTrue(draft.enactPunishmentWithoutEnforcement().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new)
+				.undoPunishmentWithoutUnenforcement()
+				.toCompletableFuture()
+				.join());
+	}
+
+	// Revoke by ID
+
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void revokeById() {
+		var draft = draftPunishment();
+		Punishment punishment = draft.enactPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		RevocationOrder revocationOrder = revoker.revokeById(punishment.getIdentifier());
+		assertTrue(revocationOrder.undoPunishment().toCompletableFuture().join());
+	}
+
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void revokeByIdWithoutUnenforcement() {
+		var draft = draftPunishment();
+		Punishment punishment = draft.enactPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		RevocationOrder revocationOrder = revoker.revokeById(punishment.getIdentifier());
+		assertTrue(revocationOrder.undoPunishmentWithoutUnenforcement().toCompletableFuture().join());
+	}
+
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void revokeAndGetById() {
+		var draft = draftPunishment();
+		Punishment punishment = draft.enactPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		RevocationOrder revocationOrder = revoker.revokeById(punishment.getIdentifier());
+		Punishment revoked = revocationOrder.undoAndGetPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		assertEqualDetails(punishment, revoked);
+	}
+
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void revokeandGetByIdWithoutUnenforcement() {
+		var draft = draftPunishment();
+		Punishment punishment = draft.enactPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		RevocationOrder revocationOrder = revoker.revokeById(punishment.getIdentifier());
+		Punishment revoked = revocationOrder.undoAndGetPunishmentWithoutUnenforcement().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		assertEqualDetails(punishment, revoked);
+	}
+
+	// Revoke by ID and type
+
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void revokeByIdAndType() {
+		var draft = draftPunishment();
+		Punishment punishment = draft.enactPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		RevocationOrder revocationOrder = revoker.revokeByIdAndType(punishment.getIdentifier(), punishment.getType());
+		assertTrue(revocationOrder.undoPunishment().toCompletableFuture().join());
+	}
+
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void revokeByIdAndTypeWithoutUnenforcement() {
+		var draft = draftPunishment();
+		Punishment punishment = draft.enactPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		RevocationOrder revocationOrder = revoker.revokeByIdAndType(punishment.getIdentifier(), punishment.getType());
+		assertTrue(revocationOrder.undoPunishmentWithoutUnenforcement().toCompletableFuture().join());
+	}
+
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void revokeAndGetByIdAndType() {
+		var draft = draftPunishment();
+		Punishment punishment = draft.enactPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		RevocationOrder revocationOrder = revoker.revokeByIdAndType(punishment.getIdentifier(), punishment.getType());
+		Punishment revoked = revocationOrder.undoAndGetPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		assertEqualDetails(punishment, revoked);
+	}
+
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void revokeAndGetByIdAndTypeWithoutUnenforcement() {
+		var draft = draftPunishment();
+		Punishment punishment = draft.enactPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		RevocationOrder revocationOrder = revoker.revokeByIdAndType(punishment.getIdentifier(), punishment.getType());
+		Punishment revoked = revocationOrder.undoAndGetPunishmentWithoutUnenforcement().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		assertEqualDetails(punishment, revoked);
+	}
+
+	// Revoke by type and victim
+
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void revokeByTypeAndVictim() {
+		ensureTypeSingular();
+		var draft = draftPunishment();
+		Punishment punishment = draft.enactPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(punishment.getType(), punishment.getVictim());
+		assertTrue(revocationOrder.undoPunishment().toCompletableFuture().join());
+	}
+
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void revokeByTypeAndVictimWithoutUnenforcement() {
+		ensureTypeSingular();
+		var draft = draftPunishment();
+		Punishment punishment = draft.enactPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(punishment.getType(), punishment.getVictim());
+		assertTrue(revocationOrder.undoPunishmentWithoutUnenforcement().toCompletableFuture().join());
+	}
+
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void revokeAndGetByTypeAndVictim() {
+		ensureTypeSingular();
+		var draft = draftPunishment();
+		Punishment punishment = draft.enactPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(punishment.getType(), punishment.getVictim());
+		Punishment revoked = revocationOrder.undoAndGetPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		assertEqualDetails(punishment, revoked);
+	}
+
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void revokeAndGetByTypeAndVictimWithoutUnenforcement() {
+		ensureTypeSingular();
+		var draft = draftPunishment();
+		Punishment punishment = draft.enactPunishment().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(punishment.getType(), punishment.getVictim());
+		Punishment revoked = revocationOrder.undoAndGetPunishmentWithoutUnenforcement().toCompletableFuture().join()
+				.orElseThrow(AssertionError::new);
+		assertEqualDetails(punishment, revoked);
 	}
 
 	@Override

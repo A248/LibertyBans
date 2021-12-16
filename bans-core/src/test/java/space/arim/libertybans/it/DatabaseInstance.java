@@ -19,7 +19,6 @@
 
 package space.arim.libertybans.it;
 
-import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.core.database.Vendor;
@@ -29,29 +28,36 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 public enum DatabaseInstance {
+	HSQLDB(Vendor.HSQLDB),
 	// See pom.xml for where these port properties come from
-	MARIADB_LEGACY("libertybans.it.mariadb.legacy.port"),
-	MARIADB_MODERN("libertybans.it.mariadb.modern.port"),
-	HSQLDB
+	MARIADB_LEGACY(Vendor.MARIADB, "libertybans.it.mariadb.legacy.port"),
+	MARIADB_MODERN(Vendor.MARIADB, "libertybans.it.mariadb.modern.port"),
+	MYSQL(Vendor.MYSQL, "libertybans.it.mysql.port"),
+	POSTGRES_LEGACY(Vendor.POSTGRES, "libertybans.it.postgres.legacy.port"),
+	POSTGRES_MODERN(Vendor.POSTGRES, "libertybans.it.postgres.modern.port"),
+	COCKROACHDB(Vendor.COCKROACH, "libertybans.it.cockroachdb.port"),
 	;
 
 	private static final int NO_PORT_APPLICABLE = -1;
 	private static final int NO_PORT_CONFIGURED = 0;
+
+	private final Vendor vendor;
 	private final int port;
 
 	private static final AtomicInteger DB_NAME_COUNTER = new AtomicInteger();
 
-	DatabaseInstance() {
+	DatabaseInstance(Vendor vendor) {
+		this.vendor = vendor;
 		port = NO_PORT_APPLICABLE;
 	}
 
-	DatabaseInstance(String portPropertyName) {
+	DatabaseInstance(Vendor vendor, String portPropertyName) {
+		this.vendor = vendor;
 		Logger logger = LoggerFactory.getLogger(getClass());
 		int port;
 		try {
@@ -64,19 +70,12 @@ public enum DatabaseInstance {
 		this.port = port;
 	}
 
-	static Stream<DatabaseInstance> fromVendor(Vendor vendor) {
-		switch (vendor) {
-		case HSQLDB:
-			return Stream.of(DatabaseInstance.HSQLDB);
-		case MARIADB:
-			return Arrays.stream(DatabaseInstance.values())
-					.filter((dbInstance) -> {
-						String name = dbInstance.name().toLowerCase(Locale.ROOT);
-						return dbInstance.port != NO_PORT_CONFIGURED && name.contains("mariadb");
-					});
-		default:
-			throw new UnsupportedOperationException("Not implemented for " + vendor);
-		}
+	public Vendor getVendor() {
+		return vendor;
+	}
+
+	static Stream<DatabaseInstance> matchingVendor(Vendor vendor) {
+		return Arrays.stream(DatabaseInstance.values()).filter((dbInstance) -> dbInstance.vendor == vendor);
 	}
 
 	Optional<DatabaseInfo> createInfo() {
@@ -94,14 +93,34 @@ public enum DatabaseInstance {
 	}
 
 	private void createDatabase(String database) {
-		try (Connection conn = DriverManager.getConnection("jdbc:mariadb://127.0.0.1:" + port + '/', "root", "");
-			 PreparedStatement prepStmt = conn.prepareStatement("CREATE DATABASE " + database
-					 + " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")) {
-
-			prepStmt.execute();
-		} catch (SQLException ex) {
-			throw Assertions.<RuntimeException>fail(ex);
+		switch (this) {
+		case MARIADB_LEGACY:
+		case MARIADB_MODERN:
+		case MYSQL:
+			createDatabaseUsing("jdbc:mariadb", database, " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+			break;
+		case POSTGRES_LEGACY:
+		case POSTGRES_MODERN:
+		case COCKROACHDB:
+			createDatabaseUsing("jdbc:postgresql", database, "");
+			break;
+		default:
+			throw new IllegalStateException("No database creation exists");
 		}
 	}
 
+	private void createDatabaseUsing(String jdbcPrefix, String database, String characterSet) {
+		String user = vendor.userForITs();
+		String password = vendor.passwordForITs();
+		String jdbcUrl = jdbcPrefix + "://127.0.0.1:" + port + '/';
+		try (Connection conn = DriverManager.getConnection(jdbcUrl, user, password);
+			 PreparedStatement prepStmt = conn.prepareStatement(
+					 "CREATE DATABASE " + database + characterSet)) {
+
+			prepStmt.execute();
+		} catch (SQLException ex) {
+			throw new IllegalStateException(
+					"Failed to connect to " + jdbcUrl + " with user:password " + user + ':' + password, ex);
+		}
+	}
 }

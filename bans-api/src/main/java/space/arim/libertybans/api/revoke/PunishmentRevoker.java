@@ -46,18 +46,18 @@ public interface PunishmentRevoker {
 	 * @param type the type of the punishment to undo
 	 * @return a revocation order using the ID and type
 	 */
-	RevocationOrder revokeByIdAndType(int id, PunishmentType type);
+	RevocationOrder revokeByIdAndType(long id, PunishmentType type);
 
 	/**
 	 * Gets a {@link RevocationOrder} to undo a punishment according to its ID. <br>
 	 * <br>
 	 * When the punishment type is known,
-	 * {@link #revokeByIdAndType(int, PunishmentType)} should be used.
+	 * {@link #revokeByIdAndType(long, PunishmentType)} should be used.
 	 * 
 	 * @param id the id of the punishment to undo
 	 * @return a revocation order using the ID
 	 */
-	RevocationOrder revokeById(int id);
+	RevocationOrder revokeById(long id);
 
 	/**
 	 * Gets a {@link RevocationOrder} to undo a punishment by its type and victim.

@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.omnibus.util.ThisClass;
@@ -145,7 +146,7 @@ public class AdvancedBanImportSource implements ImportSource {
 			// AdvancedBan uses -1 for permanent punishments
 			Instant end;
 			if (endMillis == -1L) {
-				end = PortablePunishment.KnownDetails.PERMANENT;
+				end = Punishment.PERMANENT_END_DATE;
 			} else {
 				end = Instant.ofEpochMilli(endMillis);
 			}

@@ -45,7 +45,7 @@ class ResourceCreator {
 	}
 
 	Stream<Injector> create(ConfigSpec configSpec) {
-		return DatabaseInstance.fromVendor(configSpec.vendor())
+		return DatabaseInstance.matchingVendor(configSpec.vendor())
 				.map((dbInstance) -> createSingle(configSpec, dbInstance))
 				.flatMap(Optional::stream);
 	}

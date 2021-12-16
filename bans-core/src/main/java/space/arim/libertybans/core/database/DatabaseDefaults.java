@@ -18,17 +18,17 @@
  */
 package space.arim.libertybans.core.database;
 
-import space.arim.jdbcaesar.transact.IsolationLevel;
+import java.time.Duration;
 
 /*
- * Used to consolidate defaults configured across HikariCP, JdbCaesar, and JDBC drivers
+ * Used to consolidate defaults configured across HikariCP and JDBC drivers
  * 
  */
 final class DatabaseDefaults {
 
 	static final boolean AUTOCOMMIT = false;
-	static final IsolationLevel ISOLATION = IsolationLevel.REPEATABLE_READ;
 	static final int FETCH_SIZE = 1000;
+	static final long SOCKET_TIMEOUT = Duration.ofSeconds(30L).toMillis();
 	
 	private DatabaseDefaults() {}
 	

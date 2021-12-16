@@ -28,15 +28,15 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 
 public interface MuteCache {
-	
+
 	CentralisedFuture<Optional<Punishment>> getCacheableMute(UUID uuid, NetworkAddress address);
-	
+
 	void setCachedMute(UUID uuid, NetworkAddress address, Punishment punishment);
 
 	void clearCachedMute(Punishment punishment);
-	
-	void clearCachedMute(int id);
-	
+
+	void clearCachedMute(long id);
+
 	void clearCachedMute(Victim victim);
-	
+
 }

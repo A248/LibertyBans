@@ -33,27 +33,27 @@ import space.arim.libertybans.core.selector.MuteCache;
 class RevocationOrderImpl implements RevocationOrder {
 	
 	private final Revoker revoker;
-	private final int id;
+	private final long id;
 	private final PunishmentType type;
 	private final Victim victim;
-	
-	private RevocationOrderImpl(Revoker revoker, int id, PunishmentType type, Victim victim) {
+
+	private RevocationOrderImpl(Revoker revoker, long id, PunishmentType type, Victim victim) {
 		this.revoker = revoker;
 		this.id = id;
 		this.type = type;
 		this.victim = victim;
 	}
-	
-	RevocationOrderImpl(Revoker revoker, int id) {
+
+	RevocationOrderImpl(Revoker revoker, long id) {
 		this(revoker, id, null, null);
 		assert getApproach() == Approach.ID;
 	}
-	
-	RevocationOrderImpl(Revoker revoker, int id, PunishmentType type) {
+
+	RevocationOrderImpl(Revoker revoker, long id, PunishmentType type) {
 		this(revoker, id, Objects.requireNonNull(type, "type"), null);
 		assert getApproach() == Approach.ID_TYPE;
 	}
-	
+
 	RevocationOrderImpl(Revoker revoker, PunishmentType type, Victim victim) {
 		this(revoker, -1, MiscUtil.checkSingular(type), Objects.requireNonNull(victim, "victim"));
 		assert getApproach() == Approach.TYPE_VICTIM;
@@ -64,7 +64,7 @@ class RevocationOrderImpl implements RevocationOrder {
 		ID_TYPE,
 		TYPE_VICTIM,
 	}
-	
+
 	private Approach getApproach() {
 		if (type == null) {
 			return Approach.ID;
@@ -76,8 +76,11 @@ class RevocationOrderImpl implements RevocationOrder {
 	}
 
 	@Override
-	public Optional<Integer> getID() {
-		return Optional.ofNullable(id);
+	public Optional<Long> getID() {
+		if (id == -1L) {
+			return Optional.empty();
+		}
+		return Optional.of(id);
 	}
 
 	@Override
@@ -160,27 +163,19 @@ class RevocationOrderImpl implements RevocationOrder {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + id;
-		result = prime * result + Objects.hashCode(type);
-		result = prime * result + Objects.hashCode(victim);
-		return result;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		RevocationOrderImpl that = (RevocationOrderImpl) o;
+		return id == that.id && type == that.type && Objects.equals(victim, that.victim);
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		if (this == object) {
-			return true;
-		}
-		if (!(object instanceof RevocationOrderImpl)) {
-			return false;
-		}
-		RevocationOrderImpl other = (RevocationOrderImpl) object;
-		return id == other.id
-				&& type == other.type
-				&& Objects.equals(victim, other.victim);
+	public int hashCode() {
+		int result = (int) (id ^ (id >>> 32));
+		result = 31 * result + (type != null ? type.hashCode() : 0);
+		result = 31 * result + (victim != null ? victim.hashCode() : 0);
+		return result;
 	}
 
 	@Override

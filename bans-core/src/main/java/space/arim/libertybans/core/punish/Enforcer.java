@@ -40,10 +40,10 @@ public interface Enforcer {
 	/**
 	 * Enforces an incoming connection, returning a punishment message if denied, null if allowed. <br>
 	 * <br>
-	 * Adds the UUID and name to the local fast cache, queries for an applicable ban, and formats the
+	 * Adds the uuidField and name to the local fast cache, queries for an applicable ban, and formats the
 	 * ban reason as the punishment message.
 	 * 
-	 * @param uuid the player's UUID
+	 * @param uuid the player's uuidField
 	 * @param name the player's name
 	 * @param address the player's network address
 	 * @return a future which yields the punishment message if denied, else null if allowed
@@ -53,10 +53,10 @@ public interface Enforcer {
 	/**
 	 * Enforces an incoming connection, returning a punishment message if denied, null if allowed. <br>
 	 * <br>
-	 * Adds the UUID and name to the local fast cache, queries for an applicable ban, and formats the
+	 * Adds the uuidField and name to the local fast cache, queries for an applicable ban, and formats the
 	 * ban reason as the punishment message.
 	 * 
-	 * @param uuid the player's UUID
+	 * @param uuid the player's uuidField
 	 * @param name the player's name
 	 * @param address the player's network address
 	 * @return a future which yields the punishment message if denied, else null if allowed
@@ -71,7 +71,7 @@ public interface Enforcer {
 	 * If this corresponds to an executed command, the configured commands whose access to muted players to block
 	 * are taken into account.
 	 * 
-	 * @param uuid the player's UUID
+	 * @param uuid the player's uuidField
 	 * @param address the player's network address
 	 * @param command the command executed, or {@code null} if this is a chat message
 	 * @return a future which yields the punishment message if denied, else null if allowed
@@ -84,7 +84,7 @@ public interface Enforcer {
 	 * If this corresponds to an executed command, the configured commands whose access to muted players to block
 	 * are taken into account.
 	 * 
-	 * @param uuid the player's UUID
+	 * @param uuid the player's uuidField
 	 * @param address the player's network address
 	 * @param command the command executed, or {@code null} if this is a chat message
 	 * @return a future which yields the punishment message if denied, else null if allowed

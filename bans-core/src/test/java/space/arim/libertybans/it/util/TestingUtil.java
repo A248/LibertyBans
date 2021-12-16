@@ -43,9 +43,9 @@ public final class TestingUtil {
 			assertEqualDetailsFinish((Punishment) expected, (Punishment) actual);
 		}
 	}
-	
+
 	private static void assertEqualDetailsFinish(Punishment expected, Punishment actual) {
-		assertEquals(expected.getID(), actual.getID());
+		assertEquals(expected.getIdentifier(), actual.getIdentifier());
 		assertEquals(expected.getStartDate(), actual.getStartDate());
 		assertEquals(expected.getEndDate(), actual.getEndDate());
 	}

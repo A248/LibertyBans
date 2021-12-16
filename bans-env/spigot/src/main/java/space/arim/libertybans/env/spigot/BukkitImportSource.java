@@ -24,6 +24,7 @@ import org.bukkit.BanList;
 import org.bukkit.Server;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.core.importing.ImportException;
 import space.arim.libertybans.core.importing.PlatformImportSource;
@@ -88,7 +89,7 @@ public class BukkitImportSource implements PlatformImportSource {
 			String reason = Optional.ofNullable(entry.getReason()).orElse("");
 			Instant start = entry.getCreated().toInstant();
 			Instant end = Optional.ofNullable(entry.getExpiration())
-					.map(Date::toInstant).orElse(PortablePunishment.KnownDetails.PERMANENT);
+					.map(Date::toInstant).orElse(Punishment.PERMANENT_END_DATE);
 			return new PortablePunishment(
 					null,
 					new PortablePunishment.KnownDetails(

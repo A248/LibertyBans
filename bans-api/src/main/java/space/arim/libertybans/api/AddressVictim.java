@@ -32,25 +32,24 @@ public final class AddressVictim extends Victim {
 	private final NetworkAddress address;
 	
 	private AddressVictim(NetworkAddress address) {
-		this.address = address;
+		this.address = Objects.requireNonNull(address, "address");
 	}
 	
 	/**
-	 * Gets a victim for the specified {@link NetworkAddress}
+	 * Gets a victim for the address
 	 * 
 	 * @param address the network address
-	 * @return a victim representing the address
-	 * @throws NullPointerException if {@code address} is null
+	 * @return an address victim
 	 */
 	public static AddressVictim of(NetworkAddress address) {
-		return new AddressVictim(Objects.requireNonNull(address, "address"));
+		return new AddressVictim(address);
 	}
 	
 	/**
-	 * Gets a victim for the specified {@link InetAddress}
+	 * Gets a victim for the address
 	 * 
 	 * @param address the inet address
-	 * @return a victim representing the address
+	 * @return an address victim
 	 */
 	public static AddressVictim of(InetAddress address) {
 		return new AddressVictim(NetworkAddress.of(address));
@@ -61,7 +60,7 @@ public final class AddressVictim extends Victim {
 	 * <code> AddressVictim.of(NetworkAddress.of(address)) </code>
 	 * 
 	 * @param address the raw address bytes
-	 * @return a victim representing the address
+	 * @return an address victim
 	 * @throws IllegalArgumentException if the address bytes array is of illegal length
 	 */
 	public static AddressVictim of(byte[] address) {
@@ -76,39 +75,33 @@ public final class AddressVictim extends Victim {
 	public VictimType getType() {
 		return VictimType.ADDRESS;
 	}
-	
+
 	/**
-	 * Gets the network address represented by this victim
+	 * Gets the network address of this victim
 	 * 
-	 * @return the network address this victim represents
+	 * @return the network address
 	 */
 	public NetworkAddress getAddress() {
 		return address;
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + address.hashCode();
-		return result;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		AddressVictim that = (AddressVictim) o;
+		return address.equals(that.address);
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		if (this == object) {
-			return true;
-		}
-		if (!(object instanceof AddressVictim)) {
-			return false;
-		}
-		AddressVictim other = (AddressVictim) object;
-		return address.equals(other.address);
+	public int hashCode() {
+		return address.hashCode();
 	}
 
 	@Override
 	public String toString() {
-		return "AddressVictim [address=" + address + "]";
+		return "AddressVictim{" +
+				"address=" + address +
+				'}';
 	}
-
 }

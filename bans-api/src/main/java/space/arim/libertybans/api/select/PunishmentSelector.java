@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-api
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-api is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-api is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-api. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.api.select;
 
 import java.util.Optional;
@@ -54,20 +55,20 @@ public interface PunishmentSelector {
 	 * ID exists. <br>
 	 * <br>
 	 * When the type of the punishment is known,
-	 * {@link #getActivePunishmentByIdAndType(int, PunishmentType)} should be
+	 * {@link #getActivePunishmentByIdAndType(long, PunishmentType)} should be
 	 * preferred.
 	 * 
 	 * @param id the punishment ID
 	 * @return a future which yields the active punishment with the ID, if there is
 	 *         one
 	 */
-	ReactionStage<Optional<Punishment>> getActivePunishmentById(int id);
+	ReactionStage<Optional<Punishment>> getActivePunishmentById(long id);
 
 	/**
 	 * Gets an active punishment matching a specific ID and type, if one exists with
 	 * matching type and ID. <br>
 	 * <br>
-	 * Unlike {@link #getActivePunishmentById(int)}, this method may be more
+	 * Unlike {@link #getActivePunishmentById(long)}, this method may be more
 	 * efficient when the type of the punishment is known beforehand.
 	 * 
 	 * @param id   the punishment ID
@@ -75,7 +76,7 @@ public interface PunishmentSelector {
 	 * @return a future which yields the active punishment with the ID and type, if
 	 *         there is one
 	 */
-	ReactionStage<Optional<Punishment>> getActivePunishmentByIdAndType(int id, PunishmentType type);
+	ReactionStage<Optional<Punishment>> getActivePunishmentByIdAndType(long id, PunishmentType type);
 
 	/**
 	 * Gets a historical punishment matching a specific ID, if a punishment with
@@ -85,7 +86,7 @@ public interface PunishmentSelector {
 	 * @return a future which yields the historical punishment with the ID, if there
 	 *         is one
 	 */
-	ReactionStage<Optional<Punishment>> getHistoricalPunishmentById(int id);
+	ReactionStage<Optional<Punishment>> getHistoricalPunishmentById(long id);
 
 	/**
 	 * Gets the first punishment, of a certain type, which is <i>applicable</i> to a

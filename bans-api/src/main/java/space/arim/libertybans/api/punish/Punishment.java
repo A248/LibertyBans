@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-api
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-api is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-api is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-api. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.api.punish;
 
 import java.time.Instant;
@@ -34,11 +35,30 @@ import space.arim.omnibus.util.concurrent.ReactionStage;
 public interface Punishment extends PunishmentBase {
 
 	/**
+	 * A useful constant for the {@code Instant} representing a permanent punishment's
+	 * end date. See {@link #getEndDate()}. <br>
+	 * <br>
+	 * This constant is provided for readability purposes, but it is interchangeable
+	 * with {@link Instant#MAX}.
+	 *
+	 */
+	Instant PERMANENT_END_DATE = Instant.MAX;
+
+	/**
 	 * Gets the unique ID of this punishment
 	 * 
 	 * @return the ID of the punishment
+	 * @deprecated Use {@link #getIdentifier()}, as punishment IDs now use {@code long}
 	 */
+	@Deprecated
 	int getID();
+
+	/**
+	 * Gets the unique ID of this punishment
+	 *
+	 * @return the ID of the punishment
+	 */
+	long getIdentifier();
 
 	/**
 	 * Gets the start time of the punishment
@@ -57,7 +77,7 @@ public interface Punishment extends PunishmentBase {
 	}
 
 	/**
-	 * Gets the end time of the punishment. {@link Instant#MAX} is used for a
+	 * Gets the end time of the punishment. {@link #PERMANENT_END_DATE} is used for a
 	 * permanent punishment
 	 * 
 	 * @return the end date
@@ -72,7 +92,7 @@ public interface Punishment extends PunishmentBase {
 	 */
 	default long getEndDateSeconds() {
 		Instant endDate = getEndDate();
-		return endDate.equals(Instant.MAX) ? 0L : endDate.getEpochSecond();
+		return endDate.equals(PERMANENT_END_DATE) ? 0L : endDate.getEpochSecond();
 	}
 
 	/**
@@ -81,7 +101,7 @@ public interface Punishment extends PunishmentBase {
 	 * @return true if this punishment is permanent, false otherwise
 	 */
 	default boolean isPermanent() {
-		return Instant.MAX.equals(getEndDate());
+		return PERMANENT_END_DATE.equals(getEndDate());
 	}
 
 	/**
@@ -160,7 +180,7 @@ public interface Punishment extends PunishmentBase {
 	 * Whether this punishment is equal to another. The other punishment must
 	 * represent the same punishment stored in the database. <br>
 	 * <br>
-	 * Implementations need only check {@link #getID()} since IDs must always be
+	 * Implementations need only check {@link #getIdentifier()} since IDs must always be
 	 * unique.
 	 * 
 	 * @param object the other object

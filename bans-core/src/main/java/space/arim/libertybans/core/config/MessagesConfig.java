@@ -106,7 +106,7 @@ public interface MessagesConfig {
 			@DefaultString("&c&o%TARGET%&r&7 was not found online or offline.")
 			ComponentText player();
 			
-			@DefaultString("&c&o%TARGET%&r&7 is not a valid UUID.")
+			@DefaultString("&c&o%TARGET%&r&7 is not a valid uuidField.")
 			ComponentText uuid();
 
 			@ConfKey("player-or-address")

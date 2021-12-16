@@ -63,7 +63,7 @@ public class ImportFunction {
 		return Optional.of(new Enaction.OrderDetails(
 				knownDetails.type(), victim, operator,
 				knownDetails.reason(), knownDetails.scope(),
-				knownDetails.start().getEpochSecond(), knownDetails.end()));
+				knownDetails.start(), knownDetails.end()));
 	}
 
 	private Victim toVictim(PortablePunishment.VictimInfo victimInfo, ImportSink importSink) {
@@ -80,10 +80,10 @@ public class ImportFunction {
 			return AddressVictim.of(address.get());
 		}
 		String name = victimInfo.name()
-				.orElseThrow(() -> new ImportException("Victim name must be present if UUID is not"));
+				.orElseThrow(() -> new ImportException("Victim name must be present if uuidField is not"));
 		UUID foundUUID = uuidManager.lookupUUIDFromExactName(name).join().orElse(null);
 		if (foundUUID == null) {
-			logger.warn("Skipping punishment because victim UUID could not be found for name {}", victimInfo.name());
+			logger.warn("Skipping punishment because victim uuidField could not be found for name {}", victimInfo.name());
 			return null;
 		}
 		importSink.addNameAddressRecord(new NameAddressRecord(foundUUID, name, null, time.currentTimestamp()));
@@ -99,10 +99,10 @@ public class ImportFunction {
 			return PlayerOperator.of(uuid.get());
 		}
 		String name = operatorInfo.name()
-				.orElseThrow(() -> new ImportException("Operator name must be present if UUID is not"));
+				.orElseThrow(() -> new ImportException("Operator name must be present if uuidField is not"));
 		UUID foundUUID = uuidManager.lookupUUIDFromExactName(name).join().orElse(null);
 		if (foundUUID == null) {
-			logger.warn("Skipping punishment because operator UUID could not be found for name {}", name);
+			logger.warn("Skipping punishment because operator uuidField could not be found for name {}", name);
 			return null;
 		}
 		importSink.addNameAddressRecord(new NameAddressRecord(foundUUID, name, null, time.currentTimestamp()));

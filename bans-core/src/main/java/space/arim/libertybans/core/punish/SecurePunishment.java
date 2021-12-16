@@ -1,24 +1,26 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.punish;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 import space.arim.omnibus.util.concurrent.ReactionStage;
@@ -32,25 +34,30 @@ import space.arim.libertybans.api.scope.ServerScope;
 class SecurePunishment extends AbstractPunishmentBase implements Punishment {
 
 	private final SecurePunishmentCreator creator;
-	private final int id;
+	private final long id;
 	private final Instant startDate;
 	private final Instant endDate;
 	
 	SecurePunishment(SecurePunishmentCreator creator,
-			int id, PunishmentType type, Victim victim, Operator operator,
+			long id, PunishmentType type, Victim victim, Operator operator,
 			String reason, ServerScope scope, Instant startDate, Instant endDate) {
 		super(type, victim, operator, reason, scope);
-		this.creator = creator;
+		this.creator = Objects.requireNonNull(creator, "creator");
 		this.id = id;
-		this.startDate = startDate;
-		this.endDate = endDate;
+		this.startDate = Objects.requireNonNull(startDate, "startDate");
+		this.endDate = Objects.requireNonNull(endDate, "endDate");
 	}
 
 	@Override
 	public int getID() {
+		return (int) id;
+	}
+
+	@Override
+	public long getIdentifier() {
 		return id;
 	}
-	
+
 	@Override
 	public Instant getStartDate() {
 		return startDate;
@@ -89,16 +96,16 @@ class SecurePunishment extends AbstractPunishmentBase implements Punishment {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + id;
-		return result;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		SecurePunishment that = (SecurePunishment) o;
+		return id == that.id;
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		return this == object || object instanceof SecurePunishment && id == ((SecurePunishment) object).id;
+	public int hashCode() {
+		return (int) (31 + id);
 	}
 
 	@Override

@@ -26,6 +26,8 @@ import space.arim.libertybans.core.punish.Association;
 import space.arim.libertybans.core.punish.Enaction;
 import space.arim.omnibus.util.ThisClass;
 
+import java.time.Instant;
+
 class ImportSink {
 
 	private final BatchOperationExecutor batchExecutor;
@@ -49,24 +51,24 @@ class ImportSink {
 	}
 
 	private void addPunishment(Enaction enaction, boolean active) {
-		batchExecutor.runOperation((querySource, connection) -> {
+		batchExecutor.runOperation((context, transaction) -> {
 			if (active) {
-				Punishment enacted = enaction.enactActive(querySource, connection::rollback);
+				Punishment enacted = transaction.executeNested(enaction::enactActive);
 				if (enacted == null) {
 					logger.warn("There is a conflicting active punishment for {}. for example, " +
 							"two bans for the same user. This is harmless in most cases. The punishment will be " +
 							"added to the  user's history but not be enforced actively.", enaction.orderDetails());
 				}
 			} else {
-				enaction.enactHistorical(querySource);
+				enaction.enactHistorical(context);
 			}
 		});
 	}
 
 	void addNameAddressRecord(NameAddressRecord nameAddressRecord) {
-		batchExecutor.runOperation((querySource, connection) -> {
-			Association association = new Association(nameAddressRecord.uuid(), querySource);
-			long timeRecorded = nameAddressRecord.timeRecorded().getEpochSecond();
+		batchExecutor.runOperation((context, transaction) -> {
+			Association association = new Association(nameAddressRecord.uuid(), context);
+			Instant timeRecorded = nameAddressRecord.timeRecorded();
 			nameAddressRecord.name().ifPresent((name) -> association.associatePastName(name, timeRecorded));
 			nameAddressRecord.address().ifPresent((address) -> association.associatePastAddress(address, timeRecorded));
 		});

@@ -21,6 +21,7 @@ package space.arim.libertybans.it.test.uuid;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.env.UUIDAndAddress;
 import space.arim.libertybans.core.punish.Enforcer;
 import space.arim.libertybans.core.service.SettableTime;
@@ -79,7 +80,7 @@ public class UUIDStoreIT {
 	}
 
 	@TestTemplate
-	public void storeJoiningUuid(Enforcer enforcer) {
+	public void storeJoiningUuid(Enforcer enforcer, InternalDatabase database) {
 		UUID uuid = UUID.randomUUID();
 		String name = randomName();
 		NetworkAddress address = randomAddress();
@@ -88,7 +89,7 @@ public class UUIDStoreIT {
 
 		assertEquals(name, lookupName(uuid));
 		assertEquals(uuid, lookupUUID(name));
-		assertEquals(address, lookupAddress(name));
+		assertEquals(address, lookupAddress(name), "Failed for vendor " + database.getVendor());
 	}
 
 	@TestTemplate

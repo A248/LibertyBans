@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.punish;
 
 import jakarta.inject.Inject;
@@ -32,6 +33,7 @@ import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.time.Duration;
+import java.time.Instant;
 
 @Singleton
 public class Enactor implements PunishmentDrafter {
@@ -61,26 +63,24 @@ public class Enactor implements PunishmentDrafter {
 
 	CentralisedFuture<Punishment> enactPunishment(DraftPunishment draftPunishment) {
 		InternalDatabase database = dbProvider.get();
-		return database.selectAsync(() -> {
 
-			final PunishmentType type = draftPunishment.getType();
-			final Duration duration = draftPunishment.getDuration();
-			final long start = time.currentTime();
-			final long end = (duration.isZero()) ? 0L : start + duration.toSeconds();
+		final PunishmentType type = draftPunishment.getType();
+		final Duration duration = draftPunishment.getDuration();
+		final Instant start = time.currentTimestamp();
+		final Instant end = (duration.isZero()) ?
+				Punishment.PERMANENT_END_DATE : start.plusSeconds(duration.toSeconds());
 
-			Enaction enaction = new Enaction(
-					new Enaction.OrderDetails(
-							type, draftPunishment.getVictim(), draftPunishment.getOperator(),
-							draftPunishment.getReason(), draftPunishment.getScope(), start, end),
-					creator);
+		Enaction enaction = new Enaction(
+				new Enaction.OrderDetails(
+						type, draftPunishment.getVictim(), draftPunishment.getOperator(),
+						draftPunishment.getReason(), draftPunishment.getScope(), start, end),
+				creator);
 
-			return database.jdbCaesar().transaction().body((querySource, controller) -> {
-
-				if (type != PunishmentType.KICK) {
-					database.clearExpiredPunishments(querySource, type, start);
-				}
-				return enaction.enactActive(querySource, controller::rollback);
-			}).execute();
+		return database.queryWithRetry((context, transaction) -> {
+			if (type != PunishmentType.KICK) {
+				database.clearExpiredPunishments(context, type, start);
+			}
+			return enaction.enactActive(context, transaction);
 		});
 	}
 

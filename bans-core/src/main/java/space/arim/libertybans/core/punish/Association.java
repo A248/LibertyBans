@@ -19,48 +19,81 @@
 
 package space.arim.libertybans.core.punish;
 
-import space.arim.jdbcaesar.QuerySource;
+import org.jooq.DSLContext;
 import space.arim.libertybans.api.NetworkAddress;
 
+import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
-public class Association {
+import static space.arim.libertybans.core.schema.tables.Addresses.ADDRESSES;
+import static space.arim.libertybans.core.schema.tables.Names.NAMES;
+
+public final class Association {
 
 	private final UUID uuid;
-	private final QuerySource<?> querySource;
+	private final DSLContext context;
 
-	public Association(UUID uuid, QuerySource<?> querySource) {
-		this.uuid = uuid;
-		this.querySource = querySource;
+	public Association(UUID uuid, DSLContext context) {
+		this.uuid = Objects.requireNonNull(uuid, "uuid");
+		this.context = Objects.requireNonNull(context, "context");
 	}
 
-	public void associateCurrentName(String name, long currentTime) {
-		querySource.query(
-				"INSERT INTO `libertybans_names` (`uuid`, `name`, `updated`) VALUES (?, ?, ?) "
-						+ "ON DUPLICATE KEY UPDATE `updated` = ?")
-				.params(uuid, name, currentTime, currentTime)
-				.voidResult().execute();
+	public void associateCurrentName(String name, Instant currentTime) {
+		Objects.requireNonNull(name, "name");
+		Objects.requireNonNull(currentTime, "currentTime");
+		context
+				.insertInto(NAMES)
+				.columns(NAMES.UUID, NAMES.NAME, NAMES.UPDATED)
+				.values(uuid, name, currentTime)
+				.onConflict(NAMES.UUID, NAMES.NAME)
+				.doUpdate()
+				.set(NAMES.UPDATED, currentTime)
+				.execute();
 	}
 
-	public void associatePastName(String name, long pastTime) {
-		querySource.query(
-				"INSERT IGNORE INTO `libertybans_names` (`uuid`, `name`, `updated`) VALUES (?, ?, ?)")
-				.params(uuid, name, pastTime)
-				.voidResult().execute();
+	public void associatePastName(String name, Instant pastTime) {
+		Objects.requireNonNull(name, "name");
+		Objects.requireNonNull(pastTime, "pastTime");
+		context
+				.insertInto(NAMES)
+				.columns(NAMES.UUID, NAMES.NAME, NAMES.UPDATED)
+				.values(uuid, name, pastTime)
+				.onConflict(NAMES.UUID, NAMES.NAME)
+				.doNothing()
+				.execute();
 	}
 
-	public void associateCurrentAddress(NetworkAddress address, long currentTime) {
-		querySource.query(
-				"INSERT INTO `libertybans_addresses` (`uuid`, `address`, `updated`) VALUES (?, ?, ?) "
-						+ "ON DUPLICATE KEY UPDATE `updated` = ?")
-				.params(uuid, address, currentTime, currentTime)
-				.voidResult().execute();
+	public void associateCurrentAddress(NetworkAddress address, Instant currentTime) {
+		Objects.requireNonNull(address, "address");
+		Objects.requireNonNull(currentTime, "currentTime");
+		context
+				.insertInto(ADDRESSES)
+				.columns(ADDRESSES.UUID, ADDRESSES.ADDRESS, ADDRESSES.UPDATED)
+				.values(uuid, address, currentTime)
+				.onConflict(ADDRESSES.UUID, ADDRESSES.ADDRESS)
+				.doUpdate()
+				.set(ADDRESSES.UPDATED, currentTime)
+				.execute();
 	}
 
-	public void associatePastAddress(NetworkAddress address, long pastTime) {
-		querySource.query(
-				"INSERT IGNORE INTO `libertybans_addresses` (`uuid`, `address`, `updated`) VALUES (?, ?, ?)")
-				.params(uuid, address, pastTime)
-				.voidResult().execute();
+	public void associatePastAddress(NetworkAddress address, Instant pastTime) {
+		Objects.requireNonNull(address, "address");
+		Objects.requireNonNull(pastTime, "pastTime");
+		context
+				.insertInto(ADDRESSES)
+				.columns(ADDRESSES.UUID, ADDRESSES.ADDRESS, ADDRESSES.UPDATED)
+				.values(uuid, address, pastTime)
+				.onConflict(ADDRESSES.UUID, ADDRESSES.ADDRESS)
+				.doNothing()
+				.execute();
+	}
+
+	@Override
+	public String toString() {
+		return "Association{" +
+				"uuid=" + uuid +
+				", context=" + context +
+				'}';
 	}
 }

@@ -127,7 +127,7 @@ all:
    # When issuing commands, if the specified player or IP was not found, what should the error message be?
   not-found:
     player-or-address: '&c&o%TARGET%&r&7 no fue encontrado en linea o en la base de datos y no es una IP válida.'
-    uuid: '&c&o%TARGET%&r&7no es una UUID válida.'
+    uuid: '&c&o%TARGET%&r&7no es una uuidField válida.'
     player: '&c&o%TARGET%&r&7 no fue encontrado en linea o en la base de datos.'
 
    # If a player types /libertybans but does not have the permission 'libertybans.commands', this is the denial message
@@ -321,7 +321,7 @@ alts:
      # %DETECTION_KIND% - how the account was detected. Will be replaced by the normal or strict options.
      # %ADDRESS% - the address in question which led to the detection
      # %RELEVANT_USER% - the username of the other account, formatted according to the name-display option
-     # %RELEVANT_USERID% - the UUID of the other account
+     # %RELEVANT_USERID% - the uuidField of the other account
      # %DATE_RECORDED% - the date the alt account was recorded
     layout: '%RELEVANT_USER% &7(por %ADDRESS%) en %DATE_RECORDED% - %DETECTION_KIND%'
      # In the alt-check layout, the username of the alt may be formatted depending upon whether it is banned

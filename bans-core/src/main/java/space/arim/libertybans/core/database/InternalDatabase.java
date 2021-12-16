@@ -21,8 +21,11 @@ package space.arim.libertybans.core.database;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.function.Supplier;
 
+import org.jooq.DSLContext;
+import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.libertybans.api.Operator;
@@ -32,9 +35,8 @@ import space.arim.libertybans.api.database.PunishmentDatabase;
 import space.arim.libertybans.api.scope.ServerScope;
 
 import space.arim.jdbcaesar.JdbCaesar;
-import space.arim.jdbcaesar.QuerySource;
 
-public interface InternalDatabase {
+public interface InternalDatabase extends QueryExecutor {
 	
 	PunishmentDatabase asExternal();
 
@@ -60,7 +62,7 @@ public interface InternalDatabase {
 	
 	long getEndFromResult(ResultSet resultSet) throws SQLException;
 	
-	void clearExpiredPunishments(QuerySource<?> querySource, PunishmentType type, long currentTime);
+	void clearExpiredPunishments(DSLContext context, PunishmentType type, Instant currentTime);
 
 	/**
 	 * Designed to be used by testing, to clear all tables after one integration test

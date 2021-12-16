@@ -11,7 +11,7 @@
 	
 	<artifactId>bans-core</artifactId>
 	<description>Main implementation of LibertyBans</description>
-	
+
 	<build>
 		<resources>
 			<resource>
@@ -36,6 +36,11 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<useModulePath>false</useModulePath>
+					<systemPropertyVariables>
+						<hsqldb.reconfig_logging>false</hsqldb.reconfig_logging>
+						<org.jooq.no-logo>true</org.jooq.no-logo>
+						<org.jooq.no-tips>true</org.jooq.no-tips>
+					</systemPropertyVariables>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -53,6 +58,158 @@
 					<parallelThreads>2</parallelThreads>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<dependencies>
+					<dependency>
+						<groupId>org.hsqldb</groupId>
+						<artifactId>hsqldb</artifactId>
+						<version>${hsqldb.version}</version>
+					</dependency>
+				</dependencies>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>migrate</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<ignoreFutureMigrations>false</ignoreFutureMigrations>
+					<validateMigrationNaming>true</validateMigrationNaming>
+					<group>true</group>
+
+					<url>jdbc:hsqldb:file:${project.build.directory}/schema-gen/database;shutdown=true</url>
+					<driver>org.hsqldb.jdbc.JDBCDriver</driver>
+					<user>SA</user>
+					<password/>
+
+					<placeholders>
+						<tableprefix/>
+						<generatedcolumnsuffix/>
+						<extratableoptions/>
+						<uuidtype>UUID</uuidtype>
+						<inettype>VARBINARY(16)</inettype>
+					</placeholders>
+					<locations>
+						<location>filesystem:src/main/resources/database-migrations</location>
+						<location>filesystem:src/test/resources/extra-database-migrations-for-codegen</location>
+					</locations>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.jooq</groupId>
+				<artifactId>jooq-codegen-maven</artifactId>
+				<dependencies>
+					<dependency>
+						<groupId>org.hsqldb</groupId>
+						<artifactId>hsqldb</artifactId>
+						<version>${hsqldb.version}</version>
+					</dependency>
+				</dependencies>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<logging>DEBUG</logging>
+					<jdbc>
+						<url>jdbc:hsqldb:file:${project.build.directory}/schema-gen/database;shutdown=true</url>
+						<driver>org.hsqldb.jdbc.JDBCDriver</driver>
+						<user>SA</user>
+						<password/>
+					</jdbc>
+					<generator>
+						<database>
+							<name>org.jooq.meta.hsqldb.HSQLDBDatabase</name>
+							<includes>.*</includes>
+							<excludes>flyway_schema_history</excludes>
+							<excludes>(?i:information_schema\..*)|(?i:system_lobs\..*)</excludes>
+							<inputSchema>PUBLIC</inputSchema>
+							<schemaVersionProvider>SELECT :schema_name || '_' || MAX("version") FROM "flyway_schema_history"</schemaVersionProvider>
+							<forcedTypes>
+								<forcedType>
+									<userType>java.util.UUID</userType>
+									<binding>space.arim.libertybans.core.database.jooq.UUIDBinding</binding>
+									<includeExpression>.*\.(uuid|uuid1|uuid2|victim_uuid)$</includeExpression>
+									<includeTypes>^UUID$</includeTypes>
+								</forcedType>
+								<forcedType>
+									<userType>space.arim.libertybans.api.NetworkAddress</userType>
+									<converter>space.arim.libertybans.core.database.jooq.NetworkAddressConverter</converter>
+									<includeExpression>.*\.(address|victim_address)$</includeExpression>
+									<includeTypes>^VARBINARY\(16\)$</includeTypes>
+								</forcedType>
+								<forcedType>
+									<userType>java.time.Instant</userType>
+									<converter>space.arim.libertybans.core.database.jooq.InstantConverter</converter>
+									<includeExpression>.*\.(updated|start)$</includeExpression>
+									<includeTypes>^BIGINT$</includeTypes>
+								</forcedType>
+								<forcedType>
+									<userType>java.time.Instant</userType>
+									<converter>space.arim.libertybans.core.database.jooq.EndInstantConverter</converter>
+									<includeExpression>.*\.(end)$</includeExpression>
+									<includeTypes>^BIGINT$</includeTypes>
+								</forcedType>
+								<forcedType>
+									<userType>space.arim.libertybans.api.PunishmentType</userType>
+									<converter>space.arim.libertybans.core.database.jooq.PunishmentTypeConverter</converter>
+									<!-- https://regex101.com/r/5wZ03R/1/ -->
+									<includeExpression>^(punishments\.type|simple_.*\.type|applicable_.*\.type)$</includeExpression>
+									<includeTypes>SMALLINT</includeTypes>
+								</forcedType>
+								<forcedType>
+									<userType>space.arim.libertybans.api.Victim.VictimType</userType>
+									<converter>space.arim.libertybans.core.database.jooq.VictimTypeConverter</converter>
+									<!-- https://regex101.com/r/bXFXQL/1 -->
+									<includeExpression>^(victims\.type|simple_.*\.victim_type|applicable_.*\.victim_type)$</includeExpression>
+									<includeTypes>^SMALLINT$</includeTypes>
+								</forcedType>
+								<forcedType>
+									<userType>space.arim.libertybans.api.Operator</userType>
+									<binding>space.arim.libertybans.core.database.jooq.OperatorBinding</binding>
+									<includeExpression>.*\.operator$</includeExpression>
+									<includeTypes>^UUID$</includeTypes>
+								</forcedType>
+								<forcedType>
+									<userType>space.arim.libertybans.api.scope.ServerScope</userType>
+									<converter>space.arim.libertybans.core.database.jooq.ServerScopeConverter</converter>
+									<includeExpression>.*\.scope$</includeExpression>
+									<includeTypes>^CHARACTER\ VARYING\(32\)$</includeTypes>
+								</forcedType>
+							</forcedTypes>
+						</database>
+						<generate/>
+						<target>
+							<packageName>space.arim.libertybans.core.schema</packageName>
+							<directory>${project.build.directory}/schema-gen/generated-sources</directory>
+						</target>
+					</generator>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${project.build.directory}/schema-gen/generated-sources</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -69,11 +226,10 @@
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>build-helper-maven-plugin</artifactId>
-						<version>3.2.0</version>
 						<executions>
 							<execution>
 								<id>find-available-ports</id>
-								<phase>pre-integration-test</phase>
+								<phase>package</phase>
 								<goals>
 									<goal>reserve-network-port</goal>
 								</goals>
@@ -83,6 +239,10 @@
 									<portNames>
 										<portName>it.mariadb.legacy.port</portName>
 										<portName>it.mariadb.modern.port</portName>
+										<portName>it.mysql.port</portName>
+										<portName>it.postgres.legacy.port</portName>
+										<portName>it.postgres.modern.port</portName>
+										<portName>it.cockroachdb.port</portName>
 									</portNames>
 								</configuration>
 							</execution>
@@ -93,11 +253,12 @@
 						<artifactId>docker-maven-plugin</artifactId>
 						<version>0.37.0</version>
 						<configuration>
-							<showLogs>true</showLogs>
 							<containerNamePattern>%a</containerNamePattern>
+							<showLogs>true</showLogs>
+							<startParallel>true</startParallel>
 							<images>
 								<image>
-									<name>mariadb:10.2</name>
+									<name>mariadb:10.3</name>
 									<alias>mariadb-legacy</alias>
 									<run>
 										<env>
@@ -130,6 +291,88 @@
 										<wait>
 											<time>60000</time>
 											<log>Server socket created on IP: '::'</log>
+										</wait>
+										<volumes>
+											<bind>
+												<volume>libertybans-build</volume>
+											</bind>
+										</volumes>
+									</run>
+								</image>
+								<image>
+									<name>mysql:8.0</name>
+									<alias>mysql</alias>
+									<run>
+										<env>
+											<MYSQL_ALLOW_EMPTY_PASSWORD>true</MYSQL_ALLOW_EMPTY_PASSWORD>
+										</env>
+										<ports>
+											<port>127.0.0.1:${it.mysql.port}:3306</port>
+										</ports>
+										<wait>
+											<time>60000</time>
+											<log>/usr/sbin/mysqld: ready for connections. Version: '8.0.27'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server - GPL</log>
+										</wait>
+										<volumes>
+											<bind>
+												<volume>libertybans-build</volume>
+											</bind>
+										</volumes>
+									</run>
+								</image>
+								<image>
+									<name>postgres:12</name>
+									<alias>postgresql-legacy</alias>
+									<run>
+										<env>
+											<POSTGRES_PASSWORD>pgpass</POSTGRES_PASSWORD>
+										</env>
+										<ports>
+											<port>127.0.0.1:${it.postgres.legacy.port}:5432</port>
+										</ports>
+										<wait>
+											<time>60000</time>
+											<log>listening on IPv4 address "0.0.0.0", port 5432</log>
+										</wait>
+										<volumes>
+											<bind>
+												<volume>libertybans-build</volume>
+											</bind>
+										</volumes>
+									</run>
+								</image>
+								<image>
+									<name>postgres:14</name>
+									<alias>postgresql-modern</alias>
+									<run>
+										<env>
+											<POSTGRES_PASSWORD>pgpass</POSTGRES_PASSWORD>
+										</env>
+										<ports>
+											<port>127.0.0.1:${it.postgres.modern.port}:5432</port>
+										</ports>
+										<wait>
+											<time>60000</time>
+											<log>listening on IPv4 address "0.0.0.0", port 5432</log>
+										</wait>
+										<volumes>
+											<bind>
+												<volume>libertybans-build</volume>
+											</bind>
+										</volumes>
+									</run>
+								</image>
+								<image>
+									<name>cockroachdb/cockroach:latest</name>
+									<alias>cockroachdb</alias>
+									<run>
+										<cmd>start-single-node --insecure</cmd>
+										<hostname>cockroach</hostname>
+										<ports>
+											<port>127.0.0.1:${it.cockroachdb.port}:26257</port>
+										</ports>
+										<wait>
+											<time>60000</time>
 										</wait>
 										<volumes>
 											<bind>
@@ -173,8 +416,15 @@
 						<artifactId>maven-failsafe-plugin</artifactId>
 						<configuration>
 							<systemPropertyVariables>
+								<hsqldb.reconfig_logging>false</hsqldb.reconfig_logging>
+								<org.jooq.no-logo>true</org.jooq.no-logo>
+								<org.jooq.no-tips>true</org.jooq.no-tips>
 								<libertybans.it.mariadb.legacy.port>${it.mariadb.legacy.port}</libertybans.it.mariadb.legacy.port>
 								<libertybans.it.mariadb.modern.port>${it.mariadb.modern.port}</libertybans.it.mariadb.modern.port>
+								<libertybans.it.mysql.port>${it.mysql.port}</libertybans.it.mysql.port>
+								<libertybans.it.postgres.legacy.port>${it.postgres.legacy.port}</libertybans.it.postgres.legacy.port>
+								<libertybans.it.postgres.modern.port>${it.postgres.modern.port}</libertybans.it.postgres.modern.port>
+								<libertybans.it.cockroachdb.port>${it.cockroachdb.port}</libertybans.it.cockroachdb.port>
 							</systemPropertyVariables>
 						</configuration>
 					</plugin>
@@ -254,6 +504,10 @@
 			<artifactId>flyway-core</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.jooq</groupId>
+			<artifactId>jooq</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>com.github.ben-manes.caffeine</groupId>
 			<artifactId>caffeine</artifactId>
 		</dependency>
@@ -279,12 +533,16 @@
 		</dependency>
 		<!-- JDBC drivers -->
 		<dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.mariadb.jdbc</groupId>
 			<artifactId>mariadb-java-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.hsqldb</groupId>
-			<artifactId>hsqldb</artifactId>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
 		</dependency>
 	</dependencies>
 </project>

@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-bootstrap
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-bootstrap is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-bootstrap is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-bootstrap. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.bootstrap.plugin;
 
 public final class PluginInfo {
@@ -25,11 +26,10 @@ public final class PluginInfo {
 	public static final String VERSION = "${plugin.version}";
 	public static final String DESCRIPTION = "${plugin.description}";
 	public static final String URL = "${plugin.url}";
-	
-	
-	public static final String DATABASE_REVISION_MAJOR = "${dbrevision.major}";
-	public static final String DATABASE_REVISION_MINOR = "${dbrevision.minor}";
-	
+
+	public static final int DATABASE_REVISION_MAJOR = Integer.parseInt("${dbrevision.major}");
+	public static final int DATABASE_REVISION_MINOR = Integer.parseInt("${dbrevision.minor}");
+
 	private PluginInfo() {}
-	
+
 }

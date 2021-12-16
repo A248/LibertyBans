@@ -204,7 +204,7 @@ public class Formatter implements InternalFormatter {
 		}
 
 		Map<SimpleReplaceable, String> simpleReplacements = new EnumMap<>(SimpleReplaceable.class);
-		simpleReplacements.put(SimpleReplaceable.ID, Integer.toString(punishment.getID()));
+		simpleReplacements.put(SimpleReplaceable.ID, Long.toString(punishment.getIdentifier()));
 		simpleReplacements.put(SimpleReplaceable.TYPE, formatPunishmentType(punishment.getType()));
 		simpleReplacements.put(SimpleReplaceable.VICTIM_ID, formatVictimId(punishment.getVictim()));
 		simpleReplacements.put(SimpleReplaceable.OPERATOR_ID, formatOperatorId(punishment.getOperator()));
@@ -278,7 +278,7 @@ public class Formatter implements InternalFormatter {
 		case PLAYER:
 			/*
 			 * This should be a complete future every time we call this ourselves, because of UUIDMaster's fastCache.
-			 * However, for API calls, the UUID/name might not be added to the cache.
+			 * However, for API calls, the uuidField/name might not be added to the cache.
 			 */
 			return uuidManager.lookupName(((PlayerVictim) victim).getUUID())
 					.thenApply((optName) -> optName.orElse(NAME_UNKNOWN_ERROR));

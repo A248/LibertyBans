@@ -20,17 +20,12 @@
 package space.arim.libertybans.core.commands.usage;
 
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
+import space.arim.libertybans.core.config.ReadFromResource;
 import space.arim.libertybans.core.env.CmdSender;
-import space.arim.omnibus.util.ThisClass;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UncheckedIOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -73,14 +68,7 @@ public final class PluginInfoMessage {
 	}
 
 	public static PluginInfoMessage fromResource(String resourceName) {
-		URL resource = ThisClass.get().getResource("/" + resourceName);
-		assert resource != null : "No such resource " + resourceName;
-		try (InputStream inputStream = resource.openStream();
-			 Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
-			return fromReader(reader);
-		} catch (IOException ex) {
-			throw new UncheckedIOException(ex);
-		}
+		return new ReadFromResource(resourceName).read(PluginInfoMessage::fromReader);
 	}
 
 	public void send(CmdSender sender) {
