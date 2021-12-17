@@ -1,4 +1,3 @@
-
 Normally, when you punish or unpunish a player, two messages are sent:
 
 1. A message to the player running the command, telling them it was successful

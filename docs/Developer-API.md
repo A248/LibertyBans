@@ -11,8 +11,9 @@ It is available from:
 ```
 https://mvn-repo.arim.space/affero-gpl3/
 ```
+<!-- tabs:start -->
 
-### Maven
+#### **Maven**
 
 With maven, this would be applied as follows:
 
@@ -34,6 +35,27 @@ With maven, this would be applied as follows:
 	...
 </repositories>
 ```
+
+#### **Gradle**
+
+```gradle
+repositories {
+  ...
+    maven { 
+      name= 'arim-mvn-agpl3' 
+      url = 'https://mvn-repo.arim.space/affero-gpl3/' 
+    } 
+  ...
+}
+
+dependencies {
+  ...
+    compileOnly "space.arim.libertybans:bans-api:{INSERT_LATEST_VERSION}"
+}
+```
+
+<!-- tabs:end -->
+
 
 ### Javadoc
 
@@ -163,6 +185,3 @@ future.thenRunSync(() -> { // thenRunSync is not available with CompletableFutur
  // do async operation
 }).join(); // Calling join() will cause a deadlock when using a plain CompletableFuture
 ```
-
-
-
