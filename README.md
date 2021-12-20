@@ -14,7 +14,7 @@
 [CodeSize]:https://img.shields.io/github/languages/code-size/A248/LibertyBans
 <!-- Shields -->
 [![Discord]](https://discord.gg/3C4qeG8XhE)
-[![Document]](https://github.com/A248/LibertyBans/wiki/Getting-Started)
+[![Document]](https://libertybans.org/#/Getting-Started)
 [![Spigot]](https://spigotmc.org/resources/81063)
 <br><br>[![TestedVersion]](https://spigotmc.org/resources/81063) ![SpigotRating]
 <br>![License] ![GitHubStar] ![CodeSize]
@@ -89,7 +89,7 @@ For more advanced setups (multi-proxy or installing on the backend servers), see
 
 ## Developer API
 
-The developer API is extensive. LibertyBans does not recommend developers mess with the database as a first recourse. [More information here](https://github.com/A248/LibertyBans/wiki/Developer-API)
+The developer API is extensive. LibertyBans does not recommend developers mess with the database as a first recourse. [More information here](https://libertybans.org/#/Developer-API)
 
 ### License
 
