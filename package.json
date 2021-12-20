@@ -1,0 +1,11 @@
+{
+  "name": "libertybans",
+  "description": "The Document of LibertyBans built with docsify.",
+  "license": "AGPL-3.0",
+  "scripts": {
+    "start": "docsify serve ./docs"
+  },
+  "devDependencies": {
+    "docsify-cli": "^4.4.3"
+  }
+}

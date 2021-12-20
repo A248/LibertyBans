@@ -81,3 +81,10 @@ local.properties
 .apt_generated
 
 .sts4-cache/
+
+# Docs
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
