@@ -55,7 +55,7 @@ class BaseWrapper {
 		Platform detectPlatform() {
 			ProxyServer server = plugin.getProxy();
 			return Platform.forCategory(Platform.Category.BUNGEE)
-					.slf4jSupport(Platforms.detectGetSlf4jLoggerMethod(plugin))
+					.slf4jSupport(true)
 					.build(server.getName() + " " + server.getVersion());
 		}
 		
