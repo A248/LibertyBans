@@ -26,6 +26,7 @@ import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 import space.arim.libertybans.bootstrap.logger.Slf4jBootstrapLogger;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BaseWrapperTest {
 
@@ -33,7 +34,7 @@ public class BaseWrapperTest {
 	public void detectPlatform() {
 		BootstrapLogger logger = new Slf4jBootstrapLogger(LoggerFactory.getLogger(getClass()));
 		Platform platform = new BaseWrapper.Creator(MockPlugin.create(), logger).detectPlatform();
-		assertFalse(platform.hasSlf4jSupport());
+		assertTrue(platform.hasSlf4jSupport());
 		assertFalse(platform.hasKyoriAdventureSupport());
 	}
 }
