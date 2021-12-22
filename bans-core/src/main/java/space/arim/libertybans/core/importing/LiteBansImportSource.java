@@ -151,7 +151,7 @@ public class LiteBansImportSource implements ImportSource {
 						new PortablePunishment.VictimInfo(uuid, null, null, PlayerVictim.of(uuid)));
 			}
 			String ipString = resultSet.getString("ip");
-			if (ipString == null || ipString.equals("#offline#")) {
+			if (ipString == null || ipString.equals("#offline#") || ipString.equals("#")) {
 				logger.warn("Skipping IP-ban where the LiteBans-recorded IP is \"{}\"", ipString);
 				return Optional.empty();
 			}
