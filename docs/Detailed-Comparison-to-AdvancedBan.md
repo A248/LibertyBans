@@ -1,6 +1,6 @@
 This is intended to be an impartial analysis of the API, design, and implementation of AdvancedBan compared to LibertyBans.
 
-As one of the lead contributors to AdvancedBan and the creator of LibertyBans, I am not completely unbiased. However, this means I am familiar with both codebases.
+As one of the lead contributors to AdvancedBan and the creator of LibertyBans, I am not completely unbiased. However, this means I am familiar with both codebases and can offer an in-depth analysis.
 
 # Design
 
@@ -8,17 +8,33 @@ As one of the lead contributors to AdvancedBan and the creator of LibertyBans, I
 
 AdvancedBan's codebase is heavily oriented toward singletons. This design decision leads to very fragile initialization. In the past, there have been issues where another plugin referenced AdvancedBan's classes and initialized them prematurely.
 
-LibertyBans is fully instance-based and more flexible in this regard. It is even possible to create multiple instances of it. Another plugin referencing its classes will *not* cause initialization to blow up.
+LibertyBans is fully instance-based, which means another plugin referencing its classes will not cause initialization conflicts.
 
 ## Caching
 
-AdvancedBan uses a hand-rolled punishment cache. This cache is quite brittle and has resulted in several annoying bugs.
+AdvancedBan uses a hand-rolled punishment cache. This cache is quite brittle and has resulted in several bugs. It is populated and invalidated manually. Users ocassionally report issues with cached punishments failing to be invalidated.
 
-LibertyBans uses a popular and well-tested caching library, called [Caffeine](https://github.com/ben-manes/caffeine). This library is used in software infrastructure in all kinds of applications. This means development of LibertyBans can focus on more important features.
+LibertyBans caches only mutes, and nothing else. It uses a popular caching library, called [Caffeine](https://github.com/ben-manes/caffeine). No bugs to date (as of 21 Dec 2021) have been observed with the caching mechanism used by LibertyBans. Also, caching fewer punishments requires less memory.
 
-Moreover, LibertyBans only caches what is necessary - mutes. AdvancedBan caches all punishments of online players, which results in somewhat more memory usage.
+## IDs
+
+AdvancedBan has a quirk where it creates two IDs for every punishment - one ID for the active punishment and another ID for the punishment in history.
+
+This is quite counter-intuitive. Having two separate punishment IDs can lead to confusion with appeals systems and variables in message configuration.
+
+This finding was so unexpected that some of the core contributors to AdvancedBan were not aware of it and were surprised to hear about it.
 
 ## Concurrency
+
+### Transactional Consistency
+
+AdvancedBan does not rely on transactional consistency like LibertyBans does. In practice, this means certain conditions can be violated in certain circumstances in AdvancedBan - this is a bug in AdvancedBan's design, and it is not a simple fix.
+
+In both AdvancedBan and Liberty*Bans, attempting to ban a player already banned results in a message affirming such. If you try to ban another player twice, AdvancedBan will tell you "this player is already banned." However, this guarantee does not hold solid. If you are somehow able to execute /ban quickly enough twice, you can successfully ban another player twice.
+
+Although it may sound far-fetched to ban a player twice quickly, it has been observed multiple times in practice. Automated punishment mechanisms, such as anticheats, are prone to issue commands very quickly, as they are not limited by human typing speed.
+
+This bug in AdvancedBan used to be one reason users of LibertyBans who had imported from AdvancedBan would observe duplicate punishments. In contrast to AdvancedBan, LibertyBans makes full use of transactional consistency, and is therefore not subjet to the described AdvancedBan bug.
 
 ### Synchronous / Asynchronous Constructs
 
@@ -57,12 +73,6 @@ LibertyBans uses HikariCP and takes advantage of it.
 AdvancedBan, like other ban plugins, uses VARCHAR columns for storing UUIDs and IP addresses. This is equivalent to storing the string representation of UUIDs and IP addresses.
 
 LibertyBans uses BINARY column types in order to reduce storage space. This means only the necessary bytes of the UUIDs and IP addresses are stored. The actual difference is small, but not negligible.
-
-## Database Drivers
-
-AdvancedBan uses the server's MySQL Connector-J driver. Other plugins do this as well. However, on some server versions, the Connector-J driver version is very old, with bugs which are fixed in later versions.
-
-LibertyBans uses a modern MariaDB-Connector version, which is compatible with MySQL and MariaDB and does not have the bugs present from ancient Connector-J versions.
 
 ## UTF-8 Encoding
 
@@ -108,15 +118,25 @@ In general, LibertyBans uses more modern technology, but also has greater requir
 
 LibertyBans requires Java 11 whereas AdvancedBan permits Java 8.
 
-## External database (MariaDB/MySQL)
+## External Databases
 
-Using MySQL in either plugin is optional. Both AdvancedBan and LibertyBans use HSQLDB by default.
+Using an external database in either plugin is optional. Both AdvancedBan and LibertyBans use HSQLDB by default.
 
-In LibertyBans, if you choose MariaDB or MySQL, you have to use a modern MySQL or MariaDB version. At least MySQL 8.0 or MariaDB 10.3 is required.
+LibertyBans requires certain minimum versions for database servers. At least MySQL 8.0, MariaDB 10.3, or PostgreSQL 12 is required. Older versions are not supported.
+
+Due to an unfortunate bug in pterodactyl, the pterodactyl database user has insufficient SQL privileges. TThis causes a problem with LibertyBans, because LibertyBans uses advanced SQL features which AdvancedBan does not. This results in headaches for users of LibertyBans and pterodactly, who need to manually grant the right privileges to LibertyBans for the plugin to function properly. This bug is outside the control of LibertyBans.
+
+### Database Drivers
+
+AdvancedBan uses the server's MySQL Connector-J driver. Other plugins do this as well. However, on some server versions, the Connector-J driver version is very old, with bugs which are fixed in later versions. This is not AdvancedBan's fault, but it is a problem frequently encountered by AdvancedBan users.
+
+LibertyBans uses a modern MariaDB-Connector version, which is compatible with MySQL and MariaDB and does not have the bugs present from ancient Connector-J versions.
 
 ## Platform Support
 
-Both AdvancedBan and LibertyBans support the same platforms. AdvancedBan had velocity support recently merged (24 January 2021)
+Both AdvancedBan and LibertyBans support the same platforms.
+
+AdvancedBan's support for velocity is limited to development builds, and according to user testing reports it has several known bugs. Some of the contributors to AdvancedBan say there is no maintainer for the velocity branch of AdvancedBan.
 
 # Features
 
@@ -146,7 +166,7 @@ AdvancedBan has a command to check a player's IP address, but not the ability to
 
 AdvancedBan supports a feature known as exempt permissions, where a target player cannot be banned if they have a certain permission. Note that on a proxy, permissions checking for offline players depends on LuckPerms, otherwise the feature breaks.
 
-LibertyBans does not provide this feature.
+LibertyBans does not provide this feature, on the author's claim that it cannot be made to work reliably for both online and offline players.
 
 ## Importing
 

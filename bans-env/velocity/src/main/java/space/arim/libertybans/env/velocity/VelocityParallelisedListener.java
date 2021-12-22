@@ -18,16 +18,17 @@
  */
 package space.arim.libertybans.env.velocity;
 
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.libertybans.core.env.ParallelisedListener;
-
-import com.velocitypowered.api.event.EventHandler;
+import com.velocitypowered.api.event.AwaitingEventExecutor;
+import com.velocitypowered.api.event.Continuation;
 import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.ProxyServer;
+import space.arim.libertybans.core.env.ParallelisedListener;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.impl.IndifferentCentralisedFuture;
 
 abstract class VelocityParallelisedListener<E extends ResultedEvent<?>, R> extends ParallelisedListener<E, R> {
 
@@ -35,8 +36,7 @@ abstract class VelocityParallelisedListener<E extends ResultedEvent<?>, R> exten
 	private final ProxyServer server;
 
 	// Visible for testing
-	final EarlyHandler earlyHandler = new EarlyHandler();
-	final LateHandler lateHandler = new LateHandler();
+	final AsyncHandler handler = new AsyncHandler();
 	
 	VelocityParallelisedListener(PluginContainer plugin, ProxyServer server) {
 		this.plugin = plugin;
@@ -47,8 +47,7 @@ abstract class VelocityParallelisedListener<E extends ResultedEvent<?>, R> exten
 	public final void register() {
 		Class<E> eventClass = getEventClass();
 		EventManager eventManager = server.getEventManager();
-		eventManager.register(plugin, eventClass, PostOrder.EARLY, earlyHandler);
-		eventManager.register(plugin, eventClass, PostOrder.LATE, lateHandler);
+		eventManager.register(plugin, eventClass, PostOrder.EARLY, handler);
 	}
 
 	abstract Class<E> getEventClass();
@@ -56,8 +55,7 @@ abstract class VelocityParallelisedListener<E extends ResultedEvent<?>, R> exten
 	@Override
 	public void unregister() {
 		EventManager eventManager = server.getEventManager();
-		eventManager.unregister(plugin, earlyHandler);
-		eventManager.unregister(plugin, lateHandler);
+		eventManager.unregister(plugin, handler);
 	}
 
 	@Override
@@ -75,39 +73,46 @@ abstract class VelocityParallelisedListener<E extends ResultedEvent<?>, R> exten
 	protected abstract void executeNonNullResult(E event, R result);
 
 	// Visible for testing
-	class EarlyHandler implements EventHandler<E> {
+	class AsyncHandler implements AwaitingEventExecutor<E> {
 
 		@Override
-		public void execute(E event) {
+		public EventTask executeAsync(E event) {
 			if (skipEvent(event)) {
-				return;
+				return null;
 			}
 			if (!event.getResult().isAllowed()) {
 				debugPrematurelyDenied(event);
-				return;
+				return null;
 			}
 			CentralisedFuture<R> future = beginComputation(event);
-			begin(event, future);
+			return EventTask.resumeWhenComplete(future.thenAccept((result) -> {
+				if (result == null) {
+					debugResultPermitted(event);
+					return;
+				}
+				executeNonNullResult(event, result);
+			}));
 		}
 
-	}
-
-	// Visible for testing
-	class LateHandler implements EventHandler<E> {
-
-		@Override
-		public void execute(E event) {
-			if (skipEvent(event)) {
+		void executeAndWait(E event) {
+			EventTask eventTask = executeAsync(event);
+			if (eventTask == null) {
 				return;
 			}
-			R result = withdraw(event);
-			if (result == null) {
-				debugResultPermitted(event);
-				return;
-			}
-			executeNonNullResult(event, result);
+			CentralisedFuture<Void> future = new IndifferentCentralisedFuture<>();
+			eventTask.execute(new Continuation() {
+				@Override
+				public void resume() {
+					future.complete(null);
+				}
+
+				@Override
+				public void resumeWithException(Throwable exception) {
+					future.completeExceptionally(exception);
+				}
+			});
+			future.join();
 		}
-		
 	}
 	
 }

@@ -109,7 +109,7 @@ Building on the previous example, here's what that might look like.
 				logger.info("UUID {} is already banned", uuidToBan);
 				return;
 			}
-			logger.info("ID of the enacted punishment is {}", punishment.getID());
+			logger.info("ID of the enacted punishment is {}", punishment.getIdentifier());
 		});
 	}
 ```

@@ -39,7 +39,6 @@ import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -104,8 +103,7 @@ public class ConnectionListenerTest {
 		Player player = mockPlayer();
 		LoginEvent event = new LoginEvent(player);
 		var originalResult = event.getResult();
-		listener.earlyHandler.execute(event);
-		listener.lateHandler.execute(event);
+		listener.handler.executeAndWait(event);
 		assertEquals(originalResult.getReasonComponent(), event.getResult().getReasonComponent());
 	}
 
@@ -114,8 +112,7 @@ public class ConnectionListenerTest {
 		deniedResult("denied");
 		Player player = mockPlayer();
 		LoginEvent event = new LoginEvent(player);
-		listener.earlyHandler.execute(event);
-		listener.lateHandler.execute(event);
+		listener.handler.executeAndWait(event);
 		assertEquals(
 				"denied",
 				event.getResult().getReasonComponent()
@@ -123,44 +120,15 @@ public class ConnectionListenerTest {
 	}
 
 	@Test
-	public void allowedThenDeniedByOtherPlugin() {
-		allowedResult();
-		Player player = mockPlayer();
-		LoginEvent event = new LoginEvent(player);
-		listener.earlyHandler.execute(event);
-		var denial = ResultedEvent.ComponentResult.denied(Component.text("denial"));
-		event.setResult(denial);
-		listener.lateHandler.execute(event);
-		assertEquals(
-				denial.getReasonComponent(),
-				event.getResult().getReasonComponent());
-	}
-
-	@Test
-	public void deniedByOtherPluginThenAllowed() {
+	public void deniedByOtherPlugin() {
 		allowedResult();
 		Player player = mockPlayer();
 		LoginEvent event = new LoginEvent(player);
 		var denial = ResultedEvent.ComponentResult.denied(Component.text("denial"));
 		event.setResult(denial);
-		listener.earlyHandler.execute(event);
-		listener.lateHandler.execute(event);
+		listener.handler.executeAndWait(event);
 		assertEquals(
 				denial.getReasonComponent(),
 				event.getResult().getReasonComponent());
-	}
-
-	@Test
-	public void deniedAndReallowedBySomeonesBrokenPlugin() {
-		deniedResult("denied entry");
-		Player player = mockPlayer();
-		LoginEvent event = new LoginEvent(player);
-		var denial = ResultedEvent.ComponentResult.denied(Component.text("denial"));
-		event.setResult(denial);
-		listener.earlyHandler.execute(event);
-		event.setResult(ResultedEvent.ComponentResult.allowed());
-		listener.lateHandler.execute(event);
-
-		assertEquals(Optional.empty(), event.getResult().getReasonComponent());
 	}
 }
