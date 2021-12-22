@@ -61,15 +61,13 @@ public class AdvancedBanImportSource implements ImportSource {
 	@Override
 	public Stream<PortablePunishment> sourcePunishments() {
 		/*
-		 * Filter historical punishments with same ID as active punishments, in order
+		 * Filter historical punishments with same details as active punishments, in order
 		 * to remove duplicates.
 		 */
-		Set<Integer> advancedBanIds = new HashSet<>();
+		Set<AdvancedBanUniquePunishmentDetails> uniqueDetails = new HashSet<>();
 		return unfilteredPunishments().filter((portablePunishment) -> {
-			Integer id = portablePunishment.foreignId()
-					.orElseThrow(() -> new ImportException("Every advancedban punishment should have an ID"));
 			// Despite being a stateful predicate, this is safe because the stream is not parallel
-			return advancedBanIds.add(id);
+			return uniqueDetails.add(new AdvancedBanUniquePunishmentDetails(portablePunishment));
 		});
 	}
 
