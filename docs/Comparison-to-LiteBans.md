@@ -26,19 +26,21 @@ Both LiteBans and LibertyBans use modern JDBC drivers, which avoids issues with 
 
 LibertyBans requires Java 11 whereas LiteBans permits Java 8.
 
-## External database
+## External Databases
 
 Neither LiteBans nor LibertyBans requires an external database. LibertyBans uses HSQLDB by default, and LiteBans uses H2 by default.
 
-LibertyBans has support for MariaDB/MySQL. Note that you have to use a modern MySQL or MariaDB version. At least MySQL 8.0 or MariaDB 10.3 is required.
+LiteBans supports MariaDB, MySQL, and PostgreSQL. It also has support for SQLite, but SQLite usage is discouraged by LiteBans.
 
-LiteBans supports MariaDB/MySQL and PostgreSQL. It also has support for SQLite, but SQLite usage is discouraged by LiteBans.
+LibertyBans supports MariaDB, MySQL, and PostgreSQL. It also requires certain minimum versions for database servers. At least MySQL 8.0, MariaDB 10.3, or PostgreSQL 12 is required. Older versions are not supported.
+
+Due to an unfortunate bug in pterodactyl, the pterodactyl database user has insufficient SQL privileges. TThis causes a problem with LibertyBans, because LibertyBans uses advanced SQL features which AdvancedBan does not. This results in headaches for users of LibertyBans and pterodactly, who need to manually grant the right privileges to LibertyBans for the plugin to function properly. This bug is outside the control of LibertyBans.
 
 ## Platform Support
 
-LibertyBans supports Bukkit, Velocity, and BungeeCord.
+Both LibertyBans and LiteBans support the same platforms. LiteBans had velocity support recently added (9 December 2021)
 
-LiteBans supports Bukkit and BungeeCord but does not provide a Velocity implementation. When using it with Velocity, LiteBans has to be installed on the backend servers.
+LiteBans' support for velocity came after months of users asking for the feature. It was suggested that LiteBans be made open-source so that someone could contribute a velocity version. The reluctance of the LiteBans author to add velocity support suggests that it may be unwise to rely on proprietary software for critical functionality.
 
 # Philosophy
 

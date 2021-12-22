@@ -5,11 +5,11 @@ comparisons. You can find these on the sidebar at the right. For each plugin her
 
 ### Table
 
-| Plugin       | Supported Platforms | Java Req. | Free | Open-Source | Database Support               | Thread-Safe Design | Semver API | Geyser Support | Multi-Proxy Support | Connection Pool*  | Exempt Permissions | Server Scopes | Uses UUIDs |  Import From       |
-| ------------ | ------------------- | --------- | ---- | ----------- | ------------------------------ | ------------------ | ---------- | -------------- | ---------------- | ----------------- | ----------------- | ---------- | --------- | --------------- |
-| LibertyBans  | Bukkit, BungeeCord, Velocity | 11+              | ✔️ | ✔️ | HSQLDB (local), MariaDB/MySQL  | ✔️ | ✔️ | ✔️ | ➖ | ✔️ | ❌ | ❌ | ✔️ | AdvancedBan, LiteBans, vanilla
-| AdvancedBan  | Bukkit, BungeeCord, Velocity | 8+               | ✔️ | ✔️ | HSQLDB (local), MariaDB/MySQL  | ❌ | ❌ | ❓ | ❌ | ❌ | ✔️ | ❌ | ➖ | _
-| LiteBans     | Bukkit, BungeeCord | 8+               | ❌ | ❌ | H2 (local), MariaDB/MySQL, PostgreSQL, SQLite (discouraged) | ❓ | ➖ | ❌ | ✔️ | ❓ | ✔️ | ✔️ | ✔️ | AdvancedBan, BanManager v4 and v5, BungeeAdminTools, MaxBans, UltraBans, vanilla
+| Plugin      | Supported Platforms          | Java Req. | Free | Open-Source | Database Support                                             | Thread-Safe Design | Semver API | Geyser Support | Multi-Proxy Support | Connection Pool* | Exempt Permissions | Server Scopes | Uses UUIDs | Import From                                                                      |
+|-------------|------------------------------|-----------|------|-------------|--------------------------------------------------------------|--------------------|------------|----------------|---------------------|------------------|--------------------|---------------|------------|----------------------------------------------------------------------------------|
+| LibertyBans | Bukkit, BungeeCord, Velocity | 11+       | ✔️   | ✔️          | HSQLDB (local), MariaDB, MySQL, PostgreSQL                   | ✔️                 | ✔️         | ✔️             | ➖                   | ✔️               | ❌                  | ❌             | ✔️         | AdvancedBan, LiteBans, vanilla                                                   |
+| AdvancedBan | Bukkit, BungeeCord, Velocity | 8+        | ✔️   | ✔️          | HSQLDB (local), MariaDB/MySQL                                | ❌                  | ❌          | ❓              | ❌                   | ❌                | ✔️                 | ❌             | ➖          | _                                                                                |
+| LiteBans    | Bukkit, BungeeCord           | 8+        | ❌    | ❌           | H2 (local), MariaDB, MySQL, PostgreSQL, SQLite (discouraged) | ❓                  | ➖          | ❌              | ✔️                  | ❓                | ✔️                 | ✔️            | ✔️         | AdvancedBan, BanManager v4 and v5, BungeeAdminTools, MaxBans, UltraBans, vanilla |
 
 `*` Includes whether the plugin has a connection pool *and* takes advantage of it. For example, AdvancedBan has a connection pool, but in practice, can only use 1 connection at a time, which is effectively the same as not using a connection pool.
 

@@ -15,3 +15,12 @@ If you are interested in a guide for upgrading to LibertyBans 0.8.x to 1.0.0, wh
 * Flyway is updated to 8.x
 * The event scheduler feature for MySQL/MariaDB has been removed. Its marginal benefit does not justify the maintenance cost.
 * Added accepted value 'MYSQL' for `rdms-vendor` and require MySQL to be distinguished from MariaDB.
+* LibertyBans now handles transaction serialization failure and will retry transactions which failed due to contention:
+  * Serialization failure describes the situation where multiple database transactions operate on the same data, and somehow conflict with one another. Serialization failures are propagated to the application.
+  * Whether software handles serialization failure has nothing to do with whether it maintains the integrity of its data: it is not possible to corrupt data merely due to a serialization failure.
+  * This means, in rare cases where running a command would result in a serialization failure, LibertyBans 1.0.0 will handle the situation gracefully, whereas LibertyBans 0.8.x will fail with an exception. Symptoms in 0.8.x would include stacktraces in the server console. However, in practice, no one has reported any instance of serialization failure in LibertyBans.
+  * The handling of transaction serialization failure will not be back-ported to LibertyBans 0.8.x. Much software does not handle transaction serialization failure (including LibertyBans 0.8.x) therefore this is not considered a bug of sufficient importance.
+  * Further technical reading: https://stackoverflow.com/questions/7705273/what-are-the-conditions-for-encountering-a-serialization-failure
+* Relevant client encoding variables are set per each database upon establishing connection. Also, the charset utf8mb4 and collation utf8mb4_bin are now set on created tables for MariaDB and MySQL.
+* Punishment.PERMANENT_END_DATE constant is added to the API
+* The API now uses `long` (64-bit integers) for punishment IDs.

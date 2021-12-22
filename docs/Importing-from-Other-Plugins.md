@@ -45,15 +45,14 @@ player-uuid-resolution:
 * If you are running an offline-mode server, and using `MIXED` UUIDs, where some players have cracked UUIDs and some have online UUIDs, LibertyBans cannot perform any UUID lookups. Some punishments *will be skipped* if LibertyBans cannot determine the UUID.
   * You can avoid losing punishments if all the users join the server first, or have joined the server since LibertyBans was installed. If the players have joined the server before, LibertyBans will remember their name and UUID, and so when the import occurs, LibertyBans will know the UUID of these players.
 
-## LiteBans – Using PostgreSQL or H2
+## LiteBans – Using  H2
 
-If you used LiteBans with MySQL or MariaDB, no additional setup is required. LibertyBans includes these drivers.
+If you used LiteBans with MariaDB, MySQL, or PostgreSQL, no additional setup is required. LibertyBans includes these drivers.
 
-If you used LiteBans with PostgreSQL or H2, you will need to add these drivers to your server first. How you do this is as follows:
+If you used LiteBans with H2, you will need to add the driver to your server first. How you do this is as follows:
 
 1. Download the relevant driver:
   * H2: [Maven Central link](https://mvnrepository.com/artifact/org.postgresql/postgresql/42.2.20), [Direct download link](https://repo1.maven.org/maven2/com/h2database/h2/1.4.199/h2-1.4.199.jar)
-  * PostgreSQL [Maven Central link](https://mvnrepository.com/artifact/com.h2database/h2/1.4.199), [Direct download link](https://repo1.maven.org/maven2/org/postgresql/postgresql/42.2.20/postgresql-42.2.20.jar)
 2. Create a directory called "libs" on your server. The "libs" directory should be located like this:
 ```
 libs/
@@ -74,5 +73,6 @@ java -classpath server.jar:libs/* org.bukkit.craftbukkit.Main
 ```
   * Do NOT use `-jar`!
   * If you are running a proxy, you will need to replace `org.bukkit.craftbukkit.Main` with the main class of your proxy software. For Velocity, that is `com.velocitypowered.proxy.Velocity`. For BungeeCord, that is `net.md_5.bungee.Bootstrap`.
+5. Run the import process as you normally would
 
 For help, join the discord for support.
