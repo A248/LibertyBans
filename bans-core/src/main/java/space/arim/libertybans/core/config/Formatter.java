@@ -26,6 +26,7 @@ import net.kyori.adventure.text.serializer.ComponentSerializer;
 import space.arim.api.jsonchat.adventure.ChatMessageComponentSerializer;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.AddressVictim;
+import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
@@ -52,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
+import java.util.UUID;
 import java.util.function.UnaryOperator;
 
 public class Formatter implements InternalFormatter {
@@ -159,7 +161,7 @@ public class Formatter implements InternalFormatter {
 		VICTIM,
 		OPERATOR,
 		UNOPERATOR;
-		
+
 		String getVariable() {
 			return "%" + name() + "%";
 		}
@@ -261,32 +263,44 @@ public class Formatter implements InternalFormatter {
 	}
 	
 	private String formatVictimId(Victim victim) {
+		UUID uuid;
 		switch (victim.getType()) {
 		case PLAYER:
-			return UUIDUtil.toShortString(((PlayerVictim) victim).getUUID());
+			uuid = ((PlayerVictim) victim).getUUID();
+			break;
 		case ADDRESS:
 			return formatAddressVictim((AddressVictim) victim);
+		case COMPOSITE:
+			uuid = ((CompositeVictim) victim).getUUID();
+			break;
 		default:
 			throw MiscUtil.unknownVictimType(victim.getType());
 		}
+		return UUIDUtil.toShortString(uuid);
 	}
-	
+
 	private static final String NAME_UNKNOWN_ERROR = "-NameUnknown-";
 
 	private CentralisedFuture<String> formatVictim(Victim victim) {
+		UUID uuid;
 		switch (victim.getType()) {
 		case PLAYER:
-			/*
-			 * This should be a complete future every time we call this ourselves, because of UUIDMaster's fastCache.
-			 * However, for API calls, the uuidField/name might not be added to the cache.
-			 */
-			return uuidManager.lookupName(((PlayerVictim) victim).getUUID())
-					.thenApply((optName) -> optName.orElse(NAME_UNKNOWN_ERROR));
+			uuid = ((PlayerVictim) victim).getUUID();
+			break;
 		case ADDRESS:
 			return futuresFactory.completedFuture(formatAddressVictim((AddressVictim) victim));
+		case COMPOSITE:
+			uuid = ((CompositeVictim) victim).getUUID();
+			break;
 		default:
 			throw MiscUtil.unknownVictimType(victim.getType());
 		}
+		/*
+		 * This should be a complete future every time we call this ourselves, because of UUIDManager's fastCache.
+		 * However, for API calls, the uuidField/name might not be added to the cache.
+		 */
+		return uuidManager.lookupName(uuid)
+				.thenApply((optName) -> optName.orElse(NAME_UNKNOWN_ERROR));
 	}
 	
 	private String formatOperatorId(Operator operator) {

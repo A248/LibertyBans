@@ -28,7 +28,7 @@ import net.md_5.bungee.api.CommandSender;
 import space.arim.api.env.AudienceRepresenter;
 
 import space.arim.libertybans.core.env.ParallelisedListener;
-import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.punish.Guardian;
 
 import net.md_5.bungee.api.connection.Connection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -42,14 +42,15 @@ import net.md_5.bungee.event.EventPriority;
 public class ChatListener extends ParallelisedListener<ChatEvent, Component> implements Listener {
 
 	private final Plugin plugin;
-	private final Enforcer enforcer;
+	private final Guardian guardian;
 	private final AddressReporter addressReporter;
 	private final AudienceRepresenter<CommandSender> audienceRepresenter;
 	
 	@Inject
-	public ChatListener(Plugin plugin, Enforcer enforcer, AddressReporter addressReporter, AudienceRepresenter<CommandSender> audienceRepresenter) {
+	public ChatListener(Plugin plugin, Guardian guardian,
+						AddressReporter addressReporter, AudienceRepresenter<CommandSender> audienceRepresenter) {
 		this.plugin = plugin;
-		this.enforcer = enforcer;
+		this.guardian = guardian;
 		this.addressReporter = addressReporter;
 		this.audienceRepresenter = audienceRepresenter;
 	}
@@ -77,7 +78,7 @@ public class ChatListener extends ParallelisedListener<ChatEvent, Component> imp
 		ProxiedPlayer player = (ProxiedPlayer) sender;
 		InetAddress address = addressReporter.getAddress(player);
 		String command = (event.isCommand()) ? event.getMessage().substring(1) : null;
-		begin(event, enforcer.checkChat(player.getUniqueId(), address, command));
+		begin(event, guardian.checkChat(player.getUniqueId(), address, command));
 	}
 
 	@Override

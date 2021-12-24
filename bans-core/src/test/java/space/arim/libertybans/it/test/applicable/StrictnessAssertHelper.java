@@ -18,46 +18,45 @@
  */
 package space.arim.libertybans.it.test.applicable;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
-
-import java.net.InetAddress;
-import java.util.UUID;
-
 import jakarta.inject.Inject;
-
 import net.kyori.adventure.text.Component;
-
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.select.PunishmentSelector;
-import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.punish.Guardian;
 import space.arim.libertybans.it.env.platform.QuackPlatform;
 import space.arim.libertybans.it.env.platform.QuackPlayer;
 import space.arim.libertybans.it.env.platform.QuackPlayerBuilder;
+
+import java.net.InetAddress;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class StrictnessAssertHelper {
 
 	private final PunishmentDrafter drafter;
 	private final PunishmentSelector selector;
-	private final Enforcer enforcer;
+	private final Guardian guardian;
 	private final QuackPlatform platform;
 
 	@Inject
-	public StrictnessAssertHelper(PunishmentDrafter drafter, PunishmentSelector selector, Enforcer enforcer, QuackPlatform platform) {
+	public StrictnessAssertHelper(PunishmentDrafter drafter, PunishmentSelector selector,
+								  Guardian guardian, QuackPlatform platform) {
 		this.drafter = drafter;
 		this.selector = selector;
-		this.enforcer = enforcer;
+		this.guardian = guardian;
 		this.platform = platform;
 	}
 
 	private Component connectAndGetMessage(UUID uuid, String name, InetAddress address) {
-		return enforcer.executeAndCheckConnection(uuid, name, address).join();
+		return guardian.executeAndCheckConnection(uuid, name, address).join();
 	}
 
 	public void connectAndAssertUnbannedUser(UUID uuid, String name, InetAddress address) {
@@ -90,7 +89,7 @@ public class StrictnessAssertHelper {
 		assertNotNull(punishment, assertion);
 
 		QuackPlayer player = new QuackPlayerBuilder(platform).buildRandomName(uuid, address);
-		enforcer.enforce(punishment).join();
+		punishment.enforcePunishment().toCompletableFuture().join();
 		assertFalse(player.isStillOnline(), assertion + "; Player should have been kicked");
 	}
 

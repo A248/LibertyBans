@@ -26,12 +26,12 @@ import org.jooq.Field;
 import org.jooq.impl.DSL;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.execute.SQLFunction;
-import space.arim.libertybans.core.database.sql.SimpleViewFields;
-import space.arim.libertybans.core.env.UUIDAndAddress;
 import space.arim.libertybans.core.database.sql.EndTimeCondition;
+import space.arim.libertybans.core.database.sql.SimpleViewFields;
 import space.arim.libertybans.core.database.sql.VictimCondition;
+import space.arim.libertybans.core.env.UUIDAndAddress;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
@@ -46,12 +46,12 @@ import static space.arim.libertybans.core.schema.tables.SimpleMutes.SIMPLE_MUTES
 
 public class AltDetection {
 
-	private final Provider<InternalDatabase> dbProvider;
+	private final Provider<QueryExecutor> queryExecutor;
 	private final Time time;
 
 	@Inject
-	public AltDetection(Provider<InternalDatabase> dbProvider, Time time) {
-		this.dbProvider = dbProvider;
+	public AltDetection(Provider<QueryExecutor> queryExecutor, Time time) {
+		this.queryExecutor = queryExecutor;
 		this.time = time;
 	}
 
@@ -143,8 +143,9 @@ public class AltDetection {
 	}
 
 	public CentralisedFuture<List<DetectedAlt>> detectAlts(UUID uuid, NetworkAddress address, WhichAlts whichAlts) {
-		InternalDatabase database = dbProvider.get();
-		return database.query(SQLFunction.readOnly((context) -> detectAlts(context, uuid, address, whichAlts)));
+		return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
+			return detectAlts(context, uuid, address, whichAlts);
+		}));
 	}
 
 	public CentralisedFuture<List<DetectedAlt>> detectAlts(UUIDAndAddress userDetails, WhichAlts whichAlts) {

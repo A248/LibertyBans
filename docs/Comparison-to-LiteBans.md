@@ -100,9 +100,7 @@ LibertyBans does not implement this feature.
 
 ## Multi-Proxy Support
 
-LibertyBans has passive multi-instance support, which relies on the fact that it performs minimal caching.This has limitations, including that an operator on one server cannot punish a user on another, and have that punishment be enforced while that user is online. There is an [open feature request](https://github.com/A248/LibertyBans/issues/44) to improve this.
-
-LiteBans synchronizes punishments across all of its instances, using SQL-based synchronization. This lets operators punish users on other servers with ease.
+Both LibertyBans and LiteBans synchronizes punishments across their instances, using SQL-based synchronization. This lets operators punish users on other servers with ease.
 
 
 

@@ -216,5 +216,28 @@ public interface SqlConfig {
 			EXPIRE_AFTER_WRITE
 		}
 	}
-	
+
+	@SubSection
+	Synchronization synchronization();
+
+	@ConfHeader("Settings for synchronizing multiple LibertyBans instances.")
+	interface Synchronization {
+
+		@ConfComments({"Availalble synchronization options:",
+				"NONE - no synchronization",
+				"ANSI_SQL - uses your database to synchronize punishments (called ANSI_SQL because it uses standard SQL)",
+				"Other options may be added in the future, upon feature request."})
+		@DefaultString("NONE")
+		SyncMode mode();
+
+		enum SyncMode {
+			NONE,
+			ANSI_SQL
+		}
+
+		default boolean enabled() {
+			return mode() == SyncMode.ANSI_SQL;
+		}
+	}
+
 }

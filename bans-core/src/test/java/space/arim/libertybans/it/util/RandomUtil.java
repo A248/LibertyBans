@@ -32,17 +32,23 @@ public final class RandomUtil {
 	private static Random random() {
 		return ThreadLocalRandom.current();
 	}
-	
-	private static byte[] randomBytes(int length) {
+
+	/**
+	 * Generates random bytes of the specified length
+	 *
+	 * @param length
+	 * @return
+	 */
+	public static byte[] randomBytes(int length) {
 		byte[] result = new byte[length];
 		random().nextBytes(result);
 		return result;
 	}
-	
+
 	public static boolean randomBoolean() {
 		return random().nextBoolean();
 	}
-	
+
 	/**
 	 * Random Ipv4 or Ipv6 address bytes
 	 * 
@@ -93,7 +99,7 @@ public final class RandomUtil {
 	 * @return the random string
 	 */
 	public static String randomString(int minLength, int maxLength) {
-		if (minLength > maxLength || minLength < 0 || maxLength < 0) {
+		if (minLength > maxLength || minLength < 0) {
 			throw new IllegalArgumentException("Bad min and max length: min " + minLength + " and max " + maxLength);
 		}
 		if (maxLength == minLength) {

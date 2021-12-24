@@ -33,6 +33,8 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.config.PunishmentPermissionSection;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.punish.Mode;
+import space.arim.libertybans.core.punish.PunishmentPermission;
 import space.arim.libertybans.it.util.RandomUtil;
 
 import java.util.UUID;
@@ -66,7 +68,10 @@ public class PunishmentPermissionCheckTest {
 	}
 
 	private boolean checkPermission(PunishmentType type, Victim victim, Mode mode) {
-		return new PunishmentPermissionCheck(sender, type, mode).checkPermission(victim, section);
+		return new PunishmentPermissionCheck(
+				sender,
+				new PunishmentPermission(type, mode)
+		).checkPermission(victim, section);
 	}
 
 	private static PlayerVictim playerVictim() {

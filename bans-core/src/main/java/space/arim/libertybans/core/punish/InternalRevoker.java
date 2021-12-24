@@ -21,7 +21,7 @@ package space.arim.libertybans.core.punish;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.revoke.PunishmentRevoker;
+import space.arim.libertybans.api.punish.PunishmentRevoker;
 
 public interface InternalRevoker extends PunishmentRevoker {
 

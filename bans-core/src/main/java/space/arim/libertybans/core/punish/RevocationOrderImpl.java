@@ -18,19 +18,19 @@
  */
 package space.arim.libertybans.core.punish;
 
+import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.EnforcementOptions;
+import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.punish.RevocationOrder;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.ReactionStage;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import space.arim.omnibus.util.concurrent.ReactionStage;
-
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.revoke.RevocationOrder;
-import space.arim.libertybans.core.selector.MuteCache;
-
-class RevocationOrderImpl implements RevocationOrder {
+class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
 	
 	private final Revoker revoker;
 	private final long id;
@@ -94,62 +94,53 @@ class RevocationOrderImpl implements RevocationOrder {
 	}
 
 	@Override
-	public ReactionStage<Boolean> undoPunishment() {
-		return undoPunishmentWithoutUnenforcement().thenApply((revoked) -> {
-			if (revoked) {
-				MuteCache muteCache = revoker.muteCache();
-				switch (getApproach()) {
-				case ID:
-					muteCache.clearCachedMute(id);
-					break;
-				case ID_TYPE:
-					if (type == PunishmentType.MUTE) {
-						muteCache.clearCachedMute(id);
-					}
-					break;
-				case TYPE_VICTIM:
-					if (type == PunishmentType.MUTE) {
-						muteCache.clearCachedMute(victim);
-					}
-					break;
-				default:
-					throw MiscUtil.unknownEnumEntry(getApproach());
-				}
-			}
-			return revoked;
-		});
-	}
-
-	@Override
-	public ReactionStage<Boolean> undoPunishmentWithoutUnenforcement() {
+	public ReactionStage<Boolean> undoPunishment(EnforcementOptions enforcementOptions) {
+		// Unenforcement needs both an ID and a type
+		// Revoking by ID needs to be special-cased so that unenforcement can use the punishment type
 		switch (getApproach()) {
 		case ID:
-			return revoker.undoPunishmentById(id);
+			return revoker.undoPunishmentById(id).thenCompose((type) -> {
+				if (type == null) {
+					return revoker.futuresFactory().completedFuture(false);
+				}
+				return unenforceAndReturnTrue(id, type, enforcementOptions);
+			});
 		case ID_TYPE:
-			return revoker.undoPunishmentByIdAndType(id, type);
+			return revoker.undoPunishmentByIdAndType(id, type).thenCompose((revoked) -> {
+				if (!revoked) {
+					return revoker.futuresFactory().completedFuture(false);
+				}
+				return unenforceAndReturnTrue(id, type, enforcementOptions);
+			});
 		case TYPE_VICTIM:
-			return revoker.undoPunishmentByTypeAndVictim(type, victim);
+			return revoker.undoPunishmentByTypeAndVictim(type, victim).thenCompose((id) -> {
+				if (id == null) {
+					return revoker.futuresFactory().completedFuture(false);
+				}
+				return unenforceAndReturnTrue(id, type, enforcementOptions);
+			});
 		default:
 			throw MiscUtil.unknownEnumEntry(getApproach());
 		}
 	}
 
+	private CentralisedFuture<Boolean> unenforceAndReturnTrue(long id, PunishmentType type,
+															  EnforcementOptions enforcementOptions) {
+		return revoker.enforcement().unenforce(id, type, (EnforcementOpts) enforcementOptions)
+				.thenApply((ignore) -> true);
+	}
+
 	@Override
-	public ReactionStage<Optional<Punishment>> undoAndGetPunishment() {
-		return undoAndGetPunishmentWithoutUnenforcement().thenCompose((optPunishment) -> {
-			if (optPunishment.isEmpty()) {
+	public ReactionStage<Optional<Punishment>> undoAndGetPunishment(EnforcementOptions enforcementOptions) {
+		return undoAndGetPunishmentWithoutUnenforcement().thenCompose((punishment) -> {
+			if (punishment == null) {
 				return CompletableFuture.completedStage(Optional.empty());
 			}
-			return optPunishment.get().unenforcePunishment().thenApply((ignore) -> optPunishment);
+			return punishment.unenforcePunishment(enforcementOptions).thenApply((ignore) -> Optional.of(punishment));
 		});
 	}
 
-	@Override
-	public ReactionStage<Optional<Punishment>> undoAndGetPunishmentWithoutUnenforcement() {
-		return undoAndGetPunishmentWithoutUnenforcementNullable().thenApply(Optional::ofNullable);
-	}
-
-	private ReactionStage<Punishment> undoAndGetPunishmentWithoutUnenforcementNullable() {
+	private ReactionStage<Punishment> undoAndGetPunishmentWithoutUnenforcement() {
 		switch (getApproach()) {
 		case ID:
 			return revoker.undoAndGetPunishmentById(id);

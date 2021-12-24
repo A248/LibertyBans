@@ -153,17 +153,17 @@ public enum Vendor {
 	}
 
 	public String inetType() {
-		switch (this) {
-		case HSQLDB:
-		case MARIADB:
-		case MYSQL:
-			return "VARBINARY(16)";
-		case POSTGRES:
-		case COCKROACH:
+		if (isPostgresLike()) {
 			return "BYTEA";
-		default:
-			throw MiscUtil.unknownVendor(this);
 		}
+		return "VARBINARY(16)";
+	}
+
+	public String arbitraryBinaryType() {
+		if (isPostgresLike()) {
+			return "BYTEA";
+		}
+		return "BLOB";
 	}
 
 	String getConnectionInitSql() {

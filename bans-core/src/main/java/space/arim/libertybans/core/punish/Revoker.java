@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.punish;
 
 import jakarta.inject.Inject;
@@ -27,13 +28,12 @@ import org.slf4j.LoggerFactory;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.revoke.RevocationOrder;
+import space.arim.libertybans.api.punish.RevocationOrder;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.database.sql.EndTimeCondition;
 import space.arim.libertybans.core.database.sql.SimpleViewFields;
 import space.arim.libertybans.core.database.sql.TableForType;
 import space.arim.libertybans.core.database.sql.VictimCondition;
-import space.arim.libertybans.core.selector.MuteCache;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -51,25 +51,29 @@ public class Revoker implements InternalRevoker {
 	private final FactoryOfTheFuture futuresFactory;
 	private final Provider<InternalDatabase> dbProvider;
 	private final PunishmentCreator creator;
-	private final MuteCache muteCache;
+	private final GlobalEnforcement enforcement;
 	private final Time time;
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-	
+
 	@Inject
 	public Revoker(FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider,
-				   PunishmentCreator creator, MuteCache muteCache, Time time) {
+				   PunishmentCreator creator, GlobalEnforcement enforcement, Time time) {
 		this.futuresFactory = futuresFactory;
 		this.dbProvider = dbProvider;
 		this.creator = creator;
-		this.muteCache = muteCache;
+		this.enforcement = enforcement;
 		this.time = time;
 	}
-	
-	MuteCache muteCache() {
-		return muteCache;
+
+	FactoryOfTheFuture futuresFactory() {
+		return futuresFactory;
 	}
-	
+
+	GlobalEnforcement enforcement() {
+		return enforcement;
+	}
+
 	@Override
 	public CentralisedFuture<Boolean> undoPunishment(final Punishment punishment) {
 		if (punishment.isExpired()) {
@@ -78,7 +82,7 @@ public class Revoker implements InternalRevoker {
 		}
 		return undoPunishmentByIdAndType(punishment.getIdentifier(), punishment.getType());
 	}
-	
+
 	@Override
 	public RevocationOrder revokeByIdAndType(long id, PunishmentType type) {
 		return new RevocationOrderImpl(this, id, type);
@@ -171,7 +175,7 @@ public class Revoker implements InternalRevoker {
 		});
 	}
 	
-	CentralisedFuture<Boolean> undoPunishmentById(final long id) {
+	CentralisedFuture<PunishmentType> undoPunishmentById(final long id) {
 		InternalDatabase database = dbProvider.get();
 		return database.queryWithRetry((context, transaction) -> {
 			PunishmentType type = context
@@ -180,8 +184,10 @@ public class Revoker implements InternalRevoker {
 					.where(SIMPLE_ACTIVE.ID.eq(id))
 					.fetchSingle(SIMPLE_ACTIVE.TYPE);
 			logger.trace("type={} in undoPunishmentById", type);
-			return type != null
-					&& deleteActivePunishmentByIdAndType(context, id, type);
+			if (type == null || !deleteActivePunishmentByIdAndType(context, id, type)) {
+				return null;
+			}
+			return type;
 		});
 	}
 
@@ -201,7 +207,7 @@ public class Revoker implements InternalRevoker {
 		});
 	}
 
-	CentralisedFuture<Boolean> undoPunishmentByTypeAndVictim(final PunishmentType type, final Victim victim) {
+	CentralisedFuture<Long> undoPunishmentByTypeAndVictim(final PunishmentType type, final Victim victim) {
 		MiscUtil.checkSingular(type);
 		InternalDatabase database = dbProvider.get();
 		return database.queryWithRetry((context, transaction) -> {
@@ -211,7 +217,10 @@ public class Revoker implements InternalRevoker {
 					.where(new VictimCondition(new SimpleViewFields(SIMPLE_ACTIVE)).matchesVictim(victim))
 					.fetchOne(SIMPLE_ACTIVE.ID);
 			logger.trace("id={} in undoPunishmentByTypeAndVictim", id);
-			return id != null && deleteActivePunishmentByIdAndType(context, id, type);
+			if (id == null || !deleteActivePunishmentByIdAndType(context, id, type)) {
+				return null;
+			}
+			return id;
 		});
 	}
 

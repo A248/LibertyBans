@@ -29,7 +29,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.punish.Guardian;
 import space.arim.libertybans.core.service.FuturePoster;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
@@ -49,7 +49,7 @@ import static org.mockito.Mockito.when;
 public class ChatListenerTest {
 
 	private final FuturePoster futurePoster;
-	private final Enforcer enforcer;
+	private final Guardian guardian;
 	private final Configs configs;
 	private final FactoryOfTheFuture futuresFactory = new IndifferentFactoryOfTheFuture();
 
@@ -58,16 +58,16 @@ public class ChatListenerTest {
 
 	private ChatListener chatListener;
 
-	public ChatListenerTest(@Mock FuturePoster futurePoster, @Mock Enforcer enforcer, @Mock Configs configs) {
+	public ChatListenerTest(@Mock FuturePoster futurePoster, @Mock Guardian guardian, @Mock Configs configs) {
 		this.futurePoster = futurePoster;
-		this.enforcer = enforcer;
+		this.guardian = guardian;
 		this.configs = configs;
 	}
 
 	@BeforeEach
 	public void setChatListener() {
 		chatListener = new ChatListener(MockJavaPlugin.create(tempDir), futurePoster,
-				enforcer, configs, Audience.class::cast);
+				guardian, configs, Audience.class::cast);
 	}
 
 	private interface Player extends org.bukkit.entity.Player, Audience {
@@ -83,7 +83,7 @@ public class ChatListenerTest {
 		when(player.getUniqueId()).thenReturn(uuid);
 		when(player.getAddress()).thenReturn(new InetSocketAddress(address, 0));
 		Component denyMessage = Component.text("denied");
-		when(enforcer.checkChat(uuid, address, "msg")).thenReturn(
+		when(guardian.checkChat(uuid, address, "msg")).thenReturn(
 				futuresFactory.completedFuture(denyMessage));
 		PlayerCommandPreprocessEvent commandEvent = new PlayerCommandPreprocessEvent(player, "/msg", Set.of());
 		chatListener.onCommandLow(commandEvent);

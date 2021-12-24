@@ -31,7 +31,7 @@ import net.md_5.bungee.event.EventPriority;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.core.env.PlatformListener;
-import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.punish.Guardian;
 import space.arim.omnibus.util.ThisClass;
 
 import java.net.InetAddress;
@@ -41,15 +41,15 @@ import java.util.UUID;
 public class ConnectionListener implements Listener, PlatformListener {
 
 	private final Plugin plugin;
-	private final Enforcer enforcer;
+	private final Guardian guardian;
 	private final AddressReporter addressReporter;
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-	
+
 	@Inject
-	public ConnectionListener(Plugin plugin, Enforcer enforcer, AddressReporter addressReporter) {
+	public ConnectionListener(Plugin plugin, Guardian guardian, AddressReporter addressReporter) {
 		this.plugin = plugin;
-		this.enforcer = enforcer;
+		this.guardian = guardian;
 		this.addressReporter = addressReporter;
 	}
 	
@@ -76,7 +76,7 @@ public class ConnectionListener implements Listener, PlatformListener {
 
 		event.registerIntent(plugin);
 
-		enforcer.executeAndCheckConnection(uuid, name, address).thenAccept((message) -> {
+		guardian.executeAndCheckConnection(uuid, name, address).thenAccept((message) -> {
 			if (message == null) {
 				logger.trace("Event {} will be permitted", event);
 			} else {

@@ -20,28 +20,22 @@
 package space.arim.libertybans.core.commands.extra;
 
 import net.kyori.adventure.text.Component;
-import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.config.PunishmentPermissionSection;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.punish.MiscUtil;
+import space.arim.libertybans.core.punish.PunishmentPermission;
 
 import java.util.Objects;
 
 public final class PunishmentPermissionCheck {
 
 	private final CmdSender sender;
-	private final PunishmentType type;
-	private final Mode mode;
+	private final PunishmentPermission punishmentPermission;
 
-	public PunishmentPermissionCheck(CmdSender sender, PunishmentType type, Mode mode) {
+	public PunishmentPermissionCheck(CmdSender sender, PunishmentPermission punishmentPermission) {
 		this.sender = Objects.requireNonNull(sender, "sender");
-		this.type = Objects.requireNonNull(type, "type");
-		this.mode = Objects.requireNonNull(mode, "mode");
-	}
-
-	private String permission(String suffix) {
-		return "libertybans." + type + '.' + mode + '.' + suffix;
+		this.punishmentPermission = Objects.requireNonNull(punishmentPermission, "punishmentPermission");
 	}
 
 	private static String permissionForVictim(Victim.VictimType victimType) {
@@ -50,6 +44,8 @@ public final class PunishmentPermissionCheck {
 			return "uuid";
 		case ADDRESS:
 			return "ip";
+		case COMPOSITE:
+			return "both";
 		default:
 			throw MiscUtil.unknownVictimType(victimType);
 		}
@@ -61,6 +57,8 @@ public final class PunishmentPermissionCheck {
 			return permissionSection.uuid();
 		case ADDRESS:
 			return permissionSection.ipAddress();
+		case COMPOSITE:
+			return permissionSection.both();
 		default:
 			throw MiscUtil.unknownVictimType(victimType);
 		}
@@ -68,7 +66,7 @@ public final class PunishmentPermissionCheck {
 
 	public boolean checkPermission(Victim victim, PunishmentPermissionSection permissionSection) {
 		Victim.VictimType victimType = victim.getType();
-		String permission = permission("target." + permissionForVictim(victimType));
+		String permission = punishmentPermission.permission("target." + permissionForVictim(victimType));
 		if (!sender.hasPermission(permission)) {
 			sender.sendMessage(permissionMessageForVictim(victimType, permissionSection));
 			return false;
@@ -77,10 +75,6 @@ public final class PunishmentPermissionCheck {
 	}
 
 	boolean canUseSilence() {
-		return sender.hasPermission(permission("silent"));
-	}
-
-	String notifyPermission(boolean silent) {
-		return permission((silent) ? "notifysilent" : "notify");
+		return sender.hasPermission(punishmentPermission.permission("silent"));
 	}
 }

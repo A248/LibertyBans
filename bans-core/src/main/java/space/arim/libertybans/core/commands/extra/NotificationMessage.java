@@ -22,6 +22,8 @@ package space.arim.libertybans.core.commands.extra;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.punish.Mode;
+import space.arim.libertybans.core.punish.PunishmentPermission;
 
 import java.util.Objects;
 
@@ -35,7 +37,7 @@ public final class NotificationMessage {
 	}
 
 	public NotificationMessage(CmdSender sender, PunishmentType type, Mode mode) {
-		this(new PunishmentPermissionCheck(sender, type, mode));
+		this(new PunishmentPermissionCheck(sender, new PunishmentPermission(type, mode)));
 	}
 
 	public void evaluate(CommandPackage command) {
@@ -45,9 +47,4 @@ public final class NotificationMessage {
 	public boolean isSilent() {
 		return silent;
 	}
-
-	public String notificationPermission() {
-		return permissionCheck.notifyPermission(silent);
-	}
-
 }

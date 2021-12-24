@@ -26,10 +26,10 @@ import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import space.arim.api.env.AudienceRepresenter;
+import space.arim.libertybans.core.punish.Guardian;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.punish.Enforcer;
 import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.selector.SyncEnforcement;
 import space.arim.libertybans.core.service.FuturePoster;
@@ -47,16 +47,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class ChatListener extends SpigotParallelisedListener<PlayerEvent, Component> {
 
 	private final FuturePoster futurePoster;
-	private final Enforcer enforcer;
+	private final Guardian guardian;
 	private final Configs configs;
 	private final AudienceRepresenter<CommandSender> audienceRepresenter;
 
 	@Inject
-	public ChatListener(JavaPlugin plugin, FuturePoster futurePoster, Enforcer enforcer,
+	public ChatListener(JavaPlugin plugin, FuturePoster futurePoster, Guardian guardian,
 			Configs configs, AudienceRepresenter<CommandSender> audienceRepresenter) {
 		super(plugin);
 		this.futurePoster = futurePoster;
-		this.enforcer = enforcer;
+		this.guardian = guardian;
 		this.configs = configs;
 		this.audienceRepresenter = audienceRepresenter;
 	}
@@ -79,7 +79,7 @@ public class ChatListener extends SpigotParallelisedListener<PlayerEvent, Compon
 		}
 		Player player = event.getPlayer();
 		InetAddress address = player.getAddress().getAddress();
-		begin(event, enforcer.checkChat(player.getUniqueId(), address, command));
+		begin(event, guardian.checkChat(player.getUniqueId(), address, command));
 	}
 	
 	@Override

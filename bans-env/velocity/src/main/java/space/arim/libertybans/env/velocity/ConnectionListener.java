@@ -25,9 +25,8 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import net.kyori.adventure.text.Component;
+import space.arim.libertybans.core.punish.Guardian;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.libertybans.core.punish.Enforcer;
 
 import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.connection.LoginEvent;
@@ -37,13 +36,13 @@ import com.velocitypowered.api.proxy.ProxyServer;
 
 @Singleton
 public class ConnectionListener extends VelocityParallelisedListener<LoginEvent, Component> {
-	
-	private final Enforcer enforcer;
-	
+
+	private final Guardian guardian;
+
 	@Inject
-	public ConnectionListener(PluginContainer plugin, ProxyServer server, Enforcer enforcer) {
+	public ConnectionListener(PluginContainer plugin, ProxyServer server, Guardian guardian) {
 		super(plugin, server);
-		this.enforcer = enforcer;
+		this.guardian = guardian;
 	}
 
 	@Override
@@ -57,7 +56,7 @@ public class ConnectionListener extends VelocityParallelisedListener<LoginEvent,
 		UUID uuid = player.getUniqueId();
 		String name = player.getUsername();
 		InetAddress address = player.getRemoteAddress().getAddress();
-		return enforcer.executeAndCheckConnection(uuid, name, address);
+		return guardian.executeAndCheckConnection(uuid, name, address);
 	}
 
 	@Override

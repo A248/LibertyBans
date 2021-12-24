@@ -89,6 +89,17 @@ public interface PunishmentSelector {
 	ReactionStage<Optional<Punishment>> getHistoricalPunishmentById(long id);
 
 	/**
+	 * Gets a historical punishment matching a specific ID and type, if a punishment with
+	 * such ID  and typeexists.
+	 *
+	 * @param id the punishment ID
+	 * @param type the punishment type
+	 * @return a future which yields the historical punishment with the ID, if there
+	 *         is one
+	 */
+	ReactionStage<Optional<Punishment>> getHistoricalPunishmentByIdAndType(long id, PunishmentType type);
+
+	/**
 	 * Gets the first punishment, of a certain type, which is <i>applicable</i> to a
 	 * UUID and IP address, where the UUID and address typically represent from
 	 * connected player. <br>

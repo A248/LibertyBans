@@ -26,18 +26,18 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
-import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.punish.Guardian;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 @Singleton
 public class CommandListener extends VelocityParallelisedListener<CommandExecuteEvent, Component> {
 
-	private final Enforcer enforcer;
+	private final Guardian guardian;
 
 	@Inject
-	public CommandListener(PluginContainer plugin, ProxyServer server, Enforcer enforcer) {
+	public CommandListener(PluginContainer plugin, ProxyServer server, Guardian guardian) {
 		super(plugin, server);
-		this.enforcer = enforcer;
+		this.guardian = guardian;
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public class CommandListener extends VelocityParallelisedListener<CommandExecute
 	@Override
 	protected CentralisedFuture<Component> beginComputation(CommandExecuteEvent event) {
 		Player player = (Player) event.getCommandSource();
-		return enforcer.checkChat(player.getUniqueId(), player.getRemoteAddress().getAddress(), event.getCommand());
+		return guardian.checkChat(player.getUniqueId(), player.getRemoteAddress().getAddress(), event.getCommand());
 	}
 
 	@Override

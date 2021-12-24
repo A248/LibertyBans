@@ -26,10 +26,10 @@ import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.api.revoke.PunishmentRevoker;
-import space.arim.libertybans.api.revoke.RevocationOrder;
+import space.arim.libertybans.api.punish.PunishmentRevoker;
+import space.arim.libertybans.api.punish.RevocationOrder;
 import space.arim.libertybans.api.select.PunishmentSelector;
-import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.punish.Guardian;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetAddressStrictness;
@@ -48,15 +48,15 @@ public class NotPunishedIT {
 
 	private final PunishmentSelector selector;
 	private final PunishmentRevoker revoker;
-	private final Enforcer enforcer;
+	private final Guardian guardian;
 	private final PunishmentType type;
 
 	@Inject
-	public NotPunishedIT(PunishmentSelector selector, PunishmentRevoker revoker, Enforcer enforcer,
+	public NotPunishedIT(PunishmentSelector selector, PunishmentRevoker revoker, Guardian guardian,
 			@DontInject PunishmentType type) {
 		this.selector = selector;
 		this.revoker = revoker;
-		this.enforcer = enforcer;
+		this.guardian = guardian;
 		this.type = type;
 	}
 
@@ -67,8 +67,8 @@ public class NotPunishedIT {
 		final String name = RandomUtil.randomString(16);
 		final InetAddress address = RandomUtil.randomAddress();
 
-		assertNull(enforcer.executeAndCheckConnection(uuid, name, address).join());
-		assertNull(enforcer.checkChat(uuid, address, null).join());
+		assertNull(guardian.executeAndCheckConnection(uuid, name, address).join());
+		assertNull(guardian.checkChat(uuid, address, null).join());
 
 		NetworkAddress netAddress = NetworkAddress.of(address);
 		assertNull(selector.getApplicablePunishment(uuid, netAddress, type).toCompletableFuture().join().orElse(null));

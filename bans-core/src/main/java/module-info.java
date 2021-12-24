@@ -25,11 +25,12 @@ module space.arim.libertybans.core {
 	exports space.arim.libertybans.core.commands.usage to space.arim.injector;
 	exports space.arim.libertybans.core.config;
 	exports space.arim.libertybans.core.database to space.arim.dazzleconf, space.arim.injector;
+	exports space.arim.libertybans.core.database.execute to space.arim.injector;
 	exports space.arim.libertybans.core.database.flyway to org.flywaydb.core;
 	exports space.arim.libertybans.core.env;
-	//exports space.arim.libertybans.core.event;
 	exports space.arim.libertybans.core.importing;
 	exports space.arim.libertybans.core.punish;
+	exports space.arim.libertybans.core.punish.sync to space.arim.injector;
 	exports space.arim.libertybans.core.scope;
 	exports space.arim.libertybans.core.selector;
 	exports space.arim.libertybans.core.service;

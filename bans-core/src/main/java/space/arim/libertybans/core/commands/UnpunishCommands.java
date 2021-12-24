@@ -22,10 +22,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.revoke.PunishmentRevoker;
-import space.arim.libertybans.api.revoke.RevocationOrder;
-import space.arim.libertybans.core.commands.extra.Mode;
+import space.arim.libertybans.api.punish.PunishmentRevoker;
+import space.arim.libertybans.api.punish.RevocationOrder;
 import space.arim.libertybans.core.commands.extra.NotificationMessage;
 import space.arim.libertybans.core.commands.extra.PunishmentPermissionCheck;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
@@ -33,9 +33,11 @@ import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.RemovalsSection.PunishmentRemoval;
 import space.arim.libertybans.core.config.RemovalsSection.WarnRemoval;
 import space.arim.libertybans.core.env.CmdSender;
-import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.event.PardonEventImpl;
 import space.arim.libertybans.core.event.PostPardonEventImpl;
+import space.arim.libertybans.core.punish.EnforcementOpts;
+import space.arim.libertybans.core.punish.Mode;
+import space.arim.libertybans.core.punish.PunishmentPermission;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.util.Locale;
@@ -48,16 +50,14 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 	
 	private final PunishmentRevoker revoker;
 	private final InternalFormatter formatter;
-	private final EnvEnforcer<?> envEnforcer;
 	private final TabCompletion tabCompletion;
 	
 	UnpunishCommands(Dependencies dependencies, Stream<String> matches,
 					 PunishmentRevoker revoker, InternalFormatter formatter,
-					 EnvEnforcer<?> envEnforcer, TabCompletion tabCompletion) {
+					 TabCompletion tabCompletion) {
 		super(dependencies, matches);
 		this.revoker = revoker;
 		this.formatter = formatter;
-		this.envEnforcer = envEnforcer;
 		this.tabCompletion = tabCompletion;
 	}
 
@@ -67,7 +67,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 		PunishmentPermissionCheck permissionCheck;
 		return new Execution(
 				sender, command, type,
-				(permissionCheck = new PunishmentPermissionCheck(sender, type, Mode.UNDO)),
+				(permissionCheck = new PunishmentPermissionCheck(sender, new PunishmentPermission(type, Mode.UNDO))),
 				new NotificationMessage(permissionCheck));
 	}
 	
@@ -159,7 +159,13 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 				if (event.isCancelled()) {
 					return completedFuture(null);
 				}
-				return revocationOrder.undoAndGetPunishmentWithoutUnenforcement().thenApply((optPunishment) -> {
+				// Unenforce the punishment later, after we are sure it exists
+				EnforcementOptions enforcementOptions = revocationOrder
+						.enforcementOptionsBuilder()
+						.enforcement(EnforcementOptions.Enforcement.NONE)
+						.broadcasting(EnforcementOptions.Broadcasting.NONE)
+						.build();
+				return revocationOrder.undoAndGetPunishment(enforcementOptions).thenApply((optPunishment) -> {
 					if (optPunishment.isEmpty()) {
 						sendNotFound(targetArg, id);
 						return null;
@@ -187,17 +193,23 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 
 			notificationMessage.evaluate(command()); // Evaluate -s
 
-			CentralisedFuture<?> unenforcement = punishment.unenforcePunishment().toCompletableFuture();
+			EnforcementOptions enforcementOptions = EnforcementOpts
+					.builder()
+					.enforcement(EnforcementOptions.Enforcement.GLOBAL)
+					.broadcasting(notificationMessage.isSilent() ?
+							EnforcementOptions.Broadcasting.SILENT : EnforcementOptions.Broadcasting.NORMAL
+					)
+					.targetArgument(targetArg)
+					.unOperator(sender().getOperator())
+					.build();
+			CentralisedFuture<?> unenforcement = punishment
+					.unenforcePunishment(enforcementOptions)
+					.toCompletableFuture();
 			CentralisedFuture<Component> futureMessage = formatter.formatWithPunishment(
 					section.successMessage().replaceText("%TARGET%", targetArg), punishment);
-			CentralisedFuture<Component> futureNotify = formatter.formatWithPunishmentAndUnoperator(
-					section.successNotification().replaceText("%TARGET%", targetArg), punishment, sender().getOperator());
 
-			var completion = futuresFactory().allOf(unenforcement, futureMessage, futureNotify).thenRun(() -> {
+			var completion = futuresFactory().allOf(unenforcement, futureMessage).thenRun(() -> {
 				sender().sendMessage(futureMessage.join());
-
-				envEnforcer.sendToThoseWithPermission(
-						notificationMessage.notificationPermission(), futureNotify.join());
 			});
 			postFuture(fireWithTimeout(new PostPardonEventImpl(sender().getOperator(), punishment)));
 			return completion;

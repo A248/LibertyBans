@@ -70,3 +70,10 @@ CREATE TABLE "${tableprefix}history" (
 )${extratableoptions};
 
 CREATE INDEX "${tableprefix}history_victim_index" ON "${tableprefix}history" ("victim");
+
+CREATE TABLE "${tableprefix}messages" (
+  "message" ${arbitrarybinarytype} NOT NULL,
+  "time" BIGINT NOT NULL
+);
+
+CREATE INDEX "${tableprefix}messages_time_index" ON "${tableprefix}messages" ("time");

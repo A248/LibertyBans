@@ -39,8 +39,8 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.DraftPunishment;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
-import space.arim.libertybans.api.revoke.PunishmentRevoker;
-import space.arim.libertybans.api.revoke.RevocationOrder;
+import space.arim.libertybans.api.punish.PunishmentRevoker;
+import space.arim.libertybans.api.punish.RevocationOrder;
 import space.arim.libertybans.api.select.PunishmentSelector;
 
 public class WikiExamples {

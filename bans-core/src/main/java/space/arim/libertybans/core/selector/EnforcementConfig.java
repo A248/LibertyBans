@@ -31,7 +31,7 @@ import space.arim.libertybans.core.alts.WhichAlts;
 
 @ConfHeader({"Options related to punishment enforcement and alt account checking",
 		"",
-		"Alt Account Enforcement and Checking:",
+		"Alt Account GlobalEnforcement and Checking:",
 		"There are multiple ways to combat alt accounts in LibertyBans.",
 		"First, you can have the plugin automatically detect alt accounts and prevent them from joining, ",
 		"with the same ban message. This is controlled by the 'address-strictness' setting.",

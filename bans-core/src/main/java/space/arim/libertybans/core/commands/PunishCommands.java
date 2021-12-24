@@ -23,11 +23,11 @@ import net.kyori.adventure.text.ComponentLike;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.DraftPunishment;
+import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.core.commands.extra.DurationParser;
 import space.arim.libertybans.core.commands.extra.DurationPermissionCheck;
-import space.arim.libertybans.core.commands.extra.Mode;
 import space.arim.libertybans.core.commands.extra.NotificationMessage;
 import space.arim.libertybans.core.commands.extra.PunishmentPermissionCheck;
 import space.arim.libertybans.core.commands.extra.ReasonsConfig;
@@ -37,9 +37,11 @@ import space.arim.libertybans.core.config.AdditionsSection.ExclusivePunishmentAd
 import space.arim.libertybans.core.config.AdditionsSection.PunishmentAdditionWithDurationPerm;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
-import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.event.PostPunishEventImpl;
 import space.arim.libertybans.core.event.PunishEventImpl;
+import space.arim.libertybans.core.punish.EnforcementOpts;
+import space.arim.libertybans.core.punish.Mode;
+import space.arim.libertybans.core.punish.PunishmentPermission;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.time.Duration;
@@ -51,16 +53,14 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 
 	private final PunishmentDrafter drafter;
 	private final InternalFormatter formatter;
-	private final EnvEnforcer<?> envEnforcer;
 	private final TabCompletion tabCompletion;
-	
+
 	PunishCommands(Dependencies dependencies, Stream<String> matches,
 				   PunishmentDrafter drafter, InternalFormatter formatter,
-				   EnvEnforcer<?> envEnforcer, TabCompletion tabCompletion) {
+				   TabCompletion tabCompletion) {
 		super(dependencies, matches);
 		this.drafter = drafter;
 		this.formatter = formatter;
-		this.envEnforcer = envEnforcer;
 		this.tabCompletion = tabCompletion;
 	}
 
@@ -70,7 +70,7 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 		PunishmentPermissionCheck permissionCheck;
 		return new Execution(
 				sender, command, type,
-				(permissionCheck = new PunishmentPermissionCheck(sender, type, Mode.DO)),
+				(permissionCheck = new PunishmentPermissionCheck(sender, new PunishmentPermission(type, Mode.DO))),
 				new NotificationMessage(permissionCheck));
 	}
 
@@ -181,7 +181,13 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 				if (event.isCancelled()) {
 					return completedFuture(null);
 				}
-				return draftPunishment.enactPunishmentWithoutEnforcement().thenApply((optPunishment) -> {
+				// Enforce the punishment later, after we are sure it is valid
+				EnforcementOptions enforcementOptions = draftPunishment
+						.enforcementOptionsBuilder()
+						.enforcement(EnforcementOptions.Enforcement.NONE)
+						.broadcasting(EnforcementOptions.Broadcasting.NONE)
+						.build();
+				return draftPunishment.enactPunishment(enforcementOptions).thenApply((optPunishment) -> {
 					if (optPunishment.isEmpty()) {
 						sendConflict(targetArg);
 						return null;
@@ -226,17 +232,22 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 
 		private CentralisedFuture<?> enforceAndSendSuccess(Punishment punishment, String targetArg) {
 
-			CentralisedFuture<?> enforcement = punishment.enforcePunishment().toCompletableFuture();
+			EnforcementOptions enforcementOptions = EnforcementOpts
+					.builder()
+					.enforcement(EnforcementOptions.Enforcement.GLOBAL)
+					.broadcasting(notificationMessage.isSilent() ?
+							EnforcementOptions.Broadcasting.SILENT : EnforcementOptions.Broadcasting.NORMAL
+					)
+					.targetArgument(targetArg)
+					.build();
+			CentralisedFuture<?> enforcement = punishment
+					.enforcePunishment(enforcementOptions)
+					.toCompletableFuture();
 			CentralisedFuture<Component> futureMessage = formatter.formatWithPunishment(
 					section.successMessage().replaceText("%TARGET%", targetArg), punishment);
-			CentralisedFuture<Component> futureNotify = formatter.formatWithPunishment(
-					section.successNotification().replaceText("%TARGET%", targetArg), punishment);
 
-			var completion = futuresFactory().allOf(enforcement, futureMessage, futureNotify).thenRun(() -> {
+			var completion = futuresFactory().allOf(enforcement, futureMessage).thenRun(() -> {
 				sender().sendMessage(futureMessage.join());
-
-				envEnforcer.sendToThoseWithPermission(
-						notificationMessage.notificationPermission(), futureNotify.join());
 			});
 			postFuture(fireWithTimeout(new PostPunishEventImpl(punishment)));
 			return completion;

@@ -17,6 +17,3 @@ Bonjour!
 Ciao!
 
 <!-- tabs:end -->
-
-> [!NOTE]
-Usage: https://github.com/fzankl/docsify-plugin-flexible-alerts

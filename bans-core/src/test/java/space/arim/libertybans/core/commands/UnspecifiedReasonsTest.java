@@ -41,7 +41,6 @@ import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.env.CmdSender;
-import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
@@ -62,18 +61,16 @@ public class UnspecifiedReasonsTest {
 
 	private final PunishmentDrafter drafter;
 	private final InternalFormatter formatter;
-	private final EnvEnforcer<?> envEnforcer;
 	private final TabCompletion tabCompletion;
 	private final AdditionsSection.BanAddition section;
 	private final ReasonsConfig reasonsConfig;
 	private PunishCommands punishCommands;
 
 	public UnspecifiedReasonsTest(@Mock PunishmentDrafter drafter, @Mock InternalFormatter formatter,
-								  @Mock EnvEnforcer<?> envEnforcer, @Mock TabCompletion tabCompletion,
-								  @Mock AdditionsSection.BanAddition section, @Mock ReasonsConfig reasonsConfig) {
+								  @Mock TabCompletion tabCompletion, @Mock AdditionsSection.BanAddition section,
+								  @Mock ReasonsConfig reasonsConfig) {
 		this.drafter = drafter;
 		this.formatter = formatter;
-		this.envEnforcer = envEnforcer;
 		this.tabCompletion = tabCompletion;
 		this.section = section;
 		this.reasonsConfig = reasonsConfig;
@@ -105,7 +102,7 @@ public class UnspecifiedReasonsTest {
 		when(argParser.parseVictimByName(any(), eq("A248"))).thenReturn(
 				new IndifferentFactoryOfTheFuture().completedFuture(PlayerVictim.of(UUID.randomUUID())));
 
-		punishCommands = new PlayerPunishCommands(dependencies, drafter, formatter, envEnforcer, tabCompletion, envUserResolver);
+		punishCommands = new PlayerPunishCommands(dependencies, drafter, formatter, tabCompletion, envUserResolver);
 	}
 
 	private void executeBan(CmdSender sender) {

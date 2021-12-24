@@ -1,67 +1,39 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.database;
 
+import org.jooq.DSLContext;
+import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.database.PunishmentDatabase;
+import space.arim.libertybans.core.database.execute.QueryExecutor;
+
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
-import java.util.function.Supplier;
-
-import org.jooq.DSLContext;
-import space.arim.libertybans.core.database.execute.QueryExecutor;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.api.database.PunishmentDatabase;
-import space.arim.libertybans.api.scope.ServerScope;
-
-import space.arim.jdbcaesar.JdbCaesar;
 
 public interface InternalDatabase extends QueryExecutor {
-	
+
 	PunishmentDatabase asExternal();
 
 	Vendor getVendor();
-	
-	JdbCaesar jdbCaesar();
-	
-	CentralisedFuture<?> executeAsync(Runnable command);
-	
-	<T> CentralisedFuture<T> selectAsync(Supplier<T> supplier);
-	
-	PunishmentType getTypeFromResult(ResultSet resultSet) throws SQLException;
-	
-	Victim getVictimFromResult(ResultSet resultSet) throws SQLException;
-	
-	Operator getOperatorFromResult(ResultSet resultSet) throws SQLException;
-	
-	String getReasonFromResult(ResultSet resultSet) throws SQLException;
-	
-	ServerScope getScopeFromResult(ResultSet resultSet) throws SQLException;
-	
-	long getStartFromResult(ResultSet resultSet) throws SQLException;
-	
-	long getEndFromResult(ResultSet resultSet) throws SQLException;
-	
+
 	void clearExpiredPunishments(DSLContext context, PunishmentType type, Instant currentTime);
 
 	/**

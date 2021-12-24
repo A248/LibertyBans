@@ -55,19 +55,7 @@ public final class MiscUtil {
 	public static PunishmentType[] punishmentTypesExcludingKick() {
 		return PUNISHMENT_TYPES_EXCLUDING_KICK;
 	}
-	
-	/**
-	 * Checks whether the specified end time is expired based on the current time, i.e.
-	 * {@code end != 0} and {@code end < currentTime}
-	 * 
-	 * @param currentTime the current time
-	 * @param end the end time
-	 * @return true if expired, false otherwise
-	 */
-	static boolean isExpired(long currentTime, long end) {
-		return end != 0 && end < currentTime;
-	}
-	
+
 	/**
 	 * Checks that {@link PunishmentType#isSingular()} is true
 	 * 
