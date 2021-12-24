@@ -26,7 +26,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 import org.bukkit.plugin.java.JavaPlugin;
-import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.punish.Guardian;
 import space.arim.morepaperlib.adventure.MorePaperLibAdventure;
 
 import java.net.InetAddress;
@@ -34,14 +34,14 @@ import java.util.UUID;
 
 @Singleton
 public class ConnectionListener extends SpigotParallelisedListener<AsyncPlayerPreLoginEvent, Component> {
-	
-	private final Enforcer enforcer;
+
+	private final Guardian guardian;
 	private final MorePaperLibAdventure morePaperLibAdventure;
-	
+
 	@Inject
-	public ConnectionListener(JavaPlugin plugin, Enforcer enforcer, MorePaperLibAdventure morePaperLibAdventure) {
+	public ConnectionListener(JavaPlugin plugin, Guardian guardian, MorePaperLibAdventure morePaperLibAdventure) {
 		super(plugin);
-		this.enforcer = enforcer;
+		this.guardian = guardian;
 		this.morePaperLibAdventure = morePaperLibAdventure;
 	}
 
@@ -54,7 +54,7 @@ public class ConnectionListener extends SpigotParallelisedListener<AsyncPlayerPr
 		UUID uuid = event.getUniqueId();
 		String name = event.getName();
 		InetAddress address = event.getAddress();
-		begin(event, enforcer.executeAndCheckConnection(uuid, name, address));
+		begin(event, guardian.executeAndCheckConnection(uuid, name, address));
 	}
 	
 	@Override

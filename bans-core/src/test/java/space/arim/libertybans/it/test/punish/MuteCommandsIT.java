@@ -25,7 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
-import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.punish.Guardian;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.test.applicable.StrictnessAssertHelper;
 import space.arim.libertybans.it.util.RandomUtil;
@@ -47,15 +47,15 @@ public class MuteCommandsIT {
 	}
 
 	@TestTemplate
-	public void muteCommandNotMuted(Enforcer enforcer) {
+	public void muteCommandNotMuted(Guardian guardian) {
 		UUID uuid = UUID.randomUUID();
 		InetAddress address = RandomUtil.randomAddress();
 		assertHelper.connectAndAssumeUnbannedUser(uuid, "name", address);
-		assertNull(enforcer.checkChat(uuid, address, "msg").join());
+		assertNull(guardian.checkChat(uuid, address, "msg").join());
 	}
 
 	@TestTemplate
-	public void blockMuteCommand(Enforcer enforcer, PunishmentDrafter drafter) {
+	public void blockMuteCommand(Guardian guardian, PunishmentDrafter drafter) {
 		UUID uuid = UUID.randomUUID();
 		InetAddress address = RandomUtil.randomAddress();
 		assertHelper.connectAndAssumeUnbannedUser(uuid, "name", address);
@@ -67,6 +67,6 @@ public class MuteCommandsIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
-		assertNotNull(enforcer.checkChat(uuid, address, "msg").join());
+		assertNotNull(guardian.checkChat(uuid, address, "msg").join());
 	}
 }

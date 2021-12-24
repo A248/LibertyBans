@@ -92,6 +92,11 @@ public class SelectorImpl implements InternalSelector {
 		return idImpl.getHistoricalPunishmentById(id).thenApply(Optional::ofNullable);
 	}
 
+	@Override
+	public ReactionStage<Optional<Punishment>> getHistoricalPunishmentByIdAndType(long id, PunishmentType type) {
+		return idImpl.getHistoricalPunishmentByIdAndType(id, type).thenApply(Optional::ofNullable);
+	}
+
 	/*
 	 * 
 	 * Applicability methods

@@ -21,14 +21,15 @@ package space.arim.libertybans.core.punish;
 
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.revoke.RevocationOrder;
+import space.arim.libertybans.api.punish.RevocationOrder;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.util.Optional;
 
-public final class EmptyRevocationOrder implements RevocationOrder {
+public final class EmptyRevocationOrder implements RevocationOrder, EnforcementOpts.Factory {
 
 	private final FactoryOfTheFuture futuresFactory;
 
@@ -52,22 +53,12 @@ public final class EmptyRevocationOrder implements RevocationOrder {
 	}
 
 	@Override
-	public ReactionStage<Boolean> undoPunishment() {
+	public ReactionStage<Boolean> undoPunishment(EnforcementOptions enforcementOptions) {
 		return futuresFactory.completedFuture(false);
 	}
 
 	@Override
-	public ReactionStage<Boolean> undoPunishmentWithoutUnenforcement() {
-		return futuresFactory.completedFuture(false);
-	}
-
-	@Override
-	public ReactionStage<Optional<Punishment>> undoAndGetPunishment() {
-		return futuresFactory.completedFuture(Optional.empty());
-	}
-
-	@Override
-	public ReactionStage<Optional<Punishment>> undoAndGetPunishmentWithoutUnenforcement() {
+	public ReactionStage<Optional<Punishment>> undoAndGetPunishment(EnforcementOptions enforcementOptions) {
 		return futuresFactory.completedFuture(Optional.empty());
 	}
 }

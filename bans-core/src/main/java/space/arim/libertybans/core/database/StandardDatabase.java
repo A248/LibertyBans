@@ -25,16 +25,8 @@ import org.jooq.Field;
 import org.jooq.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import space.arim.jdbcaesar.JdbCaesar;
-import space.arim.jdbcaesar.JdbCaesarBuilder;
-import space.arim.libertybans.api.AddressVictim;
-import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.api.Victim.VictimType;
 import space.arim.libertybans.api.database.PunishmentDatabase;
-import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.execute.SQLFunction;
@@ -42,25 +34,29 @@ import space.arim.libertybans.core.database.execute.SQLRunnable;
 import space.arim.libertybans.core.database.execute.SQLTransactionalFunction;
 import space.arim.libertybans.core.database.execute.SQLTransactionalRunnable;
 import space.arim.libertybans.core.database.sql.TableForType;
-import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.ThisClass;
-import space.arim.omnibus.util.UUIDUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.DelayCalculators;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
 import space.arim.omnibus.util.concurrent.ScheduledTask;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Supplier;
 
-import static space.arim.libertybans.core.schema.Tables.*;
+import static space.arim.libertybans.core.schema.Tables.ADDRESSES;
+import static space.arim.libertybans.core.schema.Tables.BANS;
+import static space.arim.libertybans.core.schema.Tables.HISTORY;
+import static space.arim.libertybans.core.schema.Tables.MESSAGES;
+import static space.arim.libertybans.core.schema.Tables.MUTES;
+import static space.arim.libertybans.core.schema.Tables.NAMES;
+import static space.arim.libertybans.core.schema.Tables.PUNISHMENTS;
+import static space.arim.libertybans.core.schema.Tables.VICTIMS;
+import static space.arim.libertybans.core.schema.Tables.WARNS;
 
 public final class StandardDatabase implements InternalDatabase {
 
@@ -71,7 +67,8 @@ public final class StandardDatabase implements InternalDatabase {
 	private final ExecutorService threadPool;
 	private final PunishmentDatabase external = new External();
 
-	private ScheduledTask sqlRefreshTask;
+	private ScheduledTask expirationRefreshTask;
+	private ScheduledTask synchronizationPollTask;
 
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
@@ -90,15 +87,29 @@ public final class StandardDatabase implements InternalDatabase {
 	 * Guarded by the global lock on BaseFoundation lifecycle events
 	 */
 
-	void startRefreshTask(Time time) {
-		EnhancedExecutor enhancedExecutor = manager.enhancedExecutorProvider().get();
-		sqlRefreshTask = enhancedExecutor.scheduleRepeating(
+	void startTasks(Time time) {
+		EnhancedExecutor enhancedExecutor = manager.enhancedExecutor();
+		expirationRefreshTask = enhancedExecutor.scheduleRepeating(
 				new RefreshTaskRunnable(manager, this, time),
-				Duration.ofHours(1L), DelayCalculators.fixedDelay());
+				Duration.ofHours(3L),
+				DelayCalculators.fixedDelay()
+		);
+		var synchronizationConf = manager.configs().getSqlConfig().synchronization();
+		if (synchronizationConf.enabled()) {
+			synchronizationPollTask = enhancedExecutor.scheduleRepeating(
+					manager.globalEnforcement(),
+					RefreshTaskRunnable.obtainPollRate(synchronizationConf),
+					DelayCalculators.fixedDelay()
+			);
+		}
 	}
 
-	void cancelRefreshTask() {
-		sqlRefreshTask.cancel();
+	void cancelTasks() {
+		expirationRefreshTask.cancel();
+		if (synchronizationPollTask != null) {
+			synchronizationPollTask.cancel();
+			synchronizationPollTask = null;
+		}
 	}
 	
 	void close() {
@@ -121,84 +132,6 @@ public final class StandardDatabase implements InternalDatabase {
 	@Override
 	public Vendor getVendor() {
 		return vendor;
-	}
-	
-	@Override
-	public JdbCaesar jdbCaesar() {
-		JdbCaesar jdbCaesar = new JdbCaesarBuilder()
-				.dataSource(dataSource)
-				.exceptionHandler((ex) -> {
-					logger.error("Error while executing a database query", ex);
-				})
-				.defaultFetchSize(DatabaseDefaults.FETCH_SIZE)
-				.addAdapters(
-						new JdbCaesarHelper.EnumOrdinalAdapter<>(PunishmentType.class),
-						new JdbCaesarHelper.VictimAdapter(),
-						new JdbCaesarHelper.EnumOrdinalAdapter<>(Victim.VictimType.class),
-						new JdbCaesarHelper.OperatorAdapter(),
-						new JdbCaesarHelper.ScopeAdapter(manager.scopeManager()),
-						new JdbCaesarHelper.UUIDBytesAdapter(),
-						new JdbCaesarHelper.NetworkAddressAdapter())
-				.build();
-		return jdbCaesar;
-	}
-
-	@Override
-	public CentralisedFuture<?> executeAsync(Runnable command) {
-		return manager.futuresFactory().runAsync(command, threadPool);
-	}
-
-	@Override
-	public <T> CentralisedFuture<T> selectAsync(Supplier<T> supplier) {
-		return manager.futuresFactory().supplyAsync(supplier, threadPool);
-	}
-
-	@Override
-	public PunishmentType getTypeFromResult(ResultSet resultSet) throws SQLException {
-		return PunishmentType.valueOf(resultSet.getString("type"));
-	}
-	
-	@Override
-	public Victim getVictimFromResult(ResultSet resultSet) throws SQLException {
-		VictimType victimType = VictimType.valueOf(resultSet.getString("victim_type"));
-		byte[] bytes = resultSet.getBytes("victim");
-		switch (victimType) {
-		case PLAYER:
-			return PlayerVictim.of(UUIDUtil.fromByteArray(bytes));
-		case ADDRESS:
-			return AddressVictim.of(bytes);
-		default:
-			throw MiscUtil.unknownVictimType(victimType);
-		}
-	}
-
-	@Override
-	public Operator getOperatorFromResult(ResultSet resultSet) throws SQLException {
-		return JdbCaesarHelper.getOperatorFromResult(resultSet);
-	}
-	
-	@Override
-	public String getReasonFromResult(ResultSet resultSet) throws SQLException {
-		return resultSet.getString("reason");
-	}
-
-	@Override
-	public ServerScope getScopeFromResult(ResultSet resultSet) throws SQLException {
-		String server = resultSet.getString("scope");
-		if (!server.isEmpty()) {
-			return manager.scopeManager().specificScope(server);
-		}
-		return manager.scopeManager().globalScope();
-	}
-	
-	@Override
-	public long getStartFromResult(ResultSet resultSet) throws SQLException {
-		return resultSet.getLong("start");
-	}
-	
-	@Override
-	public long getEndFromResult(ResultSet resultSet) throws SQLException {
-		return resultSet.getLong("end");
 	}
 
 	@Override
@@ -244,7 +177,7 @@ public final class StandardDatabase implements InternalDatabase {
 	@Override
 	public void truncateAllTables() {
 		execute((context) -> {
-			var tables = new Table[] {NAMES, ADDRESSES, HISTORY, BANS, MUTES, WARNS, PUNISHMENTS, VICTIMS};
+			var tables = new Table[] {NAMES, ADDRESSES, HISTORY, BANS, MUTES, WARNS, PUNISHMENTS, VICTIMS, MESSAGES};
 			for (Table<?> table : tables) {
 				context.deleteFrom(table).execute();
 			}

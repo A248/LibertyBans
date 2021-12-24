@@ -21,12 +21,13 @@ package space.arim.libertybans.core.alts;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
-import org.jooq.Field;
+import org.jooq.Condition;
 import space.arim.libertybans.api.AddressVictim;
+import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -40,22 +41,21 @@ import static space.arim.libertybans.core.schema.tables.LatestNames.LATEST_NAMES
 
 public class AccountHistory {
 
-	private final Provider<InternalDatabase> dbProvider;
+	private final Provider<QueryExecutor> queryExecutor;
 
 	@Inject
-	public AccountHistory(Provider<InternalDatabase> dbProvider) {
-		this.dbProvider = dbProvider;
+	public AccountHistory(Provider<QueryExecutor> queryExecutor) {
+		this.queryExecutor = queryExecutor;
 	}
 
-	private <P> CentralisedFuture<List<KnownAccount>> knownAccountsWhere(Field<P> field, P parameter) {
-		InternalDatabase database = dbProvider.get();
-		return database.query(SQLFunction.readOnly((context) -> {
+	private CentralisedFuture<List<KnownAccount>> knownAccountsWhere(Condition condition) {
+		return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
 			return context
 					.select(ADDRESSES.UUID, ADDRESSES.ADDRESS, LATEST_NAMES.NAME, ADDRESSES.UPDATED)
 					.from(ADDRESSES)
 					.innerJoin(LATEST_NAMES)
 					.on(ADDRESSES.UUID.eq(LATEST_NAMES.UUID))
-					.where(field.eq(parameter))
+					.where(condition)
 					.orderBy(ADDRESSES.UPDATED.asc())
 					.fetch((record) -> {
 						return new KnownAccount(
@@ -78,21 +78,27 @@ public class AccountHistory {
 	 * @return the detected alts, sorted in order of oldest first
 	 */
 	public CentralisedFuture<List<KnownAccount>> knownAccounts(Victim victim) {
+		UUID uuid;
+		NetworkAddress address;
 		switch (victim.getType()) {
 		case PLAYER:
-			UUID uuid = ((PlayerVictim) victim).getUUID();
-			return knownAccountsWhere(ADDRESSES.UUID, uuid);
+			uuid = ((PlayerVictim) victim).getUUID();
+			return knownAccountsWhere(ADDRESSES.UUID.eq(uuid));
 		case ADDRESS:
-			NetworkAddress address = ((AddressVictim) victim).getAddress();
-			return knownAccountsWhere(ADDRESSES.ADDRESS, address);
+			address = ((AddressVictim) victim).getAddress();
+			return knownAccountsWhere(ADDRESSES.ADDRESS.eq(address));
+		case COMPOSITE:
+			CompositeVictim compositeVictim = (CompositeVictim) victim;
+			uuid = compositeVictim.getUUID();
+			address = compositeVictim.getAddress();
+			return knownAccountsWhere(ADDRESSES.UUID.eq(uuid).or(ADDRESSES.ADDRESS.eq(address)));
 		default:
 			throw MiscUtil.unknownVictimType(victim.getType());
 		}
 	}
 
 	public CentralisedFuture<Boolean> deleteAccount(UUID user, Instant recorded) {
-		InternalDatabase database = dbProvider.get();
-		return database.queryWithRetry((context, transaction) -> {
+		return queryExecutor.get().queryWithRetry((context, transaction) -> {
 			int updateCount = context
 					.deleteFrom(ADDRESSES)
 					.where(ADDRESSES.UUID.eq(user))

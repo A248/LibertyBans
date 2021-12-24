@@ -67,14 +67,14 @@ public final class OperatorBinding extends BaseBinding<UUID, Operator> {
 		}
 	}
 
-	private static Operator uuidToOperator(UUID uuid) {
+	public Operator uuidToOperator(UUID uuid) {
 		if (uuid.equals(EmptyData.UUID)) {
 			return ConsoleOperator.INSTANCE;
 		}
 		return PlayerOperator.of(uuid);
 	}
 
-	private static UUID operatorToUuid(Operator operator) {
+	public UUID operatorToUuid(Operator operator) {
 		Operator.OperatorType operatorType = operator.getType();
 		switch (operatorType) {
 		case PLAYER:
@@ -88,8 +88,7 @@ public final class OperatorBinding extends BaseBinding<UUID, Operator> {
 
 	@Override
 	public @NotNull Converter<UUID, Operator> converter() {
-		return Converter.of(UUID.class, Operator.class,
-				OperatorBinding::uuidToOperator, OperatorBinding::operatorToUuid);
+		return Converter.of(UUID.class, Operator.class, this::uuidToOperator, this::operatorToUuid);
 	}
 
 	@Override
@@ -122,7 +121,7 @@ public final class OperatorBinding extends BaseBinding<UUID, Operator> {
 	@Override
 	protected void sqlBind(BindingSQLContext<Operator> ctx) throws SQLException {
 		if (uuidBinding.supportsUUID(ctx.dialect())) {
-			uuidBinding.sqlBind(ctx.convert(Converter.to(UUID.class, Operator.class, OperatorBinding::operatorToUuid)));
+			uuidBinding.sqlBind(ctx.convert(Converter.to(UUID.class, Operator.class, this::operatorToUuid)));
 			return;
 		}
 		super.sqlBind(ctx);

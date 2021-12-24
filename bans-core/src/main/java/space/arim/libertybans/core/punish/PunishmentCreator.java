@@ -44,6 +44,10 @@ public interface PunishmentCreator {
 			Punishment> punishmentMapper();
 
 	RecordMapper<Record9<
+			PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, ServerScope, Instant, Instant>,
+			Punishment> punishmentMapper(long id);
+
+	RecordMapper<Record9<
 			Long, Victim.VictimType, UUID, NetworkAddress, Operator, String, ServerScope, Instant, Instant>,
 			Punishment> punishmentMapper(PunishmentType type);
 

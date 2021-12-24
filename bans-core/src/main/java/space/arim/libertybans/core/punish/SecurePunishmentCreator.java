@@ -19,59 +19,42 @@
 
 package space.arim.libertybans.core.punish;
 
-import java.time.Instant;
-import java.util.UUID;
-
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
-
 import org.jooq.Record10;
 import org.jooq.Record8;
 import org.jooq.Record9;
 import org.jooq.RecordMapper;
 import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.core.database.sql.DeserializedVictim;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
-
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
-import space.arim.libertybans.core.selector.MuteCache;
+import space.arim.libertybans.core.database.sql.DeserializedVictim;
+
+import java.time.Instant;
+import java.util.UUID;
 
 @Singleton
 public class SecurePunishmentCreator implements PunishmentCreator {
 
-	private final FactoryOfTheFuture futuresFactory;
-	private final Provider<Enforcer> enforcer;
 	private final Provider<InternalRevoker> revoker;
-	private final Provider<MuteCache> muteCache;
+	private final Provider<GlobalEnforcement> enforcement;
 
 	@Inject
-	public SecurePunishmentCreator(FactoryOfTheFuture futuresFactory, Provider<Enforcer> enforcer,
-			Provider<InternalRevoker> revoker, Provider<MuteCache> muteCache) {
-		this.futuresFactory = futuresFactory;
-		this.enforcer = enforcer;
+	public SecurePunishmentCreator(Provider<InternalRevoker> revoker, Provider<GlobalEnforcement> enforcement) {
 		this.revoker = revoker;
-		this.muteCache = muteCache;
-	}
-
-	FactoryOfTheFuture futuresFactory() {
-		return futuresFactory;
-	}
-
-	Enforcer enforcer() {
-		return enforcer.get();
+		this.enforcement = enforcement;
 	}
 
 	InternalRevoker revoker() {
 		return revoker.get();
 	}
 
-	MuteCache muteCache() {
-		return muteCache.get();
+	GlobalEnforcement enforcement() {
+		return enforcement.get();
 	}
 
 	@Override
@@ -91,6 +74,21 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					record.value1(), record.value2(), // id, type
 					victim, record.value6(), record.value7(), // victim, operator, reason
 					record.value8(), record.value9(), record.value10() // scope, start, end
+			);
+		};
+	}
+
+	@Override
+	public RecordMapper<Record9<PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, ServerScope, Instant, Instant>, Punishment> punishmentMapper(long id) {
+		return (record) -> {
+			Victim victim = new DeserializedVictim(
+					record.value3(), record.value4()
+			).victim(record.value2());
+			return new SecurePunishment(
+					SecurePunishmentCreator.this,
+					id, record.value1(), // id, type
+					victim, record.value5(), record.value6(), // victim, operator, reason
+					record.value7(), record.value8(), record.value9() // scope, start, end
 			);
 		};
 	}

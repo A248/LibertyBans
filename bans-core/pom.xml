@@ -92,6 +92,7 @@
 						<extratableoptions/>
 						<uuidtype>UUID</uuidtype>
 						<inettype>VARBINARY(16)</inettype>
+						<arbitrarybinarytype>BLOB</arbitrarybinarytype>
 					</placeholders>
 					<locations>
 						<location>filesystem:src/main/resources/database-migrations</location>
@@ -149,7 +150,7 @@
 								<forcedType>
 									<userType>java.time.Instant</userType>
 									<converter>space.arim.libertybans.core.database.jooq.InstantConverter</converter>
-									<includeExpression>.*\.(updated|start)$</includeExpression>
+									<includeExpression>.*\.(updated|start|time)$</includeExpression>
 									<includeTypes>^BIGINT$</includeTypes>
 								</forcedType>
 								<forcedType>

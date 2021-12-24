@@ -22,5 +22,15 @@ If you are interested in a guide for upgrading to LibertyBans 0.8.x to 1.0.0, wh
   * The handling of transaction serialization failure will not be back-ported to LibertyBans 0.8.x. Much software does not handle transaction serialization failure (including LibertyBans 0.8.x) therefore this is not considered a bug of sufficient importance.
   * Further technical reading: https://stackoverflow.com/questions/7705273/what-are-the-conditions-for-encountering-a-serialization-failure
 * Relevant client encoding variables are set per each database upon establishing connection. Also, the charset utf8mb4 and collation utf8mb4_bin are now set on created tables for MariaDB and MySQL.
-* Punishment.PERMANENT_END_DATE constant is added to the API
-* The API now uses `long` (64-bit integers) for punishment IDs.
+* The Punishment.PERMANENT_END_DATE constant is added to the API.
+* The API now uses `long` (64-bit integers) for punishment IDs. To migrate usage, cast to long or refactor to use long IDs.
+* It is now possible to dispatch "silent" punishments using the API.
+* `EnforcementOptions` has been added to the API and replaces some methods in DraftPunishment, Punishment, and RevocationOrder. Usage can be replaced as follows:
+  * For DraftPunishment: `draftPunishment.enactPunishmentWithoutEnforcement()` -> `draftPunishment.enactPunishment(EnforcementOptions.builder().enforcement(Enforcement.NONE).build())`
+  * For Punishment:
+    * `punishment.undoPunishmentWithoutUnenforcement()` -> `punishment.undoPunishment(EnforcementOptions.builder().enforcement(Enforcement.NONE).build)`
+    * `punishment.unenforcePunishment()` -> `punishment.unenforcePunishment
+  * For RevocationOrder:
+    * `revocationOrder.undoPunishmentWithoutUnenforcement()` -> `revocationOrder.undoPunishment(EnforcementOptions.builder().enforcement(Enforcement.NONE).build())`
+    * `revocationOrder.undoAndGetPunishmentWithoutUnenforcement()` -> `revocationOrder.undoAndGetPunishment(EnforcementOptions.builder().enforcement(Enforcement.NONE).build())`
+* The package `space.arim.libertybans.api.revoke` has been merged into `space.arim.libertybans.api.punish`. Imports should be updated accordingly.

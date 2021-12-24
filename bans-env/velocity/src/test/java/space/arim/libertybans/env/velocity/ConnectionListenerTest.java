@@ -32,7 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.punish.Guardian;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
@@ -55,18 +55,18 @@ public class ConnectionListenerTest {
 
 	private final PluginContainer plugin;
 	private final ProxyServer server;
-	private final Enforcer enforcer;
+	private final Guardian guardian;
 
 	public ConnectionListenerTest(@Mock PluginContainer plugin, @Mock ProxyServer server,
-								  @Mock Enforcer enforcer) {
+								  @Mock Guardian guardian) {
 		this.plugin = plugin;
 		this.server = server;
-		this.enforcer = enforcer;
+		this.guardian = guardian;
 	}
 
 	@BeforeEach
 	public void setup() {
-		listener = new ConnectionListener(plugin, server, enforcer);
+		listener = new ConnectionListener(plugin, server, guardian);
 	}
 
 	private Player mockPlayer() {
@@ -85,8 +85,8 @@ public class ConnectionListenerTest {
 
 	private void fixedResult(Component message) {
 		var future = futuresFactory.completedFuture(message);
-		when(enforcer.executeAndCheckConnection(any(), any(), (InetAddress) any())).thenReturn(future);
-		when(enforcer.executeAndCheckConnection(any(), any(), (NetworkAddress) any())).thenReturn(future);
+		when(guardian.executeAndCheckConnection(any(), any(), (InetAddress) any())).thenReturn(future);
+		when(guardian.executeAndCheckConnection(any(), any(), (NetworkAddress) any())).thenReturn(future);
 	}
 
 	private void allowedResult() {

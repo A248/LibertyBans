@@ -22,9 +22,9 @@ import java.nio.file.Path;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.core.punish.GlobalEnforcement;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -33,30 +33,29 @@ import space.arim.libertybans.api.database.PunishmentDatabase;
 import space.arim.libertybans.bootstrap.StartupException;
 import space.arim.libertybans.core.Part;
 import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.scope.InternalScopeManager;
 
 @Singleton
 public class DatabaseManager implements Part {
 
 	private final Path folder;
 	private final FactoryOfTheFuture futuresFactory;
-	private final Provider<EnhancedExecutor> enhancedExecutorProvider;
+	private final EnhancedExecutor enhancedExecutor;
 	private final Configs configs;
-	private final InternalScopeManager scopeManager;
 	private final Time time;
-	
+	private final GlobalEnforcement globalEnforcement;
+
 	private volatile StandardDatabase database;
-	
+
 	@Inject
 	public DatabaseManager(@Named("folder") Path folder, FactoryOfTheFuture futuresFactory,
-						   Provider<EnhancedExecutor> enhancedExecutorProvider, Configs configs,
-						   InternalScopeManager scopeManager, Time time) {
+						   EnhancedExecutor enhancedExecutor, Configs configs, Time time,
+						   GlobalEnforcement globalEnforcement) {
 		this.folder = folder;
 		this.futuresFactory = futuresFactory;
-		this.enhancedExecutorProvider = enhancedExecutorProvider;
+		this.enhancedExecutor = enhancedExecutor;
 		this.configs = configs;
-		this.scopeManager = scopeManager;
 		this.time = time;
+		this.globalEnforcement = globalEnforcement;
 	}
 	
 	public Path folder() {
@@ -66,19 +65,19 @@ public class DatabaseManager implements Part {
 	public FactoryOfTheFuture futuresFactory() {
 		return futuresFactory;
 	}
-	
-	Provider<EnhancedExecutor> enhancedExecutorProvider() {
-		return enhancedExecutorProvider;
+
+	EnhancedExecutor enhancedExecutor() {
+		return enhancedExecutor;
 	}
-	
+
 	Configs configs() {
 		return configs;
 	}
-	
-	InternalScopeManager scopeManager() {
-		return scopeManager;
+
+	GlobalEnforcement globalEnforcement() {
+		return globalEnforcement;
 	}
-	
+
 	public InternalDatabase getInternal() {
 		return database;
 	}
@@ -95,7 +94,7 @@ public class DatabaseManager implements Part {
 			database.closeCompletely();
 			throw new StartupException("Database initialisation failed");
 		}
-		database.startRefreshTask(time);
+		database.startTasks(time);
 		this.database = database;
 	}
 	
@@ -109,7 +108,7 @@ public class DatabaseManager implements Part {
 			database.close();
 			throw new StartupException("Database restart failed");
 		}
-		currentDatabase.cancelRefreshTask();
+		currentDatabase.cancelTasks();
 
 		if (currentDatabase.getVendor() == database.getVendor()) {
 			currentDatabase.close();
@@ -117,14 +116,14 @@ public class DatabaseManager implements Part {
 			currentDatabase.closeCompletely();
 		}
 
-		database.startRefreshTask(time);
+		database.startTasks(time);
 		this.database = database;
 	}
 
 	@Override
 	public void shutdown() {
 		StandardDatabase database = this.database;
-		database.cancelRefreshTask();
+		database.cancelTasks();
 		database.closeCompletely();
 	}
 	

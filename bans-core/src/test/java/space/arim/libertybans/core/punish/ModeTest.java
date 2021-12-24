@@ -17,16 +17,18 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.commands.extra;
+package space.arim.libertybans.core.punish;
 
-import java.util.Locale;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
-public enum Mode {
-	DO,
-	UNDO;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-	@Override
-	public String toString() {
-		return name().toLowerCase(Locale.ROOT);
+public class ModeTest {
+
+	@ParameterizedTest
+	@EnumSource
+	public void toFromBoolean(Mode mode) {
+		assertEquals(mode, Mode.fromBoolean(mode.toBoolean()));
 	}
 }

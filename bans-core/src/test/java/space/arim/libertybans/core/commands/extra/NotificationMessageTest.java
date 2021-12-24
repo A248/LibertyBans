@@ -28,14 +28,12 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
 import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.punish.Mode;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -87,42 +85,6 @@ public class NotificationMessageTest {
 		message.evaluate(command);
 		assertTrue(message.isSilent());
 		verify(sender).hasPermission("libertybans.warn.undo.silent");
-	}
-
-	@Test
-	public void notificationPermissionDo() {
-		var message = new NotificationMessage(mock(CmdSender.class), PunishmentType.WARN, Mode.DO);
-
-		assertEquals("libertybans.warn.do.notify", message.notificationPermission());
-	}
-
-	@Test
-	public void notificationPermissionUndo() {
-		var message = new NotificationMessage(mock(CmdSender.class), PunishmentType.WARN, Mode.UNDO);
-
-		assertEquals("libertybans.warn.undo.notify", message.notificationPermission());
-	}
-
-	@Test
-	public void notificationPermissionDoSilent(@Mock CmdSender sender) {
-		var message = new NotificationMessage(sender, PunishmentType.WARN, Mode.DO);
-
-		when(sender.hasPermission("libertybans.warn.do.silent")).thenReturn(true);
-		message.evaluate(command);
-		assumeTrue(message.isSilent());
-
-		assertEquals("libertybans.warn.do.notifysilent", message.notificationPermission());
-	}
-
-	@Test
-	public void notificationPermissionUndoSilent(@Mock CmdSender sender) {
-		var message = new NotificationMessage(sender, PunishmentType.WARN, Mode.UNDO);
-
-		when(sender.hasPermission("libertybans.warn.undo.silent")).thenReturn(true);
-		message.evaluate(command);
-		assumeTrue(message.isSilent());
-
-		assertEquals("libertybans.warn.undo.notifysilent", message.notificationPermission());
 	}
 
 }

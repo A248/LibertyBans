@@ -25,6 +25,11 @@ import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.commands.usage.PluginInfoMessage;
 import space.arim.libertybans.core.commands.usage.StandardUsageGlossary;
 import space.arim.libertybans.core.commands.usage.UsageGlossary;
+import space.arim.libertybans.core.database.execute.QueryExecutor;
+import space.arim.libertybans.core.punish.sync.EnforcingMessageReceiver;
+import space.arim.libertybans.core.punish.sync.MessageReceiver;
+import space.arim.libertybans.core.punish.sync.SQLSynchronizationMessenger;
+import space.arim.libertybans.core.punish.sync.SynchronizationMessenger;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
 
 import space.arim.api.env.PlatformHandle;
@@ -60,6 +65,18 @@ public class PillarTwoBindModule {
 
 	public InternalDatabase database(DatabaseManager databaseManager) {
 		return databaseManager.getInternal();
+	}
+
+	public QueryExecutor queryExecutor(InternalDatabase database) {
+		return database;
+	}
+
+	public SynchronizationMessenger synchronizationMessenger(SQLSynchronizationMessenger synchronizationMessenger) {
+		return synchronizationMessenger;
+	}
+
+	public MessageReceiver messageReceiver(EnforcingMessageReceiver messageReceiver) {
+		return messageReceiver;
 	}
 
 	public UUIDManager uuidManager(CachingUUIDManager uuidManager) {

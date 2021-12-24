@@ -19,12 +19,16 @@
 package space.arim.libertybans.core;
 
 import space.arim.libertybans.bootstrap.BaseFoundation;
-import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.punish.GlobalEnforcement;
+import space.arim.libertybans.core.punish.Guardian;
+import space.arim.libertybans.core.punish.IntelligentGuardian;
+import space.arim.libertybans.core.punish.LocalEnforcer;
 import space.arim.libertybans.core.punish.InternalRevoker;
 import space.arim.libertybans.core.punish.PunishmentCreator;
 import space.arim.libertybans.core.punish.Revoker;
 import space.arim.libertybans.core.punish.SecurePunishmentCreator;
-import space.arim.libertybans.core.punish.StandardEnforcer;
+import space.arim.libertybans.core.punish.StandardLocalEnforcer;
+import space.arim.libertybans.core.punish.StandardGlobalEnforcement;
 import space.arim.libertybans.core.scope.InternalScopeManager;
 import space.arim.libertybans.core.scope.Scoper;
 import space.arim.libertybans.core.selector.CaffeineMuteCache;
@@ -46,8 +50,16 @@ public abstract class PillarOneBindModuleMinusConfigs {
 		return revoker;
 	}
 
-	public Enforcer enforcer(StandardEnforcer enforcer) {
+	public GlobalEnforcement enforcement(StandardGlobalEnforcement enforcement) {
+		return enforcement;
+	}
+
+	public LocalEnforcer enforcer(StandardLocalEnforcer enforcer) {
 		return enforcer;
+	}
+
+	public Guardian guardian(IntelligentGuardian guardian) {
+		return guardian;
 	}
 
 	public MuteCache muteCache(CaffeineMuteCache muteCache) {

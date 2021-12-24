@@ -27,12 +27,14 @@ import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.core.alts.AltDetection;
 import space.arim.libertybans.core.alts.DetectedAlt;
 import space.arim.libertybans.core.alts.DetectionKind;
 import space.arim.libertybans.core.alts.WhichAlts;
-import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.punish.EnforcementOpts;
+import space.arim.libertybans.core.punish.Guardian;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetTime;
@@ -57,13 +59,13 @@ import static space.arim.libertybans.it.util.RandomUtil.randomName;
 public class AltDetectionIT {
 
 	private final AltDetection altDetection;
-	private final Enforcer enforcer;
+	private final Guardian guardian;
 	private final PunishmentDrafter drafter;
 
 	@Inject
-	public AltDetectionIT(AltDetection altDetection, Enforcer enforcer, PunishmentDrafter drafter) {
+	public AltDetectionIT(AltDetection altDetection, Guardian guardian, PunishmentDrafter drafter) {
 		this.altDetection = altDetection;
-		this.enforcer = enforcer;
+		this.guardian = guardian;
 		this.drafter = drafter;
 	}
 
@@ -76,7 +78,7 @@ public class AltDetectionIT {
 		String name = randomName();
 		NetworkAddress address = randomAddress();
 
-		assumeTrue(null == enforcer.executeAndCheckConnection(uuid, name, address).join());
+		assumeTrue(null == guardian.executeAndCheckConnection(uuid, name, address).join());
 		assertEquals(List.of(), altDetection.detectAlts(uuid, address, whichAlts).join());
 	}
 
@@ -99,8 +101,8 @@ public class AltDetectionIT {
 		UUID uuidTwo = UUID.randomUUID();
 		String nameTwo = randomName();
 
-		assumeTrue(null == enforcer.executeAndCheckConnection(uuid, name, commonAddress).join());
-		assumeTrue(null == enforcer.executeAndCheckConnection(uuidTwo, nameTwo, commonAddress).join());
+		assumeTrue(null == guardian.executeAndCheckConnection(uuid, name, commonAddress).join());
+		assumeTrue(null == guardian.executeAndCheckConnection(uuidTwo, nameTwo, commonAddress).join());
 
 		operationOnAltBeforeAltCheck.accept(uuidTwo);
 
@@ -127,7 +129,8 @@ public class AltDetectionIT {
 				.operator(ConsoleOperator.INSTANCE)
 				.reason("reason")
 				.build()
-				.enactPunishmentWithoutEnforcement().toCompletableFuture().join();
+				.enactPunishment(EnforcementOpts.builder().enforcement(EnforcementOptions.Enforcement.NONE).build())
+				.toCompletableFuture().join();
 	}
 
 	@TestTemplate
@@ -176,12 +179,12 @@ public class AltDetectionIT {
 		String nameTwo = randomName();
 		NetworkAddress newAddressTwo = randomAddress();
 
-		assumeTrue(null == enforcer.executeAndCheckConnection(uuid, name, commonPastAddress).join());
-		assumeTrue(null == enforcer.executeAndCheckConnection(uuidTwo, nameTwo, commonPastAddress).join());
+		assumeTrue(null == guardian.executeAndCheckConnection(uuid, name, commonPastAddress).join());
+		assumeTrue(null == guardian.executeAndCheckConnection(uuidTwo, nameTwo, commonPastAddress).join());
 		// Detects a bug, now solved, involving reliance on the "updated" database column
 		time.advanceBy(Duration.ofDays(1L));
-		assumeTrue(null == enforcer.executeAndCheckConnection(uuid, name, newAddress).join());
-		assumeTrue(null == enforcer.executeAndCheckConnection(uuidTwo, nameTwo, newAddressTwo).join());
+		assumeTrue(null == guardian.executeAndCheckConnection(uuid, name, newAddress).join());
+		assumeTrue(null == guardian.executeAndCheckConnection(uuidTwo, nameTwo, newAddressTwo).join());
 
 		assertEquals(List.of(new DetectedAlt(
 				DetectionKind.STRICT, null, commonPastAddress,

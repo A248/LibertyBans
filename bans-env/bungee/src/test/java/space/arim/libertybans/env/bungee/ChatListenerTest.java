@@ -30,7 +30,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.api.env.AudienceRepresenter;
-import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.punish.Guardian;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
@@ -51,23 +51,23 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class ChatListenerTest {
 
-	private final Enforcer enforcer;
+	private final Guardian guardian;
 	private final AddressReporter addressReporter;
 	private final AudienceRepresenter<CommandSender> audienceRepresenter;
 
 	private ChatListener chatListener;
 	private final FactoryOfTheFuture futuresFactory = new IndifferentFactoryOfTheFuture();
 
-	public ChatListenerTest(@Mock Enforcer enforcer, @Mock AddressReporter addressReporter,
+	public ChatListenerTest(@Mock Guardian guardian, @Mock AddressReporter addressReporter,
 							@Mock AudienceRepresenter<CommandSender> audienceRepresenter) {
-		this.enforcer = enforcer;
+		this.guardian = guardian;
 		this.addressReporter = addressReporter;
 		this.audienceRepresenter = audienceRepresenter;
 	}
 
 	@BeforeEach
 	public void setup() throws UnknownHostException {
-		chatListener = new ChatListener(MockPlugin.create(), enforcer, addressReporter, audienceRepresenter);
+		chatListener = new ChatListener(MockPlugin.create(), guardian, addressReporter, audienceRepresenter);
 	}
 
 	private void fire(ChatEvent event) {
@@ -80,7 +80,7 @@ public class ChatListenerTest {
 							  @Mock ProxiedPlayer receiver) {
 		String message = "hello";
 		ChatEvent chatEvent = new ChatEvent(sender, receiver, message);
-		when(enforcer.checkChat(any(), (InetAddress) any(), any())).thenReturn(futuresFactory.completedFuture(null));
+		when(guardian.checkChat(any(), (InetAddress) any(), any())).thenReturn(futuresFactory.completedFuture(null));
 		lenient().when(audienceRepresenter.toAudience(sender)).thenReturn(senderAudience);
 
 		fire(chatEvent);
@@ -95,9 +95,9 @@ public class ChatListenerTest {
 		String message = "hello";
 		ChatEvent chatEvent = new ChatEvent(sender, receiver, message);
 		Component denyMessage = Component.text("Denied");
-		when(enforcer.checkChat(any(), (InetAddress) any(), isNull()))
+		when(guardian.checkChat(any(), (InetAddress) any(), isNull()))
 				.thenReturn(futuresFactory.completedFuture(denyMessage));
-		lenient().when(enforcer.checkChat(any(), (InetAddress) any(), isNotNull()))
+		lenient().when(guardian.checkChat(any(), (InetAddress) any(), isNotNull()))
 				.thenReturn(futuresFactory.completedFuture(null));
 		when(audienceRepresenter.toAudience(sender)).thenReturn(senderAudience);
 

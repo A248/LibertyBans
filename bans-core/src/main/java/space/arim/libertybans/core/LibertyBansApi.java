@@ -29,7 +29,7 @@ import space.arim.libertybans.api.LibertyBans;
 import space.arim.libertybans.api.database.PunishmentDatabase;
 import space.arim.libertybans.api.formatter.PunishmentFormatter;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
-import space.arim.libertybans.api.revoke.PunishmentRevoker;
+import space.arim.libertybans.api.punish.PunishmentRevoker;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.api.user.UserResolver;

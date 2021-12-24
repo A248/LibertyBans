@@ -22,12 +22,13 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.api.punish.DraftPunishment;
 import space.arim.libertybans.api.punish.Punishment;
 
-class DraftPunishmentImpl extends AbstractPunishmentBase implements DraftPunishment {
+class DraftPunishmentImpl extends AbstractPunishmentBase implements DraftPunishment, EnforcementOpts.Factory {
 
 	private final Enactor enactor;
 	private final Duration duration;
@@ -44,18 +45,13 @@ class DraftPunishmentImpl extends AbstractPunishmentBase implements DraftPunishm
 	}
 
 	@Override
-	public ReactionStage<Optional<Punishment>> enactPunishment() {
-		return enactPunishmentWithoutEnforcement().thenCompose((optPunishment) -> {
-			if (optPunishment.isEmpty()) {
+	public ReactionStage<Optional<Punishment>> enactPunishment(EnforcementOptions enforcementOptions) {
+		return enactor.enactPunishment(this).thenCompose((punishment) -> {
+			if (punishment == null) {
 				return CompletableFuture.completedStage(Optional.empty());
 			}
-			return optPunishment.get().enforcePunishment().thenApply((ignore) -> optPunishment);
+			return punishment.enforcePunishment(enforcementOptions).thenApply((ignore) -> Optional.of(punishment));
 		});
-	}
-
-	@Override
-	public ReactionStage<Optional<Punishment>> enactPunishmentWithoutEnforcement() {
-		return enactor.enactPunishment(this).thenApply(Optional::ofNullable);
 	}
 
 	@Override

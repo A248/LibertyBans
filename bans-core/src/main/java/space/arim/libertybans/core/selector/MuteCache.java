@@ -18,14 +18,12 @@
  */
 package space.arim.libertybans.core.selector;
 
-import java.util.Optional;
-import java.util.UUID;
-
+import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.api.punish.Punishment;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.api.punish.Punishment;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface MuteCache {
 
@@ -36,7 +34,5 @@ public interface MuteCache {
 	void clearCachedMute(Punishment punishment);
 
 	void clearCachedMute(long id);
-
-	void clearCachedMute(Victim victim);
 
 }

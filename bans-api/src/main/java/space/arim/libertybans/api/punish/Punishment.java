@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.api.punish;
 
+import java.time.Clock;
 import java.time.Instant;
 
 import space.arim.omnibus.util.concurrent.ReactionStage;
@@ -32,7 +33,7 @@ import space.arim.omnibus.util.concurrent.ReactionStage;
  * @author A248
  *
  */
-public interface Punishment extends PunishmentBase {
+public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 
 	/**
 	 * A useful constant for the {@code Instant} representing a permanent punishment's
@@ -128,6 +129,20 @@ public interface Punishment extends PunishmentBase {
 	}
 
 	/**
+	 * Convenience method to determine if this punishment has expired. If permanent,
+	 * will always be {@code false}
+	 *
+	 * @param clock the clock to use
+	 * @return true if this is a temporary punishment which has expired
+	 */
+	default boolean isExpired(Clock clock) {
+		if (isPermanent()) {
+			return false;
+		}
+		return clock.instant().compareTo(getEndDate()) > 0;
+	}
+
+	/**
 	 * Enforces this punishment. <br>
 	 * <br>
 	 * For bans and mutes, this will kick players matching the punishment's victim.
@@ -138,7 +153,23 @@ public interface Punishment extends PunishmentBase {
 	 * 
 	 * @return a future completed when enforcement has been conducted
 	 */
-	ReactionStage<?> enforcePunishment();
+	default ReactionStage<?> enforcePunishment() {
+		return enforcePunishment(enforcementOptionsBuilder().build());
+	}
+
+	/**
+	 * Enforces this punishment according to the given options. <br>
+	 * <br>
+	 * For bans and mutes, this will kick players matching the punishment's victim.
+	 * For mutes and warn, the players will be sent a warning message. <br>
+	 * Additionally for mutes, the player will be unable to chat (depending on the
+	 * implementation) until the mute cache expires, at which point the database is
+	 * re-queried for a mute.
+	 *
+	 * @param enforcementOptions the enforcement options. Can be used to disable unenforcement entirely
+	 * @return a future completed when enforcement has been conducted
+	 */
+	ReactionStage<?> enforcePunishment(EnforcementOptions enforcementOptions);
 
 	/**
 	 * Undoes and "unenforces" this punishment assuming it active and in the
@@ -147,34 +178,50 @@ public interface Punishment extends PunishmentBase {
 	 * {@code true}, else {@code false}. <br>
 	 * <br>
 	 * Unenforcement implies purging of this punishment from any local caches.
+	 * Additionally, any relevant broadcast messages will be sent to players.
 	 * 
 	 * @return a future which yields {@code true} if this punishment existed and was
 	 *         removed and unenforced, {@code false} otherwise
 	 */
-	ReactionStage<Boolean> undoPunishment();
+	default ReactionStage<Boolean> undoPunishment() {
+		return undoPunishment(enforcementOptionsBuilder().build());
+	}
 
 	/**
-	 * Undoes this punishment assuming it is in the database. <br>
+	 * Undoes and "unenforces" this punishment assuming it active and in the
+	 * database. <br>
 	 * If the punishment was active then was removed, the future yields
 	 * {@code true}, else {@code false}. <br>
 	 * <br>
-	 * Most callers will want to use {@link #undoPunishment()} instead, which has
-	 * the added effect of "unenforcing" the punishment. Unenforcement implies
-	 * purging of this punishment from any local caches.
-	 * 
+	 * Unenforcement implies purging of this punishment from any local caches.
+	 * Additionally, any relevant broadcast messages will be sent to players.
+	 *
+	 * @param enforcementOptions the enforcement options. Can be used to disable unenforcement entirely
 	 * @return a future which yields {@code true} if this punishment existed and was
-	 *         removed, {@code false} otherwise
+	 *         removed and unenforced, {@code false} otherwise
 	 */
-	ReactionStage<Boolean> undoPunishmentWithoutUnenforcement();
+	ReactionStage<Boolean> undoPunishment(EnforcementOptions enforcementOptions);
 
 	/**
 	 * "Unenforces" this punishment. <br>
 	 * <br>
-	 * This will update local punishment caches, such as the mute cache.
-	 * 
+	 * Unenforcement may mean purging caches such as the mute cache.
+	 *
 	 * @return a future completed when unenforcement has been conducted
 	 */
-	ReactionStage<?> unenforcePunishment();
+	default ReactionStage<?> unenforcePunishment() {
+		return unenforcePunishment(enforcementOptionsBuilder().build());
+	}
+
+	/**
+	 * "Unenforces" this punishment according to the given options. <br>
+	 * <br>
+	 * Unenforcement may mean purging caches such as the mute cache.
+	 *
+	 * @param enforcementOptions the enforcement options. Can be used to disable unenforcement entirely
+	 * @return a future completed when unenforcement has been conducted
+	 */
+	ReactionStage<?> unenforcePunishment(EnforcementOptions enforcementOptions);
 
 	/**
 	 * Whether this punishment is equal to another. The other punishment must

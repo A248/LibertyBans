@@ -28,7 +28,7 @@ import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.core.alts.AccountHistory;
 import space.arim.libertybans.core.alts.KnownAccount;
-import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.punish.Guardian;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetTime;
@@ -66,7 +66,7 @@ public class AccountHistoryIT {
 
 	@TestTemplate
 	@SetTime(unixTime = 1636233200)
-	public void listAccountHistory(Enforcer enforcer, SettableTime time) {
+	public void listAccountHistory(Guardian guardian, SettableTime time) {
 
 		final Instant startTime = Instant.ofEpochSecond(1636233200);
 		final Instant oneDayLater = startTime.plus(ONE_DAY);
@@ -80,13 +80,13 @@ public class AccountHistoryIT {
 		NetworkAddress playerOneAddress = NetworkAddress.of(RandomUtil.randomAddress());
 		NetworkAddress playerTwoAddress = NetworkAddress.of(RandomUtil.randomAddress());
 		NetworkAddress sharedAddress = NetworkAddress.of(RandomUtil.randomAddress());
-		enforcer.executeAndCheckConnection(playerOne, playerOneName, playerOneAddress).join();
+		guardian.executeAndCheckConnection(playerOne, playerOneName, playerOneAddress).join();
 		time.advanceBy(ONE_DAY);
-		enforcer.executeAndCheckConnection(playerTwo, playerTwoName, playerTwoAddress).join();
+		guardian.executeAndCheckConnection(playerTwo, playerTwoName, playerTwoAddress).join();
 		time.advanceBy(ONE_DAY);
-		enforcer.executeAndCheckConnection(playerOne, playerOneName, sharedAddress).join();
+		guardian.executeAndCheckConnection(playerOne, playerOneName, sharedAddress).join();
 		time.advanceBy(ONE_DAY);
-		enforcer.executeAndCheckConnection(playerTwo, playerTwoName, sharedAddress).join();
+		guardian.executeAndCheckConnection(playerTwo, playerTwoName, sharedAddress).join();
 
 		assertEquals(
 				List.of(new KnownAccount(playerOne, playerOneName, playerOneAddress, startTime),
@@ -110,7 +110,7 @@ public class AccountHistoryIT {
 
 	@TestTemplate
 	@SetTime(unixTime = 1636233200)
-	public void deleteAccount(Enforcer enforcer, SettableTime time) {
+	public void deleteAccount(Guardian guardian, SettableTime time) {
 		final Instant startTime = Instant.ofEpochSecond(1636233200);
 
 		UUID player = UUID.randomUUID();
@@ -118,9 +118,9 @@ public class AccountHistoryIT {
 		NetworkAddress firstAddress = NetworkAddress.of(RandomUtil.randomAddress());
 		NetworkAddress secondAddress = NetworkAddress.of(RandomUtil.randomAddress());
 
-		enforcer.executeAndCheckConnection(player, username, firstAddress).join();
+		guardian.executeAndCheckConnection(player, username, firstAddress).join();
 		time.advanceBy(ONE_DAY);
-		enforcer.executeAndCheckConnection(player, username, secondAddress).join();
+		guardian.executeAndCheckConnection(player, username, secondAddress).join();
 
 		assertFalse(
 				accountHistory.deleteAccount(player, startTime.minus(ONE_DAY)).join(),

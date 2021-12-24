@@ -33,7 +33,7 @@ import space.arim.omnibus.util.concurrent.ReactionStage;
  * @author A248
  *
  */
-public interface DraftPunishment extends PunishmentBase {
+public interface DraftPunishment extends PunishmentBase, EnforcementOptionsFactory {
 
 	/**
 	 * Gets the duration of this draft punishment
@@ -53,23 +53,24 @@ public interface DraftPunishment extends PunishmentBase {
 	 * @return a future which yields the punishment or an empty optional if there
 	 *         was a conflict
 	 */
-	ReactionStage<Optional<Punishment>> enactPunishment();
+	default ReactionStage<Optional<Punishment>> enactPunishment() {
+		return enactPunishment(enforcementOptionsBuilder().build());
+	}
 
 	/**
-	 * Enacts this punishment, adding it to the database. <br>
+	 * Enacts this punishment, adding it to the database, then enforces it
+	 * according to the given options. <br>
 	 * <br>
 	 * If the punishment type is a ban or mute, and there is already an active ban
 	 * or mute for the victim, the future will yield an empty optional. See
 	 * {@link space.arim.libertybans.api.punish} for a description of active and
-	 * historical punishments. <br>
-	 * <br>
-	 * Most callers will want to use {@link #enactPunishment()} instead, which has
-	 * the added effect of enforcing the punishment.
-	 * 
+	 * historical punishments.
+	 *
+	 * @param enforcementOptions the enforcement options. Can be used to disable enforcement entirely
 	 * @return a future which yields the punishment or an empty optional if there
 	 *         was a conflict
 	 */
-	ReactionStage<Optional<Punishment>> enactPunishmentWithoutEnforcement();
+	ReactionStage<Optional<Punishment>> enactPunishment(EnforcementOptions enforcementOptions);
 
 	/**
 	 * Whether this draft punishment is equal to another. The other draft punishment

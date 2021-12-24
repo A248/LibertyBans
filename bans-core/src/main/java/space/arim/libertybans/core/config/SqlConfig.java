@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.config;
 
+import java.time.Duration;
 import java.util.Map;
 
 import space.arim.libertybans.core.database.Vendor;
@@ -216,5 +217,37 @@ public interface SqlConfig {
 			EXPIRE_AFTER_WRITE
 		}
 	}
-	
+
+	@SubSection
+	Synchronization synchronization();
+
+	@ConfHeader("Settings for synchronizing multiple LibertyBans instances.")
+	interface Synchronization {
+
+		@ConfComments({"Availalble synchronization options:",
+				"NONE - no synchronization",
+				"ANSI_SQL - uses your database to synchronize punishments (called ANSI_SQL because it uses standard SQL)",
+				"Other options may be added in the future, upon feature request."})
+		@DefaultString("NONE")
+		SyncMode mode();
+
+		enum SyncMode {
+			NONE,
+			ANSI_SQL
+		}
+
+		@ConfKey("poll-rate-millis")
+		@DefaultInteger(4000)
+		@ConfComments({"How frequently the database is polled for updates, in milliseconds.",
+				"Usually the default setting of 4 seconds will be sufficiently responsive without querying the database too often",
+				"If you want to increase responsiveness, lower this value. If you want to reduce database load, increase this value.",
+				"",
+				"This value MUST be less than 30 seconds."})
+		long pollRateMillis();
+
+		default boolean enabled() {
+			return mode() == SyncMode.ANSI_SQL;
+		}
+	}
+
 }

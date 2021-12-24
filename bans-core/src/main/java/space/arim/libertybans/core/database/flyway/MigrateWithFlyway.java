@@ -63,7 +63,8 @@ public final class MigrateWithFlyway {
 						"generatedcolumnsuffix", vendor.getGeneratedColumnSuffix(),
 						"extratableoptions", vendor.getExtraTableOptions(),
 						"uuidtype", vendor.uuidType(),
-						"inettype", vendor.inetType()
+						"inettype", vendor.inetType(),
+						"arbitrarybinarytype", vendor.arbitraryBinaryType()
 				))
 				.locations("classpath:database-migrations")
 				// Override classpath scanning

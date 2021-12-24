@@ -23,6 +23,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
+import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.api.Operator;
@@ -31,13 +32,13 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 
-class SecurePunishment extends AbstractPunishmentBase implements Punishment {
+class SecurePunishment extends AbstractPunishmentBase implements Punishment, EnforcementOpts.Factory {
 
 	private final SecurePunishmentCreator creator;
 	private final long id;
 	private final Instant startDate;
 	private final Instant endDate;
-	
+
 	SecurePunishment(SecurePunishmentCreator creator,
 			long id, PunishmentType type, Victim victim, Operator operator,
 			String reason, ServerScope scope, Instant startDate, Instant endDate) {
@@ -69,30 +70,23 @@ class SecurePunishment extends AbstractPunishmentBase implements Punishment {
 	}
 
 	@Override
-	public ReactionStage<?> enforcePunishment() {
-		return creator.enforcer().enforce(this);
+	public ReactionStage<?> enforcePunishment(EnforcementOptions enforcementOptions) {
+		return creator.enforcement().enforce(this, (EnforcementOpts) enforcementOptions);
 	}
 
 	@Override
-	public ReactionStage<Boolean> undoPunishment() {
-		return undoPunishmentWithoutUnenforcement().thenCompose((undone) -> {
-			return (undone) ?
-					unenforcePunishment().thenApply((ignore) -> true)
-					: CompletableFuture.completedStage(false);
+	public ReactionStage<Boolean> undoPunishment(EnforcementOptions enforcementOptions) {
+		return creator.revoker().undoPunishment(this).thenCompose((undone) -> {
+			if (!undone) {
+				return CompletableFuture.completedFuture(false);
+			}
+			return unenforcePunishment(enforcementOptions).thenApply((ignore) -> true);
 		});
 	}
 
 	@Override
-	public ReactionStage<Boolean> undoPunishmentWithoutUnenforcement() {
-		return creator.revoker().undoPunishment(this);
-	}
-
-	@Override
-	public ReactionStage<?> unenforcePunishment() {
-		if (getType() == PunishmentType.MUTE) {
-			creator.muteCache().clearCachedMute(this);
-		}
-		return creator.futuresFactory().completedFuture(null);
+	public ReactionStage<?> unenforcePunishment(EnforcementOptions enforcementOptions) {
+		return creator.enforcement().unenforce(this, (EnforcementOpts) enforcementOptions);
 	}
 
 	@Override

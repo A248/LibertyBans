@@ -23,7 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.env.UUIDAndAddress;
-import space.arim.libertybans.core.punish.Enforcer;
+import space.arim.libertybans.core.punish.Guardian;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
@@ -80,12 +80,12 @@ public class UUIDStoreIT {
 	}
 
 	@TestTemplate
-	public void storeJoiningUuid(Enforcer enforcer, InternalDatabase database) {
+	public void storeJoiningUuid(Guardian guardian, InternalDatabase database) {
 		UUID uuid = UUID.randomUUID();
 		String name = randomName();
 		NetworkAddress address = randomAddress();
 
-		assumeTrue(null == enforcer.executeAndCheckConnection(uuid, name, address).join());
+		assumeTrue(null == guardian.executeAndCheckConnection(uuid, name, address).join());
 
 		assertEquals(name, lookupName(uuid));
 		assertEquals(uuid, lookupUUID(name));
@@ -93,12 +93,12 @@ public class UUIDStoreIT {
 	}
 
 	@TestTemplate
-	public void useLatestName(Enforcer enforcer, SettableTime time) {
+	public void useLatestName(Guardian guardian, SettableTime time) {
 		UUID uuid = UUID.randomUUID();
 		String name = randomName();
 		NetworkAddress address = randomAddress();
 
-		assumeTrue(null == enforcer.executeAndCheckConnection(uuid, name, address).join());
+		assumeTrue(null == guardian.executeAndCheckConnection(uuid, name, address).join());
 
 		assumeTrue(name.equals(lookupName(uuid)));
 		assumeTrue(uuid.equals(lookupUUID(name)));
@@ -110,7 +110,7 @@ public class UUIDStoreIT {
 		// Advance to make the previous name and address outdated
 		time.advanceBy(Duration.ofSeconds(2L));
 
-		assumeTrue(null == enforcer.executeAndCheckConnection(uuid, recentName, recentAddress).join());
+		assumeTrue(null == guardian.executeAndCheckConnection(uuid, recentName, recentAddress).join());
 
 		assertEquals(recentName, lookupName(uuid), "Should use most recent name");
 		assertEquals(recentAddress, lookupAddress(recentName), "Should use most recent address with most recent name");

@@ -19,31 +19,25 @@
 
 package space.arim.libertybans.core.selector;
 
+import com.github.benmanes.caffeine.cache.AsyncCacheLoader;
+import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Scheduler;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.slf4j.LoggerFactory;
+import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.punish.Punishment;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
+
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
-
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-
-import org.slf4j.LoggerFactory;
-
-import com.github.benmanes.caffeine.cache.AsyncCacheLoader;
-import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.Scheduler;
-
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
-
-import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.api.punish.Punishment;
 
 @Singleton
 public class CaffeineMuteCache implements MuteCache {
@@ -114,11 +108,6 @@ public class CaffeineMuteCache implements MuteCache {
 	@Override
 	public void clearCachedMute(long id) {
 		clearCachedMuteIf((punishment) -> punishment.getIdentifier() == id);
-	}
-	
-	@Override
-	public void clearCachedMute(Victim victim) {
-		clearCachedMuteIf((punishment) -> punishment.getVictim().equals(victim));
 	}
 	
 	private static class MuteCacheKey {

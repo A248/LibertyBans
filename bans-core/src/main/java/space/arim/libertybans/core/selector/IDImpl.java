@@ -58,10 +58,16 @@ public class IDImpl {
 		InternalDatabase database = dbProvider.get();
 		return database.query(SQLFunction.readOnly((context) -> {
 			return context
-					.selectFrom(SIMPLE_ACTIVE)
+					.select(
+							SIMPLE_ACTIVE.TYPE,
+							SIMPLE_ACTIVE.VICTIM_TYPE, SIMPLE_ACTIVE.VICTIM_UUID, SIMPLE_ACTIVE.VICTIM_ADDRESS,
+							SIMPLE_ACTIVE.OPERATOR, SIMPLE_ACTIVE.REASON,
+							SIMPLE_ACTIVE.SCOPE, SIMPLE_ACTIVE.START, SIMPLE_ACTIVE.END
+					)
+					.from(SIMPLE_ACTIVE)
 					.where(SIMPLE_ACTIVE.ID.eq(id))
 					.and(new EndTimeCondition(SIMPLE_ACTIVE.END).isNotExpired(time.currentTimestamp()))
-					.fetchOne(creator.punishmentMapper());
+					.fetchOne(creator.punishmentMapper(id));
 		}));
 	}
 
@@ -90,10 +96,31 @@ public class IDImpl {
 		InternalDatabase database = dbProvider.get();
 		return database.query(SQLFunction.readOnly((context) -> {
 			return context
-					.selectFrom(SIMPLE_HISTORY)
+					.select(
+							SIMPLE_HISTORY.TYPE,
+							SIMPLE_HISTORY.VICTIM_TYPE, SIMPLE_HISTORY.VICTIM_UUID, SIMPLE_HISTORY.VICTIM_ADDRESS,
+							SIMPLE_HISTORY.OPERATOR, SIMPLE_HISTORY.REASON,
+							SIMPLE_HISTORY.SCOPE, SIMPLE_HISTORY.START, SIMPLE_HISTORY.END
+					)
+					.from(SIMPLE_HISTORY)
 					.where(SIMPLE_HISTORY.ID.eq(id))
-					.fetchOne(creator.punishmentMapper());
+					.fetchOne(creator.punishmentMapper(id));
 		}));
 	}
 
+	CentralisedFuture<Punishment> getHistoricalPunishmentByIdAndType(long id, PunishmentType type) {
+		InternalDatabase database = dbProvider.get();
+		return database.query(SQLFunction.readOnly((context) -> {
+			return context
+					.select(
+							SIMPLE_HISTORY.VICTIM_TYPE, SIMPLE_HISTORY.VICTIM_UUID, SIMPLE_HISTORY.VICTIM_ADDRESS,
+							SIMPLE_HISTORY.OPERATOR, SIMPLE_HISTORY.REASON,
+							SIMPLE_HISTORY.SCOPE, SIMPLE_HISTORY.START, SIMPLE_HISTORY.END
+					)
+					.from(SIMPLE_HISTORY)
+					.where(SIMPLE_HISTORY.ID.eq(id))
+					.and(SIMPLE_HISTORY.TYPE.eq(type))
+					.fetchOne(creator.punishmentMapper(id, type));
+		}));
+	}
 }
