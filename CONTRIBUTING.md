@@ -63,7 +63,7 @@ The integration tests optionally rely on docker to start a temporary MariaDB dat
  * The presence of docker is automatically detected on UNIX.
    * If you want to run the tests on Windows, you will need to enable the `docker-enabled` build profile. For example, `mvn clean verify -Pdocker-enabled`.
    * If you want to disable this automatic detection, you can disable the `docker-enabled` build profile. For example, `mvn clean verify -P-docker-enabled`.
- * Random ports are selected for use in the range 40,000-50,000. You may need to tweak your firewall settings accordingly; in some cases you may need to enable outgoing connections on port 3306 as well (oddly enough).
+ * Random ports are selected for use in the range 40,000-50,000. You may need to tweak your firewall settings accordingly; in some cases you may need to enable outgoing connections on port(s) `3306` for MySQL and MariaDB, `5432` for PostgreSQL, and `26257` for CockroachDB as well (oddly enough).
 
 If you would prefer not to run the integration tests yourself, that's fine. Simply let the CI take care of it.
 
