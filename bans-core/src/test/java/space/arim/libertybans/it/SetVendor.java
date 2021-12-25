@@ -17,31 +17,22 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.database.jooq;
+package space.arim.libertybans.it;
 
-import org.jetbrains.annotations.NotNull;
-import org.jooq.Converter;
-import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.core.database.Vendor;
 
-public final class NetworkAddressConverter implements Converter<byte[], NetworkAddress> {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-	@Override
-	public NetworkAddress from(byte[] databaseObject) {
-		return (databaseObject == null) ? null : NetworkAddress.of(databaseObject);
-	}
+/**
+ * When present, filters the tested RDMS vendors
+ *
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface SetVendor {
 
-	@Override
-	public byte[] to(NetworkAddress userObject) {
-		return (userObject == null) ? null : userObject.getRawAddress();
-	}
-
-	@Override
-	public @NotNull Class<byte[]> fromType() {
-		return byte[].class;
-	}
-
-	@Override
-	public @NotNull Class<NetworkAddress> toType() {
-		return NetworkAddress.class;
-	}
+	Vendor[] value();
 }

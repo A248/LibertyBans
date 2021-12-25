@@ -40,24 +40,33 @@ public class InjectionInvocationContextProvider implements TestTemplateInvocatio
 
 	@Override
 	public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
+
+		boolean throwaway = context.getRequiredTestClass().isAnnotationPresent(ThrowawayInstance.class);
+
 		ResourceCreator creator = new ResourceCreator(context.getRoot().getStore(NAMESPACE));
 		return new ConfigSpecPossiblities(context.getElement().orElse(null))
 				.getAll()
-				.flatMap(creator::create)
-				.map(InjectorInvocationContext::new);
+				.flatMap((throwaway) ? creator::createIsolated : creator::create)
+				.map((injector) -> new InjectorInvocationContext(injector, throwaway));
 	}
 
 	private static class InjectorInvocationContext implements TestTemplateInvocationContext {
 
 		private final Injector injector;
+		private final boolean throwaway;
 
-		InjectorInvocationContext(Injector injector) {
+		InjectorInvocationContext(Injector injector, boolean throwaway) {
 			this.injector = injector;
+			this.throwaway = throwaway;
 		}
 
 		@Override
 		public List<Extension> getAdditionalExtensions() {
-			return List.of(new LibertyBansIntegrationExtension(injector));
+			var parameterResolver = new InjectorParameterResolver(injector);
+			if (throwaway) {
+				return List.of(parameterResolver);
+			}
+			return List.of(parameterResolver, new InjectorCleanupCallback(injector));
 		}
 
 	}

@@ -48,15 +48,7 @@ import java.time.Instant;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
-import static space.arim.libertybans.core.schema.Tables.ADDRESSES;
-import static space.arim.libertybans.core.schema.Tables.BANS;
-import static space.arim.libertybans.core.schema.Tables.HISTORY;
-import static space.arim.libertybans.core.schema.Tables.MESSAGES;
-import static space.arim.libertybans.core.schema.Tables.MUTES;
-import static space.arim.libertybans.core.schema.Tables.NAMES;
 import static space.arim.libertybans.core.schema.Tables.PUNISHMENTS;
-import static space.arim.libertybans.core.schema.Tables.VICTIMS;
-import static space.arim.libertybans.core.schema.Tables.WARNS;
 
 public final class StandardDatabase implements InternalDatabase {
 
@@ -177,8 +169,7 @@ public final class StandardDatabase implements InternalDatabase {
 	@Override
 	public void truncateAllTables() {
 		execute((context) -> {
-			var tables = new Table[] {NAMES, ADDRESSES, HISTORY, BANS, MUTES, WARNS, PUNISHMENTS, VICTIMS, MESSAGES};
-			for (Table<?> table : tables) {
+			for (Table<?> table : DatabaseConstants.allTables()) {
 				context.deleteFrom(table).execute();
 			}
 		}).join();

@@ -17,30 +17,19 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.database.flyway;
+package space.arim.libertybans.it;
 
-import org.jooq.DSLContext;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.function.UnaryOperator;
-
-final class Rename08xTables {
-
-	private final String tablePrefix;
-	private final UnaryOperator<String> renaming;
-
-	Rename08xTables(String tablePrefix, UnaryOperator<String> renaming) {
-		this.tablePrefix = Objects.requireNonNull(tablePrefix, "tablePrefix");
-		this.renaming = Objects.requireNonNull(renaming, "renaming");
-	}
-
-	void rename(DSLContext context) {
-		List<String> tables08x = List.of("names", "addresses", "punishments", "history", "bans", "mutes", "warns");
-		for (String table : tables08x) {
-			context.alterTable(tablePrefix + table)
-					.renameTo(renaming.apply(table))
-					.execute();
-		}
-	}
+/**
+ * Provides an instance of LibertyBans which is completed isolated from other test runs. <br>
+ * <br>
+ * For use with {@link InjectionInvocationContextProvider}
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface ThrowawayInstance {
 }

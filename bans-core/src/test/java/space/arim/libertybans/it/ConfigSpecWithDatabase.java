@@ -21,7 +21,7 @@ package space.arim.libertybans.it;
 
 import java.util.Objects;
 
-final class ConfigSpecWithDatabase {
+final class ConfigSpecWithDatabase implements InstanceKey {
 
 	private final ConfigSpec configSpec;
 	private final DatabaseInstance databaseInstance;

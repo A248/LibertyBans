@@ -60,7 +60,7 @@ public enum Vendor {
 		return isMySQLLike() || isPostgresLike();
 	}
 
-	boolean isMySQLLike() {
+	public boolean isMySQLLike() {
 		return driver == JdbcDriver.MARIADB_CONNECTOR;
 	}
 
@@ -68,7 +68,7 @@ public enum Vendor {
 		return driver == JdbcDriver.PG_JDBC;
 	}
 
-	SQLDialect dialect() {
+	public SQLDialect dialect() {
 		switch (this) {
 		case HSQLDB:
 			return SQLDialect.HSQLDB;

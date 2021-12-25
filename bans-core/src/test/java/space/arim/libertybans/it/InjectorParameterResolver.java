@@ -16,29 +16,25 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.it;
 
 import jakarta.inject.Provider;
-import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
-import space.arim.injector.Identifier;
 import space.arim.injector.Injector;
 import space.arim.injector.error.InjectorException;
-import space.arim.libertybans.core.database.InternalDatabase;
-import space.arim.libertybans.core.service.SettableTime;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.time.Instant;
 
-class LibertyBansIntegrationExtension implements ParameterResolver, AfterEachCallback {
+class InjectorParameterResolver implements ParameterResolver {
 
 	private final Injector injector;
 
-	LibertyBansIntegrationExtension(Injector injector) {
+	InjectorParameterResolver(Injector injector) {
 		this.injector = injector;
 	}
 
@@ -67,19 +63,6 @@ class LibertyBansIntegrationExtension implements ParameterResolver, AfterEachCal
 		} catch (InjectorException ex) {
 			throw new ParameterResolutionException("Unable to inject parameter", ex);
 		}
-	}
-
-	/*
-	 * AfterEachCallback
-	 */
-
-	@Override
-	public void afterEach(ExtensionContext context) throws Exception {
-		// Reset database
-		injector.request(InternalDatabase.class).truncateAllTables();
-		// Reset global clock
-		Instant startTime = injector.request(Identifier.ofTypeAndNamed(Instant.class, "testStartTime"));
-		injector.request(SettableTime.class).setTimestamp(startTime);
 	}
 
 }

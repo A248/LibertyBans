@@ -27,12 +27,12 @@ import java.time.Instant;
 public final class InstantConverter implements Converter<Long, Instant> {
 	@Override
 	public Instant from(Long databaseObject) {
-		return Instant.ofEpochSecond(databaseObject);
+		return (databaseObject == null) ? null : Instant.ofEpochSecond(databaseObject);
 	}
 
 	@Override
 	public Long to(Instant userObject) {
-		return userObject.getEpochSecond();
+		return (userObject == null) ? null : userObject.getEpochSecond();
 	}
 
 	@Override

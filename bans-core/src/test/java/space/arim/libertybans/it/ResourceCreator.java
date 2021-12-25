@@ -34,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 class ResourceCreator {
@@ -45,19 +46,32 @@ class ResourceCreator {
 	}
 
 	Stream<Injector> create(ConfigSpec configSpec) {
-		return DatabaseInstance.matchingVendor(configSpec.vendor())
-				.map((dbInstance) -> createSingle(configSpec, dbInstance))
+		return createUsing(configSpec, ConfigSpecWithDatabase::new);
+	}
+
+	Stream<Injector> createIsolated(ConfigSpec configSpec) {
+		return createUsing(configSpec, (db, spec) -> new InstanceKey() {});
+	}
+
+	private Stream<Injector> createUsing(ConfigSpec configSpec,
+										 BiFunction<ConfigSpec, DatabaseInstance, InstanceKey> keyFunction) {
+		return DatabaseInstance
+				.matchingVendor(configSpec.vendor())
+				.map((database) -> {
+					InstanceKey instanceKey = keyFunction.apply(configSpec, database);
+					return createSingle(configSpec, database, instanceKey);
+				})
 				.flatMap(Optional::stream);
 	}
 
-	private Optional<Injector> createSingle(ConfigSpec configSpec, DatabaseInstance database) {
+	private Optional<Injector> createSingle(ConfigSpec configSpec, DatabaseInstance database, InstanceKey instanceKey) {
 
 		DatabaseInfo databaseInfo = database.createInfo().orElse(null);
 		if (databaseInfo == null) {
 			return Optional.empty();
 		}
 
-		return Optional.of(store.getOrComputeIfAbsent(new ConfigSpecWithDatabase(configSpec, database), (ignore) -> {
+		return Optional.of(store.getOrComputeIfAbsent(instanceKey, (ignore) -> {
 
 			Path tempDirectory = createTempDirectory();
 
@@ -91,5 +105,4 @@ class ResourceCreator {
 		}
 		return tempDir;
 	}
-
 }

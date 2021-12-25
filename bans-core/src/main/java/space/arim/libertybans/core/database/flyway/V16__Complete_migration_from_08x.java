@@ -34,6 +34,7 @@ import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.database.jooq.OperatorBinding;
 import space.arim.libertybans.core.database.sql.SequenceValue;
 import space.arim.libertybans.core.database.sql.SerializedVictim;
 import space.arim.libertybans.core.database.sql.VictimCondition;
@@ -47,15 +48,18 @@ import space.arim.libertybans.core.schema.tables.ZeroeightBans;
 import space.arim.libertybans.core.schema.tables.ZeroeightHistory;
 import space.arim.libertybans.core.schema.tables.ZeroeightMutes;
 import space.arim.libertybans.core.schema.tables.ZeroeightWarns;
+import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.UUIDUtil;
 
 import java.sql.Connection;
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
+import static org.jooq.impl.DSL.val;
 import static org.jooq.impl.SQLDataType.BIGINT;
 import static org.jooq.impl.SQLDataType.INTEGER;
 import static org.jooq.impl.SQLDataType.VARBINARY;
@@ -71,6 +75,8 @@ import static space.arim.libertybans.core.schema.tables.ZeroeightPunishments.ZER
 
 public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 
+	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+
 	@Override
 	public void migrate(Context flywayContext) throws Exception {
 		MigrationState migrationState = MigrationState.retrieveState(flywayContext);
@@ -83,20 +89,15 @@ public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 	}
 
 	private void completeMigration(MigrationState migrationState, DSLContext context) {
-		final Logger logger = LoggerFactory.getLogger(getClass());
 		logger.info("Completing migration of data from 0.8.x to 1.0.0");
 
-		TableLock.LockedTables lockedTables = new TableLock(migrationState, List.of(
-				NAMES, ADDRESSES, PUNISHMENTS, VICTIMS, Bans.BANS, Mutes.MUTES, Warns.WARNS, History.HISTORY
-		)).lockTables(context);
+		if (migrationState.vendor().isMySQLLike()) {
+			new MySQLTableLock(migrationState).lockTables(context);
+		}
 
 		transferAllData(context);
-		new Rename08xTables(
-				"libertybans_zeroeight_",
-				(table) -> "libertybans_zeroeight_postmigration_" + table
-		).rename(context);
 
-		lockedTables.unlock();
+		new Schema08x("zeroeight_", context).renameTables("zeroeight_postmigration_");
 
 		logger.info("Completed migration of data from 0.8.x to 1.0.0");
 	}
@@ -114,7 +115,7 @@ public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 						.values((UUID) null, null, null)
 				),
 				(batch, record) -> {
-					UUID uuid = record.value1();
+					UUID uuid = UUIDUtil.fromByteArray(record.value1());
 					String name = record.value2();
 					Instant updated = record.value3();
 					return batch.bind(uuid, name, updated);
@@ -123,7 +124,7 @@ public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 		transferData(
 				context
 						.select(ZEROEIGHT_ADDRESSES.UUID, ZEROEIGHT_ADDRESSES.ADDRESS, ZEROEIGHT_ADDRESSES.UPDATED)
-						.from("libertybans_zeroeight_addresses")
+						.from(ZEROEIGHT_ADDRESSES)
 						.fetchLazy(),
 				() -> context.batch(context
 						.insertInto(ADDRESSES)
@@ -131,7 +132,7 @@ public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 						.values((UUID) null, null, null)
 				),
 				(batch, record) -> {
-					UUID uuid = record.value1();
+					UUID uuid = UUIDUtil.fromByteArray(record.value1());
 					NetworkAddress address = record.value2();
 					Instant updated = record.value3();
 					return batch.bind(uuid, address, updated);
@@ -145,7 +146,7 @@ public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 								ZEROEIGHT_PUNISHMENTS.OPERATOR, ZEROEIGHT_PUNISHMENTS.REASON,
 								ZEROEIGHT_PUNISHMENTS.SCOPE, ZEROEIGHT_PUNISHMENTS.START, ZEROEIGHT_PUNISHMENTS.END
 						)
-						.from("libertybans_zeroeight_punishments")
+						.from(ZEROEIGHT_PUNISHMENTS)
 						.fetchLazy(),
 				() -> context.batch(context
 						.insertInto(PUNISHMENTS)
@@ -157,7 +158,7 @@ public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 				(batch, record) -> {
 					long id = record.value1();
 					PunishmentType type = PunishmentType.valueOf(record.value2());
-					Operator operator = record.value3();
+					Operator operator = new OperatorBinding().uuidToOperator(UUIDUtil.fromByteArray(record.value3()));
 					String reason = record.value4();
 					ServerScope scope = record.value5();
 					Instant start = record.value6();
@@ -170,17 +171,11 @@ public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 				}
 		);
 		// Install victims using new scheme - victim IDs
-		transferData(
-				context
-						.select(ZEROEIGHT_HISTORY.VICTIM, ZEROEIGHT_HISTORY.VICTIM_TYPE)
-						.from("libertybans_zeroeight_history")
-						.fetchLazy(),
-				() -> context.batch(context
-						.insertInto(VICTIMS)
-						.columns(VICTIMS.ID, VICTIMS.TYPE, VICTIMS.UUID, VICTIMS.ADDRESS)
-						.values((Integer) null, null, null, null)
-				),
-				(batch, record) -> {
+		context
+				.select(ZEROEIGHT_HISTORY.VICTIM, ZEROEIGHT_HISTORY.VICTIM_TYPE)
+				.from(ZEROEIGHT_HISTORY)
+				.fetch()
+				.forEach((record) -> {
 					Victim victim = new Victim08x(record.value2(), record.value1()).deserialize();
 					Integer existingVictimId = context
 							.select(VICTIMS.ID)
@@ -190,17 +185,20 @@ public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 
 					if (existingVictimId != null) {
 						// Victim already inserted
-						return batch;
+						return;
 					}
 					SerializedVictim serializedVictim = new SerializedVictim(victim);
-					return batch.bind(
-							new SequenceValue<>(Sequences.LIBERTYBANS_VICTIM_IDS).nextValue(context),
-							victim.getType(),
-							serializedVictim.uuid(),
-							serializedVictim.address()
-					);
-				}
-		);
+					context
+							.insertInto(VICTIMS)
+							.columns(VICTIMS.ID, VICTIMS.TYPE, VICTIMS.UUID, VICTIMS.ADDRESS)
+							.values(
+									new SequenceValue<>(Sequences.LIBERTYBANS_VICTIM_IDS).nextValue(context),
+									val(victim.getType(), VICTIMS.TYPE),
+									val(serializedVictim.uuid(), VICTIMS.UUID),
+									val(serializedVictim.address(), VICTIMS.ADDRESS)
+							)
+							.execute();
+				});
 		// Transfer history table and active punishments
 		Map<Table<? extends Record3<Integer, byte[], String>>, Table<? extends Record2<Long, Integer>>> punishmentTables;
 		punishmentTables = Map.of(
@@ -235,6 +233,7 @@ public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 								.from(VICTIMS)
 								.where(new VictimCondition(new VictimTableFields()).matchesVictim(victim))
 								.fetchSingle(VICTIMS.ID);
+						Objects.requireNonNull(victimId, "victimId");
 						return batch.bind(punishmentId, victimId);
 					}
 			);

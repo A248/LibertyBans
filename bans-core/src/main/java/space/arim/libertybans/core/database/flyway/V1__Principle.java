@@ -23,12 +23,16 @@ import org.flywaydb.core.api.migration.BaseJavaMigration;
 import org.flywaydb.core.api.migration.Context;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
-import org.jooq.impl.DSL;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.Statement;
 
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.max;
+import static org.jooq.impl.DSL.quotedName;
+import static space.arim.libertybans.core.database.DatabaseConstants.LIBERTYBANS_08X_FLYWAY_TABLE;
+import static space.arim.libertybans.core.database.DatabaseConstants.LIBERTYBANS_08X_FLYWAY_TABLE_NAME;
 import static space.arim.libertybans.core.schema.tables.ZeroeightPunishments.ZEROEIGHT_PUNISHMENTS;
 
 /**
@@ -43,8 +47,6 @@ import static space.arim.libertybans.core.schema.tables.ZeroeightPunishments.ZER
  */
 public final class V1__Principle extends BaseJavaMigration {
 
-	private static final String LIBERTYBANS_08X_FLYWAY_TABLE = "libertybans_flyway";
-
 	@Override
 	public void migrate(Context flywayContext) throws Exception {
 		MigrationState migrationState = MigrationState.retrieveState(flywayContext);
@@ -54,18 +56,18 @@ public final class V1__Principle extends BaseJavaMigration {
 		int startingPunishmentId;
 		if (new TableExists(LIBERTYBANS_08X_FLYWAY_TABLE).exists(context)) {
 			// LibertyBans 0.8.x is found
-			Integer flywayVersion = (Integer) context
-					.select(DSL.max(DSL.field("version")).as("max_version"))
-					.from(LIBERTYBANS_08X_FLYWAY_TABLE)
-					.fetchSingle("max_version");
+			Integer flywayVersion = context
+					.select(max(field(quotedName("version"))).cast(Integer.class))
+					.from(LIBERTYBANS_08X_FLYWAY_TABLE_NAME)
+					.fetchSingle()
+					.value1();
 			assert flywayVersion != null;
 			if (flywayVersion != 5) {
 				throw new IllegalStateException(
 						"You must update to the latest 0.8.x version before upgrading to LibertyBans 1.0.0");
 			}
 			LoggerFactory.getLogger(getClass()).info("Beginning migration of data from 0.8.x to 1.0.0");
-			int max08xId = prepareMigrationOfLibertyBans08x(context);
-			startingPunishmentId = max08xId + 1;
+			startingPunishmentId = prepareMigrationOfLibertyBans08xAndRetrieveStartingId(context);
 		} else {
 			startingPunishmentId = 1;
 		}
@@ -102,25 +104,30 @@ public final class V1__Principle extends BaseJavaMigration {
 		}
 	}
 
-	private int prepareMigrationOfLibertyBans08x(DSLContext context) {
+	private int prepareMigrationOfLibertyBans08xAndRetrieveStartingId(DSLContext context) {
 		context
-				.dropTable("libertybans_revision")
+				.dropTable("revision")
 				.execute();
 		context
-				.alterTable(LIBERTYBANS_08X_FLYWAY_TABLE)
-				.renameTo("libertybans_zeroeight_flyway")
+				.alterTable(LIBERTYBANS_08X_FLYWAY_TABLE_NAME)
+				.renameTo("zeroeight_flyway")
 				.execute();
 
-		new Rename08xTables(
-				"libertybans_",
-				(table) -> "libertybans_zeroeight_" + table
-		).rename(context);
+		Schema08x schema08x = new Schema08x("", context);
+		// Drop 0.8.x views
+		schema08x.dropViews();
+		// Change libertybans_ to libertybans_zeroeight_
+		schema08x.renameTables("zeroeight_");
 
-		Integer maxId = (Integer) context
-				.select(DSL.max(ZEROEIGHT_PUNISHMENTS.ID).as("max_id"))
+		Integer maxId = context
+				.select(max(ZEROEIGHT_PUNISHMENTS.ID).cast(Integer.class))
 				.from(ZEROEIGHT_PUNISHMENTS)
-				.fetchSingle("max_id");
-		assert maxId != null;
-		return maxId;
+				.fetchSingle()
+				.value1();
+		if (maxId == null) {
+			// Empty 0.8.x tables
+			return 1;
+		}
+		return maxId + 1;
 	}
 }

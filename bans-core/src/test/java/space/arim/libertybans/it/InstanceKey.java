@@ -17,31 +17,12 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.database.jooq;
+package space.arim.libertybans.it;
 
-import org.jetbrains.annotations.NotNull;
-import org.jooq.Converter;
-import space.arim.libertybans.api.NetworkAddress;
-
-public final class NetworkAddressConverter implements Converter<byte[], NetworkAddress> {
-
-	@Override
-	public NetworkAddress from(byte[] databaseObject) {
-		return (databaseObject == null) ? null : NetworkAddress.of(databaseObject);
-	}
-
-	@Override
-	public byte[] to(NetworkAddress userObject) {
-		return (userObject == null) ? null : userObject.getRawAddress();
-	}
-
-	@Override
-	public @NotNull Class<byte[]> fromType() {
-		return byte[].class;
-	}
-
-	@Override
-	public @NotNull Class<NetworkAddress> toType() {
-		return NetworkAddress.class;
-	}
+/**
+ * Key at which instances are stored in the extension store. <br>
+ * Usually is {@link ConfigSpecWithDatabase} to faciliate reusability, the exception being
+ * when {@link ThrowawayInstance} is used
+ */
+interface InstanceKey {
 }

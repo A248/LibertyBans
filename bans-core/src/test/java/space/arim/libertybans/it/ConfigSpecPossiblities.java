@@ -74,7 +74,16 @@ class ConfigSpecPossiblities {
 				serverTypes = Set.of(serverTypeConstraint.value());
 			}
 		}
-		return new ConfigConstraints(Set.of(Vendor.values()), addressStrictnesses, serverTypes);
+		Set<Vendor> vendors;
+		{
+			SetVendor vendorConstraint = element.getAnnotation(SetVendor.class);
+			if (vendorConstraint == null) {
+				vendors = Set.of(Vendor.values());
+			} else {
+				vendors = Set.of(vendorConstraint.value());
+			}
+		}
+		return new ConfigConstraints(vendors, addressStrictnesses, serverTypes);
 	}
 
 	private static class ConfigConstraints {

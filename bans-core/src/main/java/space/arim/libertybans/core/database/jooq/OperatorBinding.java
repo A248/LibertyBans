@@ -88,7 +88,27 @@ public final class OperatorBinding extends BaseBinding<UUID, Operator> {
 
 	@Override
 	public @NotNull Converter<UUID, Operator> converter() {
-		return Converter.of(UUID.class, Operator.class, this::uuidToOperator, this::operatorToUuid);
+		return new Converter<>() {
+			@Override
+			public Operator from(UUID databaseObject) {
+				return (databaseObject == null) ? null : uuidToOperator(databaseObject);
+			}
+
+			@Override
+			public UUID to(Operator userObject) {
+				return (userObject == null) ? null : operatorToUuid(userObject);
+			}
+
+			@Override
+			public @NotNull Class<UUID> fromType() {
+				return UUID.class;
+			}
+
+			@Override
+			public @NotNull Class<Operator> toType() {
+				return Operator.class;
+			}
+		};
 	}
 
 	@Override
@@ -121,7 +141,7 @@ public final class OperatorBinding extends BaseBinding<UUID, Operator> {
 	@Override
 	protected void sqlBind(BindingSQLContext<Operator> ctx) throws SQLException {
 		if (uuidBinding.supportsUUID(ctx.dialect())) {
-			uuidBinding.sqlBind(ctx.convert(Converter.to(UUID.class, Operator.class, this::operatorToUuid)));
+			uuidBinding.sqlBind(ctx.convert(converter()));
 			return;
 		}
 		super.sqlBind(ctx);

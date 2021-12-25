@@ -152,7 +152,7 @@ public class DatabaseSettings {
 		hikariConf.setMaximumPoolSize(poolSize);
 
 		// Other settings
-		hikariConf.setAutoCommit(DatabaseDefaults.AUTOCOMMIT);
+		hikariConf.setAutoCommit(DatabaseConstants.AUTOCOMMIT);
 		hikariConf.setTransactionIsolation("TRANSACTION_REPEATABLE_READ");
 		hikariConf.setPoolName("LibertyBansPool-" + vendor);
 		hikariConf.setConnectionInitSql(vendor.getConnectionInitSql());
@@ -255,15 +255,15 @@ public class DatabaseSettings {
 		case MARIADB:
 		case MYSQL:
 			// Performance improvements
-			properties.put("autocommit", DatabaseDefaults.AUTOCOMMIT);
-			properties.put("defaultFetchSize", DatabaseDefaults.FETCH_SIZE);
+			properties.put("autocommit", DatabaseConstants.AUTOCOMMIT);
+			properties.put("defaultFetchSize", DatabaseConstants.FETCH_SIZE);
 
 			// Help debug in case of deadlock
 			properties.put("includeInnodbStatusInDeadlockExceptions", true);
 			properties.put("includeThreadDumpInDeadlockExceptions", true);
 
 			// https://github.com/brettwooldridge/HikariCP/wiki/Rapid-Recovery#mysql
-			properties.put("socketTimeout", DatabaseDefaults.SOCKET_TIMEOUT);
+			properties.put("socketTimeout", DatabaseConstants.SOCKET_TIMEOUT);
 
 			// Properties preceding can be overridden
 			properties.putAll(config.mariaDb().connectionProperties());
@@ -276,10 +276,10 @@ public class DatabaseSettings {
 		case POSTGRES:
 		case COCKROACH:
 			// Set default connecting settings
-			properties.put("defaultRowFetchSize", DatabaseDefaults.FETCH_SIZE);
+			properties.put("defaultRowFetchSize", DatabaseConstants.FETCH_SIZE);
 
 			// https://github.com/brettwooldridge/HikariCP/wiki/Rapid-Recovery#postgresql
-			properties.put("socketTimeout", DatabaseDefaults.SOCKET_TIMEOUT);
+			properties.put("socketTimeout", DatabaseConstants.SOCKET_TIMEOUT);
 
 			// Properties preceding can be overridden
 			properties.putAll(config.postgres().connectionProperties());

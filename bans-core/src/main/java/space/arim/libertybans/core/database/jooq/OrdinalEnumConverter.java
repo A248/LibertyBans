@@ -26,12 +26,12 @@ abstract class OrdinalEnumConverter<E extends Enum<E>> implements Converter<Shor
 
 	@Override
 	public final E from(Short databaseObject) {
-		return toType().getEnumConstants()[databaseObject];
+		return (databaseObject == null) ? null : toType().getEnumConstants()[databaseObject];
 	}
 
 	@Override
 	public final Short to(E userObject) {
-		return (short) userObject.ordinal();
+		return (userObject == null) ? null : (short) userObject.ordinal();
 	}
 
 	@Override

@@ -28,6 +28,9 @@ public final class ServerScopeConverter implements Converter<String, ServerScope
 
 	@Override
 	public ServerScope from(String server) {
+		if (server == null) {
+			return null;
+		}
 		if (server.isEmpty()) {
 			return ScopeImpl.GLOBAL;
 		}
@@ -36,6 +39,9 @@ public final class ServerScopeConverter implements Converter<String, ServerScope
 
 	@Override
 	public String to(ServerScope scope) {
+		if (scope == null) {
+			return null;
+		}
 		return ScopeImpl.getServer(scope, "");
 	}
 

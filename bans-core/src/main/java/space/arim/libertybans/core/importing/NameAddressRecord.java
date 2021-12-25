@@ -26,7 +26,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public class NameAddressRecord {
+public final class NameAddressRecord {
 
 	private final UUID uuid;
 	private final String name;
@@ -54,6 +54,14 @@ public class NameAddressRecord {
 
 	public Instant timeRecorded() {
 		return timeRecorded;
+	}
+
+	public NameAddressRecord withoutName() {
+		return new NameAddressRecord(uuid, null, address, timeRecorded);
+	}
+
+	public NameAddressRecord withoutAddress() {
+		return new NameAddressRecord(uuid, name, null, timeRecorded);
 	}
 
 	@Override

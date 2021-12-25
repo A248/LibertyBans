@@ -79,15 +79,16 @@
 				<configuration>
 					<ignoreFutureMigrations>false</ignoreFutureMigrations>
 					<validateMigrationNaming>true</validateMigrationNaming>
-					<group>true</group>
 
 					<url>jdbc:hsqldb:file:${project.build.directory}/schema-gen/database;shutdown=true</url>
 					<driver>org.hsqldb.jdbc.JDBCDriver</driver>
 					<user>SA</user>
 					<password/>
 
+					<table>schema_history</table>
 					<placeholders>
 						<tableprefix/>
+						<zeroeighttableprefix>zeroeight_</zeroeighttableprefix>
 						<generatedcolumnsuffix/>
 						<extratableoptions/>
 						<uuidtype>UUID</uuidtype>
@@ -96,7 +97,8 @@
 					</placeholders>
 					<locations>
 						<location>filesystem:src/main/resources/database-migrations</location>
-						<location>filesystem:src/test/resources/extra-database-migrations-for-codegen</location>
+						<location>filesystem:src/test/resources/extra-database-migrations/codegen</location>
+						<location>filesystem:src/test/resources/extra-database-migrations/zeroeight</location>
 					</locations>
 				</configuration>
 			</plugin>
@@ -133,7 +135,7 @@
 							<excludes>flyway_schema_history</excludes>
 							<excludes>(?i:information_schema\..*)|(?i:system_lobs\..*)</excludes>
 							<inputSchema>PUBLIC</inputSchema>
-							<schemaVersionProvider>SELECT :schema_name || '_' || MAX("version") FROM "flyway_schema_history"</schemaVersionProvider>
+							<schemaVersionProvider>SELECT :schema_name || '_' || MAX("version") FROM "schema_history"</schemaVersionProvider>
 							<forcedTypes>
 								<forcedType>
 									<userType>java.util.UUID</userType>

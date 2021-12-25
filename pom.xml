@@ -62,7 +62,7 @@
 		<plugin.description>${project.description}</plugin.description>
 		
 		<!-- Database revision table -->
-		<dbrevision.major>2</dbrevision.major>
+		<dbrevision.major>3</dbrevision.major>
 		<dbrevision.minor>0</dbrevision.minor>
 
 		<!-- Skip javadocs and sources by default -->
@@ -140,6 +140,7 @@
 					<version>3.8.1</version>
 					<configuration>
 						<release>11</release>
+						<testRelease>17</testRelease>
 					</configuration>
 				</plugin>
 				<plugin>

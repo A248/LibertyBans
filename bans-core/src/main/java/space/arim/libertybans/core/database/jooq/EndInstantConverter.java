@@ -27,6 +27,9 @@ import java.time.Instant;
 public final class EndInstantConverter implements Converter<Long, Instant> {
 	@Override
 	public Instant from(Long databaseObject) {
+		if (databaseObject == null) {
+			return null;
+		}
 		long end = databaseObject;
 		if (end == 0L) {
 			return Instant.MAX;
@@ -36,6 +39,9 @@ public final class EndInstantConverter implements Converter<Long, Instant> {
 
 	@Override
 	public Long to(Instant userObject) {
+		if (userObject == null) {
+			return null;
+		}
 		if (userObject.equals(Instant.MAX)) {
 			return 0L;
 		}

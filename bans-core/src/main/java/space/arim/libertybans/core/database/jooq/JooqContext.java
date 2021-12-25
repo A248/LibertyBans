@@ -39,6 +39,7 @@ public final class JooqContext {
 		this.dialect = Objects.requireNonNull(dialect, "dialect");
 	}
 
+	private static final Pattern MATCH_ALL_EXCEPT_INFORMATION_SCHEMA = Pattern.compile("^(?!INFORMATION_SCHEMA)(.*?)$");
 	static final Pattern MATCH_ALL = Pattern.compile("^(.*?)$");
 	static final String REPLACEMENT = "libertybans_$0";
 
@@ -50,7 +51,7 @@ public final class JooqContext {
 						.withRenderSchema(false)
 						.withRenderMapping(new RenderMapping()
 								.withSchemata(new MappedSchema()
-										.withInputExpression(MATCH_ALL)
+										.withInputExpression(MATCH_ALL_EXCEPT_INFORMATION_SCHEMA)
 										.withTables(new MappedTable()
 												.withInputExpression(MATCH_ALL)
 												.withOutput(REPLACEMENT)
