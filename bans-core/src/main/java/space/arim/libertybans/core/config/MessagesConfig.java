@@ -232,6 +232,33 @@ public interface MessagesConfig {
 		})
 		Map<PunishmentType, String> punishmentTypeDisplay();
 
+		@ConfKey("punishment-type-verb-display")
+		@ConfComments("How should punishment types be displayed as a verb?")
+		@DefaultMap({
+				"ban", "Banned",
+				"mute", "Muted",
+				"warn", "Warned",
+				"kick", "Kicked"
+		})
+		Map<PunishmentType, String> punishmentTypeVerbDisplay();
+
+		@ConfKey("punishment-active-display")
+		@ConfComments("How should the %IS_ACTIVE% variable be displayed?")
+		@SubSection
+		PunishmentActiveDisplay punishmentActiveDisplay();
+
+		interface PunishmentActiveDisplay {
+
+			@ConfComments("How do you describe an active punishments stats?")
+			@DefaultString("Active")
+			String active();
+
+			@ConfComments("How do you describe an expired punishments state?")
+			@DefaultString("Expired")
+			String expired();
+
+		}
+
 	}
 	
 	@SubSection

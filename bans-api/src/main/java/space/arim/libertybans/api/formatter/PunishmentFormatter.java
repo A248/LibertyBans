@@ -41,6 +41,14 @@ public interface PunishmentFormatter {
 	String formatPunishmentType(PunishmentType type);
 
 	/**
+	 * Formats a punishment type as a verb according to the configuration
+	 *
+	 * @param type the punishment type to format
+	 * @return the formatted string
+	 */
+	String formatPunishmentTypeVerb(PunishmentType type);
+
+	/**
 	 * Gets the configured timezone
 	 * 
 	 * @return the zone id used for displaying dates

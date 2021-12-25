@@ -216,11 +216,14 @@ public class ListCommands extends AbstractSubCommandGroup {
 
 			String pageString = Integer.toString(page);
 			String nextPageString = Integer.toString(page + 1);
+			String previousPageString = Integer.toString(page - 1);
 			class HeaderFooterReplacer implements UnaryOperator<String> {
 				@Override
 				public String apply(String str) {
 					str = str.replace("%PAGE%", pageString)
-							.replace("%NEXTPAGE%", nextPageString);
+							.replace("%NEXTPAGE%", nextPageString)
+							.replace("%PREVIOUSPAGE%", previousPageString)
+							.replace("%PREVPAGE%", previousPageString);
 					return replaceTargetIn(str);
 				}
 			}
