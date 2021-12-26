@@ -51,6 +51,7 @@ import space.arim.libertybans.core.alts.AltsSection;
 		"",
 		"%ID% - punishment ID number",
 		"%TYPE% - punishment type, e.g. 'Ban'",
+		"%TYPE_VERB% - punishment type as a verb, e.g. 'Banned'",
 		"%VICTIM% - display name of the victim of the punishment",
 		"%VICTIM_ID% - internal identifier of victim",
 		"%OPERATOR% - display name of the staff member who made the punishment",
@@ -62,11 +63,16 @@ import space.arim.libertybans.core.alts.AltsSection;
 		"%DURATION% - original duration (how long the punishment was made for)",
 		"%START_DATE% - the date the punishment was created",
 		"%TIME_PASSED% - the time since the punishment was created",
+		"%TIME_PASSED_SIMPLE% - the time since the punishment was created, rounded to the biggest time unit possible (e.g. 2 months instead of 1 month 23 days)",
 		"%END_DATE% - the date the punishment will end, or formatting.permanent-display.absolute for permanent punishments",
 		"%TIME_REMAINING% - the time until the punishment ends, or formatting.permanent-display.relative for permanent punishments",
+		"%TIME_REMAINING_SIMPLE% - the time until the punishment ends, rounded to the biggest time unit possible (e.g. 10 days instead of 9 days 13 hours)",
+		"%HAS_EXPIRED% - Shows if a punishments duration has run out. Does not check if the punishment is revoked!",
 		"",
 		"The following variables have limited availability:",
 		"%TARGET% - the original target argument of a command. For example, in '/ipban Player1', %TARGET% is Player1",
+		"%NEXTPAGE% - the number of the next page of a list like history",
+		"%PREVIOUSPAGE% - the number of the previous page of a list like history",
 		"",
 		""})
 public interface MessagesConfig {
@@ -233,7 +239,7 @@ public interface MessagesConfig {
 		Map<PunishmentType, String> punishmentTypeDisplay();
 
 		@ConfKey("punishment-type-verb-display")
-		@ConfComments("How should punishment types be displayed as a verb?")
+		@ConfComments("How should punishment types be displayed as a verb? Used for the %TYPE_VERB% variable.")
 		@DefaultMap({
 				"ban", "Banned",
 				"mute", "Muted",
@@ -242,18 +248,18 @@ public interface MessagesConfig {
 		})
 		Map<PunishmentType, String> punishmentTypeVerbDisplay();
 
-		@ConfKey("punishment-active-display")
-		@ConfComments("How should the %IS_ACTIVE% variable be displayed?")
+		@ConfKey("punishment-expired-display")
+		@ConfComments("How should the %HAS_EXPIRED% variable be displayed?")
 		@SubSection
-		PunishmentActiveDisplay punishmentActiveDisplay();
+		PunishmentExpiredDisplay punishmentActiveDisplay();
 
-		interface PunishmentActiveDisplay {
+		interface PunishmentExpiredDisplay {
 
-			@ConfComments("How do you describe an active punishments stats?")
-			@DefaultString("Active")
-			String active();
+			@ConfComments("How do you describe a punishment that's not expired?")
+			@DefaultString("Not expired")
+			String notExpired();
 
-			@ConfComments("How do you describe an expired punishments state?")
+			@ConfComments("How do you describe an expired punishment?")
 			@DefaultString("Expired")
 			String expired();
 

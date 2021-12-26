@@ -222,8 +222,7 @@ public class ListCommands extends AbstractSubCommandGroup {
 				public String apply(String str) {
 					str = str.replace("%PAGE%", pageString)
 							.replace("%NEXTPAGE%", nextPageString)
-							.replace("%PREVIOUSPAGE%", previousPageString)
-							.replace("%PREVPAGE%", previousPageString);
+							.replace("%PREVIOUSPAGE%", previousPageString);
 					return replaceTargetIn(str);
 				}
 			}

@@ -151,7 +151,7 @@ public class Formatter implements InternalFormatter {
 		END_DATE,
 		TIME_REMAINING,
 		TIME_REMAINING_SIMPLE,
-		IS_ACTIVE;
+		HAS_EXPIRED;
 		
 		String getVariable() {
 			return "%" + name() + "%";
@@ -176,9 +176,9 @@ public class Formatter implements InternalFormatter {
 
 		final long timePassed = now - start;
 
-		final String durationFormatted, durationFormattedSimple;
+		final String durationFormatted;
 		final String relativeEndFormatted, relativeEndFormattedSimple;
-		boolean isActive = false;
+		boolean notExpired = false;
 
 		if (punishment.isPermanent()) {
 			// Permanent punishment
@@ -186,7 +186,7 @@ public class Formatter implements InternalFormatter {
 			durationFormatted = display.duration();
 			relativeEndFormatted = display.relative();
 			relativeEndFormattedSimple = relativeEndFormatted;
-			isActive = true;
+			notExpired = true;
 
 		} else {
 			final long end = punishment.getEndDateSeconds();
@@ -194,14 +194,13 @@ public class Formatter implements InternalFormatter {
 			// Temporary punishment
 			long duration = end - start;
 			durationFormatted = formatRelative(duration);
-			durationFormattedSimple = formatRelativeSimple(duration);
 
 			if (timePassed < MARGIN_OF_INITIATION) {
 				// Punishment recently enacted
 				// Using a margin of initiation prevents the "29 days, 23 hours, 59 minutes" issue
 				relativeEndFormatted = durationFormatted;
-				relativeEndFormattedSimple = durationFormattedSimple;
-				isActive = true;
+				relativeEndFormattedSimple = formatRelativeSimple(duration);
+				notExpired = true;
 
 			} else if (timePassed >= duration) {
 				// Expired punishment
@@ -212,7 +211,7 @@ public class Formatter implements InternalFormatter {
 				long timeRemaining = end - now;
 				relativeEndFormatted = formatRelative(timeRemaining);
 				relativeEndFormattedSimple = formatRelativeSimple(timeRemaining);
-				isActive = true;
+				notExpired = true;
 			}
 		}
 
@@ -233,8 +232,8 @@ public class Formatter implements InternalFormatter {
 		simpleReplacements.put(SimpleReplaceable.END_DATE, formatAbsoluteDate(punishment.getEndDate()));
 		simpleReplacements.put(SimpleReplaceable.TIME_REMAINING, relativeEndFormatted);
 		simpleReplacements.put(SimpleReplaceable.TIME_REMAINING_SIMPLE, relativeEndFormattedSimple);
-		MessagesConfig.Formatting.PunishmentActiveDisplay display = messages().formatting().punishmentActiveDisplay();
-		simpleReplacements.put(SimpleReplaceable.IS_ACTIVE, (display != null) ? ((isActive) ? display.active() : display.expired()) : "Unknown");
+		MessagesConfig.Formatting.PunishmentExpiredDisplay display = messages().formatting().punishmentActiveDisplay();
+		simpleReplacements.put(SimpleReplaceable.HAS_EXPIRED, (display != null) ? ((notExpired) ? display.notExpired() : display.expired()) : "Unknown"); // null check needed for tests
 
 		return simpleReplacements;
 	}
