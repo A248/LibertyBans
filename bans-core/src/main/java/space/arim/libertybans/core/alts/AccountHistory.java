@@ -69,7 +69,7 @@ public class AccountHistory {
 	}
 
 	/**
-	 * Selects known accounts for a uuidField or IP address. <br>
+	 * Selects known accounts for a uuid or IP address. <br>
 	 * <br>
 	 * The returned accounts are sorted with the oldest first. See {@link AltDetection}
 	 * for a description of why this sort order is used.

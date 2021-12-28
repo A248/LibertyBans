@@ -32,12 +32,11 @@ import org.slf4j.LoggerFactory;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.database.jooq.OperatorBinding;
 import space.arim.libertybans.core.database.sql.SequenceValue;
-import space.arim.libertybans.core.database.sql.SerializedVictim;
 import space.arim.libertybans.core.database.sql.VictimCondition;
+import space.arim.libertybans.core.database.sql.VictimData;
 import space.arim.libertybans.core.database.sql.VictimTableFields;
 import space.arim.libertybans.core.schema.Sequences;
 import space.arim.libertybans.core.schema.tables.Bans;
@@ -172,7 +171,7 @@ public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 				.from(ZEROEIGHT_HISTORY)
 				.fetch()
 				.forEach((record) -> {
-					Victim victim = new Victim08x(record.value2(), record.value1()).deserialize();
+					VictimData victim = new Victim08x(record.value2(), record.value1()).deserialize();
 					Integer existingVictimId = context
 							.select(VICTIMS.ID)
 							.from(VICTIMS)
@@ -183,15 +182,14 @@ public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 						// Victim already inserted
 						return;
 					}
-					SerializedVictim serializedVictim = new SerializedVictim(victim);
 					context
 							.insertInto(VICTIMS)
 							.columns(VICTIMS.ID, VICTIMS.TYPE, VICTIMS.UUID, VICTIMS.ADDRESS)
 							.values(
 									new SequenceValue<>(Sequences.LIBERTYBANS_VICTIM_IDS).nextValue(context),
-									val(victim.getType(), VICTIMS.TYPE),
-									val(serializedVictim.uuid(), VICTIMS.UUID),
-									val(serializedVictim.address(), VICTIMS.ADDRESS)
+									val(victim.type(), VICTIMS.TYPE),
+									val(victim.uuid(), VICTIMS.UUID),
+									val(victim.address(), VICTIMS.ADDRESS)
 							)
 							.execute();
 				});
@@ -221,7 +219,7 @@ public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 					(batch, record) -> {
 						long punishmentId = record.value1();
 
-						Victim victim = new Victim08x(record.value3(), record.value2()).deserialize();
+						VictimData victim = new Victim08x(record.value3(), record.value2()).deserialize();
 
 						// The victim ID must exist, since every victim was mapped prior
 						Integer victimId = context

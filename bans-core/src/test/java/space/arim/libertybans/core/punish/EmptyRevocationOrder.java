@@ -27,6 +27,7 @@ import space.arim.libertybans.api.punish.RevocationOrder;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
+import java.util.List;
 import java.util.Optional;
 
 public final class EmptyRevocationOrder implements RevocationOrder, EnforcementOpts.Factory {
@@ -48,7 +49,7 @@ public final class EmptyRevocationOrder implements RevocationOrder, EnforcementO
 	}
 
 	@Override
-	public Optional<Victim> getVictim() {
+	public Optional<List<Victim>> getVictims() {
 		throw new UnsupportedOperationException();
 	}
 

@@ -6,6 +6,7 @@
   * [Hex Colors](Color-Codes)
   * [Lenient, Normal, and Strict punishment enforcement](Punishment-Enforcement_-Lenient,-Normal,-and-Strict-settings)
   * [Silent Punishments](Silent-Punishments)
+  * [Composite Punishments](Guide-to-Composite-Punishments)
   * [Running Multiple Instances](Running-Multiple-Instances)
 * Advanced Topics / For Developers
   * [Versioning and Support Policy](Versioning-and-Support-Policies)

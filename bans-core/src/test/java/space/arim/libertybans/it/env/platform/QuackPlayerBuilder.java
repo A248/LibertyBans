@@ -19,8 +19,9 @@
 
 package space.arim.libertybans.it.env.platform;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.it.util.RandomUtil;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Set;
@@ -41,24 +42,18 @@ public final class QuackPlayerBuilder {
 		return this;
 	}
 
-	public QuackPlayer build(UUID uuid, String name, InetAddress address) {
-		var player = new QuackPlayer(platform, uuid, name, address, permissions);
+	public QuackPlayer build(UUID uuid, String name, NetworkAddress address) {
+		var player = new QuackPlayer(platform, uuid, name, address.toInetAddress(), permissions);
 		platform.addPlayer(player);
 		return player;
 	}
 
-	public QuackPlayer buildRandomName(UUID uuid, InetAddress address) {
+	public QuackPlayer buildRandomName(UUID uuid, NetworkAddress address) {
 		return build(uuid, randomName(), address);
 	}
 
 	public QuackPlayer buildFullyRandom() {
-		InetAddress address;
-		try {
-			address = InetAddress.getByAddress(randomBytes(4));
-		} catch (UnknownHostException ex) {
-			throw new IllegalStateException(ex);
-		}
-		return buildRandomName(UUID.randomUUID(), address);
+		return buildRandomName(UUID.randomUUID(), RandomUtil.randomAddress());
 	}
 
 	private static String randomName() {

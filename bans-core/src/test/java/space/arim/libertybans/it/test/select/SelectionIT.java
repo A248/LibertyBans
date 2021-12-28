@@ -98,9 +98,9 @@ public class SelectionIT {
 		assertEmpty(selectionBuilder(type).operator(operator).victim(victim));
 		assertEmpty(selectionBuilder(type).scope(scopeManager.specificScope("servername")));
 		assertEmpty(selectionBuilder(type).victim(victim).scope(scopeManager.specificScope("servername")));
-		assertEmpty(selectionBuilder(type).maximumToRetrieve(20));
-		assertEmpty(selectionBuilder(type).operator(operator).maximumToRetrieve(20));
-		assertEmpty(selectionBuilder(type).victim(victim).skipFirstRetrieved(10).maximumToRetrieve(30));
+		assertEmpty(selectionBuilder(type).limitToRetrieve(20));
+		assertEmpty(selectionBuilder(type).operator(operator).limitToRetrieve(15));
+		assertEmpty(selectionBuilder(type).victim(victim).skipFirstRetrieved(10).limitToRetrieve(30));
 		assertEmpty(selectionBuilder(type).selectAll().victim(victim).operator(operator));
 		assertEmpty(selectionBuilder(type).selectAll().scope(scopeManager.specificScope("otherserver")));
 	}
@@ -154,7 +154,11 @@ public class SelectionIT {
 				getPunishments(selectionBuilder(type).victim(victim).skipFirstRetrieved(1)));
 		assertEquals(
 				List.of(pun3),
-				getPunishments(selectionBuilder(type).victim(victim).maximumToRetrieve(1)));
+				getPunishments(selectionBuilder(type).victim(victim).limitToRetrieve(1)));
+		assertEquals(
+				List.of(pun2),
+				getPunishments(selectionBuilder(type).victim(victim).skipFirstRetrieved(1).limitToRetrieve(1))
+		);
 	}
 
 	@TestTemplate
@@ -185,7 +189,7 @@ public class SelectionIT {
 				getPunishments(selectionBuilder(type).victim(victim).selectAll().skipFirstRetrieved(2)));
 		assertEquals(
 				List.of(active, expired2),
-				getPunishments(selectionBuilder(type).victim(victim).selectAll().maximumToRetrieve(2)));
+				getPunishments(selectionBuilder(type).victim(victim).selectAll().limitToRetrieve(2)));
 	}
 
 	@TestTemplate

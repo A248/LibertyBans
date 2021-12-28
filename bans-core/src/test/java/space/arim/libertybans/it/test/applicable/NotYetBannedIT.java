@@ -21,11 +21,10 @@ package space.arim.libertybans.it.test.applicable;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
+import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetAddressStrictness;
 import space.arim.libertybans.it.util.RandomUtil;
-
-import java.net.InetAddress;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
 public class NotYetBannedIT {
@@ -40,7 +39,7 @@ public class NotYetBannedIT {
 	@TestTemplate
 	@SetAddressStrictness(all = true)
 	public void testNoOneIsBanned() {
-		InetAddress commonAddress = RandomUtil.randomAddress();
+		NetworkAddress commonAddress = RandomUtil.randomAddress();
 
 		User userOne = User.randomUser();
 		User userTwo = User.randomUser();

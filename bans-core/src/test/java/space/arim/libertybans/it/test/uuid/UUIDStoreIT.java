@@ -16,6 +16,7 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.it.test.uuid;
 
 import org.junit.jupiter.api.TestTemplate;
@@ -27,7 +28,6 @@ import space.arim.libertybans.core.punish.Guardian;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
-import space.arim.libertybans.it.util.RandomUtil;
 
 import java.time.Duration;
 import java.util.UUID;
@@ -35,6 +35,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static space.arim.libertybans.it.util.RandomUtil.randomAddress;
 import static space.arim.libertybans.it.util.RandomUtil.randomName;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
@@ -44,10 +45,6 @@ public class UUIDStoreIT {
 
 	public UUIDStoreIT(UUIDManager uuidManager) {
 		this.uuidManager = uuidManager;
-	}
-
-	private static NetworkAddress randomAddress() {
-		return NetworkAddress.of(RandomUtil.randomAddress());
 	}
 
 	private String lookupName(UUID uuid) {

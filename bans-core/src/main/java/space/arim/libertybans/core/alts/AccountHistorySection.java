@@ -47,10 +47,6 @@ public interface AccountHistorySection {
 		@ConfDefault.DefaultString("&cYou may not delete recorded accounts.")
 		Component permission();
 
-		@ConfKey("not-by-address")
-		@ConfDefault.DefaultString("&cIt is not possible to delete recorded accounts by IP address.")
-		Component notByAddress();
-
 		@ConfKey("no-such-account")
 		@ConfDefault.DefaultString("&c%TARGET% has no recorded account for the specified timestamp.")
 		ComponentText noSuchAccount();

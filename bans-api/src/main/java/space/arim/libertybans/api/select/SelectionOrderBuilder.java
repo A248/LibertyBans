@@ -1,27 +1,31 @@
-/* 
- * LibertyBans-api
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-api is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-api is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-api. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.api.select;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
+
+import java.time.Instant;
 
 /**
  * Builder of {@link SelectionOrder}s. No required details
@@ -32,40 +36,87 @@ import space.arim.libertybans.api.scope.ServerScope;
 public interface SelectionOrderBuilder {
 
 	/**
-	 * Sets the punishment type matched. Use {@code null} to match all types, which is
-	 * the default behavior
+	 * Sets the punishment type matched
 	 * 
-	 * @param type the punishment type or {@code null} for all types
+	 * @param type the punishment type
 	 * @return this builder
 	 */
-	SelectionOrderBuilder type(PunishmentType type);
+	default SelectionOrderBuilder type(PunishmentType type) {
+		return types(SelectionPredicate.matchingOnly(type));
+	}
 
 	/**
-	 * Sets the victim matched. Use {@code null} to match all victims, which is the
-	 * default behavior
-	 * 
-	 * @param victim the victim or {@code null} for all victims
+	 * Sets the punishment types matched
+	 *
+	 * @param types the punishment type predicate
 	 * @return this builder
 	 */
-	SelectionOrderBuilder victim(Victim victim);
+	SelectionOrderBuilder types(SelectionPredicate<PunishmentType> types);
 
 	/**
-	 * Sets the operator matched. Use {@code null} to match all operators, which is
-	 * the default behavior
+	 * Sets the victim matched. Please see {@link #victims(SelectionPredicate)} for how this
+	 * interacts with composite victims.
 	 * 
-	 * @param operator the operator or {@code null} for all operators
+	 * @param victim the victim
 	 * @return this builder
 	 */
-	SelectionOrderBuilder operator(Operator operator);
+	default SelectionOrderBuilder victim(Victim victim) {
+		return victims(SelectionPredicate.matchingOnly(victim));
+	}
 
 	/**
-	 * Sets the scope matched. Use {@code null} to match all scopes, which is the
-	 * default behavior
-	 * 
-	 * @param scope the scope or {@code null} for all scopes
+	 * Sets the victims matched. <br>
+	 * <br>
+	 * Composite victims have somewhat special handling which reflects their purpose as an "either-or"
+	 * kind of victim. That is, specifying a composite victim in set of the accepted victims will
+	 * select all punishments which <i>partially</i> but not entirely match that composite victim.
+	 * Formally, if the selected victim is a composite victim, and its UUID matches the specified
+	 * composite victim  OR its address matches the specified composite, then the selected victim is matched. <br>
+	 * <br>
+	 * For example, specifying a composite victim of <code>new UUID(1, 1)</code> and address 127.0.0.1
+	 * will match all composite victims whose UUID is <code>new UUID(1, 1)</code> OR whose address is
+	 * 127.0.0.1. However, specifying a composite victim will <i>not</i> match other kinds of victims.
+	 *
+	 * @param victims the victim predicate
 	 * @return this builder
 	 */
-	SelectionOrderBuilder scope(ServerScope scope);
+	SelectionOrderBuilder victims(SelectionPredicate<Victim> victims);
+
+	/**
+	 * Sets the operator matched
+	 * 
+	 * @param operator the operator
+	 * @return this builder
+	 */
+	default SelectionOrderBuilder operator(Operator operator) {
+		return operators(SelectionPredicate.matchingOnly(operator));
+	}
+
+	/**
+	 * Sets the operators matched
+	 *
+	 * @param operators the operator predicate
+	 * @return this builder
+	 */
+	SelectionOrderBuilder operators(SelectionPredicate<Operator> operators);
+
+	/**
+	 * Sets the scope matched
+	 * 
+	 * @param scope the scope
+	 * @return this builder
+	 */
+	default SelectionOrderBuilder scope(ServerScope scope) {
+		return scopes(SelectionPredicate.matchingOnly(scope));
+	}
+
+	/**
+	 * Sets the scopes matched
+	 *
+	 * @param scopes the scope predicate
+	 * @return this builder
+	 */
+	SelectionOrderBuilder scopes(SelectionPredicate<ServerScope> scopes);
 
 	/**
 	 * Sets whether only active punishments should be matched. True by default,
@@ -107,8 +158,11 @@ public interface SelectionOrderBuilder {
 	 * Sets the amount of punishments to skip when retrieving. No punishments are
 	 * skipped by default. <br>
 	 * <br>
-	 * For example, this may be used to implement pagination on a user interface.
-	 * Punishments on earlier pages need not be displayed.
+	 * This method may be used to implement offset pagination of selected punishments,
+	 * together with {@link #limitToRetrieve(int)}. <br>
+	 * <br>
+	 * Behavior is unspecified if this is used simultaneously with {@link #seekAfter(Instant, long)}.
+	 * Callers should consider the methods exclusive to avoid unspecified behavior.
 	 * 
 	 * @param skipCount the amount of punishments to skip
 	 * @return this builder
@@ -117,18 +171,42 @@ public interface SelectionOrderBuilder {
 	SelectionOrderBuilder skipFirstRetrieved(int skipCount);
 
 	/**
-	 * Sets the maximum amount of punishments to retrieve. Unlimited by default.
+	 * Sets the amount of punishments to retrieve. Unlimited by default.
 	 * <br>
 	 * <br>
-	 * Note: If this is used with {@link #skipFirstRetrieved(int)}, the amount of
-	 * punishments retrieved is equal to {@code maximumToRetrieve - skipCount}
+	 * If this is used with {@link #skipFirstRetrieved(int)}, the amount of punishments
+	 * retrieved is still equal to {@code limitToRetrieve}. In other words, this
+	 * method is the same as SQL's {@code LIMIT} clause.
 	 * 
-	 * @param maximumToRetrieve the max amount of punishments to retrieve, {@code 0}
-	 *                          for unlimited
+	 * @param limitToRetrieve the amount of punishments to retrieve, {@code 0} for unlimited
 	 * @return this builder
-	 * @throws IllegalArgumentException if {@code maximumToRetrieve} is negative
+	 * @throws IllegalArgumentException if {@code limitToRetrieve} is negative
 	 */
-	SelectionOrderBuilder maximumToRetrieve(int maximumToRetrieve);
+	SelectionOrderBuilder limitToRetrieve(int limitToRetrieve);
+
+	/**
+	 * Sets the time after which punishments will be retrieved. Only punishments whose
+	 * start time ({@link Punishment#getStartDate()}) is after or equal to the given value will be
+	 * selected. <br>
+	 * <br>
+	 * If a punishment has a start time equal to {@code minimumStartTime}, its ID will be checked against
+	 * {@code minimumId}. The punishment will then be selected if its ID is equal to or greater than
+	 * {@code minimumId}. <br>
+	 * <br>
+	 * To reset this option to the default value, use a minimum start time of {@link Instant#EPOCH},
+	 * in which case the minimum ID is ignored.
+	 * <br>
+	 * This method may be used to implement keyset pagination of selected punishments,
+	 * together with {@link #limitToRetrieve(int)}. <br>
+	 * <br>
+	 * Behavior is unspecified if this is used simultaneously with {@link #skipFirstRetrieved(int)}.
+	 * Callers should consider the methods exclusive to avoid unspecified behavior.
+	 *
+	 * @param minimumStartTime the minimum start time, or {@code Instant.EPOCH} to reset this option
+	 * @param minimumId the minimum ID
+	 * @return this builder
+	 */
+	SelectionOrderBuilder seekAfter(Instant minimumStartTime, long minimumId);
 
 	/**
 	 * Builds a {@link SelectionOrder} from the details of this builder. May be used

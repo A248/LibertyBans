@@ -50,11 +50,6 @@ class SecurePunishment extends AbstractPunishmentBase implements Punishment, Enf
 	}
 
 	@Override
-	public int getID() {
-		return (int) id;
-	}
-
-	@Override
 	public long getIdentifier() {
 		return id;
 	}

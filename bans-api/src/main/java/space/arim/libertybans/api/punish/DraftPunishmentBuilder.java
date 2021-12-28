@@ -20,6 +20,7 @@ package space.arim.libertybans.api.punish;
 
 import java.time.Duration;
 
+import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
@@ -45,10 +46,15 @@ public interface DraftPunishmentBuilder {
 	DraftPunishmentBuilder type(PunishmentType type);
 
 	/**
-	 * Sets the victim of this builder to the specified one. Required operation
+	 * Sets the victim of this builder to the specified one. Required operation. <br>
+	 * <br>
+	 * If the victim is a {@code CompositeVictim}, it cannot use either {@link CompositeVictim#WILDCARD_UUID}
+	 * or {@link CompositeVictim#WILDCARD_ADDRESS}
 	 * 
 	 * @param victim the victim of the punishmnt
 	 * @return this builder
+	 * @throws IllegalArgumentException if the victim is a {@code CompositeVictim} and uses either
+	 * {@code WILDCARD_UUID} or {@code WILDCARD_ADDRESS}
 	 */
 	DraftPunishmentBuilder victim(Victim victim);
 

@@ -28,6 +28,10 @@ import space.arim.libertybans.core.punish.MiscUtil;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.jooq.impl.DSL.noCondition;
+import static space.arim.libertybans.api.CompositeVictim.WILDCARD_ADDRESS;
+import static space.arim.libertybans.api.CompositeVictim.WILDCARD_UUID;
+
 public final class VictimCondition {
 
 	private final VictimFields fields;
@@ -65,7 +69,13 @@ public final class VictimCondition {
 		case ADDRESS:
 			return fields.victimAddress().eq(victim.address());
 		case COMPOSITE:
-			return fields.victimUuid().eq(victim.uuid()).and(fields.victimAddress().eq(victim.address()));
+			UUID uuid = victim.uuid();
+			NetworkAddress address = victim.address();
+			Condition uuidCondition = (uuid.equals(WILDCARD_UUID)) ?
+					noCondition() : fields.victimUuid().eq(uuid);
+			Condition addressCondition = (address.equals(WILDCARD_ADDRESS)) ?
+					noCondition() : fields.victimAddress().eq(address);
+			return uuidCondition.and(addressCondition);
 		default:
 			throw MiscUtil.unknownVictimType(victimType);
 		}
@@ -80,8 +90,7 @@ public final class VictimCondition {
 	}
 
 	@Override
-	public String
-	toString() {
+	public String toString() {
 		return "VictimCondition{" +
 				"fields.type()=" + fields.victimType() +
 				", fields.victimUuid()=" + fields.victimUuid() +

@@ -32,7 +32,6 @@ import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.test.applicable.StrictnessAssertHelper;
 import space.arim.libertybans.it.util.RandomUtil;
 
-import java.net.InetAddress;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,7 +49,7 @@ public class SelectorIT {
 	@TestTemplate
 	public void selectMute(InternalSelector selector, PunishmentDrafter drafter) {
 		UUID uuid = UUID.randomUUID();
-		InetAddress address = RandomUtil.randomAddress();
+		NetworkAddress address = RandomUtil.randomAddress();
 		assertHelper.connectAndAssumeUnbannedUser(uuid, "name", address);
 		Punishment punishment = drafter.draftBuilder()
 				.type(PunishmentType.MUTE)
@@ -60,6 +59,6 @@ public class SelectorIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
-		assertEquals(punishment, selector.getApplicableMute(uuid, NetworkAddress.of(address)).join());
+		assertEquals(punishment, selector.getApplicableMute(uuid, address).join());
 	}
 }

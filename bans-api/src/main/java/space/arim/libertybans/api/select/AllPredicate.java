@@ -17,28 +17,31 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.api.event;
+package space.arim.libertybans.api.select;
 
-import space.arim.omnibus.events.AsyncEvent;
+import java.util.Set;
 
-import space.arim.libertybans.api.punish.Punishment;
+final class AllPredicate extends SelectionPredicate<Object> {
 
-/**
- * Called after a punishment has been enacted
- * 
- * @author A248
- *
- */
-public interface PostPunishEvent extends AsyncEvent {
+	private static final AllPredicate INSTANCE = new AllPredicate();
 
-	/**
-	 * Gets the punishment which was put into place. <br>
-	 * <br>
-	 * The punishment includes the operator who is enacting this punishment, the
-	 * victim who is being punished, and several other details.
-	 * 
-	 * @return the punishment
-	 */
-	Punishment getPunishment();
+	@SuppressWarnings("unchecked")
+	static <U> SelectionPredicate<U> instance() {
+		return (SelectionPredicate<U>) INSTANCE;
+	}
 
+	@Override
+	public Set<Object> acceptedValues() {
+		return Set.of();
+	}
+
+	@Override
+	public Set<Object> rejectedValues() {
+		return Set.of();
+	}
+
+	@Override
+	public String toString() {
+		return "AllPredicate.INSTANCE";
+	}
 }

@@ -44,7 +44,7 @@ class DraftPunishmentBuilderImpl implements DraftPunishmentBuilder {
 		this.enactor = enactor;
 		scope = enactor.scopeManager().globalScope();
 	}
-	
+
 	@Override
 	public DraftPunishmentBuilder type(PunishmentType type) {
 		this.type = Objects.requireNonNull(type, "type");
@@ -53,6 +53,7 @@ class DraftPunishmentBuilderImpl implements DraftPunishmentBuilder {
 
 	@Override
 	public DraftPunishmentBuilder victim(Victim victim) {
+		MiscUtil.checkNoCompositeVictimWildcards(victim);
 		this.victim = Objects.requireNonNull(victim, "victim");
 		return this;
 	}

@@ -19,19 +19,31 @@
 
 package space.arim.libertybans.core.commands.extra;
 
-import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.core.env.CmdSender;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.libertybans.core.commands.CommandPackage;
 
-import java.util.UUID;
+import java.util.Objects;
 
-public interface ArgumentParser {
+/**
+ * Accept only the -both argument, and do not use the composite-by-default config option
+ */
+public final class ParsePlayerVictimCompositeByCmdOnly implements ParseVictim {
 
-	CentralisedFuture<UUID> parseOrLookupUUID(CmdSender sender, String targetArg);
+	private final CommandPackage command;
 
-	CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg, ParseVictim how);
+	public ParsePlayerVictimCompositeByCmdOnly(CommandPackage command) {
+		this.command = Objects.requireNonNull(command, "command");
+	}
 
-	CentralisedFuture<Operator> parseOperator(CmdSender sender, String operatorArg);
-	
+	@Override
+	public Victim.VictimType preferredType() {
+		return command.findHiddenArgument("both") ? Victim.VictimType.COMPOSITE : Victim.VictimType.PLAYER;
+	}
+
+	@Override
+	public String toString() {
+		return "ParsePlayerVictimCompositeByCmdOnly{" +
+				"command=" + command +
+				'}';
+	}
 }

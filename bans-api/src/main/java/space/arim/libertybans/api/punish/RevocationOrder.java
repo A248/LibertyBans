@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.api.punish;
 
+import java.util.List;
 import java.util.Optional;
 
 import space.arim.omnibus.util.concurrent.ReactionStage;
@@ -54,12 +55,12 @@ public interface RevocationOrder extends EnforcementOptionsFactory {
 	Optional<PunishmentType> getType();
 
 	/**
-	 * Gets the victim whose punishment will be revoked, or none if the victim is
-	 * not known
-	 * 
-	 * @return the victim if there is one
+	 * Gets the victims, one of whose punishment will be revoked, or none if the list of victims
+	 * does not exist
+	 *
+	 * @return the victims if specified
 	 */
-	Optional<Victim> getVictim();
+	Optional<List<Victim>> getVictims();
 
 	/**
 	 * Revokes the punishment matching this revocation order, and "unenforces" it.

@@ -16,20 +16,21 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.it.test.applicable;
 
+import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.it.util.RandomUtil;
 
-import java.net.InetAddress;
 import java.util.Objects;
 import java.util.UUID;
 
 final class User {
 
 	private final UUID uuid;
-	private final InetAddress address;
+	private final NetworkAddress address;
 
-	User(UUID uuid, InetAddress address) {
+	User(UUID uuid, NetworkAddress address) {
 		this.uuid = Objects.requireNonNull(uuid, "uuid");
 		this.address = Objects.requireNonNull(address, "address");
 	}
@@ -42,7 +43,7 @@ final class User {
 		return uuid;
 	}
 
-	InetAddress address() {
+	NetworkAddress address() {
 		return address;
 	}
 

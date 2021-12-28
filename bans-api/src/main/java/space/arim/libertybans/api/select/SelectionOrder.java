@@ -1,33 +1,34 @@
-/* 
- * LibertyBans-api
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-api is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-api is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-api. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.api.select;
-
-import java.util.List;
-import java.util.Optional;
-
-import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.omnibus.util.concurrent.ReactionStage;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * A selection which will match punishments in the database with certain
@@ -42,32 +43,32 @@ import space.arim.libertybans.api.scope.ServerScope;
 public interface SelectionOrder {
 
 	/**
-	 * Gets the punishment type matched, or none to match all types
+	 * Gets the punishment types matched
 	 * 
-	 * @return the punishment type, or none for all types
+	 * @return the punishment types
 	 */
-	Optional<PunishmentType> getType();
+	SelectionPredicate<PunishmentType> getTypes();
 
 	/**
-	 * Gets the victim matched, or none to match all victims
+	 * Gets the victims matched
 	 * 
-	 * @return the victim or none for all victims
+	 * @return the victims
 	 */
-	Optional<Victim> getVictim();
+	SelectionPredicate<Victim> getVictims();
 
 	/**
-	 * Gets the operator matched, or none to match all operators
+	 * Gets the operators matched
 	 * 
-	 * @return the operator or none for all operators
+	 * @return the operators
 	 */
-	Optional<Operator> getOperator();
+	SelectionPredicate<Operator> getOperators();
 
 	/**
-	 * Gets the scope matched, or none to match all scopes
+	 * Gets the scopes matched
 	 * 
-	 * @return the scope or none for all scopes
+	 * @return the scopes
 	 */
-	Optional<ServerScope> getScope();
+	SelectionPredicate<ServerScope> getScopes();
 
 	/**
 	 * Whether this selection will match only active, non-expired punishments. If
@@ -89,13 +90,31 @@ public interface SelectionOrder {
 	int skipCount();
 
 	/**
-	 * Gets the maximum amount of punishments to retrieve. <br>
+	 * Gets the amount of punishments to retrieve. <br>
 	 * <br>
-	 * See {@link SelectionOrderBuilder#maximumToRetrieve(int)}
+	 * See {@link SelectionOrderBuilder#limitToRetrieve(int)}
 	 * 
-	 * @return the maximum amount to retrieve, or {@code 0} for unlimited
+	 * @return the amount to retrieve, or {@code 0} for unlimited
 	 */
-	int maximumToRetrieve();
+	int limitToRetrieve();
+
+	/**
+	 * Gets the minimum start time after which punishments will be selected. <br>
+	 * <br>
+	 * See {@link SelectionOrderBuilder#seekAfter(Instant, long)}
+	 *
+	 * @return the minimum start time, or {@link Instant#EPOCH} for none
+	 */
+	Instant seekAfterStartTime();
+
+	/**
+	 * Gets the minimum ID after which punishments will be selected. <br>
+	 * <br>
+	 * See {@link SelectionOrderBuilder#seekAfter(Instant, long)}
+	 *
+	 * @return the minimum ID, which is meaningless if {@link #seekAfterStartTime()} is {@code Instant.EPOCH}
+	 */
+	long seekAfterId();
 
 	/**
 	 * Gets the first punishment matching this selection, i.e. with the specified

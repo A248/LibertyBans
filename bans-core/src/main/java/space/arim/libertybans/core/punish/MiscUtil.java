@@ -1,32 +1,33 @@
-/* 
- * LibertyBans-api
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-api is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-api is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-api. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.punish;
 
-import java.util.List;
-import java.util.Objects;
-
+import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.database.Vendor;
 import space.arim.libertybans.core.selector.AddressStrictness;
 import space.arim.libertybans.core.selector.SyncEnforcement;
+
+import java.util.List;
 
 public final class MiscUtil {
 	
@@ -57,21 +58,24 @@ public final class MiscUtil {
 	}
 
 	/**
-	 * Checks that {@link PunishmentType#isSingular()} is true
-	 * 
-	 * @param type the punishment type
-	 * @return the same punishment type, for convenience
-	 * @throws NullPointerException if {@code type} is null
-	 * @throws IllegalArgumentException if {@code type} is not singular
+	 * Ensures that the given victim, if it is a composite victim, uses neither {@link CompositeVictim#WILDCARD_UUID}
+	 * or {@link CompositeVictim#WILDCARD_ADDRESS}
+	 *
+	 * @param victim the victim to check
+	 * @throws IllegalArgumentException if the victim is composite and uses wildcards
 	 */
-	static PunishmentType checkSingular(PunishmentType type) {
-		Objects.requireNonNull(type, "type");
-		if (!type.isSingular()) {
-			throw new IllegalArgumentException("The punishment type " + type + " is not singular");
+	static void checkNoCompositeVictimWildcards(Victim victim) {
+		if (victim instanceof CompositeVictim) {
+			CompositeVictim compositeVictim = (CompositeVictim) victim;
+			if (compositeVictim.getUUID().equals(CompositeVictim.WILDCARD_UUID)) {
+				throw new IllegalArgumentException("Punishments cannot be made with CompositeVictim.WILDCARD_UUID");
+			}
+			if (compositeVictim.getAddress().equals(CompositeVictim.WILDCARD_ADDRESS)) {
+				throw new IllegalArgumentException("Punishments cannot be made with CompositeVictim.WILDCARD_ADDRESS");
+			}
 		}
-		return type;
 	}
-	
+
 	/*
 	 * Create exceptions indicating an enum entry was not identified, typically in a switch statement
 	 */

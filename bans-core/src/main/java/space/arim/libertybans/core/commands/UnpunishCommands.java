@@ -20,12 +20,14 @@ package space.arim.libertybans.core.commands;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentRevoker;
 import space.arim.libertybans.api.punish.RevocationOrder;
+import space.arim.libertybans.core.commands.extra.AsCompositeWildcard;
 import space.arim.libertybans.core.commands.extra.NotificationMessage;
 import space.arim.libertybans.core.commands.extra.PunishmentPermissionCheck;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
@@ -39,7 +41,9 @@ import space.arim.libertybans.core.punish.EnforcementOpts;
 import space.arim.libertybans.core.punish.Mode;
 import space.arim.libertybans.core.punish.PunishmentPermission;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
@@ -101,17 +105,13 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 		}
 
 		@Override
-		public void execute() {
+		public ReactionStage<Void> execute() {
 			if (!command().hasNext()) {
 				sender().sendMessage(section.usage());
-				return;
+				return null;
 			}
-			execute0();
-		}
-		
-		private void execute0() {
 			String targetArg = command().next();
-			CentralisedFuture<?> future = parseVictim(sender(), targetArg, type()).thenCompose((victim) -> {
+			return parseVictim(sender(), command(), targetArg, type()).thenCompose((victim) -> {
 				if (victim == null) {
 					return completedFuture(null);
 				}
@@ -126,33 +126,32 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 				}
 				return sendSuccess(punishment, targetArg);
 			});
-			postFuture(future);
 		}
 
 		private CompletionStage<Punishment> performUndo(Victim victim, String targetArg) {
-			CmdSender sender = sender();
-			CommandPackage command = command();
-			PunishmentType type = type();
+			final PunishmentType type = type();
 
 			RevocationOrder revocationOrder;
 			final int id;
 			if (type == PunishmentType.WARN) {
 
-				if (!command.hasNext()) {
-					sender.sendMessage(section.usage());
+				if (!command().hasNext()) {
+					sender().sendMessage(section.usage());
 					return completedFuture(null);
 				}
-				String idArg = command.next();
+				String idArg = command().next();
 				try {
 					id = Integer.parseInt(idArg);
 				} catch (NumberFormatException ignored) {
-					sender.sendMessage(((WarnRemoval) section).notANumber().replaceText("%ID_ARG%", idArg));
+					sender().sendMessage(((WarnRemoval) section).notANumber().replaceText("%ID_ARG%", idArg));
 					return completedFuture(null);
 				}
 				revocationOrder = revoker.revokeByIdAndType(id, type);
 			} else {
 				assert type.isSingular() : type;
-				revocationOrder = revoker.revokeByTypeAndVictim(type, victim);
+				// Try to revoke this punishment for either the simple victim or composite wildcard victim
+				CompositeVictim compositeWildcard = new AsCompositeWildcard().apply(victim);
+				revocationOrder = revoker.revokeByTypeAndPossibleVictims(type, List.of(victim, compositeWildcard));
 				id = -1;
 			}
 			return fireWithTimeout(new PardonEventImpl(sender().getOperator(), victim, type)).thenCompose((event) -> {
@@ -189,7 +188,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 			sender().sendMessage(notFound);
 		}
 
-		private CentralisedFuture<?> sendSuccess(Punishment punishment, String targetArg) {
+		private CentralisedFuture<Void> sendSuccess(Punishment punishment, String targetArg) {
 
 			notificationMessage.evaluate(command()); // Evaluate -s
 
@@ -208,11 +207,11 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 			CentralisedFuture<Component> futureMessage = formatter.formatWithPunishment(
 					section.successMessage().replaceText("%TARGET%", targetArg), punishment);
 
-			var completion = futuresFactory().allOf(unenforcement, futureMessage).thenRun(() -> {
+			return futuresFactory().allOf(unenforcement, futureMessage).thenCompose((ignore) -> {
+				return fireWithTimeout(new PostPardonEventImpl(sender().getOperator(), punishment));
+			}).thenRun(() -> {
 				sender().sendMessage(futureMessage.join());
 			});
-			postFuture(fireWithTimeout(new PostPardonEventImpl(sender().getOperator(), punishment)));
-			return completion;
 		}
 	}
 

@@ -49,6 +49,7 @@ import java.net.UnknownHostException;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -88,7 +89,7 @@ public class PlayerUnpunishCommandsTest {
 
 		when(sender.getOperator()).thenReturn(ConsoleOperator.INSTANCE);
 		when(sender.hasPermission(any())).thenReturn(true);
-		when(argParser.parseVictimByName(sender, address)).thenReturn(futuresFactory.completedFuture(victim));
+		when(argParser.parseVictim(eq(sender), eq(address), any())).thenAnswer((i) -> futuresFactory.completedFuture(victim));
 		when(configs.getMessagesConfig()).thenReturn(messagesConfig);
 		Component notFoundMsg = Component.text("Not found");
 		{
@@ -99,11 +100,16 @@ public class PlayerUnpunishCommandsTest {
 			when(messagesConfig.removals()).thenReturn(removalsSection);
 		}
 
-		when(revoker.revokeByTypeAndVictim(any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory));
+		when(revoker.revokeByTypeAndPossibleVictims(any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory));
 
-		commands.execute(sender, ArrayCommandPackage.create(address), "unban").execute();
+		commands
+				.execute(sender, ArrayCommandPackage.create(address), "unban")
+				.execute()
+				.toCompletableFuture().join();
 
-		verify(revoker).revokeByTypeAndVictim(PunishmentType.BAN, victim);
+		verify(revoker).revokeByTypeAndPossibleVictims(
+				eq(PunishmentType.BAN), argThat(argument -> argument.contains(victim))
+		);
 		verify(sender).sendMessage(argThat(new ComponentMatcher<>(notFoundMsg)));
 	}
 
@@ -118,7 +124,7 @@ public class PlayerUnpunishCommandsTest {
 		lenient().when(sender.getOperator()).thenReturn(ConsoleOperator.INSTANCE);
 		// User has permission for uuidField bans, but not IP bans
 		lenient().when(sender.hasPermission("libertybans.ban.do.target.uuid")).thenReturn(true);
-		when(argParser.parseVictimByName(sender, address)).thenReturn(futuresFactory.completedFuture(victim));
+		when(argParser.parseVictim(eq(sender), eq(address), any())).thenAnswer((i) -> futuresFactory.completedFuture(victim));
 		when(configs.getMessagesConfig()).thenReturn(messagesConfig);
 		Component noPermission = Component.text("No permission");
 		{
@@ -131,9 +137,12 @@ public class PlayerUnpunishCommandsTest {
 			when(removalsSection.forType(PunishmentType.BAN)).thenReturn(punishmentRemoval);
 			when(messagesConfig.removals()).thenReturn(removalsSection);
 		}
-		lenient().when(revoker.revokeByTypeAndVictim(any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory));
+		lenient().when(revoker.revokeByTypeAndPossibleVictims(any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory));
 
-		commands.execute(sender, ArrayCommandPackage.create(address), "unban").execute();
+		commands
+				.execute(sender, ArrayCommandPackage.create(address), "unban")
+				.execute()
+				.toCompletableFuture().join();
 
 		verify(sender).sendMessage(argThat(new ComponentMatcher<>(noPermission)));
 		verifyNoMoreInteractions(revoker);

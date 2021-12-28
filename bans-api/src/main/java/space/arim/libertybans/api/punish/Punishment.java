@@ -49,10 +49,12 @@ public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 	 * Gets the unique ID of this punishment
 	 * 
 	 * @return the ID of the punishment
-	 * @deprecated Use {@link #getIdentifier()}, as punishment IDs now use {@code long}
+	 * @deprecated Use {@link #getIdentifier()} instead
 	 */
 	@Deprecated
-	int getID();
+	default int getID() {
+		return (int) getIdentifier();
+	}
 
 	/**
 	 * Gets the unique ID of this punishment
@@ -62,7 +64,7 @@ public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 	long getIdentifier();
 
 	/**
-	 * Gets the start time of the punishment
+	 * Gets the start time of the punishment, which is when the punishment was created
 	 * 
 	 * @return the state date
 	 */

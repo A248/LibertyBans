@@ -36,6 +36,31 @@ public final class CompositeVictim extends Victim {
 	private final UUID uuid;
 	private final NetworkAddress address;
 
+	/**
+	 * The wildcard (empty) UUID. This is used as a special value in several places where
+	 * victims are accepted, so as to match all composite victims with a given IP address while
+	 * disregarding the UUID. <br>
+	 * <br>
+	 * Punishments cannot be made using this UUID; punishments can only be selected and
+	 * revoked using it.
+	 *
+	 */
+	public static final UUID WILDCARD_UUID = new UUID(0, 0);
+
+	/**
+	 * The wildcard (empty) network address. This is used as a special value in several places
+	 * where victims are accepted, so as to match all composite victims with a given UUID while
+	 * disregarding the IP address. <br>
+	 * <br>
+	 * Punishments cannot be made using this IP address; punishments can only be seleted
+	 * and revoked using it. <br>
+	 * <br>
+	 * If this is combined with {@link #WILDCARD_UUID}, the result is a composite victim which
+	 * will match all composite victims.
+	 *
+	 */
+	public static final NetworkAddress WILDCARD_ADDRESS = NetworkAddress.of(new byte[4]);
+
 	private CompositeVictim(UUID uuid, NetworkAddress address) {
 		this.uuid = Objects.requireNonNull(uuid, "uuid");
 		this.address = Objects.requireNonNull(address, "address");

@@ -24,44 +24,50 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.SelectionOrder;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
+import space.arim.libertybans.api.select.SelectionPredicate;
+
+import java.time.Instant;
+import java.util.Objects;
 
 class SelectionOrderBuilderImpl implements SelectionOrderBuilder {
-	
+
 	private final SelectorImpl selector;
-	
-	private PunishmentType type;
-	private Victim victim;
-	private Operator operator;
-	private ServerScope scope;
+
+	private SelectionPredicate<PunishmentType> types = SelectionPredicate.matchingAll();
+	private SelectionPredicate<Victim> victims = SelectionPredicate.matchingAll();
+	private SelectionPredicate<Operator> operators = SelectionPredicate.matchingAll();
+	private SelectionPredicate<ServerScope> scopes = SelectionPredicate.matchingAll();
 	private boolean selectActiveOnly = true;
 	private int skipCount;
-	private int maximumToRetrieve;
-	
+	private int limitToRetrieve;
+	private Instant seekAfterStartTime = Instant.EPOCH;
+	private long seekAfterId;
+
 	SelectionOrderBuilderImpl(SelectorImpl selector) {
 		this.selector = selector;
 	}
 
 	@Override
-	public SelectionOrderBuilder type(PunishmentType type) {
-		this.type = type;
+	public SelectionOrderBuilder types(SelectionPredicate<PunishmentType> types) {
+		this.types = Objects.requireNonNull(types, "types");
 		return this;
 	}
 
 	@Override
-	public SelectionOrderBuilder victim(Victim victim) {
-		this.victim = victim;
+	public SelectionOrderBuilder victims(SelectionPredicate<Victim> victims) {
+		this.victims = Objects.requireNonNull(victims, "victims");
 		return this;
 	}
 
 	@Override
-	public SelectionOrderBuilder operator(Operator operator) {
-		this.operator = operator;
+	public SelectionOrderBuilder operators(SelectionPredicate<Operator> operators) {
+		this.operators = Objects.requireNonNull(operators, "operator");
 		return this;
 	}
 
 	@Override
-	public SelectionOrderBuilder scope(ServerScope scope) {
-		this.scope = scope;
+	public SelectionOrderBuilder scopes(SelectionPredicate<ServerScope> scopes) {
+		this.scopes = Objects.requireNonNull(scopes, "scopes");
 		return this;
 	}
 
@@ -81,18 +87,28 @@ class SelectionOrderBuilderImpl implements SelectionOrderBuilder {
 	}
 
 	@Override
-	public SelectionOrderBuilder maximumToRetrieve(int maximumToRetrieve) {
-		if (maximumToRetrieve < 0) {
+	public SelectionOrderBuilder limitToRetrieve(int limitToRetrieve) {
+		if (limitToRetrieve < 0) {
 			throw new IllegalArgumentException("Maximum to retrieve must be non-negative");
 		}
-		this.maximumToRetrieve = maximumToRetrieve;
+		this.limitToRetrieve = limitToRetrieve;
+		return this;
+	}
+
+	@Override
+	public SelectionOrderBuilder seekAfter(Instant minimumStartTime, long minimumId) {
+		this.seekAfterStartTime = Objects.requireNonNull(minimumStartTime, "minimumStartTime");
+		this.seekAfterId = minimumId;
 		return this;
 	}
 
 	@Override
 	public SelectionOrder build() {
-		return new SelectionOrderImpl(selector, type, victim, operator, scope,
-				selectActiveOnly, skipCount, maximumToRetrieve);
+		return new SelectionOrderImpl(selector,
+				types, victims, operators, scopes,
+				selectActiveOnly, skipCount, limitToRetrieve,
+				seekAfterStartTime, seekAfterId
+		);
 	}
 	
 }

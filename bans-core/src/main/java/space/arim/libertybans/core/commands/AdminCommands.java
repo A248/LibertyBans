@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.commands;
 
 import jakarta.inject.Inject;
@@ -27,11 +28,11 @@ import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.Environment;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 @Singleton
@@ -83,28 +84,28 @@ public class AdminCommands extends AbstractSubCommandGroup {
 			super(sender, command);
 			this.type = type;
 		}
-		
+
 		@Override
-		public void execute() {
+		public ReactionStage<Void> execute() {
 			if (!sender().hasPermission("libertybans.admin." + type)) {
 				sender().sendMessage(adminConfig().noPermission());
-				return;
+				return null;
 			}
 			switch (type) {
 			case RESTART:
 				restartCmd();
 				break;
 			case RELOAD:
-				reloadCmd();
-				break;
+				return reloadCmd();
 			case DEBUG:
 				debugCmd();
 				break;
 			default:
 				throw new IllegalArgumentException("Command mismatch");
 			}
+			return null;
 		}
-		
+
 		private void restartCmd() {
 			sender().sendMessage(adminConfig().ellipses());
 			boolean restarted = foundation.get().fullRestart();
@@ -115,17 +116,16 @@ public class AdminCommands extends AbstractSubCommandGroup {
 			}
 		}
 		
-		private void reloadCmd() {
+		private ReactionStage<Void> reloadCmd() {
 			sender().sendMessage(adminConfig().ellipses());
-			CompletableFuture<?> reloadFuture = configs().reloadConfigs().thenAccept((result) -> {
+			return futuresFactory().copyFuture(configs().reloadConfigs().thenAccept((result) -> {
 				if (result) {
 					sender().sendMessage(adminConfig().reloaded());
 				} else {
 					sender().sendLiteralMessage(
 							"&cAn error occurred reloading the configuration. Please check the server console.");
 				}
-			});
-			postFuture(futuresFactory().copyFuture(reloadFuture));
+			}));
 		}
 
 		private void debugCmd() {

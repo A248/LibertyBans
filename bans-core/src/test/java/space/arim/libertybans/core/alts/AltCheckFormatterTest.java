@@ -114,13 +114,13 @@ public class AltCheckFormatterTest {
 		}
 		List<DetectedAlt> alts = List.of(
 				new DetectedAlt(DetectionKind.NORMAL,
-						PunishmentType.BAN, NetworkAddress.of(RandomUtil.randomAddress()),
+						PunishmentType.BAN, RandomUtil.randomAddress(),
 						UUID.randomUUID(), "BadUser", date),
 				new DetectedAlt(DetectionKind.STRICT,
-						PunishmentType.MUTE, NetworkAddress.of(RandomUtil.randomAddress()),
+						PunishmentType.MUTE, RandomUtil.randomAddress(),
 						UUID.randomUUID(), "Misbehaver", date),
 				new DetectedAlt(DetectionKind.NORMAL,
-						null, NetworkAddress.of(RandomUtil.randomAddress()),
+						null, RandomUtil.randomAddress(),
 						UUID.randomUUID(), "Saint", date)
 		);
 		Component formattedMessage = altCheckFormatter.formatMessage(

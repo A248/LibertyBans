@@ -18,10 +18,8 @@
  */
 package space.arim.libertybans.it.util;
 
-import org.junit.jupiter.api.Assertions;
+import space.arim.libertybans.api.NetworkAddress;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -36,8 +34,8 @@ public final class RandomUtil {
 	/**
 	 * Generates random bytes of the specified length
 	 *
-	 * @param length
-	 * @return
+	 * @param length the length
+	 * @return the random bytes
 	 */
 	public static byte[] randomBytes(int length) {
 		byte[] result = new byte[length];
@@ -63,12 +61,8 @@ public final class RandomUtil {
 	 * 
 	 * @return the network address 
 	 */
-	public static InetAddress randomAddress() {
-		try {
-			return InetAddress.getByAddress(randomAddressBytes());
-		} catch (UnknownHostException ex) {
-			throw Assertions.<RuntimeException>fail(ex);
-		}
+	public static NetworkAddress randomAddress() {
+		return NetworkAddress.of(randomAddressBytes());
 	}
 
 	/**

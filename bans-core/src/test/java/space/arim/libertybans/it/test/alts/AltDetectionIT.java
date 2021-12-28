@@ -38,7 +38,6 @@ import space.arim.libertybans.core.punish.Guardian;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetTime;
-import space.arim.libertybans.it.util.RandomUtil;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -52,6 +51,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static space.arim.libertybans.core.alts.WhichAlts.ALL_ALTS;
 import static space.arim.libertybans.core.alts.WhichAlts.BANNED_ALTS;
 import static space.arim.libertybans.core.alts.WhichAlts.BANNED_OR_MUTED_ALTS;
+import static space.arim.libertybans.it.util.RandomUtil.randomAddress;
 import static space.arim.libertybans.it.util.RandomUtil.randomName;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
@@ -67,10 +67,6 @@ public class AltDetectionIT {
 		this.altDetection = altDetection;
 		this.guardian = guardian;
 		this.drafter = drafter;
-	}
-
-	private static NetworkAddress randomAddress() {
-		return NetworkAddress.of(RandomUtil.randomAddress());
 	}
 
 	private void testNoAlts(WhichAlts whichAlts) {

@@ -22,10 +22,16 @@ If you are interested in a guide for upgrading to LibertyBans 0.8.x to 1.0.0, wh
   * The handling of transaction serialization failure will not be back-ported to LibertyBans 0.8.x. Much software does not handle transaction serialization failure (including LibertyBans 0.8.x) therefore this is not considered a bug of sufficient importance.
   * Further technical reading: https://stackoverflow.com/questions/7705273/what-are-the-conditions-for-encountering-a-serialization-failure
 * Relevant client encoding variables are set per each database upon establishing connection. Also, the charset utf8mb4 and collation utf8mb4_bin are now set on created tables for MariaDB and MySQL.
-* The Punishment.PERMANENT_END_DATE constant is added to the API.
+* Added the composite victim type, a new kind of victim which is both a UUID and address.
+  * Composite victims are a better choice when you want to IP-ban users by default, but do not want the technical intricacies associated with banning an IP address rather than a user. In other words, you want user bans to be enforced as IP-bans but be able to punish, unpunish, and list punishments as if you were doing so for a user rather than an IP address.
+  * See the wiki page on composite punishments for more details.
+* The /accounthistory command accepts the `-both` argument to show the accounts matching the specified user's UUID or current IP address.
+
+### API Changes
+
 * The API now uses `long` (64-bit integers) for punishment IDs. To migrate usage, cast to long or refactor to use long IDs.
-* It is now possible to dispatch "silent" punishments using the API.
-* `EnforcementOptions` has been added to the API and replaces some methods in DraftPunishment, Punishment, and RevocationOrder. Usage can be replaced as follows:
+  * `getID` is deprecated but kept for backwards compatibility. Please migrate to `getIdentifier` when possible.
+* `EnforcementOptions` has been added to the API and replaces some methods in DraftPunishment, Punishment, and RevocationOrder. If you were using any of the 'withoutEnforcement' or 'withoutUnenforcement' methods, you will need to change your code. Usage can be replaced as follows:
   * For DraftPunishment: `draftPunishment.enactPunishmentWithoutEnforcement()` -> `draftPunishment.enactPunishment(EnforcementOptions.builder().enforcement(Enforcement.NONE).build())`
   * For Punishment:
     * `punishment.undoPunishmentWithoutUnenforcement()` -> `punishment.undoPunishment(EnforcementOptions.builder().enforcement(Enforcement.NONE).build)`
@@ -34,3 +40,13 @@ If you are interested in a guide for upgrading to LibertyBans 0.8.x to 1.0.0, wh
     * `revocationOrder.undoPunishmentWithoutUnenforcement()` -> `revocationOrder.undoPunishment(EnforcementOptions.builder().enforcement(Enforcement.NONE).build())`
     * `revocationOrder.undoAndGetPunishmentWithoutUnenforcement()` -> `revocationOrder.undoAndGetPunishment(EnforcementOptions.builder().enforcement(Enforcement.NONE).build())`
 * The package `space.arim.libertybans.api.revoke` has been merged into `space.arim.libertybans.api.punish`. Imports should be updated accordingly.
+* The API for selecting punishments has been expanded in capability. Keyset pagination is now possible. As part of this change, `SelectionOrderBuilder` and `SelectionOrder` have breaking changes:
+  * `SelectionOrderBuilder#maximumToRetrieve` has been removed, in favor of `#limitToRetrieve` which is consistent with SQL's LIMIT.
+* Non-breaking improvements to `PunishmentRevoker`:
+  * The requirement that the punishment type be singular (PunishmentType.isSingular()) is lifted for `PunishmentRevoker#revokeByTypeAndVictim`. However, if a non-singular punishment type is used, it is unspecified behavior as to which punishment will be revoked.
+  * Added the method `PunishmentRevoker#revokeByTypeAndPossibleVictims`.
+* Other breaking changes are only relevant if you were implementing the API yourself, which is unlikely:
+  * Getter methods on `SelectionOrder` reflect the new and expanded API.
+  * Getter methods on `RevocationOrder` reflect the expanded API.
+* The Punishment.PERMANENT_END_DATE constant is added to the API.
+* It is now possible to dispatch "silent" punishments using the API.

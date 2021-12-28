@@ -17,28 +17,16 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.api.event;
+package space.arim.libertybans.core.commands.extra;
 
-import space.arim.omnibus.events.AsyncEvent;
+import space.arim.libertybans.api.Victim;
 
-import space.arim.libertybans.api.punish.Punishment;
+public interface ParseVictim {
 
-/**
- * Called after a punishment has been enacted
- * 
- * @author A248
- *
- */
-public interface PostPunishEvent extends AsyncEvent {
+	Victim.VictimType preferredType();
 
-	/**
-	 * Gets the punishment which was put into place. <br>
-	 * <br>
-	 * The punishment includes the operator who is enacting this punishment, the
-	 * victim who is being punished, and several other details.
-	 * 
-	 * @return the punishment
-	 */
-	Punishment getPunishment();
+	static ParseVictim ofPreferredType(Victim.VictimType preferredType) {
+		return () -> preferredType;
+	}
 
 }

@@ -46,6 +46,7 @@ import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -99,7 +100,7 @@ public class UnspecifiedReasonsTest {
 			when(messagesConfig.additions()).thenReturn(additionsSection);
 			when(additionsSection.forType(PunishmentType.BAN)).thenReturn(section);
 		}
-		when(argParser.parseVictimByName(any(), eq("A248"))).thenReturn(
+		when(argParser.parseVictim(any(), eq("A248"), any())).thenAnswer((i) ->
 				new IndifferentFactoryOfTheFuture().completedFuture(PlayerVictim.of(UUID.randomUUID())));
 
 		punishCommands = new PlayerPunishCommands(dependencies, drafter, formatter, tabCompletion, envUserResolver);
@@ -107,7 +108,18 @@ public class UnspecifiedReasonsTest {
 
 	private void executeBan(CmdSender sender) {
 		when(sender.hasPermission(any())).thenReturn(true);
-		punishCommands.execute(sender, ArrayCommandPackage.create("A248"), "ban").execute();
+		var future = punishCommands
+				.execute(sender, ArrayCommandPackage.create("A248"), "ban")
+				.execute()
+				.toCompletableFuture();
+		try {
+			future.join();
+		} catch (CompletionException ex) {
+			if (ex.getCause() instanceof RuntimeException cause) {
+				throw cause;
+			}
+			throw ex;
+		}
 	}
 
 	private void executeBanSuccessful(CmdSender sender, String reason) {

@@ -24,6 +24,7 @@ import space.arim.libertybans.core.commands.usage.PluginInfoMessage;
 import space.arim.libertybans.core.commands.usage.UsageGlossary;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.service.FuturePoster;
 
 import java.util.List;
 import java.util.Locale;
@@ -34,28 +35,31 @@ import java.util.stream.Stream;
 public class CommandsCore implements Commands {
 
 	private final Configs configs;
+	private final FuturePoster futurePoster;
 	private final UsageGlossary usage;
 	private final PluginInfoMessage infoMessage;
-	
+
 	private final List<SubCommandGroup> subCommands;
-	
+
 	public static final String BASE_COMMAND_PERMISSION = "libertybans.commands";
 
-	CommandsCore(Configs configs, UsageGlossary usage, PluginInfoMessage infoMessage,
+	CommandsCore(Configs configs, FuturePoster futurePoster, UsageGlossary usage, PluginInfoMessage infoMessage,
 				 List<SubCommandGroup> subCommands) {
 		this.configs = configs;
+		this.futurePoster = futurePoster;
 		this.usage = usage;
 		this.infoMessage = infoMessage;
 		this.subCommands = subCommands;
 	}
 
 	@Inject
-	public CommandsCore(Configs configs, UsageGlossary usage, PluginInfoMessage infoMessage,
+	public CommandsCore(Configs configs, FuturePoster futurePoster,
+						UsageGlossary usage, PluginInfoMessage infoMessage,
 			PlayerPunishCommands playerPunish, AddressPunishCommands addressPunish,
 			PlayerUnpunishCommands playerUnpunish, AddressUnpunishCommands addressUnpunish,
 			ListCommands list, AdminCommands admin, ImportCommands importing, AltCommands alts,
 			AccountHistoryCommands accountHistory) {
-		this(configs, usage, infoMessage, List.of(
+		this(configs, futurePoster, usage, infoMessage, List.of(
 				playerPunish, addressPunish, playerUnpunish, addressUnpunish,
 				list, admin, importing, alts, accountHistory
 		));
@@ -96,9 +100,9 @@ public class CommandsCore implements Commands {
 			return;
 		}
 		CommandExecution execution = subCommand.execute(sender, command, firstArg);
-		execution.execute();
+		futurePoster.postFuture(execution.execute());
 	}
-	
+
 	/*
 	 * Tab completion
 	 */

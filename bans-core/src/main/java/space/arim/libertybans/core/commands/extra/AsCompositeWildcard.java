@@ -17,35 +17,27 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.database.flyway;
+package space.arim.libertybans.core.commands.extra;
 
 import space.arim.libertybans.api.AddressVictim;
+import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.core.database.sql.SerializedVictim;
-import space.arim.libertybans.core.database.sql.VictimData;
-import space.arim.omnibus.util.UUIDUtil;
 
-import java.util.Objects;
+import java.util.function.Function;
 
-public final class Victim08x {
+public final class AsCompositeWildcard implements Function<Victim, CompositeVictim> {
 
-	private final String victimType;
-	private final byte[] victim;
-
-	public Victim08x(String victimType, byte[] victim) {
-		this.victimType = Objects.requireNonNull(victimType, "type");
-		this.victim = Objects.requireNonNull(victim, "victim");
-	}
-
-	public VictimData deserialize() {
-		switch (Victim.VictimType.valueOf(victimType)) {
+	@Override
+	public CompositeVictim apply(Victim victim) {
+		Victim.VictimType victimType = victim.getType();
+		switch (victimType) {
 		case PLAYER:
-			return new SerializedVictim(PlayerVictim.of(UUIDUtil.fromByteArray(victim)));
+			return CompositeVictim.of(((PlayerVictim) victim).getUUID(), CompositeVictim.WILDCARD_ADDRESS);
 		case ADDRESS:
-			return new SerializedVictim(AddressVictim.of(victim));
+			return CompositeVictim.of(CompositeVictim.WILDCARD_UUID, ((AddressVictim) victim).getAddress());
 		default:
-			throw new IllegalStateException("Illegal 0.8.x victim type: " + victimType);
+			throw new UnsupportedOperationException("not supported: " + victimType);
 		}
 	}
 }

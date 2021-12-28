@@ -16,6 +16,7 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.it.test.punish;
 
 import jakarta.inject.Inject;
@@ -36,7 +37,6 @@ import space.arim.libertybans.it.SetAddressStrictness;
 import space.arim.libertybans.it.resolver.RandomPunishmentTypeResolver;
 import space.arim.libertybans.it.util.RandomUtil;
 
-import java.net.InetAddress;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -65,14 +65,13 @@ public class NotPunishedIT {
 	public void testNotPunished() {
 		final UUID uuid = UUID.randomUUID();
 		final String name = RandomUtil.randomString(16);
-		final InetAddress address = RandomUtil.randomAddress();
+		final NetworkAddress address = RandomUtil.randomAddress();
 
 		assertNull(guardian.executeAndCheckConnection(uuid, name, address).join());
 		assertNull(guardian.checkChat(uuid, address, null).join());
 
-		NetworkAddress netAddress = NetworkAddress.of(address);
-		assertNull(selector.getApplicablePunishment(uuid, netAddress, type).toCompletableFuture().join().orElse(null));
-		assertNull(selector.getCachedMute(uuid, netAddress).toCompletableFuture().join().orElse(null));
+		assertNull(selector.getApplicablePunishment(uuid, address, type).toCompletableFuture().join().orElse(null));
+		assertNull(selector.getCachedMute(uuid, address).toCompletableFuture().join().orElse(null));
 
 		if (type.isSingular()) {
 			for (Victim victim : new Victim[] {PlayerVictim.of(uuid), AddressVictim.of(address)}) {

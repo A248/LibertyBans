@@ -32,7 +32,7 @@ import java.util.Arrays;
 public final class NetworkAddress {
 	
 	private final byte[] address;
-	
+
 	private NetworkAddress(byte[] address) {
 		this.address = address;
 	}

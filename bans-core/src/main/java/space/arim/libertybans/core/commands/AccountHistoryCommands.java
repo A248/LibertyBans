@@ -21,16 +21,16 @@ package space.arim.libertybans.core.commands;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.core.alts.AccountHistory;
 import space.arim.libertybans.core.alts.AccountHistoryFormatter;
 import space.arim.libertybans.core.alts.AccountHistorySection;
+import space.arim.libertybans.core.commands.extra.ParsePlayerVictimCompositeByCmdOnly;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.time.Instant;
 import java.util.Locale;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 @Singleton
@@ -70,8 +70,9 @@ public class AccountHistoryCommands extends AbstractSubCommandGroup {
 		class UsageExecution implements CommandExecution {
 
 			@Override
-			public void execute() {
+			public ReactionStage<Void> execute() {
 				sender.sendMessage(accountHistory().usage());
+				return null;
 			}
 		}
 		if (!command.hasNext()) {
@@ -99,37 +100,32 @@ public class AccountHistoryCommands extends AbstractSubCommandGroup {
 		}
 
 		@Override
-		public void execute() {
+		public ReactionStage<Void> execute() {
 			if (!sender().hasPermission("libertybans.alts.accounthistory.delete")) {
 				sender().sendMessage(delete().permission());
-				return;
+				return null;
 			}
 			if (!command().hasNext()) {
 				sender().sendMessage(delete().usage());
-				return;
+				return null;
 			}
 			String target = command().next();
 
 			if (!command().hasNext()) {
 				sender().sendMessage(delete().usage());
-				return;
+				return null;
 			}
 			Instant timestamp;
 			try {
 				timestamp = Instant.ofEpochSecond(Long.parseLong(command().next()));
 			} catch (NumberFormatException badTimestamp) {
 				sender().sendMessage(delete().usage());
-				return;
+				return null;
 			}
-			var future = argumentParser().parseVictimByName(sender(), target).thenCompose((victim) -> {
-				if (victim == null) {
+			return argumentParser().parseOrLookupUUID(sender(), target).thenCompose((uuid) -> {
+				if (uuid == null) {
 					return completedFuture(null);
 				}
-				if (!(victim instanceof PlayerVictim)) {
-					sender().sendMessage(delete().notByAddress());
-					return completedFuture(null);
-				}
-				UUID uuid = ((PlayerVictim) victim).getUUID();
 				return accountHistory.deleteAccount(uuid, timestamp).thenAccept((success) -> {
 					if (success) {
 						sender().sendMessage(delete().success().replaceText("%TARGET%", target));
@@ -138,7 +134,6 @@ public class AccountHistoryCommands extends AbstractSubCommandGroup {
 					}
 				});
 			});
-			postFuture(future);
 		}
 
 	}
@@ -154,17 +149,20 @@ public class AccountHistoryCommands extends AbstractSubCommandGroup {
 		}
 
 		@Override
-		public void execute() {
+		public ReactionStage<Void> execute() {
 			if (!sender().hasPermission("libertybans.alts.accounthistory.list")) {
 				sender().sendMessage(listing().permission());
-				return;
+				return null;
 			}
 			if (!command().hasNext()) {
 				sender().sendMessage(listing().usage());
-				return;
+				return null;
 			}
 			String target = command().next();
-			var future = argumentParser().parseVictimByName(sender(), target).thenCompose((victim) -> {
+
+			return argumentParser().parseVictim(
+					sender(), target, new ParsePlayerVictimCompositeByCmdOnly(command())
+			).thenCompose((victim) -> {
 				if (victim == null) {
 					return completedFuture(null);
 				}
@@ -177,7 +175,6 @@ public class AccountHistoryCommands extends AbstractSubCommandGroup {
 							accountHistoryFormatter.formatMessage(target, knownAccounts));
 				});
 			});
-			postFuture(future);
 		}
 
 

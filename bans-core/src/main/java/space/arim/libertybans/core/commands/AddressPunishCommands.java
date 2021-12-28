@@ -24,6 +24,7 @@ import jakarta.inject.Singleton;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.core.commands.extra.ParseVictim;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
@@ -46,8 +47,11 @@ public class AddressPunishCommands extends PunishCommands {
 	}
 
 	@Override
-	public CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg, PunishmentType type) {
-		return argumentParser().parseAddressVictim(sender, targetArg);
+	public CentralisedFuture<Victim> parseVictim(CmdSender sender, CommandPackage command,
+												 String targetArg, PunishmentType type) {
+		return argumentParser().parseVictim(
+				sender, targetArg, ParseVictim.ofPreferredType(Victim.VictimType.ADDRESS)
+		);
 	}
 
 }

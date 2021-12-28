@@ -22,6 +22,7 @@ package space.arim.libertybans.it.test.punish;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
+import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
@@ -30,7 +31,6 @@ import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.test.applicable.StrictnessAssertHelper;
 import space.arim.libertybans.it.util.RandomUtil;
 
-import java.net.InetAddress;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -49,7 +49,7 @@ public class MuteCommandsIT {
 	@TestTemplate
 	public void muteCommandNotMuted(Guardian guardian) {
 		UUID uuid = UUID.randomUUID();
-		InetAddress address = RandomUtil.randomAddress();
+		NetworkAddress address = RandomUtil.randomAddress();
 		assertHelper.connectAndAssumeUnbannedUser(uuid, "name", address);
 		assertNull(guardian.checkChat(uuid, address, "msg").join());
 	}
@@ -57,7 +57,7 @@ public class MuteCommandsIT {
 	@TestTemplate
 	public void blockMuteCommand(Guardian guardian, PunishmentDrafter drafter) {
 		UUID uuid = UUID.randomUUID();
-		InetAddress address = RandomUtil.randomAddress();
+		NetworkAddress address = RandomUtil.randomAddress();
 		assertHelper.connectAndAssumeUnbannedUser(uuid, "name", address);
 		drafter.draftBuilder()
 				.type(PunishmentType.MUTE)

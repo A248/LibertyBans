@@ -1,99 +1,89 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.selector;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-
-import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.api.select.SelectionOrder;
+import space.arim.libertybans.api.select.SelectionPredicate;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
-class SelectionOrderImpl implements InternalSelectionOrder {
+import java.time.Instant;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+class SelectionOrderImpl implements SelectionOrder {
 
 	private transient final SelectorImpl selector;
 
-	final PunishmentType type;
-	private final Victim victim;
-	private final Operator operator;
-	private final ServerScope scope;
+	private final SelectionPredicate<PunishmentType> types;
+	private final SelectionPredicate<Victim> victims;
+	private final SelectionPredicate<Operator> operators;
+	private final SelectionPredicate<ServerScope> scopes;
 	private final boolean selectActiveOnly;
 	private final int skipCount;
-	private final int maximumToRetrieve;
+	private final int limitToRetrieve;
+	private final Instant seekAfterStartTime;
+	private final long seekAfterId;
 
 	SelectionOrderImpl(SelectorImpl selector,
-			PunishmentType type, Victim victim, Operator operator, ServerScope scope, boolean selectActiveOnly,
-			int skipCount, int maximumToRetrieve) {
-		this.selector = selector;
+					   SelectionPredicate<PunishmentType> types, SelectionPredicate<Victim> victims,
+					   SelectionPredicate<Operator> operators, SelectionPredicate<ServerScope> scopes,
+					   boolean selectActiveOnly, int skipCount, int limitToRetrieve,
+					   Instant seekAfterStartTime, long seekAfterId) {
+		this.selector = Objects.requireNonNull(selector, "selector");
 
-		this.type = type;
-		this.victim = victim;
-		this.operator = operator;
-		this.scope = scope;
+		this.types = Objects.requireNonNull(types, "types");
+		this.victims = Objects.requireNonNull(victims, "victims");
+		this.operators = Objects.requireNonNull(operators, "operators");
+		this.scopes = Objects.requireNonNull(scopes, "scopes");
 		this.selectActiveOnly = selectActiveOnly;
 		this.skipCount = skipCount;
-		this.maximumToRetrieve = maximumToRetrieve;
+		this.limitToRetrieve = limitToRetrieve;
+		this.seekAfterStartTime = Objects.requireNonNull(seekAfterStartTime, "seekAfterStartTime");
+		// Zero-out seekAfterId if start time is unset, so that equals and hashCode function reliably
+		this.seekAfterId = (seekAfterStartTime.equals(Instant.EPOCH) ? 0 : seekAfterId);
 	}
 
 	@Override
-	public Optional<PunishmentType> getType() {
-		return Optional.ofNullable(type);
+	public SelectionPredicate<PunishmentType> getTypes() {
+		return types;
 	}
 
 	@Override
-	public PunishmentType getTypeNullable() {
-		return type;
+	public SelectionPredicate<Victim> getVictims() {
+		return victims;
 	}
 
 	@Override
-	public Optional<Victim> getVictim() {
-		return Optional.ofNullable(victim);
+	public SelectionPredicate<Operator> getOperators() {
+		return operators;
 	}
 
 	@Override
-	public Victim getVictimNullable() {
-		return victim;
-	}
-
-	@Override
-	public Optional<Operator> getOperator() {
-		return Optional.ofNullable(operator);
-	}
-
-	@Override
-	public Operator getOperatorNullable() {
-		return operator;
-	}
-
-	@Override
-	public Optional<ServerScope> getScope() {
-		return Optional.ofNullable(scope);
-	}
-
-	@Override
-	public ServerScope getScopeNullable() {
-		return scope;
+	public SelectionPredicate<ServerScope> getScopes() {
+		return scopes;
 	}
 
 	@Override
@@ -107,8 +97,18 @@ class SelectionOrderImpl implements InternalSelectionOrder {
 	}
 
 	@Override
-	public int maximumToRetrieve() {
-		return maximumToRetrieve;
+	public int limitToRetrieve() {
+		return limitToRetrieve;
+	}
+
+	@Override
+	public Instant seekAfterStartTime() {
+		return seekAfterStartTime;
+	}
+
+	@Override
+	public long seekAfterId() {
+		return seekAfterId;
 	}
 
 	@Override
@@ -122,41 +122,47 @@ class SelectionOrderImpl implements InternalSelectionOrder {
 	}
 
 	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		SelectionOrderImpl that = (SelectionOrderImpl) o;
+		return selectActiveOnly == that.selectActiveOnly
+				&& skipCount == that.skipCount
+				&& limitToRetrieve == that.limitToRetrieve
+				&& seekAfterId == that.seekAfterId
+				&& types.equals(that.types)
+				&& victims.equals(that.victims)
+				&& operators.equals(that.operators)
+				&& scopes.equals(that.scopes)
+				&& seekAfterStartTime.equals(that.seekAfterStartTime);
+	}
+
+	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + Objects.hashCode(type);
-		result = prime * result + Objects.hashCode(victim);
-		result = prime * result + Objects.hashCode(operator);
-		result = prime * result + Objects.hashCode(scope);
-		result = prime * result + (selectActiveOnly ? 1231 : 1237);
-		result = prime * result + skipCount;
-		result = prime * result + maximumToRetrieve;
+		int result = types.hashCode();
+		result = 31 * result + victims.hashCode();
+		result = 31 * result + operators.hashCode();
+		result = 31 * result + scopes.hashCode();
+		result = 31 * result + (selectActiveOnly ? 1 : 0);
+		result = 31 * result + skipCount;
+		result = 31 * result + limitToRetrieve;
+		result = 31 * result + seekAfterStartTime.hashCode();
+		result = 31 * result + (int) (seekAfterId ^ (seekAfterId >>> 32));
 		return result;
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		if (this == object) {
-			return true;
-		}
-		if (!(object instanceof SelectionOrderImpl)) {
-			return false;
-		}
-		SelectionOrderImpl other = (SelectionOrderImpl) object;
-		return type == other.type
-				&& Objects.equals(victim, other.victim)
-				&& Objects.equals(operator, other.operator)
-				&& Objects.equals(scope, other.scope)
-				&& selectActiveOnly == other.selectActiveOnly
-				&& maximumToRetrieve == other.maximumToRetrieve;
-	}
-
-	@Override
 	public String toString() {
-		return "SelectionOrderImpl [type=" + type + ", victim=" + victim + ", operator=" + operator + ", scope=" + scope
-				+ ", selectActiveOnly=" + selectActiveOnly + ", skipCount=" + skipCount + ", maximumToRetrieve="
-				+ maximumToRetrieve + "]";
+		return "SelectionOrderImpl{" +
+				"types=" + types +
+				", victims=" + victims +
+				", operators=" + operators +
+				", scopes=" + scopes +
+				", selectActiveOnly=" + selectActiveOnly +
+				", skipCount=" + skipCount +
+				", limitToRetrieve=" + limitToRetrieve +
+				", seekAfterStartTime=" + seekAfterStartTime +
+				", seekAfterId=" + seekAfterId +
+				'}';
 	}
-
 }

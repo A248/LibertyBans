@@ -29,10 +29,14 @@ import space.arim.libertybans.core.commands.usage.UsageGlossary;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.service.FuturePoster;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
+import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,17 +45,21 @@ import static org.mockito.Mockito.when;
 public class CommandsCoreTest {
 
 	private final Configs configs;
+	private final FactoryOfTheFuture futuresFactory = new IndifferentFactoryOfTheFuture();
+	private final FuturePoster futurePoster;
 	private final UsageGlossary usage;
 	private final CmdSender sender;
 
-	public CommandsCoreTest(@Mock Configs configs, @Mock UsageGlossary usage, @Mock CmdSender sender) {
+	public CommandsCoreTest(@Mock Configs configs, @Mock FuturePoster futurePoster,
+							@Mock UsageGlossary usage, @Mock CmdSender sender) {
 		this.configs = configs;
+		this.futurePoster = futurePoster;
 		this.usage = usage;
 		this.sender = sender;
 	}
 
 	private CommandsCore newCommandsCore(List<SubCommandGroup> subCommands) {
-		return new CommandsCore(configs, usage, new PluginInfoMessage(), subCommands);
+		return new CommandsCore(configs, futurePoster, usage, new PluginInfoMessage(), subCommands);
 	}
 
 	@Test
@@ -102,6 +110,7 @@ public class CommandsCoreTest {
 		CommandExecution subCommandOneExecution = mock(CommandExecution.class);
 		when(subCommandOne.matches("one")).thenReturn(true);
 		when(subCommandOne.execute(any(), any(), any())).thenReturn(subCommandOneExecution);
+		when(subCommandOneExecution.execute()).thenReturn(futuresFactory.completedFuture(null));
 		SubCommandGroup subCommandTwo = mock(SubCommandGroup.class);
 
 		CommandPackage commandOne = ArrayCommandPackage.create("one");
@@ -109,6 +118,7 @@ public class CommandsCoreTest {
 
 		verify(subCommandOne).execute(sender, commandOne, "one");
 		verify(subCommandOneExecution).execute();
+		verify(futurePoster).postFuture(notNull());
 	}
 
 	@Test

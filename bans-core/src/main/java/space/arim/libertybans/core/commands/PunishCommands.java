@@ -43,6 +43,7 @@ import space.arim.libertybans.core.punish.EnforcementOpts;
 import space.arim.libertybans.core.punish.Mode;
 import space.arim.libertybans.core.punish.PunishmentPermission;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.time.Duration;
 import java.util.Locale;
@@ -105,17 +106,13 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 		}
 
 		@Override
-		public void execute() {
+		public ReactionStage<Void> execute() {
 			if (!command().hasNext()) {
 				sender().sendMessage(section.usage());
-				return;
+				return null;
 			}
-			execute0();
-		}
-
-		private void execute0() {
 			String targetArg = command().next();
-			CentralisedFuture<?> future = parseVictim(sender(), targetArg, type()).thenCompose((victim) -> {
+			return parseVictim(sender(), command(), targetArg, type()).thenCompose((victim) -> {
 				if (victim == null) {
 					return completedFuture(null);
 				}
@@ -130,7 +127,6 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 				}
 				return enforceAndSendSuccess(punishment, targetArg);
 			});
-			postFuture(future);
 		}
 
 		private CompletionStage<Punishment> performEnact(Victim victim, String targetArg) {
@@ -230,7 +226,7 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 			sender().sendMessage(message);
 		}
 
-		private CentralisedFuture<?> enforceAndSendSuccess(Punishment punishment, String targetArg) {
+		private CentralisedFuture<Void> enforceAndSendSuccess(Punishment punishment, String targetArg) {
 
 			EnforcementOptions enforcementOptions = EnforcementOpts
 					.builder()
@@ -246,11 +242,11 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 			CentralisedFuture<Component> futureMessage = formatter.formatWithPunishment(
 					section.successMessage().replaceText("%TARGET%", targetArg), punishment);
 
-			var completion = futuresFactory().allOf(enforcement, futureMessage).thenRun(() -> {
+			return futuresFactory().allOf(enforcement, futureMessage).thenCompose((ignore) -> {
+				return fireWithTimeout(new PostPunishEventImpl(punishment));
+			}).thenRun(() -> {
 				sender().sendMessage(futureMessage.join());
 			});
-			postFuture(fireWithTimeout(new PostPunishEventImpl(punishment)));
-			return completion;
 		}
 		
 	}

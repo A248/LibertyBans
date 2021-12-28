@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2021 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.commands;
 
 import jakarta.inject.Inject;
@@ -23,11 +24,16 @@ import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
+import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.api.select.SelectionOrder;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
+import space.arim.libertybans.api.select.SelectionPredicate;
+import space.arim.libertybans.core.commands.extra.AsCompositeWildcard;
+import space.arim.libertybans.core.commands.extra.ParseVictim;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.ListSection;
@@ -42,6 +48,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
+
+import static space.arim.libertybans.api.select.SelectionPredicate.matchingAnyOf;
 
 @Singleton
 public class ListCommands extends AbstractSubCommandGroup {
@@ -75,7 +83,7 @@ public class ListCommands extends AbstractSubCommandGroup {
 		ListType listType = ListType.valueOf(arg.toUpperCase(Locale.ROOT));
 		return new Execution(sender, command, listType);
 	}
-	
+
 	private class Execution extends AbstractCommandExecution {
 		
 		private final ListType listType;
@@ -90,19 +98,17 @@ public class ListCommands extends AbstractSubCommandGroup {
 		}
 
 		@Override
-		public void execute() {
+		public ReactionStage<Void> execute() {
 			if (!sender().hasPermission("libertybans.list." + listType)) {
 				sender().sendMessage(section.permissionCommand());
-				return;
+				return null;
 			}
 			SelectionOrderBuilder selectionOrderBuilder = selector.selectionBuilder();
 			switch (listType) {
 			case BANLIST:
-				parsePageThenExecute(selectionOrderBuilder.type(PunishmentType.BAN));
-				return;
+				return parsePageThenExecute(selectionOrderBuilder.type(PunishmentType.BAN));
 			case MUTELIST:
-				parsePageThenExecute(selectionOrderBuilder.type(PunishmentType.MUTE));
-				return;
+				return parsePageThenExecute(selectionOrderBuilder.type(PunishmentType.MUTE));
 			case WARNS:
 				selectionOrderBuilder.type(PunishmentType.WARN);
 				break;
@@ -118,39 +124,38 @@ public class ListCommands extends AbstractSubCommandGroup {
 
 			if (!command().hasNext()) {
 				sender().sendMessage(section.usage());
-				return;
+				return null;
 			}
 			target = command().next();
 			switch (listType) {
 			case HISTORY:
 			case WARNS:
-				postFuture(argumentParser().parseVictimByName(sender(), target)
-						.thenCompose((victim) -> {
-							if (victim == null) {
-								return completedFuture(null);
-							}
-							return parsePageThenExecuteFuture(selectionOrderBuilder.victim(victim));
-						}));
-				break;
+				return argumentParser().parseVictim(
+						sender(), target, ParseVictim.ofPreferredType(Victim.VictimType.PLAYER)
+				).thenCompose((victim) -> {
+					if (victim == null) {
+						return completedFuture(null);
+					}
+					// Select punishments made against this user OR against the composite user
+					CompositeVictim compositeWildcard = new AsCompositeWildcard().apply(victim);
+					SelectionPredicate<Victim> victimSelection = matchingAnyOf(victim, compositeWildcard);
+					return parsePageThenExecute(selectionOrderBuilder.victims(victimSelection));
+				});
 			case BLAME:
-				postFuture(argumentParser().parseOperatorByName(sender(), target)
-						.thenCompose((operator) -> {
-							if (operator == null) {
-								return completedFuture(null);
-							}
-							return parsePageThenExecuteFuture(selectionOrderBuilder.operator(operator));
-						}));
-				break;
+				return argumentParser().parseOperator(
+						sender(), target
+				).thenCompose((operator) -> {
+					if (operator == null) {
+						return completedFuture(null);
+					}
+					return parsePageThenExecute(selectionOrderBuilder.operator(operator));
+				});
 			default:
 				throw new IllegalArgumentException("Could not recognize " + listType);
 			}
 		}
-		
-		private void parsePageThenExecute(SelectionOrderBuilder selectionOrderBuilder) {
-			postFuture(parsePageThenExecuteFuture(selectionOrderBuilder));
-		}
-		
-		private ReactionStage<?> parsePageThenExecuteFuture(SelectionOrderBuilder selectionOrderBuilder) {
+
+		private ReactionStage<Void> parsePageThenExecute(SelectionOrderBuilder selectionOrderBuilder) {
 			int selectedPage = parsePage();
 			if (selectedPage < 0) {
 				sender().sendMessage(section.usage());
@@ -159,7 +164,7 @@ public class ListCommands extends AbstractSubCommandGroup {
 			int perPage = section.perPage();
 			SelectionOrder selection = selectionOrderBuilder
 					.skipFirstRetrieved(perPage * (selectedPage - 1))
-					.maximumToRetrieve(selectedPage * perPage)
+					.limitToRetrieve(perPage)
 					.build();
 			return continueWithPageAndSelection(selection, selectedPage);
 		}
@@ -177,7 +182,7 @@ public class ListCommands extends AbstractSubCommandGroup {
 			return page;
 		}
 
-		private ReactionStage<?> continueWithPageAndSelection(SelectionOrder selectionOrder, int page) {
+		private ReactionStage<Void> continueWithPageAndSelection(SelectionOrder selectionOrder, int page) {
 			return selectionOrder.getAllSpecificPunishments().thenCompose((punishments) -> {
 				return showPunishmentsOnPage(punishments, page);
 			});
@@ -202,7 +207,7 @@ public class ListCommands extends AbstractSubCommandGroup {
 			}
 		}
 
-		private CentralisedFuture<?> showPunishmentsOnPage(List<Punishment> punishments, int page) {
+		private CentralisedFuture<Void> showPunishmentsOnPage(List<Punishment> punishments, int page) {
 			if (punishments.isEmpty()) {
 				noPunishmentsOnThisPage(page);
 				return completedFuture(null);

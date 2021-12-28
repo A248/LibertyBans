@@ -77,6 +77,8 @@ public class Enaction {
 		final Instant start = orderDetails.start();
 		final Instant end = orderDetails.end();
 
+		MiscUtil.checkNoCompositeVictimWildcards(victim);
+
 		SequenceValue<Long> punishmentIdSequence = new SequenceValue<>(LIBERTYBANS_PUNISHMENT_IDS);
 		SequenceValue<Integer> victimIdSequence = new SequenceValue<>(LIBERTYBANS_VICTIM_IDS);
 		context

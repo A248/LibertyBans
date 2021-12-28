@@ -27,7 +27,6 @@ import org.mockito.Mockito;
 import space.arim.libertybans.core.commands.extra.ArgumentParser;
 import space.arim.libertybans.core.commands.usage.UsageGlossary;
 import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.service.SimpleFuturePoster;
 import space.arim.omnibus.DefaultOmnibus;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
@@ -71,7 +70,6 @@ public final class CommandSetupExtension implements ParameterResolver {
 			return new AbstractSubCommandGroup.Dependencies(
 					new DefaultOmnibus(),
 					new IndifferentFactoryOfTheFuture(),
-					new SimpleFuturePoster(),
 					configs,
 					argParser);
 		});

@@ -22,7 +22,9 @@ package space.arim.libertybans.core.punish;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.api.PunishmentType;
@@ -40,6 +42,7 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.time.Instant;
+import java.util.List;
 
 import static space.arim.libertybans.core.schema.tables.Punishments.PUNISHMENTS;
 import static space.arim.libertybans.core.schema.tables.SimpleActive.SIMPLE_ACTIVE;
@@ -95,7 +98,12 @@ public class Revoker implements InternalRevoker {
 
 	@Override
 	public RevocationOrder revokeByTypeAndVictim(PunishmentType type, Victim victim) {
-		return new RevocationOrderImpl(this, type, victim);
+		return revokeByTypeAndPossibleVictims(type, List.of(victim));
+	}
+
+	@Override
+	public RevocationOrder revokeByTypeAndPossibleVictims(PunishmentType type, List<Victim> victims) {
+		return new RevocationOrderImpl(this, type, victims);
 	}
 
 	private boolean deleteActivePunishmentByIdAndType(DSLContext context,
@@ -207,15 +215,27 @@ public class Revoker implements InternalRevoker {
 		});
 	}
 
-	CentralisedFuture<Long> undoPunishmentByTypeAndVictim(final PunishmentType type, final Victim victim) {
-		MiscUtil.checkSingular(type);
+	private static Condition matchesAnyVictim(List<Victim> victims) {
+		Condition matchesAnyVictim = DSL.noCondition();
+		VictimCondition victimCondition = new VictimCondition(new SimpleViewFields(SIMPLE_ACTIVE));
+		for (Victim victim : victims) {
+			matchesAnyVictim = matchesAnyVictim.or(
+					victimCondition.matchesVictim(victim)
+			);
+		}
+		return matchesAnyVictim;
+	}
+
+	CentralisedFuture<Long> undoPunishmentByTypeAndPossibleVictims(final PunishmentType type, 
+																   final List<Victim> victims) {
 		InternalDatabase database = dbProvider.get();
 		return database.queryWithRetry((context, transaction) -> {
+
 			Long id = context
 					.select(SIMPLE_ACTIVE.ID)
 					.from(SIMPLE_ACTIVE)
-					.where(new VictimCondition(new SimpleViewFields(SIMPLE_ACTIVE)).matchesVictim(victim))
-					.fetchOne(SIMPLE_ACTIVE.ID);
+					.where(matchesAnyVictim(victims))
+					.fetchAny(SIMPLE_ACTIVE.ID);
 			logger.trace("id={} in undoPunishmentByTypeAndVictim", id);
 			if (id == null || !deleteActivePunishmentByIdAndType(context, id, type)) {
 				return null;
@@ -224,14 +244,15 @@ public class Revoker implements InternalRevoker {
 		});
 	}
 
-	CentralisedFuture<Punishment> undoAndGetPunishmentByTypeAndVictim(final PunishmentType type, final Victim victim) {
+	CentralisedFuture<Punishment> undoAndGetPunishmentByTypeAndPossibleVictims(final PunishmentType type, 
+																			   final List<Victim> victims) {
 		InternalDatabase database = dbProvider.get();
 		return database.queryWithRetry((context, transaction) -> {
 			Long id = context
 					.select(SIMPLE_ACTIVE.ID)
 					.from(SIMPLE_ACTIVE)
-					.where(new VictimCondition(new SimpleViewFields(SIMPLE_ACTIVE)).matchesVictim(victim))
-					.fetchOne(SIMPLE_ACTIVE.ID);
+					.where(matchesAnyVictim(victims))
+					.fetchAny(SIMPLE_ACTIVE.ID);
 			logger.trace("id={} in undoAndGetPunishmentByTypeAndVictim", id);
 			if (id == null) {
 				return null;

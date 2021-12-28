@@ -31,6 +31,7 @@ import space.arim.libertybans.core.importing.ImportStatistics;
 import space.arim.libertybans.core.importing.LiteBansImportSource;
 import space.arim.libertybans.core.importing.PlatformImportSource;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.util.Locale;
 import java.util.Map;
@@ -83,14 +84,14 @@ public class ImportCommands extends AbstractSubCommandGroup {
 		}
 
 		@Override
-		public void execute() {
+		public ReactionStage<Void> execute() {
 			if (!sender().hasPermission("libertybans.admin.import")) {
 				sender().sendMessage(messages().admin().noPermission());
-				return;
+				return null;
 			}
 			if (!command().hasNext()) {
 				sender().sendMessage(importMessages().usage());
-				return;
+				return null;
 			}
 			String pluginSource = command().next().toUpperCase(Locale.ROOT);
 			PluginSourceType sourceType;
@@ -98,25 +99,24 @@ public class ImportCommands extends AbstractSubCommandGroup {
 				sourceType = PluginSourceType.valueOf(pluginSource);
 			} catch (IllegalArgumentException ex) {
 				sender().sendMessage(importMessages().usage());
-				return;
+				return null;
 			}
 			if (!isImporting.compareAndSet(false, true)) {
 				sender().sendMessage(importMessages().inProgress());
-				return;
+				return null;
 			}
 			ImportSource importSource = importSourceProviders.get(sourceType).get();
 			CentralisedFuture<ImportStatistics> importFuture = executor.performImport(importSource);
 			sender().sendMessage(importMessages().started());
-			var future = importFuture.thenAccept((ImportStatistics statistics) -> {
+
+			return importFuture.thenAccept((ImportStatistics statistics) -> {
 				if (statistics.success()) {
 					sender().sendMessage(importMessages().complete());
 					sender().sendLiteralMessage(statistics.toString());
 				} else {
 					sender().sendMessage(importMessages().failure());
 				}
-			});
-			future.whenComplete((ignore, ex) -> isImporting.set(false));
-			postFuture(future);
+			}).whenComplete((ignore, ex) -> isImporting.set(false));
 		}
 
 		private MessagesConfig.Admin.Importing importMessages() {

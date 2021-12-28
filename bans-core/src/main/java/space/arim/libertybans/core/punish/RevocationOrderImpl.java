@@ -26,6 +26,7 @@ import space.arim.libertybans.api.punish.RevocationOrder;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -35,13 +36,13 @@ class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
 	private final Revoker revoker;
 	private final long id;
 	private final PunishmentType type;
-	private final Victim victim;
+	private final List<Victim> victims;
 
-	private RevocationOrderImpl(Revoker revoker, long id, PunishmentType type, Victim victim) {
+	private RevocationOrderImpl(Revoker revoker, long id, PunishmentType type, List<Victim> victims) {
 		this.revoker = revoker;
 		this.id = id;
 		this.type = type;
-		this.victim = victim;
+		this.victims = victims;
 	}
 
 	RevocationOrderImpl(Revoker revoker, long id) {
@@ -54,8 +55,8 @@ class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
 		assert getApproach() == Approach.ID_TYPE;
 	}
 
-	RevocationOrderImpl(Revoker revoker, PunishmentType type, Victim victim) {
-		this(revoker, -1, MiscUtil.checkSingular(type), Objects.requireNonNull(victim, "victim"));
+	RevocationOrderImpl(Revoker revoker, PunishmentType type, List<Victim> victims) {
+		this(revoker, -1, type, List.copyOf(victims));
 		assert getApproach() == Approach.TYPE_VICTIM;
 	}
 	
@@ -69,7 +70,7 @@ class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
 		if (type == null) {
 			return Approach.ID;
 		}
-		if (victim != null) {
+		if (victims != null) {
 			return Approach.TYPE_VICTIM;
 		}
 		return Approach.ID_TYPE;
@@ -89,8 +90,8 @@ class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
 	}
 
 	@Override
-	public Optional<Victim> getVictim() {
-		return Optional.ofNullable(victim);
+	public Optional<List<Victim>> getVictims() {
+		return Optional.ofNullable(victims);
 	}
 
 	@Override
@@ -113,7 +114,7 @@ class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
 				return unenforceAndReturnTrue(id, type, enforcementOptions);
 			});
 		case TYPE_VICTIM:
-			return revoker.undoPunishmentByTypeAndVictim(type, victim).thenCompose((id) -> {
+			return revoker.undoPunishmentByTypeAndPossibleVictims(type, victims).thenCompose((id) -> {
 				if (id == null) {
 					return revoker.futuresFactory().completedFuture(false);
 				}
@@ -147,7 +148,7 @@ class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
 		case ID_TYPE:
 			return revoker.undoAndGetPunishmentByIdAndType(id, type);
 		case TYPE_VICTIM:
-			return revoker.undoAndGetPunishmentByTypeAndVictim(type, victim);
+			return revoker.undoAndGetPunishmentByTypeAndPossibleVictims(type, victims);
 		default:
 			throw MiscUtil.unknownEnumEntry(getApproach());
 		}
@@ -158,20 +159,20 @@ class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		RevocationOrderImpl that = (RevocationOrderImpl) o;
-		return id == that.id && type == that.type && Objects.equals(victim, that.victim);
+		return id == that.id && type == that.type && Objects.equals(victims, that.victims);
 	}
 
 	@Override
 	public int hashCode() {
 		int result = (int) (id ^ (id >>> 32));
 		result = 31 * result + (type != null ? type.hashCode() : 0);
-		result = 31 * result + (victim != null ? victim.hashCode() : 0);
+		result = 31 * result + (victims != null ? victims.hashCode() : 0);
 		return result;
 	}
 
 	@Override
 	public String toString() {
-		return "RevocationOrderImpl [id=" + id + ", type=" + type + ", victim=" + victim + "]";
+		return "RevocationOrderImpl [id=" + id + ", type=" + type + ", victims=" + victims + "]";
 	}
 	
 }

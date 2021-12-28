@@ -27,6 +27,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.api.select.SelectionOrder;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
@@ -42,7 +43,7 @@ public class SelectorImpl implements InternalSelector {
 	private final IDImpl idImpl;
 	private final ApplicableImpl applicableImpl;
 	private final Provider<MuteCache> muteCache;
-	
+
 	@Inject
 	public SelectorImpl(SelectionImpl selectionImpl, IDImpl idImpl, ApplicableImpl applicableImpl,
 			Provider<MuteCache> muteCache) {
@@ -51,23 +52,23 @@ public class SelectorImpl implements InternalSelector {
 		this.applicableImpl = applicableImpl;
 		this.muteCache = muteCache;
 	}
-	
+
 	@Override
 	public SelectionOrderBuilder selectionBuilder() {
 		return new SelectionOrderBuilderImpl(this);
 	}
-	
+
 	/*
 	 * 
 	 * PunishmentSelection methods
 	 * 
 	 */
 
-	ReactionStage<Punishment> getFirstSpecificPunishment(InternalSelectionOrder selection) {
+	ReactionStage<Punishment> getFirstSpecificPunishment(SelectionOrder selection) {
 		return selectionImpl.getFirstSpecificPunishment(selection);
 	}
 
-	ReactionStage<List<Punishment>> getSpecificPunishments(InternalSelectionOrder selection) {
+	ReactionStage<List<Punishment>> getSpecificPunishments(SelectionOrder selection) {
 		return selectionImpl.getSpecificPunishments(selection);
 	}
 

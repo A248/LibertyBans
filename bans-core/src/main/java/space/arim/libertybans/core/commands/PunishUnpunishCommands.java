@@ -28,6 +28,7 @@ interface PunishUnpunishCommands {
 
 	PunishmentType parseType(String arg);
 
-	CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg, PunishmentType type);
+	CentralisedFuture<Victim> parseVictim(CmdSender sender, CommandPackage command,
+										  String targetArg, PunishmentType type);
 
 }

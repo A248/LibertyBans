@@ -188,13 +188,13 @@ public class MigrateFrom08xIT {
 			UUID user1 = UUID.randomUUID();
 			UUID user2 = UUID.randomUUID();
 			UUID user3 = UUID.randomUUID();
-			NetworkAddress user1Address = NetworkAddress.of(RandomUtil.randomAddress());
+			NetworkAddress user1Address = RandomUtil.randomAddress();
 			builder
 					.addUser(user1, "user1", user1Address)
-					.addUser(user2, "user2", NetworkAddress.of(RandomUtil.randomAddress()));
+					.addUser(user2, "user2", RandomUtil.randomAddress());
 			time.advanceBy(Duration.ofDays(1L));
 			builder
-					.addUser(user3, "user3", NetworkAddress.of(RandomUtil.randomAddress()))
+					.addUser(user3, "user3", RandomUtil.randomAddress())
 					.addUser(user2, "user2", user1Address);
 			time.advanceBy(Duration.ofDays(2L));
 			builder.addUser(user1, "user1renamed", user1Address);

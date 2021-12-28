@@ -32,19 +32,24 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.api.select.SelectionOrder;
+import space.arim.libertybans.api.select.SelectionPredicate;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.database.sql.DeserializedVictim;
 import space.arim.libertybans.core.database.sql.EndTimeCondition;
-import space.arim.libertybans.core.database.sql.SerializedVictim;
+import space.arim.libertybans.core.database.sql.SimpleViewFields;
+import space.arim.libertybans.core.database.sql.VictimCondition;
 import space.arim.libertybans.core.punish.PunishmentCreator;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static space.arim.libertybans.core.schema.tables.SimpleActive.SIMPLE_ACTIVE;
 import static space.arim.libertybans.core.schema.tables.SimpleHistory.SIMPLE_HISTORY;
@@ -74,23 +79,23 @@ public class SelectionImpl {
 	 * the SELECT statement must be qualified by the punishment type
 	 */
 
-	private static List<Field<?>> getColumns(InternalSelectionOrder selection) {
+	private static List<Field<?>> getColumns(SelectionOrder selection) {
 		List<Field<?>> columns = new ArrayList<>();
 		boolean active = selection.selectActiveOnly();
 		columns.add(active ? SIMPLE_ACTIVE.ID : SIMPLE_HISTORY.ID);
-		if (selection.getTypeNullable() == null) {
+		if (selection.getTypes().isNotSimpleEquality()) {
 			columns.add(active ? SIMPLE_ACTIVE.TYPE : SIMPLE_HISTORY.TYPE);
 		}
-		if (selection.getVictimNullable() == null) {
+		if (selection.getVictims().isNotSimpleEquality()) {
 			columns.add(active ? SIMPLE_ACTIVE.VICTIM_TYPE : SIMPLE_HISTORY.VICTIM_TYPE);
 			columns.add(active ? SIMPLE_ACTIVE.VICTIM_UUID : SIMPLE_HISTORY.VICTIM_UUID);
 			columns.add(active ? SIMPLE_ACTIVE.VICTIM_ADDRESS : SIMPLE_HISTORY.VICTIM_ADDRESS);
 		}
-		if (selection.getOperatorNullable() == null) {
+		if (selection.getOperators().isNotSimpleEquality()) {
 			columns.add(active ? SIMPLE_ACTIVE.OPERATOR : SIMPLE_HISTORY.OPERATOR);
 		}
 		columns.add(active ? SIMPLE_ACTIVE.REASON : SIMPLE_HISTORY.REASON);
-		if (selection.getScopeNullable() == null) {
+		if (selection.getScopes().isNotSimpleEquality()) {
 			columns.add(active ? SIMPLE_ACTIVE.SCOPE : SIMPLE_HISTORY.SCOPE);
 		}
 		columns.add(active ? SIMPLE_ACTIVE.START : SIMPLE_HISTORY.START);
@@ -99,61 +104,86 @@ public class SelectionImpl {
 		return columns;
 	}
 
-	private Condition getPredication(InternalSelectionOrder selection) {
+	private static <U> Condition matchesCriterion(SelectionPredicate<U> selection, Field<U> field) {
+		Set<U> acceptedValues = selection.acceptedValues();
+		Set<U> rejectedValues = selection.rejectedValues();
+		if (acceptedValues.isEmpty() && rejectedValues.isEmpty()) {
+			// Accepts everything
+			return DSL.noCondition();
+		}
+		Condition acceptedCondition = (acceptedValues.size() == 1) ?
+				field.eq(acceptedValues.iterator().next()) : field.in(acceptedValues);
+		Condition notRejectedCondition = (rejectedValues.size() == 1) ?
+				field.notEqual(rejectedValues.iterator().next()) : field.notIn(rejectedValues);
+		return acceptedCondition.and(notRejectedCondition);
+	}
+
+	private Condition getPredication(SelectionOrder selection) {
 		Condition condition = DSL.noCondition();
 		boolean active = selection.selectActiveOnly();
-		PunishmentType type = selection.getTypeNullable();
-		if (type != null) {
-			condition = condition
-					.and((active ? SIMPLE_ACTIVE.TYPE : SIMPLE_HISTORY.TYPE).eq(type));
-		}
+
+		condition = condition
+				.and(matchesCriterion(selection.getTypes(), active ? SIMPLE_ACTIVE.TYPE : SIMPLE_HISTORY.TYPE))
+				.and(matchesCriterion(selection.getOperators(), active ? SIMPLE_ACTIVE.OPERATOR : SIMPLE_HISTORY.OPERATOR))
+				.and(matchesCriterion(selection.getScopes(), active ? SIMPLE_ACTIVE.SCOPE : SIMPLE_HISTORY.SCOPE));
 		if (active) {
 			condition = condition
 					.and(new EndTimeCondition(SIMPLE_ACTIVE.END).isNotExpired(time.currentTimestamp()));
 		}
-		Victim victim = selection.getVictimNullable();
-		if (victim != null) {
-			SerializedVictim serializedVictim = new SerializedVictim(victim);
-			condition = condition
-					.and((active ? SIMPLE_ACTIVE.VICTIM_TYPE : SIMPLE_HISTORY.VICTIM_TYPE).eq(victim.getType()))
-					.and((active ? SIMPLE_ACTIVE.VICTIM_UUID : SIMPLE_HISTORY.VICTIM_UUID).eq(serializedVictim.uuid()))
-					.and((active ? SIMPLE_ACTIVE.VICTIM_ADDRESS : SIMPLE_HISTORY.VICTIM_ADDRESS).eq(serializedVictim.address()));
-		}
-		Operator operator = selection.getOperatorNullable();
-		if (operator != null) {
-			condition = condition
-					.and((active ? SIMPLE_ACTIVE.OPERATOR : SIMPLE_HISTORY.OPERATOR).eq(operator));
-		}
-		ServerScope scope = selection.getScopeNullable();
-		if (scope != null) {
-			condition = condition
-					.and((active ? SIMPLE_ACTIVE.SCOPE : SIMPLE_HISTORY.SCOPE).eq(scope));
+		SelectionPredicate<Victim> victims = selection.getVictims();
+		{
+			VictimCondition victimCondition = new VictimCondition(
+					new SimpleViewFields(active ? SIMPLE_ACTIVE : SIMPLE_HISTORY)
+			);
+			Condition acceptedCondition = DSL.noCondition();
+			for (Victim acceptedVictim : victims.acceptedValues()) {
+				acceptedCondition = acceptedCondition.or(
+						victimCondition.matchesVictim(acceptedVictim)
+				);
+			}
+			Condition notRejectedCondition = DSL.noCondition();
+			for (Victim rejectedVictim : victims.rejectedValues()) {
+				Condition notEqual = DSL.not(
+						victimCondition.matchesVictim(rejectedVictim)
+				);
+				notRejectedCondition = notRejectedCondition.and(notEqual);
+			}
+			condition = condition.and(acceptedCondition).and(notRejectedCondition);
 		}
 		return condition;
 	}
 
-	private Punishment fromRecordAndSelection(org.jooq.Record record, InternalSelectionOrder selection) {
-		boolean active = selection.selectActiveOnly();
-		PunishmentType type = selection.getTypeNullable();
-		if (type == null) {
-			type = record.get(active ? SIMPLE_ACTIVE.TYPE : SIMPLE_HISTORY.TYPE);
+	private static <U> U retrieveValueFromRecordOrSelection(SelectionPredicate<U> selection, org.jooq.Record record,
+															Field<U> field) {
+		if (selection.isSimpleEquality()) {
+			return selection.acceptedValues().iterator().next();
 		}
-		Victim victim = selection.getVictimNullable();
-		if (victim == null) {
+		return record.get(field);
+	}
+
+	private Punishment fromRecordAndSelection(org.jooq.Record record, SelectionOrder selection) {
+		boolean active = selection.selectActiveOnly();
+
+		PunishmentType type = retrieveValueFromRecordOrSelection(
+				selection.getTypes(), record, active ? SIMPLE_ACTIVE.TYPE : SIMPLE_HISTORY.TYPE
+		);
+		Victim victim;
+		SelectionPredicate<Victim> victimSelection = selection.getVictims();
+		if (victimSelection.isSimpleEquality()) {
+			victim = victimSelection.acceptedValues().iterator().next();
+		} else {
 			Victim.VictimType victimType = record.get(active ? SIMPLE_ACTIVE.VICTIM_TYPE : SIMPLE_HISTORY.VICTIM_TYPE);
 			victim = new DeserializedVictim(
 					record.get(active ? SIMPLE_ACTIVE.VICTIM_UUID : SIMPLE_HISTORY.VICTIM_UUID),
 					record.get(active ? SIMPLE_ACTIVE.VICTIM_ADDRESS : SIMPLE_HISTORY.VICTIM_ADDRESS)
 			).victim(victimType);
 		}
-		Operator operator = selection.getOperatorNullable();
-		if (operator == null) {
-			operator = record.get(active ? SIMPLE_ACTIVE.OPERATOR : SIMPLE_HISTORY.OPERATOR);
-		}
-		ServerScope scope = selection.getScopeNullable();
-		if (scope == null) {
-			scope = record.get(active ? SIMPLE_ACTIVE.SCOPE : SIMPLE_HISTORY.SCOPE);
-		}
+		Operator operator = retrieveValueFromRecordOrSelection(
+				selection.getOperators(), record, active ? SIMPLE_ACTIVE.OPERATOR : SIMPLE_HISTORY.OPERATOR
+		);
+		ServerScope scope = retrieveValueFromRecordOrSelection(
+				selection.getScopes(), record, active ? SIMPLE_ACTIVE.SCOPE : SIMPLE_HISTORY.SCOPE
+		);
 		return creator.createPunishment(
 				record.get(active ? SIMPLE_ACTIVE.ID : SIMPLE_HISTORY.ID),
 				type,
@@ -165,47 +195,66 @@ public class SelectionImpl {
 				record.get(active ? SIMPLE_ACTIVE.END : SIMPLE_HISTORY.END));
 	}
 
-	private ResultQuery<org.jooq.Record> getSelectionQuery(InternalSelectionOrder selection,
-														   DSLContext context,
-														   boolean singlePunishment) {
+	private ResultQuery<org.jooq.Record> selectMatchingPunishments(SelectionOrder selection,
+																   DSLContext context,
+																   boolean singlePunishment) {
 		boolean active = selection.selectActiveOnly();
-		var query = context
+		var selectOrderBy = context
 				.select(getColumns(selection))
 				.from(active ? SIMPLE_ACTIVE : SIMPLE_HISTORY)
 				.where(getPredication(selection))
-				.orderBy((active ? SIMPLE_ACTIVE.START : SIMPLE_HISTORY.START).desc())
-				.offset(selection.skipCount());
-		if (singlePunishment) {
-			return query.limit(1);
-		}
-		int maximumToRetrieve = selection.maximumToRetrieve();
-		if (maximumToRetrieve == 0) {
-			return query;
+				.orderBy(
+						(active ? SIMPLE_ACTIVE.START : SIMPLE_HISTORY.START).desc(),
+						(active ? SIMPLE_ACTIVE.ID : SIMPLE_HISTORY.ID).desc()
+				);
+		// If limit == 0, omit LIMIT clause entirely
+		int limit = (singlePunishment) ? 1 : selection.limitToRetrieve();
+
+		Instant seekAfterStartTime = selection.seekAfterStartTime();
+		int offset = selection.skipCount();
+		if (offset == 0) {
+			if (seekAfterStartTime.equals(Instant.EPOCH)) {
+				// No OFFSET and no SEEK AFTER
+				return (limit == 0) ? selectOrderBy : selectOrderBy.limit(limit);
+			} else {
+				// Has SEEK AFTER
+				var seekAfterQuery = selectOrderBy.seekAfter(seekAfterStartTime, selection.seekAfterId());
+				return (limit == 0) ? seekAfterQuery : seekAfterQuery.limit(limit);
+			}
 		} else {
-			return query.limit(maximumToRetrieve - selection.skipCount());
+			// Has OFFSET
+			assert seekAfterStartTime.equals(Instant.EPOCH) : "seekAfter is exclusive with skipFirstRetrieved";
+			var offsetQuery = selectOrderBy.offset(offset);
+			return (limit == 0) ? offsetQuery : offsetQuery.limit(limit);
 		}
 	}
 
-	CentralisedFuture<Punishment> getFirstSpecificPunishment(InternalSelectionOrder selection) {
-		if (selection.selectActiveOnly() && selection.getTypeNullable() == PunishmentType.KICK) {
+	private static boolean selectActiveKicks(SelectionOrder selection) {
+		return selection.selectActiveOnly()
+				&& selection.getTypes().isSimpleEquality()
+				&& selection.getTypes().acceptedValues().iterator().next() == PunishmentType.KICK;
+	}
+
+	CentralisedFuture<Punishment> getFirstSpecificPunishment(SelectionOrder selection) {
+		if (selectActiveKicks(selection)) {
 			// Kicks cannot possibly be active. They are all history
 			return futuresFactory.completedFuture(null);
 		}
 		InternalDatabase database = dbProvider.get();
 		return database.query(SQLFunction.readOnly((context) -> {
-			return getSelectionQuery(selection, context, true)
+			return selectMatchingPunishments(selection, context, true)
 					.fetchOne((record) -> fromRecordAndSelection(record, selection));
 		}));
 	}
 
-	ReactionStage<List<Punishment>> getSpecificPunishments(InternalSelectionOrder selection) {
-		if (selection.selectActiveOnly() && selection.getTypeNullable() == PunishmentType.KICK) {
+	ReactionStage<List<Punishment>> getSpecificPunishments(SelectionOrder selection) {
+		if (selectActiveKicks(selection)) {
 			// Kicks cannot possibly be active. They are all history
 			return futuresFactory.completedFuture(List.of());
 		}
 		InternalDatabase database = dbProvider.get();
 		return database.query(SQLFunction.readOnly((context) -> {
-			return getSelectionQuery(selection, context, false)
+			return selectMatchingPunishments(selection, context, false)
 					.fetch((record) -> fromRecordAndSelection(record, selection));
 		}));
 	}

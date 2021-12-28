@@ -86,7 +86,7 @@ public interface MainConfig {
 	Commands commands();
 	
 	interface Commands {
-		
+
 		@ConfKey("enable-tab-completion")
 		@ConfComments("Whether to enable tab completion")
 		@DefaultBoolean(true)
@@ -95,7 +95,7 @@ public interface MainConfig {
 		@ConfKey("tab-completion")
 		@SubSection
 		TabCompletionConfig tabCompletion();
-		
+
 		@ConfComments({"What commands should be registered as aliases for libertybans commands?",
 			"For each command listed here, '/<command>' will be equal to '/libertybans <command>'"})
 		@DefaultStrings({
@@ -115,7 +115,14 @@ public interface MainConfig {
 			"accounthistory"
 		})
 		Set<String> aliases();
-		
+
+		@ConfKey("use-composite-victims-by-default")
+		@ConfComments({
+				"If this is enabled, it will be as if relevant commands used the -both argument.",
+				"Effectively, this makes punishments more strict, since moderators will end up banning UUIDs and addresses"
+		})
+		@DefaultBoolean(false)
+		boolean useCompositeVictimsByDefault();
+
 	}
-	
 }

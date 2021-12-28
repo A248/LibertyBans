@@ -16,17 +16,17 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.it.test.applicable;
 
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
+import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.selector.AddressStrictness;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetAddressStrictness;
 import space.arim.libertybans.it.util.RandomUtil;
-
-import java.net.InetAddress;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
 public class StrictStrictnessIT {
@@ -41,7 +41,7 @@ public class StrictStrictnessIT {
 	@TestTemplate
 	@SetAddressStrictness(AddressStrictness.STRICT)
 	public void testEnforceBan() {
-		InetAddress commonAddress = RandomUtil.randomAddress();
+		NetworkAddress commonAddress = RandomUtil.randomAddress();
 
 		User userOne = User.randomUser();
 		User userTwo = User.randomUser();

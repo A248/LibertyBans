@@ -28,6 +28,7 @@ import space.arim.libertybans.core.alts.WhichAlts;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.uuid.UUIDManager;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.util.stream.Stream;
 
@@ -72,17 +73,17 @@ public class AltCommands extends AbstractSubCommandGroup {
 		}
 
 		@Override
-		public void execute() {
+		public ReactionStage<Void> execute() {
 			if (!sender().hasPermission("libertybans.alts.command")) {
 				sender().sendMessage(section().command().permission());
-				return;
+				return null;
 			}
 			if (!command().hasNext()) {
 				sender().sendMessage(section().command().usage());
-				return;
+				return null;
 			}
 			String target = command().next();
-			var future = uuidManager.lookupPlayer(target).thenCompose((userDetails) -> {
+			return uuidManager.lookupPlayer(target).thenCompose((userDetails) -> {
 				if (userDetails.isEmpty()) {
 					sender().sendMessage(messages().all().notFound().player().replaceText("%TARGET%", target));
 					return completedFuture(null);
@@ -96,7 +97,6 @@ public class AltCommands extends AbstractSubCommandGroup {
 							altCheckFormatter.formatMessage(section().command().header(), target, detectedAlts));
 				});
 			});
-			postFuture(future);
 		}
 	}
 }

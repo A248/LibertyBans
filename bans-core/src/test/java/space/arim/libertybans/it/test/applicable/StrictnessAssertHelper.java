@@ -16,6 +16,7 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.it.test.applicable;
 
 import jakarta.inject.Inject;
@@ -31,7 +32,6 @@ import space.arim.libertybans.it.env.platform.QuackPlatform;
 import space.arim.libertybans.it.env.platform.QuackPlayer;
 import space.arim.libertybans.it.env.platform.QuackPlayerBuilder;
 
-import java.net.InetAddress;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -55,20 +55,20 @@ public class StrictnessAssertHelper {
 		this.platform = platform;
 	}
 
-	private Component connectAndGetMessage(UUID uuid, String name, InetAddress address) {
+	private Component connectAndGetMessage(UUID uuid, String name, NetworkAddress address) {
 		return guardian.executeAndCheckConnection(uuid, name, address).join();
 	}
 
-	public void connectAndAssertUnbannedUser(UUID uuid, String name, InetAddress address) {
+	public void connectAndAssertUnbannedUser(UUID uuid, String name, NetworkAddress address) {
 		assertNull(connectAndGetMessage(uuid, name, address), "User " + uuid + "/" + name + " is not banned yet");
 	}
 
-	public void connectAndAssumeUnbannedUser(UUID uuid, String name, InetAddress address) {
+	public void connectAndAssumeUnbannedUser(UUID uuid, String name, NetworkAddress address) {
 		Component banMessage = connectAndGetMessage(uuid, name, address);
 		assumeTrue(banMessage == null, "User " + uuid + "/" + name + " is not banned yet");
 	}
 
-	void banAddress(InetAddress address, String reason) {
+	void banAddress(NetworkAddress address, String reason) {
 		Punishment punishment = drafter.draftBuilder()
 				.type(PunishmentType.BAN)
 				.victim(AddressVictim.of(address))
@@ -79,12 +79,12 @@ public class StrictnessAssertHelper {
 				"Conflicting punishment. Punishment reason = " + reason);
 	}
 
-	private Punishment getBan(UUID uuid, InetAddress address) {
-		return selector.getApplicablePunishment(uuid, NetworkAddress.of(address), PunishmentType.BAN)
+	private Punishment getBan(UUID uuid, NetworkAddress address) {
+		return selector.getApplicablePunishment(uuid, address, PunishmentType.BAN)
 				.toCompletableFuture().join().orElse(null);
 	}
 
-	void assertBanned(UUID uuid, InetAddress address, String assertion) {
+	void assertBanned(UUID uuid, NetworkAddress address, String assertion) {
 		Punishment punishment = getBan(uuid, address);
 		assertNotNull(punishment, assertion);
 
@@ -93,7 +93,7 @@ public class StrictnessAssertHelper {
 		assertFalse(player.isStillOnline(), assertion + "; Player should have been kicked");
 	}
 
-	void assertNotBanned(UUID uuid, InetAddress address, String assertion) {
+	void assertNotBanned(UUID uuid, NetworkAddress address, String assertion) {
 		assertNull(getBan(uuid, address), assertion);
 	}
 

@@ -32,7 +32,6 @@ import space.arim.libertybans.core.punish.Guardian;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetTime;
-import space.arim.libertybans.it.util.RandomUtil;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -42,6 +41,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static space.arim.libertybans.it.util.RandomUtil.randomAddress;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
 @ExtendWith(MockitoExtension.class)
@@ -61,7 +61,7 @@ public class AccountHistoryIT {
 		assertEquals(List.of(),
 				accountHistory.knownAccounts(PlayerVictim.of(UUID.randomUUID())).join());
 		assertEquals(List.of(),
-				accountHistory.knownAccounts(AddressVictim.of(RandomUtil.randomAddress())).join());
+				accountHistory.knownAccounts(AddressVictim.of(randomAddress())).join());
 	}
 
 	@TestTemplate
@@ -77,9 +77,9 @@ public class AccountHistoryIT {
 		String playerOneName = "Player1";
 		UUID playerTwo = UUID.randomUUID();
 		String playerTwoName = "Player2";
-		NetworkAddress playerOneAddress = NetworkAddress.of(RandomUtil.randomAddress());
-		NetworkAddress playerTwoAddress = NetworkAddress.of(RandomUtil.randomAddress());
-		NetworkAddress sharedAddress = NetworkAddress.of(RandomUtil.randomAddress());
+		NetworkAddress playerOneAddress = randomAddress();
+		NetworkAddress playerTwoAddress = randomAddress();
+		NetworkAddress sharedAddress = randomAddress();
 		guardian.executeAndCheckConnection(playerOne, playerOneName, playerOneAddress).join();
 		time.advanceBy(ONE_DAY);
 		guardian.executeAndCheckConnection(playerTwo, playerTwoName, playerTwoAddress).join();
@@ -115,8 +115,8 @@ public class AccountHistoryIT {
 
 		UUID player = UUID.randomUUID();
 		String username = "Player1";
-		NetworkAddress firstAddress = NetworkAddress.of(RandomUtil.randomAddress());
-		NetworkAddress secondAddress = NetworkAddress.of(RandomUtil.randomAddress());
+		NetworkAddress firstAddress = randomAddress();
+		NetworkAddress secondAddress = randomAddress();
 
 		guardian.executeAndCheckConnection(player, username, firstAddress).join();
 		time.advanceBy(ONE_DAY);

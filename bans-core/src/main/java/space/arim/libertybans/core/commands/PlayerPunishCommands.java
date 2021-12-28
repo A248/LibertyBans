@@ -25,6 +25,7 @@ import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.core.commands.extra.ParsePlayerVictimDynamicallyComposite;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
@@ -54,8 +55,11 @@ public class PlayerPunishCommands extends PunishCommands {
 	}
 
 	@Override
-	public CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg, PunishmentType type) {
-		var victimFuture = argumentParser().parseVictimByName(sender, targetArg);
+	public CentralisedFuture<Victim> parseVictim(CmdSender sender, CommandPackage command,
+												 String targetArg, PunishmentType type) {
+		var victimFuture = argumentParser().parseVictim(
+				sender, targetArg, new ParsePlayerVictimDynamicallyComposite(configs(), command)
+		);
 		switch (type) {
 		case BAN:
 		case MUTE:

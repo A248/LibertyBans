@@ -16,17 +16,12 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.commands.extra;
 
-import java.util.UUID;
-
 import jakarta.inject.Inject;
-
-import space.arim.libertybans.core.config.MessagesConfig;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
-
 import space.arim.libertybans.api.AddressVictim;
+import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
@@ -34,8 +29,15 @@ import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.env.UUIDAndAddress;
+import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.uuid.UUIDManager;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
+
+import java.util.UUID;
 
 public class StandardArgumentParser implements ArgumentParser {
 
@@ -57,10 +59,9 @@ public class StandardArgumentParser implements ArgumentParser {
 	private MessagesConfig.All.NotFound notFound() {
 		return configs.getMessagesConfig().all().notFound();
 	}
-	
-	// uuidField from name
-	
-	private CentralisedFuture<UUID> parseOrLookupUUID(CmdSender sender, String targetArg) {
+
+	@Override
+	public CentralisedFuture<UUID> parseOrLookupUUID(CmdSender sender, String targetArg) {
 		switch (targetArg.length()) {
 		case 36:
 			UUID uuid;
@@ -93,20 +94,9 @@ public class StandardArgumentParser implements ArgumentParser {
 			return uuid.get();
 		});
 	}
-	
+
 	@Override
-	public CentralisedFuture<Victim> parseVictimByName(CmdSender sender, String targetArg) {
-		NetworkAddress parsedAddress = AddressParser.parseIpv4(targetArg);
-		if (parsedAddress != null) {
-			return completedFuture(AddressVictim.of(parsedAddress));
-		}
-		return parseOrLookupUUID(sender, targetArg).thenApply((uuid) -> {
-			return (uuid == null) ? null : PlayerVictim.of(uuid);
-		});
-	}
-	
-	@Override
-	public CentralisedFuture<Operator> parseOperatorByName(CmdSender sender, String operatorArg) {
+	public CentralisedFuture<Operator> parseOperator(CmdSender sender, String operatorArg) {
 		if (ContainsCI.containsIgnoreCase(configs.getMessagesConfig().formatting().consoleArguments(), operatorArg)) {
 			return completedFuture(ConsoleOperator.INSTANCE);
 		}
@@ -114,20 +104,39 @@ public class StandardArgumentParser implements ArgumentParser {
 			return (uuid == null) ? null : PlayerOperator.of(uuid);
 		});
 	}
-	
+
 	@Override
-	public CentralisedFuture<Victim> parseAddressVictim(CmdSender sender, String targetArg) {
+	public CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg, ParseVictim how) {
 		NetworkAddress parsedAddress = AddressParser.parseIpv4(targetArg);
 		if (parsedAddress != null) {
 			return completedFuture(AddressVictim.of(parsedAddress));
 		}
-		return uuidManager.lookupAddress(targetArg).thenApply((address) -> {
-			if (address == null) {
-				sender.sendMessage(notFound().playerOrAddress().replaceText("%TARGET%", targetArg));
-				return null;
-			}
-			return AddressVictim.of(address);
-		});
+		Victim.VictimType preferredType = how.preferredType();
+		switch (preferredType) {
+		case PLAYER:
+			return parseOrLookupUUID(sender, targetArg).thenApply((uuid) -> {
+				return (uuid == null) ? null : PlayerVictim.of(uuid);
+			});
+		case ADDRESS:
+			return uuidManager.lookupAddress(targetArg).thenApply((address) -> {
+				if (address == null) {
+					sender.sendMessage(notFound().playerOrAddress().replaceText("%TARGET%", targetArg));
+					return null;
+				}
+				return AddressVictim.of(address);
+			});
+		case COMPOSITE:
+			return uuidManager.lookupPlayer(targetArg).thenApply((optUuidAndAddress) -> {
+				if (optUuidAndAddress.isEmpty()) {
+					sender.sendMessage(notFound().player().replaceText("%TARGET%", targetArg));
+					return null;
+				}
+				UUIDAndAddress uuidAndAddress = optUuidAndAddress.get();
+				return CompositeVictim.of(uuidAndAddress.uuid(), uuidAndAddress.address());
+			});
+		default:
+			throw MiscUtil.unknownVictimType(preferredType);
+		}
 	}
 
 }
