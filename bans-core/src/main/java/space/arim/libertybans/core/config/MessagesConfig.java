@@ -255,7 +255,8 @@ public interface MessagesConfig {
 
 		interface PunishmentExpiredDisplay {
 
-			@ConfComments("How do you describe a punishment that's not expired?")
+			@ConfKey("not-expired")
+			@ConfComments("How do you describe a punishment which is not expired?")
 			@DefaultString("Not expired")
 			String notExpired();
 
