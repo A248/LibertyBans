@@ -251,7 +251,7 @@ public interface MessagesConfig {
 		@ConfKey("punishment-expired-display")
 		@ConfComments("How should the %HAS_EXPIRED% variable be displayed?")
 		@SubSection
-		PunishmentExpiredDisplay punishmentActiveDisplay();
+		PunishmentExpiredDisplay punishmentExpiredDisplay();
 
 		interface PunishmentExpiredDisplay {
 

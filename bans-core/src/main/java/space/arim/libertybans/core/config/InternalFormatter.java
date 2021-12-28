@@ -21,7 +21,6 @@ package space.arim.libertybans.core.config;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
-import space.arim.libertybans.api.PunishmentType;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.libertybans.api.Operator;

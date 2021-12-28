@@ -232,8 +232,8 @@ public class Formatter implements InternalFormatter {
 		simpleReplacements.put(SimpleReplaceable.END_DATE, formatAbsoluteDate(punishment.getEndDate()));
 		simpleReplacements.put(SimpleReplaceable.TIME_REMAINING, relativeEndFormatted);
 		simpleReplacements.put(SimpleReplaceable.TIME_REMAINING_SIMPLE, relativeEndFormattedSimple);
-		MessagesConfig.Formatting.PunishmentExpiredDisplay display = messages().formatting().punishmentActiveDisplay();
-		simpleReplacements.put(SimpleReplaceable.HAS_EXPIRED, (display != null) ? ((notExpired) ? display.notExpired() : display.expired()) : "Unknown"); // null check needed for tests
+		MessagesConfig.Formatting.PunishmentExpiredDisplay display = messages().formatting().punishmentExpiredDisplay();
+		simpleReplacements.put(SimpleReplaceable.HAS_EXPIRED, (notExpired) ? display.notExpired() : display.expired());
 
 		return simpleReplacements;
 	}
