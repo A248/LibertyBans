@@ -138,6 +138,7 @@ public class Formatter implements InternalFormatter {
 	private enum SimpleReplaceable {
 		ID,
 		TYPE,
+		TYPE_VERB,
 		VICTIM_ID,
 		OPERATOR_ID,
 		UNOPERATOR_ID,
@@ -146,8 +147,11 @@ public class Formatter implements InternalFormatter {
 		DURATION,
 		START_DATE,
 		TIME_PASSED,
+		TIME_PASSED_SIMPLE,
 		END_DATE,
-		TIME_REMAINING;
+		TIME_REMAINING,
+		TIME_REMAINING_SIMPLE,
+		HAS_EXPIRED;
 		
 		String getVariable() {
 			return "%" + name() + "%";
@@ -173,13 +177,16 @@ public class Formatter implements InternalFormatter {
 		final long timePassed = now - start;
 
 		final String durationFormatted;
-		final String relativeEndFormatted;
+		final String relativeEndFormatted, relativeEndFormattedSimple;
+		boolean notExpired = false;
 
 		if (punishment.isPermanent()) {
 			// Permanent punishment
 			MessagesConfig.Formatting.PermanentDisplay display = messages().formatting().permanentDisplay();
 			durationFormatted = display.duration();
 			relativeEndFormatted = display.relative();
+			relativeEndFormattedSimple = relativeEndFormatted;
+			notExpired = true;
 
 		} else {
 			final long end = punishment.getEndDateSeconds();
@@ -192,20 +199,26 @@ public class Formatter implements InternalFormatter {
 				// Punishment recently enacted
 				// Using a margin of initiation prevents the "29 days, 23 hours, 59 minutes" issue
 				relativeEndFormatted = durationFormatted;
+				relativeEndFormattedSimple = formatRelativeSimple(duration);
+				notExpired = true;
 
 			} else if (timePassed >= duration) {
 				// Expired punishment
 				relativeEndFormatted = messages().formatting().noTimeRemainingDisplay();
+				relativeEndFormattedSimple = relativeEndFormatted;
 			} else {
 				// Punishment still active
 				long timeRemaining = end - now;
 				relativeEndFormatted = formatRelative(timeRemaining);
+				relativeEndFormattedSimple = formatRelativeSimple(timeRemaining);
+				notExpired = true;
 			}
 		}
 
 		Map<SimpleReplaceable, String> simpleReplacements = new EnumMap<>(SimpleReplaceable.class);
 		simpleReplacements.put(SimpleReplaceable.ID, Long.toString(punishment.getIdentifier()));
 		simpleReplacements.put(SimpleReplaceable.TYPE, formatPunishmentType(punishment.getType()));
+		simpleReplacements.put(SimpleReplaceable.TYPE_VERB, formatPunishmentTypeVerb(punishment.getType()));
 		simpleReplacements.put(SimpleReplaceable.VICTIM_ID, formatVictimId(punishment.getVictim()));
 		simpleReplacements.put(SimpleReplaceable.OPERATOR_ID, formatOperatorId(punishment.getOperator()));
 		if (unOperator != null)
@@ -215,12 +228,16 @@ public class Formatter implements InternalFormatter {
 		simpleReplacements.put(SimpleReplaceable.DURATION, durationFormatted);
 		simpleReplacements.put(SimpleReplaceable.START_DATE, formatAbsoluteDate(punishment.getStartDate()));
 		simpleReplacements.put(SimpleReplaceable.TIME_PASSED, formatRelative(timePassed));
+		simpleReplacements.put(SimpleReplaceable.TIME_PASSED_SIMPLE, formatRelativeSimple(timePassed));
 		simpleReplacements.put(SimpleReplaceable.END_DATE, formatAbsoluteDate(punishment.getEndDate()));
 		simpleReplacements.put(SimpleReplaceable.TIME_REMAINING, relativeEndFormatted);
+		simpleReplacements.put(SimpleReplaceable.TIME_REMAINING_SIMPLE, relativeEndFormattedSimple);
+		MessagesConfig.Formatting.PunishmentExpiredDisplay display = messages().formatting().punishmentExpiredDisplay();
+		simpleReplacements.put(SimpleReplaceable.HAS_EXPIRED, (notExpired) ? display.notExpired() : display.expired());
 
 		return simpleReplacements;
 	}
-	
+
 	private CentralisedFuture<Component> formatWithPunishment0(ComponentText componentText,
 															   Map<SimpleReplaceable, String> simpleReplacements,
 															   Map<FutureReplaceable, CentralisedFuture<String>> futureReplacements) {
@@ -355,11 +372,43 @@ public class Formatter implements InternalFormatter {
 		}
 		return joiner.toString();
 	}
+
+	String formatRelativeSimple(long diff) {
+		if (diff < 0) {
+			return formatRelativeSimple(-diff);
+		}
+		MessagesConfig.Misc.Time timeConfig = messages().misc().time();
+
+		List<Map.Entry<ChronoUnit, String>> fragments = new ArrayList<>(timeConfig.fragments().entrySet());
+		fragments.sort(Map.Entry.<ChronoUnit, String>comparingByKey().reversed());
+		String segment = "";
+
+		for (Map.Entry<ChronoUnit, String> fragment : fragments) {
+			long unitLength = fragment.getKey().getDuration().toSeconds();
+			if (diff >= unitLength) {
+				long amount = Math.round(diff / (double) unitLength);
+				if (amount > 0) {
+					segment = fragment.getValue().replace("%VALUE%", Long.toString(amount));
+					break;
+				}
+			}
+		}
+		if (segment.isEmpty()) {
+			return timeConfig.fallbackSeconds().replace("%VALUE%", Long.toString(diff));
+		}
+		return segment;
+	}
 	
 	@Override
 	public String formatPunishmentType(PunishmentType type) {
 		String formatted = messages().formatting().punishmentTypeDisplay().get(type);
 		return (formatted == null) ? type.toString() : formatted;
+	}
+
+	@Override
+	public String formatPunishmentTypeVerb(PunishmentType type) {
+		String formatted = messages().formatting().punishmentTypeVerbDisplay().get(type);
+		return (formatted == null) ? type.toString() + "ed" : formatted;
 	}
 
 	@Override

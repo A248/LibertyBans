@@ -142,6 +142,20 @@ public class FormatterTest {
 				formatter.formatRelative(ChronoUnit.YEARS.getDuration().multipliedBy(3).getSeconds()));
 	}
 
+	@Test
+	public void formatRelativeSimple() {
+		setTimeConf(simpleTimeConf());
+
+		assertEquals("3 minutes",
+				formatter.formatRelativeSimple(3L * 60L + 5L));
+		assertEquals("5 hours",
+				formatter.formatRelativeSimple(4L * 60L * 60L + 45L * 60L + 58L));
+		assertEquals("2 days",
+				formatter.formatRelativeSimple(2L * 24L * 60L * 60L + 25L * 60L + 40L));
+		assertEquals("153 years",
+				formatter.formatRelativeSimple(ChronoUnit.YEARS.getDuration().multipliedBy(153).getSeconds()));
+	}
+
 	private void setSimpleDateFormatting() {
 		MainConfig mainConfig = mock(MainConfig.class);
 		MainConfig.DateFormatting dateFormatting = mock(MainConfig.DateFormatting.class);
@@ -159,6 +173,10 @@ public class FormatterTest {
 		lenient().when(formatting.globalScopeDisplay()).thenReturn("global");
 		lenient().when(formatting.punishmentTypeDisplay()).thenReturn(Map.of());
 		lenient().when(formatting.noTimeRemainingDisplay()).thenReturn("(No time remaining)");
+		MessagesConfig.Formatting.PunishmentExpiredDisplay expiredDisplay = mock(MessagesConfig.Formatting.PunishmentExpiredDisplay.class);
+		lenient().when(expiredDisplay.notExpired()).thenReturn("not expired");
+		lenient().when(expiredDisplay.expired()).thenReturn("expired");
+		lenient().when(formatting.punishmentExpiredDisplay()).thenReturn(expiredDisplay);
 	}
 
 	private void setupSimpleDefaults() {
