@@ -27,6 +27,7 @@ import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.time.Instant;
 
@@ -35,13 +36,16 @@ import static space.arim.libertybans.core.schema.tables.Messages.MESSAGES;
 @Singleton
 public final class SQLSynchronizationMessenger implements SynchronizationMessenger {
 
+	private final FactoryOfTheFuture futuresFactory;
 	private final Provider<QueryExecutor> queryExecutor;
 	private final Time time;
 
 	private Instant lastTimestamp;
 
 	@Inject
-	public SQLSynchronizationMessenger(Provider<QueryExecutor> queryExecutor, Time time) {
+	public SQLSynchronizationMessenger(FactoryOfTheFuture futuresFactory,
+									   Provider<QueryExecutor> queryExecutor, Time time) {
+		this.futuresFactory = futuresFactory;
 		this.queryExecutor = queryExecutor;
 		this.time = time;
 	}
@@ -60,12 +64,12 @@ public final class SQLSynchronizationMessenger implements SynchronizationMesseng
 	@Override
 	public CentralisedFuture<byte[][]> poll() {
 		Instant currentTime = time.currentTimestamp();
-		Condition timeCondition;
 		if (lastTimestamp == null) {
-			timeCondition = MESSAGES.TIME.lessOrEqual(currentTime);
-		} else {
-			timeCondition = MESSAGES.TIME.lessOrEqual(currentTime).and(MESSAGES.TIME.greaterThan(lastTimestamp));
+			// The server has recently started up or LibertyBans has restarted
+			lastTimestamp = currentTime;
+			return futuresFactory.completedFuture(new byte[][] {});
 		}
+		Condition timeCondition = MESSAGES.TIME.lessOrEqual(currentTime).and(MESSAGES.TIME.greaterThan(lastTimestamp));
 		var future = queryExecutor.get().query(SQLFunction.readOnly((context) -> {
 			return context
 					.select(MESSAGES.MESSAGE)
