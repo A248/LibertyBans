@@ -38,15 +38,18 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 public class SQLSynchronizationIT {
 
 	private final SQLSynchronizationMessenger synchronizationMessenger;
+	private final SettableTime time;
 
 	@Inject
-	public SQLSynchronizationIT(SQLSynchronizationMessenger synchronizationMessenger) {
+	public SQLSynchronizationIT(SQLSynchronizationMessenger synchronizationMessenger, SettableTime time) {
 		this.synchronizationMessenger = synchronizationMessenger;
+		this.time = time;
 	}
 
 	@BeforeEach
 	public void initialPoll() {
 		synchronizationMessenger.setInitialTimestamp();
+		time.advanceBy(Duration.ofMinutes(1L));
 	}
 
 	@AfterEach
@@ -69,7 +72,7 @@ public class SQLSynchronizationIT {
 	}
 
 	@TestTemplate
-	public void sendAndReceive(SettableTime time) {
+	public void sendAndReceive() {
 		byte[] message = dispatchRandomMessage();
 		time.advanceBy(Duration.ofMillis(10L));
 
@@ -80,7 +83,7 @@ public class SQLSynchronizationIT {
 	}
 
 	@TestTemplate
-	public void sendAndReceiveMultipleInOrder(SettableTime time) {
+	public void sendAndReceiveMultipleInOrder() {
 		byte[] message1 = dispatchRandomMessage();
 		time.advanceBy(Duration.ofMillis(10L));
 		byte[] message2 = dispatchRandomMessage();
