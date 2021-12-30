@@ -21,6 +21,7 @@ package space.arim.libertybans.it.test.punish.sync;
 
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.core.punish.sync.SQLSynchronizationMessenger;
@@ -41,6 +42,11 @@ public class SQLSynchronizationIT {
 	@Inject
 	public SQLSynchronizationIT(SQLSynchronizationMessenger synchronizationMessenger) {
 		this.synchronizationMessenger = synchronizationMessenger;
+	}
+
+	@BeforeEach
+	public void initialPoll() {
+		synchronizationMessenger.setInitialTimestamp();
 	}
 
 	@AfterEach

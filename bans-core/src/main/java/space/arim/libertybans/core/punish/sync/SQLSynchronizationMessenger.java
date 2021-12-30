@@ -82,6 +82,10 @@ public final class SQLSynchronizationMessenger implements SynchronizationMesseng
 		return future;
 	}
 
+	public void setInitialTimestamp() {
+		lastTimestamp = time.currentTimestamp();
+	}
+
 	public void resetLastTimestamp() {
 		lastTimestamp = null;
 	}
