@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.it.test;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -69,6 +70,16 @@ public class JpmsTest {
 		return new JpmsLauncher(folder, handle, environment, envEnforcer, envUserResolver);
 	}
 
+	@BeforeEach
+	public void setEnhancedExecutor() {
+		when(handle.createEnhancedExecutor()).thenReturn(new SimplifiedEnhancedExecutor() {
+			@Override
+			public void execute(Runnable command) {
+				ForkJoinPool.commonPool().execute(command);
+			}
+		});
+	}
+
 	@Test
 	public void initialize() {
 		BaseFoundation foundation = assertDoesNotThrow(() -> newLauncher().launch());
@@ -79,12 +90,6 @@ public class JpmsTest {
 	public void startupAndShutdown() {
 		// This test is mostly intended to check that the configuration is exported to dazzleconf
 		when(handle.createFuturesFactory()).thenReturn(new IndifferentFactoryOfTheFuture());
-		when(handle.createEnhancedExecutor()).thenReturn(new SimplifiedEnhancedExecutor() {
-			@Override
-			public void execute(Runnable command) {
-				ForkJoinPool.commonPool().execute(command);
-			}
-		});
 		when(environment.createListeners()).thenReturn(Set.of());
 		when(environment.createAliasCommand(any())).thenReturn(new PlatformListener() {
 
@@ -99,21 +104,4 @@ public class JpmsTest {
 		assertDoesNotThrow(foundation::startup);
 		assertDoesNotThrow(foundation::shutdown);
 	}
-
-	/*
-	Flyway-3342
-	@Test
-	public void loadFlywayExtensions() {
-		ModuleLayer thisLayer = getClass().getModule().getLayer();
-		Objects.requireNonNull(thisLayer, "Must be running on the module path");
-		ServiceLoader<org.flywaydb.core.extensibility.Plugin> loader = ServiceLoader.load(thisLayer, org.flywaydb.core.extensibility.Plugin.class);
-		long count = loader
-				.stream()
-				.map(ServiceLoader.Provider::get)
-				.filter((plugin) -> plugin.getClass().equals(org.flywaydb.database.MySQLDatabaseExtension.class))
-				.count();
-		assertEquals(1, count, "One MySQLDatabaseExtension should be loaded");
-	}
-
-	 */
 }
