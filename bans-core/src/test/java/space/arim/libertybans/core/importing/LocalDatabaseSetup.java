@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2020 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,9 @@
 
 package space.arim.libertybans.core.importing;
 
+import org.jooq.CloseableDSLContext;
+import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionConfigurationException;
@@ -62,20 +65,33 @@ public class LocalDatabaseSetup implements BeforeEachCallback, AfterEachCallback
 		throw new ExtensionConfigurationException("Either @Hsqldb or @H2 is required");
 	}
 
-	private String getJdbcUrl(Class<?> testClass, int counterValue) {
-		return isHsqldbNotH2(testClass) ?
-				"jdbc:hsqldb:mem:testdb-" + counterValue
-				: "jdbc:h2:mem:testdb-" + counterValue + ";DB_CLOSE_DELAY=-1";
+	private record WrappedDSLContext(CloseableDSLContext context) implements ExtensionContext.Store.CloseableResource {
+
+		@Override
+		public void close() throws Throwable {
+			context.close();
+		}
 	}
 
 	@Override
 	public void beforeEach(ExtensionContext context) throws Exception {
-		AtomicInteger globalCounter = context.getRoot().getStore(namespace)
-				.getOrComputeIfAbsent(AtomicInteger.class, (k) -> new AtomicInteger(), AtomicInteger.class);
+		int counterValue;
+		{
+			AtomicInteger globalCounter = context.getRoot().getStore(namespace)
+					.getOrComputeIfAbsent(AtomicInteger.class, (k) -> new AtomicInteger(), AtomicInteger.class);
+			counterValue = globalCounter.getAndIncrement();
+		}
+		String jdbcUrl =  isHsqldbNotH2(context.getRequiredTestClass()) ?
+				"jdbc:hsqldb:mem:testdb-" + counterValue
+				: "jdbc:h2:mem:testdb-" + counterValue + ";DB_CLOSE_DELAY=-1";
 
-		String jdbcUrl =  getJdbcUrl(context.getRequiredTestClass(), globalCounter.incrementAndGet());
-		ConnectionSource connectionSource = () -> DriverManager.getConnection(jdbcUrl, "SA", "");
-		context.getStore(namespace).put(ConnectionSource.class, connectionSource);
+		context.getStore(namespace).put(String.class, jdbcUrl);
+		context.getStore(namespace).put(WrappedDSLContext.class, new WrappedDSLContext(DSL.using(jdbcUrl, "SA", "")));
+	}
+
+	private ConnectionSource getConnectionSource(ExtensionContext context) {
+		String jdbcUrl = context.getStore(namespace).get(String.class, String.class);
+		return () -> DriverManager.getConnection(jdbcUrl, "SA", "");
 	}
 
 	@Override
@@ -87,20 +103,21 @@ public class LocalDatabaseSetup implements BeforeEachCallback, AfterEachCallback
 		}
 	}
 
-	private ConnectionSource getConnectionSource(ExtensionContext context) {
-		return context.getStore(namespace).get(ConnectionSource.class, ConnectionSource.class);
-	}
-
 	@Override
 	public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
 		var paramType = parameterContext.getParameter().getType();
-		return paramType.equals(ConnectionSource.class);
+		return paramType.equals(ConnectionSource.class) || paramType.equals(DSLContext.class);
 	}
 
 	@Override
 	public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
+		var paramType = parameterContext.getParameter().getType();
+		if (paramType.equals(DSLContext.class)) {
+			return extensionContext.getStore(namespace).get(WrappedDSLContext.class, WrappedDSLContext.class).context;
+		}
+		assert paramType.equals(ConnectionSource.class);
 		return getConnectionSource(extensionContext);
 	}
 }

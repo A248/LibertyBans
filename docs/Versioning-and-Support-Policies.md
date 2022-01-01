@@ -38,15 +38,23 @@ Assuming no external programs are connected to the database, single servers and 
 
 ## Support
 
-
 | Version                | Support Provided |
 | ---------------------- | ---------------------- |
 | Latest released        | Always                 |
 | Previous minor version | At least 1 month after the next minor version is released  |
 | Previous major version | At least 4 months after the next major version is released |
 
-Notes for previous versions:
+There is no timeline for responding to support requests, but an effort will be made to respond within 3 days *at maximum*, ideally within 1 day.
+
+### Support for Previous Versions
+
 * You must be on the most recent version *for that version*. For example, you cannot expect support for 1.4.2 if 1.4.3 has been released.
 * Support may be slower than that for the latest version. If you are on the latest version, you are more likely to receive support *faster* and *from more users*.
 
-There is no timeline for responding to support requests, but an effort will be made to respond within 3 days *at maximum*, ideally within 1 day.
+### A Note on Bugs in Other Software
+
+* If we identify a bug on your server which could affect LibertyBans, we reserve the right to require you to fix this bug before requesting further support.
+* If you find a bug in other software which affects LibertyBans; we may ask you to fix this other software, if it is your responsibility to do so.
+  * For example, there is a bug in pterodactyl which prevents using pterodactyl, MariaDB, and LibertyBans together. We could not fix this bug in pterodactyl even if we tried. It must be fixed in pterodactyl.
+
+We are glad to assist you in fixing bugs on your server. The LibertyBans community is reputed for discovering, reporting, and fixing bugs in other plugins. However, the LibertyBans plugin cannot fix these bugs; it can only fix its own bugs.

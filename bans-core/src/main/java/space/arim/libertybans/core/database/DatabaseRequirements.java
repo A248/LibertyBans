@@ -136,6 +136,9 @@ public final class DatabaseRequirements {
 				"\n" +
 				message +
 				"\n\n" +
-				"For additional support, please join the LibertyBans discord where we can help you with your database.");
+				"For additional support, please join the LibertyBans discord where we can help you with your database." +
+				"\n\n" +
+				"Note for advanced users: Understanding the consequences, you can disable this check by setting " +
+						"the system property libertybans.database.disablecheck to 'true'");
 	}
 }

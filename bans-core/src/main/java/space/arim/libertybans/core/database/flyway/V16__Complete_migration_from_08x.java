@@ -47,7 +47,6 @@ import space.arim.libertybans.core.schema.tables.ZeroeightBans;
 import space.arim.libertybans.core.schema.tables.ZeroeightHistory;
 import space.arim.libertybans.core.schema.tables.ZeroeightMutes;
 import space.arim.libertybans.core.schema.tables.ZeroeightWarns;
-import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.UUIDUtil;
 
 import java.sql.Connection;
@@ -74,8 +73,6 @@ import static space.arim.libertybans.core.schema.tables.ZeroeightPunishments.ZER
 
 public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-
 	@Override
 	public void migrate(Context flywayContext) throws Exception {
 		MigrationState migrationState = MigrationState.retrieveState(flywayContext);
@@ -88,6 +85,7 @@ public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 	}
 
 	private void completeMigration(DSLContext context) {
+		Logger logger = LoggerFactory.getLogger(getClass());
 		logger.info("Completing migration of data from 0.8.x to 1.0.0");
 
 		transferAllData(context);

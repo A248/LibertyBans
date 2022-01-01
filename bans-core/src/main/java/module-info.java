@@ -15,7 +15,6 @@ module space.arim.libertybans.core {
 	requires space.arim.api.util.web;
 	requires space.arim.dazzleconf;
 	requires space.arim.dazzleconf.ext.snakeyaml;
-	requires space.arim.jdbcaesar;
 	requires transitive space.arim.libertybans.api;
 	requires transitive space.arim.libertybans.bootstrap;
 	exports space.arim.libertybans.core;

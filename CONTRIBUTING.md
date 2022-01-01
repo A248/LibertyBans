@@ -1,5 +1,5 @@
 
-# Contributing
+# Building from Source
 
 ## Pre-requisites
 
@@ -17,34 +17,81 @@ Run `git clone https://github.com/A248/LibertyBans.git && cd LibertyBans && mvn 
 
 This will clone the source repository and start the Maven build in the cloned directory.
 
+When the build is complete, the jar at `bans-distribution/executable/target/LibertyBans-Executable_version.jar` can run as a plugin on any supported platform.
+
+# Introduction to the Codebase
+
 ## Working on the source code
 
 You can use any IDE you choose. Simply import the project and ensure it is configured to use Maven.
 
-The project is split into several Maven modules:
-* The API
-* The core, platform-independent implementation
-* Implementations for specific platforms
-* The bootstrap-related modules, which perform dependency downloading
+The project is split into several Maven modules. You will want to make sure that your IDE recognizes these modules.
 
-You will want to make sure that your IDE recognizes these modules.
+## Architecture
 
-## The distribution mechanism
+### Project Structure
 
-### The main distribution which uses dependency downloading
+* The API: `bans-api`
+* Startup code which sets up classloader isolation and launches the rest of the plugin: `bans-boostrap`
+* Platform-specific plugins:
+  * `bans-env-bungeeplugin` (extends Plugin)
+  * `bans-env-spigotplugin` (extends JavaPlugin)
+  * `bans-env-velocityplugin` (@Plugin)
 
-Because of hosting limits, LibertyBans uses some tricks to ensure the main distributed jar, on SpigotMC and Github Releases, is less than 5 MB in size.
+The following modules comprise the core implementation:
 
-Dependencies are downloaded at runtime and verified against SHA-512 hashes. The implementation jar is shaded with all dependencies at compile time and placed in an isolated classloader at runtime.
+* The core, platform-agnostic implementation: `bans-core`
+* Platform-specific implementation code:
+  * `bans-env-bungee`
+  * `bans-env-spigot`
+  * `bans-env-velocity`
 
-### The distribution for compiling and running from source
+### Startup Process
 
-If you want to collaborate on LibertyBans, or build a jar for your own purposes, follow these steps:
+1. LibertyBans starts with the platform-specific plugin, which calls into the boostrap module. 
+2. The bootstrap module sets up classloader isolation, downloads or extracts dependencies as necessary, then launches the core.
+3. The core creates the configuration and connects to the database.
+4. The platform-specific implementation registers commands and listeners.
 
-1. Use `mvn clean package`.
-2. The jar at `bans-distribution/executable/target/LibertyBans-Executable_version.jar` can be run as a plugin on any supported platform.
+For example, on Velocity:
 
-This jar is fully ready for use. It packages dependencies using a nested jar format, and it will use the sources and libraries you compiled it with.
+```
+   bans-env-velocityplugin
+          | | | |
+          V V V V
+       bans-bootstrap
+          | | | |               // Plugin class loader
+--------- V V V V -------------------------------------
+         bans-core              // Isolated class loader
+    /       |        \
+   /        |         \ 
+   V        V          V
+Config   Database     bans-env-velocity
+```
+
+The implementation modules are placed in an isolated classloader. This classloader separation means that plugin classes are visible to implementation classes, but implementation classes are *not* visible to plugin classes.
+
+## Distribution
+
+LibertyBans is distributed in two ways.
+
+### The release distribution
+
+The release distribution is a lightweight jar which downloads its dependencies at runtime, with SHA-512 hash verification. This jar is published to SpigotMC and Github Releases.
+
+### The development distribution (for compiling and running from source)
+
+The development distribution is intended for compiling and running from source. It uses a nested jar format and extracts these jars at runtime.
+
+### Relocation in Other Plugins
+
+Other plugins must relocate their dependencies for LibertyBans to work properly.
+
+Sometimes, the user's server is bugged -- another plugin did not relocate its dependencies properly. This happens most commonly with HikariCP, a widely-used library.
+
+When this happens, we print a massive warning message and identify the offending plugin.
+* For development builds, we fail-fast with an error message.
+* For release builds, we attempt to proceed, but we can make no guarantees that LibertyBans will function properly.
 
 ## Testing
 
@@ -71,7 +118,7 @@ If you would prefer not to run the integration tests yourself, that's fine. Simp
 
 See the section "Compiling and running the current source"
 
-### Making a release
+## Making a release
 
 I make releases with a few steps:
 
@@ -80,4 +127,3 @@ I make releases with a few steps:
 3. Update the dependency hashes in the parent pom
 4. Perform the deployment with `mvn clean deploy -Pcheck-hash`
 
-The maven-release-plugin does not fit this project unfortunately. I do recommend it for nearly everything else however.

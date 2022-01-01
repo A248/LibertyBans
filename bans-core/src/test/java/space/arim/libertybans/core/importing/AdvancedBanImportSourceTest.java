@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2020 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,13 +19,13 @@
 
 package space.arim.libertybans.core.importing;
 
+import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
-import space.arim.jdbcaesar.JdbCaesar;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
@@ -42,6 +42,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.table;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.lenient;
@@ -52,20 +54,21 @@ import static org.mockito.Mockito.mock;
 @LocalDatabaseSetup.Hsqldb
 public class AdvancedBanImportSourceTest {
 
+	private DSLContext context;
 	private ImportSource importSource;
-	private JdbCaesar jdbCaesar;
 
 	private ServerScope globalScope = ScopeImpl.GLOBAL;
 
 	@BeforeEach
-	public void setup(ConnectionSource connectionSource) throws SQLException {
+	public void setup(DSLContext context, ConnectionSource connectionSource) throws SQLException {
+		this.context = context;
+
 		ScopeManager scopeManager = mock(ScopeManager.class);
 		globalScope = mock(ServerScope.class);
 		lenient().when(scopeManager.globalScope()).thenReturn(globalScope);
 
 		PluginDatabaseSetup pluginDatabaseSetup = new PluginDatabaseSetup(connectionSource);
 		importSource = pluginDatabaseSetup.createAdvancedBanImportSource(scopeManager);
-		jdbCaesar = pluginDatabaseSetup.createJdbCaesar();
 
 		pluginDatabaseSetup.initAdvancedBanSchema();
 	}
@@ -73,12 +76,13 @@ public class AdvancedBanImportSourceTest {
 	private void insertAdvancedBan(String table,
 								   String name, String uuid, String reason, String operator,
 								   String punishmentType, long startTime, long endTime) {
-		jdbCaesar.query(
-				"INSERT INTO " + table + " " +
-						"(name, uuid, reason, operator, punishmentType, start, end, calculation) " +
-						"VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-				.params(name, uuid, reason, operator, punishmentType, startTime, endTime, null)
-				.voidResult().execute();
+		context.insertInto(table(table))
+				.columns(
+						field("name"), field("uuid"), field("reason"), field("operator"),
+						field("punishmentType"), field("start"), field("end"), field("calculation")
+				)
+				.values(name, uuid, reason, operator, punishmentType, startTime, endTime, null)
+				.execute();
 	}
 
 	private void insertActiveNoCopyToHistory(String name, String uuid, String reason, String operator,

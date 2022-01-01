@@ -487,10 +487,6 @@
 			<artifactId>injector</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.jdbcaesar</groupId>
-			<artifactId>jdbcaesar</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>space.arim.dazzleconf</groupId>
 			<artifactId>dazzleconf-ext-snakeyaml</artifactId>
 		</dependency>

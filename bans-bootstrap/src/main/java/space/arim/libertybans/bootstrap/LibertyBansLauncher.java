@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-bootstrap
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-bootstrap is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-bootstrap is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-bootstrap. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.bootstrap;
 
 import space.arim.libertybans.bootstrap.depend.BootstrapLauncher;
@@ -35,12 +36,11 @@ public class LibertyBansLauncher {
 
 	private final BootstrapLogger logger;
 	private final Platform platform;
-	private ClassLoader parentClassLoader = getClass().getClassLoader();
 	private final Path libsFolder;
 	private final Executor executor;
 	private final Path jarFile;
 	private final CulpritFinder culpritFinder;
-	
+
 	public LibertyBansLauncher(BootstrapLogger logger, Platform platform, Path folder, Executor executor,
 							   Path jarFile, CulpritFinder culpritFinder) {
 		this.logger = Objects.requireNonNull(logger, "logger");
@@ -50,47 +50,49 @@ public class LibertyBansLauncher {
 		this.jarFile = Objects.requireNonNull(jarFile, "jarFile");
 		this.culpritFinder = Objects.requireNonNull(culpritFinder, "culpritFinder");
 	}
-	
+
 	public LibertyBansLauncher(BootstrapLogger logger, Platform platform, Path folder, Executor executor,
 							   Path jarFile) {
 		this(logger, platform, folder, executor, jarFile, (clazz) -> "");
 	}
 
-	public void overrideParentClassLoader(ClassLoader parentClassLoader) {
-		this.parentClassLoader = parentClassLoader;
-	}
-	
-	private static Class<?> classForName(String clazzName) {
-		try {
-			return Class.forName(clazzName);
-		} catch (ClassNotFoundException ignored) {
-			return null;
-		}
-	}
-	
 	private String findCulpritWhoFailedToRelocate(Class<?> libClass) {
 		String pluginName = culpritFinder.findCulprit(libClass);
 		if (pluginName == null || pluginName.isEmpty()) {
-			return "An unknown plugin";
+			return "<Unknown plugin>";
 		}
 		return "Plugin '" + pluginName + '\'';
 	}
-	
+
 	private void warnRelocation(String libName, String clazzName) {
-		Class<?> libClass = classForName(clazzName);
-		if (libClass == null) {
+		Class<?> libClass;
+		try {
+			libClass = Class.forName(clazzName);
+		} catch (ClassNotFoundException ignored) {
 			return;
 		}
 		String pluginName = findCulpritWhoFailedToRelocate(libClass);
 		String line = "*******************************************";
-		logger.warn(line + '\n'
-				+ pluginName + " has shaded the library '"
-				+ libName + "' but did not relocate it. This may or may not pose problems. "
+		String message = line + '\n'
+				+ pluginName + " has a critical bug. That plugin has shaded the library '"
+				+ libName + "' but did not relocate it, which will pose problems. "
+				+ "\n\n"
+				+ "LibertyBans is not guaranteed to function if you do not fix this bug in " + pluginName
+				+ "\n\n"
 				+ "Contact the author of this plugin and tell them to relocate their dependencies. "
 				+ "Unrelocated class detected was " + libClass.getName()
-				+ '\n' + line);
+				+ "\n\n"
+				+ "Note for advanced users: Understanding the consequences, you can disable this check by setting "
+				+ "the system property libertybans.relocationbug.disablecheck to 'true'"
+				+ '\n' + line;
+		if (!Boolean.getBoolean("libertybans.relocationbug.disablecheck") && distributionMode() == DistributionMode.JAR_OF_JARS) {
+			// In development builds we have no patience for bugs
+			throw new IllegalStateException(message);
+		}
+		// In release builds, attempt to run despite the bug
+		logger.warn(message);
 	}
-	
+
 	private Set<DependencyBundle> determineNeededDependencies() {
 		Set<DependencyBundle> bundles = EnumSet.noneOf(DependencyBundle.class);
 		if (!platform.hasSlf4jSupport()) {
@@ -118,10 +120,13 @@ public class LibertyBansLauncher {
 		return DistributionMode.DEPLOY_AND_DOWNLOAD;
 	}
 
-	public CompletableFuture<ClassLoader> attemptLaunch() {
-		for (RelocationCheck checkForUnrelocation : RelocationCheck.values()) {
-			var classPresence = checkForUnrelocation.classPresence();
-			warnRelocation(classPresence.dependencyName(), classPresence.className());
+	public final CompletableFuture<ClassLoader> attemptLaunch() {
+		return attemptLaunch(getClass().getClassLoader());
+	}
+
+	public final CompletableFuture<ClassLoader> attemptLaunch(ClassLoader parentClassLoader) {
+		for (RelocationCheck library : RelocationCheck.values()) {
+			warnRelocation(library.libName(), library.className());
 		}
 		DependencyLoaderBuilder loader = new DependencyLoaderBuilder()
 				.executor(executor)

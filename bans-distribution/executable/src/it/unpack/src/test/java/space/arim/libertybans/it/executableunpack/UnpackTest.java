@@ -67,9 +67,9 @@ public class UnpackTest {
 				Path.of("target/folder"),
 				ForkJoinPool.commonPool(),
 				jarFile);
-		launcher.overrideParentClassLoader(parentClassLoader);
 		assertEquals(DistributionMode.JAR_OF_JARS, launcher.distributionMode());
-		CompletableFuture<ClassLoader> futureClassLoader = launcher.attemptLaunch();
+		System.setProperty("libertybans.relocationbug.disablecheck", "true");
+		CompletableFuture<ClassLoader> futureClassLoader = launcher.attemptLaunch(parentClassLoader);
 		futureClassLoader.orTimeout(5L, TimeUnit.SECONDS);
 		return assertDoesNotThrow(futureClassLoader::join);
 	}

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,17 +19,10 @@
 
 package space.arim.libertybans.core.importing;
 
-import org.junit.jupiter.api.Assertions;
-import space.arim.jdbcaesar.JdbCaesar;
-import space.arim.jdbcaesar.JdbCaesarBuilder;
 import space.arim.libertybans.api.scope.ScopeManager;
 
-import javax.sql.DataSource;
-
-import java.sql.SQLException;
 import java.util.Objects;
 
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -60,16 +53,6 @@ public final class PluginDatabaseSetup {
 		when(liteBansSettings.toConnectionSource()).thenReturn(connectionSource);
 
 		return new LiteBansImportSource(importConfig, scopeManager);
-	}
-
-	public JdbCaesar createJdbCaesar() {
-		DataSource dataSource = mock(DataSource.class);
-		try {
-			lenient().when(dataSource.getConnection()).thenAnswer((invocation) -> connectionSource.openConnection());
-		} catch (SQLException ex) {
-			throw Assertions.<RuntimeException>fail(ex);
-		}
-		return new JdbCaesarBuilder().dataSource(dataSource).build();
 	}
 
 	public void initAdvancedBanSchema() {

@@ -38,6 +38,20 @@
 							<exclude>com.github.ben-manes.caffeine:caffeine</exclude>
 						</excludes>
 					</artifactSet>
+					<!--
+					HikariCP is so critical that in release builds, we employ some relocation to allow
+					LibertyBans to continue to function despite another bugged plugin failing to relocate.
+
+					Users should still fix the bugged plugin and we will still print a massive warning message.
+
+					See also CONTRIBUTING.md
+					-->
+					<relocations>
+						<relocation>
+							<pattern>com.zaxxer.hikari</pattern>
+							<shadedPattern>space.arim.libertybans.core.protectedlibs.com.zaxxer.hikari</shadedPattern>
+						</relocation>
+					</relocations>
 				</configuration>
 			</plugin>
 		</plugins>

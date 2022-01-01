@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2020 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,11 +19,11 @@
 
 package space.arim.libertybans.core.importing;
 
+import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import space.arim.jdbcaesar.JdbCaesar;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
@@ -43,6 +43,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.table;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -53,14 +55,16 @@ import static org.mockito.Mockito.mock;
 public class LiteBansImportSourceTest {
 
 	private ImportSource importSource;
-	private JdbCaesar jdbCaesar;
+	private DSLContext context;
 
 	private final ServerScope globalScope = ScopeImpl.GLOBAL;
 	private final ServerScope kitpvpScope = ScopeImpl.specificServer("kitpvp");
 	private final ServerScope lobbyScope = ScopeImpl.specificServer("lobby");
 
 	@BeforeEach
-	public void setup(ConnectionSource connectionSource) throws SQLException, IOException {
+	public void setup(DSLContext context, ConnectionSource connectionSource) throws SQLException, IOException {
+		this.context = context;
+
 		ScopeManager scopeManager = mock(ScopeManager.class);
 		lenient().when(scopeManager.globalScope()).thenReturn(globalScope);
 		lenient().when(scopeManager.specificScope("kitpvp")).thenReturn(kitpvpScope);
@@ -68,7 +72,6 @@ public class LiteBansImportSourceTest {
 
 		PluginDatabaseSetup pluginDatabaseSetup = new PluginDatabaseSetup(connectionSource);
 		importSource = pluginDatabaseSetup.createLiteBansImportSource(scopeManager);
-		jdbCaesar = pluginDatabaseSetup.createJdbCaesar();
 
 		pluginDatabaseSetup.initLiteBansSchema();
 	}
@@ -80,11 +83,13 @@ public class LiteBansImportSourceTest {
 	private void insertLiteBans(String table, String uuid, String ip, String reason,
 								String bannedByUuid, String bannedByName, long time, long until,
 								String scope, boolean ipBan) {
-		jdbCaesar.query("INSERT INTO litebans_" + table + " " +
-				"(uuid, ip, reason, banned_by_uuid, banned_by_name, time, until, server_scope, active, silent, ipban, ipban_wildcard) " +
-				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-				.params(uuid, ip, reason, bannedByUuid, bannedByName, time, until, scope, true, false, ipBan, false)
-				.voidResult().execute();
+		context.insertInto(table("litebans_" + table))
+				.columns(
+						field("uuid"), field("ip"), field("reason"), field("banned_by_uuid"), field("banned_by_name"),
+						field("time"), field("until"), field("server_scope"),
+						field("active"), field("silent"), field("ipban"), field("ipban_wildcard"))
+				.values(uuid, ip, reason, bannedByUuid, bannedByName, time, until, scope, true, false, ipBan, false)
+				.execute();
 	}
 
 	@Test
@@ -154,10 +159,12 @@ public class LiteBansImportSourceTest {
 		UUID uuid = UUID.fromString("a14a251d-9621-446a-9b8a-812a582c1245");
 		String username = "SkyDoesMlnecraft";
 		Instant date = Instant.parse("2021-07-21T01:59:32.000000Z");
-		jdbCaesar.query(
-				"INSERT INTO litebans_history (id, date, name, uuid, ip) VALUES (?, ?, ?, ?, ?)")
-				.params(30827, Timestamp.from(date), username, uuid.toString(), "#undefined#")
-				.voidResult().execute();
+
+		context.insertInto(table("litebans_history"))
+				.columns(field("id"), field("date"), field("name"), field("uuid"), field("ip"))
+				.values(30827, Timestamp.from(date), username, uuid.toString(), "#undefined#")
+				.execute();
+
 		assertEquals(Set.of(new NameAddressRecord(uuid, username, null, date)),
 				importSource.sourceNameAddressHistory().collect(Collectors.toUnmodifiableSet()));
 	}
