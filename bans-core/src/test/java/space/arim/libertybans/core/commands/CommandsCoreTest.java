@@ -36,8 +36,10 @@ import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -134,4 +136,19 @@ public class CommandsCoreTest {
 		verify(usage).sendUsage(sender, commandNone, false);
 	}
 
+	@Test
+	public void nullExecution(@Mock SubCommandGroup subCommand, @Mock CommandExecution commandExecution) {
+		addBasePermission();
+
+		when(subCommand.matches("arg")).thenReturn(true);
+		when(subCommand.execute(any(), any(), any())).thenReturn(commandExecution);
+		when(commandExecution.execute()).thenReturn(null);
+
+		CommandPackage command = ArrayCommandPackage.create("arg");
+		newCommandsCore(List.of(subCommand)).execute(sender, command);
+
+		verify(subCommand).execute(sender, command, "arg");
+		verify(commandExecution).execute();
+		verify(futurePoster, times(0)).postFuture(isNull());
+	}
 }

@@ -8,8 +8,11 @@
   * [Silent Punishments](Silent-Punishments)
   * [Composite Punishments](Guide-to-Composite-Punishments)
   * [Running Multiple Instances](Running-Multiple-Instances)
-* Advanced Topics / For Developers
+* Versioning and Upgrades
   * [Versioning and Support Policy](Versioning-and-Support-Policies)
+  * [Upgrading to 1.0.0 from 0.8.x](Upgrading-to-LibertyBans-1.0.0-from-0.8.x)
+  * [Full changelog for 1.0.0](Changes-in-LibertyBans-1.0.0)
+* For Developers
   * [Developer API](Developer-API)
   * [The Database Schema](The-Database-Schema)
 * Relations to other software

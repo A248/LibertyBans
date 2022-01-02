@@ -1,6 +1,7 @@
+
 This is a formal change-log of changes made in LibertyBans 1.0.0. It notes all manners of changes, including breaking changes; technically-detailed, little-mentioned changes which are invisible to the user; sweeping feature additions, and in-depth descriptions thereof; design and architectural decisions, and various minor matters.
 
-If you are interested in a guide for upgrading to LibertyBans 0.8.x to 1.0.0, which focuses on breaking changes and their impact to you,
+If you are interested in a guide for upgrading to LibertyBans 0.8.x to 1.0.0, which focuses on breaking changes and their impact to you, see [this page](Upgrading-to-LibertyBans-1.0.0-from-0.8.x)
 
 ## Changes
 
@@ -26,6 +27,13 @@ If you are interested in a guide for upgrading to LibertyBans 0.8.x to 1.0.0, wh
   * Composite victims are a better choice when you want to IP-ban users by default, but do not want the technical intricacies associated with banning an IP address rather than a user. In other words, you want user bans to be enforced as IP-bans but be able to punish, unpunish, and list punishments as if you were doing so for a user rather than an IP address.
   * See the wiki page on composite punishments for more details.
 * The /accounthistory command accepts the `-both` argument to show the accounts matching the specified user's UUID or current IP address.
+* HikariCP is now relocated in release builds.
+* New variables are added to punishment messages:
+  * %TYPE_VERB% - verb-based rendition of the punishment type
+  * %TIME_PASSED_SIMPLE% - like TIME_PASSED but rounds to the largest time unit
+  * %TIME_REMAINING_SIMPLE% - like TIME_REMAINING but rounds to the largest time unit
+  * %HAS_EXPIRED% - whether the punishment has expired on account of the passage of time
+* Added the %PREVIOUSPAGE% variable
 
 ### API Changes
 
@@ -50,3 +58,4 @@ If you are interested in a guide for upgrading to LibertyBans 0.8.x to 1.0.0, wh
   * Getter methods on `RevocationOrder` reflect the expanded API.
 * The Punishment.PERMANENT_END_DATE constant is added to the API.
 * It is now possible to dispatch "silent" punishments using the API.
+* Added `PunishmentFormatter#formatPunishmentTypeVerb`

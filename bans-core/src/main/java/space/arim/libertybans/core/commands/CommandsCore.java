@@ -25,6 +25,7 @@ import space.arim.libertybans.core.commands.usage.UsageGlossary;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.service.FuturePoster;
+import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.util.List;
 import java.util.Locale;
@@ -100,7 +101,10 @@ public class CommandsCore implements Commands {
 			return;
 		}
 		CommandExecution execution = subCommand.execute(sender, command, firstArg);
-		futurePoster.postFuture(execution.execute());
+		ReactionStage<Void> future = execution.execute();
+		if (future != null) {
+			futurePoster.postFuture(future);
+		}
 	}
 
 	/*

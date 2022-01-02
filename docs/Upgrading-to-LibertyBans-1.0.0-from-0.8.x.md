@@ -4,7 +4,11 @@ The upgrade should be mostly seamless and core functionality will work out of th
 
 ## Pre-requisites and Getting Started
 
-To start with, you should be on LibertyBans 0.8.2 before you upgrade to 1.0.0.
+To start with, you should be on the latest LibertyBans 0.8.x before you upgrade to 1.0.0 - currently LibertyBans 0.8.1.
+
+# Manual Action
+
+For some changes, you will need to adjust your server configuration manually.
 
 ## Changes to permissions
 
@@ -44,13 +48,31 @@ It is now necessary to distinguish between MariaDB and MySQL when configuring th
 
 ## Multi-Instance / Multi-Proxy Support
 
-LibertyBans 0.8.2 can co-exist with LibertyBans 1.0.0 on the same database. Before beginning to upgrade to 1.0.0, you must set the option `version1-compatibility-mode` to `true` in the `sql.yml` for all your 0.8.2 LibertyBans instances.
+This documentation is intended for LibertyBans 0.8.2, an upcoming 0.8.x release which will add a compatibility mode.
 
-If you forgot to enable `version1-compatibility-mode`, the upgrade will still work, as long as you do not restart the 0.8.2 LibertyBans instances. If you restart a 0.8.2 LibertyBans instance which does not have `version1-compatibility-mode` enabled, the instance will fail to start.
+The compatibility mode will allow you to run LibertyBans 0.8.2 on the same database as 1.0.x.
 
-After you upgrade to 1.0.0, it is safe to remove `version1-compatibility-mode` since this option does not exist in 1.0.0
+Until this compatibility mode is released, it is not possible to use LibertyBans 0.8.x and 1.0.x side-by-side on the same database. Therefore, you should upgrade your multi-proxy network once 0.8.2 has been made available.
 
-## Non-Breaking Changes
+~~LibertyBans 0.8.2 can co-exist with LibertyBans 1.0.0 on the same database. Before beginning to upgrade to 1.0.0, you must set the option `version1-compatibility-mode` to `true` in the `sql.yml` for all your 0.8.2 LibertyBans instances.~~
+
+~~After you upgrade to 1.0.0, it is safe to remove `version1-compatibility-mode` since this option does not exist in 1.0.0~~
+
+# Automatic Action
+
+## Database Migration
+
+LibertyBans 1.0.0, when it starts, will automatically upgrade your database to 1.0.0.
+
+The database schema has breaking changes, and some software which relies on it, such as the NamelessMC punishment panel, may need to be updated.
+
+## Configuration Migration
+
+New configuration options will be added automatically.
+
+Existing configuration options will be preserved.
+
+# Non-Breaking Changes
 
 There are some improvements which are non-breaking, but might be useful to know.
 

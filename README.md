@@ -3,7 +3,7 @@
 <img alt="LibertyBans" src="./.github/banner.png" />
 
 <!-- Shields -->
-[Document]:https://img.shields.io/badge/-Document-blue.svg?logo=Wikipedia&style=for-the-badge&logoColor=black
+[Documentation]:https://img.shields.io/badge/-Documentation-blue.svg?logo=Wikipedia&style=for-the-badge&logoColor=black
 [Discord]:https://img.shields.io/badge/-Discord-5865F2.svg?logo=discord&style=for-the-badge&logoColor=white
 [Spigot]:https://img.shields.io/badge/-SpigotMC-ef9023.svg?logo=Accenture&style=for-the-badge&logoColor=grey
 
@@ -14,7 +14,7 @@
 [CodeSize]:https://img.shields.io/github/languages/code-size/A248/LibertyBans
 <!-- Shields -->
 [![Discord]](https://discord.gg/3C4qeG8XhE)
-[![Document]](https://libertybans.org/#/Getting-Started)
+[![Documentation]](https://libertybans.org/#/Getting-Started)
 [![Spigot]](https://spigotmc.org/resources/81063)
 <br><br>[![TestedVersion]](https://spigotmc.org/resources/81063) ![SpigotRating]
 <br>![License] ![GitHubStar] ![CodeSize]

@@ -7,8 +7,6 @@ on:
 
 jobs:
   build:
-    # Credits to ViaVersion; this prevents the build from running twice
-    if: ${{ github.event_name != 'pull_request' || github.repository != github.event.pull_request.head.repo.full_name }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2

@@ -108,12 +108,9 @@ public class UnspecifiedReasonsTest {
 
 	private void executeBan(CmdSender sender) {
 		when(sender.hasPermission(any())).thenReturn(true);
-		var future = punishCommands
-				.execute(sender, ArrayCommandPackage.create("A248"), "ban")
-				.execute()
-				.toCompletableFuture();
+		var execution = punishCommands.execute(sender, ArrayCommandPackage.create("A248"), "ban");
 		try {
-			future.join();
+			execution.executeNow();
 		} catch (CompletionException ex) {
 			if (ex.getCause() instanceof RuntimeException cause) {
 				throw cause;
