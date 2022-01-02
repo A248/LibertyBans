@@ -22,7 +22,6 @@ package space.arim.libertybans.core.database.flyway;
 import org.flywaydb.core.api.ClassProvider;
 import org.flywaydb.core.api.migration.JavaMigration;
 import org.jooq.DSLContext;
-import space.arim.libertybans.core.database.Vendor;
 import space.arim.libertybans.core.database.jooq.JooqContext;
 
 import java.sql.Connection;
@@ -32,26 +31,14 @@ import java.util.Objects;
 
 final class MigrationState {
 
-	private final Vendor vendor;
 	private final JooqContext jooqContext;
-	private final String tablePrefix;
 
-	MigrationState(Vendor vendor, JooqContext jooqContext, String tablePrefix) {
-		this.vendor = Objects.requireNonNull(vendor, "vendor");
+	MigrationState(JooqContext jooqContext) {
 		this.jooqContext = Objects.requireNonNull(jooqContext, "jooqContext");
-		this.tablePrefix = Objects.requireNonNull(tablePrefix, "tablePrefix");
-	}
-
-	Vendor vendor() {
-		return vendor;
 	}
 
 	DSLContext createJooqContext(Connection connection) {
 		return jooqContext.createContext(connection);
-	}
-
-	String tablePrefix() {
-		return tablePrefix;
 	}
 
 	ClassProvider<JavaMigration> asClassProvider(List<Class<? extends JavaMigration>> classes) {

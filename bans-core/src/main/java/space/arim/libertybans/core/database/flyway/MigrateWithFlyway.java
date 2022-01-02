@@ -41,7 +41,7 @@ public final class MigrateWithFlyway {
 	private static final String TABLE_PREFIX = "libertybans_";
 
 	public void migrate(JooqContext jooqContext) throws MigrationFailedException {
-		Flyway flyway = createFlyway(new MigrationState(vendor, jooqContext, TABLE_PREFIX));
+		Flyway flyway = createFlyway(new MigrationState(jooqContext));
 		try {
 			flyway.migrate();
 		} catch (FlywayException ex) {

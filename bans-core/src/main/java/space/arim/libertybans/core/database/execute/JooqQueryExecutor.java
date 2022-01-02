@@ -85,6 +85,11 @@ public final class JooqQueryExecutor implements QueryExecutor {
 	 * @return true if caused by a transaction serialization failure
 	 */
 	private static boolean isSerializationFailure(SQLException ex) {
+		/*
+		HSQLDB - Serialization failure
+		MariaDB and MySQL - ER_LOCK_DEADLOCK
+		PostgreSQL and CockroachDB - serialization_failure
+		 */
 		return ex.getErrorCode() == 40001;
 	}
 

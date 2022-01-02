@@ -84,16 +84,12 @@ public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 		DSLContext context = migrationState.createJooqContext(connection);
 
 		if (new TableExists("libertybans_zeroeight_punishments").exists(context)) {
-			completeMigration(migrationState, context);
+			completeMigration(context);
 		}
 	}
 
-	private void completeMigration(MigrationState migrationState, DSLContext context) {
+	private void completeMigration(DSLContext context) {
 		logger.info("Completing migration of data from 0.8.x to 1.0.0");
-
-		if (migrationState.vendor().isMySQLLike()) {
-			new MySQLTableLock(migrationState).lockTables(context);
-		}
 
 		transferAllData(context);
 
