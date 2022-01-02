@@ -131,7 +131,7 @@ public class CommandsCore implements Commands {
 		Stream<String> completions = subCommand.suggest(sender, firstArg, argIndex);
 		String lastArg = args[args.length - 1];
 		if (!lastArg.isEmpty()) {
-			completions = completions.filter((completion) -> completion.startsWith(lastArg));
+			completions = completions.filter((completion) -> completion.toLowerCase().startsWith(lastArg.toLowerCase()));
 		}
 		return completions.sorted().collect(Collectors.toUnmodifiableList());
 	}
