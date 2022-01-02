@@ -129,9 +129,9 @@ public class CommandsCore implements Commands {
 		 */
 		int argIndex = args.length - 2;
 		Stream<String> completions = subCommand.suggest(sender, firstArg, argIndex);
-		String lastArg = args[args.length - 1];
+		String lastArg = args[args.length - 1].toLowerCase(Locale.ROOT);
 		if (!lastArg.isEmpty()) {
-			completions = completions.filter((completion) -> completion.toLowerCase().startsWith(lastArg.toLowerCase()));
+			completions = completions.filter((completion) -> completion.toLowerCase(Locale.ROOT).startsWith(lastArg));
 		}
 		return completions.sorted().collect(Collectors.toUnmodifiableList());
 	}
