@@ -29,12 +29,13 @@
 
 ## Introduction
 
+Free software and high quality, LibertyBans is the best-designed punishment plugin. It can efficiently scale to large networks and operate on single servers with minimal resources.
+
 ### Design
 
 * Effective and lightweight. No complicated installation and avoids unnecessary features.
-* Option to use local file-based database (HyperSQL), or remote database (MariaDB/MySQL).
-* Enhanced database-oriented performance emphasising calculations in SQL. Low memory usage because punishments are stored almost completely in the database.
-* Compact storage definitions. UUIDs are stored in minimal form as raw bytes instead of strings. Same for IP addresses.
+* Option to use local file-based database (HyperSQL), or remote database (MariaDB, MySQL, PostgreSQL).
+* Enhanced database-oriented performance emphasising calculations in SQL. Low memory usage because punishments are stored almost completely in the database. Data is stored in minimal form as raw bytes instead of strings.
 * Best practices for asynchronous calculations are followed. The performance cost of context switching is understood and avoided; the plugin does not blindly fire async tasks.
 * Designed for high availability and concurrency. Minimal locking is employed while keeping state consistent; this is mostly realised through the fact that most plugin state is maintained in the database itself.
 * Well-structured API providing a framework for other plugins to work with the plugin.
@@ -55,37 +56,35 @@
     * /warns <player> - shows all warns for a player
     * /blame <player> - shows all the punishments a staff member has enacted
 * Multiple means to block alt accounts:
-  * Automatic enforcement to block alt accounts. *By default, alts are automatically banned from joining if the main account is banned.* This behavior is configurable, and you can even increase the strictness of alt-checking. 
+  * Automatic enforcement to block alt accounts. *By default, when using IP-bans, alts are automatically banned from joining if the main account is banned.* This behavior is configurable, and you can even increase the strictness of alt-checking.
   * Manual /alts command - shows suspected alt accounts for a player.
   * Alts notification on join - tells staff members when a player whose suspected alt is banned or muted.
 * Options and behaviour are fully configurable. You can even tweak your connection pool and statement cache settings to fine-tune performance.
+* Full multi-proxy and multi-instance support. You can place LibertyBans on the proxy if you use a single proxy, or on multiple backend servers.
 * All dependencies are automatically downloaded with secure SHA-512 hashes used to validate the downloads. Additionally, builds of LibertyBans are reproducible from the source code, meaning checksums can be personally verified.
 
 ## Basic Info
 
 ### Requirements
 
-* Java 11 (or higher)
-* A compatible server platform
+* Java 11
 
-### Supported Platforms
+Supported platforms:
 
 * Spigot/Paper or any forks thereof
 * BungeeCord
 * Velocity
 
-### Compatibility With
-
-* Velocity 3.0, an upcoming version of Velocity (as of 26 June 2021).
-* Geyser/Floodgate usernames.
+Compatibility with Geyser/Floodgate usernames.
 
 ### Installation
 
 LibertyBans will work out-of-the-box for most users.
 
-When using a proxy, it is recommend to install LibertyBans on the proxy itself. Do not install LibertyBans on both the backend servers and the proxy at the same time.
+* When using a single proxy, it is recommended, but not required, to install LibertyBans on the proxy itself.
+* LibertyBans can also be installed on the backend servers if you are willing to configure multi-instance synchronization.
 
-For more advanced setups (multi-proxy or installing on the backend servers), see the wiki for additional information.
+For installing on the backend servers and synchronizing punishments, see the wiki for additional information.
 
 ## Developer API
 
