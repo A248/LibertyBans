@@ -1,6 +1,4 @@
-This page starts with LibertyBans 1.0. For LibertyBans 0.8.x, please scroll down.
-
-**LibertyBans 1.0.0 is not stable and not yet released** (except in development builds). Please be sure that you read the documentation for your intended version. 
+This page starts with LibertyBans 1.0.x. For LibertyBans 0.8.x, please scroll down.
 
 # LibertyBans 1.0
 

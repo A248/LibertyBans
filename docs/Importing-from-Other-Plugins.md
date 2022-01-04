@@ -51,8 +51,9 @@ If you used LiteBans with MariaDB, MySQL, or PostgreSQL, no additional setup is 
 
 If you used LiteBans with H2, you will need to add the driver to your server first. How you do this is as follows:
 
-1. Download the relevant driver:
-  * H2: [Maven Central link](https://mvnrepository.com/artifact/org.postgresql/postgresql/42.2.20), [Direct download link](https://repo1.maven.org/maven2/com/h2database/h2/1.4.199/h2-1.4.199.jar)
+1. Download the H2 driver:
+  * [Direct download link](https://repo1.maven.org/maven2/com/h2database/h2/1.4.199/h2-1.4.199.jar)
+  * [Maven Central link](https://mvnrepository.com/artifact/com.h2database/h2/1.4.199),
 2. Create a directory called "libs" on your server. The "libs" directory should be located like this:
 ```
 libs/
