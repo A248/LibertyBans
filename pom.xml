@@ -8,21 +8,21 @@
 		<artifactId>common-parent</artifactId>
 		<version>0.3.0</version>
 	</parent>
-	
+
 	<groupId>space.arim.libertybans</groupId>
 	<artifactId>bans-parent</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>pom</packaging>
-	
+
 	<name>LibertyBans</name>
 	<description>The be-all, end-all of discipline.</description>
 	<url>https://github.com/A248/LibertyBans</url>
 	<inceptionYear>2019</inceptionYear>
-	
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.build.outputTimestamp>2021-05-12T0:40:06Z</project.build.outputTimestamp>
-		
+		<project.build.outputTimestamp>2022-01-04T00:00:00Z</project.build.outputTimestamp>
+
 		<!-- Testing dependencies -->
 		<junit.version>5.8.2</junit.version>
 		<mockito.version>4.2.0</mockito.version>
@@ -50,8 +50,8 @@
 		<morepaperlib.version>0.3.2</morepaperlib.version>
 
 		<!-- Internal hash -->
-		<self-implementation.hash>cd5b3577a4d7cb20b57fe7b75aed42069ae54da187c7fa425415369a1a1810382ef9f023cbbb38b5ac3870b134e4e9636212171918ae1ef843e7b0c4f7d06ea5</self-implementation.hash>
-		
+		<self-implementation.hash>1cf1d8d75e9f91f51a1a280a97849f0f64001e63d620e2e8df119bed47d4a75873e1511e662404c5b30bca4bba31e35e7b747fa4065784c79d780bc09f115ff1</self-implementation.hash>
+
 		<!-- Plugin variables -->
 		<plugin.name>LibertyBans</plugin.name>
 		<plugin.annotationId>libertybans</plugin.annotationId> <!-- Used for @Plugin annotation on Velocity -->
@@ -59,7 +59,7 @@
 		<plugin.author>A248</plugin.author>
 		<plugin.url>https://github.com/A248/LibertyBans</plugin.url>
 		<plugin.description>${project.description}</plugin.description>
-		
+
 		<!-- Database revision table -->
 		<dbrevision.major>3</dbrevision.major>
 		<dbrevision.minor>0</dbrevision.minor>
@@ -68,7 +68,7 @@
 		<common-parent.skip-javadoc>true</common-parent.skip-javadoc>
 		<common-parent.skip-sources>true</common-parent.skip-sources>
 	</properties>
-	
+
 	<licenses>
 		<license>
 			<name>GNU Affero General Public License, Version 3</name>
@@ -77,7 +77,7 @@
 			<comments>Strong copyleft license, commonly known as the GNU AGPL v3</comments>
 		</license>
 	</licenses>
-	
+
 	<developers>
 		<developer>
 			<id>anandbeh</id>
@@ -90,7 +90,7 @@
 			<timezone>America/New_York</timezone>
 		</developer>
 	</developers>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -256,7 +256,7 @@
 			</build>
 		</profile>
 	</profiles>
-	
+
 	<modules>
 		<module>bans-api</module>
 		<module>bans-bootstrap</module>
@@ -264,7 +264,7 @@
 		<module>bans-env</module>
 		<module>bans-distribution</module>
 	</modules>
-	
+
 	<distributionManagement>
 		<repository>
 			<id>cloudsmith-deploy</id>
@@ -324,7 +324,7 @@
 				<artifactId>bans-env-velocityplugin</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-			
+
 			<!-- Testing Dependencies -->
 			<dependency>
 				<groupId>org.junit.jupiter</groupId>
@@ -363,7 +363,7 @@
 				<artifactId>omnibus</artifactId>
 				<version>${omnibus.version}</version>
 			</dependency>
-			
+
 			<!-- Internal dependencies -->
 			<dependency>
 				<groupId>jakarta.inject</groupId>
@@ -499,7 +499,7 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-	
+
 	<repositories>
 		<repository>
 			<id>arim-mvn-lgpl3</id>
