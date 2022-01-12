@@ -90,18 +90,14 @@ class QueryingImpl {
 	CentralisedFuture<UUIDAndAddress> resolvePlayer(String name) {
 		InternalDatabase database = dbProvider.get();
 		return database.query(SQLFunction.readOnly((context) -> {
-			System.out.println("Addresses joined with names based on UUID: " + context
-					.select(ADDRESSES.UUID, ADDRESSES.ADDRESS)
-					.from(NAMES)
-					.innerJoin(ADDRESSES)
-					.on(NAMES.UUID.eq(ADDRESSES.UUID))
-					.fetch());
 			return context
 					.select(ADDRESSES.UUID, ADDRESSES.ADDRESS)
 					.from(NAMES)
 					.innerJoin(ADDRESSES)
 					.on(NAMES.UUID.eq(ADDRESSES.UUID))
 					.where(NAMES.LOWER_NAME.eq(lower(name)))
+					.orderBy(NAMES.UPDATED.desc(), ADDRESSES.UPDATED.desc())
+					.limit(1)
 					.fetchOne((record) -> {
 						return new UUIDAndAddress(
 								record.get(ADDRESSES.UUID),

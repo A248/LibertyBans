@@ -45,4 +45,9 @@ public final class SettableTimeImpl implements SettableTime {
 	public long currentTime() {
 		return timestamp.getEpochSecond();
 	}
+
+	@Override
+	public long arbitraryNanoTime() {
+		return timestamp.getEpochSecond() * 1_000_000_000L + timestamp.getNano();
+	}
 }

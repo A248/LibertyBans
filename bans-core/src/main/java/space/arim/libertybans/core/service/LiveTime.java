@@ -36,6 +36,11 @@ public final class LiveTime implements Time {
 	}
 
 	@Override
+	public long arbitraryNanoTime() {
+		return System.nanoTime();
+	}
+
+	@Override
 	public String toString() {
 		return "Live.INSTANCE";
 	}
