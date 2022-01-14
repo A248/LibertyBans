@@ -6,6 +6,7 @@ module space.arim.libertybans.core {
 	requires net.kyori.adventure;
 	requires net.kyori.examination.api;
 	requires org.flywaydb.core;
+	requires static org.checkerframework.checker.qual;
 	requires static org.jetbrains.annotations;
 	requires org.jooq;
 	requires org.slf4j;

@@ -22,7 +22,6 @@ package space.arim.libertybans.it.test.alts;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
@@ -55,7 +54,6 @@ import static space.arim.libertybans.it.util.RandomUtil.randomAddress;
 import static space.arim.libertybans.it.util.RandomUtil.randomName;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
-@ExtendWith(MockitoExtension.class)
 public class AltDetectionIT {
 
 	private final AltDetection altDetection;

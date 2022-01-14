@@ -27,16 +27,12 @@ import org.jooq.impl.DSL;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.core.alts.AltDetection;
-import space.arim.libertybans.core.alts.AltNotification;
-import space.arim.libertybans.core.alts.DetectedAlt;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.database.sql.EndTimeCondition;
 import space.arim.libertybans.core.database.sql.SimpleViewFields;
 import space.arim.libertybans.core.database.sql.VictimCondition;
-import space.arim.libertybans.core.punish.Association;
 import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.punish.PunishmentCreator;
 import space.arim.libertybans.core.service.Time;
@@ -44,7 +40,6 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -59,26 +54,23 @@ public class ApplicableImpl {
 	private final FactoryOfTheFuture futuresFactory;
 	private final Provider<InternalDatabase> dbProvider;
 	private final PunishmentCreator creator;
-	private final AltDetection altDetection;
-	private final AltNotification altNotification;
+
 	private final Time time;
 
 	@Inject
-	public ApplicableImpl(Configs configs, FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider,
-						  PunishmentCreator creator, AltDetection altDetection, AltNotification altNotification,
+	public ApplicableImpl(Configs configs, FactoryOfTheFuture futuresFactory,
+						  Provider<InternalDatabase> dbProvider, PunishmentCreator creator,
 						  Time time) {
 		this.configs = configs;
 		this.futuresFactory = futuresFactory;
 		this.dbProvider = dbProvider;
 		this.creator = creator;
-		this.altDetection = altDetection;
-		this.altNotification = altNotification;
 		this.time = time;
 	}
 
-	private Punishment selectApplicable(DSLContext context,
-										UUID uuid, NetworkAddress address,
-										PunishmentType type, final Instant currentTime) {
+	Punishment selectApplicable(DSLContext context,
+								UUID uuid, NetworkAddress address,
+								PunishmentType type, final Instant currentTime) {
 		var appl = APPLICABLE_ACTIVE;
 		AddressStrictness strictness = configs.getMainConfig().enforcement().addressStrictness();
 		switch (strictness) {
@@ -129,38 +121,6 @@ public class ApplicableImpl {
 		}
 	}
 
-	CentralisedFuture<Punishment> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address) {
-		InternalDatabase database = dbProvider.get();
-		return database.queryWithRetry((context, transaction) -> {
-			Instant currentTime = time.currentTimestamp();
-
-			Association association = new Association(uuid, context);
-			association.associateCurrentName(name, currentTime);
-			association.associateCurrentAddress(address, currentTime);
-
-			Punishment ban = selectApplicable(context, uuid, address, PunishmentType.BAN, currentTime);
-			if (ban != null) {
-				return ban;
-			}
-			// The player is not banned, but should be checked for alts
-			EnforcementConfig.AltsAutoShow altsAutoShow = configs.getMainConfig().enforcement().altsAutoShow();
-			if (altsAutoShow.enable()) {
-				return altDetection.detectAlts(context, uuid, address, altsAutoShow.showWhichAlts());
-			}
-			return null;
-		}).thenApply((banOrDetectedAltsOrNull) -> {
-			if (banOrDetectedAltsOrNull instanceof Punishment) {
-				return (Punishment) banOrDetectedAltsOrNull;
-			}
-			if (banOrDetectedAltsOrNull instanceof List) {
-				@SuppressWarnings("unchecked")
-				List<DetectedAlt> detectedAlts = (List<DetectedAlt>) banOrDetectedAltsOrNull;
-				altNotification.notifyFoundAlts(uuid, name, address, detectedAlts);
-			}
-			return null;
-		});
-	}
-	
 	private CentralisedFuture<Punishment> getApplicablePunishment0(UUID uuid, NetworkAddress address, PunishmentType type) {
 		InternalDatabase database = dbProvider.get();
 		return database.query(SQLFunction.readOnly((context) -> {
