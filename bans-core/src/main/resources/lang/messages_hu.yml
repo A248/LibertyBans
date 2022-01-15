@@ -126,7 +126,7 @@ all:
 
    # When issuing commands, if the specified player or IP was not found, what should the error message be?
   not-found:
-    uuid: '&c&oA(z) &c&o%TARGET%&7 nem egy valós uuidField.'
+    uuid: '&c&oA(z) &c&o%TARGET%&7 nem egy valós uuid.'
     player: '&c&oA(z) &c&o%TARGET%&7 nevű játékost nem találtuk online se offline.'
     player-or-address: '&c&oA(z) &c&o%TARGET%&7 nevű játékost nem találtuk online se offline, és/vagy a megadott IP cím ismeretlen.'
 
@@ -184,7 +184,7 @@ alts:
      # %DETECTION_KIND% - how the account was detected. Will be replaced by the normal or strict options.
      # %ADDRESS% - the address in question which led to the detection
      # %RELEVANT_USER% - the username of the other account, formatted according to the name-display option
-     # %RELEVANT_USERID% - the uuidField of the other account
+     # %RELEVANT_USERID% - the uuid of the other account
      # %DATE_RECORDED% - the date the alt account was recorded
     layout: '%RELEVANT_USER% &7(%ADDRESS% által) %DATE_RECORDED% kor - %DETECTION_KIND%'
      # In the alt-check layout, the username of the alt may be formatted depending upon whether it is banned

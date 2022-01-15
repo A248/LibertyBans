@@ -54,15 +54,17 @@ import space.arim.libertybans.core.punish.MiscUtil;
  */
 public class DatabaseSettings {
 
+	private final Path folder;
 	private final DatabaseManager manager;
 
-	private SqlConfig config;
+	private DatabaseSettingsConfig config;
 	private Vendor vendor;
 	private HikariConfig hikariConf;
 
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
-	public DatabaseSettings(DatabaseManager manager) {
+	public DatabaseSettings(Path folder, DatabaseManager manager) {
+		this.folder = folder;
 		this.manager = manager;
 	}
 	
@@ -76,12 +78,12 @@ public class DatabaseSettings {
 	}
 
 	/**
-	 * Creates a data source connection pool
+	 * Creates a data source connection pool. <b>Exposed only for testing purposes</b>
 	 *
 	 * @param config the config
 	 * @return the data source
 	 */
-	public HikariDataSource createDataSource(SqlConfig config) {
+	public HikariDataSource createDataSource(DatabaseSettingsConfig config) {
 		this.config = config;
 		vendor = config.vendor();
 		hikariConf = new HikariConfig();
@@ -96,7 +98,7 @@ public class DatabaseSettings {
 	 * @param config the config
 	 * @return a database result, which should be checked for success or failure
 	 */
-	public DatabaseResult create(SqlConfig config) {
+	public DatabaseResult create(DatabaseSettingsConfig config) {
 		HikariDataSource hikariDataSource = createDataSource(config);
 
 		JooqContext jooqContext = new JooqContext(vendor.dialect());
@@ -213,7 +215,7 @@ public class DatabaseSettings {
 			break;
 
 		case HSQLDB:
-			Path databaseFolder = manager.folder().resolve("hypersql");
+			Path databaseFolder = folder.resolve("hypersql");
 			try {
 				Files.createDirectories(databaseFolder);
 			} catch (IOException ex) {
@@ -249,6 +251,8 @@ public class DatabaseSettings {
 			properties.put("sql.enforce_types", true);
 			// Respect interrupt status during query execution
 			properties.put("hsqldb.tx_interrupt_rollback", true);
+			// Use CACHED tables by default
+			properties.put("hsqldb.default_table_type", "cached");
 
 			break;
 

@@ -48,7 +48,7 @@ public class VelocityBindModule {
 	}
 
 	public PlatformImportSource platformImportSource() {
-		throw new UnsupportedOperationException("PlatformImportSource not available");
+		throw new UnsupportedOperationException("It is impossible to import from vanilla on Velocity");
 	}
 
 }

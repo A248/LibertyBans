@@ -19,19 +19,13 @@
 
 package space.arim.libertybans.core.config;
 
-import java.time.Duration;
-import java.util.Map;
-
-import space.arim.libertybans.core.database.Vendor;
-
 import space.arim.dazzleconf.annote.ConfComments;
-import space.arim.dazzleconf.annote.ConfDefault.DefaultBoolean;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultInteger;
-import space.arim.dazzleconf.annote.ConfDefault.DefaultMap;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultString;
 import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.SubSection;
+import space.arim.libertybans.core.database.DatabaseSettingsConfig;
 
 @ConfHeader({
 		"",
@@ -62,122 +56,7 @@ import space.arim.dazzleconf.annote.SubSection;
 		"",
 		"",
 		""})
-public interface SqlConfig {
-
-	@ConfKey("rdms-vendor")
-	@ConfComments({
-			"What RDMS vendor will you be using?",
-			"Available options:",
-			"'HSQLDB' - Local HyperSQL database. No additional requirements.",
-			"'MARIADB' - Requires an external MariaDB database. At least MariaDB 10.3 is required.",
-			"'MYSQL' - Requires an external MySQL database. At least MySQL 8.0 is required.",
-			"'POSTGRES' - Requires an external PostgreSQL database. At least PostgreSQL 12 is required.",
-			"'COCKROACH' - Requires an external CockroachDB database. The latest CockroachDB is required. " +
-					"Warning: this option is strictly experimental."})
-	@DefaultString("HSQLDB")
-	Vendor vendor(); // Sensitive name used in integration testing
-	
-	@ConfKey("connection-pool-size")
-	@ConfComments({
-			"",
-			"How large should the connection pool be?",
-			"A thread pool of similar size is derived from the connection pool size.",
-			"For most servers, the default option is suitable."})
-	@DefaultInteger(6)
-	int poolSize();
-	
-	@SubSection
-	@ConfComments({
-			"",
-			"Connection timeout settings",
-			"LibertyBans uses HikariCP for connection pooling. The following settings control connection timeouts."})
-	Timeouts timeouts();
-	
-	interface Timeouts {
-		
-		@ConfKey("connection-timeout-seconds")
-		@ConfComments({
-				"How long, at maximum, should LibertyBans wait when acquiring new connections, "
-						+ "if no existing connection is available?"})
-		@DefaultInteger(14)
-		int connectionTimeoutSeconds();
-		
-		@ConfKey("max-lifetime-minutes")
-		@ConfComments({
-				"How long, at maxium, should a connection in the pool last before having to be recreated?",
-				"\"This value should be set for MariaDB or MySQL. HikariCP notes:",
-				"\"It should be several seconds shorter than any database or infrastructure imposed connection time limit\""})
-		@DefaultInteger(25)
-		int maxLifetimeMinutes();
-		
-	}
-	
-	@ConfKey("auth-details")
-	@SubSection
-	@ConfComments("Authentication details for remote databases: used for MariaDB, MySQL, PostgreSQL, and CockroachDB.")
-	AuthDetails authDetails();  // Sensitive name used in integration testing
-	
-	interface AuthDetails {
-		
-		@DefaultString("localhost")
-		String host();
-		
-		@DefaultInteger(3306)
-		int port();
-		
-		@DefaultString("bans")
-		String database();
-		
-		@ConfKey("user")
-		@DefaultString("defaultuser")
-		String username();
-		
-		@DefaultString("defaultpass")
-		String password();
-		
-	}
-
-	@ConfKey("mariadb")
-	@ConfComments("The values in this section only apply when using a MariaDB or MySQL database")
-	@SubSection
-	MariaDbConfig mariaDb();
-
-	interface MariaDbConfig {
-
-		@ConfKey("connection-properties")
-		@ConfComments({
-				"Connection properties to be applied to database connections"
-		})
-		@DefaultMap({
-				"useUnicode", "true",
-				"characterEncoding", "UTF-8",
-				"useServerPrepStmts", "true",
-				"cachePrepStmts", "true",
-				"prepStmtCacheSize", "25",
-				"prepStmtCacheSqlLimit", "1024"})
-		Map<String, String> connectionProperties();
-
-	}
-
-	@ConfKey("postgres")
-	@ConfComments("The values in this section only apply when using a PostgreSQL or CockroachDB database")
-	@SubSection
-	PostgresConfig postgres();
-
-	interface PostgresConfig {
-
-		@ConfKey("connection-properties")
-		@ConfComments("Connection properties to be applied to database connections")
-		@DefaultMap({
-				"preparedStatementCacheQueries", "25"})
-		Map<String, String> connectionProperties();
-
-	}
-
-	@ConfKey("use-traditional-jdbc-url")
-	@ConfComments("Legacy option. Don't touch this unless you understand it or you're told to enable it.")
-	@DefaultBoolean(false)
-	boolean useTraditionalJdbcUrl();
+public interface SqlConfig extends DatabaseSettingsConfig {
 
 	@ConfKey("mute-caching")
 	@SubSection

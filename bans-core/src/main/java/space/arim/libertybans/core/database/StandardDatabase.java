@@ -50,7 +50,7 @@ import java.util.concurrent.ExecutorService;
 
 import static space.arim.libertybans.core.schema.Tables.PUNISHMENTS;
 
-public final class StandardDatabase implements InternalDatabase {
+public final class StandardDatabase implements InternalDatabase, AutoCloseable {
 
 	private final DatabaseManager manager;
 	private final Vendor vendor;
@@ -103,8 +103,9 @@ public final class StandardDatabase implements InternalDatabase {
 			synchronizationPollTask = null;
 		}
 	}
-	
-	void close() {
+
+	@Override
+	public void close() {
 		dataSource.close();
 		threadPool.shutdown();
 	}
@@ -132,7 +133,7 @@ public final class StandardDatabase implements InternalDatabase {
 	}
 
 	@Override
-	public CentralisedFuture<?> execute(SQLRunnable command) {
+	public CentralisedFuture<Void> execute(SQLRunnable command) {
 		return queryExecutor.execute(command);
 	}
 
@@ -142,7 +143,7 @@ public final class StandardDatabase implements InternalDatabase {
 	}
 
 	@Override
-	public CentralisedFuture<?> executeWithRetry(int retryCount, SQLTransactionalRunnable command) {
+	public CentralisedFuture<Void> executeWithRetry(int retryCount, SQLTransactionalRunnable command) {
 		return queryExecutor.executeWithRetry(retryCount, command);
 	}
 
@@ -169,7 +170,7 @@ public final class StandardDatabase implements InternalDatabase {
 	@Override
 	public void truncateAllTables() {
 		execute((context) -> {
-			for (Table<?> table : DatabaseConstants.allTables()) {
+			for (Table<?> table : DatabaseConstants.allTables(DatabaseConstants.TableOrder.REFERENTS_LAST)) {
 				context.deleteFrom(table).execute();
 			}
 		}).join();

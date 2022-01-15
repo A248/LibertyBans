@@ -66,7 +66,7 @@ public class AltDetection {
 	 * the lack of pagination we want to show a short and linear progression from old to new.
 	 *
 	 * @param context the query source with which to contact the database
-	 * @param uuid the user's uuidField
+	 * @param uuid the user's uuid
 	 * @param address the user's address
 	 * @param whichAlts which alts to detect
 	 * @return the detected alts, sorted in order of oldest first

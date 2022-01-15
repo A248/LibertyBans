@@ -119,7 +119,7 @@ public class PlayerUnpunishCommandsTest {
 		Victim victim = AddressVictim.of(NetworkAddress.of(InetAddress.getByName(address)));
 
 		lenient().when(sender.getOperator()).thenReturn(ConsoleOperator.INSTANCE);
-		// User has permission for uuidField bans, but not IP bans
+		// User has permission for uuid bans, but not IP bans
 		lenient().when(sender.hasPermission("libertybans.ban.do.target.uuid")).thenReturn(true);
 		when(argParser.parseVictim(eq(sender), eq(address), any())).thenAnswer((i) -> futuresFactory.completedFuture(victim));
 		when(configs.getMessagesConfig()).thenReturn(messagesConfig);

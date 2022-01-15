@@ -43,7 +43,7 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	void sendToThoseWithPermission(String permission, ComponentLike message);
 	
 	/**
-	 * Searches for a player with the given uuidField, if found, invokes the callback
+	 * Searches for a player with the given uuid, if found, invokes the callback
 	 * 
 	 * @param uuid the uuid
 	 * @param callback the callback
@@ -67,17 +67,17 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	void sendMessageNoPrefix(P player, ComponentLike message);
 	
 	/**
-	 * Enforces a target matcher, invoking its callback for players matching its uuidField or address set
+	 * Enforces a target matcher, invoking its callback for players matching its uuid or address set
 	 * 
 	 * @param matcher the target matcher
 	 */
 	void enforceMatcher(TargetMatcher<P> matcher);
 	
 	/**
-	 * Gets the uuidField of a player
+	 * Gets the uuid of a player
 	 * 
 	 * @param player the player
-	 * @return the uuidField
+	 * @return the uuid
 	 */
 	UUID getUniqueIdFor(P player);
 	

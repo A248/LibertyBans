@@ -44,7 +44,7 @@ public interface QueryExecutor {
 	 * @param command the operation to run
 	 * @return a future completed once the SQL is executed
 	 */
-	CentralisedFuture<?> execute(SQLRunnable command);
+	CentralisedFuture<Void> execute(SQLRunnable command);
 
 	/**
 	 * Executes a command. Because this will not retry on transaction
@@ -64,7 +64,7 @@ public interface QueryExecutor {
 	 * @param command the operation to run
 	 * @return a future completed once the command is successfully run
 	 */
-	CentralisedFuture<?> executeWithRetry(int retryCount, SQLTransactionalRunnable command);
+	CentralisedFuture<Void> executeWithRetry(int retryCount, SQLTransactionalRunnable command);
 
 	/**
 	 * Retrieves a command until it succeeds
@@ -72,7 +72,7 @@ public interface QueryExecutor {
 	 * @param command the operation to run
 	 * @return a future completed once the command is successfully run
 	 */
-	default CentralisedFuture<?> executeWithRetry(SQLTransactionalRunnable command) {
+	default CentralisedFuture<Void> executeWithRetry(SQLTransactionalRunnable command) {
 		return executeWithRetry(DEFAULT_RETRIES, command);
 	}
 

@@ -21,17 +21,21 @@
  * Implements importing from other plugins. <br>
  * <br>
  * How punishment data is stored differs across plugins, especially with regards to UUIDs
- * and names. <br>
+ * and names. Importers for specific plugins implement {@link space.arim.libertybans.core.importing.ImportSource} <br>
  * <br>
  * <b>AdvancedBan</b> <br>
- * AdvancedBan has no dedicated persistent uuidField/name cache. The plugin does store victim names
- * and UUIDs alongside each punishment. Also, it does not retain the operator uuidField, but rather
+ * AdvancedBan has no dedicated persistent uuid/name cache. The plugin does store victim names
+ * and UUIDs alongside each punishment. Also, it does not retain the operator uuid, but rather
  * uses operator names. This requires a lookup during the import process. <br>
  * <br>
  * <b>LiteBans</b> <br>
- * LiteBans maintains a uuidField and name store in litebans_history.
- * Additionally, it puts the victim name and uuidField, and the operator name and uuidField,
- * alongside each punishment.
+ * LiteBans maintains a uuid and name store in litebans_history.
+ * Additionally, it puts the victim name and uuid, and the operator name and uuid,
+ * alongside each punishment. <br>
+ * <br>
+ * <b>Self</b> <br>
+ * The self-import process is intentionally special-cased. It has no ImportSource implementation
+ * but rather uses {@link space.arim.libertybans.core.importing.SelfImportProcess}
  *
  */
 package space.arim.libertybans.core.importing;

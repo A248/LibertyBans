@@ -25,13 +25,14 @@ import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.IntegerRange;
 import space.arim.dazzleconf.annote.SubSection;
+import space.arim.libertybans.core.database.DatabaseSettingsConfig;
 
 @ConfHeader({
 		"Settings for importing from other plugins",
 		"Most users should not have to touch this.",
 		"",
 		"In order to perform an import, run /libertybans import <source>.",
-		"Available sources are 'advancedban', 'litebans', and 'vanilla'.",
+		"Available sources are 'advancedban', 'litebans', 'vanilla', and 'self'.",
 		"",
 		"Importing from vanilla is only possible on Bukkit.",
 		"Essentials users: Note that Essentials uses the vanilla ban system.",
@@ -39,12 +40,11 @@ import space.arim.dazzleconf.annote.SubSection;
 		"--- NOTICE ---",
 		"You MUST backup your data before performing the import.",
 		"LibertyBans will never delete your data, but taking a backup is the best practice",
-		"whenever you are performing any large transfer of data. The possibility of failure",
-		"will never be zero.",
+		"whenever you are performing any large transfer of data.",
 		"",
 		"--- WARNING when importing from AdvancedBan and Vanilla ---",
-		"AdvancedBan/Vanilla does not store the uuidField of the operator who made a punishment.",
-		"To work around this, LibertyBans will attempt to lookup the operator uuidField. By default",
+		"AdvancedBan/Vanilla does not store the uuid of the operator who made a punishment.",
+		"To work around this, LibertyBans will attempt to lookup the operator uuid. By default",
 		"this uses the Mojang API. However, if your server sends the Mojang API too many requests,",
 		"your server might be rate limited (which you do NOT want to happen).",
 		"To prevent this, add another service to your web-api-resolvers, in the config.yml",
@@ -67,7 +67,10 @@ public interface ImportConfig {
 	AdvancedBanSettings advancedBan();
 
 	@ConfHeader({
-			"Importing from AdvancedBan",
+			"",
+			"",
+			"",
+			"-- Importing from AdvancedBan --",
 			"",
 			"The defaults here match the default settings in AdvancedBan.",
 			"If you use AdvancedBan's default storage, you do not need to change anything here.",
@@ -104,7 +107,10 @@ public interface ImportConfig {
 	LiteBansSettings litebans();
 
 	@ConfHeader({
-			"Importing from LiteBans",
+			"",
+			"",
+			"",
+			"-- Importing from LiteBans --",
 			"",
 			"This is no easy task. The main problem is that LiteBans is a closed-source black box,",
 			"such that no one except its author knows how the plugin works internally.",
@@ -123,13 +129,10 @@ public interface ImportConfig {
 			"If you configured a username and password for LiteBans, you should enter the same",
 			"username and password in this section.",
 			"",
-			"--- JDBC Driver Availability: H2 and Postgres Only ---",
-			"One issue you may run into is the availability of your JDBC driver. LiteBans supports",
-			"H2, MySQL/MariaDB, and Postgres. While LibertyBans can import from all of these sources,",
-			"LibertyBans only includes the MySQL/MariaDB driver for its own purposes.",
+			"--- JDBC Driver Availability: If you use H2 ---",
+			"LiteBans uses the H2 database by default. If importing from H2, you will need to install the H2 driver first.",
 			"",
-			"Therefore, if using H2 or Postgres, you will need to attach the relevant JDBC driver to the",
-			"classpath of your server. This is done by downloading the driver jar, and starting",
+			"The driver is installed by adding it to the classpath. This is done by downloading the driver jar, and starting",
 			"your server with the -cp option. The wiki has a tutorial on how to do this."})
 	interface LiteBansSettings {
 
@@ -154,4 +157,26 @@ public interface ImportConfig {
 		}
 	}
 
+	@ConfKey("self")
+	@SubSection
+	SelfSettings self();
+
+	@ConfHeader({
+			"",
+			"",
+			"",
+			"-- Importing from another LibertyBans database --",
+			"",
+			"NOTICE: The current database MUST be empty when the import is performed.",
+			"",
+			"The self-import process is different from the import process for other plugins.",
+			"It is a direct transfer, which is why the current database must be empty. Also, punishment IDs are preserved.",
+			"",
+			"Self-importing may be used to switch between various database backends supported by LibertyBans.",
+			"For example, you could transfer your data from HSQLDB to MariaDB.",
+			"",
+			"The settings here are used exactly as in sql.yml - in fact, they are the same settings."})
+	interface SelfSettings extends DatabaseSettingsConfig {
+
+	}
 }

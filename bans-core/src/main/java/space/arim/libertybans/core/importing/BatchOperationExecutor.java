@@ -56,7 +56,7 @@ class BatchOperationExecutor implements AutoCloseable {
 		/*
 		 * Committing every time is a necessity. Queries cannot be batched together
 		 * because otherwise the open transaction leads to deadlocks with other
-		 * queries, such as uuidField lookups for name-based operators.
+		 * queries, such as uuid lookups for name-based operators.
 		 *
 		 * Committing is handled by #executeWithExistingConnection
 		 */

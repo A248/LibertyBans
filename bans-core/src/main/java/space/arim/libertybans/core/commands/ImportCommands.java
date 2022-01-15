@@ -30,6 +30,7 @@ import space.arim.libertybans.core.importing.ImportSource;
 import space.arim.libertybans.core.importing.ImportStatistics;
 import space.arim.libertybans.core.importing.LiteBansImportSource;
 import space.arim.libertybans.core.importing.PlatformImportSource;
+import space.arim.libertybans.core.importing.SelfImportProcess;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
@@ -43,31 +44,36 @@ public class ImportCommands extends AbstractSubCommandGroup {
 
 	private final ImportExecutor executor;
 	private final Map<PluginSourceType, Provider<? extends ImportSource>> importSourceProviders;
+	/** The self-import process has no ImportSource implementation */
+	private final SelfImportProcess selfImportProcess;
 	private final AtomicBoolean isImporting = new AtomicBoolean();
 
 	@Inject
 	public ImportCommands(Dependencies dependencies, ImportExecutor executor,
 						  Provider<AdvancedBanImportSource> advancedBanImportSourceProvider,
 						  Provider<LiteBansImportSource> liteBansImportSourceProvider,
-						  Provider<PlatformImportSource> platformImportSourceProvider) {
+						  Provider<PlatformImportSource> platformImportSourceProvider,
+						  SelfImportProcess selfImportProcess) {
 		super(dependencies, "import");
 		this.executor = executor;
 		importSourceProviders = Map.of(
 				PluginSourceType.ADVANCEDBAN, advancedBanImportSourceProvider,
 				PluginSourceType.LITEBANS, liteBansImportSourceProvider,
 				PluginSourceType.VANILLA, platformImportSourceProvider);
+		this.selfImportProcess = selfImportProcess;
 	}
 
 	private enum PluginSourceType {
 		ADVANCEDBAN,
 		LITEBANS,
-		VANILLA
+		VANILLA,
+		SELF
 	}
 
 	@Override
 	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
 		if (argIndex == 0) {
-			return Stream.of("advancedban", "litebans");
+			return Stream.of("advancedban", "litebans", "vanilla", "self");
 		}
 		return Stream.empty();
 	}
@@ -105,18 +111,22 @@ public class ImportCommands extends AbstractSubCommandGroup {
 				sender().sendMessage(importMessages().inProgress());
 				return null;
 			}
-			ImportSource importSource = importSourceProviders.get(sourceType).get();
-			CentralisedFuture<ImportStatistics> importFuture = executor.performImport(importSource);
+			CentralisedFuture<Void> importFuture;
+			if (sourceType == PluginSourceType.SELF) {
+				importFuture = selfImportProcess.transferAllData();
+			} else {
+				ImportSource importSource = importSourceProviders.get(sourceType).get();
+				importFuture = executor.performImport(importSource).thenAccept((ImportStatistics statistics) -> {
+					if (statistics.success()) {
+						sender().sendMessage(importMessages().complete());
+						sender().sendLiteralMessage(statistics.toString());
+					} else {
+						sender().sendMessage(importMessages().failure());
+					}
+				});
+			}
 			sender().sendMessage(importMessages().started());
-
-			return importFuture.thenAccept((ImportStatistics statistics) -> {
-				if (statistics.success()) {
-					sender().sendMessage(importMessages().complete());
-					sender().sendLiteralMessage(statistics.toString());
-				} else {
-					sender().sendMessage(importMessages().failure());
-				}
-			}).whenComplete((ignore, ex) -> isImporting.set(false));
+			return importFuture.whenComplete((ignore, ex) -> isImporting.set(false));
 		}
 
 		private MessagesConfig.Admin.Importing importMessages() {

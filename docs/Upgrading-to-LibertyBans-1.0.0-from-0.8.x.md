@@ -72,8 +72,17 @@ New configuration options will be added automatically.
 
 Existing configuration options will be preserved.
 
-# Non-Breaking Changes
+# Other useful information
 
-There are some improvements which are non-breaking, but might be useful to know.
+## Non-Breaking Changes
+
+These changes might be useful to know.
 
 * The event scheduler feature (`mariadb.use-event-scheduler` in the sql.yml) has been removed. This feature existed solely as a minor performance optimization. If you were using this feature before, you can drop the event with `DROP EVENT IF EXISTS libertybans_refresher`
+
+## Automatic Upgrade from 0.8.x
+
+LibertyBans will not delete the 0.8.x data. If you'd like to free up disk space, you can remove the old tables.
+  * Following a successful import, the 0.8.x tables will have "zeroeight_postmigration" in their name.
+  * **Please be careful with your data**. Always take a backup before deleting large amounts of data.
+  * In HSQLDB, you would need to edit the hypersql/punishments-database.script file. This must be done while the server is stopped. Deleting the tables correctly is not trivial, so it is suggested to ask for support if necessary.

@@ -65,9 +65,8 @@ public class DatabaseSettingsIT {
 
 	private DatabaseSettings createDatabaseSettings() {
 		DatabaseManager dbManager = mock(DatabaseManager.class);
-		when(dbManager.folder()).thenReturn(databaseDir);
 		when(dbManager.futuresFactory()).thenReturn(new IndifferentFactoryOfTheFuture());
-		return new DatabaseSettings(dbManager);
+		return new DatabaseSettings(databaseDir, dbManager);
 	}
 
 	private SqlConfig createSqlConfig() {

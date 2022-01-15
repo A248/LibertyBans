@@ -42,11 +42,46 @@ public final class DatabaseConstants {
 
 	private DatabaseConstants() {}
 
-	public static Table<?>[] allTables() {
-		// Order is significant - referents must come last, referees first (with respect to foreign keys)
-		return new Table[] {
+	/**
+	 * Gets all the tables in the specified order
+	 *
+	 * @param tableOrder the order in which to return the tables
+	 * @return the tables in an order which considers foreign key references
+	 */
+	public static Table<?>[] allTables(TableOrder tableOrder) {
+		// Referees first, referents last with respect to foreign keys
+		Table<?>[] tables = new Table[] {
 				NAMES, ADDRESSES, HISTORY, BANS, MUTES, WARNS, PUNISHMENTS, VICTIMS, MESSAGES, REVISION
 		};
+		if (tableOrder == TableOrder.REFERENTS_FIRST) {
+			// Reverse array
+			int midpoint = tables.length / 2;
+			for (int n = 0; n < midpoint; n++) {
+
+				int swapIndex = tables.length - n - 1;
+				Table<?> subject, swapWith;
+				subject = tables[n];
+				swapWith = tables[swapIndex];
+				tables[n] = swapWith;
+				tables[swapIndex] = subject;
+			}
+		}
+		return tables;
+	}
+
+	public enum TableOrder {
+		/**
+		 * Referenced tables are placed first, and tables referring to them come last. <br>
+		 * <br>
+		 * Commonly used for inserting data
+		 */
+		REFERENTS_FIRST,
+		/**
+		 * Referenced tables are placed last, and tables referring to them come first. <br>
+		 * <br>
+		 * Commonly used for deleting data
+		 */
+		REFERENTS_LAST
 	}
 
 	public static Table<?>[] allViews() {

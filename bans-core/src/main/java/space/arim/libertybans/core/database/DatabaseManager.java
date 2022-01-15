@@ -57,11 +57,7 @@ public class DatabaseManager implements Part {
 		this.time = time;
 		this.globalEnforcement = globalEnforcement;
 	}
-	
-	public Path folder() {
-		return folder;
-	}
-	
+
 	public FactoryOfTheFuture futuresFactory() {
 		return futuresFactory;
 	}
@@ -88,7 +84,7 @@ public class DatabaseManager implements Part {
 	
 	@Override
 	public void startup() {
-		DatabaseResult dbResult = new DatabaseSettings(this).create();
+		DatabaseResult dbResult = new DatabaseSettings(folder, this).create();
 		StandardDatabase database = dbResult.database();
 		if (!dbResult.success()) {
 			database.closeCompletely();
@@ -102,7 +98,7 @@ public class DatabaseManager implements Part {
 	public void restart() {
 		StandardDatabase currentDatabase = this.database;
 
-		DatabaseResult dbResult = new DatabaseSettings(this).create();
+		DatabaseResult dbResult = new DatabaseSettings(folder, this).create();
 		StandardDatabase database = dbResult.database();
 		if (!dbResult.success()) {
 			database.close();

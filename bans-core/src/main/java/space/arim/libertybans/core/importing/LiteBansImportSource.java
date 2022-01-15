@@ -134,14 +134,14 @@ public class LiteBansImportSource implements ImportSource {
 		private Optional<PortablePunishment.VictimInfo> mapVictimInfo(ResultSet resultSet) throws SQLException {
 			/*
 			 * For user bans, the IP can be null, properly defined, or the magic string "#offline#".
-			 * For some IP-bans, the uuidField is "#offline#" and the IP is the name of the player.
-			 * In other IP-bans, the uuidField is well-defined, but the IP is "#offline#".
+			 * For some IP-bans, the uuid is "#offline#" and the IP is the name of the player.
+			 * In other IP-bans, the uuid is well-defined, but the IP is "#offline#".
 			 * Presumably some of this is to support banning players who have never joined,
 			 * but in practice it is quite absurd.
 			 */
 			String uuidString = getNonnullString(resultSet, "uuid");
 			if (uuidString.equals("#offline#")) {
-				logger.warn("Skipping punishment where the LiteBans-recorded uuidField is \"{}\"", uuidString);
+				logger.warn("Skipping punishment where the LiteBans-recorded uuid is \"{}\"", uuidString);
 				return Optional.empty();
 			}
 			UUID uuid = UUID.fromString(uuidString);
@@ -172,7 +172,7 @@ public class LiteBansImportSource implements ImportSource {
 			}
 			if (operatorId.length() != 36) {
 				// LiteBans occasionally records a name in the banned_by_uuid column
-				logger.warn("Found operator uuidField '{}' with incorrect length (should be 36 characters). " +
+				logger.warn("Found operator uuid '{}' with incorrect length (should be 36 characters). " +
 								"LibertyBans will rely on the name in banned_by_name instead.", operatorId);
 				String operatorName = getNonnullString(resultSet, "banned_by_name");
 				return PortablePunishment.OperatorInfo.createUser(null, operatorName);

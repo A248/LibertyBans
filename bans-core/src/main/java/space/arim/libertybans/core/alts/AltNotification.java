@@ -44,7 +44,7 @@ public class AltNotification {
 	/**
 	 * Notifies staff members that a joining user has detected alt accounts
 	 *
-	 * @param uuid the user's uuidField
+	 * @param uuid the user's uuid
 	 * @param name the user's name
 	 * @param address the user's address
 	 * @param alts the alt accounts found

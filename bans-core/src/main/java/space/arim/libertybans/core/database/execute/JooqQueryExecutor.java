@@ -178,7 +178,7 @@ public final class JooqQueryExecutor implements QueryExecutor {
 	}
 
 	@Override
-	public CentralisedFuture<?> execute(SQLRunnable command) {
+	public CentralisedFuture<Void> execute(SQLRunnable command) {
 		class RunnableAsFunction implements SQLFunction<Void> {
 
 			@Override
@@ -201,7 +201,7 @@ public final class JooqQueryExecutor implements QueryExecutor {
 	}
 
 	@Override
-	public CentralisedFuture<?> executeWithRetry(int retryCount, SQLTransactionalRunnable command) {
+	public CentralisedFuture<Void> executeWithRetry(int retryCount, SQLTransactionalRunnable command) {
 		class RunnableAsFunction implements SQLTransactionalFunction<Void> {
 
 			@Override
