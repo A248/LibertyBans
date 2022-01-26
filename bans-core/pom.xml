@@ -314,7 +314,7 @@
 										</ports>
 										<wait>
 											<time>60000</time>
-											<log>/usr/sbin/mysqld: ready for connections. Version: '8.0.27'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server - GPL</log>
+											<log>/usr/sbin/mysqld: ready for connections. Version: '8.0</log>
 										</wait>
 										<volumes>
 											<bind>
