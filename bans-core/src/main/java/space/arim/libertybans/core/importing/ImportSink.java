@@ -55,9 +55,10 @@ class ImportSink {
 			if (active) {
 				Punishment enacted = transaction.executeNested(enaction::enactActive);
 				if (enacted == null) {
-					logger.warn("There is a conflicting active punishment for {}. for example, " +
-							"two bans for the same user. This is harmless in most cases. The punishment will be " +
-							"added to the  user's history but not be enforced actively.", enaction.orderDetails());
+					logger.warn(
+							"There is a conflicting active punishment: {}. For example two bans for the same user. " +
+									"This is harmless in most cases. The punishment will be skipped.",
+							enaction.orderDetails());
 				}
 			} else {
 				enaction.enactHistorical(context);

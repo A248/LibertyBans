@@ -37,6 +37,8 @@ import space.arim.libertybans.core.database.DatabaseSettingsConfig;
 		"Importing from vanilla is only possible on Bukkit.",
 		"Essentials users: Note that Essentials uses the vanilla ban system.",
 		"",
+		"During the import, it is not needed to enable the plugin you are importing from.",
+		"",
 		"--- NOTICE ---",
 		"You MUST backup your data before performing the import.",
 		"LibertyBans will never delete your data, but taking a backup is the best practice",
@@ -98,7 +100,10 @@ public interface ImportConfig {
 		String password();
 
 		default ConnectionSource toConnectionSource() {
-			return new JdbcDetails(jdbcUrl(), username(), password());
+			return new ConnectionSource.InformativeErrorMessages(
+					new JdbcDetails(jdbcUrl(), username(), password()),
+					"AdvancedBan"
+			);
 		}
 	}
 
@@ -121,7 +126,7 @@ public interface ImportConfig {
 			"--- Config Options Explained ---",
 			"The jdbc-url depends on the storage mode you are using LiteBans with.",
 			"- Using H2, it should be 'jdbc:h2:./plugins/LiteBans/litebans'",
-			"- Using MySQL/MariaDB, it should be 'jdbc:mariadb://<host>:<port>/<database>' with <host>,",
+			"- Using MySQL or MariaDB, it should be 'jdbc:mariadb://<host>:<port>/<database>' with <host>,",
 			"<port>, and <database> replaced with the correct values.",
 			"- Using PostgreSQL, it should be 'jdbc:postgresql://<host>:<port>/<database>' with <host>,",
 			"<port>, and <database> replaced with the correct values.",
@@ -153,7 +158,10 @@ public interface ImportConfig {
 		String tablePrefix();
 
 		default ConnectionSource toConnectionSource() {
-			return new JdbcDetails(jdbcUrl(), username(), password());
+			return new ConnectionSource.InformativeErrorMessages(
+					new JdbcDetails(jdbcUrl(), username(), password()),
+					"LiteBans"
+			);
 		}
 	}
 
@@ -178,5 +186,54 @@ public interface ImportConfig {
 			"The settings here are used exactly as in sql.yml - in fact, they are the same settings."})
 	interface SelfSettings extends DatabaseSettingsConfig {
 
+	}
+
+	@ConfKey("ban-manager")
+	@SubSection
+	BanManagerSettings banManager();
+
+	@ConfHeader({
+			"",
+			"",
+			"",
+			"-- Importing from BanManager (v7) --",
+			"",
+			"Bans, IP bans, mutes, IP mutes, warns, and kicks are supported.",
+			"",
+			"BanManager's IP range bans, name bans, notes, and reports are not supported. LibertyBans has no equivalent features.",
+			"",
+			"--- Config Options Explained ---",
+			"The jdbc-url depends on the storage mode you are using BanManager with.",
+			"- Using H2, it should be 'jdbc:h2:./plugins/BanManager/local-bans'",
+			"- Using MySQL or MariaDB, it should be 'jdbc:mariadb://<host>:<port>/<database>' with <host>,",
+			"<port>, and <database> replaced with the correct values.",
+			"",
+			"If you configured a username and password for BanManager, you should enter the same",
+			"username and password in this section.",
+	})
+	interface BanManagerSettings {
+
+		@ConfKey("jdbc-url")
+		@ConfComments("The default value here is set for H2.")
+		@ConfDefault.DefaultString("jdbc:h2:./plugins/BanManager/local-bans")
+		String jdbcUrl();
+
+		@ConfDefault.DefaultString("")
+		String username();
+
+		@ConfDefault.DefaultString("")
+		String password();
+
+		@ConfKey("table-prefix")
+		@ConfComments("The same table prefix you used with BanManager")
+		@ConfDefault.DefaultString("bm_")
+		String tablePrefix();
+
+		default ConnectionSource toConnectionSource() {
+			return new ConnectionSource.InformativeErrorMessages(
+					new JdbcDetails(jdbcUrl(), username(), password()),
+					"BanManager"
+			);
+		}
 	}
 }

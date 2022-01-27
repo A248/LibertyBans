@@ -1,56 +1,57 @@
-Since LiteBans is closed-source and pay-walled, it is hard to gather information about its workings. Very little is known about its internal code design.
+
+Since LiteBans is closed-source and pay-walled, it is hard to gather information about its workings. Very little is known about its internal code design. In fact, it may even be illegal to reverse-engineer LiteBans.
 
 This comparison will focus on what information is known about LiteBans.
 
-# Design
+## Design
 
-## API Design
+### API
 
-LiteBans's API encourages users to query its database directly. While this makes the API comprehensive, it tightly couples LiteBans' database and API users. If an API user leaks open connections, for example, it will appear that LiteBans is the culprit of the leak.
+LiteBans's API encourages users to query its database directly. As a  result, developers working with the LiteBans API have criticized it as a poor abstraction. Requiring API users to execute SQL tightly couples the database schema and API users.
 
-LibertyBans discourages reliance on the database structure, and instead provides an expansive Java API which attempts to cover the capabilities offered by a punishment plugin. In contrast to LiteBans, simple plugins using the LibertyBans API can call type-safe methods instead of executing SQL with JDBC.
+This has consequences:
+* If a plugin leaks a connection, it will appear that LiteBans is the source of the leak. Debugging connection leaks is further complicated because the LiteBans binary is obfuscated.
+* Creating a rigid database schema upon which API users rely means LiteBans is unable to improve its database schema without widespread breakage.
 
-## Database schema
+LibertyBans instead provides an expansive Java API which attempts to cover the capabilities offered by a punishment plugin. In contrast to LiteBans, plugins using the LibertyBans API need not execute SQL.
+
+### Database Schema
 
 LiteBans, like other ban plugins, uses VARCHAR columns for storing UUIDs and IP addresses. This is equivalent to storing the string representation of UUIDs and IP addresses.
 
 LibertyBans uses BINARY column types in order to reduce storage space. This means only the necessary bytes of the UUIDs and IP addresses are stored. The actual difference is small, but not negligible.
 
-## Database Drivers
+### Undoing Operator
 
-Both LiteBans and LibertyBans use modern JDBC drivers, which avoids issues with the default drivers which are on some servers quite old and bug-ridden. Other plugins use the default drivers, and thus experience issues LiteBans and LibertyBans do not.
+LiteBans stores the operator who revoked a punishment. This makes it possible for staff to determine who is responsible for unbans, unmutes, etc.
 
-# Requirements
+LibertyBans does not store this information.
 
-## Java Version Support
+## Implementation
 
-LibertyBans requires Java 11 whereas LiteBans permits Java 8.
+### Test Suite
 
-## External Databases
+LibertyBans has an extensive test suite. Automated tests help catch bugs before a release can be made. The scope and strength of automated testing in LibertyBans has saved countless hours of development time.
 
-Neither LiteBans nor LibertyBans requires an external database. LibertyBans uses HSQLDB by default, and LiteBans uses H2 by default.
+LiteBans is closed-source; as such, it is not clear whether it has a test suite. However, evidence suggests LiteBans has little automated testing:
+* LiteBans has experienced bugs which are of such a kind as to imply LiteBans does not have significant automated testing:
+  * "Fixed the /unwarn command, broken since 2.1" and "Fixed a harmless error when starting the plugin for the first time if config.yml doesn't exist yet" - https://www.spigotmc.org/resources/litebans.3715/update?update=102167
+  * "Fixed Database.prepareStatement() returning a closed statement" - https://www.spigotmc.org/resources/litebans.3715/update?update=163048
+  * A bug due to an invalid query string: https://gitlab.com/ruany/LiteBans/-/issues/391
+  * These kinds of bugs would most likely be prevented by automated testing
+* Bug descriptions frequently mention manual testing, but none of them mention automated testing.
 
-LiteBans supports MariaDB, MySQL, and PostgreSQL. It also has support for SQLite, but SQLite usage is discouraged by LiteBans.
+### Platform Separation
 
-LibertyBans supports MariaDB, MySQL, and PostgreSQL. It also requires certain minimum versions for database servers. At least MySQL 8.0, MariaDB 10.3, or PostgreSQL 12 is required. Older versions are not supported.
+The LibertyBans codebase is separated based on the platform.
 
-Due to an unfortunate bug in pterodactyl, the pterodactyl database user has insufficient SQL privileges. TThis causes a problem with LibertyBans, because LibertyBans uses advanced SQL features which AdvancedBan does not. This results in headaches for users of LibertyBans and pterodactly, who need to manually grant the right privileges to LibertyBans for the plugin to function properly. This bug is outside the control of LibertyBans.
+Separating code for each platform prevents whole categories of bugs relating to accidental class initialization. Fewer bugs means less time spent debugging and more time available for improving the rest of the plugin.
 
-## Platform Support
+Although LiteBans is closed-source, evidence strongly suggests that its codebase is *not* separated for each platform.<sup id="note1ret">[1](#note1)</sup>
 
-Both LibertyBans and LiteBans support the same platforms. LiteBans had velocity support recently added (9 December 2021)
+## Philosophy
 
-LiteBans' support for velocity came after months of users asking for the feature. It was suggested that LiteBans be made open-source so that someone could contribute a velocity version. The reluctance of the LiteBans author to add velocity support suggests that it may be unwise to rely on proprietary software for critical functionality.
-
-# Philosophy
-
-## Versioning
-
-LiteBans does not follow semantic versioning, leading to potential instability for developers using its API. However, at least it has not yet introduced breaking API changes in the same major version, so LiteBans partially follows semver. Reference: https://www.spigotmc.org/resources/litebans.3715/update?update=341296
-
-LibertyBans fully follows semantic versioning for its API.
-
-## Price and Availability
+### Price and Availability
 
 LibertyBans is free and open-source. Anyone can inspect the source code if they so desire. Anyone can work on it; anyone can contribute and add features or modify it for own use. Users can use the latest version of the source code without having to wait until the next official release.
 
@@ -58,49 +59,83 @@ LiteBans is closed-source. Only the author has access to the source code; only t
 
 LiteBans is also behind a pay-wall, meaning that users have to pay in order to use it. This also means that prospective users cannot test out the plugin so easily. They have to pay before testing.
 
-# Features
+Users of LiteBans must carefully consider whether they are willing to rely entirely on the author of LiteBans for features and improvements.
 
-## Geyser Support
+### Versioning
+
+LiteBans does not follow semantic versioning, leading to potential instability for developers using its API. It has introduced new API without issuing a minor release.<sup id="note2ret">[2](#note2)</sup>
+
+LibertyBans fully follows semantic versioning for its API.
+
+## Requirements
+
+### Java Version Support
+
+LibertyBans requires Java 11 whereas LiteBans permits Java 8.
+
+### External Databases
+
+Neither LibertyBans nor LiteBans requires an external database. LibertyBans uses HSQLDB by default, and LiteBans uses H2 by default.
+
+Both LibertyBans and LiteBans supports MariaDB, MySQL, and PostgreSQL. LiteBans also has support for SQLite, but SQLite usage is discouraged by LiteBans.
+
+LibertyBans requires certain minimum versions for database servers. At least MySQL 8.0, MariaDB 10.3, or PostgreSQL 12 is required. Older versions are not supported.
+
+## Platform Support
+
+Both LibertyBans and LiteBans support the same platforms. LiteBans had velocity support recently added (9 December 2021)
+
+LiteBans' support for velocity came after months of users asking for the feature. It was suggested that LiteBans be made open-source so that someone could contribute a velocity version. The reluctance of the LiteBans author to add velocity support suggests that it may be unwise to rely on proprietary software for critical functionality.
+
+## Features
+
+### Geyser Support
 
 LibertyBans has Geyser support (since 30 May 2021), whereas LiteBans does not.
 
-## Core punishment types
+### Core punishment types
 
 Both LibertyBans and LiteBans include bans, ip-bans, mutes, warns, and kicks.
 
-### IP-Mutes, IP-Warns, IP-Kicks
-
 By the nature of its flexible design, LibertyBans also supports ip-mutes, ip-warns, and ip-kicks, even though these are rarely used. It costs nothing to add these extra features.
 
-## Punishment enforcement
+LiteBans allows banning IP ranges. LibertyBans does not.
 
-Both LibertyBans and LiteBans have a command to check for alts as well as an automatic notification when a suspected player joins.
+### Combatting Punishment Evasion (Alt Accounts)
 
-LibertyBans further supports multiple modes of IP address-based punishment, in order to automatically block alt accounts.
+Both LibertyBans and LiteBans have a command to check for alts as well as an automatic notification when an alt of a banned player joins the server.
 
-## Exempt Permissions
+LibertyBans further supports multiple modes of IP address-based punishment, in order to automatically block alt accounts. LiteBans does not have this feature.
+
+### Exempt Permissions
 
 LiteBans supports the feature known as exempt permissions, where a target player cannot be banned if they have a certain permission.
+ * Note that on a single server, LiteBans' permission checking for offline players depends on Vault, otherwise the feature breaks for offline players.
 
-LibertyBans does not provide this feature.
+LibertyBans does not provide this feature, on the author's claim that it cannot be made to work reliably for both online and offline players.
 
-## Importing
+### Importing From Other Plugins
 
-LibertyBans supports importing from AdvancedBan, LiteBans, and vanilla.
+LibertyBans supports importing from AdvancedBan, BanManager, LiteBans, and vanilla.
 
-LiteBans supports importing from AdvancedBan, BanManager v4 and v5, BungeeAdminTools, MaxBans, UltraBans, and vanilla.
+LiteBans supports importing from AdvancedBan, BanManager, BungeeAdminTools, MaxBans, UltraBans, and vanilla.
 
-LiteBans also allows importing from itself, which LibertyBans does not currently support.
+### Server Scopes
 
-## Server Scopes
-
-LiteBans has full support for punishments scoped to certain servers.
+LiteBans enables punishments scoped to certain servers.
 
 LibertyBans does not implement this feature.
 
-## Multi-Proxy Support
+### Multi-Proxy / Multi-Instance Synchronization
 
-Both LibertyBans and LiteBans synchronizes punishments across their instances, using SQL-based synchronization. This lets operators punish users on other servers with ease.
+Both LibertyBans and LiteBans provide synchronization across multiple instances, a feature commonly used for multi-proxy setups.
 
+## References
 
+<a id="note1">1</a>: Falistos. "Start error under Java 18." LiteBans Gitlab Issue. https://gitlab.com/ruany/LiteBans/-/issues/408 [↩](#note1ret)
 
+<a id="note2">2</a>: Ruan. "LiteBans 2.5.4 - 2.5.9." SpigotMC Resource Update. https://www.spigotmc.org/resources/litebans.3715/update?update=341296 [↩](#note2ret)
+
+### Disclaimer
+
+Please note that no harm is meant to subjects of criticism. If the writing sounds harsh, we apologize; please let us know and we will make the language less harsh.

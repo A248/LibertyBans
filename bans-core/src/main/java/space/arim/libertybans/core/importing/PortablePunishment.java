@@ -179,13 +179,17 @@ public final class PortablePunishment {
 		}
 
 		public VictimInfo(UUID uuid, String name, NetworkAddress address, Victim overrideVictim) {
-			if (uuid == null && name == null && address == null) {
-				throw new IllegalArgumentException("One of uuid, username, or address must be nonnull");
+			if (uuid == null && name == null && address == null && overrideVictim == null) {
+				throw new IllegalArgumentException("One of uuid, username, address, or overrideVictim must be nonnull");
 			}
 			this.uuid = uuid;
 			this.name = name;
 			this.address = address;
 			this.overrideVictim = overrideVictim;
+		}
+
+		public static VictimInfo simpleVictim(Victim victim) {
+			return new VictimInfo(null, null, null, victim);
 		}
 
 		public Optional<UUID> uuid() {

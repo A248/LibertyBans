@@ -68,7 +68,9 @@ public class LiteBansImportSource implements ImportSource {
 	@Override
 	public Stream<PortablePunishment> sourcePunishments() {
 		DatabaseStream databaseStream = databaseStream();
-		return Arrays.stream(LiteBansTable.values()).map(PunishmentRowMapper::new).flatMap(databaseStream::streamRows);
+		return Arrays.stream(LiteBansTable.values())
+				.map(PunishmentRowMapper::new)
+				.flatMap(databaseStream::streamRows);
 	}
 
 	private class PunishmentRowMapper implements SchemaRowMapper<PortablePunishment> {
@@ -91,7 +93,6 @@ public class LiteBansImportSource implements ImportSource {
 				logger.warn("Skipped LiteBans wildcard IP ban {} which is not supported by LibertyBans", id);
 				return Optional.empty();
 			}
-			boolean active = table != LiteBansTable.KICKS && resultSet.getBoolean("active");
 			logger.trace("Mapping row from table {} with ID {}", table, id);
 			Optional<PortablePunishment.VictimInfo> victimInfo = mapVictimInfo(resultSet);
 			if (victimInfo.isEmpty()) {
@@ -102,7 +103,8 @@ public class LiteBansImportSource implements ImportSource {
 					mapKnownDetails(resultSet),
 					victimInfo.get(),
 					mapOperatorInfo(resultSet),
-					active));
+					table != LiteBansTable.KICKS && resultSet.getBoolean("active")
+			));
 		}
 
 		private PortablePunishment.KnownDetails mapKnownDetails(ResultSet resultSet) throws SQLException {

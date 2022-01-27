@@ -53,8 +53,7 @@ class DatabaseStream {
 			} catch (SQLException suppressed) { ex.addSuppressed(suppressed); }
 			throw new ImportException("Unable to select imported punishments", ex);
 		}
-		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator,
-				Spliterator.DISTINCT + Spliterator.IMMUTABLE), false)
+		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, Spliterator.IMMUTABLE), false)
 				.onClose(() -> {
 					try {
 						iterator.close();
