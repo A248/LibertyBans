@@ -19,8 +19,8 @@
 
 package space.arim.libertybans.core.service;
 
+import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalAmount;
 
 public interface SettableTime extends Time {
 
@@ -36,5 +36,5 @@ public interface SettableTime extends Time {
 	 *
 	 * @param progression the progression
 	 */
-	void advanceBy(TemporalAmount progression);
+	void advanceBy(Duration progression);
 }

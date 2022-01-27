@@ -74,7 +74,7 @@ public class SQLSynchronizationIT {
 	@TestTemplate
 	public void sendAndReceive() {
 		byte[] message = dispatchRandomMessage();
-		time.advanceBy(Duration.ofMillis(10L));
+		time.advanceBy(Duration.ofSeconds(10L));
 
 		assertArrayEquals(
 				new byte[][] {message},
@@ -85,13 +85,13 @@ public class SQLSynchronizationIT {
 	@TestTemplate
 	public void sendAndReceiveMultipleInOrder() {
 		byte[] message1 = dispatchRandomMessage();
-		time.advanceBy(Duration.ofMillis(10L));
+		time.advanceBy(Duration.ofSeconds(10L));
 		byte[] message2 = dispatchRandomMessage();
-		time.advanceBy(Duration.ofMillis(300L));
+		time.advanceBy(Duration.ofSeconds(300L));
 		byte[] message3 = dispatchRandomMessage();
-		time.advanceBy(Duration.ofMillis(1L));
+		time.advanceBy(Duration.ofSeconds(1L));
 		byte[] message4 = dispatchRandomMessage();
-		time.advanceBy(Duration.ofMillis(5L));
+		time.advanceBy(Duration.ofSeconds(5L));
 
 		assertArrayEquals(
 				new byte[][] {message1, message2, message3, message4},
