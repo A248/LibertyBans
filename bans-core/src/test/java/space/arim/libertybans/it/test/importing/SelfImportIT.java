@@ -26,7 +26,6 @@ import org.jooq.Table;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.NetworkAddress;
@@ -63,7 +62,6 @@ import static space.arim.libertybans.core.schema.Tables.VICTIMS;
 import static space.arim.libertybans.core.schema.Tables.WARNS;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
-@ExtendWith(MockitoExtension.class)
 public class SelfImportIT {
 
 	@TempDir

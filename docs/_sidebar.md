@@ -19,7 +19,8 @@
   * [Importing from other plugins](Importing-from-Other-Plugins)
   * [Dealing with misbehaving plugins](Event-was-previously-blocked-by-the-server-or-another-plugin...)
 * Comparison to Other Plugins
-  * [Comparison to AdvancedBan](Detailed-Comparison-to-AdvancedBan)
+  * [Comparison to AdvancedBan](Comparison-to-AdvancedBan)
+  * [Comparison to BanManager](Comparison-to-BanManager)
   * [Comparison to LiteBans](Comparison-to-LiteBans)
   * [Quick Plugin Comparison](Quick-Plugin-Comparison)
-  
+  * [Plugin Comparison Conclusions](Plugin-Comparison-Conclusions)

@@ -22,24 +22,33 @@ package space.arim.libertybans.core.importing;
 import java.util.Objects;
 
 /**
- * See the wiki for the explanation on AdvancedBan's quirks relating to
- * punishment uniqueness.
+ * Represents a unique combination of punishment details. <br>
+ * <br>
+ * See the wiki for the explanation on AdvancedBan's quirks relating to punishment uniqueness.
  *
  */
-public final class AdvancedBanUniquePunishmentDetails {
+final class AdvancedBanUniquePunishmentDetails {
 
-	private final PortablePunishment.KnownDetails knownDetails;
-	private final PortablePunishment.VictimInfo victimInfo;
-	private final PortablePunishment.OperatorInfo operatorInfo;
+	private final PortablePunishment portablePunishment;
 
-	public AdvancedBanUniquePunishmentDetails(PortablePunishment.KnownDetails knownDetails, PortablePunishment.VictimInfo victimInfo, PortablePunishment.OperatorInfo operatorInfo) {
-		this.knownDetails = Objects.requireNonNull(knownDetails, "knownDetails");
-		this.victimInfo = Objects.requireNonNull(victimInfo, "victimInfo");
-		this.operatorInfo = Objects.requireNonNull(operatorInfo, "operatorInfo");
+	AdvancedBanUniquePunishmentDetails(PortablePunishment portablePunishment) {
+		this.portablePunishment = Objects.requireNonNull(portablePunishment);
 	}
 
-	public AdvancedBanUniquePunishmentDetails(PortablePunishment portablePunishment) {
-		this(portablePunishment.knownDetails(), portablePunishment.victimInfo(), portablePunishment.operatorInfo());
+	PortablePunishment portablePunishment() {
+		return portablePunishment;
+	}
+
+	private PortablePunishment.KnownDetails knownDetails() {
+		return portablePunishment.knownDetails();
+	}
+
+	private PortablePunishment.VictimInfo victimInfo() {
+		return portablePunishment.victimInfo();
+	}
+
+	private PortablePunishment.OperatorInfo operatorInfo() {
+		return portablePunishment.operatorInfo();
 	}
 
 	@Override
@@ -47,25 +56,23 @@ public final class AdvancedBanUniquePunishmentDetails {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		AdvancedBanUniquePunishmentDetails that = (AdvancedBanUniquePunishmentDetails) o;
-		return knownDetails.equals(that.knownDetails)
-				&& victimInfo.equals(that.victimInfo)
-				&& operatorInfo.equals(that.operatorInfo);
+		return knownDetails().equals(that.knownDetails())
+				&& victimInfo().equals(that.victimInfo())
+				&& operatorInfo().equals(that.operatorInfo());
 	}
 
 	@Override
 	public int hashCode() {
-		int result = knownDetails.hashCode();
-		result = 31 * result + victimInfo.hashCode();
-		result = 31 * result + operatorInfo.hashCode();
+		int result = knownDetails().hashCode();
+		result = 31 * result + victimInfo().hashCode();
+		result = 31 * result + operatorInfo().hashCode();
 		return result;
 	}
 
 	@Override
 	public String toString() {
 		return "AdvancedBanUniquePunishmentDetails{" +
-				"knownDetails=" + knownDetails +
-				", victimInfo=" + victimInfo +
-				", operatorInfo=" + operatorInfo +
+				"portablePunishment=" + portablePunishment +
 				'}';
 	}
 }

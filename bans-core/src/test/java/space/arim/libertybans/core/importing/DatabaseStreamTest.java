@@ -56,18 +56,15 @@ public class DatabaseStreamTest {
 		}
 	}
 
-	private void prepareData(PreparedStatement insertDataStatement, Row row) throws SQLException {
-		insertDataStatement.setInt(1, row.tally());
-		insertDataStatement.setString(2, row.text());
-		insertDataStatement.setBoolean(3, row.flag());
-	}
-
 	private void insertAllData(Set<Row> rows) {
 		try (Connection connection = connectionSource.openConnection();
 			 PreparedStatement insertDataStatement = connection.prepareStatement(
 			 		"INSERT INTO test_rows (tally, textual, flag) VALUES (?, ?, ?)")) {
 			for (Row row : rows) {
-				prepareData(insertDataStatement, row);
+				insertDataStatement.setInt(1, row.tally());
+				insertDataStatement.setString(2, row.text());
+				insertDataStatement.setBoolean(3, row.flag());
+
 				insertDataStatement.addBatch();
 			}
 			insertDataStatement.executeBatch();

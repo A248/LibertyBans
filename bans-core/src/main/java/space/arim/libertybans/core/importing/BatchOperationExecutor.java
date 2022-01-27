@@ -36,7 +36,7 @@ class BatchOperationExecutor implements AutoCloseable {
 	private Connection connection;
 	private int countInThisConnection;
 
-	private static final int OPERATIONS_PER_CONNECTION = 200;
+	private static final int OPERATIONS_PER_CONNECTION = 400;
 
 	BatchOperationExecutor(InternalDatabase database) {
 		this.database = database;
