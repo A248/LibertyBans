@@ -380,7 +380,7 @@
 										</wait>
 										<volumes>
 											<bind>
-												<volume>libertybans-build-cockroachdb:/cockroach</volume>
+												<volume>libertybans-build-cockroachdb:/usr/local/lib/cockroach</volume>
 											</bind>
 										</volumes>
 									</run>
