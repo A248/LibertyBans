@@ -277,7 +277,7 @@
 										</wait>
 										<volumes>
 											<bind>
-												<volume>libertybans-build</volume>
+												<volume>libertybans-build-mariadb-legacy:/var/lib/mysql</volume>
 											</bind>
 										</volumes>
 									</run>
@@ -298,7 +298,7 @@
 										</wait>
 										<volumes>
 											<bind>
-												<volume>libertybans-build</volume>
+												<volume>libertybans-build-mariadb-modern:/var/lib/mysql</volume>
 											</bind>
 										</volumes>
 									</run>
@@ -319,7 +319,7 @@
 										</wait>
 										<volumes>
 											<bind>
-												<volume>libertybans-build</volume>
+												<volume>libertybans-build-mysql:/var/lib/mysql</volume>
 											</bind>
 										</volumes>
 									</run>
@@ -340,7 +340,7 @@
 										</wait>
 										<volumes>
 											<bind>
-												<volume>libertybans-build</volume>
+												<volume>libertybans-build-postgresql-legacy:/var/lib/postgresql/data</volume>
 											</bind>
 										</volumes>
 									</run>
@@ -361,7 +361,7 @@
 										</wait>
 										<volumes>
 											<bind>
-												<volume>libertybans-build</volume>
+												<volume>libertybans-build-postgresql-modern:/var/lib/postgresql/data</volume>
 											</bind>
 										</volumes>
 									</run>
@@ -373,7 +373,6 @@
 										<cmd>start-single-node --insecure</cmd>
 										<hostname>cockroach</hostname>
 										<ports>
-											<!--suppress UnresolvedMavenProperty -->
 											<port>127.0.0.1:${it.cockroachdb.port}:26257</port>
 										</ports>
 										<wait>
@@ -381,15 +380,56 @@
 										</wait>
 										<volumes>
 											<bind>
-												<volume>libertybans-build</volume>
+												<volume>libertybans-build-cockroachdb:/cockroach</volume>
 											</bind>
 										</volumes>
 									</run>
 								</image>
 							</images>
 							<volumes>
+								<!-- MariaDB Legacy container volume -->
 								<volume>
-									<name>libertybans-build</name>
+									<name>libertybans-build-mariadb-legacy</name>
+									<opts>
+										<type>tmpfs</type>
+										<device>tmpfs</device>
+									</opts>
+								</volume>
+								<!-- MariaDB Modern container volume -->
+								<volume>
+									<name>libertybans-build-mariadb-modern</name>
+									<opts>
+										<type>tmpfs</type>
+										<device>tmpfs</device>
+									</opts>
+								</volume>
+								<!-- MySQL container volume -->
+								<volume>
+									<name>libertybans-build-mysql</name>
+									<opts>
+										<type>tmpfs</type>
+										<device>tmpfs</device>
+									</opts>
+								</volume>
+								<!-- Postgresql Legacy container volume -->
+								<volume>
+									<name>libertybans-build-postgresql-legacy</name>
+									<opts>
+										<type>tmpfs</type>
+										<device>tmpfs</device>
+									</opts>
+								</volume>
+								<!-- Postgresql Modern container volume -->
+								<volume>
+									<name>libertybans-build-postgresql-modern</name>
+									<opts>
+										<type>tmpfs</type>
+										<device>tmpfs</device>
+									</opts>
+								</volume>
+								<!-- Cockroachdb container volume -->
+								<volume>
+									<name>libertybans-build-cockroachdb</name>
 									<opts>
 										<type>tmpfs</type>
 										<device>tmpfs</device>
