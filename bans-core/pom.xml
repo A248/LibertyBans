@@ -259,6 +259,7 @@
 							<containerNamePattern>%a</containerNamePattern>
 							<showLogs>true</showLogs>
 							<startParallel>true</startParallel>
+							<removeVolumes>true</removeVolumes>
 							<images>
 								<image>
 									<name>mariadb:10.3</name>
@@ -372,6 +373,7 @@
 										<cmd>start-single-node --insecure</cmd>
 										<hostname>cockroach</hostname>
 										<ports>
+											<!--suppress UnresolvedMavenProperty -->
 											<port>127.0.0.1:${it.cockroachdb.port}:26257</port>
 										</ports>
 										<wait>
