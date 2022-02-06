@@ -3,6 +3,7 @@
 <img alt="LibertyBans" src="./.github/banner.png" />
 
 <!-- Shields -->
+[Homepage]:https://img.shields.io/badge/-Home_Page-blueviolet.svg?logo=StarTrek&style=for-the-badge&logoColor=white
 [Documentation]:https://img.shields.io/badge/-Documentation-blue.svg?logo=Wikipedia&style=for-the-badge&logoColor=black
 [Discord]:https://img.shields.io/badge/-Discord-5865F2.svg?logo=discord&style=for-the-badge&logoColor=white
 [Spigot]:https://img.shields.io/badge/-SpigotMC-ef9023.svg?logo=Accenture&style=for-the-badge&logoColor=grey
@@ -13,8 +14,10 @@
 [License]:https://img.shields.io/github/license/A248/LibertyBans
 [CodeSize]:https://img.shields.io/github/languages/code-size/A248/LibertyBans
 <!-- Shields -->
+[![Homepage]](https://libertybans.org)
+
 [![Discord]](https://discord.gg/3C4qeG8XhE)
-[![Documentation]](https://libertybans.org/#/Getting-Started)
+[![Documentation]](https://docs.libertybans.org/#/Getting-Started)
 [![Spigot]](https://spigotmc.org/resources/81063)
 <br><br>[![TestedVersion]](https://spigotmc.org/resources/81063) ![SpigotRating]
 <br>![License] ![GitHubStar] ![CodeSize]
@@ -86,7 +89,7 @@ LibertyBans will work out-of-the-box for most users.
 
 For installing on the backend servers and synchronizing punishments, see the wiki for additional information.
 
-## Developer API
+### Developer API
 
 The developer API is extensive. LibertyBans does not recommend developers mess with the database as a first recourse. [More information here](https://libertybans.org/#/Developer-API)
 
