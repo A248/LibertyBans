@@ -261,7 +261,8 @@ public class SelectionImpl {
 	private PunishmentFields getPunishmentFieldsToUse(SelectionOrder selection) {
 		if (selection.selectActiveOnly()) {
 			if (selection.getTypes().isSimpleEquality()) {
-				return new TableForType(selection.getTypes().acceptedValues().iterator().next()).simpleView();
+				PunishmentType type = selection.getTypes().acceptedValues().iterator().next();
+				return new TableForType(type).simpleView();
 			} else {
 				return new SimpleViewFields<>(SimpleActive.SIMPLE_ACTIVE);
 			}
