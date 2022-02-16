@@ -119,12 +119,11 @@ public class Enaction {
 			}
 		}
 		if (active && type != PunishmentType.KICK) {
-			var table = new TableForType(type).dataTable();
-			var tableFields = table.newRecord();
+			var dataTable = new TableForType(type).dataTable();
 			if (type.isSingular()) {
 				int updateCount = context
-						.insertInto(table)
-						.columns(tableFields.field1(), tableFields.field2())
+						.insertInto(dataTable.table())
+						.columns(dataTable.id(), dataTable.victimId())
 						.values(punishmentIdField, victimIdField)
 						.onDuplicateKeyIgnore()
 						.execute();
@@ -135,8 +134,8 @@ public class Enaction {
 				}
 			} else {
 				context
-						.insertInto(table)
-						.columns(tableFields.field1(), tableFields.field2())
+						.insertInto(dataTable.table())
+						.columns(dataTable.id(), dataTable.victimId())
 						.values(punishmentIdField, victimIdField)
 						.execute();
 			}
