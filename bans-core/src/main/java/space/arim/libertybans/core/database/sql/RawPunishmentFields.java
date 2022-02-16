@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,17 +20,37 @@
 package space.arim.libertybans.core.database.sql;
 
 import org.jooq.Field;
-import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.api.Victim;
+import org.jooq.Record;
+import org.jooq.Record2;
+import org.jooq.Table;
 
-import java.util.UUID;
+import java.util.Objects;
 
-public interface VictimFields extends TableFieldAccessor {
+public final class RawPunishmentFields<R extends Record2<Long, Integer>> implements TableFieldAccessor {
 
-	Field<Victim.VictimType> victimType();
+	private final Table<R> dataTable;
 
-	Field<UUID> victimUuid();
+	public RawPunishmentFields(Table<R> dataTable) {
+		this.dataTable = Objects.requireNonNull(dataTable, "dataTable");
+	}
 
-	Field<NetworkAddress> victimAddress();
+	@Override
+	public Table<? extends Record> table() {
+		return dataTable;
+	}
 
+	public Field<Long> id() {
+		return dataTable.newRecord().field1();
+	}
+
+	public Field<Integer> victimId() {
+		return dataTable.newRecord().field2();
+	}
+
+	@Override
+	public String toString() {
+		return "RawPunishmentFields{" +
+				"dataTable=" + dataTable +
+				'}';
+	}
 }

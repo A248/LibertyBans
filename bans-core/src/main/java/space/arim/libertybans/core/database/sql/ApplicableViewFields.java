@@ -20,6 +20,7 @@
 package space.arim.libertybans.core.database.sql;
 
 import org.jooq.Field;
+import org.jooq.Record;
 import org.jooq.Record12;
 import org.jooq.Table;
 import space.arim.libertybans.api.NetworkAddress;
@@ -32,28 +33,23 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public final class ApplicableViewFields implements PunishmentFields {
+public final class ApplicableViewFields<R extends Record12<
+		Long, PunishmentType,
+		Victim.VictimType, UUID, NetworkAddress,
+		Operator, String, ServerScope, Instant, Instant,
+		UUID, NetworkAddress>> implements PunishmentFields {
 
-	private final Record12<
-			Long, PunishmentType,
-			Victim.VictimType, UUID, NetworkAddress,
-			Operator, String, ServerScope, Instant, Instant,
-			UUID, NetworkAddress> fieldSupplier;
+	private final Table<R> applicableView;
+	private final R fieldSupplier;
 
-	public ApplicableViewFields(Record12<
-			Long, PunishmentType,
-			Victim.VictimType, UUID, NetworkAddress,
-			Operator, String, ServerScope, Instant, Instant,
-			UUID, NetworkAddress> fieldSupplier) {
-		this.fieldSupplier = Objects.requireNonNull(fieldSupplier, "fieldSupplier");
+	public ApplicableViewFields(Table<R> applicableView) {
+		this.applicableView = applicableView;
+		this.fieldSupplier = applicableView.newRecord();
 	}
 
-	public ApplicableViewFields(Table<? extends Record12<
-			Long, PunishmentType,
-			Victim.VictimType, UUID, NetworkAddress,
-			Operator, String, ServerScope, Instant, Instant,
-			UUID, NetworkAddress>> applicableView) {
-		this(applicableView.newRecord());
+	@Override
+	public Table<? extends Record> table() {
+		return applicableView;
 	}
 
 	@Override
@@ -108,5 +104,12 @@ public final class ApplicableViewFields implements PunishmentFields {
 
 	public Field<UUID> uuid() {
 		return Objects.requireNonNull(fieldSupplier.field11(), "uuid field does not exist");
+	}
+
+	@Override
+	public String toString() {
+		return "ApplicableViewFields{" +
+				"applicableView=" + applicableView +
+				'}';
 	}
 }

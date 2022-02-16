@@ -20,6 +20,8 @@
 package space.arim.libertybans.core.database.sql;
 
 import org.jooq.Field;
+import org.jooq.Record;
+import org.jooq.Table;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Victim;
 
@@ -28,6 +30,11 @@ import java.util.UUID;
 import static space.arim.libertybans.core.schema.tables.Victims.VICTIMS;
 
 public final class VictimTableFields implements VictimFields {
+
+	@Override
+	public Table<? extends Record> table() {
+		return VICTIMS;
+	}
 
 	@Override
 	public Field<Victim.VictimType> victimType() {
@@ -42,5 +49,10 @@ public final class VictimTableFields implements VictimFields {
 	@Override
 	public Field<NetworkAddress> victimAddress() {
 		return VICTIMS.ADDRESS;
+	}
+
+	@Override
+	public String toString() {
+		return "VictimTableFields";
 	}
 }

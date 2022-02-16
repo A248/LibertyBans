@@ -21,7 +21,6 @@ package space.arim.libertybans.core.database;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.DSLContext;
-import org.jooq.Field;
 import org.jooq.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,11 +154,10 @@ public final class StandardDatabase implements InternalDatabase, AutoCloseable {
 	@Override
 	public void clearExpiredPunishments(DSLContext context, PunishmentType type, Instant currentTime) {
 		assert type != PunishmentType.KICK;
-		var table = new TableForType(type).dataTable();
-		Field<Long> idField = table.newRecord().field1();
+		var dataTable = new TableForType(type).dataTable();
 		context
-				.deleteFrom(table)
-				.where(idField.in(context
+				.deleteFrom(dataTable.table())
+				.where(dataTable.id().in(context
 						.select(PUNISHMENTS.ID)
 						.from(PUNISHMENTS)
 						.where(PUNISHMENTS.END.notEqual(Instant.MAX))

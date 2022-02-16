@@ -19,15 +19,29 @@
 
 package space.arim.libertybans.core.database.sql;
 
+import org.jooq.Record10;
+import org.jooq.Record12;
 import org.jooq.Record2;
 import org.jooq.Table;
+import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.punish.MiscUtil;
+import space.arim.libertybans.core.schema.tables.ApplicableBans;
+import space.arim.libertybans.core.schema.tables.ApplicableMutes;
+import space.arim.libertybans.core.schema.tables.ApplicableWarns;
 import space.arim.libertybans.core.schema.tables.Bans;
 import space.arim.libertybans.core.schema.tables.Mutes;
+import space.arim.libertybans.core.schema.tables.SimpleBans;
+import space.arim.libertybans.core.schema.tables.SimpleMutes;
+import space.arim.libertybans.core.schema.tables.SimpleWarns;
 import space.arim.libertybans.core.schema.tables.Warns;
 
+import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 public final class TableForType {
 
@@ -37,7 +51,11 @@ public final class TableForType {
 		this.type = Objects.requireNonNull(type, "type");
 	}
 
-	public Table<? extends Record2<Long, Integer>> dataTable() {
+	public RawPunishmentFields<? extends Record2<Long, Integer>> dataTable() {
+		return new RawPunishmentFields<>(dataTable0());
+	}
+
+	private Table<? extends Record2<Long, Integer>> dataTable0() {
 		switch (type) {
 		case BAN:
 			return Bans.BANS;
@@ -50,5 +68,64 @@ public final class TableForType {
 		default:
 			throw MiscUtil.unknownType(type);
 		}
+	}
+
+	public SimpleViewFields<? extends Record10<
+			Long, PunishmentType,
+			Victim.VictimType, UUID, NetworkAddress,
+			Operator, String, ServerScope, Instant, Instant>> simpleView() {
+		return new SimpleViewFields<>(simpleView0());
+	}
+
+	private Table<? extends Record10<
+			Long, PunishmentType,
+			Victim.VictimType, UUID, NetworkAddress,
+			Operator, String, ServerScope, Instant, Instant>> simpleView0() {
+		switch (type) {
+		case BAN:
+			return SimpleBans.SIMPLE_BANS;
+		case MUTE:
+			return SimpleMutes.SIMPLE_MUTES;
+		case WARN:
+			return SimpleWarns.SIMPLE_WARNS;
+		case KICK:
+			throw new UnsupportedOperationException("Does not exist for kicks");
+		default:
+			throw MiscUtil.unknownType(type);
+		}
+	}
+
+	public ApplicableViewFields<? extends Record12<
+			Long, PunishmentType,
+			Victim.VictimType, UUID, NetworkAddress,
+			Operator, String, ServerScope, Instant, Instant,
+			UUID, NetworkAddress>> applicableView() {
+		return new ApplicableViewFields<>(applicableView0());
+	}
+
+	private Table<? extends Record12<
+			Long, PunishmentType,
+			Victim.VictimType, UUID, NetworkAddress,
+			Operator, String, ServerScope, Instant, Instant,
+			UUID, NetworkAddress>> applicableView0() {
+		switch (type) {
+		case BAN:
+			return ApplicableBans.APPLICABLE_BANS;
+		case MUTE:
+			return ApplicableMutes.APPLICABLE_MUTES;
+		case WARN:
+			return ApplicableWarns.APPLICABLE_WARNS;
+		case KICK:
+			throw new UnsupportedOperationException("Does not exist for kicks");
+		default:
+			throw MiscUtil.unknownType(type);
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "TableForType{" +
+				"type=" + type +
+				'}';
 	}
 }

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,18 +19,11 @@
 
 package space.arim.libertybans.core.database.sql;
 
-import org.jooq.Field;
-import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.api.Victim;
+import org.jooq.Record;
+import org.jooq.Table;
 
-import java.util.UUID;
+public interface TableFieldAccessor {
 
-public interface VictimFields extends TableFieldAccessor {
-
-	Field<Victim.VictimType> victimType();
-
-	Field<UUID> victimUuid();
-
-	Field<NetworkAddress> victimAddress();
+	Table<? extends Record> table();
 
 }
