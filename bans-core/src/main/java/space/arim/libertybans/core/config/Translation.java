@@ -28,5 +28,6 @@ enum Translation {
 	ZH_CN,
 	HU,
 	NO,
-	FR
+	FR,
+	ZH_TW
 }
