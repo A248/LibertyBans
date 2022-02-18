@@ -102,6 +102,7 @@ public interface EnforcementConfig {
 		"reply",
 		"r",
 		"whisper",
+                "w",
 		"tell",
                 "t"})
 	Set<String> muteCommands();
