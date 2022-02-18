@@ -102,7 +102,8 @@ public interface EnforcementConfig {
 		"reply",
 		"r",
 		"whisper",
-		"tell"})
+		"tell",
+                "t"})
 	Set<String> muteCommands();
 	
 	@ConfKey("sync-events-strategy")
