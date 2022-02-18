@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.commands;
 
+import org.jetbrains.annotations.Nullable;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 interface CommandExecution {
@@ -29,6 +30,12 @@ interface CommandExecution {
 	 *
 	 * @return a future or {@code null} for convenience
 	 */
-	ReactionStage<Void> execute();
+	@Nullable ReactionStage<Void> execute();
 
+	default void executeNow() {
+		var future = execute();
+		if (future != null) {
+			future.toCompletableFuture().join();
+		}
+	}
 }

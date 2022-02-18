@@ -33,9 +33,9 @@ import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.RevocationOrder;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.database.sql.EndTimeCondition;
-import space.arim.libertybans.core.database.sql.SimpleViewFields;
 import space.arim.libertybans.core.database.sql.TableForType;
 import space.arim.libertybans.core.database.sql.VictimCondition;
+import space.arim.libertybans.core.database.sql.VictimFields;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -110,12 +110,10 @@ public class Revoker implements InternalRevoker {
 													  final long id, final PunishmentType type) {
 		final Instant currentTime = time.currentTimestamp();
 
-		var table = new TableForType(type).dataTable();
-		var fields = table.newRecord();
-
+		var dataTable = new TableForType(type).dataTable();
 		int deleteCount = context
-				.deleteFrom(table)
-				.where(fields.field1().eq(id))
+				.deleteFrom(dataTable.table())
+				.where(dataTable.id().eq(id))
 				.execute();
 		logger.trace("deleteCount={} in deleteActivePunishmentByIdAndType", deleteCount);
 		if (deleteCount != 1) {
@@ -135,12 +133,10 @@ public class Revoker implements InternalRevoker {
 															   final long id, final PunishmentType type) {
 		final Instant currentTime = time.currentTimestamp();
 
-		var table = new TableForType(type).dataTable();
-		var fields = table.newRecord();
-
+		var dataTable = new TableForType(type).dataTable();
 		int deleteCount = context
-				.deleteFrom(table)
-				.where(fields.field1().eq(id))
+				.deleteFrom(dataTable.table())
+				.where(dataTable.id().eq(id))
 				.execute();
 		logger.trace("deleteCount={} in deleteAndGetActivePunishmentByIdAndType", deleteCount);
 		if (deleteCount != 1) {
@@ -182,7 +178,7 @@ public class Revoker implements InternalRevoker {
 			return deleteAndGetActivePunishmentByIdAndType(context, id, type);
 		});
 	}
-	
+
 	CentralisedFuture<PunishmentType> undoPunishmentById(final long id) {
 		InternalDatabase database = dbProvider.get();
 		return database.queryWithRetry((context, transaction) -> {
@@ -215,9 +211,9 @@ public class Revoker implements InternalRevoker {
 		});
 	}
 
-	private static Condition matchesAnyVictim(List<Victim> victims) {
+	private static Condition matchesAnyVictim(VictimFields victimFields, List<Victim> victims) {
 		Condition matchesAnyVictim = DSL.noCondition();
-		VictimCondition victimCondition = new VictimCondition(new SimpleViewFields(SIMPLE_ACTIVE));
+		VictimCondition victimCondition = new VictimCondition(victimFields);
 		for (Victim victim : victims) {
 			matchesAnyVictim = matchesAnyVictim.or(
 					victimCondition.matchesVictim(victim)
@@ -230,12 +226,12 @@ public class Revoker implements InternalRevoker {
 																   final List<Victim> victims) {
 		InternalDatabase database = dbProvider.get();
 		return database.queryWithRetry((context, transaction) -> {
-
+			var simpleView = new TableForType(type).simpleView();
 			Long id = context
-					.select(SIMPLE_ACTIVE.ID)
-					.from(SIMPLE_ACTIVE)
-					.where(matchesAnyVictim(victims))
-					.fetchAny(SIMPLE_ACTIVE.ID);
+					.select(simpleView.id())
+					.from(simpleView.table())
+					.where(matchesAnyVictim(simpleView, victims))
+					.fetchAny(simpleView.id());
 			logger.trace("id={} in undoPunishmentByTypeAndVictim", id);
 			if (id == null || !deleteActivePunishmentByIdAndType(context, id, type)) {
 				return null;
@@ -248,11 +244,12 @@ public class Revoker implements InternalRevoker {
 																			   final List<Victim> victims) {
 		InternalDatabase database = dbProvider.get();
 		return database.queryWithRetry((context, transaction) -> {
+			var simpleView = new TableForType(type).simpleView();
 			Long id = context
-					.select(SIMPLE_ACTIVE.ID)
-					.from(SIMPLE_ACTIVE)
-					.where(matchesAnyVictim(victims))
-					.fetchAny(SIMPLE_ACTIVE.ID);
+					.select(simpleView.id())
+					.from(simpleView.table())
+					.where(matchesAnyVictim(simpleView, victims))
+					.fetchAny(simpleView.id());
 			logger.trace("id={} in undoAndGetPunishmentByTypeAndVictim", id);
 			if (id == null) {
 				return null;

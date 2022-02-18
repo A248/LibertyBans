@@ -314,7 +314,7 @@ public class Formatter implements InternalFormatter {
 		}
 		/*
 		 * This should be a complete future every time we call this ourselves, because of UUIDManager's fastCache.
-		 * However, for API calls, the uuidField/name might not be added to the cache.
+		 * However, for API calls, the uuid/name might not be added to the cache.
 		 */
 		return uuidManager.lookupName(uuid)
 				.thenApply((optName) -> optName.orElse(NAME_UNKNOWN_ERROR));

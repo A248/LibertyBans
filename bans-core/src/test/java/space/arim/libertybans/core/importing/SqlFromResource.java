@@ -21,9 +21,11 @@ package space.arim.libertybans.core.importing;
 
 import space.arim.libertybans.core.config.ReadFromResource;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 class SqlFromResource {
 
@@ -33,58 +35,48 @@ class SqlFromResource {
 		this.connectionSource = connectionSource;
 	}
 
-	void setupAdvancedBan() {
-		setupSchema("advancedban");
-	}
-
-	void setupLiteBans() {
-		setupSchema("litebans");
-	}
-
-	private void setupSchema(String schemaName) {
-		runSqlFrom("schemas/" + schemaName + ".sql");
-	}
-
 	void runSqlFrom(String resource) {
 		new ReadFromResource(resource).readBuffered((reader) -> {
-			StringBuilder currentQuery = new StringBuilder();
-			String line;
-			while ((line = reader.readLine()) != null) {
-				if (line.contains(";")) {
-					String[] split = line.split(";");
 
-					currentQuery.append(split[0]);
-					runQuery(currentQuery);
+			try (Connection connection = connectionSource.openConnection();
+				 Statement statement = connection.createStatement()) {
 
-					StringBuilder nextQuery = new StringBuilder();
-					switch (split.length) {
-					case 1: // Expected
-						break;
-					case 2: // Okay
-						nextQuery.append(split[1]);
-						break;
-					default:
-						throw new IllegalStateException("Unexpected line " + line);
-					}
-					currentQuery = nextQuery;
-				} else {
-					currentQuery.append(line).append('\n');
-				}
-			}
-			String lastQuery = currentQuery.toString();
-			if (!lastQuery.isBlank()) {
-				runQuery(lastQuery);
+				runQueriesFromReader(statement, reader);
+			} catch (SQLException ex) {
+				throw new RuntimeException(ex);
 			}
 			return null;
 		});
 	}
 
-	private void runQuery(CharSequence query) {
-		try (Connection connection = connectionSource.openConnection();
-			 PreparedStatement preparedStatement = connection.prepareStatement(query.toString())) {
-			preparedStatement.execute();
-		} catch (SQLException ex) {
-			throw new RuntimeException(ex);
+	private void runQueriesFromReader(Statement statement, BufferedReader reader) throws SQLException, IOException {
+		StringBuilder currentQuery = new StringBuilder();
+		String line;
+		while ((line = reader.readLine()) != null) {
+			if (line.contains(";")) {
+				String[] split = line.split(";");
+
+				currentQuery.append(split[0]);
+				statement.execute(currentQuery.toString());
+
+				StringBuilder nextQuery = new StringBuilder();
+				switch (split.length) {
+				case 1: // Expected
+					break;
+				case 2: // Okay
+					nextQuery.append(split[1]);
+					break;
+				default:
+					throw new IllegalStateException("Unexpected line " + line);
+				}
+				currentQuery = nextQuery;
+			} else {
+				currentQuery.append(line).append('\n');
+			}
+		}
+		String lastQuery = currentQuery.toString();
+		if (!lastQuery.isBlank()) {
+			statement.execute(lastQuery);
 		}
 	}
 }

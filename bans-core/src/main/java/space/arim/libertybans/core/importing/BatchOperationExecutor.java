@@ -36,7 +36,7 @@ class BatchOperationExecutor implements AutoCloseable {
 	private Connection connection;
 	private int countInThisConnection;
 
-	private static final int OPERATIONS_PER_CONNECTION = 200;
+	private static final int OPERATIONS_PER_CONNECTION = 400;
 
 	BatchOperationExecutor(InternalDatabase database) {
 		this.database = database;
@@ -56,7 +56,7 @@ class BatchOperationExecutor implements AutoCloseable {
 		/*
 		 * Committing every time is a necessity. Queries cannot be batched together
 		 * because otherwise the open transaction leads to deadlocks with other
-		 * queries, such as uuidField lookups for name-based operators.
+		 * queries, such as uuid lookups for name-based operators.
 		 *
 		 * Committing is handled by #executeWithExistingConnection
 		 */

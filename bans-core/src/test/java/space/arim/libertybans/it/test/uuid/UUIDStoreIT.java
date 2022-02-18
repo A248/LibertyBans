@@ -117,4 +117,21 @@ public class UUIDStoreIT {
 		assertEquals(uuid, lookupUUID(name), "Should still be able to look up by past name");
 	}
 
+	@TestTemplate
+	public void useLatestAddressInLookupPlayer(Guardian guardian, SettableTime time) {
+		UUID uuid = UUID.randomUUID();
+		String name = randomName();
+		NetworkAddress addressOne = randomAddress();
+		NetworkAddress addressTwo = randomAddress();
+
+		assumeTrue(null == guardian.executeAndCheckConnection(uuid, name, addressOne).join());
+
+		time.advanceBy(Duration.ofHours(1L));
+
+		assumeTrue(null == guardian.executeAndCheckConnection(uuid, name, addressTwo).join());
+
+		time.advanceBy(Duration.ofMinutes(5L));
+
+		assertEquals(addressTwo, lookupPlayer(name).address(), "Should use most recent address");
+	}
 }

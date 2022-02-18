@@ -90,7 +90,7 @@ public class CaffeineMuteCache implements MuteCache {
 		/*
 		 * Any matching entries must be fully removed so that they may be recalculated afresh,
 		 * and not merely set to an empty Optional, the reason being there may be multiple
-		 * applicable mutes for the uuidField/address combination.
+		 * applicable mutes for the uuid/address combination.
 		 */
 		muteCache.synchronous().asMap().values().removeIf((optPunishment) -> {
 			return optPunishment.isPresent() && filter.test(optPunishment.get());

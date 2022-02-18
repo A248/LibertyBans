@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.selector;
 
 import java.util.Set;
@@ -26,20 +27,26 @@ import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultString;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultStrings;
+import space.arim.dazzleconf.annote.NumericRange;
 import space.arim.dazzleconf.annote.SubSection;
+import space.arim.libertybans.core.alts.ConnectionLimitConfig;
 import space.arim.libertybans.core.alts.WhichAlts;
 
 @ConfHeader({"Options related to punishment enforcement and alt account checking",
 		"",
-		"Alt Account GlobalEnforcement and Checking:",
+		"-- Alt Account Enforcement and Checking --",
 		"There are multiple ways to combat alt accounts in LibertyBans.",
+		"",
 		"First, you can have the plugin automatically detect alt accounts and prevent them from joining, ",
 		"with the same ban message. This is controlled by the 'address-strictness' setting.",
+		"",
 		"Second, you can tell your staff members to be on the lookout for alts. They can use ",
 		"the /alts command to manually check players they suspect are alt accounts. Also, you can ",
-		"use 'enable-alts-auto-show' which will notify staff of players who may be using alts."})
+		"use the alts-auto-show feature which will automatically notify staff of players who may be using alts.",
+		"",
+		"Third, you may use 'composite punishments', a more advanced feature which is described on the wiki."})
 public interface EnforcementConfig {
-	
+
 	@ConfKey("address-strictness")
 	@ConfComments({"",
 		"How strict should IP-based punishments be?",
@@ -77,7 +84,11 @@ public interface EnforcementConfig {
 		WhichAlts showWhichAlts();
 
 	}
-	
+
+	@ConfKey("connection-limiter")
+	@SubSection
+	ConnectionLimitConfig connectionLimiter();
+
 	@ConfKey("mute-commands")
 	@ConfComments({"",
 		"A list of commands muted players will not be able to execute",
@@ -113,5 +124,29 @@ public interface EnforcementConfig {
 			"Velocity and BungeeCord are therefore not affected by synchronous events."})
 	@DefaultString("ALLOW")
 	SyncEnforcement syncEnforcement();
-	
+
+	@ConfKey("alt-account-expiration")
+	@SubSection
+	AltAccountExpiration altAccountExpiration();
+
+	@ConfHeader({"Controls the expiration of join history as used by manual alt detection.",
+			"This allows expiring alt accounts after some time has elapsed.",
+			"",
+			"This setting does NOT affect enforcement of IP-based punishments.",
+			"It applies only to the /alts command and the alts-auto-show feature.",
+			"",
+			"Note that this feature will not actually delete any data from the database."})
+	interface AltAccountExpiration {
+
+		@ConfComments("Whether to enable this feature")
+		@ConfDefault.DefaultBoolean(false)
+		boolean enable();
+
+		@ConfKey("expiration-time-days")
+		@ConfComments("The expiration time, in days.")
+		@ConfDefault.DefaultInteger(30)
+		@NumericRange(min = 1)
+		long expirationTimeDays();
+
+	}
 }

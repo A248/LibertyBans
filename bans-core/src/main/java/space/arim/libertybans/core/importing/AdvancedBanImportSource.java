@@ -35,9 +35,7 @@ import java.net.UnknownHostException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -60,21 +58,17 @@ public class AdvancedBanImportSource implements ImportSource {
 
 	@Override
 	public Stream<PortablePunishment> sourcePunishments() {
-		/*
-		 * Filter historical punishments with same details as active punishments, in order
-		 * to remove duplicates.
-		 */
-		Set<AdvancedBanUniquePunishmentDetails> uniqueDetails = new HashSet<>();
-		return unfilteredPunishments().filter((portablePunishment) -> {
-			// Despite being a stateful predicate, this is safe because the stream is not parallel
-			return uniqueDetails.add(new AdvancedBanUniquePunishmentDetails(portablePunishment));
-		});
-	}
 
-	private Stream<PortablePunishment> unfilteredPunishments() {
 		DatabaseStream databaseStream = new DatabaseStream(
 				config.advancedBan().toConnectionSource(), config.retrievalSize());
-		return Stream.of(new RowMapper(true), new RowMapper(false)).flatMap(databaseStream::streamRows);
+
+		// Map active punishments first. Stream.of has guaranteed order
+		return Stream.of(new RowMapper(true), new RowMapper(false))
+				.flatMap(databaseStream::streamRows)
+				// Filter punishments with the same details, in order to remove duplicates.
+				.map(AdvancedBanUniquePunishmentDetails::new)
+				.distinct()
+				.map(AdvancedBanUniquePunishmentDetails::portablePunishment);
 	}
 
 	private class RowMapper implements SchemaRowMapper<PortablePunishment> {
@@ -87,7 +81,7 @@ public class AdvancedBanImportSource implements ImportSource {
 
 		@Override
 		public String selectStatement() {
-			return "SELECT * FROM " + ((active) ? "Punishments" : "PunishmentHistory");
+			return "SELECT * FROM " + (active ? "Punishments" : "PunishmentHistory");
 		}
 
 		@Override

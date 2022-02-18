@@ -64,21 +64,17 @@ public final class IntelligentGuardian implements Guardian {
 	@Override
 	public CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address) {
 		uuidManager.addCache(uuid, name);
-		return selector.executeAndCheckConnection(uuid, name, address).thenCompose((ban) -> {
-			if (ban == null) {
-				return futuresFactory.completedFuture(null);
-			}
-			return formatter.getPunishmentMessage(ban);
-
-		}).exceptionally((ex) -> {
-			logger.error("Unable to execute incoming connection", ex);
-			return null;
-			/*
-			 * Using copy() ensures that the previous future is not affected by a timeout,
-			 * and therefore prevents exceptions from selector.executeAndCheckConnection
-			 * from being swallowed.
-			 */
-		}).copy().orTimeout(10, TimeUnit.SECONDS);
+		return selector.executeAndCheckConnection(uuid, name, address)
+				.exceptionally((ex) -> {
+					logger.error("Unable to execute incoming connection", ex);
+					return null;
+				})
+				/*
+				 * Using copy() ensures that the previous future is not affected by a timeout,
+				 * and therefore prevents exceptions from being swallowed.
+				 */
+				.copy()
+				.orTimeout(10, TimeUnit.SECONDS);
 	}
 
 	@Override

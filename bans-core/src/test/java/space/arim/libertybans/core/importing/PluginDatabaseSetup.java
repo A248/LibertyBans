@@ -20,8 +20,13 @@
 package space.arim.libertybans.core.importing;
 
 import space.arim.libertybans.api.scope.ScopeManager;
+import space.arim.omnibus.util.UUIDUtil;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Objects;
+import java.util.UUID;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -55,12 +60,44 @@ public final class PluginDatabaseSetup {
 		return new LiteBansImportSource(importConfig, scopeManager);
 	}
 
+	public ImportSource createBanManagerImportSource(ScopeManager scopeManager) {
+		ImportConfig importConfig = mock(ImportConfig.class);
+		ImportConfig.BanManagerSettings banManagerSettings = mock(ImportConfig.BanManagerSettings.class);
+		when(importConfig.retrievalSize()).thenReturn(200);
+		when(importConfig.banManager()).thenReturn(banManagerSettings);
+		when(banManagerSettings.tablePrefix()).thenReturn("bm_");
+		when(banManagerSettings.toConnectionSource()).thenReturn(connectionSource);
+
+		return new BanManagerImportSource(importConfig, scopeManager);
+	}
+
+	public void addBanManagerConsole(UUID consoleUuid) {
+		String uuidString = UUIDUtil.toShortString(consoleUuid);
+		try (Connection connection = connectionSource.openConnection();
+			 Statement statement = connection.createStatement()) {
+
+			statement.execute(
+					"INSERT INTO \"bm_players\" (\"id\", \"name\", \"ip\", \"lastSeen\") " +
+							"VALUES (X'" + uuidString + "', 'Console', X'7f000001', 0)");
+		} catch (SQLException ex) {
+			throw new IllegalStateException("Unable to set console UUID", ex);
+		}
+	}
+
 	public void initAdvancedBanSchema() {
-		new SqlFromResource(connectionSource).setupAdvancedBan();
+		initPluginSchema("advancedban");
+	}
+
+	public void initBanManagerSchema() {
+		initPluginSchema("banmanager");
 	}
 
 	public void initLiteBansSchema() {
-		new SqlFromResource(connectionSource).setupLiteBans();
+		initPluginSchema("litebans");
+	}
+
+	private void initPluginSchema(String schemaName) {
+		runSqlFromResource("schemas/" + schemaName + ".sql");
 	}
 
 	public void runSqlFromResource(String resourceName) {

@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.core.service;
 
+import java.util.Objects;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
@@ -70,6 +71,7 @@ public class StandardAsynchronicityManager implements AsynchronicityManager {
 
 	@Override
 	public void postFuture(CompletionStage<?> future) {
+		Objects.requireNonNull(future);
 		universalJoiner.execute(() -> {
 			try {
 				future.toCompletableFuture().join();

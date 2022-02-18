@@ -184,7 +184,7 @@ public class AdvancedBanImportSourceTest {
 
 	@Test
 	public void namesInUuidColumn() {
-		// AdvancedBan uses names in the uuidField column on offline-mode servers
+		// AdvancedBan uses names in the uuid column on offline-mode servers
 		String victimName = "Whoever";
 		String reason = "Some reason";
 		long startTime = 1593013804802L;

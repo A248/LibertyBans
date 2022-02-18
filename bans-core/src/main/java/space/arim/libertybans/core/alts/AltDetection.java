@@ -26,8 +26,10 @@ import org.jooq.Field;
 import org.jooq.impl.DSL;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.execute.SQLFunction;
+import space.arim.libertybans.core.database.sql.AccountExpirationCondition;
 import space.arim.libertybans.core.database.sql.EndTimeCondition;
 import space.arim.libertybans.core.database.sql.SimpleViewFields;
 import space.arim.libertybans.core.database.sql.VictimCondition;
@@ -46,11 +48,13 @@ import static space.arim.libertybans.core.schema.tables.SimpleMutes.SIMPLE_MUTES
 
 public class AltDetection {
 
+	private final Configs configs;
 	private final Provider<QueryExecutor> queryExecutor;
 	private final Time time;
 
 	@Inject
-	public AltDetection(Provider<QueryExecutor> queryExecutor, Time time) {
+	public AltDetection(Configs configs, Provider<QueryExecutor> queryExecutor, Time time) {
+		this.configs = configs;
 		this.queryExecutor = queryExecutor;
 		this.time = time;
 	}
@@ -66,7 +70,7 @@ public class AltDetection {
 	 * the lack of pagination we want to show a short and linear progression from old to new.
 	 *
 	 * @param context the query source with which to contact the database
-	 * @param uuid the user's uuidField
+	 * @param uuid the user's uuid
 	 * @param address the user's address
 	 * @param whichAlts which alts to detect
 	 * @return the detected alts, sorted in order of oldest first
@@ -103,6 +107,8 @@ public class AltDetection {
 				.and(new EndTimeCondition(new SimpleViewFields(SIMPLE_MUTES)).isNotExpired(currentTime))
 				// Select alts for the player in question
 				.where(ADDRESSES.UUID.eq(uuid))
+				// Filter non-expired alts
+				.and(new AccountExpirationCondition(detectedAlt.UPDATED).isNotExpired(configs, currentTime))
 				// Order with oldest first
 				.orderBy(detectedAlt.UPDATED.asc())
 				.fetch((record) -> {

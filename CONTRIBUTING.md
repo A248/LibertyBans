@@ -7,7 +7,7 @@ You will need:
 
 1. Git
 2. Maven
-3. JDK 11 or greater (JDK 17 is recommended)
+3. JDK 17 or greater
 
 These can be installed through your package manager of choice.
 
@@ -17,7 +17,7 @@ Run `git clone https://github.com/A248/LibertyBans.git && cd LibertyBans && mvn 
 
 This will clone the source repository and start the Maven build in the cloned directory.
 
-When the build is complete, the jar at `bans-distribution/executable/target/LibertyBans-Executable_version.jar` can run as a plugin on any supported platform.
+When the build is complete, the jar at `bans-distribution/executable/target/LibertyBans_version.jar` can run as a plugin on any supported platform.
 
 # Introduction to the Codebase
 

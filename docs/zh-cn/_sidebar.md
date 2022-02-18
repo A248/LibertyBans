@@ -14,6 +14,6 @@
   * [从其他插件迁移](Importing-from-Other-Plugins)
   * [处理冲突插件的方法](Event-was-previously-blocked-by-the-server-or-another-plugin...)
 * 与其他插件作比
-  * [与 AdvancedBan 作比](Detailed-Comparison-to-AdvancedBan)
+  * [与 AdvancedBan 作比](Comparison-to-AdvancedBan)
   * [与 LiteBans 作比](Comparison-to-LiteBans)
   * [插件快速对比](Quick-Plugin-Comparison)

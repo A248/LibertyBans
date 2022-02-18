@@ -68,7 +68,7 @@ final class ZeroeightInterlocutor {
 			context.dropView(table).execute();
 		}
 		// Drop tables
-		for (Table<?> table : DatabaseConstants.allTables()) {
+		for (Table<?> table : DatabaseConstants.allTables(DatabaseConstants.TableOrder.REFERENTS_LAST)) {
 			context.dropTable(table).execute();
 		}
 		context.dropTable(SCHEMA_HISTORY).execute();

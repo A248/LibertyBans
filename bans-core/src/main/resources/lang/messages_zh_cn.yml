@@ -1,0 +1,376 @@
+ # 
+ # 信息配置文件
+ # 
+ # 
+ # 在大多数情况下，默认消息中的变量是可用的
+ # 在那个特定的信息中。例外情况是某种惩罚。
+ # 
+ # 
+ # 当消息具有相关惩罚时，有多个变量可用：
+ # 
+ # %ID% - 惩罚的 ID 序号
+ # %TYPE% - 惩罚类型，例如 'Ban'
+ # %VICTIM% - 显示 被执行者 的名字
+ # %VICTIM_ID% - 被执行者的内部用标签ID
+ # %OPERATOR% - 显示作出处罚的工作人员姓名
+ # %OPERATOR_ID% - 操作员的内部用标识ID
+ # %UNOPERATOR% - 撤销惩处的操作者。只有当惩罚撤销时才可用
+ # %UNOPERATOR_ID% - 撤销惩处的操作员的内部标识ID
+ # %REASON% - 惩处的原因
+ # %SCOPE% - 处罚范围
+ # %DURATION% - 最初由操作员设定的处罚有效期
+ # %START_DATE% - 创建惩罚的日期
+ # %TIME_PASSED% - 自设立惩罚以来的时间
+ # %END_DATE% - 惩罚结束的日期，或用 formatting.permanent-display.relative 为永久惩处。
+ # %TIME_REMAINING% - 直到惩罚结束的时间，或用 formatting.permanent-display.relative 来替代永久惩处。
+ # 
+ # 
+all:
+  prefix:
+     # 插件信息前缀
+    value: '&6&lLibertyBans &8»&7 '
+     # 如果启用，所有信息都将添加上述的前缀内容
+    enable: true
+
+   # 假如一名玩家输入了 /libertybans 但没有权限 'libertybans.commands', 这是反馈的信息
+  base-permission-message: '&c您没有相应的权限那么做。'
+  usage: '&c未知子命令. 示例用法 :'
+   # 发出命令时，如果找不到指定的玩家或IP，应该显示怎样的错误信息？
+  not-found:
+    uuid: '&c&o%TARGET%&7 不是有效的UUID。'
+    player: '&c&o%TARGET%&7 没在上线和离线的玩家列表。'
+    player-or-address: '&c&o%TARGET%&7 并没有在上线或离线的玩家中被找到，并且这不是一个有效的 IP。'
+
+
+ # 
+ # 输入 /ban, /mute, /warn, /kick 等命令的信息
+ # 包括惩罚输出
+ # 
+ # 
+additions:
+  warns:
+    layout:
+      - '&7&l警告&f'
+      - '&c有效时长: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&l原因&f'
+      - '&7%REASON%'
+    permission:
+      duration: '&c您无法的设置有效期为 &e%DURATION%&c 的惩罚。'
+      uuid: '&c您可能无法警告别的玩家。'
+      ip-address: '&c您无法通过 IP 来警告别的玩家。'
+
+    usage: '&c用法: /warn &e<player> [有效时长] <理由>&c。'
+    success:
+      notification: '&c&o%OPERATOR%&7 以 &e&o%REASON%&7 的理由警告了 &c&o%VICTIM%&7，该警告有效期为 &a&o%DURATION%&7。'
+      message: '&a已为 &c&o%VICTIM%&a 添加时长为 &o%DURATION%&r&a 的警告处罚，提供的理由为 &e&o%REASON%&a。'
+
+
+  kicks:
+    layout:
+      - '&7&l踢出&f'
+      - ''
+      - '&c&l原因&f'
+      - '&7%REASON%'
+    usage: '&c用法: /kick &e<玩家> <理由>&c。'
+    permission:
+      uuid: '&c您没有权限踢出别的玩家。'
+      ip-address: '&c您没有按 IP 来踢出玩家的权限。'
+
+    success:
+      notification: '&c&o%OPERATOR%&7 以 &e&o%REASON%&7 的理由将 &c&o%VICTIM%&7 踢出了游戏。'
+      message: '&a已将 &c&o%VICTIM%&a 移出游戏，提供的理由为 &e&o%REASON%&a。'
+
+
+  bans:
+    conflicting: '&c&o%TARGET%&7 已经被封禁过了。'
+    layout:
+      - '&7&l封禁&f'
+      - '&c有效时长: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&l原因&f'
+      - '&7%REASON%&f'
+      - ''
+      - '&3&l申述您的惩罚&f'
+      - '&c网站: &7链接&f'
+      - '&cDiscord: &7discord&f'
+    permission:
+      duration: '&c您不能为别的玩家设置时长为 &e%DURATION%&c 的封禁。'
+      uuid: '&c您没有权限来封禁别的玩家。'
+      ip-address: '&c您没有通过 IP 封禁别的玩家的权限。'
+
+    usage: '&c用法: /ban &e<玩家> [有效时长] <理由>&c。'
+    success:
+      notification: '&c&o%OPERATOR%&7 以 &e&o%REASON%&7 的理由封禁了 &c&o%VICTIM%&7，该惩罚的有效时长为 &a&o%DURATION%&7。'
+      message: '&a已将 &c&o%VICTIM%&a 封禁 &o%DURATION%&r&a，提供的理由为 &e&o%REASON%&a。'
+
+
+  mutes:
+    conflicting: '&c&o%TARGET%&7 已经被禁言了。'
+    layout:
+      - '&7&l禁言&f'
+      - '&c有效时长: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&l原因&f'
+      - '&7%REASON%'
+    permission:
+      duration: '&c您无法为别的玩家设置有效时长为 &e%DURATION%&c 的禁言。'
+      uuid: '&c您没有权限来禁言别的玩家。'
+      ip-address: '&c您没有通过 IP 来禁言别的玩家的权限。'
+
+    usage: '&c用法: /mute &e<玩家> [有效时长] <理由>&c。'
+    success:
+      notification: '&c&o%OPERATOR%&7 以 &e&o%REASON%&7 为理由给予了 &c&o%VICTIM%&7 时长为 &a&o%DURATION%&7 的禁言。'
+      message: '&a已为 &c&o%VICTIM%&a 添加时长为 &o%DURATION%&r&a 的禁言，提供的理由为 &e&o%REASON%&a。'
+
+
+
+ # 用于 /banlist, /mutelist, /history, /warns, /blame
+lists:
+  ban-list:
+    perPage: 10
+    layout:
+      header:
+        - '&7[&eID&7] &e&o受罚主体&f'
+        - '&7执行者 &8/ &7理由 &8/ &7剩余有效期&f'
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      footer: '&7页码 &e%PAGE%&7.||ttp:点击跳转到 下一页||cmd:/libertybans banlist %NEXTPAGE%'
+
+    usage: '&c用法: /banlist &e[页码]'
+    maxPages: '&7页码 &e%PAGE%&7 并不存在。'
+    permission:
+      command: '&7您没有权限来查看封禁列表。'
+
+    noPages: '&7目前还没有有效的封禁惩罚记录在案哦。'
+
+  warns:
+    perPage: 10
+    layout:
+      header: '&7[&eID&7] 操作者 &8/ &7理由 &8/ &7剩余有效期&f'
+      body: '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      footer: '&7页码 &e%PAGE%&7.||ttp:点击跳转到 下一页||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+
+    usage: '&c用法: /warns &e<玩家> [页码]'
+    maxPages: '&7页码 &e%PAGE%&7 并不存在。'
+    permission:
+      command: '&7您没有权限查看别人的警告历史。'
+
+    noPages: '&c&o%TARGET%&7 还没有被警告过。'
+
+  blame:
+    perPage: 10
+    layout:
+      header:
+        - '&7[&eID&7] &e&o受罚主体 &8/ &7惩处类型&f'
+        - '&7理由 &8/ &7处理日期&f'
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM% &8 / &7%TYPE%&f'
+        - '&7%REASON% &8/ &7%START_DATE%&f'
+      footer: '&7页码 &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+
+    usage: '&c用法: /blame &e<玩家> [页码]'
+    maxPages: '&7页码 &e%PAGE%&7 并不存在。'
+    permission:
+      command: '&7您没有权限来查看别人的前科。'
+
+    noPages: '&c&o%TARGET%&7 还没有被惩处过。'
+
+  mute-list:
+    perPage: 10
+    layout:
+      header:
+        - '&7[&eID&7] &e&o受罚主体&f'
+        - '&7操作者 &8/ &7理由 &8/ &7剩余有效期&f'
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      footer: '&7Page &e%PAGE%&7.||ttp:点击跳转 下一页||cmd:/libertybans mutelist %NEXTPAGE%'
+
+    usage: '&c用法: /mutelist &e[页码]'
+    maxPages: '&7页码 &e%PAGE%&7 并不存在。'
+    permission:
+      command: '&7您没有权限查看别的玩家的禁言记录。'
+
+    noPages: '&7这里还没有禁言记录哦。'
+
+  history:
+    perPage: 10
+    layout:
+      header:
+        - '&7[&eID&7] &8/ &7惩处类型&f'
+        - '&7操作者 &8/ &7理由 &8/ &7处理日期&f'
+      body:
+        - '&7[&e%ID%&7] / %TYPE%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%&f'
+      footer: '&7页码 &e%PAGE%&7.||ttp:点击跳转 下一页||cmd:/libertybans history %TARGET% %NEXTPAGE%'
+
+    usage: '&c用法: /history &e<玩家> [页码]'
+    maxPages: '&7页码 &e%PAGE%&7 并不存在。'
+    permission:
+      command: '&7您没有权限查看惩处历史。'
+
+    noPages: '&c&o%TARGET%&7 还没有被惩处过的记录。'
+
+
+ # 用于 alt 账户检查及提醒的信息
+ # 
+ # 在配置本节之前，有必要查看位于主配置文件 config.yml 的 address-enforcement
+ # 设置以了解不同的 alt 账户检查方式
+ # 有 普通 和 严格 两种检查。
+alts:
+  auto-show:
+     # 要在 alt 账户检查顶部显示的消息。设置为空字符串以禁用
+    header:
+      - '&c&o%TARGET%&7 可能是一个 alt 账户。&f'
+      - '&7很可能是 - 与被封禁玩家有着相同 IP。&f'
+      - '&7有可能是 - 和被封禁玩家的历史 IP相似。'
+
+   # 有关 /alts 命令
+  command:
+    none-found: '&7没有找到 alt 账户'
+    usage: '&c用法: /alts &e<玩家>&c。'
+     # 要在 alt 账户检查顶部显示的消息。设置为空字符串以禁用
+    header:
+      - '&c&o%TARGET%&7 可能是一个 alt 账户。&f'
+      - '&7很可能是 - 与被封禁玩家有着相同 IP。&f'
+      - '&7有可能是 - 和被封禁玩家的历史 IP相似。'
+    permission: '&c您没有权限来检查 alt 小号。'
+
+  formatting:
+     # 单个 alt 小号的消息怎样输出
+     # 可用变量:
+     # %DETECTION_KIND% - 如何检测该帐户。将由 正常或 严格选项替代。
+     # %ADDRESS% - 导致该账号变检测的地址
+     # %RELEVANT_USER% - 另一个帐户的用户名，根据名称显示选项格式化
+     # %RELEVANT_USERID% - 另一个账号的 uuid
+     # %DATE_RECORDED% - 记录 alt 账号的时间
+    layout: '%RELEVANT_USER% &7(每 %ADDRESS%) 于 %DATE_RECORDED% - %DETECTION_KIND%'
+     # 当 alt 账号被 普通 检测出来时的信息输出
+    normal: '&c很可能是'
+     # In the alt-check layout, the username of the alt may be formatted depending upon whether it is banned
+     # For example, the usernames of banned alts may be colored red whereas alts not banned are green
+     # Variables: %USERNAME%
+    name-display:
+      banned: '&c&o%USERNAME%'
+      muted: '&e&o%USERNAME%'
+      not-punished: '&o%USERNAME%'
+
+     # The description for an alt account detected by strict detection.
+    strict: '&e有可能是'
+
+
+admin:
+  restarted: '&a已重启插件'
+  no-permission: '&c抱歉，您没有权限怎么做。'
+  reloaded: '&a已重载插件'
+  ellipses: '&a...'
+  importing:
+     # 为防止错误，不允许一次导入多个封禁。
+    in-progress: '&c目前已经有一个运行中的导入进程了。'
+    failure: '&c导入失败。查看控制台获取更多信息。'
+    usage: '&c用法: /libertybans import <advancedban|litebans|vanilla>'
+    started: '&7导入已开始。查看控制台获取更多信息及进度。'
+    complete: '&7导入完成。'
+
+
+ # 有关 /unban, /unmute, /unwarn
+removals:
+  warns:
+    not-a-number: '&c&o%ID_ARG%&7 不是一个数字。'
+    usage: '&c用法: /unwarn &e<玩家> <id>&c。'
+    permission:
+      uuid: '&c您没有权限撤销别的玩家的警告。'
+      ip-address: '&c您没有通过 IP 撤销警告的权限。'
+
+    not-found: '&c&o%TARGET%&7 并没有受到 ID 为 &c&o%ID%&7 的警告。'
+    success:
+      notification: '&c&o%UNOPERATOR%&7 撤销了 &c&o%VICTIM%&7 的警告。'
+      message: '&7已撤销 &c&o%VICTIM%&7 的警告。'
+
+
+  bans:
+    usage: '&c用法: /unban &e<玩家>&c。'
+    permission:
+      uuid: '&c您没有权限撤销别的玩家的封禁。'
+      ip-address: '&c您没有权限撤销IP封禁。'
+
+    not-found: '&c&o%TARGET%&7 还没被封禁。'
+    success:
+      notification: '&c&o%UNOPERATOR%&7 撤销了 &c&o%VICTIM%&7 的封禁。'
+      message: '&7已撤销 &c&o%VICTIM%&7 的封禁。'
+
+
+  mutes:
+    usage: '&c用法: /unmute &e<玩家>&c。'
+    permission:
+      uuid: '&c您没有权限撤销禁言。'
+      ip-address: '&c您没有权限撤销 IP 禁言。'
+
+    not-found: '&c&o%TARGET%&7 还没被禁言。'
+    success:
+      notification: '&c&o%UNOPERATOR%&7 撤销了 &c&o%VICTIM%&7 的禁言。'
+      message: '&7已撤销 &c&o%VICTIM%&7 的禁言。'
+
+
+
+ # Specific formatting options
+formatting:
+   # When using /blame, how should the console be specified?
+  console-arguments:
+    - 'console'
+   # How should the global scope be displayed?
+  global-scope-display: '所有服务器'
+   # There are 2 ways to make permanent punishments. The first is to not specify a time (/ban <player> <reason>).
+   # The second is to specify a permanent amount of time (/ban <player> perm <reason>).
+   # When typing commands, what time arguments will be counted as permanent?
+  permanent-arguments:
+    - 'permanent'
+    - 'permanently'
+    - 'perm'
+   # How should punishment types be displayed?
+  punishment-type-display:
+    KICK: '踢出'
+    MUTE: '禁言'
+    WARN: '警告'
+    BAN: '封禁'
+
+   # How should the console be displayed?
+  console-display: '控制台'
+   # When there is no more time remaining in a punishment (the punishment has expired),
+   # this becomes the value of the %TIME_REMAINING% variable
+  no-time-remaining-display: '永远'
+   # How should 'permanent' be displayed as a length of time?
+  permanent-display:
+     # What do you call a permanent duration?
+    duration: '永久'
+     # When does a permanent punishment end?
+    absolute: '永不'
+     # How do you describe the time remaining in a permanent punishment?
+    relative: '临时'
+
+
+misc:
+  unknown-error: '&c一个未知错误发生了。'
+   # Only applicable if synchronous enforcement strategy is DENY in the main config
+  sync-chat-denial-message: '&c在尝试同步聊天时被拒绝。&7请稍后再试。'
+   # Concerns formatting of relative times and durations
+  time:
+     # Times are formatted to seconds accuracy, but you may not want to display seconds 
+     # for most times. However, for very small durations, you need to display a value in seconds.
+     # If you are using SECONDS in the above section, this value is meaningless.
+    fallback-seconds: '%VALUE% 秒'
+    grammar:
+       # What should come before the last fragment? Set to empty text to disable
+      and: 'and '
+       # If enabled, places commas after each time fragment, except the last one
+      comma: false
+
+    fragments:
+      MONTHS: '%VALUE% 月'
+      HOURS: '%VALUE% 时'
+      YEARS: '%VALUE% 年'
+      MINUTES: '%VALUE% 分'
+      WEEKS: '%VALUE% 周'
+      DAYS: '%VALUE% 天'

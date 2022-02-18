@@ -34,6 +34,7 @@ import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -59,6 +60,8 @@ public class ImportExecutor {
 	}
 
 	public CentralisedFuture<ImportStatistics> performImport(ImportSource importSource) {
+		Objects.requireNonNull(importSource, "importSource");
+
 		CentralisedFuture<ImportStatistics> future = futuresFactory.newIncompleteFuture();
 		new Thread(() -> {
 			try {

@@ -27,16 +27,12 @@ import org.jooq.impl.DSL;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.core.alts.AltDetection;
-import space.arim.libertybans.core.alts.AltNotification;
-import space.arim.libertybans.core.alts.DetectedAlt;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.database.sql.EndTimeCondition;
-import space.arim.libertybans.core.database.sql.SimpleViewFields;
+import space.arim.libertybans.core.database.sql.TableForType;
 import space.arim.libertybans.core.database.sql.VictimCondition;
-import space.arim.libertybans.core.punish.Association;
 import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.punish.PunishmentCreator;
 import space.arim.libertybans.core.service.Time;
@@ -44,12 +40,9 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import static space.arim.libertybans.core.schema.tables.ApplicableActive.APPLICABLE_ACTIVE;
-import static space.arim.libertybans.core.schema.tables.SimpleActive.SIMPLE_ACTIVE;
 import static space.arim.libertybans.core.schema.tables.StrictLinks.STRICT_LINKS;
 
 @Singleton
@@ -59,69 +52,65 @@ public class ApplicableImpl {
 	private final FactoryOfTheFuture futuresFactory;
 	private final Provider<InternalDatabase> dbProvider;
 	private final PunishmentCreator creator;
-	private final AltDetection altDetection;
-	private final AltNotification altNotification;
+
 	private final Time time;
 
 	@Inject
-	public ApplicableImpl(Configs configs, FactoryOfTheFuture futuresFactory, Provider<InternalDatabase> dbProvider,
-						  PunishmentCreator creator, AltDetection altDetection, AltNotification altNotification,
+	public ApplicableImpl(Configs configs, FactoryOfTheFuture futuresFactory,
+						  Provider<InternalDatabase> dbProvider, PunishmentCreator creator,
 						  Time time) {
 		this.configs = configs;
 		this.futuresFactory = futuresFactory;
 		this.dbProvider = dbProvider;
 		this.creator = creator;
-		this.altDetection = altDetection;
-		this.altNotification = altNotification;
 		this.time = time;
 	}
 
-	private Punishment selectApplicable(DSLContext context,
-										UUID uuid, NetworkAddress address,
-										PunishmentType type, final Instant currentTime) {
-		var appl = APPLICABLE_ACTIVE;
+	Punishment selectApplicable(DSLContext context,
+								UUID uuid, NetworkAddress address,
+								PunishmentType type, final Instant currentTime) {
+		var applView = new TableForType(type).applicableView();
+
 		AddressStrictness strictness = configs.getMainConfig().enforcement().addressStrictness();
 		switch (strictness) {
 		case LENIENT:
+			var simpleView = new TableForType(type).simpleView();
 			return context
 					.select(
-							SIMPLE_ACTIVE.ID,
-							SIMPLE_ACTIVE.VICTIM_TYPE, SIMPLE_ACTIVE.VICTIM_UUID, SIMPLE_ACTIVE.VICTIM_ADDRESS,
-							SIMPLE_ACTIVE.OPERATOR, SIMPLE_ACTIVE.REASON,
-							SIMPLE_ACTIVE.SCOPE, SIMPLE_ACTIVE.START, SIMPLE_ACTIVE.END
+							simpleView.id(),
+							simpleView.victimType(), simpleView.victimUuid(), simpleView.victimAddress(),
+							simpleView.operator(), simpleView.reason(),
+							simpleView.scope(), simpleView.start(), simpleView.end()
 					)
-					.from(SIMPLE_ACTIVE)
-					.where(SIMPLE_ACTIVE.TYPE.eq(type))
-					.and(new VictimCondition(new SimpleViewFields(SIMPLE_ACTIVE)).simplyMatches(DSL.val(uuid), DSL.val(address)))
-					.and(new EndTimeCondition(SIMPLE_ACTIVE.END).isNotExpired(currentTime))
+					.from(simpleView.table())
+					.where(new VictimCondition(simpleView).simplyMatches(DSL.val(uuid), DSL.val(address)))
+					.and(new EndTimeCondition(simpleView).isNotExpired(currentTime))
 					.limit(1)
 					.fetchOne(creator.punishmentMapper(type));
 		case NORMAL:
 			return context
 					.select(
-							appl.ID,
-							appl.VICTIM_TYPE, appl.VICTIM_UUID, appl.VICTIM_ADDRESS,
-							appl.OPERATOR, appl.REASON,
-							appl.SCOPE, appl.START, appl.END
-					).from(appl)
-					.where(appl.TYPE.eq(type))
-					.and(appl.UUID.eq(uuid))
-					.and(new EndTimeCondition(appl.END).isNotExpired(currentTime))
+							applView.id(),
+							applView.victimType(), applView.victimUuid(), applView.victimAddress(),
+							applView.operator(), applView.reason(),
+							applView.scope(), applView.start(), applView.end()
+					).from(applView.table())
+					.where(applView.uuid().eq(uuid))
+					.and(new EndTimeCondition(applView).isNotExpired(currentTime))
 					.limit(1)
 					.fetchOne(creator.punishmentMapper(type));
 		case STRICT:
 			return context
 					.select(
-							appl.ID,
-							appl.VICTIM_TYPE, appl.VICTIM_UUID, appl.VICTIM_ADDRESS,
-							appl.OPERATOR, appl.REASON,
-							appl.SCOPE, appl.START, appl.END
-					).from(appl)
+							applView.id(),
+							applView.victimType(), applView.victimUuid(), applView.victimAddress(),
+							applView.operator(), applView.reason(),
+							applView.scope(), applView.start(), applView.end()
+					).from(applView.table())
 					.innerJoin(STRICT_LINKS)
-					.on(appl.UUID.eq(STRICT_LINKS.UUID1))
-					.where(appl.TYPE.eq(type))
-					.and(STRICT_LINKS.UUID2.eq(uuid))
-					.and(new EndTimeCondition(appl.END).isNotExpired(currentTime))
+					.on(applView.uuid().eq(STRICT_LINKS.UUID1))
+					.where(STRICT_LINKS.UUID2.eq(uuid))
+					.and(new EndTimeCondition(applView).isNotExpired(currentTime))
 					.limit(1)
 					.fetchOne(creator.punishmentMapper(type));
 		default:
@@ -129,38 +118,6 @@ public class ApplicableImpl {
 		}
 	}
 
-	CentralisedFuture<Punishment> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address) {
-		InternalDatabase database = dbProvider.get();
-		return database.queryWithRetry((context, transaction) -> {
-			Instant currentTime = time.currentTimestamp();
-
-			Association association = new Association(uuid, context);
-			association.associateCurrentName(name, currentTime);
-			association.associateCurrentAddress(address, currentTime);
-
-			Punishment ban = selectApplicable(context, uuid, address, PunishmentType.BAN, currentTime);
-			if (ban != null) {
-				return ban;
-			}
-			// The player is not banned, but should be checked for alts
-			EnforcementConfig.AltsAutoShow altsAutoShow = configs.getMainConfig().enforcement().altsAutoShow();
-			if (altsAutoShow.enable()) {
-				return altDetection.detectAlts(context, uuid, address, altsAutoShow.showWhichAlts());
-			}
-			return null;
-		}).thenApply((banOrDetectedAltsOrNull) -> {
-			if (banOrDetectedAltsOrNull instanceof Punishment) {
-				return (Punishment) banOrDetectedAltsOrNull;
-			}
-			if (banOrDetectedAltsOrNull instanceof List) {
-				@SuppressWarnings("unchecked")
-				List<DetectedAlt> detectedAlts = (List<DetectedAlt>) banOrDetectedAltsOrNull;
-				altNotification.notifyFoundAlts(uuid, name, address, detectedAlts);
-			}
-			return null;
-		});
-	}
-	
 	private CentralisedFuture<Punishment> getApplicablePunishment0(UUID uuid, NetworkAddress address, PunishmentType type) {
 		InternalDatabase database = dbProvider.get();
 		return database.query(SQLFunction.readOnly((context) -> {

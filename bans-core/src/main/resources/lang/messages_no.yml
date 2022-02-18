@@ -1,0 +1,439 @@
+#
+# Messages configuration
+#
+#
+# In most cases, the variables inside the default messages are those available
+# in that specific message. The exception to this is messages which are related
+# to a certain punishment.
+#
+# When message has an associated punishment, multiple variables are available:
+#
+# %ID% - punishment ID number
+# %TYPE% - punishment type, e.g. 'Ban'
+# %TYPE_VERB% - punishment type as a verb, e.g. 'Banned'
+# %VICTIM% - display name of the victim of the punishment
+# %VICTIM_ID% - internal identifier of victim
+# %OPERATOR% - display name of the staff member who made the punishment
+# %OPERATOR_ID% - internal identifier of the operator
+# %UNOPERATOR% - staff member undoing the punishment. available only when the punishment is undone
+# %UNOPERATOR_ID% - internal identifier of staff member undoing the punishment
+# %REASON% - reason for the punishment
+# %SCOPE% - scope of the punishment
+# %DURATION% - original duration (how long the punishment was made for)
+# %START_DATE% - the date the punishment was created
+# %TIME_PASSED% - the time since the punishment was created
+# %TIME_PASSED_SIMPLE% - the time since the punishment was created, rounded to the biggest time unit possible (e.g. 2 months instead of 1 month 23 days)
+# %END_DATE% - the date the punishment will end, or formatting.permanent-display.absolute for permanent punishments
+# %TIME_REMAINING% - the time until the punishment ends, or formatting.permanent-display.relative for permanent punishments
+# %TIME_REMAINING_SIMPLE% - the time until the punishment ends, rounded to the biggest time unit possible (e.g. 10 days instead of 9 days 13 hours)
+# %HAS_EXPIRED% - Shows if a punishments duration has run out. Does not check if the punishment is revoked!
+#
+# The following variables have limited availability:
+# %TARGET% - the original target argument of a command. For example, in '/ipban Player1', %TARGET% is Player1
+# %NEXTPAGE% - the number of the next page of a list like history
+# %PREVIOUSPAGE% - the number of the previous page of a list like history
+#
+#
+# Used for /banlist, /mutelist, /history, /warns, /blame
+lists:
+  history:
+    usage: '&cBruk: /history &e<spiller> [side]'
+    layout:
+      header:
+        - '&7[&eID&7] &8/ &7Type staff &f'
+        - '&7Operatør &8/ &7Grunn &8/ &7Vedtatt dato&f'
+      body:
+        - '&7[&e%ID%&7] / %TYPE%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%&f'
+      footer: '&7Side &e%PAGE%&7.||ttp:Trykk for neste side||cmd:/libertybans history %TARGET% %NEXTPAGE%'
+
+    maxPages: '&7Side &e%PAGE%&7 eksisterer ikke.'
+    perPage: 10
+    noPages: '&c&o%TARGET%&7 har ingen historie.'
+    permission:
+      command: '&7Du kan ikke se historikk.'
+
+
+  blame:
+    usage: '&cBruk: /blame &e<spiller> [side]'
+    layout:
+      header:
+        - '&7[&eID&7] &e&oSubjekt &8/ &7Type staffe&f'
+        - '&7Grunn &8/ &7Vedtatt dato&f'
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM% &8 / &7%TYPE%&f'
+        - '&7%REASON% &8/ &7%START_DATE%&f'
+      footer: '&7Side &e%PAGE%&7.||ttp:Trykk for neste side||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+
+    maxPages: '&7Side &e%PAGE%&7 eksisterer ikke.'
+    perPage: 10
+    noPages: '&c&o%TARGET%&7 har ikke straffet noen spillere.'
+    permission:
+      command: '&7Du kan ikke gjøre dette.'
+
+
+  warns:
+    usage: '&cBruk: /warns &e<spiller> [side]'
+    layout:
+      header: '&7[&eID&7] Operatør &8/ &7Grunn &8/ &7Gjenstående tid&f'
+      body: '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      footer: '&7Side &e%PAGE%&7.||ttp:Trykk for neste side||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+
+    maxPages: '&7Side &e%PAGE%&7 eksisterer ikke.'
+    perPage: 10
+    noPages: '&c&o%TARGET%&7 har ingen advarsler.'
+    permission:
+      command: '&7Du kan ikke se advarsler.'
+
+
+  mute-list:
+    usage: '&cBruk: /mutelist &e[side]'
+    layout:
+      header:
+        - '&7[&eID&7] &e&oSubjekt&f'
+        - '&7Operatør &8/ &7Grunn &8/ &7Gjenstående tid&f'
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      footer: '&7Side &e%PAGE%&7.||ttp:Trykk for neste side||cmd:/libertybans mutelist %NEXTPAGE%'
+
+    maxPages: '&7Side &e%PAGE%&7 eksisterer ikke.'
+    perPage: 10
+    noPages: '&7Ingen spillere er dempet'
+    permission:
+      command: '&7Du kan ikke se listen over dempet spillere'
+
+
+  ban-list:
+    usage: '&cBruk: /banlist &e[side]'
+    layout:
+      header:
+        - '&7[&eID&7] &e&oSubjekt&f'
+        - '&7Operatør &8/ &7Grunn &8/ &7Gjenstående tid&f'
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      footer: '&7Side &e%PAGE%&7.||ttp:Trykk for neste side||cmd:/libertybans banlist %NEXTPAGE%'
+
+    maxPages: '&7Side &e%PAGE%&7 eksisterer ikke.'
+    perPage: 10
+    noPages: '&7Det er ingen aktive utestengelser'
+    permission:
+      command: '&7Du kan ikke se listen over utestengelser.'
+
+
+
+all:
+  usage: '&cUkjent underkommando. Viser bruk:'
+  # If a player types /libertybans but does not have the permission 'libertybans.commands', this is the denial message
+  base-permission-message: '&cDu kan ikke gjøre dette.'
+  # When issuing commands, if the specified player or IP was not found, what should the error message be?
+  not-found:
+    uuid: '&c&o%TARGET%&7 er ikke et gyldig uuid.'
+    player: '&c&o%TARGET%&7 kunne ikke bli funnet hverken online eller offline'
+    player-or-address: '&c&o%TARGET%&7 kunne ikke bli funnet hverken online eller offline, og er ikke en gyldig IP adresse.'
+
+  prefix:
+    # If enabled, all messages will be prefixed
+    enable: true
+    # The prefix to use
+    value: '&6&lLibertyBans &8»&7 '
+
+
+  # Specific formatting options
+formatting:
+  # When there is no more time remaining in a punishment (the punishment has expired),
+  # this becomes the value of the %TIME_REMAINING% variable
+  no-time-remaining-display: 'N/A'
+  # How should punishment types be displayed as a verb? Used for the %TYPE_VERB% variable.
+  punishment-type-verb-display:
+    WARN: 'Advart'
+    KICK: 'Kastet ut'
+    MUTE: 'Dempet'
+    BAN: 'Utestengt'
+
+    # How should punishment types be displayed?
+  punishment-type-display:
+    WARN: 'Advarse'
+    KICK: 'Kaste ut'
+    MUTE: 'Dempe'
+    BAN: 'Utestenge'
+
+    # How should the %HAS_EXPIRED% variable be displayed?
+  punishment-expired-display:
+    # How do you describe an expired punishment?
+    expired: 'Utløpt'
+    # How do you describe a punishment which is not expired?
+    not-expired: 'Ikke utløpt'
+
+    # When using /blame, how should the console be specified?
+  console-arguments:
+    - 'konsoll'
+    # How should 'permanent' be displayed as a length of time?
+  permanent-display:
+    # When does a permanent punishment end?
+    absolute: 'Aldri'
+    # What do you call a permanent duration?
+    duration: 'Uendelig'
+    # How do you describe the time remaining in a permanent punishment?
+    relative: 'Permanent'
+
+    # How should the global scope be displayed?
+  global-scope-display: 'Alle servere'
+  # How should the console be displayed?
+  console-display: 'Konsoll'
+    # There are 2 ways to make permanent punishments. The first is to not specify a time (/ban <player> <reason>).
+    # The second is to specify a permanent amount of time (/ban <player> perm <reason>).
+  # When typing commands, what time arguments will be counted as permanent?
+  permanent-arguments:
+    - 'perm'
+    - 'permanent'
+    - 'permanent'
+
+misc:
+  # Concerns formatting of relative times and durations
+  time:
+    grammar:
+      # What should come before the last fragment? Set to empty text to disable
+      and: 'og '
+      # If enabled, places commas after each time fragment, except the last one
+      comma: true
+
+    fragments:
+      HOURS: '%VALUE% timer'
+      WEEKS: '%VALUE% uker'
+      MONTHS: '%VALUE% måneder'
+      DAYS: '%VALUE% dager'
+      MINUTES: '%VALUE% minutter'
+      YEARS: '%VALUE% år'
+
+      # Times are formatted to seconds accuracy, but you may not want to display seconds
+      # for most times. However, for very small durations, you need to display a value in seconds.
+      # If you are using SECONDS in the above section, this value is meaningless.
+    fallback-seconds: '%VALUE% sekunder'
+
+    # Only applicable if synchronous enforcement strategy is DENY in the main config
+  sync-chat-denial-message: '&cSynkron chat nektet. &7Vennligst prøv igjen.'
+  unknown-error: '&cEn ukjent feil oppstod.'
+
+  # Regards /unban, /unmute, /unwarn
+removals:
+  warns:
+    usage: '&cBruk: /unwarn &e<spiller> <id>&c.'
+    success:
+      message: '&7Advarsel fjernet for &c&o%VICTIM%&7.'
+      notification: '&c&o%UNOPERATOR%&7 fjernet advarsel for &c&o%VICTIM%&7.'
+
+    not-found: '&c&o%TARGET%&7 har ingen advarsler gitt av &c&o%ID%&7.'
+    not-a-number: '&c&o%ID_ARG%&7 er ikke et godkjent tall.'
+    permission:
+      uuid: '&cDu kan ikke gjøre dette mot spillere.'
+      ip-address: '&cDu kan ikke gjøre dette mot IP adresser.'
+      both: '&cDu kan ikke gjøre dette mot spillere og deres IP adresser.'
+
+
+  bans:
+    usage: '&cBruk: /unban &e<spiller>&c.'
+    success:
+      message: '&7Opphevet utestengelse for &c&o%VICTIM%&7.'
+      notification: '&c&o%UNOPERATOR%&7 Opphevet utestengelse for &c&o%VICTIM%&7.'
+
+    not-found: '&c&o%TARGET%&7 er ikke utestengt.'
+    permission:
+      uuid: '&cDu kan ikke gjøre dette mot spillere.'
+      ip-address: '&cDu kan ikke gjøre dette mot IP adresser.'
+      both: '&cDu kan ikke gjøre dette mot spillere og deres IP adresser.'
+
+
+  mutes:
+    usage: '&cBruk: /unmute &e<spiller>&c.'
+    success:
+      message: '&7Opphevet dempelse for &c&o%VICTIM%&7.'
+      notification: '&c&o%UNOPERATOR%&7 Opphevet dempelse for &c&o%VICTIM%&7.'
+
+    not-found: '&c&o%TARGET%&7 er ikke dempet.'
+    permission:
+      uuid: '&cDu kan ikke gjøre dette mot spillere.'
+      ip-address: '&cDu kan ikke gjøre dette mot IP adresser.'
+      both: '&cDu kan ikke gjøre dette mot spillere og deres IP adresser.'
+
+
+
+admin:
+  importing:
+    failure: '&cImport mislyktes. Se serverkonsollen for detaljer.'
+    started: '&7Importen har startet. Se serverkonsollen for detaljer og fremgang.'
+    complete: '&7Import fullført.'
+    usage: '&cBruk: /libertybans import <advancedban|litebans|vanilla>'
+    # To prevent mistakes, it is not allowed to import multiple times at once.
+    in-progress: '&cDet pågår allerede en import.'
+
+  ellipses: '&a...'
+  no-permission: '&cBeklager, du kan ikke bruke dette.'
+  restarted: '&aRestartet'
+  reloaded: '&aLastet inn på nytt'
+
+  # Messages for alt-checks and alt account notifications
+  #
+  # Before configuring this section, it is necessary to look at the address-enforcement
+  # settings in the main config.yml and understand the different kinds of alt detection.
+  # There is normal and strict detection.
+alts:
+  # Regarding the /alts command
+  command:
+    # The message to display atop the alt check. Set to an empty string to disable
+    header:
+      - '&7Alt-konto rapport for &c&o%TARGET%&7 tilsier.&f'
+      - '&7Sterk sannsynlighet - Samme adresse som utestengt spiller.&f'
+      - '&7Liten sannsynlighet - Koblet til utestengt spiller etter vanlig tidligere adresse'
+    permission: '&cDu kan ikke sjekke alt-kontoer.'
+    usage: '&cBruk: /alts &e<spiller>&c.'
+    none-found: '&7Ingen alt brukere funnet.'
+
+  formatting:
+    # The description for an alt account detected by strict detection.
+    strict: '&eLiten sannsynlighet'
+    # The description for an alt account detected by normal detection.
+    normal: '&cSterk sannsynlighet'
+      # How a single detected alt should be displayed
+      # Available variables:
+      # %DETECTION_KIND% - how the account was detected. Will be replaced by the normal or strict options.
+      # %ADDRESS% - the address in question which led to the detection
+      # %RELEVANT_USER% - the username of the other account, formatted according to the name-display option
+      # %RELEVANT_USERID% - the uuidField of the other account
+    # %DATE_RECORDED% - the date the alt account was recorded
+    layout: '%RELEVANT_USER% &7(per %ADDRESS%) på %DATE_RECORDED% - %DETECTION_KIND%'
+      # In the alt-check layout, the username of the alt may be formatted depending upon whether it is banned
+      # For example, the usernames of banned alts may be colored red whereas alts not banned are green
+    # Variables: %USERNAME%
+    name-display:
+      banned: '&c&o%USERNAME%'
+      not-punished: '&o%USERNAME%'
+      muted: '&e&o%USERNAME%'
+
+
+  auto-show:
+    # The message to display atop the alt check. Set to an empty string to disable
+    header:
+      - '&c&o%TARGET%&7 kan være en alt-konto. Rapport tilsier.&f'
+      - '&7Sterk sannsynlighet - Samme adresse som utestengt spiller.&f'
+      - '&7Liten sannsynlighet - Koblet til utestengt spiller etter tidligere felles adresse'
+
+
+  # Configuration for the /accounthistory command
+account-history:
+  # Pertains to /accounthistory delete <user> <timestamp>
+  delete:
+    permission: '&cDu kan ikke slette registrerte kontoer.'
+    success: '&7Slettet den registrerte kontoen til &e%TARGET%'
+    usage:
+      - '&cBruk: /accounthistory delete <spiller> <tidspunkt>.&f'
+      - '&7Tidsstemplet er i unix sekunder og er vanligvis hentet fra /accounthistory list'
+    no-such-account: '&c%TARGET% har ingen registrert konto for det angitte tidsstemplet.'
+
+  usage: '&cBruk: /accounthistory <delete|list>'
+  # Regards /accounthistory list <user>
+  listing:
+    # The message to display before the account listing. Set to an empty string to disable
+    header: '&7Kjente kontoer rapport for &c&o%TARGET%&7 tilsier.'
+    permission: '&cDu kan ikke føre opp registrerte kontoer.'
+      # How a single recorded account should be displayed
+      # Available variables:
+      # %TARGET% - the original input to the command
+      # %USERNAME% - the username the player connected with
+      # %ADDRESS% - the address the player connected with
+      # %DATE_RECORDED% - the date the join was recorded
+    # %DATE_RECORDED_RAW% - the raw timestamp the join was recorded
+    layout: '%USERNAME% &7(på %ADDRESS%) ved %DATE_RECORDED% (%DATE_RECORDED_RAW%)||ttp:&7Klikk for å slette denne lagrede kontoen||cmd:/accounthistory delete %TARGET% %DATE_RECORDED_RAW%'
+    usage: '&cBruk: /accounthistory list <spiller|ip>'
+    none-found: '&7Ingen registrerte kontoer funnet'
+
+
+  #
+  # Messages regarding /ban, /mute, /warn, /kick
+  # Includes punishment layouts
+  #
+  #
+additions:
+  kicks:
+    layout:
+      - '&7&lKastet ut&f'
+      - ''
+      - '&c&lGrunnet&f'
+      - '&7%REASON%'
+    usage: '&cBruk: /kick &e<spiller> <grunn>&c.'
+    must-be-online: '&c&o%TARGET%&7 må være online.'
+    success:
+      message: '&aKastet ut &c&o%VICTIM%&a grunnet &e&o%REASON%&a.'
+      notification: '&c&o%OPERATOR%&7 kastet ut &c&o%VICTIM%&7 på grunn av &e&o%REASON%&7.'
+
+    permission:
+      uuid: '&cDu kan ikke gjøre dette mot spillere.'
+      ip-address: '&cDu kan ikke gjøre dette mot IP adresser.'
+      both: '&cDu kan ikke gjøre dette mot spillere og deres IP adresser.'
+
+
+  warns:
+    layout:
+      - '&7&lAdvart&f'
+      - '&cVarighet: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&lGrunnet&f'
+      - '&7%REASON%'
+    usage: '&cBruk: /warn &e<spiller> [tid] <grunn>&c.'
+    success:
+      message: '&aAdvart &c&o%VICTIM%&a for &o%DURATION%&r&a på grunn av &e&o%REASON%&a.'
+      notification: '&c&o%OPERATOR%&7 advarte &c&o%VICTIM%&7 for &a&o%DURATION%&7 på grunn av &e&o%REASON%&7.'
+
+    permission:
+      duration: '&cDu kan ikke gjøre dette for &e%DURATION%&c.'
+      uuid: '&cDu kan ikke gjøre dette mot spillere.'
+      ip-address: '&cDu kan ikke gjøre dette mot IP adresser.'
+      both: '&cDu kan ikke gjøre dette mot spillere og deres IP adresser.'
+
+
+  bans:
+    layout:
+      - '&7&lUtestengt&f'
+      - '&Varighet: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&lGrunnet&f'
+      - '&7%REASON%&f'
+      - ''
+      - '&3&lAnke straffen din&f'
+      - '&cNettside: &7website&f'
+      - '&cDiscord: &7discord'
+    usage: '&cBruk: /ban &e<spiller> [tid] <grunn>&c.'
+    success:
+      message: '&aUtestengt &c&o%VICTIM%&a for &o%DURATION%&r&a på grunn av &e&o%REASON%&a.'
+      notification: '&c&o%OPERATOR%&7 utestengte &c&o%VICTIM%&7 for &a&o%DURATION%&7 på grunn av &e&o%REASON%&7.'
+
+    conflicting: '&c&o%TARGET%&7 er allerede utestengt.'
+    permission:
+      duration: '&cDu kan ikke gjøre dette for &e%DURATION%&c.'
+      uuid: '&cDu kan ikke gjøre dette mot spillere.'
+      ip-address: '&cDu kan ikke gjøre dette mot IP adresser.'
+      both: '&cDu kan ikke gjøre dette mot spillere og deres IP adresser.'
+
+
+  mutes:
+    layout:
+      - '&7&lDempet&f'
+      - '&cVarighet: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&lGrunnet&f'
+      - '&7%REASON%'
+    usage: '&cBruk: /mute &e<spiller> [tid] <grunn>&c.'
+    success:
+      message: '&aDempet &c&o%VICTIM%&a for &o%DURATION%&r&a på grunn av &e&o%REASON%&a.'
+      notification: '&c&o%OPERATOR%&7 dempet &c&o%VICTIM%&7 for &a&o%DURATION%&7 på grunn av &e&o%REASON%&7.'
+
+    conflicting: '&c&o%TARGET%&7 er allerede dempet.'
+    permission:
+      duration: '&cDu kan ikke gjøre dette for &e%DURATION%&c.'
+      uuid: '&cDu kan ikke gjøre dette mot spillere.'
+      ip-address: '&cDu kan ikke gjøre dette mot IP adresser.'
+      both: '&cDu kan ikke gjøre dette mot spillere og deres IP adresser.'
+
+
+

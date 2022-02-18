@@ -19,6 +19,8 @@
 
 package space.arim.libertybans.core.service;
 
+import com.github.benmanes.caffeine.cache.Ticker;
+
 import java.time.Clock;
 import java.time.Instant;
 
@@ -44,4 +46,14 @@ public interface Time {
 		return Instant.ofEpochSecond(currentTime());
 	}
 
+	/**
+	 * Retrieves the number of nanoseconds since some fixed, arbitrary point in time
+	 *
+	 * @return the nanoseconds which have passed
+	 */
+	long arbitraryNanoTime();
+
+	default Ticker toCaffeineTicker() {
+		return this::arbitraryNanoTime;
+	}
 }

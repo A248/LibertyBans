@@ -21,7 +21,6 @@ package space.arim.libertybans.core.database.flyway;
 
 import org.flywaydb.core.api.migration.BaseJavaMigration;
 import org.flywaydb.core.api.migration.Context;
-import org.jooq.BatchBindStep;
 import org.jooq.Cursor;
 import org.jooq.DSLContext;
 import org.jooq.Record2;
@@ -33,6 +32,7 @@ import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.database.jooq.BatchTransfer;
 import space.arim.libertybans.core.database.jooq.OperatorBinding;
 import space.arim.libertybans.core.database.sql.SequenceValue;
 import space.arim.libertybans.core.database.sql.VictimCondition;
@@ -54,8 +54,6 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.BiFunction;
-import java.util.function.Supplier;
 
 import static org.jooq.impl.DSL.val;
 import static org.jooq.impl.SQLDataType.BIGINT;
@@ -234,22 +232,9 @@ public final class V16__Complete_migration_from_08x extends BaseJavaMigration {
 
 	private <R extends org.jooq.Record> void transferData(
 			Cursor<R> cursor,
-			Supplier<BatchBindStep> batchSupplier,
-			BiFunction<BatchBindStep, R, BatchBindStep> batchAttachment) {
+			BatchTransfer.BatchProvider batchProvider,
+			BatchTransfer.BatchAttachment<R> batchAttachment) {
 
-		int maxBatchSize = 1000;
-		BatchBindStep batch = batchSupplier.get();
-		try (cursor) {
-			for (R record : cursor) {
-				batch = batchAttachment.apply(batch, record);
-				if (batch.size() == maxBatchSize) {
-					batch.execute();
-					batch = batchSupplier.get();
-				}
-			}
-			if (batch.size() > 0) {
-				batch.execute();
-			}
-		}
+		new BatchTransfer<>(cursor, batchProvider, batchAttachment).transferData(1000);
 	}
 }

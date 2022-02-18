@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.uuid;
 
+import com.github.benmanes.caffeine.cache.Ticker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.core.config.SqlConfig;
 import space.arim.libertybans.core.env.UUIDAndAddress;
+import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.UUIDUtil;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.config.Configs;
@@ -55,6 +57,7 @@ public class CachingUUIDManagerTest {
 	private final NameValidator nameValidator;
 	private final EnvUserResolver envUserResolver;
 	private final QueryingImpl queryingImpl;
+	private final Time time;
 
 	private final UUIDManager uuidManager;
 
@@ -63,13 +66,15 @@ public class CachingUUIDManagerTest {
 	private final NetworkAddress address = NetworkAddress.of(new byte[4]);
 
 	public CachingUUIDManagerTest(@Mock Configs configs, @Mock NameValidator nameValidator,
-								  @Mock EnvUserResolver envUserResolver, @Mock QueryingImpl queryingImpl) {
+								  @Mock EnvUserResolver envUserResolver, @Mock QueryingImpl queryingImpl,
+								  @Mock Time time) {
 		this.configs = configs;
 		this.nameValidator = nameValidator;
 		this.envUserResolver = envUserResolver;
 		this.queryingImpl = queryingImpl;
+		this.time = time;
 
-		uuidManager = new CachingUUIDManager(configs, futuresFactory, envUserResolver, queryingImpl);
+		uuidManager = new CachingUUIDManager(configs, futuresFactory, envUserResolver, queryingImpl, time);
 	}
 
 	@BeforeEach
@@ -87,6 +92,8 @@ public class CachingUUIDManagerTest {
 		when(sqlConfig.muteCaching()).thenReturn(muteCaching);
 		when(muteCaching.expirationSemantic()).thenReturn(SqlConfig.MuteCaching.ExpirationSemantic.EXPIRE_AFTER_WRITE);
 		when(muteCaching.expirationTimeSeconds()).thenReturn(60);
+
+		when(time.toCaffeineTicker()).thenReturn(Ticker.disabledTicker());
 
 		uuidManager.startup();
 		lenient().when(nameValidator.validateNameArgument(name)).thenReturn(true);
@@ -122,7 +129,7 @@ public class CachingUUIDManagerTest {
 				Optional.of(uuid), Optional.empty());
 
 		assertEquals(uuid, lookupUUID(name));
-		assertEquals(uuid, lookupUUID(name), "uuidField should be cached");
+		assertEquals(uuid, lookupUUID(name), "uuid should be cached");
 		assertEquals(uuid, lookupUUIDExact(name));
 
 		verify(envUserResolver).lookupUUID(name);
@@ -163,7 +170,7 @@ public class CachingUUIDManagerTest {
 		when(queryingImpl.resolve(name)).thenReturn(completedFuture(uuid), completedFuture(null));
 
 		assertEquals(uuid, lookupUUID(name));
-		assertEquals(uuid, lookupUUID(name), "uuidField should be cached");
+		assertEquals(uuid, lookupUUID(name), "uuid should be cached");
 		assertEquals(uuid, lookupUUIDExact(name));
 
 		verify(queryingImpl).resolve(name);
@@ -217,7 +224,7 @@ public class CachingUUIDManagerTest {
 				completedFuture(uuid), completedFuture(null));
 
 		assertEquals(uuid, lookupUUID(name));
-		assertEquals(uuid, lookupUUID(name), "uuidField should be cached");
+		assertEquals(uuid, lookupUUID(name), "uuid should be cached");
 		assertEquals(uuid, lookupUUIDExact(name));
 	}
 
@@ -242,9 +249,9 @@ public class CachingUUIDManagerTest {
 		mockConfig(ServerType.OFFLINE, remoteApiBundle);
 
 		UUID uuid = OfflineUUID.computeOfflineUuid(name);
-		assertNull(lookupUUID(name), "Inexact lookup cannot compute offline uuidField");
+		assertNull(lookupUUID(name), "Inexact lookup cannot compute offline uuid");
 		assertEquals(uuid, lookupUUIDExact(name));
-		assertEquals(uuid, lookupUUID(name), "uuidField should be cached");
+		assertEquals(uuid, lookupUUID(name), "uuid should be cached");
 	}
 
 	@Test

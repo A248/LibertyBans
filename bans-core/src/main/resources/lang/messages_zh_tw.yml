@@ -1,0 +1,436 @@
+ # 
+ # Messages configuration
+ # 
+ # 
+ # In most cases, the variables inside the default messages are those available
+ # in that specific message. The exception to this is messages which are related
+ # to a certain punishment.
+ # 
+ # When message has an associated punishment, multiple variables are available:
+ # 
+ # %ID% - punishment ID number
+ # %TYPE% - punishment type, e.g. 'Ban'
+ # %TYPE_VERB% - punishment type as a verb, e.g. 'Banned'
+ # %VICTIM% - display name of the victim of the punishment
+ # %VICTIM_ID% - internal identifier of victim
+ # %OPERATOR% - display name of the staff member who made the punishment
+ # %OPERATOR_ID% - internal identifier of the operator
+ # %UNOPERATOR% - staff member undoing the punishment. available only when the punishment is undone
+ # %UNOPERATOR_ID% - internal identifier of staff member undoing the punishment
+ # %REASON% - reason for the punishment
+ # %SCOPE% - scope of the punishment
+ # %DURATION% - original duration (how long the punishment was made for)
+ # %START_DATE% - the date the punishment was created
+ # %TIME_PASSED% - the time since the punishment was created
+ # %TIME_PASSED_SIMPLE% - the time since the punishment was created, rounded to the biggest time unit possible (e.g. 2 months instead of 1 month 23 days)
+ # %END_DATE% - the date the punishment will end, or formatting.permanent-display.absolute for permanent punishments
+ # %TIME_REMAINING% - the time until the punishment ends, or formatting.permanent-display.relative for permanent punishments
+ # %TIME_REMAINING_SIMPLE% - the time until the punishment ends, rounded to the biggest time unit possible (e.g. 10 days instead of 9 days 13 hours)
+ # %HAS_EXPIRED% - Shows if a punishments duration has run out. Does not check if the punishment is revoked!
+ # 
+ # The following variables have limited availability:
+ # %TARGET% - the original target argument of a command. For example, in '/ipban Player1', %TARGET% is Player1
+ # %NEXTPAGE% - the number of the next page of a list like history
+ # %PREVIOUSPAGE% - the number of the previous page of a list like history
+ # 
+ # 
+ # Used for /banlist, /mutelist, /history, /warns, /blame
+lists:
+  ban-list:
+    perPage: 10
+    noPages: '&7沒有啟用的封鎖.'
+    maxPages: '&7頁面 &e%PAGE%&7 並不存在.'
+    permission:
+      command: '&7你可能無法查看封鎖列表.'
+
+    layout:
+      header:
+        - '&7[&eID&7] &e&o受罰者&f'
+        - '&7執行者 &8/ &7原因 &8/ &7剩餘時間&f'
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      footer: '&7頁面 &e%PAGE%&7.||ttp:點擊到下一頁||cmd:/libertybans banlist %NEXTPAGE%'
+
+    usage: '&c用法: /banlist &e[page]'
+
+  mute-list:
+    perPage: 10
+    noPages: '&7沒有啟用的禁言.'
+    maxPages: '&7頁面 &e%PAGE%&7 並不存在.'
+    permission:
+      command: '&7你可能無法查看禁言列表.'
+
+    layout:
+      header:
+        - '&7[&eID&7] &e&o受罰者&f'
+        - '&7執行者 &8/ &7原因 &8/ &7剩餘時間&f'
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      footer: '&7頁面 &e%PAGE%&7.||ttp:點擊到下一頁||cmd:/libertybans mutelist %NEXTPAGE%'
+
+    usage: '&c用法: /mutelist &e[page]'
+
+  warns:
+    perPage: 10
+    noPages: '&c&o%TARGET%&7 沒有警告.'
+    maxPages: '&7頁面 &e%PAGE%&7 並不存在.'
+    permission:
+      command: '&7你可能沒有權限查看警告.'
+
+    layout:
+      header: '&7[&eID&7] 執行者 &8/ &7原因 &8/ &7剩餘時間&f'
+      body: '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      footer: '&7頁面 &e%PAGE%&7.||ttp:點擊到下一頁||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+
+    usage: '&c用法: /warns &e<player> [page]'
+
+  blame:
+    perPage: 10
+    noPages: '&c&o%TARGET%&7 沒有懲罰過任何玩家.'
+    maxPages: '&7頁面 &e%PAGE%&7 並不存在.'
+    permission:
+      command: '&7你不能使用責備.'
+
+    layout:
+      header:
+        - '&7[&eID&7] &e&o受罰者 &8/ &7懲罰類型&f'
+        - '&7原因 &8/ &7懲罰日期&f'
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM% &8 / &7%TYPE%&f'
+        - '&7%REASON% &8/ &7%START_DATE%&f'
+      footer: '&7頁面 &e%PAGE%&7.||ttp:點擊到下一頁||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+
+    usage: '&c用法: /blame &e<player> [page]'
+
+  history:
+    perPage: 10
+    noPages: '&c&o%TARGET%&7 沒有歷史記錄.'
+    maxPages: '&7頁面 &e%PAGE%&7 並不存在.'
+    permission:
+      command: '&7你可能沒有權限查看歷史記錄.'
+
+    layout:
+      header:
+        - '&7[&eID&7] &8/ &7懲罰類型&f'
+        - '&7執行者 &8/ &7原因 &8/ &7懲罰日期&f'
+      body:
+        - '&7[&e%ID%&7] / %TYPE%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%&f'
+      footer: '&7頁面 &e%PAGE%&7.||ttp:點擊到下一頁||cmd:/libertybans history %TARGET% %NEXTPAGE%'
+
+    usage: '&c用法: /history &e<player> [page]'
+
+
+all:
+  prefix:
+     # If enabled, all messages will be prefixed
+    enable: true
+     # The prefix to use
+    value: '&6&lLibertyBans &8»&7 '
+
+   # When issuing commands, if the specified player or IP was not found, what should the error message be?
+  not-found:
+    player-or-address: '&c&o%TARGET%&7 並未被找到在線上或離線, 且並不是一個有效的 IP 位置.'
+    uuid: '&c&o%TARGET%&7 並不是有效的 uuid 字串.'
+    player: '&c&o%TARGET%&7 並未找到在線上或離線.'
+
+   # If a player types /libertybans but does not have the permission 'libertybans.commands', this is the denial message
+  base-permission-message: '&c你不能使用這個.'
+  usage: '&c未知的子指令. 顯示使用方法:'
+
+ # 
+ # Messages regarding /ban, /mute, /warn, /kick
+ # Includes punishment layouts
+ # 
+ # 
+additions:
+  bans:
+    conflicting: '&c&o%TARGET%&7 已經被封鎖.'
+    success:
+      notification: '&c&o%OPERATOR%&7 已封鎖 &c&o%VICTIM%&7 因為 &e&o%REASON%&7, 懲罰時間為 &a&o%DURATION%&7.'
+      message: '&a已封鎖 &c&o%VICTIM%&a 因為 &e&o%REASON%&a, 懲罰時間為 &o%DURATION%&r&a.'
+
+    usage: '&c用法: /ban &e<player> [time] <reason>&c.'
+    layout:
+      - '&7&l已封鎖&f'
+      - '&c持續時間: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&l原因&f'
+      - '&7%REASON%&f'
+      - ''
+      - '&3&l上訴你的懲罰&f'
+      - '&c網站: &7website&f'
+      - '&cDiscord: &7discord'
+    permission:
+      duration: '&c你不能設置持續時間為 &e%DURATION%&c.'
+      both: '&c你不能對玩家與它們的 IP 位置執行此操作.'
+      uuid: '&c你不能對玩家執行此操作.'
+      ip-address: '&c你不能對 IP 位置執行此操作.'
+
+
+  mutes:
+    conflicting: '&c&o%TARGET%&7 已經被禁言.'
+    success:
+      notification: '&c&o%OPERATOR%&7 已禁言 &c&o%VICTIM%&7 因為 &e&o%REASON%&7, 懲罰時間為 &a&o%DURATION%&7.'
+      message: '&a已禁言 &c&o%VICTIM%&a 因為 &e&o%REASON%&a, 懲罰時間為 &o%DURATION%&r&a.'
+
+    usage: '&c用法: /mute &e<player> [time] <reason>&c.'
+    layout:
+      - '&7&l已禁言&f'
+      - '&c持續時間: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&l原因&f'
+      - '&7%REASON%'
+    permission:
+      duration: '&c你不能設置持續時間為 &e%DURATION%&c.'
+      both: '&c你不能對玩家與它們的 IP 位置執行此操作.'
+      uuid: '&c你不能對玩家執行此操作.'
+      ip-address: '&c你不能對 IP 位置執行此操作.'
+
+
+  kicks:
+    success:
+      notification: '&c&o%OPERATOR%&7 已被踢出 &c&o%VICTIM%&7 因為 &e&o%REASON%&7.'
+      message: '&a已踢出 &c&o%VICTIM%&a 因為 &e&o%REASON%&a.'
+
+    must-be-online: '&c&o%TARGET%&7 必須在線上.'
+    usage: '&c用法: /kick &e<player> <reason>&c.'
+    layout:
+      - '&7&l已踢出&f'
+      - ''
+      - '&c&l原因&f'
+      - '&7%REASON%'
+    permission:
+      both: '&c你不能對玩家與它們的 IP 位置執行此操作.'
+      uuid: '&c你不能對玩家執行此操作.'
+      ip-address: '&c你不能對 IP 位置執行此操作.'
+
+
+  warns:
+    success:
+      notification: '&c&o%OPERATOR%&7 已警告 &c&o%VICTIM%&7 因為 &e&o%REASON%&7, 懲罰時間為 &a&o%DURATION%&7.'
+      message: '&a已警告 &c&o%VICTIM%&a 因為 &e&o%REASON%&a, 懲罰時間為 &o%DURATION%&r&a.'
+
+    usage: '&c用法: /warn &e<player> [time] <reason>&c.'
+    layout:
+      - '&7&l已警告&f'
+      - '&c持續時間: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&l原因&f'
+      - '&7%REASON%'
+    permission:
+      duration: '&c你不能設置持續時間為 &e%DURATION%&c.'
+      both: '&c你不能對玩家與它們的 IP 位置執行此操作.'
+      uuid: '&c你不能對玩家執行此操作.'
+      ip-address: '&c你不能對 IP 位置執行此操作.'
+
+
+
+ # Specific formatting options
+formatting:
+   # How should 'permanent' be displayed as a length of time?
+  permanent-display:
+     # When does a permanent punishment end?
+    absolute: '永不'
+     # What do you call a permanent duration?
+    duration: '無限'
+     # How do you describe the time remaining in a permanent punishment?
+    relative: '永久'
+
+   # When there is no more time remaining in a punishment (the punishment has expired),
+   # this becomes the value of the %TIME_REMAINING% variable
+  no-time-remaining-display: '無'
+   # How should the %HAS_EXPIRED% variable be displayed?
+  punishment-expired-display:
+     # How do you describe an expired punishment?
+    expired: '已過時'
+     # How do you describe a punishment which is not expired?
+    not-expired: '未過時'
+
+   # How should the console be displayed?
+  console-display: '後台'
+   # How should punishment types be displayed?
+  punishment-type-display:
+    WARN: '警告'
+    MUTE: '禁言'
+    KICK: '踢出'
+    BAN: '封鎖'
+
+   # How should punishment types be displayed as a verb? Used for the %TYPE_VERB% variable.
+  punishment-type-verb-display:
+    WARN: '警告'
+    MUTE: '禁言'
+    KICK: '已踢出'
+    BAN: '已封鎖'
+
+   # How should the global scope be displayed?
+  global-scope-display: '所有伺服器'
+   # When using /blame, how should the console be specified?
+  console-arguments:
+    - 'console'
+   # There are 2 ways to make permanent punishments. The first is to not specify a time (/ban <player> <reason>).
+   # The second is to specify a permanent amount of time (/ban <player> perm <reason>).
+   # When typing commands, what time arguments will be counted as permanent?
+  permanent-arguments:
+    - 'perm'
+    - 'permanent'
+    - 'permanently'
+
+misc:
+   # Concerns formatting of relative times and durations
+  time:
+    grammar:
+       # What should come before the last fragment? Set to empty text to disable
+      and: '和 '
+       # If enabled, places commas after each time fragment, except the last one
+      comma: true
+
+     # Times are formatted to seconds accuracy, but you may not want to display seconds 
+     # for most times. However, for very small durations, you need to display a value in seconds.
+     # If you are using SECONDS in the above section, this value is meaningless.
+    fallback-seconds: '%VALUE% 秒'
+    fragments:
+      YEARS: '%VALUE% 年'
+      MONTHS: '%VALUE% 月'
+      HOURS: '%VALUE% 小時'
+      WEEKS: '%VALUE% 周'
+      DAYS: '%VALUE% 天'
+      MINUTES: '%VALUE% 分'
+
+
+  unknown-error: '&c發生了未知的錯誤.'
+   # Only applicable if synchronous enforcement strategy is DENY in the main config
+  sync-chat-denial-message: '&c同步聊天已被拒絕. &7請在嘗試一次.'
+
+admin:
+  importing:
+    failure: '&c導入失敗. 請查看伺服器後台了解更多詳細訊息.'
+    started: '&7導入開始. 查看伺服器後台以了解詳細訊息及進度.'
+    complete: '&7導入完成.'
+    usage: '&c用法: /libertybans import <advancedban|litebans|vanilla>'
+     # To prevent mistakes, it is not allowed to import multiple times at once.
+    in-progress: '&c已經有導入正在進行中.'
+
+  ellipses: '&a...'
+  reloaded: '&a已重新加載'
+  restarted: '&a已重新啟動'
+  no-permission: '&c對不起, 但你不能使用這個.'
+
+ # Messages for alt-checks and alt account notifications
+ # 
+ # Before configuring this section, it is necessary to look at the address-enforcement
+ # settings in the main config.yml and understand the different kinds of alt detection.
+ # There is normal and strict detection.
+alts:
+   # Regarding the /alts command
+  command:
+     # The message to display atop the alt check. Set to an empty string to disable
+    header:
+      - '&c&o%TARGET%&7 的分帳報告如下.&f'
+      - '&7可能性很高 - 與被封鎖的玩家 IP 位置相同.&f'
+      - '&7可能性很低 - 與過去被封鎖的玩家 IP 位置相似'
+    permission: '&c你不能檢查分帳.'
+    none-found: '&7未找到任何分帳'
+    usage: '&c用法: /alts &e<player>&c.'
+
+  formatting:
+     # The description for an alt account detected by strict detection.
+    strict: '&e可能性很低'
+     # The description for an alt account detected by normal detection.
+    normal: '&c可能性很高'
+     # In the alt-check layout, the username of the alt may be formatted depending upon whether it is banned
+     # For example, the usernames of banned alts may be colored red whereas alts not banned are green
+     # Variables: %USERNAME%
+    name-display:
+      not-punished: '&o%USERNAME%'
+      banned: '&c&o%USERNAME%'
+      muted: '&e&o%USERNAME%'
+
+     # How a single detected alt should be displayed
+     # Available variables:
+     # %DETECTION_KIND% - how the account was detected. Will be replaced by the normal or strict options.
+     # %ADDRESS% - the address in question which led to the detection
+     # %RELEVANT_USER% - the username of the other account, formatted according to the name-display option
+     # %RELEVANT_USERID% - the uuidField of the other account
+     # %DATE_RECORDED% - the date the alt account was recorded
+    layout: '%RELEVANT_USER% &7( %ADDRESS% 每個) 在 %DATE_RECORDED% - %DETECTION_KIND%'
+
+  auto-show:
+     # The message to display atop the alt check. Set to an empty string to disable
+    header:
+      - '&c&o%TARGET%&7 可能是分帳. 報告如下.&f'
+      - '&7可能性很高 - 與被封鎖的玩家 IP 位置相同.&f'
+      - '&7可能性很低 - 與過去被封鎖的玩家 IP 位置相似'
+
+
+ # Configuration for the /accounthistory command
+account-history:
+   # Pertains to /accounthistory delete <user> <timestamp>
+  delete:
+    permission: '&c你可能不行刪除已記錄的帳號.'
+    no-such-account: '&c%TARGET% 沒有在該指定時間戳所記錄的帳號.'
+    usage:
+      - '&c用法: /accounthistory delete <user> <timestamp>.&f'
+      - '&7時間戳是以 unix 秒為單位, 通常從 /accounthistory list 中獲取'
+    success: '&7已成功從帳號 &e%TARGET% &7刪除記錄'
+
+   # Regards /accounthistory list <user>
+  listing:
+     # The message to display before the account listing. Set to an empty string to disable
+    header: '&c&o%TARGET%&7 的已知帳號報告如下.'
+    permission: '&c你可能不能查看已記錄的帳號.'
+    none-found: '&7沒有找到該帳號記錄'
+    usage: '&c用法: /accounthistory list <user|ip>'
+     # How a single recorded account should be displayed
+     # Available variables:
+     # %TARGET% - the original input to the command
+     # %USERNAME% - the username the player connected with
+     # %ADDRESS% - the address the player connected with
+     # %DATE_RECORDED% - the date the join was recorded
+     # %DATE_RECORDED_RAW% - the raw timestamp the join was recorded
+    layout: '%USERNAME% &7(在 %ADDRESS%) 在 %DATE_RECORDED% (%DATE_RECORDED_RAW%)||ttp:&7點擊以刪除此儲存的帳號||cmd:/accounthistory delete %TARGET% %DATE_RECORDED_RAW%'
+
+  usage: '&c用法: /accounthistory <delete|list>'
+
+ # Regards /unban, /unmute, /unwarn
+removals:
+  bans:
+    not-found: '&c&o%TARGET%&7 並未被封鎖.'
+    success:
+      notification: '&c&o%UNOPERATOR%&7 解除封鎖 &c&o%VICTIM%&7.'
+      message: '&7解除封鎖 &c&o%VICTIM%&7.'
+
+    usage: '&c用法: /unban &e<player>&c.'
+    permission:
+      both: '&c你不能對玩家與它們的 IP 位置執行此操作.'
+      uuid: '&c你不能對玩家執行此操作.'
+      ip-address: '&c你不能對 IP 位置執行此操作.'
+
+
+  mutes:
+    not-found: '&c&o%TARGET%&7 並未被禁言.'
+    success:
+      notification: '&c&o%UNOPERATOR%&7 解除禁言 &c&o%VICTIM%&7.'
+      message: '&7解除禁言 &c&o%VICTIM%&7.'
+
+    usage: '&c用法: /unmute &e<player>&c.'
+    permission:
+      both: '&c你不能對玩家與它們的 IP 位置執行此操作.'
+      uuid: '&c你不能對玩家執行此操作.'
+      ip-address: '&c你不能對 IP 位置執行此操作.'
+
+
+  warns:
+    not-a-number: '&c&o%ID_ARG%&7 並不是數字.'
+    not-found: '&c&o%TARGET%&7 沒有 &c&o%ID% &7的警告.'
+    success:
+      notification: '&c&o%UNOPERATOR%&7 取消警告 &c&o%VICTIM%&7.'
+      message: '&7取消警告 &c&o%VICTIM%&7.'
+
+    usage: '&c用法: /unwarn &e<player> <id>&c.'
+    permission:
+      both: '&c你不能對玩家與它們的 IP 位置執行此操作.'
+      uuid: '&c你不能對玩家執行此操作.'
+      ip-address: '&c你不能對 IP 位置執行此操作.'

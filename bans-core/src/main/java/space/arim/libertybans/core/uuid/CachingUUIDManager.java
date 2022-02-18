@@ -1,22 +1,41 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.uuid;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import space.arim.api.util.web.RemoteApiResult;
+import space.arim.api.util.web.RemoteNameUUIDApi;
+import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.config.SqlConfig;
+import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.env.EnvUserResolver;
+import space.arim.libertybans.core.env.UUIDAndAddress;
+import space.arim.libertybans.core.service.Time;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.net.InetAddress;
 import java.time.Duration;
@@ -26,27 +45,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Provider;
-import jakarta.inject.Singleton;
-
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-import space.arim.libertybans.core.config.SqlConfig;
-import space.arim.libertybans.core.env.UUIDAndAddress;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
-
-import space.arim.api.util.web.RemoteApiResult;
-import space.arim.api.util.web.RemoteNameUUIDApi;
-
-import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.database.InternalDatabase;
-import space.arim.libertybans.core.env.EnvUserResolver;
-
 @Singleton
 public final class CachingUUIDManager implements UUIDManager {
 
@@ -54,6 +52,7 @@ public final class CachingUUIDManager implements UUIDManager {
 	private final FactoryOfTheFuture futuresFactory;
 	private final EnvUserResolver envResolver;
 	private final QueryingImpl queryingImpl;
+	private final Time time;
 
 	private Cache<@NonNull String, @NonNull UUID> nameToUuidCache;
 	private Cache<@NonNull UUID, @NonNull String> uuidToNameCache;
@@ -61,16 +60,17 @@ public final class CachingUUIDManager implements UUIDManager {
 
 	@Inject
 	public CachingUUIDManager(Configs configs, FactoryOfTheFuture futuresFactory,
-							  Provider<InternalDatabase> dbProvider, EnvUserResolver envResolver) {
-		this(configs, futuresFactory, envResolver, new QueryingImpl(dbProvider));
+							  Provider<InternalDatabase> dbProvider, EnvUserResolver envResolver, Time time) {
+		this(configs, futuresFactory, envResolver, new QueryingImpl(dbProvider), time);
 	}
 
 	CachingUUIDManager(Configs configs, FactoryOfTheFuture futuresFactory,
-					   EnvUserResolver envResolver, QueryingImpl queryingImpl) {
+					   EnvUserResolver envResolver, QueryingImpl queryingImpl, Time time) {
 		this.configs = configs;
 		this.futuresFactory = futuresFactory;
 		this.envResolver = envResolver;
 		this.queryingImpl = queryingImpl;
+		this.time = time;
 	}
 
 	@Override
@@ -83,13 +83,13 @@ public final class CachingUUIDManager implements UUIDManager {
 		nameValidator = uuidResolution().nameValidator();
 	}
 
-	private static <K, V> Cache<@NonNull K, @NonNull V> createCache(Duration expiration,
-																	SqlConfig.MuteCaching.ExpirationSemantic semantic) {
+	private <K, V> Cache<@NonNull K, @NonNull V> createCache(Duration expiration,
+															 SqlConfig.MuteCaching.ExpirationSemantic semantic) {
 		switch (semantic) {
 		case EXPIRE_AFTER_ACCESS:
-			return Caffeine.newBuilder().expireAfterAccess(expiration).build();
+			return Caffeine.newBuilder().ticker(time.toCaffeineTicker()).expireAfterAccess(expiration).build();
 		case EXPIRE_AFTER_WRITE:
-			return Caffeine.newBuilder().expireAfterWrite(expiration).build();
+			return Caffeine.newBuilder().ticker(time.toCaffeineTicker()).expireAfterWrite(expiration).build();
 		default:
 			throw new IllegalStateException("Unknown expiration semantic " + semantic);
 		}
@@ -118,13 +118,13 @@ public final class CachingUUIDManager implements UUIDManager {
 	}
 
 	/*
-	 * uuidField resolution works as follows:
+	 * uuid resolution works as follows:
 	 * 
 	 * 1. Check caches
 	 * 2. Check online players
 	 * 3. Check own database
 	 * 4. If online server, check Mojang API and third party web APIs where configured.
-	 * If offline server and exact name provided, compute offline uuidField.
+	 * If offline server and exact name provided, compute offline uuid.
 	 */
 	
 	@Override

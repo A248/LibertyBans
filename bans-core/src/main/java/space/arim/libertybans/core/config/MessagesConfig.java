@@ -112,7 +112,7 @@ public interface MessagesConfig {
 			@DefaultString("&c&o%TARGET%&r&7 was not found online or offline.")
 			ComponentText player();
 			
-			@DefaultString("&c&o%TARGET%&r&7 is not a valid uuidField.")
+			@DefaultString("&c&o%TARGET%&r&7 is not a valid uuid.")
 			ComponentText uuid();
 
 			@ConfKey("player-or-address")
@@ -157,7 +157,7 @@ public interface MessagesConfig {
 			@DefaultString("&7Import has started. View your server console for details and progress.")
 			Component started();
 
-			@DefaultString("&cUsage: /libertybans import <advancedban|litebans|vanilla>")
+			@DefaultString("&cUsage: /libertybans import <advancedban|litebans|vanilla|self>")
 			Component usage();
 
 			@DefaultString("&7Import completed.")

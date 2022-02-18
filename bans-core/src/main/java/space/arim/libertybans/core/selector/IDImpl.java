@@ -22,17 +22,16 @@ package space.arim.libertybans.core.selector;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
-
-import space.arim.libertybans.core.database.execute.SQLFunction;
-import space.arim.libertybans.core.database.sql.EndTimeCondition;
-import space.arim.libertybans.core.service.Time;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
-
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.database.execute.SQLFunction;
+import space.arim.libertybans.core.database.sql.EndTimeCondition;
+import space.arim.libertybans.core.database.sql.TableForType;
 import space.arim.libertybans.core.punish.PunishmentCreator;
+import space.arim.libertybans.core.service.Time;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import static space.arim.libertybans.core.schema.tables.SimpleActive.SIMPLE_ACTIVE;
 import static space.arim.libertybans.core.schema.tables.SimpleHistory.SIMPLE_HISTORY;
@@ -78,16 +77,16 @@ public class IDImpl {
 		}
 		InternalDatabase database = dbProvider.get();
 		return database.query(SQLFunction.readOnly((context) -> {
+			var simpleView = new TableForType(type).simpleView();
 			return context
 					.select(
-							SIMPLE_ACTIVE.VICTIM_TYPE, SIMPLE_ACTIVE.VICTIM_UUID, SIMPLE_ACTIVE.VICTIM_ADDRESS,
-							SIMPLE_ACTIVE.OPERATOR, SIMPLE_ACTIVE.REASON,
-							SIMPLE_ACTIVE.SCOPE, SIMPLE_ACTIVE.START, SIMPLE_ACTIVE.END
+							simpleView.victimType(), simpleView.victimUuid(), simpleView.victimAddress(),
+							simpleView.operator(), simpleView.reason(),
+							simpleView.scope(), simpleView.start(), simpleView.end()
 					)
-					.from(SIMPLE_ACTIVE)
-					.where(SIMPLE_ACTIVE.ID.eq(id))
-					.and(SIMPLE_ACTIVE.TYPE.eq(type))
-					.and(new EndTimeCondition(SIMPLE_ACTIVE.END).isNotExpired(time.currentTimestamp()))
+					.from(simpleView.table())
+					.where(simpleView.id().eq(id))
+					.and(new EndTimeCondition(simpleView).isNotExpired(time.currentTimestamp()))
 					.fetchOne(creator.punishmentMapper(id, type));
 		}));
 	}

@@ -25,7 +25,7 @@ import space.arim.libertybans.api.Victim;
 
 import java.util.UUID;
 
-public interface VictimFields {
+public interface VictimFields extends TableFieldAccessor {
 
 	Field<Victim.VictimType> victimType();
 

@@ -18,6 +18,12 @@
  */
 package space.arim.libertybans.core.config;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
+import space.arim.libertybans.bootstrap.StartupException;
+import space.arim.libertybans.core.importing.ImportConfig;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -31,13 +37,6 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Singleton;
-
-import space.arim.libertybans.bootstrap.StartupException;
-import space.arim.libertybans.core.importing.ImportConfig;
 
 @Singleton
 public class StandardConfigs implements Configs {
@@ -86,23 +85,26 @@ public class StandardConfigs implements Configs {
 		CompletableFuture<?> futureLangFiles = createLangFiles(langFolder);
 
 		// Reload main config
-		CompletableFuture<Boolean> reloadMain = mainHolder.reload(folder.resolve("config.yml"));
+		CompletableFuture<ConfigResult> reloadMain = mainHolder.reload(folder.resolve("config.yml"));
 		// Reload sql config
-		CompletableFuture<Boolean> reloadSql = sqlHolder.reload(folder.resolve("sql.yml"));
+		CompletableFuture<ConfigResult> reloadSql = sqlHolder.reload(folder.resolve("sql.yml"));
 		// Reload import config
-		CompletableFuture<Boolean> reloadImport = importHolder.reload(folder.resolve("import.yml"));
+		CompletableFuture<ConfigResult> reloadImport = importHolder.reload(folder.resolve("import.yml"));
 
 		// Reload messages config from specified language file
-		CompletableFuture<Boolean> reloadMessages = CompletableFuture.allOf(futureLangFiles, reloadMain)
+		CompletableFuture<ConfigResult> reloadMessages = CompletableFuture.allOf(futureLangFiles, reloadMain)
 				.thenCompose((ignore) -> {
-			if (!reloadMain.join()) {
-				return CompletableFuture.completedFuture(false);
-			}
-			String langFileOption = mainHolder.getConfigData().langFile();
-			return messagesHolder.reload(langFolder.resolve("messages_" + langFileOption + ".yml"));
-		});
+					if (reloadMain.join() == ConfigResult.IO_ERROR) {
+						return CompletableFuture.completedFuture(ConfigResult.IO_ERROR);
+					}
+					String langFileOption = mainHolder.getConfigData().langFile();
+					return messagesHolder.reload(langFolder.resolve("messages_" + langFileOption + ".yml"));
+				});
 		return CompletableFuture.allOf(reloadMessages, reloadSql, reloadImport).thenApply((ignore) -> {
-			return reloadMain.join() && reloadMessages.join() && reloadSql.join() && reloadImport.join();
+			ConfigResult combinedResult = ConfigResult.combinePessimistically(
+					reloadMain.join(), reloadMessages.join(), reloadSql.join(), reloadImport.join()
+			);
+			return combinedResult != ConfigResult.IO_ERROR;
 		});
 	}
 

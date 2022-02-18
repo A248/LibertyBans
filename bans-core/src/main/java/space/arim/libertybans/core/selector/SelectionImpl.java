@@ -38,9 +38,13 @@ import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.database.sql.DeserializedVictim;
 import space.arim.libertybans.core.database.sql.EndTimeCondition;
+import space.arim.libertybans.core.database.sql.PunishmentFields;
 import space.arim.libertybans.core.database.sql.SimpleViewFields;
+import space.arim.libertybans.core.database.sql.TableForType;
 import space.arim.libertybans.core.database.sql.VictimCondition;
 import space.arim.libertybans.core.punish.PunishmentCreator;
+import space.arim.libertybans.core.schema.tables.SimpleActive;
+import space.arim.libertybans.core.schema.tables.SimpleHistory;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -50,9 +54,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import static space.arim.libertybans.core.schema.tables.SimpleActive.SIMPLE_ACTIVE;
-import static space.arim.libertybans.core.schema.tables.SimpleHistory.SIMPLE_HISTORY;
 
 @Singleton
 public class SelectionImpl {
@@ -79,27 +80,26 @@ public class SelectionImpl {
 	 * the SELECT statement must be qualified by the punishment type
 	 */
 
-	private static List<Field<?>> getColumns(SelectionOrder selection) {
+	private static List<Field<?>> getColumns(SelectionOrder selection, PunishmentFields fields) {
 		List<Field<?>> columns = new ArrayList<>();
-		boolean active = selection.selectActiveOnly();
-		columns.add(active ? SIMPLE_ACTIVE.ID : SIMPLE_HISTORY.ID);
+		columns.add(fields.id());
 		if (selection.getTypes().isNotSimpleEquality()) {
-			columns.add(active ? SIMPLE_ACTIVE.TYPE : SIMPLE_HISTORY.TYPE);
+			columns.add(fields.type());
 		}
 		if (selection.getVictims().isNotSimpleEquality()) {
-			columns.add(active ? SIMPLE_ACTIVE.VICTIM_TYPE : SIMPLE_HISTORY.VICTIM_TYPE);
-			columns.add(active ? SIMPLE_ACTIVE.VICTIM_UUID : SIMPLE_HISTORY.VICTIM_UUID);
-			columns.add(active ? SIMPLE_ACTIVE.VICTIM_ADDRESS : SIMPLE_HISTORY.VICTIM_ADDRESS);
+			columns.add(fields.victimType());
+			columns.add(fields.victimUuid());
+			columns.add(fields.victimAddress());
 		}
 		if (selection.getOperators().isNotSimpleEquality()) {
-			columns.add(active ? SIMPLE_ACTIVE.OPERATOR : SIMPLE_HISTORY.OPERATOR);
+			columns.add(fields.operator());
 		}
-		columns.add(active ? SIMPLE_ACTIVE.REASON : SIMPLE_HISTORY.REASON);
+		columns.add(fields.reason());
 		if (selection.getScopes().isNotSimpleEquality()) {
-			columns.add(active ? SIMPLE_ACTIVE.SCOPE : SIMPLE_HISTORY.SCOPE);
+			columns.add(fields.scope());
 		}
-		columns.add(active ? SIMPLE_ACTIVE.START : SIMPLE_HISTORY.START);
-		columns.add(active ? SIMPLE_ACTIVE.END : SIMPLE_HISTORY.END);
+		columns.add(fields.start());
+		columns.add(fields.end());
 
 		return columns;
 	}
@@ -118,23 +118,21 @@ public class SelectionImpl {
 		return acceptedCondition.and(notRejectedCondition);
 	}
 
-	private Condition getPredication(SelectionOrder selection) {
+	private Condition getPredication(SelectionOrder selection, PunishmentFields fields) {
 		Condition condition = DSL.noCondition();
 		boolean active = selection.selectActiveOnly();
 
 		condition = condition
-				.and(matchesCriterion(selection.getTypes(), active ? SIMPLE_ACTIVE.TYPE : SIMPLE_HISTORY.TYPE))
-				.and(matchesCriterion(selection.getOperators(), active ? SIMPLE_ACTIVE.OPERATOR : SIMPLE_HISTORY.OPERATOR))
-				.and(matchesCriterion(selection.getScopes(), active ? SIMPLE_ACTIVE.SCOPE : SIMPLE_HISTORY.SCOPE));
+				.and(matchesCriterion(selection.getTypes(), fields.type()))
+				.and(matchesCriterion(selection.getOperators(), fields.operator()))
+				.and(matchesCriterion(selection.getScopes(), fields.scope()));
 		if (active) {
 			condition = condition
-					.and(new EndTimeCondition(SIMPLE_ACTIVE.END).isNotExpired(time.currentTimestamp()));
+					.and(new EndTimeCondition(fields).isNotExpired(time.currentTimestamp()));
 		}
 		SelectionPredicate<Victim> victims = selection.getVictims();
 		{
-			VictimCondition victimCondition = new VictimCondition(
-					new SimpleViewFields(active ? SIMPLE_ACTIVE : SIMPLE_HISTORY)
-			);
+			VictimCondition victimCondition = new VictimCondition(fields);
 			Condition acceptedCondition = DSL.noCondition();
 			for (Victim acceptedVictim : victims.acceptedValues()) {
 				acceptedCondition = acceptedCondition.or(
@@ -161,51 +159,50 @@ public class SelectionImpl {
 		return record.get(field);
 	}
 
-	private Punishment fromRecordAndSelection(org.jooq.Record record, SelectionOrder selection) {
-		boolean active = selection.selectActiveOnly();
+	private Punishment fromRecordAndSelection(org.jooq.Record record,
+											  SelectionOrder selection, PunishmentFields fields) {
 
 		PunishmentType type = retrieveValueFromRecordOrSelection(
-				selection.getTypes(), record, active ? SIMPLE_ACTIVE.TYPE : SIMPLE_HISTORY.TYPE
+				selection.getTypes(), record, fields.type()
 		);
 		Victim victim;
 		SelectionPredicate<Victim> victimSelection = selection.getVictims();
 		if (victimSelection.isSimpleEquality()) {
 			victim = victimSelection.acceptedValues().iterator().next();
 		} else {
-			Victim.VictimType victimType = record.get(active ? SIMPLE_ACTIVE.VICTIM_TYPE : SIMPLE_HISTORY.VICTIM_TYPE);
+			Victim.VictimType victimType = record.get(fields.victimType());
 			victim = new DeserializedVictim(
-					record.get(active ? SIMPLE_ACTIVE.VICTIM_UUID : SIMPLE_HISTORY.VICTIM_UUID),
-					record.get(active ? SIMPLE_ACTIVE.VICTIM_ADDRESS : SIMPLE_HISTORY.VICTIM_ADDRESS)
+					record.get(fields.victimUuid()),
+					record.get(fields.victimAddress())
 			).victim(victimType);
 		}
 		Operator operator = retrieveValueFromRecordOrSelection(
-				selection.getOperators(), record, active ? SIMPLE_ACTIVE.OPERATOR : SIMPLE_HISTORY.OPERATOR
+				selection.getOperators(), record, fields.operator()
 		);
 		ServerScope scope = retrieveValueFromRecordOrSelection(
-				selection.getScopes(), record, active ? SIMPLE_ACTIVE.SCOPE : SIMPLE_HISTORY.SCOPE
+				selection.getScopes(), record, fields.scope()
 		);
 		return creator.createPunishment(
-				record.get(active ? SIMPLE_ACTIVE.ID : SIMPLE_HISTORY.ID),
+				record.get(fields.id()),
 				type,
 				victim,
 				operator,
-				record.get(active ? SIMPLE_ACTIVE.REASON : SIMPLE_HISTORY.REASON),
+				record.get(fields.reason()),
 				scope,
-				record.get(active ? SIMPLE_ACTIVE.START : SIMPLE_HISTORY.START),
-				record.get(active ? SIMPLE_ACTIVE.END : SIMPLE_HISTORY.END));
+				record.get(fields.start()),
+				record.get(fields.end()));
 	}
 
 	private ResultQuery<org.jooq.Record> selectMatchingPunishments(SelectionOrder selection,
+																   PunishmentFields fields,
 																   DSLContext context,
 																   boolean singlePunishment) {
-		boolean active = selection.selectActiveOnly();
 		var selectOrderBy = context
-				.select(getColumns(selection))
-				.from(active ? SIMPLE_ACTIVE : SIMPLE_HISTORY)
-				.where(getPredication(selection))
+				.select(getColumns(selection, fields))
+				.from(fields.table())
+				.where(getPredication(selection, fields))
 				.orderBy(
-						(active ? SIMPLE_ACTIVE.START : SIMPLE_HISTORY.START).desc(),
-						(active ? SIMPLE_ACTIVE.ID : SIMPLE_HISTORY.ID).desc()
+						fields.start().desc(), fields.id().desc()
 				);
 		// If limit == 0, omit LIMIT clause entirely
 		int limit = (singlePunishment) ? 1 : selection.limitToRetrieve();
@@ -242,8 +239,9 @@ public class SelectionImpl {
 		}
 		InternalDatabase database = dbProvider.get();
 		return database.query(SQLFunction.readOnly((context) -> {
-			return selectMatchingPunishments(selection, context, true)
-					.fetchOne((record) -> fromRecordAndSelection(record, selection));
+			PunishmentFields fields = getPunishmentFieldsToUse(selection);
+			return selectMatchingPunishments(selection, fields, context, true)
+					.fetchOne((record) -> fromRecordAndSelection(record, selection, fields));
 		}));
 	}
 
@@ -254,9 +252,22 @@ public class SelectionImpl {
 		}
 		InternalDatabase database = dbProvider.get();
 		return database.query(SQLFunction.readOnly((context) -> {
-			return selectMatchingPunishments(selection, context, false)
-					.fetch((record) -> fromRecordAndSelection(record, selection));
+			PunishmentFields fields = getPunishmentFieldsToUse(selection);
+			return selectMatchingPunishments(selection, fields, context, false)
+					.fetch((record) -> fromRecordAndSelection(record, selection, fields));
 		}));
 	}
 
+	private PunishmentFields getPunishmentFieldsToUse(SelectionOrder selection) {
+		if (selection.selectActiveOnly()) {
+			if (selection.getTypes().isSimpleEquality()) {
+				PunishmentType type = selection.getTypes().acceptedValues().iterator().next();
+				return new TableForType(type).simpleView();
+			} else {
+				return new SimpleViewFields<>(SimpleActive.SIMPLE_ACTIVE);
+			}
+		} else {
+			return new SimpleViewFields<>(SimpleHistory.SIMPLE_HISTORY);
+		}
+	}
 }

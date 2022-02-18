@@ -22,7 +22,6 @@ package space.arim.libertybans.it.test.alts;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
@@ -44,7 +43,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static space.arim.libertybans.it.util.RandomUtil.randomAddress;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
-@ExtendWith(MockitoExtension.class)
 public class AccountHistoryIT {
 
 	private final AccountHistory accountHistory;
