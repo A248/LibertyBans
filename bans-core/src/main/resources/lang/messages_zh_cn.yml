@@ -39,7 +39,7 @@ all:
   not-found:
     uuid: '&c&o%TARGET%&7 不是有效的UUID。'
     player: '&c&o%TARGET%&7 没在上线和离线的玩家列表。'
-    player-or-address: '&c&o%TARGET%&7 并没有在上线或离线的玩家中被找到，并且这不是一个有效的 IP。'
+    player-or-address: '&c&o%TARGET%&7 并没有在上线或离线的玩家中被找到，或者这不是一个有效的 IP。'
 
 
  # 
@@ -96,7 +96,7 @@ additions:
       - '&cDiscord: &7discord&f'
     permission:
       duration: '&c您不能为别的玩家设置时长为 &e%DURATION%&c 的封禁。'
-      uuid: '&c您没有权限来封禁别的玩家。'
+      uuid: '&c您没有权限封禁别的玩家。'
       ip-address: '&c您没有通过 IP 封禁别的玩家的权限。'
 
     usage: '&c用法: /ban &e<玩家> [有效时长] <理由>&c。'
@@ -115,8 +115,8 @@ additions:
       - '&7%REASON%'
     permission:
       duration: '&c您无法为别的玩家设置有效时长为 &e%DURATION%&c 的禁言。'
-      uuid: '&c您没有权限来禁言别的玩家。'
-      ip-address: '&c您没有通过 IP 来禁言别的玩家的权限。'
+      uuid: '&c您没有权限禁言别的玩家。'
+      ip-address: '&c您没有通过 IP 禁言别的玩家的权限。'
 
     usage: '&c用法: /mute &e<玩家> [有效时长] <理由>&c。'
     success:
@@ -141,9 +141,9 @@ lists:
     usage: '&c用法: /banlist &e[页码]'
     maxPages: '&7页码 &e%PAGE%&7 并不存在。'
     permission:
-      command: '&7您没有权限来查看封禁列表。'
+      command: '&7您没有权限查看封禁列表。'
 
-    noPages: '&7目前还没有有效的封禁惩罚记录在案哦。'
+    noPages: '&7目前还没有有效的封禁惩罚记录在案。'
 
   warns:
     perPage: 10
@@ -193,7 +193,7 @@ lists:
     permission:
       command: '&7您没有权限查看别的玩家的禁言记录。'
 
-    noPages: '&7这里还没有禁言记录哦。'
+    noPages: '&7这里还没有禁言记录。'
 
   history:
     perPage: 10
