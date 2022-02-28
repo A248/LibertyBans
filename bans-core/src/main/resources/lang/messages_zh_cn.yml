@@ -263,7 +263,7 @@ alts:
 
 admin:
   restarted: '&a已重启插件'
-  no-permission: '&c抱歉，您没有权限怎么做。'
+  no-permission: '&c抱歉，您没有权限。'
   reloaded: '&a已重载插件'
   ellipses: '&a...'
   importing:
