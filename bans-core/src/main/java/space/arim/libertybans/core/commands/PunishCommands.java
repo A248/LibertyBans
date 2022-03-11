@@ -85,9 +85,6 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 			}
 			return tabCompletion.completeOfflinePlayerNames(sender);
 		}
-		if (argIndex == 1) {
-			return tabCompletion.completePunishmentDurations(sender, type);
-		}
 		return Stream.empty();
 	}
 	
