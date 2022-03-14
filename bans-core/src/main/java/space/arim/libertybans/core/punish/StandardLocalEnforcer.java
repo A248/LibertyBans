@@ -49,7 +49,7 @@ import space.arim.libertybans.core.env.ExactTargetMatcher;
 import space.arim.libertybans.core.env.TargetMatcher;
 import space.arim.libertybans.core.env.UUIDTargetMatcher;
 import space.arim.libertybans.core.selector.AddressStrictness;
-import space.arim.libertybans.core.selector.MuteCache;
+import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;

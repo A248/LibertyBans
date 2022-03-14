@@ -19,6 +19,11 @@
 
 package space.arim.libertybans.core.service;
 
+import com.github.benmanes.caffeine.cache.Ticker;
+
+import java.time.Clock;
+import java.time.Instant;
+
 /**
  * A live timer, commonly used at runtime
  *
@@ -36,12 +41,27 @@ public final class LiveTime implements Time {
 	}
 
 	@Override
+	public Instant currentTimestamp() {
+		return Instant.now();
+	}
+
+	@Override
 	public long arbitraryNanoTime() {
 		return System.nanoTime();
 	}
 
 	@Override
+	public Ticker toCaffeineTicker() {
+		return Ticker.systemTicker();
+	}
+
+	@Override
+	public Clock toJdkClock() {
+		return Clock.systemUTC();
+	}
+
+	@Override
 	public String toString() {
-		return "Live.INSTANCE";
+		return getClass().getSimpleName() + ".INSTANCE";
 	}
 }

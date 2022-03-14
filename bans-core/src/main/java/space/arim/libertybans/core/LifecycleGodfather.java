@@ -24,6 +24,7 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
+import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.omnibus.registry.Registration;
 import space.arim.omnibus.registry.RegistryPriorities;
@@ -42,6 +43,7 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 	private final Configs configs;
 	private final DatabaseManager databaseManager;
 	private final UUIDManager uuidManager;
+	private final MuteCache muteCache;
 	private final TabCompletion tabCompletion;
 	private final EnvironmentManager envManager;
 
@@ -52,12 +54,14 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 
 	@Inject
 	public LifecycleGodfather(AsynchronicityManager asyncManager, Configs configs, DatabaseManager databaseManager,
-							  UUIDManager uuidManager, TabCompletion tabCompletion, EnvironmentManager envManager,
+							  UUIDManager uuidManager, MuteCache muteCache,
+							  TabCompletion tabCompletion, EnvironmentManager envManager,
 							  LibertyBans api) {
 		this.asyncManager = asyncManager;
 		this.configs = configs;
 		this.databaseManager = databaseManager;
 		this.uuidManager = uuidManager;
+		this.muteCache = muteCache;
 		this.tabCompletion = tabCompletion;
 		this.envManager = envManager;
 
@@ -70,6 +74,7 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 		configs.startup();
 		databaseManager.startup();
 		uuidManager.startup();
+		muteCache.startup();
 		tabCompletion.startup();
 		envManager.startup();
 
@@ -87,6 +92,7 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 		configs.restart();
 		databaseManager.restart();
 		uuidManager.restart();
+		muteCache.restart();
 		tabCompletion.restart();
 		envManager.startup();
 	}
@@ -95,6 +101,7 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 	void shutdown0() {
 		envManager.shutdown();
 		tabCompletion.shutdown();
+		muteCache.shutdown();
 		uuidManager.shutdown();
 		configs.shutdown();
 		databaseManager.shutdown();

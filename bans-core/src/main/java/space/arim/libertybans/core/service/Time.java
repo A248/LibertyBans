@@ -23,6 +23,8 @@ import com.github.benmanes.caffeine.cache.Ticker;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 
 /**
  * Timer which is very similar to {@link Clock}
@@ -55,5 +57,24 @@ public interface Time {
 
 	default Ticker toCaffeineTicker() {
 		return this::arbitraryNanoTime;
+	}
+
+	default Clock toJdkClock() {
+		return new Clock() {
+			@Override
+			public ZoneId getZone() {
+				return ZoneOffset.UTC;
+			}
+
+			@Override
+			public Clock withZone(ZoneId zoneId) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public Instant instant() {
+				return Time.this.currentTimestamp();
+			}
+		};
 	}
 }

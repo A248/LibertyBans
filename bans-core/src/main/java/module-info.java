@@ -43,4 +43,6 @@ module space.arim.libertybans.core {
 	opens space.arim.libertybans.core.importing to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.selector to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.uuid to space.arim.dazzleconf;
+	exports space.arim.libertybans.core.selector.cache;
+	opens space.arim.libertybans.core.selector.cache to space.arim.dazzleconf;
 }

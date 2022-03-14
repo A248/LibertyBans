@@ -28,7 +28,7 @@ import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.selector.InternalSelector;
-import space.arim.libertybans.core.selector.MuteCache;
+import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -82,7 +82,7 @@ public final class IntelligentGuardian implements Guardian {
 		if (command != null && !blockForMuted(command)) {
 			return futuresFactory.completedFuture(null);
 		}
-		return muteCache.getCacheableMute(uuid, address).thenCompose((optMute) -> {
+		return muteCache.getCachedMute(uuid, address).thenCompose((optMute) -> {
 			if (optMute.isEmpty()) {
 				return futuresFactory.completedFuture(null);
 			}
