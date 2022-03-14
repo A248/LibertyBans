@@ -96,36 +96,17 @@ public interface EnforcementConfig {
 		"This list supports subcommands, which will be enforced if the executed command starts with the list entry.",
 		"Additionally, colons in commands, such as\"pluginname:cmd\", cannot be used to bypass this."})
 	@DefaultStrings({
-		"me",
-		"say",
-		"msg",
-		"reply",
-		"r",
-		"whisper",
-                "w",
-		"tell",
-                "t"})
+			"me",
+			"say",
+			"msg",
+			"reply",
+			"r",
+			"whisper",
+			"w",
+			"tell",
+			"t"
+	})
 	Set<String> muteCommands();
-	
-	@ConfKey("sync-events-strategy")
-	@ConfComments({"",
-			"Occasionally, LibertyBans may have to deal with a platform event synchronously",
-			"",
-			"Currently, this happens rarely, and only on Bukkit, with the enforcement of mutes.",
-			"Most of the time, chat events are async. However, if another plugin forces a player",
-			"to chat, the event will happen sync. Also, the command event is run sync.",
-			"",
-			"In these situations, it is possible LibertyBans has no cached mute result and cannot",
-			"query the database quickly enough. The following strategies are available:",
-			"",
-			"* WAIT - wait for the database query to complete. This can block the main thread",
-			"* DENY - deny the event, using the 'misc.sync-event-denial' message",
-			"* ALLOW - allow the event",
-			"",
-			"This situation can be avoided by using a proxy, where there is no \"main thread\".",
-			"Velocity and BungeeCord are therefore not affected by synchronous events."})
-	@DefaultString("ALLOW")
-	SyncEnforcement syncEnforcement();
 
 	@ConfKey("alt-account-expiration")
 	@SubSection

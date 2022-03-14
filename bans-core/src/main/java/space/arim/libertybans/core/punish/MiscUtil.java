@@ -25,7 +25,6 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.database.Vendor;
 import space.arim.libertybans.core.selector.AddressStrictness;
-import space.arim.libertybans.core.selector.SyncEnforcement;
 
 import java.util.List;
 
@@ -94,10 +93,6 @@ public final class MiscUtil {
 	
 	public static RuntimeException unknownAddressStrictness(AddressStrictness strictness) {
 		return unknownEnumEntry(strictness);
-	}
-	
-	public static RuntimeException unknownSyncEnforcement(SyncEnforcement strategy) {
-		return unknownEnumEntry(strategy);
 	}
 	
 	public static RuntimeException unknownVendor(Vendor vendor) {

@@ -79,7 +79,7 @@ public class Revoker implements InternalRevoker {
 
 	@Override
 	public CentralisedFuture<Boolean> undoPunishment(final Punishment punishment) {
-		if (punishment.isExpired()) {
+		if (punishment.isExpired(time.toJdkClock())) {
 			// Already expired
 			return futuresFactory.completedFuture(false);
 		}

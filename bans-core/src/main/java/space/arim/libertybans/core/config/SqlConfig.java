@@ -71,7 +71,7 @@ public interface SqlConfig extends DatabaseSettingsConfig {
 
 		@ConfKey("expiration-time-seconds")
 		@ConfComments({"How long it takes a mute to expire"})
-		@DefaultInteger(60)
+		@DefaultInteger(20)
 		int expirationTimeSeconds();
 
 		@ConfKey("expiration-semantics")
@@ -80,14 +80,15 @@ public interface SqlConfig extends DatabaseSettingsConfig {
 				"",
 				"Set this to EXPIRE_AFTER_WRITE if there is any program or other instance of LibertyBans",
 				"which may modify mutes in the database outside of this instance of LibertyBans.",
-				"Examples: multi-proxy networks running multiple LibertyBans instances,",
-				"setups where LibertyBans is installed on multiple backend servers,",
-				"or using a third-party tool which can delete or add mutes.",
-				"EXPIRE_AFTER_WRITE is the correct semantic in these cases.",
+				"For example, if you are using a third-party tool which can delete or add mutes,",
+				"EXPIRE_AFTER_WRITE is the correct semantic.",
+				"",
+				"If you are using multi-instance synchronization, this option is set automatically",
+				"and you do not need to configure it.",
 				"",
 				"EXPIRE_AFTER_WRITE will expire the cached mute after a fixed time has elapsed",
-				"since the mute was fetched (unlike with EXPIRE_AFTER_ACCESS, the expiration time",
-				"will not refresh each time the mute is used)."})
+				"since the mute was fetched. With EXPIRE_AFTER_ACCESS, the expiration time",
+				"will refresh each time the mute is used."})
 		@DefaultString("EXPIRE_AFTER_ACCESS")
 		ExpirationSemantic expirationSemantic();
 

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2020 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,14 +25,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import space.arim.libertybans.core.config.SqlConfig;
-import space.arim.libertybans.core.env.UUIDAndAddress;
-import space.arim.libertybans.core.service.Time;
-import space.arim.omnibus.util.UUIDUtil;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.env.EnvUserResolver;
+import space.arim.libertybans.core.env.UUIDAndAddress;
+import space.arim.libertybans.core.service.Time;
+import space.arim.omnibus.util.UUIDUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
@@ -79,19 +78,11 @@ public class CachingUUIDManagerTest {
 
 	@BeforeEach
 	public void setup() {
-		{
-			MainConfig mainConfig = mock(MainConfig.class);
-			UUIDResolutionConfig uuidResolution = mock(UUIDResolutionConfig.class);
-			when(configs.getMainConfig()).thenReturn(mainConfig);
-			when(mainConfig.uuidResolution()).thenReturn(uuidResolution);
-			when(uuidResolution.nameValidator()).thenReturn(nameValidator);
-		}
-		SqlConfig sqlConfig = mock(SqlConfig.class);
-		SqlConfig.MuteCaching muteCaching = mock(SqlConfig.MuteCaching.class);
-		when(configs.getSqlConfig()).thenReturn(sqlConfig);
-		when(sqlConfig.muteCaching()).thenReturn(muteCaching);
-		when(muteCaching.expirationSemantic()).thenReturn(SqlConfig.MuteCaching.ExpirationSemantic.EXPIRE_AFTER_WRITE);
-		when(muteCaching.expirationTimeSeconds()).thenReturn(60);
+		MainConfig mainConfig = mock(MainConfig.class);
+		UUIDResolutionConfig uuidResolution = mock(UUIDResolutionConfig.class);
+		when(configs.getMainConfig()).thenReturn(mainConfig);
+		when(mainConfig.uuidResolution()).thenReturn(uuidResolution);
+		when(uuidResolution.nameValidator()).thenReturn(nameValidator);
 
 		when(time.toCaffeineTicker()).thenReturn(Ticker.disabledTicker());
 

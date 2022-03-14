@@ -51,6 +51,7 @@ public class SelectorIT {
 		UUID uuid = UUID.randomUUID();
 		NetworkAddress address = RandomUtil.randomAddress();
 		assertHelper.connectAndAssumeUnbannedUser(uuid, "name", address);
+
 		Punishment punishment = drafter.draftBuilder()
 				.type(PunishmentType.MUTE)
 				.victim(PlayerVictim.of(uuid))
@@ -59,6 +60,10 @@ public class SelectorIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
-		assertEquals(punishment, selector.getApplicableMute(uuid, address).join());
+		assertEquals(
+				punishment,
+				selector.getApplicablePunishment(uuid, address, PunishmentType.MUTE)
+						.toCompletableFuture().join().orElse(null)
+		);
 	}
 }

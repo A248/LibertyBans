@@ -22,15 +22,11 @@ package space.arim.libertybans.core.punish;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.selector.InternalSelector;
-import space.arim.libertybans.core.selector.MuteCache;
+import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.libertybans.core.uuid.UUIDManager;
-import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -43,20 +39,15 @@ public final class IntelligentGuardian implements Guardian {
 	private final Configs configs;
 	private final FactoryOfTheFuture futuresFactory;
 	private final InternalSelector selector;
-	private final InternalFormatter formatter;
 	private final UUIDManager uuidManager;
 	private final MuteCache muteCache;
 
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-
 	@Inject
 	public IntelligentGuardian(Configs configs, FactoryOfTheFuture futuresFactory,
-							   InternalSelector selector, InternalFormatter formatter,
-							   UUIDManager uuidManager, MuteCache muteCache) {
+							   InternalSelector selector, UUIDManager uuidManager, MuteCache muteCache) {
 		this.configs = configs;
 		this.futuresFactory = futuresFactory;
 		this.selector = selector;
-		this.formatter = formatter;
 		this.uuidManager = uuidManager;
 		this.muteCache = muteCache;
 	}
@@ -65,16 +56,14 @@ public final class IntelligentGuardian implements Guardian {
 	public CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address) {
 		uuidManager.addCache(uuid, name);
 		return selector.executeAndCheckConnection(uuid, name, address)
-				.exceptionally((ex) -> {
-					logger.error("Unable to execute incoming connection", ex);
-					return null;
+				.thenCompose((component) -> {
+					// Contact the mute cache, but only if needed
+					if (component != null) {
+						return futuresFactory.completedFuture(component);
+					}
+					return muteCache.cacheOnLogin(uuid, address).thenApply((ignore) -> null);
 				})
-				/*
-				 * Using copy() ensures that the previous future is not affected by a timeout,
-				 * and therefore prevents exceptions from being swallowed.
-				 */
-				.copy()
-				.orTimeout(10, TimeUnit.SECONDS);
+				.orTimeout(12, TimeUnit.SECONDS);
 	}
 
 	@Override
@@ -82,12 +71,7 @@ public final class IntelligentGuardian implements Guardian {
 		if (command != null && !blockForMuted(command)) {
 			return futuresFactory.completedFuture(null);
 		}
-		return muteCache.getCacheableMute(uuid, address).thenCompose((optMute) -> {
-			if (optMute.isEmpty()) {
-				return futuresFactory.completedFuture(null);
-			}
-			return formatter.getPunishmentMessage(optMute.get());
-		});
+		return muteCache.getCachedMuteMessage(uuid, address).thenApply((opt) -> opt.orElse(null));
 	}
 
 	private boolean blockForMuted(String command) {

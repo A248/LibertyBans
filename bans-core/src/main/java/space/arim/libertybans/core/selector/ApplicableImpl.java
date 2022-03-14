@@ -31,6 +31,7 @@ import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.database.sql.EndTimeCondition;
+import space.arim.libertybans.core.database.sql.EndTimeOrdering;
 import space.arim.libertybans.core.database.sql.TableForType;
 import space.arim.libertybans.core.database.sql.VictimCondition;
 import space.arim.libertybans.core.punish.MiscUtil;
@@ -85,6 +86,7 @@ public class ApplicableImpl {
 					.from(simpleView.table())
 					.where(new VictimCondition(simpleView).simplyMatches(DSL.val(uuid), DSL.val(address)))
 					.and(new EndTimeCondition(simpleView).isNotExpired(currentTime))
+					.orderBy(new EndTimeOrdering(simpleView).expiresLeastSoon())
 					.limit(1)
 					.fetchOne(creator.punishmentMapper(type));
 		case NORMAL:
@@ -97,6 +99,7 @@ public class ApplicableImpl {
 					).from(applView.table())
 					.where(applView.uuid().eq(uuid))
 					.and(new EndTimeCondition(applView).isNotExpired(currentTime))
+					.orderBy(new EndTimeOrdering(applView).expiresLeastSoon())
 					.limit(1)
 					.fetchOne(creator.punishmentMapper(type));
 		case STRICT:
@@ -111,18 +114,12 @@ public class ApplicableImpl {
 					.on(applView.uuid().eq(STRICT_LINKS.UUID1))
 					.where(STRICT_LINKS.UUID2.eq(uuid))
 					.and(new EndTimeCondition(applView).isNotExpired(currentTime))
+					.orderBy(new EndTimeOrdering(applView).expiresLeastSoon())
 					.limit(1)
 					.fetchOne(creator.punishmentMapper(type));
 		default:
 			throw MiscUtil.unknownAddressStrictness(strictness);
 		}
-	}
-
-	private CentralisedFuture<Punishment> getApplicablePunishment0(UUID uuid, NetworkAddress address, PunishmentType type) {
-		InternalDatabase database = dbProvider.get();
-		return database.query(SQLFunction.readOnly((context) -> {
-			return selectApplicable(context, uuid, address, type, time.currentTimestamp());
-		}));
 	}
 
 	CentralisedFuture<Punishment> getApplicablePunishment(UUID uuid, NetworkAddress address, PunishmentType type) {
@@ -131,11 +128,9 @@ public class ApplicableImpl {
 			// Kicks are never active
 			return futuresFactory.completedFuture(null);
 		}
-		return getApplicablePunishment0(uuid, address, type);
-	}
-	
-	CentralisedFuture<Punishment> getApplicableMute(UUID uuid, NetworkAddress address) {
-		return getApplicablePunishment0(uuid, address, PunishmentType.MUTE);
+		return dbProvider.get().query(SQLFunction.readOnly((context) -> {
+			return selectApplicable(context, uuid, address, type, time.currentTimestamp());
+		}));
 	}
 
 }

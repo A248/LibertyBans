@@ -30,6 +30,7 @@ import jakarta.inject.Singleton;
 
 import net.kyori.adventure.text.Component;
 import space.arim.libertybans.api.select.SelectionOrder;
+import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
@@ -121,12 +122,12 @@ public class SelectorImpl implements InternalSelector {
 	@Override
 	public ReactionStage<Optional<Punishment>> getCachedMute(UUID uuid, NetworkAddress address) {
 		Objects.requireNonNull(uuid, "uuid");
-		return muteCache.get().getCacheableMute(uuid, address);
+		return muteCache.get().getCachedMute(uuid, address);
 	}
 
 	@Override
 	public CentralisedFuture<Punishment> getApplicableMute(UUID uuid, NetworkAddress address) {
-		return applicableImpl.getApplicableMute(uuid, address);
+		return applicableImpl.getApplicablePunishment(uuid, address, PunishmentType.MUTE);
 	}
 
 }

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,20 +17,22 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.it.jpmscompat;
+package space.arim.libertybans.env.spigot;
 
-import space.arim.libertybans.core.selector.cache.MuteCache;
-import space.arim.libertybans.core.selector.cache.OnDemandMuteCache;
-import space.arim.libertybans.core.importing.PlatformImportSource;
+import org.junit.jupiter.api.Test;
+import space.arim.api.util.testing.InjectableConstructor;
+import space.arim.libertybans.core.env.ParallelisedListener;
+import space.arim.libertybans.core.env.PlatformListener;
 
-public class JpmsBindModule {
+public class SpigotEnvTest {
 
-	public MuteCache muteCache(OnDemandMuteCache muteCache) {
-		return muteCache;
+	@Test
+	public void testConstructor() {
+		new InjectableConstructor(SpigotEnv.class)
+				.verifyParametersContainSubclassesOf(PlatformListener.class, (clazz) -> {
+					// Exclude CommandHandler since it is constructed directly
+					// Exclude ParallelisedListener, which would never be injected
+					return !clazz.equals(CommandHandler.class) && !clazz.equals(ParallelisedListener.class);
+				});
 	}
-
-	public PlatformImportSource platformImportSource() {
-		throw new UnsupportedOperationException("PlatformImportSource not available");
-	}
-
 }

@@ -29,7 +29,6 @@ import space.arim.api.util.web.RemoteApiResult;
 import space.arim.api.util.web.RemoteNameUUIDApi;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.config.SqlConfig;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.env.UUIDAndAddress;
@@ -75,24 +74,15 @@ public final class CachingUUIDManager implements UUIDManager {
 
 	@Override
 	public void startup() {
-		SqlConfig.MuteCaching muteCaching = configs.getSqlConfig().muteCaching();
-		Duration expiration = Duration.ofSeconds(muteCaching.expirationTimeSeconds());
-		var semantic = muteCaching.expirationSemantic();
-		nameToUuidCache = createCache(expiration, semantic);
-		uuidToNameCache = createCache(expiration, semantic);
+		nameToUuidCache = Caffeine.newBuilder()
+				.ticker(time.toCaffeineTicker())
+				.expireAfterAccess(Duration.ofMinutes(15L))
+				.build();
+		uuidToNameCache = Caffeine.newBuilder()
+				.ticker(time.toCaffeineTicker())
+				.expireAfterAccess(Duration.ofMinutes(15L))
+				.build();
 		nameValidator = uuidResolution().nameValidator();
-	}
-
-	private <K, V> Cache<@NonNull K, @NonNull V> createCache(Duration expiration,
-															 SqlConfig.MuteCaching.ExpirationSemantic semantic) {
-		switch (semantic) {
-		case EXPIRE_AFTER_ACCESS:
-			return Caffeine.newBuilder().ticker(time.toCaffeineTicker()).expireAfterAccess(expiration).build();
-		case EXPIRE_AFTER_WRITE:
-			return Caffeine.newBuilder().ticker(time.toCaffeineTicker()).expireAfterWrite(expiration).build();
-		default:
-			throw new IllegalStateException("Unknown expiration semantic " + semantic);
-		}
 	}
 
 	@Override
