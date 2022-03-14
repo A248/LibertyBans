@@ -19,9 +19,15 @@
 
 package space.arim.libertybans.core.it.jpmscompat;
 
+import space.arim.libertybans.core.selector.cache.MuteCache;
+import space.arim.libertybans.core.selector.cache.OnDemandMuteCache;
 import space.arim.libertybans.core.importing.PlatformImportSource;
 
 public class JpmsBindModule {
+
+	public MuteCache muteCache(OnDemandMuteCache muteCache) {
+		return muteCache;
+	}
 
 	public PlatformImportSource platformImportSource() {
 		throw new UnsupportedOperationException("PlatformImportSource not available");

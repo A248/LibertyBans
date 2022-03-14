@@ -33,6 +33,7 @@ module space.arim.libertybans.core {
 	exports space.arim.libertybans.core.punish.sync to space.arim.injector;
 	exports space.arim.libertybans.core.scope;
 	exports space.arim.libertybans.core.selector;
+	exports space.arim.libertybans.core.selector.cache;
 	exports space.arim.libertybans.core.service;
 	exports space.arim.libertybans.core.uuid
 			to space.arim.dazzleconf, space.arim.injector;
@@ -43,6 +44,4 @@ module space.arim.libertybans.core {
 	opens space.arim.libertybans.core.importing to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.selector to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.uuid to space.arim.dazzleconf;
-	exports space.arim.libertybans.core.selector.cache;
-	opens space.arim.libertybans.core.selector.cache to space.arim.dazzleconf;
 }
