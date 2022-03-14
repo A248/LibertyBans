@@ -28,7 +28,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.selector.EnforcementConfig;
 import space.arim.libertybans.core.selector.InternalSelector;
@@ -53,27 +52,22 @@ import static org.mockito.Mockito.when;
 public class IntelligentGuardianTest {
 
 	private final FactoryOfTheFuture futuresFactory = new IndifferentFactoryOfTheFuture();
-	private final InternalSelector selector;
-	private final InternalFormatter formatter;
 	private final MuteCache muteCache;
 
 	private UUID uuid;
 	private NetworkAddress address;
 	private Guardian guardian;
 
-	public IntelligentGuardianTest(@Mock InternalSelector selector, @Mock InternalFormatter formatter,
-								   @Mock MuteCache muteCache) {
-		this.selector = selector;
-		this.formatter = formatter;
+	public IntelligentGuardianTest(@Mock MuteCache muteCache) {
 		this.muteCache = muteCache;
 	}
 
 	@BeforeEach
-	public void setup(@Mock Configs configs, @Mock UUIDManager uuidManager) {
+	public void setup(@Mock Configs configs, @Mock InternalSelector selector, @Mock UUIDManager uuidManager) {
 		uuid = UUID.randomUUID();
 		address = RandomUtil.randomAddress();
 
-		guardian = new IntelligentGuardian(configs, futuresFactory, selector, formatter, uuidManager, muteCache);
+		guardian = new IntelligentGuardian(configs, futuresFactory, selector, uuidManager, muteCache);
 
 		MainConfig mainConfig = mock(MainConfig.class);
 		EnforcementConfig enforcementConfig = mock(EnforcementConfig.class);
@@ -88,7 +82,7 @@ public class IntelligentGuardianTest {
 
 	@Test
 	public void checkChatNotMuted() {
-		when(muteCache.getCachedMute(uuid, address)).thenReturn(completedFuture(Optional.empty()));
+		when(muteCache.getCachedMuteMessage(uuid, address)).thenReturn(completedFuture(Optional.empty()));
 
 		assertNull(guardian.checkChat(uuid, address, null).join());
 		assertNull(guardian.checkChat(uuid, address, "help").join());
@@ -98,8 +92,7 @@ public class IntelligentGuardianTest {
 	@Test
 	public void checkChatIsMuted(@Mock Punishment punishment) {
 		Component denyMessage = Component.text("You are forbidden to chat");
-		when(muteCache.getCachedMute(uuid, address)).thenReturn(completedFuture(Optional.of(punishment)));
-		when(formatter.getPunishmentMessage(punishment)).thenReturn(completedFuture(denyMessage));
+		when(muteCache.getCachedMuteMessage(uuid, address)).thenReturn(completedFuture(Optional.of(denyMessage)));
 
 		assertEquals(denyMessage, guardian.checkChat(uuid, address, null).join());
 		assertNull(guardian.checkChat(uuid, address, "help").join(),

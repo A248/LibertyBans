@@ -1,34 +1,37 @@
-/* 
- * LibertyBans-env-spigot
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-env-spigot is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-env-spigot is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-env-spigot. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.env.spigot;
 
 import jakarta.inject.Singleton;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import space.arim.api.env.AudienceRepresenter;
+import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.bukkit.BukkitAudienceRepresenter;
 import space.arim.api.env.bukkit.BukkitPlatformHandle;
-import space.arim.api.env.PlatformHandle;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.importing.PlatformImportSource;
+import space.arim.libertybans.core.selector.cache.AlwaysAvailableMuteCache;
+import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.morepaperlib.MorePaperLib;
 import space.arim.morepaperlib.adventure.MorePaperLibAdventure;
 
@@ -37,6 +40,10 @@ public class SpigotBindModule {
 	@Singleton
 	public PlatformHandle handle(JavaPlugin plugin) {
 		return BukkitPlatformHandle.create(plugin);
+	}
+
+	public MuteCache muteCache(AlwaysAvailableMuteCache muteCache) {
+		return muteCache;
 	}
 
 	public AudienceRepresenter<CommandSender> audienceRepresenter() {

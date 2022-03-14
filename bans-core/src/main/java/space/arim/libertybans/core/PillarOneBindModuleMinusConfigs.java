@@ -34,8 +34,6 @@ import space.arim.libertybans.core.scope.InternalScopeManager;
 import space.arim.libertybans.core.scope.Scoper;
 import space.arim.libertybans.core.selector.InternalSelector;
 import space.arim.libertybans.core.selector.SelectorImpl;
-import space.arim.libertybans.core.selector.cache.MuteCache;
-import space.arim.libertybans.core.selector.cache.OnDemandMuteCache;
 
 public abstract class PillarOneBindModuleMinusConfigs {
 
@@ -61,10 +59,6 @@ public abstract class PillarOneBindModuleMinusConfigs {
 
 	public Guardian guardian(IntelligentGuardian guardian) {
 		return guardian;
-	}
-
-	public MuteCache muteCache(OnDemandMuteCache muteCache) {
-		return muteCache;
 	}
 
 	public InternalSelector selector(SelectorImpl selector) {

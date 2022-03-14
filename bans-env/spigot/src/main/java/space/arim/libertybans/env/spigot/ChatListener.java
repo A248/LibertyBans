@@ -1,134 +1,111 @@
-/* 
- * LibertyBans-env-spigot
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-env-spigot is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-env-spigot is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-env-spigot. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.env.spigot;
 
-import java.net.InetAddress;
+package space.arim.libertybans.env.spigot;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
-import space.arim.api.env.AudienceRepresenter;
-import space.arim.libertybans.core.punish.Guardian;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.punish.MiscUtil;
-import space.arim.libertybans.core.selector.SyncEnforcement;
-import space.arim.libertybans.core.service.FuturePoster;
-
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import space.arim.api.env.AudienceRepresenter;
+import space.arim.libertybans.core.env.PlatformListener;
+import space.arim.libertybans.core.punish.Guardian;
+import space.arim.omnibus.util.ThisClass;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+
+import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class ChatListener extends SpigotParallelisedListener<PlayerEvent, Component> {
+public final class ChatListener implements PlatformListener, Listener {
 
-	private final FuturePoster futurePoster;
+	private final JavaPlugin plugin;
 	private final Guardian guardian;
-	private final Configs configs;
 	private final AudienceRepresenter<CommandSender> audienceRepresenter;
 
+	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+
 	@Inject
-	public ChatListener(JavaPlugin plugin, FuturePoster futurePoster, Guardian guardian,
-			Configs configs, AudienceRepresenter<CommandSender> audienceRepresenter) {
-		super(plugin);
-		this.futurePoster = futurePoster;
+	public ChatListener(JavaPlugin plugin, Guardian guardian, AudienceRepresenter<CommandSender> audienceRepresenter) {
+		this.plugin = plugin;
 		this.guardian = guardian;
-		this.configs = configs;
 		this.audienceRepresenter = audienceRepresenter;
 	}
 
-	@EventHandler(priority = EventPriority.LOW)
-	public void onChatLow(AsyncPlayerChatEvent event) {
-		combinedBegin(event, null);
+	@Override
+	public void register() {
+		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
 
-	@EventHandler(priority = EventPriority.LOW)
-	public void onCommandLow(PlayerCommandPreprocessEvent event) {
+	@Override
+	public void unregister() {
+		HandlerList.unregisterAll(this);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH)
+	public void onChat(AsyncPlayerChatEvent event) {
+		combinedChatEvent(event, null);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH)
+	public void onCommand(PlayerCommandPreprocessEvent event) {
 		String command = event.getMessage();
-		combinedBegin(event, (command.charAt(0) == '/') ? command.substring(1) : command);
+		combinedChatEvent(event, (command.charAt(0) == '/') ? command.substring(1) : command);
 	}
 
-	private <E extends PlayerEvent & Cancellable> void combinedBegin(E event, String command) {
+	private <E extends PlayerEvent & Cancellable> void combinedChatEvent(E event, String command) {
 		if (event.isCancelled()) {
-			debugPrematurelyDenied(event);
 			return;
 		}
 		Player player = event.getPlayer();
-		InetAddress address = player.getAddress().getAddress();
-		begin(event, guardian.checkChat(player.getUniqueId(), address, command));
-	}
-	
-	@Override
-	protected boolean isAllowed(PlayerEvent event) {
-		return !((Cancellable) event).isCancelled();
-	}
-	
-	@EventHandler(priority = EventPriority.HIGH)
-	public void onChatHigh(AsyncPlayerChatEvent event) {
-		combinedWithdraw(event);
-	}
-	
-	@EventHandler(priority = EventPriority.HIGH)
-	public void onCommandHigh(PlayerCommandPreprocessEvent event) {
-		combinedWithdraw(event);
-	}
-	
-	private <E extends PlayerEvent & Cancellable> void combinedWithdraw(E event) {
-		CentralisedFuture<Component> futureMessage = withdrawRaw(event);
-		if (futureMessage == null) {
-			absentFutureHandler(event);
-			return;
-		}
+		CentralisedFuture<Component> futureMessage = guardian.checkChat(
+				player.getUniqueId(), player.getAddress().getAddress(), command
+		);
 		Component message;
-		if (event.isAsynchronous() || futureMessage.isDone()) {
+		if (futureMessage.isDone()) {
 			message = futureMessage.join();
+
+		} else if (event.isAsynchronous()) {
+			logger.warn(
+					"Cached mute unavailable for asynchronous chat/command event. Perhaps {} logged off?",
+					player.getName()
+			);
+			message = futureMessage.orTimeout(4L, TimeUnit.SECONDS).join();
 		} else {
-			SyncEnforcement strategy = configs.getMainConfig().enforcement().syncEnforcement();
-			switch (strategy) {
-			case WAIT:
-				message = futureMessage.join();
-				break;
-			case ALLOW:
-				futurePoster.postFuture(futureMessage);
-				return;
-			case DENY:
-				futurePoster.postFuture(futureMessage);
-				message = configs.getMessagesConfig().misc().syncDenialMessage();
-				break;
-			default:
-				throw MiscUtil.unknownSyncEnforcement(strategy);
-			}
+			throw new IllegalStateException("Cached mute unavailable for synchronous chat/command event");
 		}
 		if (message == null) {
-			debugResultPermitted(event);
 			return;
 		}
 		event.setCancelled(true);
-		audienceRepresenter.toAudience(event.getPlayer()).sendMessage(message);
+		audienceRepresenter.toAudience(player).sendMessage(message);
 	}
-	
+
 }

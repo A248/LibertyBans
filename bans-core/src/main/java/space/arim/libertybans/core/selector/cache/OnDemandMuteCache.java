@@ -83,6 +83,7 @@ public final class OnDemandMuteCache extends BaseMuteCache {
 				.ticker(time.toCaffeineTicker())
 				.buildAsync((key, executor) -> {
 					return queryPunishment(key).exceptionally((ex) -> {
+						// If we don't catch these exceptions, Caffeine will
 						LoggerFactory.getLogger(OnDemandMuteCache.class)
 								.warn("Exception while computing cached mute", ex);
 						return Optional.empty();

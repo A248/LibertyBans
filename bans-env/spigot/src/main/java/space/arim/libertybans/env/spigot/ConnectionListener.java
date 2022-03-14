@@ -23,9 +23,12 @@ import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 import org.bukkit.plugin.java.JavaPlugin;
+import space.arim.libertybans.core.env.ParallelisedListener;
 import space.arim.libertybans.core.punish.Guardian;
 import space.arim.morepaperlib.adventure.MorePaperLibAdventure;
 
@@ -33,16 +36,27 @@ import java.net.InetAddress;
 import java.util.UUID;
 
 @Singleton
-public class ConnectionListener extends SpigotParallelisedListener<AsyncPlayerPreLoginEvent, Component> {
+public class ConnectionListener extends ParallelisedListener<AsyncPlayerPreLoginEvent, Component> implements Listener {
 
+	private final JavaPlugin plugin;
 	private final Guardian guardian;
 	private final MorePaperLibAdventure morePaperLibAdventure;
 
 	@Inject
 	public ConnectionListener(JavaPlugin plugin, Guardian guardian, MorePaperLibAdventure morePaperLibAdventure) {
-		super(plugin);
+		this.plugin = plugin;
 		this.guardian = guardian;
 		this.morePaperLibAdventure = morePaperLibAdventure;
+	}
+
+	@Override
+	public void register() {
+		plugin.getServer().getPluginManager().registerEvents(this, plugin);
+	}
+
+	@Override
+	public void unregister() {
+		HandlerList.unregisterAll(this);
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
@@ -56,7 +70,7 @@ public class ConnectionListener extends SpigotParallelisedListener<AsyncPlayerPr
 		InetAddress address = event.getAddress();
 		begin(event, guardian.executeAndCheckConnection(uuid, name, address));
 	}
-	
+
 	@Override
 	protected boolean isAllowed(AsyncPlayerPreLoginEvent event) {
 		return event.getLoginResult() == Result.ALLOWED;
@@ -71,5 +85,5 @@ public class ConnectionListener extends SpigotParallelisedListener<AsyncPlayerPr
 		}
 		morePaperLibAdventure.disallowPreLoginEvent(event, Result.KICK_BANNED, message);
 	}
-	
+
 }

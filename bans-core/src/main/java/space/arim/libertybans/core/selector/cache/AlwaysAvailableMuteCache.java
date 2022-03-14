@@ -23,7 +23,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.LoggerFactory;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.select.PunishmentSelector;
@@ -82,10 +81,6 @@ public final class AlwaysAvailableMuteCache extends BaseMuteCache {
 				return futuresFactory.completedFuture(null);
 			}
 			return formatMessage(optMute.get());
-		}).exceptionally((ex) -> {
-			LoggerFactory.getLogger(AlwaysAvailableMuteCache.class)
-					.warn("Exception while computing cached mute or its message", ex);
-			return null;
 		});
 	}
 
@@ -133,7 +128,7 @@ public final class AlwaysAvailableMuteCache extends BaseMuteCache {
 			return new Entry(currentValue, lastUpdated, nextValue);
 		});
 		if (cacheEntry == null) {
-			// The player is offline. This can only happen through an API request.
+			// The player is offline. This should only happen through an API request.
 			// In that case, we query the database and skip caching
 			return queryPunishmentAndMessage(cacheKey).thenApply(Optional::ofNullable);
 		}
