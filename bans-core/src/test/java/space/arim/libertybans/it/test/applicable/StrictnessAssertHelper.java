@@ -21,9 +21,9 @@ package space.arim.libertybans.it.test.applicable;
 
 import jakarta.inject.Inject;
 import net.kyori.adventure.text.Component;
-import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.select.PunishmentSelector;
@@ -68,10 +68,10 @@ public class StrictnessAssertHelper {
 		assumeTrue(banMessage == null, "User " + uuid + "/" + name + " is not banned yet");
 	}
 
-	void banAddress(NetworkAddress address, String reason) {
+	void banVictim(Victim victim, String reason) {
 		Punishment punishment = drafter.draftBuilder()
 				.type(PunishmentType.BAN)
-				.victim(AddressVictim.of(address))
+				.victim(victim)
 				.reason(reason)
 				.build()
 				.enactPunishment().toCompletableFuture().join().orElse(null);
@@ -80,8 +80,10 @@ public class StrictnessAssertHelper {
 	}
 
 	private Punishment getBan(UUID uuid, NetworkAddress address) {
-		return selector.getApplicablePunishment(uuid, address, PunishmentType.BAN)
-				.toCompletableFuture().join().orElse(null);
+		return selector
+				.getApplicablePunishment(uuid, address, PunishmentType.BAN)
+				.toCompletableFuture()
+				.join().orElse(null);
 	}
 
 	void assertBanned(UUID uuid, NetworkAddress address, String assertion) {
