@@ -25,6 +25,7 @@ import jakarta.inject.Provider;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Table;
+import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.core.config.Configs;
@@ -35,6 +36,7 @@ import space.arim.libertybans.core.database.DatabaseSettings;
 import space.arim.libertybans.core.database.StandardDatabase;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.jooq.BatchTransfer;
+import space.arim.libertybans.core.database.sql.SequenceValue;
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
@@ -44,8 +46,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import static space.arim.libertybans.core.schema.Sequences.LIBERTYBANS_PUNISHMENT_IDS;
+import static space.arim.libertybans.core.schema.Sequences.LIBERTYBANS_VICTIM_IDS;
 import static space.arim.libertybans.core.schema.tables.Messages.MESSAGES;
+import static space.arim.libertybans.core.schema.tables.Punishments.PUNISHMENTS;
 import static space.arim.libertybans.core.schema.tables.Revision.REVISION;
+import static space.arim.libertybans.core.schema.tables.Victims.VICTIMS;
 
 public final class SelfImportProcess {
 
@@ -83,7 +89,9 @@ public final class SelfImportProcess {
 					return;
 				}
 				database.execute((source) -> {
-					new SelfImport(source, target, importConfig.retrievalSize()).runTransfer();
+					var selfImport = new SelfImport(source, target, importConfig.retrievalSize());
+					selfImport.runTransfer();
+					selfImport.updateSequences();
 				}).join();
 			}
 			logger.info("Completed self-import process");
@@ -149,6 +157,21 @@ public final class SelfImportProcess {
 						return batch.bind(bindValues);
 					}
 			).transferData(maxBatchSize);
+		}
+
+		private void updateSequences() {
+			// Make sure to select MAX + 1 of sequence value
+			long nextPunishmentId = target
+					.select(DSL.max(PUNISHMENTS.ID).plus(1))
+					.from(PUNISHMENTS)
+					.fetchSingle().value1();
+			new SequenceValue<>(LIBERTYBANS_PUNISHMENT_IDS).setValue(target, nextPunishmentId);
+
+			int nextVictimId = target
+					.select(DSL.max(VICTIMS.ID).plus(1))
+					.from(VICTIMS)
+					.fetchSingle().value1();
+			new SequenceValue<>(LIBERTYBANS_VICTIM_IDS).setValue(target, nextVictimId);
 		}
 	}
 }

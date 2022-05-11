@@ -32,6 +32,8 @@ import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.punish.EnforcementOptions;
+import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.importing.SelfImportProcess;
 import space.arim.libertybans.core.punish.PunishmentCreator;
@@ -45,7 +47,6 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -104,7 +105,7 @@ public class SelfImportIT {
 	}
 
 	@TestTemplate
-	public void blueTree242(PunishmentCreator creator) throws IOException, SQLException {
+	public void blueTree242(PunishmentCreator creator) throws IOException {
 		Path folder = copyImportData("bluetree242");
 
 		assertDoesNotThrow(selfImportProcess.transferAllData(folder)::join);
@@ -172,6 +173,40 @@ public class SelfImportIT {
 							.where(SIMPLE_HISTORY.ID.eq(135L))
 							.fetchSingle(creator.punishmentMapper())
 			);
+		}).join();
+	}
+
+	@TestTemplate
+	public void blueTree242sequences(PunishmentDrafter drafter) throws IOException {
+		Path folder = copyImportData("bluetree242");
+
+		selfImportProcess.transferAllData(folder).join();
+
+		queryExecutor.get().execute((context) -> {
+			var banOfExistingPlayer = drafter.draftBuilder()
+					.type(PunishmentType.BAN)
+					.victim(PlayerVictim.of(UUID.fromString("47df0fc2-3213-3401-af68-58cafb0e99f5")))
+					.reason("Banning an existing player to make sure punishment sequence is available")
+					.build();
+			var banOfNewPlayer = drafter.draftBuilder()
+					.type(PunishmentType.BAN)
+					.victim(PlayerVictim.of(UUID.randomUUID()))
+					.reason("Banning a new player to make sure victim sequence is available")
+					.build();
+
+			EnforcementOptions noEnforcement = banOfExistingPlayer
+					.enforcementOptionsBuilder()
+					.enforcement(EnforcementOptions.Enforcement.NONE)
+					.broadcasting(EnforcementOptions.Broadcasting.NONE)
+					.build();
+			banOfExistingPlayer
+					.enactPunishment(noEnforcement)
+					.toCompletableFuture().join()
+					.orElseThrow();
+			banOfNewPlayer
+					.enactPunishment(noEnforcement)
+					.toCompletableFuture().join()
+					.orElseThrow();
 		}).join();
 	}
 

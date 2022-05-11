@@ -37,10 +37,18 @@ public final class SequenceValue<R extends Number> {
 		this.sequence = Objects.requireNonNull(sequence, "sequence");
 	}
 
+	private Table<?> emulationTable() {
+		return DSL.table(sequence.getName());
+	}
+
+	private Field<R> emulationTableValueField() {
+		return DSL.field("value", sequence.getDataType());
+	}
+
 	public Field<R> nextValue(DSLContext context) {
 		if (context.family() == SQLDialect.MYSQL) {
-			Table<?> emulationTable = DSL.table(sequence.getName());
-			Field<R> valueField = DSL.field("value", sequence.getDataType());
+			Table<?> emulationTable = emulationTable();
+			Field<R> valueField = emulationTableValueField();
 
 			R sequenceValue = context
 					.select(valueField)
@@ -67,6 +75,35 @@ public final class SequenceValue<R extends Number> {
 			return DSL.val(lastValueForMySQL, sequence.getDataType());
 		} else {
 			return sequence.currval();
+		}
+	}
+
+	public void setValue(DSLContext context, R value) {
+		switch (context.family()) {
+		case MYSQL:
+			context
+					.update(emulationTable())
+					.set(emulationTableValueField(), value)
+					.execute();
+			break;
+		case HSQLDB:
+			context
+					.alterSequence(sequence)
+					.restartWith(value)
+					.execute();
+			break;
+		case MARIADB:
+			context
+					.query("SELECT SETVAL(" + sequence.getName() + ", " + value + ")")
+					.execute();
+			break;
+		case POSTGRES:
+			context
+					.query("SELECT SETVAL('" + sequence.getName() + "', " + value + ")")
+					.execute();
+			break;
+		default:
+			throw new UnsupportedOperationException("Not supported: " + context.family());
 		}
 	}
 }
