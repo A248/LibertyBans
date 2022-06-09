@@ -31,7 +31,9 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.util.UUID;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Singleton
 public final class IntelligentGuardian implements Guardian {
@@ -63,7 +65,18 @@ public final class IntelligentGuardian implements Guardian {
 					}
 					return muteCache.cacheOnLogin(uuid, address).thenApply((ignore) -> null);
 				})
-				.orTimeout(12, TimeUnit.SECONDS);
+				.orTimeout(12, TimeUnit.SECONDS)
+				.exceptionally((ex) -> {
+					if (ex instanceof TimeoutException) {
+						throw new IllegalStateException(
+								"Database timeout while attempting to execute incoming login. " +
+										"Your database likely took too long to respond.",
+								ex);
+					} else if (ex instanceof CompletionException) {
+						throw (CompletionException) ex;
+					}
+					throw new CompletionException(ex);
+				});
 	}
 
 	@Override
