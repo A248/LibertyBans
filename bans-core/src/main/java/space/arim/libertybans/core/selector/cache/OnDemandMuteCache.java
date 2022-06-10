@@ -92,6 +92,9 @@ public final class OnDemandMuteCache extends BaseMuteCache {
 	}
 
 	@Override
+	void uninstallCache() {}
+
+	@Override
 	public CentralisedFuture<Optional<Punishment>> getCachedMute(UUID uuid, NetworkAddress address) {
 		return cacheRequest(new MuteCacheKey(uuid, address));
 	}

@@ -29,14 +29,20 @@ import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.SqlConfig;
+import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.DelayCalculators;
+import space.arim.omnibus.util.concurrent.EnhancedExecutor;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
+import space.arim.omnibus.util.concurrent.ScheduledTask;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -52,23 +58,39 @@ import java.util.function.Predicate;
 public final class AlwaysAvailableMuteCache extends BaseMuteCache {
 
 	private final FactoryOfTheFuture futuresFactory;
+	private final EnhancedExecutor enhancedExecutor;
+	private final EnvUserResolver envUserResolver;
 	private final InternalFormatter formatter;
 	private final Time time;
 
 	private volatile Cache cache;
 
+	static final long GRACE_PERIOD_NANOS = TimeUnit.MINUTES.toNanos(4);
+	static final Duration PURGE_TASK_INTERVAL = Duration.ofMinutes(3L);
+
 	@Inject
 	public AlwaysAvailableMuteCache(Configs configs, FactoryOfTheFuture futuresFactory,
-									PunishmentSelector selector, InternalFormatter formatter, Time time) {
+									PunishmentSelector selector, EnhancedExecutor enhancedExecutor,
+									EnvUserResolver envUserResolver, InternalFormatter formatter, Time time) {
 		super(configs, selector);
 		this.futuresFactory = futuresFactory;
+		this.enhancedExecutor = enhancedExecutor;
+		this.envUserResolver = envUserResolver;
 		this.formatter = formatter;
 		this.time = time;
 	}
 
 	@Override
 	void installCache(Duration expirationTime, SqlConfig.MuteCaching.ExpirationSemantic expirationSemantic) {
-		cache = new Cache(expirationTime);
+		ConcurrentHashMap<MuteCacheKey, Entry> map = new ConcurrentHashMap<>();
+		Cache cache = new Cache(map, expirationTime);
+		cache.startPurgeTask();
+		this.cache = cache;
+	}
+
+	@Override
+	void uninstallCache() {
+		cache.stopPurgeTask();
 	}
 
 	private long nanoTime() {
@@ -142,29 +164,39 @@ public final class AlwaysAvailableMuteCache extends BaseMuteCache {
 
 	@Override
 	public CentralisedFuture<?> cacheOnLogin(UUID uuid, NetworkAddress address) {
-		MuteCacheKey key = new MuteCacheKey(uuid, address);
-		return queryPunishmentAndMessage(key).thenAccept((value) -> {
-			// Add to cache
-			Entry previousEntry = cache.map.put(key, new Entry(value, nanoTime(), null));
-			// Sanity check
-			if (previousEntry != null) {
-				// Very bad if this is happening
-				Duration updatedAgo = Duration.ofNanos(nanoTime() - previousEntry.lastUpdated);
-				throw new IllegalStateException(
-						"Found an existing mute cache entry for player " + uuid + ". " +
-								"Maybe the player is already logged in? Last updated " + updatedAgo);
+		final long currentTime = nanoTime();
+		// There might be an existing entry if the player rejoins before periodic invalidation
+		Entry entry = cache.map.compute(new MuteCacheKey(uuid, address), (key, existingEntry) -> {
+			if (existingEntry == null) {
+				// Most common
+				return new Entry(null, currentTime, queryPunishmentAndMessage(key));
 			}
+			// Use the existing entry; refresh it if necessary
+			MuteAndMessage currentValue = existingEntry.currentValue;
+			CentralisedFuture<MuteAndMessage> nextValue = existingEntry.nextValue;
+			// If the next value is ready, replace the current value with it
+			if (nextValue != null && nextValue.isDone()) {
+				currentValue = nextValue.join();
+				nextValue = null;
+			}
+			long originallyUpdatedAgo = currentTime - existingEntry.lastUpdated;
+			if (originallyUpdatedAgo >= cache.expirationTimeNanos) {
+				nextValue = queryPunishmentAndMessage(key);
+			}
+			// Always update lastUpdated, to prevent periodic invalidation
+			// But subtract 1 to signal to ourselves outside the lambda
+			return new Entry(currentValue, currentTime - 1, nextValue);
 		});
+		if (entry.lastUpdated == currentTime) {
+			// Wait for our newly-entered computation
+			return entry.nextValue;
+		}
+		// There's no need to wait: we have an existing entry
+		return futuresFactory.completedFuture(null);
 	}
 
 	@Override
 	public void uncacheOnQuit(UUID uuid, NetworkAddress address) {
-		// Clean removal - stops any in-progress computation, too
-		Entry removed = cache.map.remove(new MuteCacheKey(uuid, address));
-		// Sanity check
-		if (removed == null) {
-			throw new IllegalStateException("Expected there to be a mute cache entry for player " + uuid);
-		}
 	}
 
 	@Override
@@ -200,13 +232,47 @@ public final class AlwaysAvailableMuteCache extends BaseMuteCache {
 		});
 	}
 
-	private static final class Cache {
+	private final class Cache {
 
-		private final ConcurrentHashMap<MuteCacheKey, Entry> map = new ConcurrentHashMap<>();
+		private final ConcurrentHashMap<MuteCacheKey, Entry> map;
 		private final long expirationTimeNanos;
+		private ScheduledTask purgeTask;
 
-		private Cache(Duration expirationTime) {
+		private Cache(ConcurrentHashMap<MuteCacheKey, Entry> map, Duration expirationTime) {
+			this.map = map;
 			this.expirationTimeNanos = expirationTime.toNanos();
+		}
+
+		private void startPurgeTask() {
+			purgeTask = enhancedExecutor.scheduleRepeating(() -> {
+				long currentTime = nanoTime();
+				for (Map.Entry<MuteCacheKey, Entry> mapEntry : map.entrySet()) {
+					MuteCacheKey key = mapEntry.getKey();
+					if (envUserResolver.lookupName(key.uuid()).isPresent()) {
+						// The player is online
+						continue;
+					}
+					Entry entry = mapEntry.getValue();
+					if (currentTime - entry.lastUpdated <= GRACE_PERIOD_NANOS) {
+						/*
+						Not enough time has passed. This allows a grace period in which cache entries may exist
+						despite the player is not logged in.
+
+						This solves the login process conundrum which occurs when the client is between
+						the login event and join event (AsyncPlayerPreLoginEvent and PlayerJoinEvent on Bukkit).
+						We reasonably assume the time between login event and join event < 4 minutes.
+						 */
+						continue;
+					}
+					// The player is offline and the grace period has passed
+					// IMPORTANT: This relies on the exact Entry instance for concurrent correctness
+					map.remove(key, entry);
+				}
+			}, PURGE_TASK_INTERVAL, DelayCalculators.fixedDelay());
+		}
+
+		private void stopPurgeTask() {
+			purgeTask.cancel();
 		}
 	}
 
