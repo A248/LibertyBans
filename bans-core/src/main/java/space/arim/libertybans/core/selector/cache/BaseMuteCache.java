@@ -47,11 +47,6 @@ abstract class BaseMuteCache implements MuteCache {
 
 	@Override
 	public final void startup() {
-		restart();
-	}
-
-	@Override
-	public final void restart() {
 		SqlConfig sqlConfig = configs.getSqlConfig();
 		SqlConfig.MuteCaching muteCaching = sqlConfig.muteCaching();
 
@@ -67,9 +62,19 @@ abstract class BaseMuteCache implements MuteCache {
 	}
 
 	@Override
-	public final void shutdown() {}
+	public final void restart() {
+		shutdown();
+		startup();
+	}
+
+	@Override
+	public final void shutdown() {
+		uninstallCache();
+	}
 
 	abstract void installCache(Duration expirationTime, ExpirationSemantic expirationSemantic);
+
+	abstract void uninstallCache();
 
 	// Retrieval
 
