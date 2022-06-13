@@ -170,7 +170,7 @@ additions:
       - '&7%REASON%&f'
       - ''
       - '&3&lDer Ban ist nicht gerechtfertigt?&f'
-      - '&cWebsite: &7website
+      - '&cWebsite: &7website'
       - '&cDiscord: &7discord'
     conflicting: '&c&o%TARGET%&7 ist schon gebannt.'
     success:
