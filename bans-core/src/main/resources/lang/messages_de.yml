@@ -253,6 +253,8 @@ formatting:
     - 'permanently'
     - 'perma'
     - 'dauerhaft'
+    - 'unendlich'
+    - 'bigmacbanndenweg'
    # How should 'permanent' be displayed as a length of time?
   permanent-display:
      # When does a permanent punishment end?
