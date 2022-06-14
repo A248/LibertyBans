@@ -1,0 +1,444 @@
+ # 
+ # Messages configuration
+ # 
+ # 
+ # In most cases, the variables inside the default messages are those available
+ # in that specific message. The exception to this is messages which are related
+ # to a certain punishment.
+ # 
+ # When message has an associated punishment, multiple variables are available:
+ # 
+ # %ID% - punishment ID number
+ # %TYPE% - punishment type, e.g. 'Ban'
+ # %TYPE_VERB% - punishment type as a verb, e.g. 'Banned'
+ # %VICTIM% - display name of the victim of the punishment
+ # %VICTIM_ID% - internal identifier of victim
+ # %OPERATOR% - display name of the staff member who made the punishment
+ # %OPERATOR_ID% - internal identifier of the operator
+ # %UNOPERATOR% - staff member undoing the punishment. available only when the punishment is undone
+ # %UNOPERATOR_ID% - internal identifier of staff member undoing the punishment
+ # %REASON% - reason for the punishment
+ # %SCOPE% - scope of the punishment
+ # %DURATION% - original duration (how long the punishment was made for)
+ # %START_DATE% - the date the punishment was created
+ # %TIME_PASSED% - the time since the punishment was created
+ # %TIME_PASSED_SIMPLE% - the time since the punishment was created, rounded to the biggest time unit possible (e.g. 2 months instead of 1 month 23 days)
+ # %END_DATE% - the date the punishment will end, or formatting.permanent-display.absolute for permanent punishments
+ # %TIME_REMAINING% - the time until the punishment ends, or formatting.permanent-display.relative for permanent punishments
+ # %TIME_REMAINING_SIMPLE% - the time until the punishment ends, rounded to the biggest time unit possible (e.g. 10 days instead of 9 days 13 hours)
+ # %HAS_EXPIRED% - Shows if a punishments duration has run out. Does not check if the punishment is revoked!
+ # 
+ # The following variables have limited availability:
+ # %TARGET% - the original target argument of a command. For example, in '/ipban Player1', %TARGET% is Player1
+ # %NEXTPAGE% - the number of the next page of a list like history
+ # %PREVIOUSPAGE% - the number of the previous page of a list like history
+ # 
+ # 
+ # Used for /banlist, /mutelist, /history, /warns, /blame
+lists:
+  ban-list:
+    perPage: 10
+    noPages: '&7Es gibt keine aktiven Bans.'
+    maxPages: '&7Seite &e%PAGE%&7 existiert nicht.'
+    permission:
+      command: '&7Du darfst die Banlist nicht sehen.'
+
+    layout:
+      header:
+        - '&7[&eID&7] &e&oSpieler&f'
+        - '&7Ausführender &8/ &7Grund &8/ &7Verbleibende Zeit&f'
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans banlist %NEXTPAGE%'
+
+    usage: '&cSyntax: /banlist &e[Seite]'
+
+  mute-list:
+    perPage: 10
+    noPages: '&7Es gibt keine aktiven Mutes.'
+    maxPages: '&7Seite &e%PAGE%&7 existiert nicht.'
+    permission:
+      command: '&7Du darfst die Mutelist nicht sehen.'
+
+    layout:
+      header:
+        - '&7[&eID&7] &e&oSpieler&f'
+        - '&7Ausführender &8/ &7Grund &8/ &7Verbleibende Zeit&f'
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans mutelist %NEXTPAGE%'
+
+    usage: '&cSyntax: /mutelist &e[Seite]'
+
+  history:
+    perPage: 10
+    noPages: '&c&o%TARGET%&7 hat keine History.'
+    maxPages: '&7Seite &e%PAGE%&7 existiert nicht.'
+    permission:
+      command: '&7Du darfst die History nicht sehen.'
+
+    layout:
+      header:
+        - '&7[&eID&7] &8/ &7Bestrafungstyp&f'
+        - '&7Ausführender &8/ &7Grund &8/ &7Erlassdatum&f'
+      body:
+        - '&7[&e%ID%&7] / %TYPE%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%&f'
+      footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans history %TARGET% %NEXTPAGE%'
+
+    usage: '&cSyntax: /history &e<Spieler> [Seite]'
+
+  warns:
+    perPage: 10
+    noPages: '&c&o%TARGET%&7 hat keine Warns.'
+    maxPages: '&7Seite &e%PAGE%&7 existiert nicht.'
+    permission:
+      command: '&7Du darfst keine Warns sehen.'
+
+    layout:
+      header: '&7[&eID&7] Ausführender &8/ &7Grund &8/ &7Verbleibende Zeit&f'
+      body: '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+
+    usage: '&cSyntax: /warns &e<Spieler> [Seite]'
+
+  blame:
+    perPage: 10
+    noPages: '&c&o%TARGET%&7 hat noch niemanden bestraft.'
+    maxPages: '&7Seite &e%PAGE%&7 existiert nicht.'
+    permission:
+      command: '&7Du darfst Blame nicht nutzen.'
+
+    layout:
+      header:
+        - '&7[&eID&7] &e&oSpieler &8/ &7Bestrafungstyp&f'
+        - '&7Grund &8/ &7Erlassdatum&f'
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM% &8 / &7%TYPE%&f'
+        - '&7%REASON% &8/ &7%START_DATE%&f'
+      footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+
+    usage: '&cSyntax: /blame &e<Spieler> [Seite]'
+
+
+all:
+  prefix:
+     # The prefix to use
+    value: '&6&lLibertyBans &8»&7 '
+     # If enabled, all messages will be prefixed
+    enable: true
+
+  usage: '&cUnbekannter Subcommand. Syntax:'
+   # When issuing commands, if the specified player or IP was not found, what should the error message be?
+  not-found:
+    uuid: '&c&o%TARGET%&7 ist keine valide UUID.'
+    player: '&c&o%TARGET%&7 wurde weder online noch offline gefunden.'
+    player-or-address: '&c&o%TARGET%&7 wurde weder online noch offline gefunden, und ist keine valide IP-Adresse.'
+
+   # If a player types /libertybans but does not have the permission 'libertybans.commands', this is the denial message
+  base-permission-message: '&cUnzureichende Berechtigung.'
+
+admin:
+  importing:
+    failure: '&cImport fehlgeschlagen. In der Server-Konsole findest du mehr Details.'
+    started: '&7Import wurde gestartet. In der Server-Konsole findest du mehr Details und den Fortschritt.'
+    complete: '&7Import abgeschlossen.'
+     # To prevent mistakes, it is not allowed to import multiple times at once.
+    in-progress: '&cEs läuft bereits ein Import.'
+    usage: '&cSyntax: /libertybans import <advancedban|litebans|vanilla|self>'
+
+  no-permission: '&cSorry, du kannst das nicht benutzen.'
+  ellipses: '&a...'
+  reloaded: '&aLibertybans wurde neugeladen'
+  restarted: '&aLibertybans wurde neugestartet'
+
+ # 
+ # Messages regarding /ban, /mute, /warn, /kick
+ # Includes punishment layouts
+ # 
+ # 
+additions:
+  bans:
+    usage: '&cSyntax: /ban &e<Spieler> [Zeit] <Grund>&c.'
+    layout:
+      - '&7&lBanned&f'
+      - '&cDauer: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&lGrund&f'
+      - '&7%REASON%&f'
+      - ''
+      - '&3&lDer Ban ist nicht gerechtfertigt?&f'
+      - '&cWebsite: &7website'
+      - '&cDiscord: &7discord'
+    conflicting: '&c&o%TARGET%&7 ist schon gebannt.'
+    success:
+      notification: '&c&o%OPERATOR%&7 hat &c&o%VICTIM%&7 wegen &e&o%REASON%&7 für &a&o%DURATION%&7 gebannt.'
+      message: '&aBan erfolgreich!'
+
+    permission:
+      duration: '&cDu kannst das nicht für &e%DURATION%&c tun.'
+      both: '&cDu kannst das nicht für Spieler / IP-Adressen tun.'
+      uuid: '&cDu kannst das nicht für Spieler tun.'
+      ip-address: '&cDu kannst das nicht für IP-Adressen tun.'
+
+
+  mutes:
+    usage: '&cSyntax: /mute &e<Spieler> [Zeit] <Grund>&c.'
+    layout:
+      - '&7&lMuted&f'
+      - '&cDauer: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&lGrund&f'
+      - '&7%REASON%'
+    conflicting: '&c&o%TARGET%&7 ist schon gemuted.'
+    success:
+      notification: '&c&o%OPERATOR%&7 hat &c&o%VICTIM%&7 wegen &e&o%REASON%&7 für &a&o%DURATION%&7 gemuted.'
+      message: '&aMute erfolgreich!'
+
+    permission:
+      duration: '&cDu kannst das nicht für &e%DURATION%&c tun.'
+      both: '&cDu kannst das nicht für Spieler / IP-Adressen tun.'
+      uuid: '&cDu kannst das nicht für Spieler tun.'
+      ip-address: '&cDu kannst das nicht für IP-Adressen tun.'
+
+
+  kicks:
+    usage: '&cSyntax: /kick &e<Spieler> <Grund>&c.'
+    layout:
+      - '&7&lKicked&f'
+      - ''
+      - '&c&lGrund&f'
+      - '&7%REASON%'
+    success:
+      notification: '&c&o%OPERATOR%&7 hat &c&o%VICTIM%&7 wegen &e&o%REASON%&7 gekickt.'
+      message: '&aKick erfolgreich!'
+
+    must-be-online: '&c&o%TARGET%&7 muss online sein.'
+    permission:
+      both: '&cDu kannst das nicht für Spieler / IP-Adressen tun.'
+      uuid: '&cDu kannst das nicht für Spieler tun.'
+      ip-address: '&cDu kannst das nicht für IP-Adressen tun.'
+
+
+  warns:
+    usage: '&cSyntax: /warn &e<Spieler> [Zeit] <Grund>&c.'
+    layout:
+      - '&7&lWarned&f'
+      - '&cDauer: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&lGrund&f'
+      - '&7%REASON%'
+    success:
+      notification: '&c&o%OPERATOR%&7 hat &c&o%VICTIM%&7 wegen &e&o%REASON%&7 für &a&o%DURATION%&7 verwarnt.'
+      message: '&aWarn erfolgreich!'
+
+    permission:
+      duration: '&cDu kannst das nicht für &e%DURATION%&c tun.'
+      both: '&cDu kannst das nicht für Spieler / IP-Adressen tun.'
+      uuid: '&cDu kannst das nicht für Spieler tun.'
+      ip-address: '&cDu kannst das nicht für IP-Adressen tun.'
+
+
+
+ # Specific formatting options
+formatting:
+   # There are 2 ways to make permanent punishments. The first is to not specify a time (/ban <player> <reason>).
+   # The second is to specify a permanent amount of time (/ban <player> perm <reason>).
+   # When typing commands, what time arguments will be counted as permanent?
+  permanent-arguments:
+    - 'perm'
+    - 'permanent'
+    - 'permanently'
+    - 'perma'
+    - 'dauerhaft'
+    - 'unendlich'
+    - 'bigmacbanndenweg'
+   # How should 'permanent' be displayed as a length of time?
+  permanent-display:
+     # When does a permanent punishment end?
+    absolute: 'Nie'
+     # What do you call a permanent duration?
+    duration: '∞'
+     # How do you describe the time remaining in a permanent punishment?
+    relative: 'Permanent'
+
+   # When there is no more time remaining in a punishment (the punishment has expired),
+   # this becomes the value of the %TIME_REMAINING% variable
+  no-time-remaining-display: 'N/A'
+   # How should the %HAS_EXPIRED% variable be displayed?
+  punishment-expired-display:
+     # How do you describe an expired punishment?
+    expired: 'Ausgelaufen'
+     # How do you describe a punishment which is not expired?
+    not-expired: 'Aktiv'
+
+   # How should the console be displayed?
+  console-display: 'Konsole'
+   # How should punishment types be displayed?
+  punishment-type-display:
+    MUTE: 'Mute'
+    WARN: 'Warn'
+    KICK: 'Kick'
+    BAN: 'Ban'
+
+   # How should punishment types be displayed as a verb? Used for the %TYPE_VERB% variable.
+  punishment-type-verb-display:
+    MUTE: 'gemuted'
+    WARN: 'verwarnt'
+    KICK: 'gekickt'
+    BAN: 'gebannt'
+
+   # How should the global scope be displayed?
+  global-scope-display: 'Alle Server'
+   # When using /blame, how should the console be specified?
+  console-arguments:
+    - 'console'
+    - 'konsole'
+
+ # Messages for alt-checks and alt account notifications
+ # 
+ # Before configuring this section, it is necessary to look at the address-enforcement
+ # settings in the main config.yml and understand the different kinds of alt detection.
+ # There is normal and strict detection.
+alts:
+   # Regarding the /alts command
+  command:
+     # The message to display atop the alt check. Set to an empty string to disable
+    header:
+      - '&7Alt Account Meldung f+r &c&o%TARGET%&7.&f'
+      - '&7Hohe Wahrscheinlichkeit - Selbe Adresse wie ein gebannter Spieler.&f'
+      - '&7Geringe Wahrscheinlichkeit -  Verbindung zu gesperrtem Spieler durch gemeinsame frühere Adresse'
+    permission: '&cDu darfst Alts nicht überprüfen.'
+    none-found: '&7Keine Alt Accounts gefunden'
+    usage: '&cSyntax: /alts &e<Spieler>&c.'
+
+  formatting:
+     # The description for an alt account detected by strict detection.
+    strict: '&eGeringe Wahrscheinlichkeit'
+     # The description for an alt account detected by normal detection.
+    normal: '&cHohe Wahrscheinlichkeit'
+     # How a single detected alt should be displayed
+     # Available variables:
+     # %DETECTION_KIND% - how the account was detected. Will be replaced by the normal or strict options.
+     # %ADDRESS% - the address in question which led to the detection
+     # %RELEVANT_USER% - the username of the other account, formatted according to the name-display option
+     # %RELEVANT_USERID% - the uuid of the other account
+     # %DATE_RECORDED% - the date the alt account was recorded
+    layout: '%RELEVANT_USER% &7(via %ADDRESS%) um %DATE_RECORDED% - %DETECTION_KIND%'
+     # In the alt-check layout, the username of the alt may be formatted depending upon whether it is banned
+     # For example, the usernames of banned alts may be colored red whereas alts not banned are green
+     # Variables: %USERNAME%
+    name-display:
+      banned: '&c&o%USERNAME%'
+      not-punished: '&o%USERNAME%'
+      muted: '&e&o%USERNAME%'
+
+
+  auto-show:
+     # The message to display atop the alt check. Set to an empty string to disable
+    header:
+      - '&c&o%TARGET%&7 könnte ein Alt Account sein.&f'
+      - '&7Hohe Wahrscheinlichkeit - Selbe Adresse wie ein gebannter Spieler.&f'
+      - '&7Geringe Wahrscheinlichkeit -  Verbindung zu gesperrtem Spieler durch gemeinsame frühere Adresse'
+
+
+ # Configuration for the /accounthistory command
+account-history:
+   # Pertains to /accounthistory delete <user> <timestamp>
+  delete:
+    permission: '&cDu darfst aufgenommene Accounts nicht löschen.'
+    no-such-account: '&c%TARGET% hat, für den angegebenen Timestamp, keinen aufgenommenen Account.'
+    success: '&7Aufgenommenen Account von &e%TARGET% &7erfolgreich gelöscht.'
+    usage:
+      - '&cSyntax: /accounthistory delete <Spieler> <Timestamp>.&f'
+      - '&7Der Timestamp (in Unix-Sekunden) kann von /accounthistory list bekommen werden'
+
+  usage: '&cSyntax: /accounthistory <delete|list>'
+   # Regards /accounthistory list <user>
+  listing:
+     # The message to display before the account listing. Set to an empty string to disable
+    header: '&7Bekannte Account Meldungen für &c&o%TARGET%&7.'
+    permission: '&cDu darfst aufgenommene Accounts nicht listen.'
+    none-found: '&7Keine aufgenommen Accounts gefunden.'
+    usage: '&cSyntax: /accounthistory list <Spieler|IP>'
+     # How a single recorded account should be displayed
+     # Available variables:
+     # %TARGET% - the original input to the command
+     # %USERNAME% - the username the player connected with
+     # %ADDRESS% - the address the player connected with
+     # %DATE_RECORDED% - the date the join was recorded
+     # %DATE_RECORDED_RAW% - the raw timestamp the join was recorded
+    layout: '%USERNAME% &7(via %ADDRESS%) um %DATE_RECORDED% (%DATE_RECORDED_RAW%)||ttp:&7Klicke, um diesen gespeicherten Account zu löschen||cmd:/accounthistory delete %TARGET% %DATE_RECORDED_RAW%'
+
+
+misc:
+   # Concerns formatting of relative times and durations
+  time:
+    grammar:
+       # What should come before the last fragment? Set to empty text to disable
+      and: 'und '
+       # If enabled, places commas after each time fragment, except the last one
+      comma: true
+
+    fragments:
+      WEEKS: '%VALUE% Wochen'
+      MINUTES: '%VALUE% Minuten'
+      MONTHS: '%VALUE% Monate'
+      HOURS: '%VALUE% Stunden'
+      YEARS: '%VALUE% Jahre'
+      DAYS: '%VALUE% Tage'
+
+     # Times are formatted to seconds accuracy, but you may not want to display seconds 
+     # for most times. However, for very small durations, you need to display a value in seconds.
+     # If you are using SECONDS in the above section, this value is meaningless.
+    fallback-seconds: '%VALUE% Sekunden'
+
+  unknown-error: '&cEs ist ein unbekannter Fehler aufgetreten.'
+   # Only applicable if synchronous enforcement strategy is DENY in the main config
+  sync-chat-denial-message: '&cChatfehler (Synchronisation). &7Bitte versuche es nochmal.'
+
+ # Regards /unban, /unmute, /unwarn
+removals:
+  bans:
+    usage: '&cSyntax: /unban &e<Spieler>&c.'
+    not-found: '&c&o%TARGET%&7 ist nicht gebannt.'
+    success:
+      notification: '&c&o%UNOPERATOR%&7 hat &c&o%VICTIM%&7 entbannt.'
+      message: '&aUnban erfolgreich!'
+
+    permission:
+      both: '&cDu kannst das nicht für Spieler / IP-Adressen tun.'
+      uuid: '&cDu kannst das nicht für Spieler tun.'
+      ip-address: '&cDu kannst das nicht für IP-Adressen tun.'
+
+
+  mutes:
+    usage: '&cSyntax: /unmute &e<Spieler>&c.'
+    not-found: '&c&o%TARGET%&7 ist nicht gemuted.'
+    success:
+      notification: '&c&o%UNOPERATOR%&7 hat &c&o%VICTIM%&7 geunmuted.'
+      message: '&aUnmute erfolgreich!'
+
+    permission:
+      both: '&cDu kannst das nicht für Spieler / IP-Adressen tun.'
+      uuid: '&cDu kannst das nicht für Spieler tun.'
+      ip-address: '&cDu kannst das nicht für IP-Adressen tun.'
+
+
+  warns:
+    not-a-number: '&c&o%ID_ARG%&7 ist keine Nummer.'
+    usage: '&cSyntax: /unwarn &e<Spieler> <ID>&c.'
+    not-found: '&c&o%TARGET%&7 hat keine Warnung mit ID &c&o%ID%&7.'
+    success:
+      notification: '&c&o%UNOPERATOR%&7 hat &c&o%VICTIM%&7 unwarned.'
+      message: '&aUnwarn erfolgreich!'
+
+    permission:
+      both: '&cDu kannst das nicht für Spieler / IP-Adressen tun.'
+      uuid: '&cDu kannst das nicht für Spieler tun.'
+      ip-address: '&cDu kannst das nicht für IP-Adressen tun.'
+
+
+
