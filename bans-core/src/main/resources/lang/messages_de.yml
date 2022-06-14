@@ -52,7 +52,7 @@ lists:
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
       footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans banlist %NEXTPAGE%'
 
-    usage: '&cSyntax: /banlist &e[seite]'
+    usage: '&cSyntax: /banlist &e[Seite]'
 
   mute-list:
     perPage: 10
@@ -70,14 +70,14 @@ lists:
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
       footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans mutelist %NEXTPAGE%'
 
-    usage: '&cSyntax: /mutelist &e[seite]'
+    usage: '&cSyntax: /mutelist &e[Seite]'
 
   history:
     perPage: 10
     noPages: '&c&o%TARGET%&7 hat keine History.'
     maxPages: '&7Seite &e%PAGE%&7 existiert nicht.'
     permission:
-      command: '&7Du darfst keine History sehen.'
+      command: '&7Du darfst die History nicht sehen.'
 
     layout:
       header:
@@ -88,7 +88,7 @@ lists:
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%&f'
       footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans history %TARGET% %NEXTPAGE%'
 
-    usage: '&cSyntax: /history &e<player> [seite]'
+    usage: '&cSyntax: /history &e<Spieler> [Seite]'
 
   warns:
     perPage: 10
@@ -102,11 +102,11 @@ lists:
       body: '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
       footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
 
-    usage: '&cSyntax: /warns &e<player> [seite]'
+    usage: '&cSyntax: /warns &e<Spieler> [Seite]'
 
   blame:
     perPage: 10
-    noPages: '&c&o%TARGET%&7 hat noch keine Bestrafungen ausgeführt.'
+    noPages: '&c&o%TARGET%&7 hat noch niemanden bestraft.'
     maxPages: '&7Seite &e%PAGE%&7 existiert nicht.'
     permission:
       command: '&7Du darfst Blame nicht nutzen.'
@@ -120,7 +120,7 @@ lists:
         - '&7%REASON% &8/ &7%START_DATE%&f'
       footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
 
-    usage: '&cSyntax: /blame &e<player> [seite]'
+    usage: '&cSyntax: /blame &e<Spieler> [Seite]'
 
 
 all:
@@ -130,7 +130,7 @@ all:
      # If enabled, all messages will be prefixed
     enable: true
 
-  usage: '&cUnbekannter Subcommand. Nutzung:'
+  usage: '&cUnbekannter Subcommand. Syntax:'
    # When issuing commands, if the specified player or IP was not found, what should the error message be?
   not-found:
     uuid: '&c&o%TARGET%&7 ist keine valide UUID.'
@@ -161,7 +161,7 @@ admin:
  # 
 additions:
   bans:
-    usage: '&cSyntax: /ban &e<spieler> [zeit] <grund>&c.'
+    usage: '&cSyntax: /ban &e<Spieler> [Zeit] <Grund>&c.'
     layout:
       - '&7&lBanned&f'
       - '&cDauer: &e%TIME_REMAINING%&f'
@@ -185,7 +185,7 @@ additions:
 
 
   mutes:
-    usage: '&cSyntax: /mute &e<spieler> [zeit] <grund>&c.'
+    usage: '&cSyntax: /mute &e<Spieler> [Zeit] <Grund>&c.'
     layout:
       - '&7&lMuted&f'
       - '&cDauer: &e%TIME_REMAINING%&f'
@@ -205,7 +205,7 @@ additions:
 
 
   kicks:
-    usage: '&cSyntax: /kick &e<spieler> <grund>&c.'
+    usage: '&cSyntax: /kick &e<Spieler> <Grund>&c.'
     layout:
       - '&7&lKicked&f'
       - ''
@@ -223,7 +223,7 @@ additions:
 
 
   warns:
-    usage: '&cSyntax: /warn &e<spieler> [zeit] <grund>&c.'
+    usage: '&cSyntax: /warn &e<Spieler> [Zeit] <Grund>&c.'
     layout:
       - '&7&lWarned&f'
       - '&cDauer: &e%TIME_REMAINING%&f'
@@ -272,7 +272,7 @@ formatting:
      # How do you describe an expired punishment?
     expired: 'Ausgelaufen'
      # How do you describe a punishment which is not expired?
-    not-expired: 'Nicht ausgelaufen'
+    not-expired: 'Aktiv'
 
    # How should the console be displayed?
   console-display: 'Konsole'
@@ -312,7 +312,7 @@ alts:
       - '&7Geringe Wahrscheinlichkeit -  Verbindung zu gesperrtem Spieler durch gemeinsame frühere Adresse'
     permission: '&cDu darfst Alts nicht überprüfen.'
     none-found: '&7Keine Alt Accounts gefunden'
-    usage: '&cSyntax: /alts &e<spieler>&c.'
+    usage: '&cSyntax: /alts &e<Spieler>&c.'
 
   formatting:
      # The description for an alt account detected by strict detection.
@@ -352,8 +352,8 @@ account-history:
     no-such-account: '&c%TARGET% hat, für den angegebenen Timestamp, keinen aufgenommenen Account.'
     success: '&7Aufgenommenen Account von &e%TARGET% &7erfolgreich gelöscht.'
     usage:
-      - '&cSyntax: /accounthistory delete <spieler> <timestamp>.&f'
-      - '&7Der Timestamp ist in unix seconds und wird normalerweise von /accounthistory list bekommen'
+      - '&cSyntax: /accounthistory delete <Spieler> <Timestamp>.&f'
+      - '&7Der Timestamp (in Unix-Sekunden) kann von /accounthistory list bekommen werden'
 
   usage: '&cSyntax: /accounthistory <delete|list>'
    # Regards /accounthistory list <user>
@@ -362,7 +362,7 @@ account-history:
     header: '&7Bekannte Account Meldungen für &c&o%TARGET%&7.'
     permission: '&cDu darfst aufgenommene Accounts nicht listen.'
     none-found: '&7Keine aufgenommen Accounts gefunden.'
-    usage: '&cSyntax: /accounthistory list <spieler|ip>'
+    usage: '&cSyntax: /accounthistory list <Spieler|IP>'
      # How a single recorded account should be displayed
      # Available variables:
      # %TARGET% - the original input to the command
@@ -397,12 +397,12 @@ misc:
 
   unknown-error: '&cEs ist ein unbekannter Fehler aufgetreten.'
    # Only applicable if synchronous enforcement strategy is DENY in the main config
-  sync-chat-denial-message: '&cSynchroner Chat Fehler. &7Bitte versuche es nochmal.'
+  sync-chat-denial-message: '&cChatfehler (Synchronisation). &7Bitte versuche es nochmal.'
 
  # Regards /unban, /unmute, /unwarn
 removals:
   bans:
-    usage: '&cSyntax: /unban &e<spieler>&c.'
+    usage: '&cSyntax: /unban &e<Spieler>&c.'
     not-found: '&c&o%TARGET%&7 ist nicht gebannt.'
     success:
       notification: '&c&o%UNOPERATOR%&7 hat &c&o%VICTIM%&7 entbannt.'
@@ -415,7 +415,7 @@ removals:
 
 
   mutes:
-    usage: '&cSyntax: /unmute &e<player>&c.'
+    usage: '&cSyntax: /unmute &e<Spieler>&c.'
     not-found: '&c&o%TARGET%&7 ist nicht gemuted.'
     success:
       notification: '&c&o%UNOPERATOR%&7 hat &c&o%VICTIM%&7 geunmuted.'
@@ -429,7 +429,7 @@ removals:
 
   warns:
     not-a-number: '&c&o%ID_ARG%&7 ist keine Nummer.'
-    usage: '&cSyntax: /unwarn &e<spieler> <id>&c.'
+    usage: '&cSyntax: /unwarn &e<Spieler> <ID>&c.'
     not-found: '&c&o%TARGET%&7 hat keine Warnung mit ID &c&o%ID%&7.'
     success:
       notification: '&c&o%UNOPERATOR%&7 hat &c&o%VICTIM%&7 unwarned.'
