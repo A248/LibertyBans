@@ -104,8 +104,8 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 		muteCache.shutdown();
 		uuidManager.shutdown();
 		configs.shutdown();
-		databaseManager.shutdown();
 		asyncManager.shutdown();
+		databaseManager.shutdown();
 
 		api.getOmnibus().getRegistry().unregister(LibertyBans.class, apiRegistration);
 	}

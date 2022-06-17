@@ -49,9 +49,7 @@ public class StandardAsynchronicityManager implements AsynchronicityManager {
 	 * Awaits the execution of all independent asynchronous execution chains.
 	 * Ensures all plugin operations can be shutdown.
 	 */
-	private final ExecutorService universalJoiner = Executors.newFixedThreadPool(1,
-			SimpleThreadFactory.create("Joiner"));
-
+	private ExecutorService universalJoiner;
 	private FactoryOfTheFuture futuresFactory;
 
 	@Inject
@@ -83,12 +81,16 @@ public class StandardAsynchronicityManager implements AsynchronicityManager {
 
 	@Override
 	public void startup() {
-		var registeredFactory = omnibus.getRegistry().getProvider(FactoryOfTheFuture.class);
-		this.futuresFactory = registeredFactory.orElseGet(envHandle::createFuturesFactory);
+		universalJoiner = Executors.newFixedThreadPool(1, SimpleThreadFactory.create("Joiner"));
+		futuresFactory =  omnibus.getRegistry()
+				.getProvider(FactoryOfTheFuture.class)
+				.orElseGet(envHandle::createFuturesFactory);
 	}
 
 	@Override
 	public void restart() {
+		shutdown();
+		startup();
 	}
 
 	@Override
@@ -98,7 +100,7 @@ public class StandardAsynchronicityManager implements AsynchronicityManager {
 		/*
 		 * On Bukkit, this prevents deadlocks. On any other platform, this is
 		 * unimportant.
-		 * 
+		 *
 		 * By awaiting termination through the futures factory, the managed wait
 		 * implementation breaks dependencies arising from tasks needing the main
 		 * thread. If the main thread is simply blocked, tasks depending on it cannot
