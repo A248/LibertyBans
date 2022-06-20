@@ -42,9 +42,17 @@ With maven, this would be applied as follows:
 repositories {
   ...
     maven { 
+      name= 'arim-mvn-lgpl3' 
+      url = 'https://mvn-repo.arim.space/lesser-gpl3/' 
+    }
+    maven { 
+      name= 'arim-mvn-gpl3' 
+      url = 'https://mvn-repo.arim.space/gpl3/' 
+    }
+    maven { 
       name= 'arim-mvn-agpl3' 
       url = 'https://mvn-repo.arim.space/affero-gpl3/' 
-    } 
+    }
   ...
 }
 

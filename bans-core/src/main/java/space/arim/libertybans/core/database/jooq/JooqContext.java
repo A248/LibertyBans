@@ -44,21 +44,25 @@ public final class JooqContext {
 	static final String REPLACEMENT = "libertybans_$0";
 
 	public DSLContext createContext(Connection connection) {
-		return DSL.using(
-				connection,
-				dialect,
-				new Settings()
-						.withRenderSchema(false)
-						.withRenderMapping(new RenderMapping()
-								.withSchemata(new MappedSchema()
-										.withInputExpression(MATCH_ALL_EXCEPT_INFORMATION_SCHEMA)
-										.withTables(new MappedTable()
-												.withInputExpression(MATCH_ALL)
-												.withOutput(REPLACEMENT)
-										)
+		return DSL.using(connection, dialect, createSettings());
+	}
+
+	public DSLContext createRenderOnlyContext() {
+		return DSL.using(dialect, createSettings());
+	}
+
+	private Settings createSettings() {
+		return new Settings()
+				.withRenderSchema(false)
+				.withRenderMapping(new RenderMapping()
+						.withSchemata(new MappedSchema()
+								.withInputExpression(MATCH_ALL_EXCEPT_INFORMATION_SCHEMA)
+								.withTables(new MappedTable()
+										.withInputExpression(MATCH_ALL)
+										.withOutput(REPLACEMENT)
 								)
 						)
-		);
+				);
 	}
 
 	@Override

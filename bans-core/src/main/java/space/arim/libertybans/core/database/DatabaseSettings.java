@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -37,6 +37,7 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import space.arim.libertybans.core.database.flyway.MigrateWithFlyway;
 import space.arim.libertybans.core.database.flyway.MigrationFailedException;
+import space.arim.libertybans.core.database.jooq.JooqClassloading;
 import space.arim.libertybans.core.database.jooq.JooqContext;
 import space.arim.libertybans.core.database.execute.JooqQueryExecutor;
 import space.arim.libertybans.core.service.SimpleThreadFactory;
@@ -112,15 +113,16 @@ public class DatabaseSettings {
 				threadPool
 		);
 
+		JooqClassloading jooqClassloading = new JooqClassloading(jooqContext);
 		MigrateWithFlyway migrateWithFlyway = new MigrateWithFlyway(hikariDataSource, vendor);
 		try {
 			migrateWithFlyway.migrate(jooqContext);
 		} catch (MigrationFailedException ex) {
 			logger.error("Unable to migrate your database. Please create a backup of your database "
 					+ "and promptly report this issue.", ex);
-			return new DatabaseResult(database, false);
+			return new DatabaseResult(database, jooqClassloading, false);
 		}
-		return new DatabaseResult(database, true);
+		return new DatabaseResult(database, jooqClassloading, true);
 	}
 
 	private void setHikariConfig() {

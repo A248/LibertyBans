@@ -91,7 +91,7 @@ For installing on the backend servers and synchronizing punishments, see the wik
 
 ### Developer API
 
-The developer API is extensive. LibertyBans does not recommend developers mess with the database as a first recourse. [More information here](https://libertybans.org/#/Developer-API)
+The developer API is extensive. LibertyBans does not recommend developers mess with the database as a first recourse. [More information here](https://docs.libertybans.org/#/Developer-API)
 
 ### License
 

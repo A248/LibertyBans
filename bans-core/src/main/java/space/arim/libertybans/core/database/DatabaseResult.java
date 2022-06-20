@@ -1,30 +1,37 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.database;
+
+import space.arim.libertybans.core.database.jooq.JooqClassloading;
+
+import java.util.concurrent.ForkJoinPool;
 
 public final class DatabaseResult {
 
 	private final StandardDatabase database;
+	private final JooqClassloading jooqClassloading;
 	private final boolean success;
-	
-	DatabaseResult(StandardDatabase database, boolean success) {
+
+	DatabaseResult(StandardDatabase database, JooqClassloading jooqClassloading, boolean success) {
 		this.database = database;
+		this.jooqClassloading = jooqClassloading;
 		this.success = success;
 	}
 
@@ -34,6 +41,10 @@ public final class DatabaseResult {
 
 	public boolean success() {
 		return success;
+	}
+
+	void preinitializeJooqClasses() {
+		ForkJoinPool.commonPool().execute(this.jooqClassloading::preinitializeClasses);
 	}
 
 	@Override
