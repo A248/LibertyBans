@@ -42,9 +42,10 @@ enum UsageSection {
 			"&e/accounthistory &7- list and modify stored join history"),
 	OTHER("&e/libertybans &7usage - shows this",
 			"&e/libertybans &7about - shows version and plugin information",
-			"&e/libertybans &7reload - reload config.yml and language configuration",
-			"&e/libertybans &7restart - perform a full restart, reloads everything including database connections",
-			"&e/libertybans &7debug - outputs debug information",
+			"&e/libertybans &7debug - outputs debug information"),
+	ADMIN("&e/libertybans &7reload - reload config.yml and language configuration",
+			"&e/libertybans &7restart - perform a full restart; reloads everything including database connections",
+			"&e/libertybans &7addon - manage installed addons",
 			"&e/libertybans &7import - imports from another plugin");
 	
 	private final Component content;

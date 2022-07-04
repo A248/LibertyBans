@@ -140,7 +140,11 @@ public interface MessagesConfig {
 		
 		@DefaultString("&aReloaded")
 		Component reloaded();
-		
+
+		@ConfKey("reload-failed")
+		@DefaultString("&cAn error occurred reloading the configuration. Please check the server console.")
+		Component reloadFailed();
+
 		@DefaultString("&aRestarted")
 		Component restarted();
 
@@ -168,6 +172,47 @@ public interface MessagesConfig {
 
 		}
 
+		@SubSection
+		Addons addons();
+
+		interface Addons {
+
+			@DefaultString("&cUsage: /libertybans addon <list|reload>")
+			Component usage();
+
+			@SubSection
+			Listing listing();
+
+			interface Listing {
+
+				@DefaultString("&b&lAddons Installed")
+				Component message();
+
+				@DefaultString("&7- %ADDON%")
+				ComponentText layout();
+			}
+
+			@ConfKey("reload-addon")
+			@SubSection
+			Reloading reloadAddon();
+
+			interface Reloading {
+
+				@DefaultString("&cUsage: /libertybans addon reload <addon>. To reload all addons, /libertybans reload will suffice.")
+				Component usage();
+
+				@ConfKey("does-not-exist")
+				@DefaultString("&cThat addon does not exist.")
+				Component doesNotExist();
+
+				@DefaultString("&aReloaded addon &e%ADDON%&a.")
+				ComponentText success();
+
+				@DefaultString("&cAn error occurred reloading addon configuration. Please check the server console.")
+				Component failed();
+
+			}
+		}
 		
 	}
 	

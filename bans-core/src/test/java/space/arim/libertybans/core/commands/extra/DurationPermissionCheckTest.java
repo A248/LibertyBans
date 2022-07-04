@@ -26,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.config.MainConfig;
+import space.arim.libertybans.core.config.ParsedDuration;
 import space.arim.libertybans.core.env.CmdSender;
 
 import java.time.Duration;
@@ -61,9 +62,9 @@ public class DurationPermissionCheckTest {
 		when(config.durationPermissions()).thenReturn(durationPermissions);
 		when(durationPermissions.enable()).thenReturn(true);
 		when(durationPermissions.permissionsToCheck()).thenReturn(Set.of(
-				new DurationPermission("1m", Duration.ofMinutes(1L)),
-				new DurationPermission("4h", Duration.ofHours(4L)),
-				new DurationPermission("perm", Duration.ZERO)));
+				new ParsedDuration("1m", Duration.ofMinutes(1L)),
+				new ParsedDuration("4h", Duration.ofHours(4L)),
+				new ParsedDuration("perm", Duration.ZERO)));
 	}
 
 	@Test

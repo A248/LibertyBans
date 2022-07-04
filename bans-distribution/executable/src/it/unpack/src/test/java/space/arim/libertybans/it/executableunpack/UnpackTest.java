@@ -30,8 +30,10 @@ import space.arim.libertybans.bootstrap.LibertyBansLauncher;
 import space.arim.libertybans.bootstrap.Platform;
 import space.arim.libertybans.bootstrap.logger.Slf4jBootstrapLogger;
 
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.security.CodeSource;
 import java.util.List;
@@ -47,11 +49,16 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class UnpackTest {
 
-	private Path getJarFile() {
-		CodeSource codeSource = LibertyBansLauncher.class.getProtectionDomain().getCodeSource();
+	private static URL getJarURL(Class<?> clazz) {
+		CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
 		assertNotNull(codeSource, "No CodeSource");
 		URL jar = codeSource.getLocation();
 		assertNotNull(jar, "No CodeSource#getLocation");
+		return jar;
+	}
+
+	private static Path getJarFile() {
+		URL jar = getJarURL(LibertyBansLauncher.class);
 		try {
 			return Path.of(jar.toURI());
 		} catch (URISyntaxException ex) {
@@ -82,13 +89,15 @@ public class UnpackTest {
 
 	@Test
 	public void unpackAndLink() {
+		ClassLoader isolatedParentClassLoader = new ClassLoader("EmptyCL", ClassLoader.getSystemClassLoader()) {};
 		Platform platform = Platform.forCategory(Platform.Category.BUKKIT).build("it-unpack-and-link");
-		ClassLoader classLoader = unpack(platform, new ClassLoader() {});
+		ClassLoader classLoader = unpack(platform, isolatedParentClassLoader);
 
 		List<String> classNames;
 		try (ScanResult scanResult = new ClassGraph()
 				.overrideClassLoaders(classLoader)
 				.enableClassInfo()
+				.ignoreClassVisibility()
 				.scan()) {
 			classNames = scanResult.getAllClasses()
 					.filter(classInfo -> {
@@ -103,7 +112,7 @@ public class UnpackTest {
 			try {
 				Class.forName(className, true, classLoader);
 			} catch (ClassNotFoundException | LinkageError ex) {
-				fail("Unable to find or link class in LibertyBans namespace", ex);
+				fail("Unable to find or link class " + className, ex);
 			}
 		});
 	}

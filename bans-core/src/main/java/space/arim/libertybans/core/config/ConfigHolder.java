@@ -39,7 +39,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-class ConfigHolder<C> {
+public final class ConfigHolder<C> {
 
 	private final Class<C> configClass;
 	
@@ -58,15 +58,19 @@ class ConfigHolder<C> {
 		YAML_OPTIONS = new SnakeYamlOptions.Builder().commentMode(CommentMode.alternativeWriter()).build();
 	}
 	
-	ConfigHolder(Class<C> configClass) {
+	public ConfigHolder(Class<C> configClass) {
 		this.configClass = Objects.requireNonNull(configClass);
 	}
-	
-	C getConfigData() {
+
+	public Class<C> getConfigClass() {
+		return configClass;
+	}
+
+	public C getConfigData() {
 		return instance;
 	}
 
-	CompletableFuture<ConfigResult> reload(Path path) {
+	public CompletableFuture<ConfigResult> reload(Path path) {
 		return CompletableFuture.supplyAsync(() -> {
 			ConfigurationFactory<C> factory = SnakeYamlConfigurationFactory.create(configClass, CONFIG_OPTIONS, YAML_OPTIONS);
 			C defaults = factory.loadDefaults();

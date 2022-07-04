@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,20 +17,25 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.commands.extra;
+package space.arim.libertybans.core.config;
 
+import space.arim.dazzleconf.error.BadValueException;
+import space.arim.dazzleconf.serialiser.Decomposer;
+import space.arim.dazzleconf.serialiser.FlexibleType;
+import space.arim.dazzleconf.serialiser.ValueSerialiser;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.core.commands.extra.DurationParser;
 import space.arim.libertybans.core.env.CmdSender;
 
 import java.time.Duration;
 import java.util.Objects;
 
-public final class DurationPermission {
+public final class ParsedDuration {
 
 	private transient final String value;
 	private final Duration duration;
 
-	DurationPermission(String value, Duration duration) {
+	public ParsedDuration(String value, Duration duration) {
 		if (duration.isNegative()) { // implicit null check
 			throw new IllegalArgumentException("Duration cannot be negative");
 		}
@@ -38,15 +43,15 @@ public final class DurationPermission {
 		this.duration = duration;
 	}
 
-	String value() {
+	public String value() {
 		return value;
 	}
 
-	boolean hasPermission(CmdSender sender, PunishmentType type) {
+	public boolean hasDurationPermission(CmdSender sender, PunishmentType type) {
 		return sender.hasPermission("libertybans." + type + ".dur." + value);
 	}
 
-	Duration duration() {
+	public Duration duration() {
 		return duration;
 	}
 
@@ -54,7 +59,7 @@ public final class DurationPermission {
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		DurationPermission that = (DurationPermission) o;
+		ParsedDuration that = (ParsedDuration) o;
 		return duration.equals(that.duration);
 	}
 
@@ -65,9 +70,32 @@ public final class DurationPermission {
 
 	@Override
 	public String toString() {
-		return "DurationPermission{" +
+		return "ParsedDuration{" +
 				"value='" + value + '\'' +
 				", duration=" + duration +
 				'}';
+	}
+
+	static final class Serializer implements ValueSerialiser<ParsedDuration> {
+
+		@Override
+		public Class<ParsedDuration> getTargetClass() {
+			return ParsedDuration.class;
+		}
+
+		@Override
+		public ParsedDuration deserialise(FlexibleType flexibleType) throws BadValueException {
+			String value = flexibleType.getString();
+			Duration duration = new DurationParser().parse(value);
+			if (duration.isNegative()) {
+				throw flexibleType.badValueExceptionBuilder().message(value + " must be a valid duration").build();
+			}
+			return new ParsedDuration(value, duration);
+		}
+
+		@Override
+		public Object serialise(ParsedDuration value, Decomposer decomposer) {
+			return value.value();
+		}
 	}
 }

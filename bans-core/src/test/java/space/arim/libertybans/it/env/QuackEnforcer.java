@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -16,6 +16,7 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.it.env;
 
 import jakarta.inject.Inject;
@@ -78,6 +79,11 @@ public class QuackEnforcer extends AbstractEnvEnforcer<QuackPlayer, QuackPlayer>
 	@Override
 	public InetAddress getAddressFor(QuackPlayer player) {
 		return player.getAddress();
+	}
+
+	@Override
+	public void executeConsoleCommand(String command) {
+		throw new UnsupportedOperationException();
 	}
 
 }

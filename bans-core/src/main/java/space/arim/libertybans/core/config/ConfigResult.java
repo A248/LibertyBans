@@ -19,6 +19,9 @@
 
 package space.arim.libertybans.core.config;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 public enum ConfigResult {
 	/**
 	 * Loaded the specified configuration successfully
@@ -29,7 +32,7 @@ public enum ConfigResult {
 	 */
 	SUCCESS_WITH_DEFAULTS,
 	/**
-	 * The user's configuration is invalid (wrong type, bad yaml syntax0
+	 * The user's configuration is invalid (wrong type, bad yaml syntax)
 	 */
 	USER_ERROR,
 	/**
@@ -47,10 +50,15 @@ public enum ConfigResult {
 	}
 
 	static ConfigResult combinePessimistically(ConfigResult...results) {
+		return combinePessimistically(Arrays.asList(results));
+	}
+
+	public static ConfigResult combinePessimistically(Collection<ConfigResult> results) {
 		int maxOrdinal = 0;
 		for (ConfigResult result : results) {
 			maxOrdinal = Math.max(maxOrdinal, result.ordinal());
 		}
 		return values()[maxOrdinal];
 	}
+
 }

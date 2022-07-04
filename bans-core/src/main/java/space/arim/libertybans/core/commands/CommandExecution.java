@@ -22,7 +22,7 @@ package space.arim.libertybans.core.commands;
 import org.jetbrains.annotations.Nullable;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
-interface CommandExecution {
+public interface CommandExecution {
 
 	/**
 	 * Executes a returns a future. The returned future may be null, for convenience purposes,

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -33,7 +33,7 @@ import space.arim.libertybans.core.service.FuturePoster;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
-import java.util.List;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -60,7 +60,7 @@ public class CommandsCoreTest {
 		this.sender = sender;
 	}
 
-	private CommandsCore newCommandsCore(List<SubCommandGroup> subCommands) {
+	private CommandsCore newCommandsCore(Set<SubCommandGroup> subCommands) {
 		return new CommandsCore(configs, futurePoster, usage, new PluginInfoMessage(), subCommands);
 	}
 
@@ -75,7 +75,7 @@ public class CommandsCoreTest {
 		when(all.basePermissionMessage()).thenReturn(noPermMessage);
 
 		CommandPackage dummyCommand = ArrayCommandPackage.create("args");
-		newCommandsCore(List.of()).execute(sender, dummyCommand);
+		newCommandsCore(Set.of()).execute(sender, dummyCommand);
 
 		verify(sender).sendMessage(noPermMessage);
 	}
@@ -89,7 +89,7 @@ public class CommandsCoreTest {
 		addBasePermission();
 
 		CommandPackage dummyCommand = ArrayCommandPackage.create("args");
-		newCommandsCore(List.of()).execute(sender, dummyCommand);
+		newCommandsCore(Set.of()).execute(sender, dummyCommand);
 
 		verify(usage).sendUsage(sender, dummyCommand, false);
 	}
@@ -99,7 +99,7 @@ public class CommandsCoreTest {
 		addBasePermission();
 
 		CommandPackage dummyCommand = ArrayCommandPackage.create("help");
-		newCommandsCore(List.of()).execute(sender, dummyCommand);
+		newCommandsCore(Set.of()).execute(sender, dummyCommand);
 
 		verify(usage).sendUsage(sender, dummyCommand, true);
 	}
@@ -116,7 +116,7 @@ public class CommandsCoreTest {
 		SubCommandGroup subCommandTwo = mock(SubCommandGroup.class);
 
 		CommandPackage commandOne = ArrayCommandPackage.create("one");
-		newCommandsCore(List.of(subCommandOne, subCommandTwo)).execute(sender, commandOne);
+		newCommandsCore(Set.of(subCommandOne, subCommandTwo)).execute(sender, commandOne);
 
 		verify(subCommandOne).execute(sender, commandOne, "one");
 		verify(subCommandOneExecution).execute();
@@ -131,7 +131,7 @@ public class CommandsCoreTest {
 		SubCommandGroup subCommandTwo = mock(SubCommandGroup.class);
 
 		CommandPackage commandNone = ArrayCommandPackage.create("none");
-		newCommandsCore(List.of(subCommandOne, subCommandTwo)).execute(sender, commandNone);
+		newCommandsCore(Set.of(subCommandOne, subCommandTwo)).execute(sender, commandNone);
 
 		verify(usage).sendUsage(sender, commandNone, false);
 	}
@@ -145,7 +145,7 @@ public class CommandsCoreTest {
 		when(commandExecution.execute()).thenReturn(null);
 
 		CommandPackage command = ArrayCommandPackage.create("arg");
-		newCommandsCore(List.of(subCommand)).execute(sender, command);
+		newCommandsCore(Set.of(subCommand)).execute(sender, command);
 
 		verify(subCommand).execute(sender, command, "arg");
 		verify(commandExecution).execute();

@@ -66,6 +66,7 @@ public class JpmsLauncher implements PlatformLauncher {
 						new PillarOneBindModule(),
 						new PillarTwoBindModule(),
 						new JpmsBindModule())
+				.multiBindings(true)
 				.build()
 				.request(BaseFoundation.class);
 	}

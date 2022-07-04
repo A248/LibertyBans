@@ -27,6 +27,7 @@ import jakarta.inject.Singleton;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MainConfig;
+import space.arim.libertybans.core.config.ParsedDuration;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.env.CmdSender;
@@ -117,16 +118,16 @@ public final class StandardTabCompletion implements TabCompletion {
 		if (durationsConfig.enable()) {
 
 			// Only supply durations for which the sender has permission
-			Predicate<DurationPermission> permissionFilter;
+			Predicate<ParsedDuration> permissionFilter;
 			if (config.durationPermissions().enable()) {
-				permissionFilter = (durPerm) -> durPerm.hasPermission(sender, type);
+				permissionFilter = (durPerm) -> durPerm.hasDurationPermission(sender, type);
 			} else {
 				permissionFilter = (durPerm) -> true;
 			}
 			return durationsConfig.durationsToSupply()
 					.stream()
 					.filter(permissionFilter)
-					.map(DurationPermission::value);
+					.map(ParsedDuration::value);
 		}
 		return Stream.empty();
 	}

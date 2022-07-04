@@ -21,6 +21,7 @@ package space.arim.libertybans.core;
 
 import org.junit.jupiter.api.Test;
 import space.arim.api.util.testing.InjectableConstructor;
+import space.arim.libertybans.core.addon.Addon;
 
 import java.util.Set;
 import java.util.function.Predicate;
@@ -30,7 +31,7 @@ public class LifecycleGodfatherTest {
 	@Test
 	public void allDeclared() {
 		Predicate<Class<?>> subClassFilter = (subClass) -> {
-			return subClass.isInterface() || Set.of(subClass.getInterfaces()).contains(Part.class);
+			return Set.of(subClass.getInterfaces()).contains(Part.class) && !subClass.equals(Addon.class);
 		};
 		new InjectableConstructor(LifecycleGodfather.class)
 				.verifyParametersContainSubclassesOf(Part.class, subClassFilter);

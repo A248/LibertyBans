@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-env-velocity
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-env-velocity is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-env-velocity is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-env-velocity. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.env.velocity;
 
 import com.velocitypowered.api.command.CommandSource;
@@ -24,6 +25,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
@@ -80,6 +83,17 @@ public class VelocityEnforcer extends AbstractEnvEnforcer<CommandSource, Player>
 	@Override
 	public InetAddress getAddressFor(Player player) {
 		return player.getRemoteAddress().getAddress();
+	}
+
+	@Override
+	public void executeConsoleCommand(String command) {
+		server.getCommandManager()
+				.executeAsync(server.getConsoleCommandSource(), command)
+				.exceptionally((ex) -> {
+					Logger logger = LoggerFactory.getLogger(VelocityEnforcer.class);
+					logger.warn("Exception occurred while executing console command {}", command, ex);
+					return null;
+				});
 	}
 
 }

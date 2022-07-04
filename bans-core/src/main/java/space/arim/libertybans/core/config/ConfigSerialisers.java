@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.config;
 
 import java.time.DateTimeException;
@@ -37,21 +38,23 @@ import space.arim.dazzleconf.error.BadValueException;
 import space.arim.dazzleconf.serialiser.Decomposer;
 import space.arim.dazzleconf.serialiser.FlexibleType;
 import space.arim.dazzleconf.serialiser.ValueSerialiser;
-import space.arim.libertybans.core.commands.extra.DurationPermissionSerialiser;
+import space.arim.libertybans.core.scope.ScopeSerializer;
 
 final class ConfigSerialisers {
-	
+
 	private ConfigSerialisers() {}
-	
+
 	static void addTo(ConfigurationOptions.Builder builder) {
 		builder.addSerialisers(
 				new ComponentValueSerializer(new ChatMessageComponentSerializer()),
 				new ComponentTextSerializer(),
-				new DurationPermissionSerialiser(),
+				new ParsedDuration.Serializer(),
 				new DateTimeFormatterSerialiser(),
-				new ZoneIdSerialiser());
+				new ZoneIdSerialiser(),
+				new ScopeSerializer()
+		);
 	}
-	
+
 	private static class ComponentValueSerializer implements ValueSerialiser<Component> {
 
 		private final ComponentSerializer<Component, Component, String> adventureSerializer;

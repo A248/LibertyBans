@@ -24,6 +24,7 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.api.LibertyBans;
+import space.arim.libertybans.core.addon.AddonCenter;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.database.DatabaseManager;
@@ -45,6 +46,7 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 	private final MuteCache muteCache;
 	private final TabCompletion tabCompletion;
 	private final EnvironmentManager envManager;
+	private final AddonCenter addonCenter;
 
 	private final LibertyBans api;
 	private Registration<LibertyBans> apiRegistration;
@@ -53,8 +55,8 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 
 	@Inject
 	public LifecycleGodfather(AsynchronicityManager asyncManager, Configs configs, DatabaseManager databaseManager,
-							  UUIDManager uuidManager, MuteCache muteCache,
-							  TabCompletion tabCompletion, EnvironmentManager envManager,
+							  UUIDManager uuidManager, MuteCache muteCache, TabCompletion tabCompletion,
+							  EnvironmentManager envManager, AddonCenter addonCenter,
 							  LibertyBans api) {
 		this.asyncManager = asyncManager;
 		this.configs = configs;
@@ -63,6 +65,7 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 		this.muteCache = muteCache;
 		this.tabCompletion = tabCompletion;
 		this.envManager = envManager;
+		this.addonCenter = addonCenter;
 
 		this.api = api;
 	}
@@ -75,6 +78,7 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 		uuidManager.startup();
 		muteCache.startup();
 		tabCompletion.startup();
+		addonCenter.startup();
 		envManager.startup();
 
 		apiRegistration = api.getOmnibus().getRegistry()
@@ -93,12 +97,14 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 		uuidManager.restart();
 		muteCache.restart();
 		tabCompletion.restart();
+		addonCenter.restart();
 		envManager.startup();
 	}
 
 	@Override
 	void shutdown0() {
 		envManager.shutdown();
+		addonCenter.shutdown();
 		tabCompletion.shutdown();
 		muteCache.shutdown();
 		uuidManager.shutdown();

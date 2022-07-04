@@ -16,9 +16,12 @@ module space.arim.libertybans.core {
 	requires space.arim.api.util.web;
 	requires space.arim.dazzleconf;
 	requires space.arim.dazzleconf.ext.snakeyaml;
+	requires space.arim.injector;
 	requires transitive space.arim.libertybans.api;
 	requires transitive space.arim.libertybans.bootstrap;
+
 	exports space.arim.libertybans.core;
+	exports space.arim.libertybans.core.addon;
 	exports space.arim.libertybans.core.alts to space.arim.dazzleconf, space.arim.injector;
 	exports space.arim.libertybans.core.commands;
 	exports space.arim.libertybans.core.commands.extra to space.arim.injector;
@@ -44,4 +47,6 @@ module space.arim.libertybans.core {
 	opens space.arim.libertybans.core.importing to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.selector to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.uuid to space.arim.dazzleconf;
+
+	uses space.arim.libertybans.core.addon.AddonProvider;
 }

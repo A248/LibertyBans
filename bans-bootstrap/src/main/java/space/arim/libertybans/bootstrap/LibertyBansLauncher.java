@@ -19,11 +19,16 @@
 
 package space.arim.libertybans.bootstrap;
 
+import space.arim.libertybans.bootstrap.depend.AddableURLClassLoader;
 import space.arim.libertybans.bootstrap.depend.BootstrapLauncher;
 import space.arim.libertybans.bootstrap.depend.DependencyLoaderBuilder;
 import space.arim.libertybans.bootstrap.depend.ExistingDependency;
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -31,12 +36,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 public class LibertyBansLauncher {
 
 	private final BootstrapLogger logger;
 	private final Platform platform;
-	private final Path libsFolder;
+	private final Path folder;
 	private final Executor executor;
 	private final Path jarFile;
 	private final CulpritFinder culpritFinder;
@@ -45,7 +51,7 @@ public class LibertyBansLauncher {
 							   Path jarFile, CulpritFinder culpritFinder) {
 		this.logger = Objects.requireNonNull(logger, "logger");
 		this.platform = Objects.requireNonNull(platform, "platform");
-		libsFolder = folder.resolve("libraries");
+		this.folder = Objects.requireNonNull(folder, "folder");
 		this.executor = Objects.requireNonNull(executor, "executor");
 		this.jarFile = Objects.requireNonNull(jarFile, "jarFile");
 		this.culpritFinder = Objects.requireNonNull(culpritFinder, "culpritFinder");
@@ -130,7 +136,7 @@ public class LibertyBansLauncher {
 		}
 		DependencyLoaderBuilder loader = new DependencyLoaderBuilder()
 				.executor(executor)
-				.outputDirectory(libsFolder);
+				.outputDirectory(folder.resolve("libraries"));
 		Set<ExistingDependency> existingDependencies = new HashSet<>();
 		DistributionMode distributionMode = distributionMode();
 		for (DependencyBundle bundle : determineNeededDependencies()) {
@@ -151,10 +157,36 @@ public class LibertyBansLauncher {
 				throw new IllegalArgumentException("Unknown distributionMode " + distributionMode);
 			}
 		}
+		// Begin to download dependencies
 		BootstrapLauncher launcher = BootstrapLauncher.create(
 				"LibertyBans", parentClassLoader,
 				loader.build(), existingDependencies);
-		return launcher.load();
+		CompletableFuture<AddableURLClassLoader> futureClassLoader = launcher.load();
+		// Detect addons in the meantime
+		Set<Path> addons;
+		try {
+			Path addonsFolder = folder.resolve("addons");
+			Files.createDirectories(addonsFolder);
+			addons = Files.list(addonsFolder)
+					.filter((library) -> library.getFileName().toString().endsWith(".jar"))
+					.collect(Collectors.toUnmodifiableSet());
+			if (!addons.isEmpty()) {
+				logger.info("Detected " + addons.size() + " addon(s)");
+			}
+		} catch (IOException ex) {
+			throw new UncheckedIOException(ex);
+		}
+		return futureClassLoader.thenApply((classLoader) -> {
+			// Attach addons here
+			for (Path addon : addons) {
+				try {
+					classLoader.addURL(addon.toUri().toURL());
+				} catch (MalformedURLException ex) {
+					throw new UncheckedIOException(ex);
+				}
+			}
+			return classLoader;
+		});
 	}
 	
 }

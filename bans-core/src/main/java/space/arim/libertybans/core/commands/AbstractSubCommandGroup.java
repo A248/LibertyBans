@@ -50,11 +50,11 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 		this.matches = Set.copyOf(matches);
 	}
 
-	AbstractSubCommandGroup(Dependencies dependencies, String...matches) {
+	protected AbstractSubCommandGroup(Dependencies dependencies, String...matches) {
 		this(dependencies, Set.of(matches));
 	}
 
-	AbstractSubCommandGroup(Dependencies dependencies, Stream<String> matches) {
+	protected AbstractSubCommandGroup(Dependencies dependencies, Stream<String> matches) {
 		this(dependencies, matches.collect(Collectors.toUnmodifiableSet()));
 	}
 
@@ -96,7 +96,7 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 		return dependencies.futuresFactory;
 	}
 
-	<T> CentralisedFuture<T> completedFuture(T value) {
+	protected <T> CentralisedFuture<T> completedFuture(T value) {
 		return futuresFactory().completedFuture(value);
 	}
 
@@ -104,11 +104,11 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 		return dependencies.configs;
 	}
 
-	MainConfig config() {
+	protected MainConfig config() {
 		return configs().getMainConfig();
 	}
 
-	MessagesConfig messages() {
+	protected MessagesConfig messages() {
 		return configs().getMessagesConfig();
 	}
 

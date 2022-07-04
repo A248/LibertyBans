@@ -28,7 +28,7 @@ public final class ScopeImpl implements ServerScope {
 
 	private ScopeImpl(String server) {
 		if (server.length() > 32) {
-			throw new IllegalArgumentException("Server must be 32 or less chars");
+			throw new IllegalArgumentException("Server must be 32 or fewer characters");
 		}
 		this.server = server;
 	}

@@ -24,6 +24,7 @@ import space.arim.dazzleconf.annote.ConfDefault;
 import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.SubSection;
+import space.arim.libertybans.core.config.ParsedDuration;
 
 import java.util.Set;
 
@@ -92,7 +93,7 @@ public interface TabCompletionConfig {
 				"If duration permissions are enabled, only players who have permission to use a certain duration",
 				"will have that duration tab-completed."})
 		@ConfDefault.DefaultStrings({"perm", "30d", "10d", "4h"})
-		Set<DurationPermission> durationsToSupply();
+		Set<ParsedDuration> durationsToSupply();
 
 	}
 

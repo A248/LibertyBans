@@ -33,7 +33,7 @@
 
 		<!-- Internal dependencies -->
 		<jakarta-inject.version>2.0.0</jakarta-inject.version>
-		<solidinjector.version>1.0.0</solidinjector.version>
+		<solidinjector.version>1.1.0-RC1</solidinjector.version>
 		<dazzleconf.version>1.3.0-M1</dazzleconf.version>
 		<slf4j.version>1.7.30</slf4j.version>
 		<hikari.version>5.0.0</hikari.version>
@@ -45,7 +45,7 @@
 		<jooq.version>3.15.1</jooq.version>
 		<adventure.version>4.7.0</adventure.version>
 		<examination.version>1.3.0</examination.version>
-		<arimapi.version>0.24.9</arimapi.version>
+		<arimapi.version>0.24.11</arimapi.version>
 		<managedwaits.version>0.1.3</managedwaits.version>
 		<morepaperlib.version>0.3.2</morepaperlib.version>
 
@@ -261,6 +261,7 @@
 		<module>bans-api</module>
 		<module>bans-bootstrap</module>
 		<module>bans-core</module>
+		<module>bans-core-addons</module>
 		<module>bans-env</module>
 		<module>bans-distribution</module>
 	</modules>

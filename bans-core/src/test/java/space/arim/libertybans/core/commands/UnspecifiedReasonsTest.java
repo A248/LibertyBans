@@ -31,7 +31,7 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.DraftPunishmentBuilder;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.core.commands.extra.ArgumentParser;
-import space.arim.libertybans.core.commands.extra.DurationPermission;
+import space.arim.libertybans.core.config.ParsedDuration;
 import space.arim.libertybans.core.commands.extra.DurationPermissionsConfig;
 import space.arim.libertybans.core.commands.extra.ReasonsConfig;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
@@ -90,7 +90,7 @@ public class UnspecifiedReasonsTest {
 				public boolean enable() { return false; }
 
 				@Override
-				public Set<DurationPermission> permissionsToCheck() { return Set.of(); }
+				public Set<ParsedDuration> permissionsToCheck() { return Set.of(); }
 			});
 		}
 		{

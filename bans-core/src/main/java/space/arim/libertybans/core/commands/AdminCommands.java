@@ -25,9 +25,11 @@ import jakarta.inject.Singleton;
 import space.arim.api.env.PlatformHandle;
 import space.arim.libertybans.bootstrap.BaseFoundation;
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
+import space.arim.libertybans.core.addon.AddonCenter;
 import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.Environment;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.util.Arrays;
@@ -40,14 +42,16 @@ public class AdminCommands extends AbstractSubCommandGroup {
 
 	private final Provider<BaseFoundation> foundation;
 	private final Provider<Environment> environment;
+	private final AddonCenter addonCenter;
 	private final PlatformHandle envHandle;
 
 	@Inject
 	public AdminCommands(Dependencies dependencies, Provider<BaseFoundation> foundation,
-			Provider<Environment> environment, PlatformHandle envHandle) {
+						 Provider<Environment> environment, AddonCenter addonCenter, PlatformHandle envHandle) {
 		super(dependencies, Arrays.stream(Type.values()).map(Type::toString));
 		this.foundation = foundation;
 		this.environment = environment;
+		this.addonCenter = addonCenter;
 		this.envHandle = envHandle;
 	}
 
@@ -115,17 +119,22 @@ public class AdminCommands extends AbstractSubCommandGroup {
 				sender().sendLiteralMessage("Not restarting because loading already in process");
 			}
 		}
-		
+
 		private ReactionStage<Void> reloadCmd() {
 			sender().sendMessage(adminConfig().ellipses());
-			return futuresFactory().copyFuture(configs().reloadConfigs().thenAccept((result) -> {
+			return reloadAllConfiguration().thenAccept((result) -> {
 				if (result) {
 					sender().sendMessage(adminConfig().reloaded());
 				} else {
-					sender().sendLiteralMessage(
-							"&cAn error occurred reloading the configuration. Please check the server console.");
+					sender().sendMessage(adminConfig().reloadFailed());
 				}
-			}));
+			});
+		}
+
+		private CentralisedFuture<Boolean> reloadAllConfiguration() {
+			var reloadCoreConfigs = configs().reloadConfigs();
+			var reloadAddonConfigs = addonCenter.reloadAddons();
+			return reloadAddonConfigs.thenCombine(reloadCoreConfigs, (reload1, reload2) -> reload1 && reload2);
 		}
 
 		private void debugCmd() {

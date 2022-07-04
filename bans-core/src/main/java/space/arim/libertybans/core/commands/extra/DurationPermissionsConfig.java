@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,6 +22,7 @@ package space.arim.libertybans.core.commands.extra;
 import space.arim.dazzleconf.annote.ConfComments;
 import space.arim.dazzleconf.annote.ConfDefault;
 import space.arim.dazzleconf.annote.ConfKey;
+import space.arim.libertybans.core.config.ParsedDuration;
 
 import java.util.Set;
 
@@ -35,6 +36,6 @@ public interface DurationPermissionsConfig {
 	@ConfComments({"Which duration permissions should a staff member be checked for?",
 			"Specify all the durations which you want to explicitly grant permission for."})
 	@ConfDefault.DefaultStrings({"perm", "30d", "10d", "4h"})
-	Set<DurationPermission> permissionsToCheck();
+	Set<ParsedDuration> permissionsToCheck();
 
 }

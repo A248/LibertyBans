@@ -1,0 +1,51 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>space.arim.libertybans</groupId>
+        <artifactId>bans-parent</artifactId>
+        <version>1.0.3-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>bans-core-addons</artifactId>
+    <packaging>pom</packaging>
+    <description>Parent pom for core addons.</description>
+
+    <build>
+        <finalName>${project.name}_LibertyBansAddon</finalName>
+        <plugins>
+            <plugin>
+                <groupId>eu.somatik.serviceloader-maven-plugin</groupId>
+                <artifactId>serviceloader-maven-plugin</artifactId>
+                <version>1.4.0</version>
+                <configuration>
+                    <services>
+                        <param>space.arim.libertybans.core.addon.AddonProvider</param>
+                    </services>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <modules>
+        <module>command-checkpunish</module>
+        <module>warn-actions</module>
+        <module>addon-integration</module>
+    </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>space.arim.libertybans</groupId>
+            <artifactId>bans-core</artifactId>
+        </dependency>
+    </dependencies>
+</project>

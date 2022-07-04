@@ -20,6 +20,8 @@
 package space.arim.libertybans.core;
 
 import space.arim.libertybans.bootstrap.BaseFoundation;
+import space.arim.libertybans.core.addon.AddonCenter;
+import space.arim.libertybans.core.addon.StandardAddonCenter;
 import space.arim.libertybans.core.punish.GlobalEnforcement;
 import space.arim.libertybans.core.punish.Guardian;
 import space.arim.libertybans.core.punish.IntelligentGuardian;
@@ -69,4 +71,7 @@ public abstract class PillarOneBindModuleMinusConfigs {
 		return scopeManager;
 	}
 
+	public AddonCenter addonCenter(StandardAddonCenter addonCenter) {
+		return addonCenter;
+	}
 }

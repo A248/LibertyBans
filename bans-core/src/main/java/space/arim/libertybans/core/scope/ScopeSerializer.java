@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,34 +17,27 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.commands.extra;
+package space.arim.libertybans.core.scope;
 
 import space.arim.dazzleconf.error.BadValueException;
 import space.arim.dazzleconf.serialiser.Decomposer;
 import space.arim.dazzleconf.serialiser.FlexibleType;
 import space.arim.dazzleconf.serialiser.ValueSerialiser;
+import space.arim.libertybans.api.scope.ServerScope;
 
-import java.time.Duration;
-
-public class DurationPermissionSerialiser implements ValueSerialiser<DurationPermission> {
-
+public final class ScopeSerializer implements ValueSerialiser<ServerScope> {
 	@Override
-	public Class<DurationPermission> getTargetClass() {
-		return DurationPermission.class;
+	public Class<ServerScope> getTargetClass() {
+		return ServerScope.class;
 	}
 
 	@Override
-	public DurationPermission deserialise(FlexibleType flexibleType) throws BadValueException {
-		String value = flexibleType.getString();
-		Duration duration = new DurationParser().parse(value);
-		if (duration.isNegative()) {
-			throw flexibleType.badValueExceptionBuilder().message(value + " must be a valid duration").build();
-		}
-		return new DurationPermission(value, duration);
+	public ServerScope deserialise(FlexibleType flexibleType) throws BadValueException {
+		return ScopeImpl.GLOBAL;
 	}
 
 	@Override
-	public Object serialise(DurationPermission value, Decomposer decomposer) {
-		return value.value();
+	public Object serialise(ServerScope value, Decomposer decomposer) {
+		return "*";
 	}
 }

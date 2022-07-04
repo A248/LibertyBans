@@ -23,8 +23,10 @@ import org.junit.jupiter.api.extension.ExtensionContext.Store;
 import space.arim.injector.Identifier;
 import space.arim.injector.Injector;
 import space.arim.injector.InjectorBuilder;
+import space.arim.injector.SpecificationSupport;
 import space.arim.libertybans.bootstrap.BaseFoundation;
 import space.arim.libertybans.core.ApiBindModule;
+import space.arim.libertybans.core.CommandsModule;
 import space.arim.libertybans.core.PillarOneReplacementModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
 import space.arim.libertybans.it.env.QuackBindModule;
@@ -76,18 +78,21 @@ class ResourceCreator {
 			Path tempDirectory = createTempDirectory();
 
 			Injector injector = new InjectorBuilder()
-				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), tempDirectory)
-				.bindInstance(ConfigSpec.class, configSpec)
-				.bindInstance(DatabaseInfo.class, databaseInfo)
-				// The next two bindings are for ITs only
-				.bindInstance(DatabaseInstance.class, database)
-				.bindInstance(Identifier.ofTypeAndNamed(Instant.class, "testStartTime"), configSpec.unixTime())
-				.addBindModules(
-						new ApiBindModule(),
-						new PillarOneReplacementModule(),
-						new PillarTwoBindModule(),
-						new QuackBindModule())
-				.build();
+					.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), tempDirectory)
+					.bindInstance(ConfigSpec.class, configSpec)
+					.bindInstance(DatabaseInfo.class, databaseInfo)
+					// The next two bindings are for ITs only
+					.bindInstance(DatabaseInstance.class, database)
+					.bindInstance(Identifier.ofTypeAndNamed(Instant.class, "testStartTime"), configSpec.unixTime())
+					.addBindModules(
+							new ApiBindModule(),
+							new PillarOneReplacementModule(),
+							new PillarTwoBindModule(),
+							new CommandsModule(),
+							new QuackBindModule())
+					.specification(SpecificationSupport.JAKARTA)
+					.multiBindings(true)
+					.build();
 
 			BaseFoundation base = injector.request(BaseFoundation.class);
 			base.startup();

@@ -25,6 +25,7 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import space.arim.libertybans.core.config.ParsedDuration;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -45,18 +46,18 @@ public class DurationParserTest {
 	@TestFactory
 	public Stream<DynamicNode> parseCorrect() {
 		return Stream.of(
-				new DurationPermission("1m", Duration.ofMinutes(1L)),
-				new DurationPermission("5h", Duration.ofHours(5L)),
-				new DurationPermission("5H", Duration.ofHours(5L)),
-				new DurationPermission("30d", Duration.ofDays(30L)),
-				new DurationPermission("1MO", ChronoUnit.MONTHS.getDuration()),
-				new DurationPermission("2y", ChronoUnit.YEARS.getDuration().multipliedBy(2)),
-				new DurationPermission("perm", Duration.ZERO),
-				new DurationPermission("Perm", Duration.ZERO)
+				new ParsedDuration("1m", Duration.ofMinutes(1L)),
+				new ParsedDuration("5h", Duration.ofHours(5L)),
+				new ParsedDuration("5H", Duration.ofHours(5L)),
+				new ParsedDuration("30d", Duration.ofDays(30L)),
+				new ParsedDuration("1MO", ChronoUnit.MONTHS.getDuration()),
+				new ParsedDuration("2y", ChronoUnit.YEARS.getDuration().multipliedBy(2)),
+				new ParsedDuration("perm", Duration.ZERO),
+				new ParsedDuration("Perm", Duration.ZERO)
 		).map(this::testCorrect);
 	}
 
-	private DynamicNode testCorrect(DurationPermission durationPermission) {
+	private DynamicNode testCorrect(ParsedDuration durationPermission) {
 		return DynamicTest.dynamicTest("Verifying correct " + durationPermission, () -> {
 			assertEquals(durationPermission.duration(), parser.parse(durationPermission.value()),
 					() -> "Duration " + durationPermission + " should parse correctly");

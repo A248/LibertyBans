@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,6 +21,7 @@ package space.arim.libertybans.core.commands.extra;
 
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.config.MainConfig;
+import space.arim.libertybans.core.config.ParsedDuration;
 import space.arim.libertybans.core.env.CmdSender;
 
 import java.time.Duration;
@@ -57,8 +58,8 @@ public class DurationPermissionCheck {
 
 	private Duration getGreatestPermittedDuration(PunishmentType type) {
 		Duration greatestPermission = Duration.ofNanos(-1L);
-		for (DurationPermission durationPermission : config.durationPermissions().permissionsToCheck()) {
-			if (!durationPermission.hasPermission(sender, type)) {
+		for (ParsedDuration durationPermission : config.durationPermissions().permissionsToCheck()) {
+			if (!durationPermission.hasDurationPermission(sender, type)) {
 				continue;
 			}
 			Duration durationValue = durationPermission.duration();
