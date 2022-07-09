@@ -2,22 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>LibertyBans Document</title>
+  <title>LibertyBans Documentation</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <meta name="keywords" content="doc,docs,documentation,libertybans,minecraft,plugins">
-  <meta name="description" content="A Document for LibertyBans plugin">
+  <meta name="description" content="A documentation for LibertyBans plugin">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <!-- fontawesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/regular.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css">
-  
-  <link
-  rel="stylesheet"
-  href="//cdn.jsdelivr.net/npm/docsify-print@latest/dist/style.css"
-  />
+  <!-- plugins -->
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-print@latest/dist/style.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/docsify-toc@1.0.0/dist/toc.css">
   <!-- Theme -->
   <link 
     rel="stylesheet"
@@ -33,10 +29,10 @@
     window.$docsify = {
       search: 'auto',
       coverpage: false,
-	    loadSidebar: true,
-	    loadNavbar: true,
-	    auto2top: true,
-	    repo: 'https://github.com/A248/LibertyBans',
+      loadSidebar: true,
+      loadNavbar: true,
+      auto2top: true,
+      repo: 'https://github.com/A248/LibertyBans',
       name: 'LibertyBans',
       search: {
         noData: {
@@ -48,18 +44,19 @@
         }
       },
       toc: {
-      tocMaxLevel: 5,
-      target: 'h2, h3, h4, h5, h6'
+        scope: '.markdown-section',
+        headings: 'h1, h2, h3, h4, h5, h6',
+        title: 'Table of Contents',
       },
       editLink: {
-      text: 'Edit this document',
-      // text: '<span style="color: limegreen;">Edit this document</span>',
-      repo: 'A248/LibertyBans',
-      // repo: 'https://github.com/cyrilf/docsify-edit-link/edit/master/docs/',
-      cssClass: 'docsify-edit-link m-0'
+        text: 'Edit this document',
+        // text: '<span style="color: limegreen;">Edit this document</span>',
+        repo: 'A248/LibertyBans',
+        // repo: 'https://github.com/cyrilf/docsify-edit-link/edit/master/docs/',
+        cssClass: 'docsify-edit-link m-0'
       },
       lastModified: {
-      repo: 'A248/LibertyBans'
+        repo: 'A248/LibertyBans'
       },
       print: {
         // Quite annoying as it appears in every documents. Just credit them here.
@@ -89,19 +86,19 @@
   </script>
   <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
   <!-- https://github.com/imyelo/docsify-pagination -->
-  <script src="//unpkg.com/docsify-pagination/dist/docsify-pagination.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-pagination/dist/docsify-pagination.min.js"></script>
   <!-- https://github.com/fzankl/docsify-plugin-flexible-alerts -->
   <script src="//cdn.jsdelivr.net/npm/docsify-plugin-flexible-alerts@latest/dist/docsify-plugin-flexible-alerts.min.js"></script>
   <!-- https://github.com/jperasmus/docsify-copy-code -->
-  <script src="//unpkg.com/docsify-copy-code"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-copy-code"></script>
   <!-- https://github.com/jhildenbiddle/docsify-tabs -->
-  <script src="//cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-tabs"></script>
   <!-- https://github.com/justintien/docsify-plugin-toc -->
-  <script src="//unpkg.com/docsify-plugin-toc"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-toc@1.0.0/dist/toc.js"></script>
   <!-- https://github.com/cyrilf/docsify-edit-link -->
-  <script src="//unpkg.com/docsify-edit-link@^1"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-edit-link@^1"></script>
   <!-- https://github.com/zhengxiangqi/docsify-scroll-to-top -->
-  <script src="//unpkg.com/docsify-scroll-to-top/dist/docsify-scroll-to-top.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-scroll-to-top/dist/docsify-scroll-to-top.min.js"></script>
   <!-- https://github.com/HerbertHe/docsify-progress -->
   <script src="//cdn.jsdelivr.net/npm/docsify-progress@latest/dist/progress.min.js"></script>
   <!-- https://github.com/Plugin-contrib/docsify-plugin -->
