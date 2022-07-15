@@ -19,40 +19,36 @@
 
 package space.arim.libertybans.env.spigot;
 
-import java.util.Set;
-
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
-
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.env.PlatformListener;
 
-public class SpigotEnv implements Environment {
+import java.util.Set;
 
-	private final Provider<ConnectionListener> connectionListenerProvider;
-	private final Provider<ChatListener> chatListenerProvider;
-	private final Provider<QuitListener> quitListenerProvider;
+public final class SpigotEnv implements Environment {
+
+	private final Provider<ConnectionListener> connectionListener;
+	private final Provider<ChatListener> chatListener;
 	private final CommandHandler.CommandHelper commandHelper;
 
 	@Inject
-	public SpigotEnv(Provider<ConnectionListener> connectionListenerProvider,
-					 Provider<ChatListener> chatListenerProvider,
-					 Provider<QuitListener> quitListenerProvider,
+	public SpigotEnv(Provider<ConnectionListener> connectionListener,
+					 Provider<ChatListener> chatListener,
 					 CommandHandler.CommandHelper commandHelper) {
-		this.connectionListenerProvider = connectionListenerProvider;
-		this.chatListenerProvider = chatListenerProvider;
-		this.quitListenerProvider = quitListenerProvider;
+		this.connectionListener = connectionListener;
+		this.chatListener = chatListener;
 		this.commandHelper = commandHelper;
 	}
 
 	@Override
 	public Set<PlatformListener> createListeners() {
 		return Set.of(
-				connectionListenerProvider.get(),
-				chatListenerProvider.get(),
-				quitListenerProvider.get(),
-				new CommandHandler(commandHelper, Commands.BASE_COMMAND_NAME, false));
+				connectionListener.get(),
+				chatListener.get(),
+				new CommandHandler(commandHelper, Commands.BASE_COMMAND_NAME, false)
+		);
 	}
 
 	@Override

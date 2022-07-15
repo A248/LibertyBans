@@ -20,9 +20,13 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
+				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
-					<release>8</release>
+					<archive>
+						<manifestEntries>
+							<Automatic-Module-Name>space.arim.libertybans.env.bungee.plugin</Automatic-Module-Name>
+						</manifestEntries>
+					</archive>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -45,6 +49,11 @@
 			<artifactId>bans-bootstrap</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>

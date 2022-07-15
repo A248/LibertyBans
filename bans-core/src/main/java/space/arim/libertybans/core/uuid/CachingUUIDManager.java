@@ -36,7 +36,6 @@ import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
-import java.net.InetAddress;
 import java.time.Duration;
 import java.util.Locale;
 import java.util.Optional;
@@ -92,13 +91,13 @@ public final class CachingUUIDManager implements UUIDManager {
 
 	@Override
 	public void shutdown() { }
-	
+
 	@Override
 	public void addCache(UUID uuid, String name) {
 		nameToUuidCache.put(name.toLowerCase(Locale.ROOT), uuid);
 		uuidToNameCache.put(uuid, name);
 	}
-	
+
 	private <T> CentralisedFuture<T> completedFuture(T value) {
 		return futuresFactory.completedFuture(value);
 	}
@@ -108,15 +107,15 @@ public final class CachingUUIDManager implements UUIDManager {
 	}
 
 	/*
-	 * uuid resolution works as follows:
+	 * UUID resolution works as follows:
 	 * 
-	 * 1. Check caches
+	 * 1. Check cache
 	 * 2. Check online players
 	 * 3. Check own database
 	 * 4. If online server, check Mojang API and third party web APIs where configured.
 	 * If offline server and exact name provided, compute offline uuid.
 	 */
-	
+
 	@Override
 	public CentralisedFuture<Optional<UUID>> lookupUUID(String name) {
 		return lookupUUIDExactOrNot(name, false);
@@ -145,21 +144,25 @@ public final class CachingUUIDManager implements UUIDManager {
 	}
 
 	private CentralisedFuture<Optional<UUID>> lookupUUIDUncached(String name, boolean canComputeOffline) {
-		Optional<UUID> envResolve = envResolver.lookupUUID(name);
-		if (envResolve.isPresent()) {
-			return completedFuture(envResolve);
-		}
-		return queryingImpl.resolve(name).thenCompose((queriedUuid) -> {
-			if (queriedUuid != null) {
-				return completedFuture(Optional.of(queriedUuid));
+		// 1. Resolve by environment
+		return envResolver.lookupUUID(name).thenCompose((envResolve) -> {
+			if (envResolve.isPresent()) {
+				return completedFuture(envResolve);
 			}
-			if (canComputeOffline) {
-				// Offline server and exact lookup
-				UUID offlineUuid = OfflineUUID.computeOfflineUuid(name);
-				return completedFuture(Optional.of(offlineUuid));
-			}
-			// Online or mixed mode server, or inexact lookup
-			return webLookup((remoteApi) -> remoteApi.lookupUUID(name));
+			// 2. Resolve by database query
+			return queryingImpl.resolve(name).thenCompose((queriedUuid) -> {
+				if (queriedUuid != null) {
+					return completedFuture(Optional.of(queriedUuid));
+				}
+				// 3. Resolve by web API or offline UUID computation
+				if (canComputeOffline) {
+					// Offline server and exact lookup
+					UUID offlineUuid = OfflineUUID.computeOfflineUuid(name);
+					return completedFuture(Optional.of(offlineUuid));
+				}
+				// Online or mixed mode server, or inexact lookup
+				return webLookup((remoteApi) -> remoteApi.lookupUUID(name));
+			});
 		});
 	}
 
@@ -178,18 +181,19 @@ public final class CachingUUIDManager implements UUIDManager {
 	}
 
 	private CentralisedFuture<Optional<String>> lookupNameUncached(UUID uuid) {
-		Optional<String> envResolve = envResolver.lookupName(uuid);
-		if (envResolve.isPresent()) {
-			return completedFuture(envResolve);
-		}
-		return queryingImpl.resolve(uuid).thenCompose((queriedName) -> {
-			if (queriedName != null) {
-				return completedFuture(Optional.of(queriedName));
+		return envResolver.lookupName(uuid).thenCompose((envResolve) -> {
+			if (envResolve.isPresent()) {
+				return completedFuture(envResolve);
 			}
-			return webLookup((remoteApi) -> remoteApi.lookupName(uuid));
+			return queryingImpl.resolve(uuid).thenCompose((queriedName) -> {
+				if (queriedName != null) {
+					return completedFuture(Optional.of(queriedName));
+				}
+				return webLookup((remoteApi) -> remoteApi.lookupName(uuid));
+			});
 		});
 	}
-	
+
 	private <T> CompletableFuture<Optional<T>> webLookup(Function<RemoteNameUUIDApi, CompletableFuture<RemoteApiResult<T>>> resultFunction) {
 		UUIDResolutionConfig uuidResolution = uuidResolution();
 		if (uuidResolution.serverType() != ServerType.ONLINE) {
@@ -197,19 +201,20 @@ public final class CachingUUIDManager implements UUIDManager {
 		}
 		return uuidResolution.remoteApis().lookup(resultFunction).thenApply(Optional::ofNullable);
 	}
-	
+
 	// Other lookups
-	
+
 	@Override
 	public CentralisedFuture<NetworkAddress> lookupAddress(String name) {
 		if (!nameValidator.validateNameArgument(name)) {
 			return completedFuture(null);
 		}
-		Optional<InetAddress> quickResolve = envResolver.lookupAddress(name);
-		if (quickResolve.isPresent()) {
-			return completedFuture(NetworkAddress.of(quickResolve.get()));
-		}
-		return queryingImpl.resolveAddress(name);
+		return envResolver.lookupAddress(name).thenCompose((envResolve) -> {
+			if (envResolve.isPresent()) {
+				return completedFuture(NetworkAddress.of(envResolve.get()));
+			}
+			return queryingImpl.resolveAddress(name);
+		});
 	}
 
 	@Override
@@ -217,11 +222,12 @@ public final class CachingUUIDManager implements UUIDManager {
 		if (!nameValidator.validateNameArgument(name)) {
 			return completedFuture(Optional.empty());
 		}
-		Optional<UUIDAndAddress> quickResolve = envResolver.lookupPlayer(name);
-		if (quickResolve.isPresent()) {
-			return futuresFactory.completedFuture(quickResolve);
-		}
-		return queryingImpl.resolvePlayer(name).thenApply(Optional::ofNullable);
+		return envResolver.lookupPlayer(name).thenCompose((envResolve) -> {
+			if (envResolve.isPresent()) {
+				return futuresFactory.completedFuture(envResolve);
+			}
+			return queryingImpl.resolvePlayer(name).thenApply(Optional::ofNullable);
+		});
 	}
-	
+
 }

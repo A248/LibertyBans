@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -16,6 +16,7 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.it.env.platform;
 
 import jakarta.inject.Singleton;
@@ -26,15 +27,15 @@ import org.slf4j.LoggerFactory;
 import space.arim.omnibus.util.ThisClass;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
 public class QuackPlatform {
 
-	private final Map<UUID, QuackPlayer> players = new HashMap<>();
+	private final Map<UUID, QuackPlayer> players = new ConcurrentHashMap<>();
 
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 

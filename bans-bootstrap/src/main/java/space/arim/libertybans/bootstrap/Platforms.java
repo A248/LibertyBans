@@ -19,49 +19,60 @@
 
 package space.arim.libertybans.bootstrap;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Stream;
+
 public final class Platforms {
 
 	private Platforms() {}
 
-	public static boolean detectGetSlf4jLoggerMethod(Object plugin) {
-		try {
-			plugin.getClass().getMethod("getSLF4JLogger");
-			return true;
-		} catch (NoSuchMethodException ignored) {
-			return false;
-		}
+	public static Platform.Builder bukkit() {
+		return Platform.builderForCategory(Platform.Category.BUKKIT);
 	}
 
-	/**
-	 * Determines whether a library is present in the given classloader or any of its
-	 * parent classloaders
-	 *
-	 * @param className a class in the library
-	 * @param expectedClassLoader the classloader
-	 * @return true if the library is present in the classloader or any of its parents
-	 */
-	public static boolean detectLibrary(String className, ClassLoader expectedClassLoader) {
-		Class<?> libClass;
-		try {
-			libClass = Class.forName(className);
-		} catch (ClassNotFoundException ex) {
-			return false;
-		}
-		return findClassLoaderInHierarchy(libClass.getClassLoader(), expectedClassLoader);
+	public static Platform.Builder bungeecord() {
+		return Platform.builderForCategory(Platform.Category.BUNGEE);
 	}
 
-	private static boolean findClassLoaderInHierarchy(ClassLoader subjectToLookFor, ClassLoader hierarchy) {
-		if (subjectToLookFor == hierarchy) {
-			return true;
-		}
-		ClassLoader parent = hierarchy.getParent();
-		return parent != null && findClassLoaderInHierarchy(subjectToLookFor, parent);
+	public static Platform sponge(ClassLoader platformClassLoader) {
+		return Platform
+				.builderForCategory(Platform.Category.SPONGE)
+				// Slf4j is an internal dependency
+				.slf4jSupport(new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.SLF4J_API, platformClassLoader))
+				.kyoriAdventureSupport(LibraryDetection.enabled())
+				.caffeineProvided(LibraryDetection.enabled())
+				// HikariCP is an internal dependency
+				.hiddenHikariCP(new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.HIKARICP, platformClassLoader))
+				.build("Sponge");
 	}
 
-	public static Platform velocity(boolean caffeine) {
-		return Platform.forCategory(Platform.Category.VELOCITY)
-				.slf4jSupport(true).kyoriAdventureSupport(true).caffeineProvided(caffeine)
+	public static Platform velocity(ClassLoader platformClassLoader) {
+		return Platform
+				.builderForCategory(Platform.Category.VELOCITY)
+				.slf4jSupport(LibraryDetection.enabled())
+				.kyoriAdventureSupport(LibraryDetection.enabled())
+				// Caffeine is an internal dependency
+				.caffeineProvided(new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.CAFFEINE, platformClassLoader))
 				.build("Velocity");
 	}
 
+	// Used for testing purposes
+	public static Stream<Platform> allPossiblePlatforms(String platformName) {
+		Set<Platform> platforms = new HashSet<>();
+		for (Platform.Category category : Platform.Category.values()) {
+			for (boolean adventure : new boolean[] {true, false}) {
+				for (boolean slf4j : new boolean[] {true, false}) {
+					for (boolean caffeine : new boolean[] {true, false}) {
+						platforms.add(Platform.builderForCategory(category)
+								.kyoriAdventureSupport(() -> adventure)
+								.slf4jSupport(() -> slf4j)
+								.caffeineProvided(() -> caffeine)
+								.build("Testing"));
+					}
+				}
+			}
+		}
+		return platforms.stream();
+	}
 }

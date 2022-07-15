@@ -1,50 +1,64 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.env;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.util.Objects;
 
-public abstract class AbstractEnvEnforcer<C, P extends C> implements EnvEnforcer<P> {
+public abstract class AbstractEnvEnforcer<P> implements EnvEnforcer<P> {
 
+	private final FactoryOfTheFuture futuresFactory;
 	private final InternalFormatter formatter;
-	private final AudienceRepresenter<C> audienceRepresenter;
+	private final AudienceRepresenter<? super P> audienceRepresenter;
 
-	protected AbstractEnvEnforcer(InternalFormatter formatter, AudienceRepresenter<C> audienceRepresenter) {
+	protected AbstractEnvEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter,
+								  AudienceRepresenter<? super P> audienceRepresenter) {
+		this.futuresFactory = Objects.requireNonNull(futuresFactory, "futuresFactory");
 		this.formatter = Objects.requireNonNull(formatter, "formatter");
 		this.audienceRepresenter = Objects.requireNonNull(audienceRepresenter, "audienceRepresenter");
 	}
 
-	protected AudienceRepresenter<C> audienceRepresenter() {
+	protected FactoryOfTheFuture futuresFactory() {
+		return futuresFactory;
+	}
+
+	protected AudienceRepresenter<? super P> audienceRepresenter() {
 		return audienceRepresenter;
 	}
-	
+
+	protected CentralisedFuture<Void> completedVoid() {
+		return futuresFactory.completedFuture(null);
+	}
+
 	@Override
-	public final void sendToThoseWithPermission(String permission, ComponentLike message) {
-		sendToThoseWithPermissionNoPrefix(permission, formatter.prefix(message).asComponent());
+	public final CentralisedFuture<Void> sendToThoseWithPermission(String permission, ComponentLike message) {
+		return sendToThoseWithPermissionNoPrefix(permission, formatter.prefix(message).asComponent());
 	}
 	
-	protected abstract void sendToThoseWithPermissionNoPrefix(String permission, Component message);
+	protected abstract CentralisedFuture<Void> sendToThoseWithPermissionNoPrefix(String permission, Component message);
 
 	@Override
 	public void sendMessageNoPrefix(P player, ComponentLike message) {

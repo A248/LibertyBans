@@ -1,26 +1,29 @@
-/* 
- * LibertyBans-env-velocity
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-env-velocity is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-env-velocity is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-env-velocity. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.env.velocity;
 
-import java.nio.file.Path;
-import java.util.Map.Entry;
-
+import com.velocitypowered.api.plugin.PluginContainer;
+import com.velocitypowered.api.proxy.ProxyServer;
+import space.arim.injector.Identifier;
+import space.arim.injector.InjectorBuilder;
+import space.arim.injector.SpecificationSupport;
 import space.arim.libertybans.bootstrap.BaseFoundation;
 import space.arim.libertybans.bootstrap.PlatformLauncher;
 import space.arim.libertybans.core.ApiBindModule;
@@ -38,6 +41,8 @@ import space.arim.libertybans.core.addon.AddonLoader;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
+import java.nio.file.Path;
+
 public class VelocityLauncher implements PlatformLauncher {
 
 	private final PluginContainer plugin;
@@ -45,8 +50,8 @@ public class VelocityLauncher implements PlatformLauncher {
 	private final Path folder;
 	private final Omnibus omnibus;
 
-	public VelocityLauncher(Entry<PluginContainer, ProxyServer> pluginAndServer, Path folder) {
-		this(pluginAndServer.getKey(), pluginAndServer.getValue(), folder, OmnibusProvider.getOmnibus());
+	public VelocityLauncher(PluginContainer plugin, ProxyServer server, Path folder) {
+		this(plugin, server, folder, OmnibusProvider.getOmnibus());
 	}
 
 	public VelocityLauncher(PluginContainer plugin, ProxyServer server, Path folder, Omnibus omnibus) {

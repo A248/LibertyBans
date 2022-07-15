@@ -36,6 +36,7 @@ The project is split into several Maven modules. You will want to make sure that
 * Platform-specific plugins:
   * `bans-env-bungeeplugin` (extends Plugin)
   * `bans-env-spigotplugin` (extends JavaPlugin)
+  * `bans-env-spongeplugin` (@Plugin)
   * `bans-env-velocityplugin` (@Plugin)
 
 The following modules comprise the core implementation:
@@ -44,6 +45,7 @@ The following modules comprise the core implementation:
 * Platform-specific implementation code:
   * `bans-env-bungee`
   * `bans-env-spigot`
+  * `bans-env-sponge`
   * `bans-env-velocity`
 
 ### Startup Process
@@ -79,19 +81,9 @@ LibertyBans is distributed in two ways.
 
 The release distribution is a lightweight jar which downloads its dependencies at runtime, with SHA-512 hash verification. This jar is published to SpigotMC and Github Releases.
 
-### The development distribution (for compiling and running from source)
+### The development distribution
 
 The development distribution is intended for compiling and running from source. It uses a nested jar format and extracts these jars at runtime.
-
-### Relocation in Other Plugins
-
-Other plugins must relocate their dependencies for LibertyBans to work properly.
-
-Sometimes, the user's server is bugged -- another plugin did not relocate its dependencies properly. This happens most commonly with HikariCP, a widely-used library.
-
-When this happens, we print a massive warning message and identify the offending plugin.
-* For development builds, we fail-fast with an error message.
-* For release builds, we attempt to proceed, but we can make no guarantees that LibertyBans will function properly.
 
 ## Testing
 

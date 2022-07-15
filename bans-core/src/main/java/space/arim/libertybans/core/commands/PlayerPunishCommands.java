@@ -72,15 +72,18 @@ public final class PlayerPunishCommands extends PunishCommands {
 				// On a network with synchronization enabled, we do not check that the target is online
 				return victimFuture;
 			}
-			return victimFuture.thenApply((victim) -> {
+			return victimFuture.thenCompose((victim) -> {
 				if (victim instanceof PlayerVictim) {
 					UUID uuid = ((PlayerVictim) victim).getUUID();
-					if (envUserResolver.lookupName(uuid).isEmpty()) {
-						sender.sendMessage(messages().additions().kicks().mustBeOnline().replaceText("%TARGET%", targetArg));
-						return null;
-					}
+					return envUserResolver.lookupName(uuid).thenApply((optName) -> {
+						if (optName.isEmpty()) {
+							sender.sendMessage(messages().additions().kicks().mustBeOnline().replaceText("%TARGET%", targetArg));
+							return null;
+						}
+						return victim;
+					});
 				}
-				return victim;
+				return completedFuture(victim);
 			});
 		default:
 			throw MiscUtil.unknownType(type);

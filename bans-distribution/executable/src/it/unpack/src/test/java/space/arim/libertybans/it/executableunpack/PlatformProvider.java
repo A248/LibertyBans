@@ -22,7 +22,7 @@ package space.arim.libertybans.it.executableunpack;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
-import space.arim.libertybans.bootstrap.Platform;
+import space.arim.libertybans.bootstrap.Platforms;
 
 import java.util.stream.Stream;
 
@@ -30,6 +30,6 @@ public final class PlatformProvider implements ArgumentsProvider {
 
 	@Override
 	public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
-		return Platform.Builder.allPossiblePlatforms("it-unpack").map(Arguments::of);
+		return Platforms.allPossiblePlatforms("it-unpack").map(Arguments::of);
 	}
 }

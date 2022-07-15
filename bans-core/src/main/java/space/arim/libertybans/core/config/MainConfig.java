@@ -138,4 +138,42 @@ public interface MainConfig {
 
 	}
 
+	@SubSection
+	Platforms platforms();
+
+	interface Platforms {
+
+		@SubSection
+		Sponge sponge();
+
+		interface Sponge {
+
+			@ConfKey("register-ban-service")
+			@ConfComments({
+					"Whether to register the ban service for use by other plugins.",
+					"If enabled, LibertyBans will replace the server's default banning implementation with its own.",
+					"",
+					"This option is somewhat technical. For advice on whether you should configure this option,",
+					"please ask for support.",
+					"It is highly recommended to ask for guidance if you are unsure about this option.",
+					"",
+					"How this affects compatibility:",
+					"- If disabled, the vanilla ban service will remain. Other plugins which query for bans will be",
+					"  served with information from vanilla. For example, if a player is banned through LibertyBans",
+					"  but not vanilla, then other plugins will think the player is not banned.",
+					"- If enabled, uses of the ban service will forward to LibertyBans. Other plugins which query for bans",
+					"  will be served with accurate information from LibertyBans.",
+					"- However, the LibertyBans ban service has limitations. It cannot issue bans, for example.",
+					"  So, if another plugin attempts to create bans using the ban service, you will receive an error.",
+					"  If you absolutely need other plugins to issue bans, you must disable this option.",
+					"",
+					"Note that it is impossible to import vanilla bans if you enable this option. So, if you wish to import",
+					"from vanilla, first you need to disable this option. After importing, you may re-enable it."
+			})
+			@DefaultBoolean(true)
+			boolean registerBanService();
+
+		}
+	}
+
 }

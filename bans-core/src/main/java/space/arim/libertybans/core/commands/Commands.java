@@ -47,12 +47,12 @@ public interface Commands {
 	List<String> suggest(CmdSender sender, String[] args);
 
 	/**
-	 * Determines whether a sender has permission for a command alias, for tab completion purposes
+	 * Determines whether a sender has permission for a command, for tab completion purposes
 	 *
 	 * @param sender the command sender
-	 * @param alias the command alias, must be lowercase
+	 * @param command the command name, must be lowercase
 	 * @return true if the sender has permission to use the alias
 	 */
-	boolean hasPermissionFor(CmdSender sender, String alias);
+	boolean hasPermissionFor(CmdSender sender, String command);
 
 }

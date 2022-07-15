@@ -21,7 +21,6 @@ package space.arim.libertybans.bootstrap.depend;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -32,113 +31,87 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 /**
- * Composition of a {@link DependencyLoader} used to add dependencies to
- * an AddableURLClassLoader.
- * 
- * @author A248
+ * Executes a dependency loader and attaches its resulting jars
  *
  */
-public final class BootstrapLauncher {
+public final class BootstrapLauncher<J extends JarAttachment> {
 
-	private final AddableURLClassLoader classLoader;
+	private final J jarAttachment;
 	private final DependencyLoader dependencyLoader;
 	private final Set<ExistingDependency> existingDependencies;
 
-	private BootstrapLauncher(AddableURLClassLoader classLoader, DependencyLoader dependencyLoader,
-							  Set<ExistingDependency> existingDependencies) {
-		this.classLoader = classLoader;
+	public BootstrapLauncher(J jarAttachment, DependencyLoader dependencyLoader,
+							 Set<ExistingDependency> existingDependencies) {
+		this.jarAttachment = Objects.requireNonNull(jarAttachment, "jarAttachment");
 		this.dependencyLoader = Objects.requireNonNull(dependencyLoader, "dependencyLoader");
 		this.existingDependencies = Set.copyOf(existingDependencies);
 	}
 
-	public static BootstrapLauncher create(String programName, ClassLoader parentClassLoader,
-			DependencyLoader dependencyLoader, Set<ExistingDependency> existingDependencies) {
-		return new BootstrapLauncher(
-				new AddableURLClassLoader(programName, parentClassLoader),
-				dependencyLoader, existingDependencies);
-	}
-	
-	private CompletableFuture<Set<Path>> loadJarPaths(DependencyLoader loader) {
-		Path targetDirectory = loader.getOutputDirectory();
-		return loader.execute().thenApply((results) -> {
+	private Set<Path> loadJarPaths(Map<Dependency, DownloadResult> results) {
+		// JARs which will be used on the classpath/modulepath
+		Set<Path> jarPaths = new HashSet<>(results.size(), 1f);
 
-			// JARs which will be used on the classpath/modulepath
-			Set<Path> jarPaths = new HashSet<>(results.size());
-			// JARs present which should not be deleted. Includes jarPaths
-			Set<Path> dontDelete = new HashSet<>(results.size());
+		Set<BootstrapException> failures = new HashSet<>();
+		for (Map.Entry<Dependency, DownloadResult> entry : results.entrySet()) {
 
-			Set<BootstrapException> failures = new HashSet<>();
-			for (Map.Entry<Dependency, DownloadResult> entry : results.entrySet()) {
-
-				Dependency dependency = entry.getKey();
-				DownloadResult result = entry.getValue();
-				switch (result.getResultType()) {
-				case HASH_MISMATCH:
-					failures.add(new BootstrapException(
-							"Failed to download dependency: " + dependency + " . Reason: Hash mismatch, " + "expected "
-									+ Dependency.bytesToHex(result.getExpectedHash()) + " but got "
-									+ Dependency.bytesToHex(result.getActualHash())));
-					continue;
-				case ERROR:
-					failures.add(new BootstrapException(
-							"Failed to download dependency: " + dependency + " . Reason: Exception",
-							result.getException()));
-					continue;
-				default:
-					break;
-				}
-				Path jarFile = result.getJarFile();
-				// Keep downloaded JARs so they don't need to be re-downloaded
-				dontDelete.add(jarFile);
-				jarPaths.addAll(
-						dependency.downloadProcessor().onDependencyDownload(dependency, jarFile, targetDirectory));
+			Dependency dependency = entry.getKey();
+			DownloadResult result = entry.getValue();
+			switch (result.getResultType()) {
+			case HASH_MISMATCH:
+				failures.add(new BootstrapException(
+						"Failed to download dependency: " + dependency + " . Reason: Hash mismatch, " + "expected "
+								+ Dependency.bytesToHex(result.getExpectedHash()) + " but got "
+								+ Dependency.bytesToHex(result.getActualHash())));
+				continue;
+			case ERROR:
+				failures.add(new BootstrapException(
+						"Failed to download dependency: " + dependency + " . Reason: Exception",
+						result.getException()));
+				continue;
+			default:
+				break;
 			}
-			if (!failures.isEmpty()) {
-				if (failures.size() == 1) {
-					throw failures.iterator().next();
-				}
-				BootstrapException ex = new BootstrapException("Failed to download dependencies. View and report details.");
-				for (BootstrapException failure : failures) {
-					ex.addSuppressed(failure);
-				}
-				throw ex;
+			jarPaths.add(result.getJarFile());
+		}
+		if (!failures.isEmpty()) {
+			if (failures.size() == 1) {
+				throw failures.iterator().next();
 			}
+			BootstrapException ex = new BootstrapException("Failed to download dependencies. View and report details.");
+			for (BootstrapException failure : failures) {
+				ex.addSuppressed(failure);
+			}
+			throw ex;
+		}
+		try {
+			Path targetDirectory = dependencyLoader.getOutputDirectory();
+			// Add existing dependencies
 			for (ExistingDependency existingDependency : existingDependencies) {
-				// Keep existing external dependencies
-				dontDelete.add(existingDependency.jarPath());
 				jarPaths.addAll(existingDependency.onDependencyDownload(targetDirectory));
 			}
-			// Don't delete immediately-needed JARs
-			dontDelete.addAll(jarPaths);
-			/*
-			 * Cleanup previous but now-unused jars
-			 */
+			// Cleanup unused jars
 			try (Stream<Path> fileStream = Files.list(targetDirectory)) {
-				fileStream.filter((file) -> !dontDelete.contains(file)).forEach((toDelete) -> {
+				fileStream.filter((file) -> !jarPaths.contains(file)).forEach((toDelete) -> {
 					try {
 						Files.delete(toDelete);
 					} catch (IOException ex) {
 						throw new UncheckedIOException(ex);
 					}
 				});
-			} catch (IOException ex) {
-				throw new UncheckedIOException(ex);
 			}
-			return jarPaths;
-		});
+		} catch (IOException ex) {
+			throw new UncheckedIOException(ex);
+		}
+		return jarPaths;
 	}
 
-	public CompletableFuture<AddableURLClassLoader> load() {
-		return loadJarPaths(dependencyLoader).thenApply((paths) -> {
-			try {
-				for (Path path : paths) {
-					classLoader.addURL(path.toUri().toURL());
-				}
-			} catch (MalformedURLException ex) {
-				throw new BootstrapException("Unable to convert Path to URL", ex);
-			}
-			return classLoader;
-		});
+	public CompletableFuture<J> load() {
+		return dependencyLoader.execute()
+				.thenApply(this::loadJarPaths)
+				.thenApply((jarPaths) -> {
+					jarPaths.forEach(jarAttachment::addJarPath);
+					return jarAttachment;
+				});
 	}
 
 }

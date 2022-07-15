@@ -30,6 +30,7 @@ import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.TargetMatcher;
 import space.arim.morepaperlib.adventure.MorePaperLibAdventure;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.net.InetAddress;
@@ -37,9 +38,8 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 @Singleton
-public class SpigotEnforcer extends AbstractEnvEnforcer<CommandSender, Player> {
+public class SpigotEnforcer extends AbstractEnvEnforcer<Player> {
 
-	private final FactoryOfTheFuture futuresFactory;
 	private final Server server;
 	private final MorePaperLibAdventure morePaperLibAdventure;
 
@@ -48,19 +48,20 @@ public class SpigotEnforcer extends AbstractEnvEnforcer<CommandSender, Player> {
 						  AudienceRepresenter<CommandSender> audienceRepresenter,
 						  FactoryOfTheFuture futuresFactory, Server server,
 						  MorePaperLibAdventure morePaperLibAdventure) {
-		super(formatter, audienceRepresenter);
-		this.futuresFactory = futuresFactory;
+		super(futuresFactory, formatter, audienceRepresenter);
 		this.server = server;
 		this.morePaperLibAdventure = morePaperLibAdventure;
 	}
-	
-	private void runSyncNow(Runnable command) {
-		futuresFactory.runSync(command).join();
+
+	@SuppressWarnings("unchecked")
+	private CentralisedFuture<Void> runSync(Runnable command) {
+		// Technically an inaccurate cast, but it will never matter
+		return (CentralisedFuture<Void>) futuresFactory().runSync(command);
 	}
-	
+
 	@Override
-	protected void sendToThoseWithPermissionNoPrefix(String permission, Component message) {
-		runSyncNow(() -> {
+	protected CentralisedFuture<Void> sendToThoseWithPermissionNoPrefix(String permission, Component message) {
+		return runSync(() -> {
 			for (Player player : server.getOnlinePlayers()) {
 				if (player.hasPermission(permission)) {
 					audienceRepresenter().toAudience(player).sendMessage(message);
@@ -75,8 +76,8 @@ public class SpigotEnforcer extends AbstractEnvEnforcer<CommandSender, Player> {
 	}
 
 	@Override
-	public void doForPlayerIfOnline(UUID uuid, Consumer<Player> callback) {
-		runSyncNow(() -> {
+	public CentralisedFuture<Void> doForPlayerIfOnline(UUID uuid, Consumer<Player> callback) {
+		return runSync(() -> {
 			Player player = server.getPlayer(uuid);
 			if (player != null) {
 				callback.accept(player);
@@ -85,8 +86,8 @@ public class SpigotEnforcer extends AbstractEnvEnforcer<CommandSender, Player> {
 	}
 
 	@Override
-	public void enforceMatcher(TargetMatcher<Player> matcher) {
-		runSyncNow(() -> {
+	public CentralisedFuture<Void> enforceMatcher(TargetMatcher<Player> matcher) {
+		return runSync(() -> {
 			for (Player player : server.getOnlinePlayers()) {
 				if (matcher.matches(player.getUniqueId(), player.getAddress().getAddress())) {
 					matcher.callback().accept(player);
@@ -106,8 +107,8 @@ public class SpigotEnforcer extends AbstractEnvEnforcer<CommandSender, Player> {
 	}
 
 	@Override
-	public void executeConsoleCommand(String command) {
-		runSyncNow(() -> server.dispatchCommand(server.getConsoleSender(), command));
+	public CentralisedFuture<Void> executeConsoleCommand(String command) {
+		return runSync(() -> server.dispatchCommand(server.getConsoleSender(), command));
 	}
 
 }

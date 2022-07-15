@@ -20,7 +20,6 @@
 package space.arim.libertybans.env.spigot;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -43,7 +42,6 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.util.concurrent.TimeUnit;
 
-@Singleton
 public final class ChatListener implements PlatformListener, Listener {
 
 	private final JavaPlugin plugin;

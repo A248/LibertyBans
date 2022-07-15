@@ -21,14 +21,19 @@ package space.arim.libertybans.core.env;
 
 import java.net.InetAddress;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import space.arim.api.env.annote.PlatformPlayer;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 /**
- * Platform specific enforcer
+ * Platform specific enforcer. Use of each method requires careful attention to
+ * the return type. If the return type is a future, the method is safe to call
+ * from any thread. Otherwise, the method is <i>ONLY</i> safe to call inside
+ * an enforcement callback.
  * 
  * @param <P> the player object type
  */
@@ -41,18 +46,20 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	 * @param permission the permission
 	 * @param message the message
 	 */
-	void sendToThoseWithPermission(String permission, ComponentLike message);
-	
+	CentralisedFuture<Void> sendToThoseWithPermission(String permission, ComponentLike message);
+
 	/**
 	 * Searches for a player with the given uuid, if found, invokes the callback
 	 * 
 	 * @param uuid the uuid
 	 * @param callback the callback
 	 */
-	void doForPlayerIfOnline(UUID uuid, Consumer<P> callback);
+	CentralisedFuture<Void> doForPlayerIfOnline(UUID uuid, Consumer<P> callback);
 
 	/**
-	 * Kicks the given player
+	 * Kicks the given player. <br>
+	 * <br>
+	 * <b>Must be used within a callback.</b>
 	 *
 	 * @param player the player to kick
 	 * @param message the kick message
@@ -60,7 +67,9 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	void kickPlayer(P player, Component message);
 
 	/**
-	 * Sends a message to the given player. Does not include a prefix
+	 * Sends a message to the given player. Does not include a prefix. <br>
+	 * <br>
+	 * <b>Must be used within a callback.</b>
 	 *
 	 * @param player the player
 	 * @param message the message to send
@@ -72,10 +81,12 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	 * 
 	 * @param matcher the target matcher
 	 */
-	void enforceMatcher(TargetMatcher<P> matcher);
+	CentralisedFuture<Void> enforceMatcher(TargetMatcher<P> matcher);
 	
 	/**
-	 * Gets the uuid of a player
+	 * Gets the uuid of a player. <br>
+	 * <br>
+	 * <b>Must be used within a callback.</b>
 	 * 
 	 * @param player the player
 	 * @return the uuid
@@ -83,7 +94,9 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	UUID getUniqueIdFor(P player);
 
 	/**
-	 * Gets the address of a player
+	 * Gets the address of a player. <br>
+	 * <br>
+	 * <b>Must be used within a callback.</b>
 	 * 
 	 * @param player the player
 	 * @return the address
@@ -95,6 +108,7 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	 *
 	 * @param command the command to execute, without the slash
 	 */
-	void executeConsoleCommand(String command);
+	// The looser return type of CompletableFuture allows for some flexibility in implementation
+	CompletableFuture<Void> executeConsoleCommand(String command);
 
 }

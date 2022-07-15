@@ -34,32 +34,31 @@ public final class Dependency {
 	private final String artifactId;
 	private final String version;
 	private transient final byte[] sha512hash;
-	private transient final DownloadProcessor downloadProcessor;
-	
-	/**
-	 * Creates a dependency
-	 * @param groupId the group ID
-	 * @param artifactId the artifact ID
-	 * @param version the version
-	 * @param sha512hash the SHA 512 hash, null to disable hash checking
-	 * @param downloadProcessor the download processor
-	 */
-	public Dependency(String groupId, String artifactId, String version, byte[] sha512hash,
-					  DownloadProcessor downloadProcessor) {
+
+	private Dependency(String groupId, String artifactId, String version, byte[] sha512hash) {
 		this.groupId = Objects.requireNonNull(groupId, "groupId");
 		this.artifactId = Objects.requireNonNull(artifactId, "artifactId");
 		this.version = Objects.requireNonNull(version, "version");
 		this.sha512hash = sha512hash.clone();
-		this.downloadProcessor = Objects.requireNonNull(downloadProcessor, "downloadProcessor");
 	}
-	
-	public static Dependency of(String groupId, String artifactId, String version, String hexHash,
-								DownloadProcessor downloadProcessor) {
-		return new Dependency(groupId, artifactId, version,
-				hexStringToByteArray(hexHash.toLowerCase(Locale.ROOT)),
-				downloadProcessor);
+
+
+	/**
+	 * Creates a dependency
+	 *
+	 * @param groupId the group ID
+	 * @param artifactId the artifact ID
+	 * @param version the version
+	 * @param hexHash the SHA 512 hash, null to disable hash checking
+	 * @return the dependency
+	 */
+	public static Dependency of(String groupId, String artifactId, String version, String hexHash) {
+		return new Dependency(
+				groupId, artifactId, version,
+				hexStringToByteArray(hexHash.toLowerCase(Locale.ROOT))
+		);
 	}
-	
+
 	// https://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
 	static byte[] hexStringToByteArray(String s) {
 		int len = s.length();
@@ -96,23 +95,19 @@ public final class Dependency {
 	public String version() {
 		return version;
 	}
-	
+
 	public byte[] getSha512Hash() {
 		return sha512hash.clone();
 	}
 
-	public DownloadProcessor downloadProcessor() {
-		return downloadProcessor;
-	}
-	
 	public boolean matchesHash(byte[] otherSha512Hash) {
 		return Arrays.equals(sha512hash, otherSha512Hash);
 	}
-	
+
 	DownloadResult hashMismatchResult(byte[] actualHash) {
 		return DownloadResult.hashMismatch0(sha512hash, actualHash);
 	}
-	
+
 	@Override
 	public String toString() {
 		return "Dependency [groupId=" + groupId + ", artifactId=" + artifactId + ", version=" + version + "]";

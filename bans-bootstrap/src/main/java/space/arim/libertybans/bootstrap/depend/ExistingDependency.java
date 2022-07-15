@@ -19,55 +19,31 @@
 
 package space.arim.libertybans.bootstrap.depend;
 
+import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.Set;
 
 /**
- * A dependency which already exists on the filesystem
+ * An existing dependency
  *
  */
-public final class ExistingDependency {
-
-	private final Path jarPath;
-	private final DownloadProcessor downloadProcessor;
-
-	public ExistingDependency(Path jarPath, DownloadProcessor downloadProcessor) {
-		this.jarPath = Objects.requireNonNull(jarPath, "jarPath");
-		this.downloadProcessor = Objects.requireNonNull(downloadProcessor, "downloadProcessor");
-	}
+public interface ExistingDependency {
 
 	/**
-	 * Gets the jar path for this dependency itself
-	 *
-	 * @return the path for the dependency itself
-	 */
-	public Path jarPath() {
-		return jarPath;
-	}
-
-	/**
-	 * "Downloads" this existing dependency by adding it to the launcher. <br>
+	 * Processes this file dependency. <br>
 	 * <br>
-	 * Very similar to {@link DownloadProcessor#onDependencyDownload(Dependency, Path, Path)}
+	 * Each path returned is treated as a jar which will be added to the {@code BootstrapLauncher}.
+	 * The paths returned should be inside {@code targetDirectory}. <br>
+	 * <br>
+	 * The multiplicity of paths returned allows a {@code ExistingDependency} implementation to
+	 * extract as many jars as necessary.
 	 *
-	 * @param targetDirectory the target directory
+	 * @param targetDirectory the location where dependencies should be copied to
 	 * @return the jar files to add to the launcher
+	 * @throws IOException if an I/O error occurs
 	 * @throws UncheckedIOException if an I/O error occurs
 	 */
-	public Set<Path> onDependencyDownload(Path targetDirectory) {
-		return downloadProcessor.onDependencyDownload(
-				new Dependency("existing", "existing", "1", new byte[0], downloadProcessor),
-				jarPath,
-				targetDirectory);
-	}
+	Set<Path> onDependencyDownload(Path targetDirectory) throws IOException;
 
-	@Override
-	public String toString() {
-		return "ExistingDependency{" +
-				"jarPath=" + jarPath +
-				", downloadProcessor=" + downloadProcessor +
-				'}';
-	}
 }

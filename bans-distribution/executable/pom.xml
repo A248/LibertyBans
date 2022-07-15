@@ -21,7 +21,24 @@
 				<version>3.3.0</version>
 				<executions>
 					<execution>
-						<id>assemble</id>
+						<id>assemble-bundles</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<attach>false</attach>
+							<descriptors>
+								<descriptor>src/assembly/caffeine.xml</descriptor>
+								<descriptor>src/assembly/kyori.xml</descriptor>
+								<descriptor>src/assembly/self-implementation.xml</descriptor>
+								<descriptor>src/assembly/slf4j.xml</descriptor>
+							</descriptors>
+							<outputDirectory>${project.build.directory}/bundles</outputDirectory>
+						</configuration>
+					</execution>
+					<execution>
+						<id>final-executable</id>
 						<phase>package</phase>
 						<goals>
 							<goal>single</goal>
@@ -29,7 +46,7 @@
 						<configuration>
 							<appendAssemblyId>false</appendAssemblyId>
 							<descriptors>
-								<descriptor>src/assembly/assemble.xml</descriptor>
+								<descriptor>src/assembly/final-executable.xml</descriptor>
 							</descriptors>
 						</configuration>
 					</execution>
@@ -48,11 +65,15 @@
 	<dependencies>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-env-bungeeplugin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-env-spigotplugin</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-env-bungeeplugin</artifactId>
+			<artifactId>bans-env-spongeplugin</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
@@ -60,11 +81,15 @@
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-env-bungee</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-env-spigot</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-env-bungee</artifactId>
+			<artifactId>bans-env-sponge</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>

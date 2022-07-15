@@ -19,7 +19,6 @@
 
 package space.arim.libertybans.env.velocity;
 
-import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import jakarta.inject.Inject;
@@ -31,29 +30,33 @@ import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.TargetMatcher;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.net.InetAddress;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 @Singleton
-public class VelocityEnforcer extends AbstractEnvEnforcer<CommandSource, Player> {
+public class VelocityEnforcer extends AbstractEnvEnforcer<Player> {
 
 	private final ProxyServer server;
 	
 	@Inject
-	public VelocityEnforcer(InternalFormatter formatter, ProxyServer server) {
-		super(formatter, AudienceRepresenter.identity());
+	public VelocityEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter, ProxyServer server) {
+		super(futuresFactory, formatter, AudienceRepresenter.identity());
 		this.server = server;
 	}
 
 	@Override
-	protected void sendToThoseWithPermissionNoPrefix(String permission, Component message) {
+	protected CentralisedFuture<Void> sendToThoseWithPermissionNoPrefix(String permission, Component message) {
 		for (Player player : server.getAllPlayers()) {
 			if (player.hasPermission(permission)) {
 				player.sendMessage(message);
 			}
 		}
+		return completedVoid();
 	}
 
 	@Override
@@ -62,17 +65,19 @@ public class VelocityEnforcer extends AbstractEnvEnforcer<CommandSource, Player>
 	}
 
 	@Override
-	public void doForPlayerIfOnline(UUID uuid, Consumer<Player> callback) {
+	public CentralisedFuture<Void> doForPlayerIfOnline(UUID uuid, Consumer<Player> callback) {
 		server.getPlayer(uuid).ifPresent(callback);
+		return completedVoid();
 	}
 
 	@Override
-	public void enforceMatcher(TargetMatcher<Player> matcher) {
+	public CentralisedFuture<Void> enforceMatcher(TargetMatcher<Player> matcher) {
 		for (Player player : server.getAllPlayers()) {
 			if (matcher.matches(player.getUniqueId(), player.getRemoteAddress().getAddress())) {
 				matcher.callback().accept(player);
 			}
 		}
+		return completedVoid();
 	}
 
 	@Override
@@ -86,12 +91,14 @@ public class VelocityEnforcer extends AbstractEnvEnforcer<CommandSource, Player>
 	}
 
 	@Override
-	public void executeConsoleCommand(String command) {
-		server.getCommandManager()
+	public CompletableFuture<Void> executeConsoleCommand(String command) {
+		return server.getCommandManager()
 				.executeAsync(server.getConsoleCommandSource(), command)
-				.exceptionally((ex) -> {
-					Logger logger = LoggerFactory.getLogger(VelocityEnforcer.class);
-					logger.warn("Exception occurred while executing console command {}", command, ex);
+				.handle((ignore, ex) -> {
+					if (ex != null) {
+						Logger logger = LoggerFactory.getLogger(getClass());
+						logger.warn("Exception occurred while executing console command {}", command, ex);
+					}
 					return null;
 				});
 	}
