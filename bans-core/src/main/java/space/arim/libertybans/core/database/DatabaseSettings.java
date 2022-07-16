@@ -90,7 +90,19 @@ public class DatabaseSettings {
 		hikariConf = new HikariConfig();
 
 		setHikariConfig();
-		return new HikariDataSource(hikariConf);
+
+		HikariDataSource dataSource = new HikariDataSource(hikariConf);
+		// Check database preconditions before yielding data source
+		if (!Boolean.getBoolean("libertybans.database.disablecheck")) {
+			try (Connection connection = dataSource.getConnection()) {
+				connection.setReadOnly(true);
+				new DatabaseRequirements(vendor, connection).checkRequirements();
+			} catch (java.sql.SQLException ex) {
+				throw new IllegalStateException(
+						"Unable to connect to database. Please make sure your authentication details are correct.", ex);
+			}
+		}
+		return dataSource;
 	}
 
 	/**
@@ -128,20 +140,6 @@ public class DatabaseSettings {
 	private void setHikariConfig() {
 		setUsernameAndPassword();
 		setConfiguredDriver();
-
-		// Check database preconditions as soon as we are able
-		// Provide the system property for the benefit of advanced users
-		if (!Boolean.getBoolean("libertybans.database.disablecheck")) {
-			hikariConf.setPoolName("LibertyBansTemporaryPool-" + vendor);
-			try (HikariDataSource temporaryDataSource = new HikariDataSource(hikariConf);
-				 Connection connection = temporaryDataSource.getConnection()) {
-				connection.setReadOnly(true);
-				new DatabaseRequirements(vendor, connection).checkRequirements();
-			} catch (java.sql.SQLException ex) {
-				throw new IllegalStateException(
-						"Unable to connect to database. Please make sure your authentication details are correct.", ex);
-			}
-		}
 
 		// Timeouts
 		SqlConfig.Timeouts timeouts = config.timeouts();
