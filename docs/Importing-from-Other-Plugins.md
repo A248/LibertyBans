@@ -4,12 +4,13 @@ LibertyBans supports importing from the following sources:
 * LiteBans
 * Vanilla server bans (includes Essentials)
   * Importing vanilla bans requires that you run LibertyBans on Bukkit during the import process. Once the import is complete you can move LibertyBans to any supported platform.
+* LibertyBans itself, for the purpose of switching storage backends. See [self-importing](Self-Importing) for more information.
 
 If you do not see your plugin listed here, open a [new issue](https://github.com/A248/LibertyBans/issues) and describe the feature request.
 
 # Importing Steps
 
-1. Backup your data! Taking backups is good practice, *always*. If you want to be extra safe, be sure that you can restore your backup, too.
+1. Backup your data. Taking backups is good practice, *always*. If you want to be extra safe, be sure that you can restore your backup, too.
 2. Configure the `import.yml`
 2. Run the import command - `/libertybans import <source>`. Replace <source> with 'advancedban', 'litebans', or 'vanilla'
 

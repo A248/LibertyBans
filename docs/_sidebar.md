@@ -8,6 +8,7 @@
   * [Silent Punishments](Silent-Punishments)
   * [Composite Punishments](Guide-to-Composite-Punishments)
   * [Running Multiple Instances](Running-Multiple-Instances)
+  * [Switching Storage Backends (Self-Importing)](Self-Importing)
 * Versioning and Upgrades
   * [Versioning and Support Policy](Versioning-and-Support-Policies)
   * [Upgrading to 1.0.0 from 0.8.x](Upgrading-to-LibertyBans-1.0.0-from-0.8.x)
