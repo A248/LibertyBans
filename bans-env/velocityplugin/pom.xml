@@ -10,18 +10,12 @@
 	</parent>
 	
 	<artifactId>bans-env-velocityplugin</artifactId>
+
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-invoker-plugin</artifactId>
-				<configuration>
-					<settingsFile>src/it/settings.xml</settingsFile>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>
