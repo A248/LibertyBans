@@ -148,6 +148,22 @@ public class SelectionImpl {
 			}
 			condition = condition.and(acceptedCondition).and(notRejectedCondition);
 		}
+		Instant seekAfterStartTime = selection.seekAfterStartTime();
+		if (!seekAfterStartTime.equals(Instant.EPOCH)) {
+			long seekAfterId = selection.seekAfterId();
+			if (seekAfterId == 0L) {
+				// Optimization since seekAfterId is irrelevant
+				// start >= seekAfterStartTime
+				condition = condition.and(fields.start().greaterOrEqual(seekAfterStartTime));
+			} else {
+				// start > seekAfterStartTime OR (start = seekAfterStartTime AND id >= seekAfterId)
+				condition = condition.and(
+						fields.start().greaterThan(seekAfterStartTime).or(
+								fields.start().eq(seekAfterStartTime).and(fields.id().greaterOrEqual(seekAfterId))
+						)
+				);
+			}
+		}
 		return condition;
 	}
 
@@ -210,14 +226,8 @@ public class SelectionImpl {
 		Instant seekAfterStartTime = selection.seekAfterStartTime();
 		int offset = selection.skipCount();
 		if (offset == 0) {
-			if (seekAfterStartTime.equals(Instant.EPOCH)) {
-				// No OFFSET and no SEEK AFTER
-				return (limit == 0) ? selectOrderBy : selectOrderBy.limit(limit);
-			} else {
-				// Has SEEK AFTER
-				var seekAfterQuery = selectOrderBy.seekAfter(seekAfterStartTime, selection.seekAfterId());
-				return (limit == 0) ? seekAfterQuery : seekAfterQuery.limit(limit);
-			}
+			// No OFFSET
+			return (limit == 0) ? selectOrderBy : selectOrderBy.limit(limit);
 		} else {
 			// Has OFFSET
 			assert seekAfterStartTime.equals(Instant.EPOCH) : "seekAfter is exclusive with skipFirstRetrieved";

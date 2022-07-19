@@ -17,14 +17,14 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.addon.checkpunish;
+package space.arim.libertybans.core.addon.staffrollback;
 
 import space.arim.libertybans.core.addon.AddonBindModule;
 import space.arim.libertybans.core.addon.AddonProvider;
 
-public final class CheckPunishProvider implements AddonProvider {
+public final class StaffRollbackProvider implements AddonProvider {
 	@Override
 	public AddonBindModule[] bindModules() {
-		return new AddonBindModule[] {new CheckPunishModule()};
+		return new AddonBindModule[] {new StaffRollbackModule()};
 	}
 }

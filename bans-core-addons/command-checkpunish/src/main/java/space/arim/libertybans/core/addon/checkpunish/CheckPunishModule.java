@@ -24,7 +24,7 @@ import space.arim.libertybans.core.addon.Addon;
 import space.arim.libertybans.core.addon.AddonBindModule;
 import space.arim.libertybans.core.commands.SubCommandGroup;
 
-public final class CheckPunishBindModule extends AddonBindModule {
+public final class CheckPunishModule extends AddonBindModule {
 
 	@MultiBinding
 	public Addon<?> checkPunishAddon(CheckPunishAddon checkPunishAddon) {

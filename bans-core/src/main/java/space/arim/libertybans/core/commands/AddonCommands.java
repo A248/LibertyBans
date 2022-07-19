@@ -65,6 +65,10 @@ public class AddonCommands extends AbstractSubCommandGroup {
 
 		@Override
 		public @Nullable ReactionStage<Void> execute() {
+			if (!sender().hasPermission("libertybans.admin.addon")) {
+				sender().sendMessage(messages().admin().noPermission());
+				return null;
+			}
 			if (!command().hasNext()) {
 				sender().sendMessage(conf.usage());
 				return null;
@@ -76,6 +80,7 @@ public class AddonCommands extends AbstractSubCommandGroup {
 				var layout = listing.layout();
 				sender().sendMessage(Component.text()
 						.append(listing.message())
+						.append(Component.newline())
 						.append(Component.join(
 								Component.newline(),
 								addonCenter.allIdentifiers()

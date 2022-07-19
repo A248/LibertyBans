@@ -75,5 +75,13 @@ public interface InternalFormatter extends PunishmentFormatter {
 	CentralisedFuture<Component> formatWithPunishmentAndUnoperator(ComponentText componentText,
 																   Punishment punishment,
 																   Operator unOperator);
-	
+
+	/**
+	 * Formats the value of an operator variable
+	 *
+	 * @param operator the operator
+	 * @return the formatted operator
+	 */
+	CentralisedFuture<String> formatOperator(Operator operator);
+
 }

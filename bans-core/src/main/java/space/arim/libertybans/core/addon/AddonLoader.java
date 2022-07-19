@@ -19,11 +19,11 @@
 
 package space.arim.libertybans.core.addon;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
 import java.util.ServiceLoader;
+import java.util.Set;
 
 public final class AddonLoader {
 
@@ -33,15 +33,15 @@ public final class AddonLoader {
 		this.addonProviders = addonProviders;
 	}
 
-	private List<AddonBindModule> addonBindModules() {
-		List<AddonBindModule> addonBindModules = new ArrayList<>();
+	private Set<AddonBindModule> addonBindModules() {
+		Set<AddonBindModule> addonBindModules = new HashSet<>();
 		for (AddonProvider addonProvider : addonProviders) {
 			addonBindModules.addAll(Arrays.asList(addonProvider.bindModules()));
 		}
-		return Collections.unmodifiableList(addonBindModules);
+		return Collections.unmodifiableSet(addonBindModules);
 	}
 
-	public static List<AddonBindModule> loadAddonBindModules() {
+	public static Set<AddonBindModule> loadAddonBindModules() {
 		return new AddonLoader(
 				ServiceLoader.load(AddonProvider.class, AddonLoader.class.getClassLoader())
 		).addonBindModules();

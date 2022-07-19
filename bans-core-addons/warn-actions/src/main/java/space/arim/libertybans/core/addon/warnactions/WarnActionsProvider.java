@@ -25,6 +25,6 @@ import space.arim.libertybans.core.addon.AddonProvider;
 public final class WarnActionsProvider implements AddonProvider {
 	@Override
 	public AddonBindModule[] bindModules() {
-		return new AddonBindModule[] {new WarnActionsBindModule()};
+		return new AddonBindModule[] {new WarnActionsModule()};
 	}
 }

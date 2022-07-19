@@ -23,7 +23,7 @@ import space.arim.injector.MultiBinding;
 import space.arim.libertybans.core.addon.Addon;
 import space.arim.libertybans.core.addon.AddonBindModule;
 
-public final class WarnActionsBindModule extends AddonBindModule {
+public final class WarnActionsModule extends AddonBindModule {
 
 	@MultiBinding
 	public Addon<?> warnActionsAddon(WarnActionsAddon warnActionsAddon) {

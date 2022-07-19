@@ -20,9 +20,11 @@
 package space.arim.libertybans.core.addon.checkpunish;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import space.arim.libertybans.core.addon.AbstractAddon;
 import space.arim.libertybans.core.addon.AddonCenter;
 
+@Singleton
 public final class CheckPunishAddon extends AbstractAddon<CheckPunishConfig> {
 
 	@Inject

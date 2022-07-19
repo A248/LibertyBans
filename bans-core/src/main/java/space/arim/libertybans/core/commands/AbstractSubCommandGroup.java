@@ -88,7 +88,7 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 	 * 
 	 */
 
-	ArgumentParser argumentParser() {
+	protected ArgumentParser argumentParser() {
 		return dependencies.argumentParser;
 	}
 

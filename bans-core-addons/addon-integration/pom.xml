@@ -54,6 +54,11 @@
         </dependency>
         <dependency>
             <groupId>space.arim.libertybans</groupId>
+            <artifactId>addon-command-staffrollback</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>space.arim.libertybans</groupId>
             <artifactId>addon-warn-actions</artifactId>
             <version>${project.version}</version>
         </dependency>

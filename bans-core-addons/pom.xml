@@ -40,6 +40,7 @@
         <module>command-checkpunish</module>
         <module>warn-actions</module>
         <module>addon-integration</module>
+        <module>command-staffrollback</module>
     </modules>
 
     <dependencies>

@@ -57,12 +57,17 @@ For obvious reasons, there are no duration permissions for kicks; moreover there
 * `libertybans.alts.accounthistory.list` - /accounthistory list
 * `libertybans.alts.accounthistory.delete` - /accounthistory delete
 
-## Everything Else
+## Administration
 
+* `libertybans.admin.debug` - /libertybans debug
 * `libertybans.admin.reload` - /libertybans reload
 * `libertybans.admin.restart` - /libertybans restart
-* `libertybans.admin.debug` - /libertybans debug
+* `libertybans.admin.addon` - /libertybans addon
 * `libertybans.admin.import` - /libertybans import
+
+## Addons
+
+Addon-specific permissions are described on the [Addons](Addons) page.
 
 # LibertyBans 0.8.x
 

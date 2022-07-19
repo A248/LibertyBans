@@ -31,7 +31,7 @@ public interface CheckPunishConfig extends AddonConfig {
 	@ConfDefault.DefaultString("&cSorry, you cannot use this.")
 	Component noPermission();
 
-	@ConfDefault.DefaultString("&cUsage: /checkpunish &e<id>")
+	@ConfDefault.DefaultString("&cUsage: /libertybans checkpunish &e<id>")
 	Component usage();
 
 	@ConfKey("does-not-exist")

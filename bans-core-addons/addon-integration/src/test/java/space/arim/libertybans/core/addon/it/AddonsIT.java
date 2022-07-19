@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.addon.it;
 
+import jakarta.inject.Singleton;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +36,7 @@ import space.arim.libertybans.core.ApiBindModule;
 import space.arim.libertybans.core.CommandsModule;
 import space.arim.libertybans.core.PillarOneBindModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
+import space.arim.libertybans.core.addon.Addon;
 import space.arim.libertybans.core.addon.AddonLoader;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.EnvUserResolver;
@@ -50,6 +52,7 @@ import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
@@ -70,7 +73,7 @@ public class AddonsIT {
 	public void setupInjector(@TempDir Path folder, @Mock PlatformHandle handle,
 							  @Mock EnvEnforcer<?> envEnforcer, @Mock EnvUserResolver envUserResolver) {
 		lenient().when(handle.createFuturesFactory()).thenReturn(new IndifferentFactoryOfTheFuture());
-		when(handle.createEnhancedExecutor()).thenReturn(new SimplifiedEnhancedExecutor() {
+		lenient().when(handle.createEnhancedExecutor()).thenReturn(new SimplifiedEnhancedExecutor() {
 			@Override
 			public void execute(Runnable command) {
 				ForkJoinPool.commonPool().execute(command);
@@ -114,5 +117,12 @@ public class AddonsIT {
 		});
 		BaseFoundation foundation = injector.request(BaseFoundation.class);
 		foundation.startup();
+	}
+
+	@Test
+	public void addonsAnnotatedWithSingleton() {
+		injector.requestMultipleInstances(Addon.class).forEach((addon) -> {
+			assertNotNull(addon.getClass().getAnnotation(Singleton.class));
+		});
 	}
 }
