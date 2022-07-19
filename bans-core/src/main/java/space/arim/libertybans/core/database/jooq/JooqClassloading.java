@@ -20,6 +20,7 @@
 package space.arim.libertybans.core.database.jooq;
 
 import org.jooq.DSLContext;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.NetworkAddress;
@@ -43,7 +44,29 @@ public final class JooqClassloading {
 	}
 
 	public void preinitializeClasses() {
+		Logger logger = LoggerFactory.getLogger(getClass());
 		long startNanos = System.nanoTime();
+		/*
+		In some environments, the plugin classloader is closed when a plugin encounters an error during startup.
+
+		Without this try-catch block, a startup exception in LibertyBans would cause 2 stacktraces in the console:
+		firstly the startup exception itself, secondly a classloading-related exception because
+		the plugin classloader closed.
+		 */
+		try {
+			renderDummyQueries();
+		} catch (RuntimeException ex) {
+			// Purposefully hide the exception stacktrace to avoid unnecessary noise
+			logger.warn("Failed to pre-initialize classes: {}", ex.getMessage());
+		}
+		long elapsedMillis = (System.nanoTime() - startNanos) / 1_000_000L;
+		if (elapsedMillis >= 250) {
+			String elapsedSeconds = String.format("%.2f", ((double) elapsedMillis) / 1000D);
+			logger.info("Finished pre-initializing classes in {} seconds", elapsedSeconds);
+		}
+	}
+
+	private void renderDummyQueries() {
 		DSLContext context = jooqContext.createRenderOnlyContext();
 		context
 				.insertInto(VICTIMS)
@@ -67,11 +90,5 @@ public final class JooqClassloading {
 				.columns(BANS.ID, BANS.VICTIM)
 				.values(0L, 0)
 				.getSQL();
-		long elapsedMillis = (System.nanoTime() - startNanos) / 1_000_000L;
-		if (elapsedMillis >= 250) {
-			String elapsedSeconds = String.format("%.2f", ((double) elapsedMillis) / 1000D);
-			LoggerFactory.getLogger(getClass())
-					.info("Ensured JOOQ classes were loaded in {} seconds", elapsedSeconds);
-		}
 	}
 }
