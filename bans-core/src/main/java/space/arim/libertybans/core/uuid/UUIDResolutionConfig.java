@@ -58,7 +58,7 @@ public interface UUIDResolutionConfig {
 	@ConfKey("geyser-name-prefix")
 	@ConfComments({
 			"If using Geyser, set this to the prefix in front of bedrock players' names.",
-			"Geyser users should also set the server-type option to MIXED",
+			"Geyser users should also set the server-type option to GEYSER",
 			"This setting requires a restart (/libertybans restart) to take effect"})
 	@ConfDefault.DefaultString("")
 	String geyserNamePrefix();
