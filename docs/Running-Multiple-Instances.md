@@ -17,11 +17,13 @@ LibertyBans is designed to synchronize punishments across instances, but only ac
 
 ### Database
 
+Configure all instances to connect to the same database in the `sql.yml`.
+
 It is not possible to synchronize punishments using the default (local) database, HSQLDB. You need to use a remote database, such as MariaDB or PostgreSQL.
 
 ### Synchronization
 
-You must enable cross-instance synchronization in the sql.yml:
+You must also enable cross-instance synchronization in the `sql.yml`:
   * Set `synchronization.mode` to an available setting other than 'NONE'. For example:
 ```yaml
 synchronization:

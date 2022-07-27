@@ -17,12 +17,11 @@ Note that the presence of a version does not necessarily mean that the changes w
 
 ### Database Schema
 
-Database schema changes only matter if you are doing one of the following:
-1. Running on a multi-proxy setup
-2. Running a single-proxy setup where LibertyBans is placed on the backend servers
-3. Running an external program which connects to the database, for example a web interface
+Database schema changes only matter if you are either:
+1. Running [multiple instances](Running-Multiple-Instances) of LibertyBans.
+2. Running an external program which connects to the database, for example a web interface.
 
-Assuming no external programs are connected to the database, single servers and single-proxy servers where LibertyBans is placed on the proxy do not need to be concerned with database schema changes.
+Assuming no external programs are connected to the database, single installations of LibertyBans do not need to be concerned with database schema changes.
 
 | Change                            | Versioning Change | Description                                                                                                                                                                                                                                                                                                                                                                    |
 |-----------------------------------|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -53,8 +52,6 @@ There is no timeline for responding to support requests, but an effort will be m
 
 ### A Note on Bugs in Other Software
 
-* If we identify a bug on your server which could affect LibertyBans, we reserve the right to require you to fix this bug before requesting further support.
-* If you find a bug in other software which affects LibertyBans; we may ask you to fix this other software, if it is your responsibility to do so.
-  * For example, there was a bug in pterodactyl which prevented using pterodactyl, MariaDB, and LibertyBans together. Gepron1x submitted [a fix](https://github.com/pterodactyl/panel/pull/3800) to pterodactyl, but the bug may still have residual impact (old pterodactyl versions or already-created database users).
+Sometimes, we identify bugs in other software which could affect LibertyBans. We may require you to fix these bugs before requesting further support.
 
-We are glad to assist you in fixing bugs on your server. The LibertyBans community is reputed for discovering, reporting, and fixing bugs in other plugins. However, the LibertyBans plugin cannot fix these bugs; it can only fix its own bugs.
+We are glad to assist you in fixing bugs on your server. The LibertyBans community is reputed for discovering, reporting, and fixing bugs in other plugins. Ultimately, however, we are only responsible for fixing our own bugs.
