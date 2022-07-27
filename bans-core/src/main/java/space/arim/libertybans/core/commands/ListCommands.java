@@ -42,6 +42,7 @@ import space.arim.libertybans.core.env.CmdSender;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -237,11 +238,17 @@ public class ListCommands extends AbstractSubCommandGroup {
 			ComponentLike footer = section.layoutFooter().replaceText(headerFooterReplacer);
 
 			return futuresFactory().allOf(entries.values()).thenRun(() -> {
-				sender().sendMessage(header);
+
+				List<Component> punishmentMessages = new ArrayList<>(punishments.size());
 				for (Punishment punishment : punishments) {
-					sender().sendMessage(entries.get(punishment).join());
+					punishmentMessages.add(entries.get(punishment).join());
 				}
-				sender().sendMessage(footer);
+				Component joinedMessage = Component.join(Component.newline(),
+						header,
+						Component.join(Component.newline(), punishmentMessages),
+						footer
+				);
+				sender().sendMessage(joinedMessage);
 			});
 		}
 		
