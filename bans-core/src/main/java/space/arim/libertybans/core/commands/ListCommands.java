@@ -116,6 +116,7 @@ public class ListCommands extends AbstractSubCommandGroup {
 				selectionOrderBuilder.selectAll();
 				break;
 			case BLAME:
+				selectionOrderBuilder.selectActiveOnly(config().commands().blameShowsActiveOnly());
 				break;
 			default:
 				throw new IllegalArgumentException("Could not recognise " + listType);
