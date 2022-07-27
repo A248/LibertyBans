@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -34,7 +34,7 @@ import java.util.Locale;
 import java.util.stream.Stream;
 
 @Singleton
-public class AccountHistoryCommands extends AbstractSubCommandGroup {
+public final class AccountHistoryCommands extends AbstractSubCommandGroup {
 
 	private final AccountHistory accountHistory;
 	private final AccountHistoryFormatter accountHistoryFormatter;
@@ -49,19 +49,7 @@ public class AccountHistoryCommands extends AbstractSubCommandGroup {
 		this.tabCompletion = tabCompletion;
 	}
 
-	@Override
-	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
-		switch (argIndex) {
-		case 0:
-			return Stream.of("delete", "list");
-		case 1:
-			return tabCompletion.completeOfflinePlayerNames(sender);
-		default:
-			return Stream.empty();
-		}
-	}
-
-	private AccountHistorySection accountHistory() {
+	private AccountHistorySection accountHistoryConfig() {
 		return messages().accountHistory();
 	}
 
@@ -71,7 +59,7 @@ public class AccountHistoryCommands extends AbstractSubCommandGroup {
 
 			@Override
 			public ReactionStage<Void> execute() {
-				sender.sendMessage(accountHistory().usage());
+				sender.sendMessage(accountHistoryConfig().usage());
 				return null;
 			}
 		}
@@ -89,6 +77,28 @@ public class AccountHistoryCommands extends AbstractSubCommandGroup {
 		}
 	}
 
+	@Override
+	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
+		switch (argIndex) {
+		case 0:
+			return Stream.of("delete", "list").filter((subCmd) -> hasPermission(sender, subCmd));
+		case 1:
+			return tabCompletion.completeOfflinePlayerNames(sender);
+		default:
+			break;
+		}
+		return Stream.empty();
+	}
+
+	@Override
+	public boolean hasTabCompletePermission(CmdSender sender, String arg) {
+		return hasPermission(sender, "delete") || hasPermission(sender, "list");
+	}
+
+	private boolean hasPermission(CmdSender sender, String sub) {
+		return sender.hasPermission("libertybans.alts.accounthistory." + sub);
+	}
+
 	private final class DeleteExecution extends AbstractCommandExecution {
 
 		DeleteExecution(CmdSender sender, CommandPackage command) {
@@ -96,12 +106,12 @@ public class AccountHistoryCommands extends AbstractSubCommandGroup {
 		}
 
 		private AccountHistorySection.Delete delete() {
-			return accountHistory().delete();
+			return accountHistoryConfig().delete();
 		}
 
 		@Override
 		public ReactionStage<Void> execute() {
-			if (!sender().hasPermission("libertybans.alts.accounthistory.delete")) {
+			if (!hasPermission(sender(), "delete")) {
 				sender().sendMessage(delete().permission());
 				return null;
 			}
@@ -145,12 +155,12 @@ public class AccountHistoryCommands extends AbstractSubCommandGroup {
 		}
 
 		private AccountHistorySection.Listing listing() {
-			return accountHistory().listing();
+			return accountHistoryConfig().listing();
 		}
 
 		@Override
 		public ReactionStage<Void> execute() {
-			if (!sender().hasPermission("libertybans.alts.accounthistory.list")) {
+			if (!hasPermission(sender(), "list")) {
 				sender().sendMessage(listing().permission());
 				return null;
 			}

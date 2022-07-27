@@ -24,15 +24,13 @@ import jakarta.inject.Singleton;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
-import space.arim.libertybans.core.commands.extra.ParseVictim;
+import space.arim.libertybans.core.commands.extra.PunishmentPermissionCheck;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
-import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.punish.MiscUtil;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 @Singleton
-public class AddressPunishCommands extends PunishCommands {
+public final class AddressPunishCommands extends PunishCommands implements PunishUnpunishCommands.WithPreferredVictim {
 
 	@Inject
 	public AddressPunishCommands(Dependencies dependencies, PunishmentDrafter drafter,
@@ -47,11 +45,13 @@ public class AddressPunishCommands extends PunishCommands {
 	}
 
 	@Override
-	public CentralisedFuture<Victim> parseVictim(CmdSender sender, CommandPackage command,
-												 String targetArg, PunishmentType type) {
-		return argumentParser().parseVictim(
-				sender, targetArg, ParseVictim.ofPreferredType(Victim.VictimType.ADDRESS)
-		);
+	public Victim.VictimType preferredVictimType() {
+		return Victim.VictimType.ADDRESS;
+	}
+
+	@Override
+	public boolean hasTabCompletePermission(PunishmentPermissionCheck permissionCheck) {
+		return permissionCheck.hasPermission(Victim.VictimType.ADDRESS);
 	}
 
 }

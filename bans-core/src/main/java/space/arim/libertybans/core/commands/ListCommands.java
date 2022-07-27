@@ -45,7 +45,6 @@ import space.arim.omnibus.util.concurrent.ReactionStage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
@@ -58,7 +57,7 @@ public class ListCommands extends AbstractSubCommandGroup {
 	private final PunishmentSelector selector;
 	private final InternalFormatter formatter;
 	private final TabCompletion tabCompletion;
-	
+
 	@Inject
 	public ListCommands(Dependencies dependencies, PunishmentSelector selector,
 						InternalFormatter formatter, TabCompletion tabCompletion) {
@@ -67,11 +66,16 @@ public class ListCommands extends AbstractSubCommandGroup {
 		this.formatter = formatter;
 		this.tabCompletion = tabCompletion;
 	}
-	
+
+	@Override
+	public CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
+		return new Execution(sender, command, ListType.fromString(arg));
+	}
+
 	@Override
 	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
 		if (argIndex == 0) {
-			ListType listType = ListType.valueOf(arg.toUpperCase(Locale.ROOT));
+			ListType listType = ListType.fromString(arg);
 			if (listType.requiresTarget()) {
 				return tabCompletion.completeOfflinePlayerNames(sender);
 			}
@@ -80,16 +84,15 @@ public class ListCommands extends AbstractSubCommandGroup {
 	}
 
 	@Override
-	public CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
-		ListType listType = ListType.valueOf(arg.toUpperCase(Locale.ROOT));
-		return new Execution(sender, command, listType);
+	public boolean hasTabCompletePermission(CmdSender sender, String arg) {
+		return ListType.fromString(arg).hasPermission(sender);
 	}
 
 	private class Execution extends AbstractCommandExecution {
-		
+
 		private final ListType listType;
 		private final ListSection.PunishmentList section;
-		
+
 		private String target;
 
 		Execution(CmdSender sender, CommandPackage command, ListType listType) {
@@ -100,7 +103,7 @@ public class ListCommands extends AbstractSubCommandGroup {
 
 		@Override
 		public ReactionStage<Void> execute() {
-			if (!sender().hasPermission("libertybans.list." + listType)) {
+			if (!listType.hasPermission(sender())) {
 				sender().sendMessage(section.permissionCommand());
 				return null;
 			}

@@ -26,6 +26,7 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.core.commands.extra.ParsePlayerVictimDynamicallyComposite;
+import space.arim.libertybans.core.commands.extra.PunishmentPermissionCheck;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
@@ -36,7 +37,7 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import java.util.UUID;
 
 @Singleton
-public class PlayerPunishCommands extends PunishCommands {
+public final class PlayerPunishCommands extends PunishCommands {
 
 	private final EnvUserResolver envUserResolver;
 
@@ -84,6 +85,12 @@ public class PlayerPunishCommands extends PunishCommands {
 		default:
 			throw MiscUtil.unknownType(type);
 		}
+	}
+
+	@Override
+	public boolean hasTabCompletePermission(PunishmentPermissionCheck permissionCheck) {
+		return permissionCheck.hasPermission(Victim.VictimType.PLAYER)
+				|| permissionCheck.hasPermission(Victim.VictimType.COMPOSITE);
 	}
 
 }

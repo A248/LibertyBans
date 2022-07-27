@@ -32,6 +32,7 @@ import space.arim.omnibus.util.concurrent.ReactionStage;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,25 +44,25 @@ public class CommandsCore implements Commands {
 	private final UsageGlossary usage;
 	private final PluginInfoMessage infoMessage;
 
-	private final Set<SubCommandGroup> subCommands;
+	private final Set<SubCommandGroup> subCommandGroups;
 
 	public static final String BASE_COMMAND_PERMISSION = "libertybans.commands";
 
 	@Inject
 	public CommandsCore(Configs configs, FuturePoster futurePoster,
 						UsageGlossary usage, PluginInfoMessage infoMessage,
-						@MultiBinding Set<SubCommandGroup> subCommands) {
+						@MultiBinding Set<SubCommandGroup> subCommandGroups) {
 		this.configs = configs;
 		this.futurePoster = futurePoster;
 		this.usage = usage;
 		this.infoMessage = infoMessage;
-		this.subCommands = subCommands;
+		this.subCommandGroups = subCommandGroups;
 	}
 
 	private SubCommandGroup getMatchingSubCommand(String firstArg) {
-		for (SubCommandGroup subCommand : subCommands) {
-			if (subCommand.matches(firstArg)) {
-				return subCommand;
+		for (SubCommandGroup subCommandGroup : subCommandGroups) {
+			if (subCommandGroup.matches().contains(firstArg)) {
+				return subCommandGroup;
 			}
 		}
 		return null;
@@ -103,18 +104,37 @@ public class CommandsCore implements Commands {
 	 * Tab completion
 	 */
 
+	private List<String> subCommandCompletions(CmdSender sender, Predicate<String> filter) {
+		return subCommandGroups.stream()
+				.flatMap((subCommandGroup) -> {
+					return subCommandGroup.matches()
+							.stream()
+							.filter((subCmd) -> subCommandGroup.hasTabCompletePermission(sender, subCmd));
+				})
+				.filter(filter)
+				.sorted()
+				.collect(Collectors.toUnmodifiableList());
+	}
+
 	@Override
 	public List<String> suggest(CmdSender sender, String[] args) {
-		// A length of 0 means '/libertybans' itself is tab completed
-		// Length 1 means a sub-command name like '/libertybans ban' is tab completed
-		if (args.length == 0 || args.length == 1
-				|| !sender.hasPermission(BASE_COMMAND_PERMISSION)
-				|| !configs.getMainConfig().commands().tabComplete()) {
+
+		if (!sender.hasPermission(BASE_COMMAND_PERMISSION) || !configs.getMainConfig().commands().tabComplete()) {
+			// No permission or tab complete is disabled
 			return List.of();
+		}
+		if (args.length == 0) {
+			// A length of 0 means '/libertybans ' itself is tab completed
+			return subCommandCompletions(sender, (subCmd) -> true);
+		}
+		if (args.length == 1) {
+			// Length 1 means a sub-command name like '/libertybans ban' is tab completed
+			String lookingFor = args[0].toLowerCase(Locale.ROOT);
+			return subCommandCompletions(sender, (subCmd) -> subCmd.startsWith(lookingFor));
 		}
 		String firstArg = args[0].toLowerCase(Locale.ROOT);
 		SubCommandGroup subCommand = getMatchingSubCommand(firstArg);
-		if (subCommand == null) {
+		if (subCommand == null || !subCommand.hasTabCompletePermission(sender, firstArg)) {
 			return List.of();
 		}
 		/*
@@ -130,6 +150,15 @@ public class CommandsCore implements Commands {
 			completions = completions.filter((completion) -> completion.toLowerCase(Locale.ROOT).startsWith(lastArg));
 		}
 		return completions.sorted().collect(Collectors.toUnmodifiableList());
+	}
+
+	@Override
+	public boolean hasPermissionFor(CmdSender sender, String command) {
+		if (command.equals(BASE_COMMAND_NAME)) {
+			return sender.hasPermission(BASE_COMMAND_PERMISSION);
+		}
+		SubCommandGroup subCommand = getMatchingSubCommand(command);
+		return subCommand != null && subCommand.hasTabCompletePermission(sender, command);
 	}
 
 }

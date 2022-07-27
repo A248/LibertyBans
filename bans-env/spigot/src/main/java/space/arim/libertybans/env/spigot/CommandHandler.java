@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-env-spigot
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-env-spigot is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-env-spigot is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-env-spigot. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.env.spigot;
 
 import jakarta.inject.Inject;
@@ -39,7 +40,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class CommandHandler extends BukkitCommandSkeleton implements PlatformListener {
+public final class CommandHandler extends BukkitCommandSkeleton implements PlatformListener {
 
 	private final CommandHelper commandHelper;
 	private final boolean alias;
@@ -87,7 +88,11 @@ public class CommandHandler extends BukkitCommandSkeleton implements PlatformLis
 		List<String> suggest(CommandSender platformSender, String[] args) {
 			return commands.suggest(adaptSender(platformSender), args);
 		}
-		
+
+		boolean testPermission(CommandSender platformSender, String command) {
+			return commands.hasPermissionFor(adaptSender(platformSender), command);
+		}
+
 	}
 	
 	@Override
@@ -128,6 +133,11 @@ public class CommandHandler extends BukkitCommandSkeleton implements PlatformLis
 	@Override
 	protected List<String> suggest(CommandSender platformSender, String[] args) {
 		return commandHelper.suggest(platformSender, adaptArgs(args));
+	}
+
+	@Override
+	public boolean testPermissionSilent(CommandSender platformSender) {
+		return commandHelper.testPermission(platformSender, getName());
 	}
 
 }

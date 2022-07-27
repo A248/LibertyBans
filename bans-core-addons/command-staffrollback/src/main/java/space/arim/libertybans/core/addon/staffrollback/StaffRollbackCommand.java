@@ -20,7 +20,6 @@
 package space.arim.libertybans.core.addon.staffrollback;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import org.jetbrains.annotations.Nullable;
 import space.arim.libertybans.core.addon.staffrollback.execute.PreparedRollback;
 import space.arim.libertybans.core.addon.staffrollback.execute.RollbackExecutor;
@@ -43,7 +42,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-@Singleton
 public final class StaffRollbackCommand extends AbstractSubCommandGroup {
 
 	private final StaffRollbackAddon addon;
@@ -65,6 +63,11 @@ public final class StaffRollbackCommand extends AbstractSubCommandGroup {
 	}
 
 	@Override
+	public CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
+		return new Execution(sender, command);
+	}
+
+	@Override
 	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
 		if (argIndex == 0) {
 			return tabCompletion.completeOfflinePlayerNames(sender);
@@ -73,8 +76,12 @@ public final class StaffRollbackCommand extends AbstractSubCommandGroup {
 	}
 
 	@Override
-	public CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
-		return new Execution(sender, command);
+	public boolean hasTabCompletePermission(CmdSender sender, String arg) {
+		return hasPermission(sender);
+	}
+
+	private boolean hasPermission(CmdSender sender) {
+		return sender.hasPermission("libertybans.addon.staffrollback.use");
 	}
 
 	private final class Execution extends AbstractCommandExecution {
@@ -88,7 +95,7 @@ public final class StaffRollbackCommand extends AbstractSubCommandGroup {
 
 		@Override
 		public @Nullable ReactionStage<Void> execute() {
-			if (!sender().hasPermission("libertybans.addon.staffrollback.use")) {
+			if (!hasPermission(sender())) {
 				sender().sendMessage(config.noPermission());
 				return null;
 			}

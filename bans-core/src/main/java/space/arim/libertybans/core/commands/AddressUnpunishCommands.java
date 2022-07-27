@@ -24,17 +24,14 @@ import jakarta.inject.Singleton;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.PunishmentRevoker;
-import space.arim.libertybans.core.commands.extra.ParseVictim;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
-import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.punish.MiscUtil;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.util.Arrays;
 
 @Singleton
-public class AddressUnpunishCommands extends UnpunishCommands {
+public final class AddressUnpunishCommands extends UnpunishCommands {
 
 	@Inject
 	public AddressUnpunishCommands(Dependencies dependencies, PunishmentRevoker revoker,
@@ -49,11 +46,8 @@ public class AddressUnpunishCommands extends UnpunishCommands {
 	}
 
 	@Override
-	public CentralisedFuture<Victim> parseVictim(CmdSender sender, CommandPackage command,
-												 String targetArg, PunishmentType type) {
-		return argumentParser().parseVictim(
-				sender, targetArg, ParseVictim.ofPreferredType(Victim.VictimType.ADDRESS)
-		);
+	public Victim.VictimType preferredVictimType() {
+		return Victim.VictimType.ADDRESS;
 	}
 
 }

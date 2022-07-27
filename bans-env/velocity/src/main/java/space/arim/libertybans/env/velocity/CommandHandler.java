@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-env-velocity
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-env-velocity is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-env-velocity is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-env-velocity. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.env.velocity;
 
 import com.velocitypowered.api.command.CommandManager;
@@ -34,24 +35,24 @@ import space.arim.omnibus.util.ArraysUtil;
 
 import java.util.List;
 
-public class CommandHandler implements SimpleCommand, PlatformListener {
+public final class CommandHandler implements SimpleCommand, PlatformListener {
 
 	private final CommandHelper commandHelper;
 	private final String name;
 	private final boolean alias;
-	
+
 	CommandHandler(CommandHelper commandHelper, String name, boolean alias) {
 		this.commandHelper = commandHelper;
 		this.name = name;
 		this.alias = alias;
 	}
-	
+
 	public static class CommandHelper {
-		
+
 		private final InternalFormatter formatter;
 		private final Commands commands;
 		final ProxyServer server;
-		
+
 		@Inject
 		public CommandHelper(InternalFormatter formatter, Commands commands,
 							 ProxyServer server) {
@@ -74,8 +75,13 @@ public class CommandHandler implements SimpleCommand, PlatformListener {
 		List<String> suggest(CommandSource platformSender, String[] args) {
 			return commands.suggest(adaptSender(platformSender), args);
 		}
+
+		boolean testPermission(CommandSource platformSender, String command) {
+			return commands.hasPermissionFor(adaptSender(platformSender), command);
+		}
+
 	}
-	
+
 	@Override
 	public void register() {
 		CommandManager cmdManager = commandHelper.server.getCommandManager();
@@ -87,7 +93,7 @@ public class CommandHandler implements SimpleCommand, PlatformListener {
 		CommandManager cmdManager = commandHelper.server.getCommandManager();
 		cmdManager.unregister(name);
 	}
-	
+
 	private String[] adaptArgs(String[] args, boolean tabComplete) {
 		if (alias) {
 			if (tabComplete && args.length == 0) {
@@ -106,12 +112,18 @@ public class CommandHandler implements SimpleCommand, PlatformListener {
 		String[] args = invocation.arguments();
 		commandHelper.execute(platformSender, ArrayCommandPackage.create(adaptArgs(args, false)));
 	}
-	
+
 	@Override
 	public List<String> suggest(Invocation invocation) {
 		CommandSource platformSender = invocation.source();
 		String[] args = invocation.arguments();
 		return commandHelper.suggest(platformSender, adaptArgs(args, true));
 	}
-	
+
+	@Override
+	public boolean hasPermission(Invocation invocation) {
+		CommandSource platformSender = invocation.source();
+		return commandHelper.testPermission(platformSender, name);
+	}
+
 }

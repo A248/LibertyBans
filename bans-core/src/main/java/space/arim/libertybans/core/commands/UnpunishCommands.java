@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.commands;
 
 import net.kyori.adventure.text.Component;
@@ -50,16 +51,16 @@ import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-abstract class UnpunishCommands extends AbstractSubCommandGroup implements PunishUnpunishCommands {
-	
+abstract class UnpunishCommands extends AbstractSubCommandGroup implements PunishUnpunishCommands.WithPreferredVictim {
+
 	private final PunishmentRevoker revoker;
 	private final InternalFormatter formatter;
 	private final TabCompletion tabCompletion;
-	
-	UnpunishCommands(Dependencies dependencies, Stream<String> matches,
+
+	UnpunishCommands(Dependencies dependencies, Stream<String> subCommands,
 					 PunishmentRevoker revoker, InternalFormatter formatter,
 					 TabCompletion tabCompletion) {
-		super(dependencies, matches);
+		super(dependencies, subCommands);
 		this.revoker = revoker;
 		this.formatter = formatter;
 		this.tabCompletion = tabCompletion;
@@ -74,7 +75,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 				(permissionCheck = new PunishmentPermissionCheck(sender, new PunishmentPermission(type, Mode.UNDO))),
 				new NotificationMessage(permissionCheck));
 	}
-	
+
 	@Override
 	public final Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
 		if (argIndex == 0) {
@@ -89,7 +90,16 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 		}
 		return Stream.empty();
 	}
-	
+
+	@Override
+	public final boolean hasTabCompletePermission(CmdSender sender, String arg) {
+		PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
+		PunishmentPermissionCheck permissionCheck = new PunishmentPermissionCheck(sender, new PunishmentPermission(type, Mode.UNDO));
+		// Accept either the preferred victim or composite wildcard; see execution below
+		return permissionCheck.hasPermission(preferredVictimType())
+				|| permissionCheck.hasPermission(Victim.VictimType.COMPOSITE);
+	}
+
 	private class Execution extends TypeSpecificExecution {
 
 		private final PunishmentPermissionCheck permissionCheck;

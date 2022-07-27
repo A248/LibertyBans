@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.commands;
 
+import java.util.Set;
 import java.util.stream.Stream;
 
 import space.arim.libertybans.core.env.CmdSender;
@@ -30,37 +31,44 @@ import space.arim.libertybans.core.env.CmdSender;
  *
  */
 public interface SubCommandGroup {
-	
-	/**
-	 * Whether this subcommand object matches the specified subcommand argument
-	 * 
-	 * @param arg the argument, lowercased
-	 * @return true if matches, false otherwise
-	 */
-	boolean matches(String arg);
 
 	/**
-	 * Executes the subcommand, assuming it matched the subcommand argument
-	 * 
+	 * Gets the sub commands implemented by this sub command group.
+	 *
+	 * @return the sub commands, all of which should be lowercased
+	 */
+	Set<String> matches();
+
+	/**
+	 * Executes a sub command
+	 *
 	 * @param sender the command sender
 	 * @param command the command
-	 * @param arg the argument matched to this sub command group, lowercased
+	 * @param arg the sub command matched to this sub command group, lowercased
 	 * @return the execution
 	 */
 	CommandExecution execute(CmdSender sender, CommandPackage command, String arg);
 
 	/**
-	 * Gets tab complete suggestions for the subcommand. <br>
+	 * Gets tab complete suggestions for a sub command. <br>
 	 * <br>
-	 * The argIndex determines which tab completions are requested. An argIndex
-	 * of {@code n} means to request the tab completions for the nth argument
-	 * of this command. The index is zero-based.
-	 * 
+	 * The argIndex determines which tab completions are requested. An argIndex of {@code n} means to request
+	 * the tab completions for the nth argument of the sub command. The index is zero-based.
+	 *
 	 * @param sender the command sender
-	 * @param arg the argument matched to this sub command group, lowercased
-	 * @param argIndex the index of the furthest subcommand argument
+	 * @param arg the sub command matched to this sub command group, lowercased
+	 * @param argIndex the index of the furthest argument
 	 * @return tab complete suggestions
 	 */
 	Stream<String> suggest(CmdSender sender, String arg, int argIndex);
-	
+
+	/**
+	 * Determines whether the sender has permission for a sub command, for tab completion purposes
+	 *
+	 * @param sender the command sender
+	 * @param arg the argument matched to this sub command group, uppercased
+	 * @return true if the sender has permission
+	 */
+	boolean hasTabCompletePermission(CmdSender sender, String arg);
+
 }

@@ -110,7 +110,7 @@ public class CommandsCoreTest {
 
 		SubCommandGroup subCommandOne = mock(SubCommandGroup.class);
 		CommandExecution subCommandOneExecution = mock(CommandExecution.class);
-		when(subCommandOne.matches("one")).thenReturn(true);
+		when(subCommandOne.matches()).thenReturn(Set.of("one"));
 		when(subCommandOne.execute(any(), any(), any())).thenReturn(subCommandOneExecution);
 		when(subCommandOneExecution.execute()).thenReturn(futuresFactory.completedFuture(null));
 		SubCommandGroup subCommandTwo = mock(SubCommandGroup.class);
@@ -128,7 +128,9 @@ public class CommandsCoreTest {
 		addBasePermission();
 
 		SubCommandGroup subCommandOne = mock(SubCommandGroup.class);
+		when(subCommandOne.matches()).thenReturn(Set.of());
 		SubCommandGroup subCommandTwo = mock(SubCommandGroup.class);
+		when(subCommandTwo.matches()).thenReturn(Set.of());
 
 		CommandPackage commandNone = ArrayCommandPackage.create("none");
 		newCommandsCore(Set.of(subCommandOne, subCommandTwo)).execute(sender, commandNone);
@@ -140,7 +142,7 @@ public class CommandsCoreTest {
 	public void nullExecution(@Mock SubCommandGroup subCommand, @Mock CommandExecution commandExecution) {
 		addBasePermission();
 
-		when(subCommand.matches("arg")).thenReturn(true);
+		when(subCommand.matches()).thenReturn(Set.of("arg"));
 		when(subCommand.execute(any(), any(), any())).thenReturn(commandExecution);
 		when(commandExecution.execute()).thenReturn(null);
 

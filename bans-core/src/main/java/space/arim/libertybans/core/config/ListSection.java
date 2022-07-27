@@ -30,6 +30,7 @@ import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.IntegerRange;
 import space.arim.dazzleconf.annote.SubSection;
+import space.arim.libertybans.core.env.CmdSender;
 
 @ConfHeader("Used for /banlist, /mutelist, /history, /warns, /blame")
 public interface ListSection {
@@ -298,7 +299,15 @@ public interface ListSection {
 				throw new IllegalArgumentException("requiresTarget not up-to-date");
 			}
 		}
-		
+
+		public boolean hasPermission(CmdSender sender) {
+			return sender.hasPermission("libertybans.list." + this);
+		}
+
+		public static ListType fromString(String listType) {
+			return valueOf(listType.toUpperCase(Locale.ROOT));
+		}
+
 		@Override
 		public String toString() {
 			return name().toLowerCase(Locale.ROOT);

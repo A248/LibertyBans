@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -33,7 +33,7 @@ import space.arim.omnibus.util.concurrent.ReactionStage;
 import java.util.stream.Stream;
 
 @Singleton
-public class AltCommands extends AbstractSubCommandGroup {
+public final class AltCommands extends AbstractSubCommandGroup {
 
 	private final UUIDManager uuidManager;
 	private final AltDetection altDetection;
@@ -49,6 +49,10 @@ public class AltCommands extends AbstractSubCommandGroup {
 		this.tabCompletion = tabCompletion;
 	}
 
+	private AltsSection altsConfig() {
+		return messages().alts();
+	}
+
 	@Override
 	public CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
 		return new Execution(sender, command);
@@ -62,8 +66,13 @@ public class AltCommands extends AbstractSubCommandGroup {
 		return Stream.empty();
 	}
 
-	private AltsSection section() {
-		return messages().alts();
+	@Override
+	public boolean hasTabCompletePermission(CmdSender sender, String arg) {
+		return hasPermission(sender);
+	}
+
+	private boolean hasPermission(CmdSender sender) {
+		return sender.hasPermission("libertybans.alts.command");
 	}
 
 	private class Execution extends AbstractCommandExecution {
@@ -74,12 +83,12 @@ public class AltCommands extends AbstractSubCommandGroup {
 
 		@Override
 		public ReactionStage<Void> execute() {
-			if (!sender().hasPermission("libertybans.alts.command")) {
-				sender().sendMessage(section().command().permission());
+			if (!hasPermission(sender())) {
+				sender().sendMessage(altsConfig().command().permission());
 				return null;
 			}
 			if (!command().hasNext()) {
-				sender().sendMessage(section().command().usage());
+				sender().sendMessage(altsConfig().command().usage());
 				return null;
 			}
 			String target = command().next();
@@ -90,11 +99,11 @@ public class AltCommands extends AbstractSubCommandGroup {
 				}
 				return altDetection.detectAlts(userDetails.get(), WhichAlts.ALL_ALTS).thenAccept((detectedAlts) -> {
 					if (detectedAlts.isEmpty()) {
-						sender().sendMessage(section().command().noneFound());
+						sender().sendMessage(altsConfig().command().noneFound());
 						return;
 					}
 					sender().sendMessageNoPrefix(
-							altCheckFormatter.formatMessage(section().command().header(), target, detectedAlts));
+							altCheckFormatter.formatMessage(altsConfig().command().header(), target, detectedAlts));
 				});
 			});
 		}

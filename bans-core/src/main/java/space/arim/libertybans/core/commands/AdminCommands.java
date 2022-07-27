@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -38,7 +38,7 @@ import java.util.Locale;
 import java.util.stream.Stream;
 
 @Singleton
-public class AdminCommands extends AbstractSubCommandGroup {
+public final class AdminCommands extends AbstractSubCommandGroup {
 
 	private final Provider<BaseFoundation> foundation;
 	private final Provider<Environment> environment;
@@ -61,19 +61,32 @@ public class AdminCommands extends AbstractSubCommandGroup {
 
 	@Override
 	public CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
-		return new Execution(sender, command, Type.valueOf(arg.toUpperCase(Locale.ROOT)));
+		return new Execution(sender, command, Type.fromString(arg));
 	}
-	
+
 	@Override
 	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
 		return Stream.empty();
 	}
-	
+
+	@Override
+	public boolean hasTabCompletePermission(CmdSender sender, String arg) {
+		return Type.fromString(arg).hasPermission(sender);
+	}
+
 	private enum Type {
 		RELOAD,
 		RESTART,
 		DEBUG;
-		
+
+		boolean hasPermission(CmdSender sender) {
+			return sender.hasPermission("libertybans.admin." + this);
+		}
+
+		static Type fromString(String type) {
+			return valueOf(type.toUpperCase(Locale.ROOT));
+		}
+
 		@Override
 		public String toString() {
 			return name().toLowerCase(Locale.ROOT);
@@ -91,7 +104,7 @@ public class AdminCommands extends AbstractSubCommandGroup {
 
 		@Override
 		public ReactionStage<Void> execute() {
-			if (!sender().hasPermission("libertybans.admin." + type)) {
+			if (!type.hasPermission(sender())) {
 				sender().sendMessage(adminConfig().noPermission());
 				return null;
 			}

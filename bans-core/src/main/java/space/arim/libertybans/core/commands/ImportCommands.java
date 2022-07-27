@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2020 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 @Singleton
-public class ImportCommands extends AbstractSubCommandGroup {
+public final class ImportCommands extends AbstractSubCommandGroup {
 
 	private final ImportExecutor executor;
 	private final Map<PluginSourceType, Provider<? extends ImportSource>> importSourceProviders;
@@ -71,6 +71,11 @@ public class ImportCommands extends AbstractSubCommandGroup {
 	}
 
 	@Override
+	public CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
+		return new Execution(sender, command);
+	}
+
+	@Override
 	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
 		if (argIndex == 0) {
 			return Stream.of("advancedban", "litebans", "vanilla", "self");
@@ -79,8 +84,12 @@ public class ImportCommands extends AbstractSubCommandGroup {
 	}
 
 	@Override
-	public CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
-		return new Execution(sender, command);
+	public boolean hasTabCompletePermission(CmdSender sender, String arg) {
+		return hasPermission(sender);
+	}
+
+	private boolean hasPermission(CmdSender sender) {
+		return sender.hasPermission("libertybans.admin.import");
 	}
 
 	private class Execution extends AbstractCommandExecution {
@@ -91,7 +100,7 @@ public class ImportCommands extends AbstractSubCommandGroup {
 
 		@Override
 		public ReactionStage<Void> execute() {
-			if (!sender().hasPermission("libertybans.admin.import")) {
+			if (!hasPermission(sender())) {
 				sender().sendMessage(messages().admin().noPermission());
 				return null;
 			}

@@ -38,7 +38,7 @@ public final class PunishmentPermissionCheck {
 		this.punishmentPermission = Objects.requireNonNull(punishmentPermission, "punishmentPermission");
 	}
 
-	private static String permissionForVictim(Victim.VictimType victimType) {
+	private static String permissionForVictimType(Victim.VictimType victimType) {
 		switch (victimType) {
 		case PLAYER:
 			return "uuid";
@@ -51,7 +51,8 @@ public final class PunishmentPermissionCheck {
 		}
 	}
 
-	private static Component permissionMessageForVictim(Victim.VictimType victimType, PunishmentPermissionSection permissionSection) {
+	private static Component permissionMessageForVictimType(Victim.VictimType victimType,
+															PunishmentPermissionSection permissionSection) {
 		switch (victimType) {
 		case PLAYER:
 			return permissionSection.uuid();
@@ -64,11 +65,15 @@ public final class PunishmentPermissionCheck {
 		}
 	}
 
+	public boolean hasPermission(Victim.VictimType victimType) {
+		String permission = punishmentPermission.permission("target." + permissionForVictimType(victimType));
+		return sender.hasPermission(permission);
+	}
+
 	public boolean checkPermission(Victim victim, PunishmentPermissionSection permissionSection) {
 		Victim.VictimType victimType = victim.getType();
-		String permission = punishmentPermission.permission("target." + permissionForVictim(victimType));
-		if (!sender.hasPermission(permission)) {
-			sender.sendMessage(permissionMessageForVictim(victimType, permissionSection));
+		if (!hasPermission(victimType)) {
+			sender.sendMessage(permissionMessageForVictimType(victimType, permissionSection));
 			return false;
 		}
 		return true;

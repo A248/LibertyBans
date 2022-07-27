@@ -43,19 +43,19 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 	 * Matching commands, lowercased
 	 * 
 	 */
-	private final Set<String> matches;
+	private final Set<String> subCommands;
 
-	private AbstractSubCommandGroup(Dependencies dependencies, Set<String> matches) {
+	private AbstractSubCommandGroup(Dependencies dependencies, Set<String> subCommands) {
 		this.dependencies = dependencies;
-		this.matches = Set.copyOf(matches);
+		this.subCommands = Set.copyOf(subCommands);
 	}
 
-	protected AbstractSubCommandGroup(Dependencies dependencies, String...matches) {
-		this(dependencies, Set.of(matches));
+	protected AbstractSubCommandGroup(Dependencies dependencies, String... subCommands) {
+		this(dependencies, Set.of(subCommands));
 	}
 
-	protected AbstractSubCommandGroup(Dependencies dependencies, Stream<String> matches) {
-		this(dependencies, matches.collect(Collectors.toUnmodifiableSet()));
+	protected AbstractSubCommandGroup(Dependencies dependencies, Stream<String> subCommands) {
+		this(dependencies, subCommands.collect(Collectors.toUnmodifiableSet()));
 	}
 
 	@Singleton
@@ -78,8 +78,8 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 	}
 
 	@Override
-	public boolean matches(String arg) {
-		return matches.contains(arg);
+	public Set<String> matches() {
+		return subCommands;
 	}
 
 	/*
@@ -88,11 +88,11 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 	 * 
 	 */
 
-	protected ArgumentParser argumentParser() {
+	public ArgumentParser argumentParser() {
 		return dependencies.argumentParser;
 	}
 
-	FactoryOfTheFuture futuresFactory() {
+	protected FactoryOfTheFuture futuresFactory() {
 		return dependencies.futuresFactory;
 	}
 
@@ -100,7 +100,7 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 		return futuresFactory().completedFuture(value);
 	}
 
-	Configs configs() {
+	protected Configs configs() {
 		return dependencies.configs;
 	}
 

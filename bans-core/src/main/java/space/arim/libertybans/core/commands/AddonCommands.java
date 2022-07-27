@@ -34,7 +34,7 @@ import java.util.Locale;
 import java.util.stream.Stream;
 
 @Singleton
-public class AddonCommands extends AbstractSubCommandGroup {
+public final class AddonCommands extends AbstractSubCommandGroup {
 
 	private final AddonCenter addonCenter;
 
@@ -44,6 +44,10 @@ public class AddonCommands extends AbstractSubCommandGroup {
 		this.addonCenter = addonCenter;
 	}
 
+	private MessagesConfig.Admin.Addons addonConfig() {
+		return messages().admin().addons();
+	}
+
 	@Override
 	public CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
 		return new Execution(sender, command);
@@ -51,32 +55,47 @@ public class AddonCommands extends AbstractSubCommandGroup {
 
 	@Override
 	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
+		switch (argIndex) {
+		case 0:
+			return Stream.of("list", "reload");
+		case 1:
+			// Assume this is the reload command
+			return addonCenter.allIdentifiers();
+		default:
+			break;
+		}
 		return Stream.empty();
+	}
+
+	@Override
+	public boolean hasTabCompletePermission(CmdSender sender, String arg) {
+		return hasPermission(sender);
+	}
+
+	private boolean hasPermission(CmdSender sender) {
+		return sender.hasPermission("libertybans.admin.addon");
 	}
 
 	private class Execution extends AbstractCommandExecution {
 
-		private final MessagesConfig.Admin.Addons conf;
-
 		Execution(CmdSender sender, CommandPackage command) {
 			super(sender, command);
-			conf = messages().admin().addons();
 		}
 
 		@Override
 		public @Nullable ReactionStage<Void> execute() {
-			if (!sender().hasPermission("libertybans.admin.addon")) {
+			if (!hasPermission(sender())) {
 				sender().sendMessage(messages().admin().noPermission());
 				return null;
 			}
 			if (!command().hasNext()) {
-				sender().sendMessage(conf.usage());
+				sender().sendMessage(addonConfig().usage());
 				return null;
 			}
 			String firstArg = command().next();
 			switch (firstArg.toLowerCase(Locale.ROOT)) {
 			case "list":
-				var listing = conf.listing();
+				var listing = addonConfig().listing();
 				var layout = listing.layout();
 				sender().sendMessage(Component.text()
 						.append(listing.message())
@@ -91,14 +110,14 @@ public class AddonCommands extends AbstractSubCommandGroup {
 			case "reload":
 				return reloadCmd();
 			default:
-				sender().sendMessage(conf.usage());
+				sender().sendMessage(addonConfig().usage());
 				break;
 			}
 			return null;
 		}
 
 		private ReactionStage<Void> reloadCmd() {
-			var reloadConfig = conf.reloadAddon();
+			var reloadConfig = addonConfig().reloadAddon();
 			if (!command().hasNext()) {
 				sender().sendMessage(reloadConfig.usage());
 				return completedFuture(null);
