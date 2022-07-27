@@ -25,7 +25,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.core.commands.Commands;
-import space.arim.libertybans.core.commands.CommandsCore;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
@@ -34,6 +33,7 @@ import space.arim.libertybans.it.NoDbAccess;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
@@ -50,7 +50,7 @@ public class TabCompletionIT {
 	@TestTemplate
 	@NoDbAccess
 	public void suggest(@DontInject @Mock CmdSender sender) {
-		when(sender.hasPermission(CommandsCore.BASE_COMMAND_PERMISSION)).thenReturn(true);
+		when(sender.hasPermission(any())).thenReturn(true);
 		List<String> onSameServer = List.of("aplayer", "bplayer", "cplayer");
 		when(sender.getPlayerNamesOnSameServer()).thenReturn(onSameServer.stream());
 
