@@ -19,7 +19,7 @@
   * [The Database Schema](The-Database-Schema)
 * Relations to other software
   * [Importing from other plugins](Importing-from-Other-Plugins)
-  * [Dealing with misbehaving plugins](Event-was-previously-blocked-by-the-server-or-another-plugin...)
+  * [Dealing with misbehaving plugins](Misbehaving-Plugins)
 * Comparison to Other Plugins
   * [Comparison to AdvancedBan](Comparison-to-AdvancedBan)
   * [Comparison to BanManager](Comparison-to-BanManager)
