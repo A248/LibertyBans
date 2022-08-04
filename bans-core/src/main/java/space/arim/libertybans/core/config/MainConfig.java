@@ -33,7 +33,7 @@ import space.arim.libertybans.core.selector.EnforcementConfig;
 import space.arim.libertybans.core.uuid.UUIDResolutionConfig;
 
 import java.time.ZoneId;
-import java.util.Set;
+import java.util.List;
 
 @ConfHeader({
 		"",
@@ -115,7 +115,7 @@ public interface MainConfig {
 		    "alts",
 			"accounthistory"
 		})
-		Set<String> aliases();
+		List<String> aliases();
 
 		@ConfKey("use-composite-victims-by-default")
 		@ConfComments({

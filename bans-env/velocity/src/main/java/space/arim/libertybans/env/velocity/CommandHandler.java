@@ -20,8 +20,10 @@
 package space.arim.libertybans.env.velocity;
 
 import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
+import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import jakarta.inject.Inject;
@@ -51,13 +53,15 @@ public final class CommandHandler implements SimpleCommand, PlatformListener {
 
 		private final InternalFormatter formatter;
 		private final Commands commands;
-		final ProxyServer server;
+		private final PluginContainer plugin;
+		private final ProxyServer server;
 
 		@Inject
 		public CommandHelper(InternalFormatter formatter, Commands commands,
-							 ProxyServer server) {
+							 PluginContainer plugin, ProxyServer server) {
 			this.formatter = formatter;
 			this.commands = commands;
+			this.plugin = plugin;
 			this.server = server;
 		}
 
@@ -84,8 +88,12 @@ public final class CommandHandler implements SimpleCommand, PlatformListener {
 
 	@Override
 	public void register() {
-		CommandManager cmdManager = commandHelper.server.getCommandManager();
-		cmdManager.register(cmdManager.metaBuilder(name).build(), this);
+		CommandManager commandManager = commandHelper.server.getCommandManager();
+		CommandMeta commandMeta = commandManager
+				.metaBuilder(name)
+				.plugin(commandHelper.plugin)
+				.build();
+		commandManager.register(commandMeta, this);
 	}
 
 	@Override

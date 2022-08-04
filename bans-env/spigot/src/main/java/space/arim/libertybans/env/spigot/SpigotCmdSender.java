@@ -66,20 +66,17 @@ public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 
 	static class PlayerSender extends SpigotCmdSender {
 
-		private final FactoryOfTheFuture futuresFactory;
-
 		PlayerSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
 					 Player player, JavaPlugin plugin, FactoryOfTheFuture futuresFactory) {
 			super(formatter, audienceRepresenter,
 					player, PlayerOperator.of(player.getUniqueId()), plugin, futuresFactory);
-			this.futuresFactory = futuresFactory;
 		}
 
 		@Override
 		public boolean hasPermission(String permission) {
-			return futuresFactory.supplySync(() -> getRawSender().hasPermission(permission)).join();
+			return getRawSender().hasPermission(permission);
 		}
-		
+
 	}
 
 	static class ConsoleSender extends SpigotCmdSender {

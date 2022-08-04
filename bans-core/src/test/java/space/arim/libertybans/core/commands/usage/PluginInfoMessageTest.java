@@ -61,6 +61,6 @@ public class PluginInfoMessageTest {
 				List.of("Collaborator"),
 				List.of("Commended User")
 		).send(sender);
-		verify(sender).sendLiteralMessage(notNull());
+		verify(sender).sendLiteralMessageNoPrefix(notNull());
 	}
 }

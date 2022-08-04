@@ -1,4 +1,4 @@
-All chat messages use color codes. Color codes enable colorful chat messages.
+All chat messages may use color codes, enabling fancier formatting.
 
 ## How To
 
@@ -8,19 +8,19 @@ You can use multiple color codes and formatting.
 
 ## All Codes
 
-![Color Codes Image](https://www.spigotmc.org/attachments/example2-png.188806/)
+![Color Codes Image](https://user-images.githubusercontent.com/22414680/183296891-9882b41d-3c64-40b0-ba06-3752e590efe5.png)
 
 The &k color code is called *obfuscated* (a.k.a *magic*). It scrambles the text which it formats.
 
-## Hex Colour Codes
+## Hex Color Codes
 
 You can use hex colour codes in messages with the syntax <#00FF00>
 
-If the platform does not support it, hex colour codes are converted to the closest '&' colour codes.
+If the platform does not support it, hex color codes are converted to the closest '&' color codes.
 
-Platforms supporting hex colour codes:
+Platforms supporting hex color codes:
 
-* Bukkit/Spigot/Paper *1.16 or later*
+* Paper *1.16 or later*
 * BungeeCord
 * Velocity
 
