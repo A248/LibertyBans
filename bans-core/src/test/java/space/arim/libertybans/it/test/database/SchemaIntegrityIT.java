@@ -23,7 +23,6 @@ import jakarta.inject.Provider;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
-import space.arim.libertybans.core.database.jooq.NetworkAddressConverter;
 import space.arim.libertybans.core.service.Time;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -51,7 +50,7 @@ public class SchemaIntegrityIT {
 		return queryExecutor.get().execute((context) -> {
 			context
 					.insertInto(ADDRESSES)
-					.columns(ADDRESSES.UUID, ADDRESSES.ADDRESS.convert(new NetworkAddressConverter().inverse()), ADDRESSES.UPDATED)
+					.columns(ADDRESSES.UUID, ADDRESSES.ADDRESS.coerce(byte[].class), ADDRESSES.UPDATED)
 					.values(UUID.randomUUID(), address, time.currentTimestamp())
 					.execute();
 		});
