@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -44,8 +44,7 @@ class VelocityInitializer {
 
 	Platform detectPlatform() {
 		String caffeineClass = "com.github.benmanes.caffeine.cache.Caffeine";
-		boolean caffeine = Platforms.detectLibrary(caffeineClass,
-				ProxyServer.class.getClassLoader(), velocityPlugin.server.getClass().getClassLoader());
+		boolean caffeine = Platforms.detectLibrary(caffeineClass, ProxyServer.class.getClassLoader());
 		return Platforms.velocity(caffeine);
 	}
 

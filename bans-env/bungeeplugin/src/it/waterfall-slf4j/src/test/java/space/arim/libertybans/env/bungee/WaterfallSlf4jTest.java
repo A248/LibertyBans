@@ -22,10 +22,11 @@ package space.arim.libertybans.env.bungee;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.LoggerFactory;
 import space.arim.libertybans.bootstrap.Platform;
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
-import space.arim.libertybans.bootstrap.logger.Slf4jBootstrapLogger;
+import space.arim.libertybans.bootstrap.logger.JulBootstrapLogger;
+
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,7 +36,7 @@ public class WaterfallSlf4jTest {
 
 	@Test
 	public void detectPlatform() {
-		BootstrapLogger logger = new Slf4jBootstrapLogger(LoggerFactory.getLogger(getClass()));
+		BootstrapLogger logger = new JulBootstrapLogger(Logger.getLogger(getClass().getName()));
 		Platform platform = new BaseWrapper.Creator(MockPlugin.create(), logger).detectPlatform();
 		assertTrue(platform.hasSlf4jSupport());
 		assertFalse(platform.hasKyoriAdventureSupport());

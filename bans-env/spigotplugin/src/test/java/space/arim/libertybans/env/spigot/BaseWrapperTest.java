@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,12 +24,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.LoggerFactory;
 import space.arim.libertybans.bootstrap.Platform;
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
-import space.arim.libertybans.bootstrap.logger.Slf4jBootstrapLogger;
+import space.arim.libertybans.bootstrap.logger.JulBootstrapLogger;
 
 import java.nio.file.Path;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.when;
@@ -45,7 +45,7 @@ public class BaseWrapperTest {
 		JavaPlugin plugin = MockJavaPlugin.create(dataFolder, (server) -> {
 			when(server.getVersion()).thenReturn("version");
 		});
-		BootstrapLogger logger = new Slf4jBootstrapLogger(LoggerFactory.getLogger(getClass()));
+		BootstrapLogger logger = new JulBootstrapLogger(Logger.getLogger(getClass().getName()));
 		Platform platform = new BaseWrapper.Creator(plugin, logger, dataFolder).detectPlatform();
 		assertFalse(platform.hasSlf4jSupport());
 		assertFalse(platform.hasKyoriAdventureSupport());

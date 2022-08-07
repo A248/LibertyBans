@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,8 +19,6 @@
 
 package space.arim.libertybans.bootstrap;
 
-import java.util.List;
-
 public final class Platforms {
 
 	private Platforms() {}
@@ -35,20 +33,29 @@ public final class Platforms {
 	}
 
 	/**
-	 * Determines whether a library is present in any of the given classloaders
+	 * Determines whether a library is present in the given classloader or any of its
+	 * parent classloaders
 	 *
 	 * @param className a class in the library
-	 * @param expectedClassLoaders the classloaders, may contain duplicates
-	 * @return true if the library is present in any of the classloaders
+	 * @param expectedClassLoader the classloader
+	 * @return true if the library is present in the classloader or any of its parents
 	 */
-	public static boolean detectLibrary(String className, ClassLoader...expectedClassLoaders) {
+	public static boolean detectLibrary(String className, ClassLoader expectedClassLoader) {
 		Class<?> libClass;
 		try {
 			libClass = Class.forName(className);
 		} catch (ClassNotFoundException ex) {
 			return false;
 		}
-		return List.of(expectedClassLoaders).contains(libClass.getClassLoader());
+		return findClassLoaderInHierarchy(libClass.getClassLoader(), expectedClassLoader);
+	}
+
+	private static boolean findClassLoaderInHierarchy(ClassLoader subjectToLookFor, ClassLoader hierarchy) {
+		if (subjectToLookFor == hierarchy) {
+			return true;
+		}
+		ClassLoader parent = hierarchy.getParent();
+		return parent != null && findClassLoaderInHierarchy(subjectToLookFor, parent);
 	}
 
 	public static Platform velocity(boolean caffeine) {

@@ -17,24 +17,37 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.env.bungee;
+package space.arim.libertybans.env.spigot;
 
+import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.bootstrap.Platform;
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 import space.arim.libertybans.bootstrap.logger.JulBootstrapLogger;
 
 import java.util.logging.Logger;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
-public class BaseWrapperTest {
+@ExtendWith(MockitoExtension.class)
+public class SpigotSlf4jTest {
+
+	@TempDir
+	public Path dataFolder;
 
 	@Test
 	public void detectPlatform() {
+		JavaPlugin plugin = MockJavaPlugin.create(dataFolder, (server) -> {
+			when(server.getVersion()).thenReturn("version");
+		});
 		BootstrapLogger logger = new JulBootstrapLogger(Logger.getLogger(getClass().getName()));
-		Platform platform = new BaseWrapper.Creator(MockPlugin.create(), logger).detectPlatform();
+		Platform platform = new BaseWrapper.Creator(plugin, logger, dataFolder).detectPlatform();
 		assertTrue(platform.hasSlf4jSupport());
 		assertFalse(platform.hasKyoriAdventureSupport());
 	}
