@@ -22,6 +22,8 @@ package space.arim.libertybans.core.punish;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.api.punish.Punishment;
@@ -116,7 +118,14 @@ public final class StandardGlobalEnforcement implements GlobalEnforcement {
 
 	@Override
 	public void run() {
-		synchronizationMessenger.get().poll().thenCompose(this::receiveAllMessages).join();
+		synchronizationMessenger.get()
+				.poll()
+				.thenCompose(this::receiveAllMessages)
+				.exceptionally((ex) -> {
+					Logger logger = LoggerFactory.getLogger(getClass());
+					logger.warn("Exception while polling for synchronization messages", ex);
+					return null;
+				});
 	}
 
 	ReactionStage<?> receiveAllMessages(byte[][] messages) {

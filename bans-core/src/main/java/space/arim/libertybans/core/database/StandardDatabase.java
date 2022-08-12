@@ -89,7 +89,7 @@ public final class StandardDatabase implements InternalDatabase, AutoCloseable {
 		if (synchronizationConf.enabled()) {
 			synchronizationPollTask = enhancedExecutor.scheduleRepeating(
 					manager.globalEnforcement(),
-					RefreshTaskRunnable.obtainPollRate(synchronizationConf),
+					Duration.ofMillis(synchronizationConf.pollRateMillis()),
 					DelayCalculators.fixedDelay()
 			);
 		}

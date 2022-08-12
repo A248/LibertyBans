@@ -24,8 +24,10 @@ import space.arim.dazzleconf.annote.ConfDefault.DefaultInteger;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultString;
 import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
+import space.arim.dazzleconf.annote.IntegerRange;
 import space.arim.dazzleconf.annote.SubSection;
 import space.arim.libertybans.core.database.DatabaseSettingsConfig;
+import space.arim.libertybans.core.database.RefreshTaskRunnable;
 
 @ConfHeader({
 		"",
@@ -117,12 +119,13 @@ public interface SqlConfig extends DatabaseSettingsConfig {
 		}
 
 		@ConfKey("poll-rate-millis")
-		@DefaultInteger(4000)
 		@ConfComments({"How frequently the database is polled for updates, in milliseconds.",
 				"Usually the default setting of 4 seconds will be sufficiently responsive without querying the database too often",
 				"If you want to increase responsiveness, lower this value. If you want to reduce database load, increase this value.",
 				"",
 				"This value MUST be less than 30 seconds."})
+		@IntegerRange(min = 250L, max = RefreshTaskRunnable.MAX_POLL_RATE_MILLIS)
+		@DefaultInteger(4000)
 		long pollRateMillis();
 
 		default boolean enabled() {
