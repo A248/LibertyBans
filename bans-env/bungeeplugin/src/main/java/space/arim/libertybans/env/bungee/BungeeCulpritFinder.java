@@ -20,12 +20,13 @@
 package space.arim.libertybans.env.bungee;
 
 import java.lang.reflect.Field;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
 import net.md_5.bungee.api.plugin.PluginDescription;
 
-final class BungeeCulpritFinder implements Function<Class<?>, String> {
+final class BungeeCulpritFinder implements Function<Class<?>, Optional<String>> {
 
 	private final Logger logger;
 
@@ -64,11 +65,12 @@ final class BungeeCulpritFinder implements Function<Class<?>, String> {
 	}
 
 	@Override
-	public String apply(Class<?> clazz) {
+	public Optional<String> apply(Class<?> clazz) {
 		PluginDescription description = getProvidingPluginDescription(clazz);
-		if (description != null) {
-			return description.getName() + " " + description.getVersion();
+		if (description == null) {
+			return Optional.empty();
 		}
-		return null;
+		return Optional.of(description.getName() + " " + description.getVersion());
 	}
+
 }

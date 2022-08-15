@@ -63,7 +63,7 @@ public class VelocityCulpritFinderTest {
 		}
 
 		CulpritFinder culpritFinder = new VelocityCulpritFinder(server);
-		assertEquals("JDK 0", culpritFinder.findCulprit(List.class));
-		assertEquals("Self 1", culpritFinder.findCulprit(getClass()));
+		assertEquals(Optional.of("JDK 0"), culpritFinder.findCulprit(List.class));
+		assertEquals(Optional.of("Self 1"), culpritFinder.findCulprit(getClass()));
 	}
 }

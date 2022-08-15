@@ -19,21 +19,19 @@
 
 package space.arim.libertybans.env.spigot;
 
-import java.nio.file.Path;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import space.arim.libertybans.bootstrap.BaseFoundation;
 import space.arim.libertybans.bootstrap.CulpritFinder;
-import space.arim.libertybans.bootstrap.Platform;
 import space.arim.libertybans.bootstrap.Instantiator;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
+import space.arim.libertybans.bootstrap.Platform;
 import space.arim.libertybans.bootstrap.Platforms;
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 
-import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.java.JavaPlugin;
+import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 class BaseWrapper {
 
@@ -80,16 +78,7 @@ class BaseWrapper {
 			ClassLoader launchLoader;
 			try {
 				// Using CulpritFinder#decorate prevents java.lang.UnsupportedClassVersionError during linkage
-				CulpritFinder culpritFinder = CulpritFinder.decorate((clazz) -> {
-					JavaPlugin plugin;
-					try {
-						 plugin = JavaPlugin.getProvidingPlugin(clazz);
-					} catch (IllegalArgumentException ignored) {
-						return null;
-					}
-					PluginDescriptionFile description = plugin.getDescription();
-					return description.getName() + " " + description.getVersion();
-				});
+				CulpritFinder culpritFinder = CulpritFinder.decorate(new SpigotCulpritFinder());
 				LibertyBansLauncher launcher = new LibertyBansLauncher(logger,
 						platform, folder, executor, jarFile, culpritFinder);
 				launchLoader = launcher.attemptLaunch().join();

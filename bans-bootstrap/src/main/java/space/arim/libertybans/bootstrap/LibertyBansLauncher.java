@@ -33,6 +33,7 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -59,15 +60,7 @@ public class LibertyBansLauncher {
 
 	public LibertyBansLauncher(BootstrapLogger logger, Platform platform, Path folder, Executor executor,
 							   Path jarFile) {
-		this(logger, platform, folder, executor, jarFile, (clazz) -> "");
-	}
-
-	private String findCulpritWhoFailedToRelocate(Class<?> libClass) {
-		String pluginName = culpritFinder.findCulprit(libClass);
-		if (pluginName == null || pluginName.isEmpty()) {
-			return "<Unknown plugin>";
-		}
-		return "Plugin '" + pluginName + '\'';
+		this(logger, platform, folder, executor, jarFile, (clazz) -> Optional.empty());
 	}
 
 	private void warnRelocation(String libName, String clazzName) {
@@ -77,7 +70,13 @@ public class LibertyBansLauncher {
 		} catch (ClassNotFoundException ignored) {
 			return;
 		}
-		String pluginName = findCulpritWhoFailedToRelocate(libClass);
+		String pluginName = culpritFinder.findCulprit(libClass)
+				.map((name) -> "Plugin '" + name + '\'')
+				.orElse("<Unknown plugin>");
+		if (Boolean.getBoolean("libertybans.relocationbug.disablecheck")) {
+			logger.info("Discovered unrelocated class " + libClass + " from plugin " + pluginName);
+			return;
+		}
 		String line = "*******************************************";
 		String message = line + '\n'
 				+ pluginName + " has a critical bug. That plugin has shaded the library '"
@@ -91,7 +90,7 @@ public class LibertyBansLauncher {
 				+ "Note for advanced users: Understanding the consequences, you can disable this check by setting "
 				+ "the system property libertybans.relocationbug.disablecheck to 'true'"
 				+ '\n' + line;
-		if (!Boolean.getBoolean("libertybans.relocationbug.disablecheck") && distributionMode() == DistributionMode.JAR_OF_JARS) {
+		if (distributionMode() == DistributionMode.JAR_OF_JARS) {
 			// In development builds we have no patience for bugs
 			throw new IllegalStateException(message);
 		}

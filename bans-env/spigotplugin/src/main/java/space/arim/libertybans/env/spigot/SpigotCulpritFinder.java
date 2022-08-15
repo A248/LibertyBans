@@ -17,30 +17,26 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.bootstrap;
+package space.arim.libertybans.env.spigot;
+
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
 import java.util.function.Function;
 
-@FunctionalInterface
-public interface CulpritFinder {
+final class SpigotCulpritFinder implements Function<Class<?>, Optional<String>> {
 
-	/**
-	 * Gets the name of the plugin which failed to shade the specified library class
-	 * 
-	 * @param libraryClass the class which should have been relocated
-	 * @return the name of the plugin, or a null or empty string if unknown
-	 */
-	Optional<String> findCulprit(Class<?> libraryClass);
-
-	/**
-	 * Decorates a {@link Function} whose signature matches a culprit finder
-	 * 
-	 * @param function the function
-	 * @return a culprit finder using the function
-	 */
-	static CulpritFinder decorate(Function<Class<?>, Optional<String>> function) {
-		return function::apply;
+	@Override
+	public Optional<String> apply(Class<?> clazz) {
+		JavaPlugin plugin;
+		try {
+			plugin = JavaPlugin.getProvidingPlugin(clazz);
+		} catch (IllegalArgumentException ignored) {
+			return Optional.empty();
+		}
+		PluginDescriptionFile description = plugin.getDescription();
+		return Optional.of(description.getName() + " " + description.getVersion());
 	}
 
 }

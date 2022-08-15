@@ -25,6 +25,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import space.arim.libertybans.bootstrap.CulpritFinder;
 
 import java.util.Objects;
+import java.util.Optional;
 
 final class VelocityCulpritFinder implements CulpritFinder {
 
@@ -35,7 +36,7 @@ final class VelocityCulpritFinder implements CulpritFinder {
 	}
 
 	@Override
-	public String findCulprit(Class<?> libraryClass) {
+	public Optional<String> findCulprit(Class<?> libraryClass) {
 		for (PluginContainer plugin : server.getPluginManager().getPlugins()) {
 			Object pluginInstance = plugin.getInstance().orElse(null);
 			if (pluginInstance == null) {
@@ -43,9 +44,9 @@ final class VelocityCulpritFinder implements CulpritFinder {
 			}
 			if (pluginInstance.getClass().getClassLoader() == libraryClass.getClassLoader()) {
 				PluginDescription description = plugin.getDescription();
-				return description.getId() + " " + description.getVersion().orElse("<No-Version>");
+				return Optional.of(description.getId() + " " + description.getVersion().orElse("<No-Version>"));
 			}
 		}
-		return "";
+		return Optional.empty();
 	}
 }
