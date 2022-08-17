@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>space.arim.libertybans</groupId>
 		<artifactId>bans-distribution</artifactId>
-		<version>1.0.3-SNAPSHOT</version>
+		<version>1.0.3</version>
 	</parent>
 
 	<artifactId>bans-executable</artifactId>
