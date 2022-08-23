@@ -215,7 +215,7 @@ public class DatabaseSettings {
 			break;
 
 		case HSQLDB:
-			Path databaseFolder = folder.resolve("hypersql");
+			Path databaseFolder = folder.resolve("internal").resolve("hypersql");
 			try {
 				Files.createDirectories(databaseFolder);
 			} catch (IOException ex) {

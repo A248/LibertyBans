@@ -79,7 +79,7 @@ public class SelfImportIT {
 
 	private Path copyImportData(String sample) throws IOException {
 		Path folder = databaseDir.resolve(sample);
-		Path databaseFolder = folder.resolve("hypersql");
+		Path databaseFolder = folder.resolve("internal").resolve("hypersql");
 		Files.createDirectories(databaseFolder);
 
 		for (String extensionToCopy : new String[] {".script", ".properties"}) {

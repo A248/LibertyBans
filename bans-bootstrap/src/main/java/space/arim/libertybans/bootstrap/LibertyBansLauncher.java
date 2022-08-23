@@ -125,17 +125,41 @@ public class LibertyBansLauncher {
 		return DistributionMode.DEPLOY_AND_DOWNLOAD;
 	}
 
+	private void migrateLegacyDirectory(Path oldPath, Path newPath) throws IOException {
+		if (Files.exists(oldPath) && !Files.isDirectory(newPath)) {
+			Files.move(oldPath, newPath);
+			logger.info("Migrated legacy directory " + oldPath + " to " + newPath + ".");
+		}
+	}
+
+	private void migrateLegacyDirectories(Path internalFolder) {
+		Path newHyperSqlFolder = internalFolder.resolve("hypersql");
+		Path newLibrariesFolder = internalFolder.resolve("libraries");
+		try {
+			Files.createDirectories(internalFolder);
+			migrateLegacyDirectory(folder.resolve("hypersql"), newHyperSqlFolder);
+			migrateLegacyDirectory(folder.resolve("libraries"), newLibrariesFolder);
+		} catch (IOException ex) {
+			throw new UncheckedIOException(ex);
+		}
+	}
+
 	public final CompletableFuture<ClassLoader> attemptLaunch() {
 		return attemptLaunch(getClass().getClassLoader());
 	}
 
 	public final CompletableFuture<ClassLoader> attemptLaunch(ClassLoader parentClassLoader) {
+
+		Path internalFolder = folder.resolve("internal");
+		// Migrate legacy directories from LibertyBans 1.0.x
+		migrateLegacyDirectories(internalFolder);
+
 		for (RelocationCheck library : RelocationCheck.values()) {
 			warnRelocation(library.libName(), library.className());
 		}
 		DependencyLoaderBuilder loader = new DependencyLoaderBuilder()
 				.executor(executor)
-				.outputDirectory(folder.resolve("libraries"));
+				.outputDirectory(internalFolder.resolve("libraries"));
 		Set<ExistingDependency> existingDependencies = new HashSet<>();
 		DistributionMode distributionMode = distributionMode();
 		for (DependencyBundle bundle : determineNeededDependencies()) {
