@@ -25,6 +25,7 @@ import jakarta.inject.Singleton;
 import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.importing.AdvancedBanImportSource;
+import space.arim.libertybans.core.importing.BanManagerImportSource;
 import space.arim.libertybans.core.importing.ImportExecutor;
 import space.arim.libertybans.core.importing.ImportSource;
 import space.arim.libertybans.core.importing.ImportStatistics;
@@ -51,6 +52,7 @@ public final class ImportCommands extends AbstractSubCommandGroup {
 	@Inject
 	public ImportCommands(Dependencies dependencies, ImportExecutor executor,
 						  Provider<AdvancedBanImportSource> advancedBanImportSourceProvider,
+						  Provider<BanManagerImportSource> banManagerImportSourceProvider,
 						  Provider<LiteBansImportSource> liteBansImportSourceProvider,
 						  Provider<PlatformImportSource> platformImportSourceProvider,
 						  SelfImportProcess selfImportProcess) {
@@ -58,6 +60,7 @@ public final class ImportCommands extends AbstractSubCommandGroup {
 		this.executor = executor;
 		importSourceProviders = Map.of(
 				PluginSourceType.ADVANCEDBAN, advancedBanImportSourceProvider,
+				PluginSourceType.BANMANAGER, banManagerImportSourceProvider,
 				PluginSourceType.LITEBANS, liteBansImportSourceProvider,
 				PluginSourceType.VANILLA, platformImportSourceProvider);
 		this.selfImportProcess = selfImportProcess;
@@ -65,6 +68,7 @@ public final class ImportCommands extends AbstractSubCommandGroup {
 
 	private enum PluginSourceType {
 		ADVANCEDBAN,
+		BANMANAGER,
 		LITEBANS,
 		VANILLA,
 		SELF
@@ -78,7 +82,8 @@ public final class ImportCommands extends AbstractSubCommandGroup {
 	@Override
 	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
 		if (argIndex == 0) {
-			return Stream.of("advancedban", "litebans", "vanilla", "self");
+			return Stream.of(PluginSourceType.values())
+					.map((pluginSourceType) -> pluginSourceType.name().toLowerCase(Locale.ROOT));
 		}
 		return Stream.empty();
 	}

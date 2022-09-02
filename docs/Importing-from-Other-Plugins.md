@@ -1,6 +1,7 @@
 LibertyBans supports importing from the following sources:
 
 * AdvancedBan
+* BanManager
 * LiteBans
 * Vanilla server bans (includes Essentials)
   * Importing vanilla bans requires that you run LibertyBans on Bukkit during the import process. Once the import is complete you can move LibertyBans to any supported platform.
@@ -11,24 +12,25 @@ If you do not see your plugin listed here, open a [new issue](https://github.com
 # Importing Steps
 
 1. Backup your data. Taking backups is good practice, *always*. If you want to be extra safe, be sure that you can restore your backup, too.
-2. Configure the `import.yml`
-2. Run the import command - `/libertybans import <source>`. Replace <source> with 'advancedban', 'litebans', or 'vanilla'
+2. Configure the `import.yml`.
+3. Run the import command - `/libertybans import <source>`.
 
 # Caveats
 
 Importing is not a 1-to-1 process, because storage methods vary across plugins.
 
-## AdvancedBan and Vanilla – UUID Support
+## UUID Support in AdvancedBan and vanilla
 
-| Import source  | UUID Support - Victims | UUID Support - Operators |
-| -------------- | ---------------------- | ------------------------ |
-| LiteBans       | ✔️ | ✔️ |
-| AdvancedBan    | ✔️ | ❌ |
-| Vanilla        | ❌ | ❌ |
+| Import source | UUID Support - Victims | UUID Support - Operators |
+|---------------|------------------------|--------------------------|
+| AdvancedBan   | ✔️                     | ❌                        |
+| BanManager    | ✔️                     | ✔️                       |
+| LiteBans      | ✔️                     | ✔️                       |
+| Vanilla       | ❌                      | ❌                        |
 
 
 
-AdvancedBan and vanilla bans both use names in some places where LibertyBans needs UUIDs. LibertyBans uses UUIDs everywhere, so a UUID lookup will be performed in these cases.
+AdvancedBan and vanilla bans use names in some places where LibertyBans needs UUIDs. LibertyBans uses UUIDs everywhere, so a UUID lookup will be performed in these cases.
 
 How UUID lookups are performed is controlled by the uuid-resolution and server-type settings in the `config.yml`. 
 
@@ -50,31 +52,13 @@ player-uuid-resolution:
 
 If you used LiteBans with MariaDB, MySQL, or PostgreSQL, no additional setup is required. LibertyBans includes these drivers.
 
-If you used LiteBans with H2, you will need to add the driver to your server first. How you do this is as follows:
+If you used LiteBans with H2, you will need to download and install the driver first:
 
-1. Download the H2 driver:
+1. Download the H2 driver jar:
   * [Direct download link](https://repo1.maven.org/maven2/com/h2database/h2/1.4.199/h2-1.4.199.jar)
-  * [Maven Central link](https://mvnrepository.com/artifact/com.h2database/h2/1.4.199),
-2. Create a directory called "libs" on your server. The "libs" directory should be located like this:
-```
-libs/
-logs/
-plugins/
-server.properties
-bukkit.yml
-spigot.yml
-paper.yml
-server.jar
-... etc
-```
-3. Upload the driver you downloaded in Step 1 to the libs directory
-4. Now you will need to start your server so that it recognizes the libs directory. To do this, you need to use the `-classpath` option instead of `-jar`.
-  * Start your server like this. Replace 'server.jar' with your server jar:
-```
-java -classpath server.jar:libs/* org.bukkit.craftbukkit.Main
-```
-  * Do NOT use `-jar`!
-  * If you are running a proxy, you will need to replace `org.bukkit.craftbukkit.Main` with the main class of your proxy software. For Velocity, that is `com.velocitypowered.proxy.Velocity`. For BungeeCord, that is `net.md_5.bungee.Bootstrap`.
-5. Run the import process as you normally would
+  * [Maven Central link](https://mvnrepository.com/artifact/com.h2database/h2/1.4.199)
+2. Find the `LibertyBans/internal/attachments` directory. Upload the driver jar here.
+3. Restart the server.
+4. Run the import process as you normally would.
 
 For help, join the discord for support.

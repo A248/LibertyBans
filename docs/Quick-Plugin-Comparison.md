@@ -22,6 +22,7 @@ comparisons. You can find these on the sidebar at the right. For each plugin her
 | AdvancedBan | ![Bukkit]Bukkit<br/> <img src="https://avatars.githubusercontent.com/u/1007849?v=4" width=16>Bungee                                                                                                                                                                           | 8+        | ✔️            | ✔️ ![GPL]      | HSQLDB (local), MariaDB, MySQL             | ❌                  | ❌          | ❓              | ❌                      | ❌               | ✔️                 | ❌             | ➖          | ❌                |                                                                                       |
 | BanManager  | ![Bukkit]Bukkit<br/> <img src="https://avatars.githubusercontent.com/u/1007849?v=4" width=16>Bungee<br/> <img src="https://www.spongepowered.org/assets/img/icons/spongie-mark.svg" width=16>Sponge                                                                           | 8+        | ✔️            | ➖️ ![CC-BY-NC] | H2 (local), MariaDB, MySQL                 | ❌️                 | ❌          | ➖              | ✔️                     | ✔️              | ❌                  | ➖             | ✔️         | ✔️               | AdvancedBan<br/>vanilla                                                               |
 | LiteBans    | ![Bukkit]Bukkit<br/> <img src="https://avatars.githubusercontent.com/u/1007849?v=4" width=16>Bungee<br/> <img src="https://raw.githubusercontent.com/PaperMC/velocitypowered.com/5878ae0941e3adff3a238fe9020250c5f01c2899/src/assets/img/velocity-blue.png" width=16>Velocity | 8+        | ❌             | ❌ Proprietary  | H2 (local), MariaDB, MySQL, PostgreSQL     | ❓                  | ➖          | ❌              | ✔️                     | ❓               | ✔️                 | ✔️            | ✔️         | ❌                | AdvancedBan<br/>BanManager<br/>BungeeAdminTools<br/>MaxBans<br/>UltraBans<br/>vanilla |
+| vanilla     | ![Bukkit]Bukkit<br/> <img src="https://www.spongepowered.org/assets/img/icons/spongie-mark.svg" width=16>Sponge                                                                                                                                                               | 8+        | ✔️            | ❌ Proprietary  | Flatfile                                   | ✔️                 | ✔️         | ✔️             | ❌                      | NA              | ❌                  | ❌             | ✔️         | ❌                |                                                                                       |
 
 Legend:
 
@@ -32,6 +33,8 @@ Legend:
 ❌ – No
 
 ❓ - Unknown, either because the plugin is closed-source, or the feature has not been tested.
+
+NA - Not applicable
 
 ## Categories
 

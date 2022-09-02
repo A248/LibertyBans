@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class LibertyBansLauncher {
 
@@ -185,25 +186,35 @@ public class LibertyBansLauncher {
 				"LibertyBans", parentClassLoader,
 				loader.build(), existingDependencies);
 		CompletableFuture<AddableURLClassLoader> futureClassLoader = launcher.load();
-		// Detect addons in the meantime
-		Set<Path> addons;
+		// Detect addons and attachments in the meantime
+		Set<Path> additionalLibraries;
 		try {
+			// Addons
 			Path addonsFolder = folder.resolve("addons");
 			Files.createDirectories(addonsFolder);
-			addons = Files.list(addonsFolder)
-					.filter((library) -> library.getFileName().toString().endsWith(".jar"))
-					.collect(Collectors.toUnmodifiableSet());
-			if (!addons.isEmpty()) {
-				logger.info("Detected " + addons.size() + " addon(s)");
+			try (Stream<Path> addonStream = Files.list(addonsFolder)) {
+				Set<Path> addonJars = addonStream
+						.filter((library) -> library.getFileName().toString().endsWith(".jar"))
+						.collect(Collectors.toCollection(HashSet::new));
+				logger.info(addonJars.isEmpty() ?
+						"No addons detected" : "Detected " + addonJars.size() + " addon(s)"
+				);
+				additionalLibraries = addonJars;
+			}
+			// Attachments
+			Path attachmentsFolder = internalFolder.resolve("attachments");
+			Files.createDirectories(attachmentsFolder);
+			try (Stream<Path> attachments = Files.list(attachmentsFolder)) {
+				attachments.forEach(additionalLibraries::add);
 			}
 		} catch (IOException ex) {
 			throw new UncheckedIOException(ex);
 		}
 		return futureClassLoader.thenApply((classLoader) -> {
-			// Attach addons here
-			for (Path addon : addons) {
+			// Attach additional libraries here
+			for (Path additionalLibrary : additionalLibraries) {
 				try {
-					classLoader.addURL(addon.toUri().toURL());
+					classLoader.addURL(additionalLibrary.toUri().toURL());
 				} catch (MalformedURLException ex) {
 					throw new UncheckedIOException(ex);
 				}
@@ -211,5 +222,5 @@ public class LibertyBansLauncher {
 			return classLoader;
 		});
 	}
-	
+
 }
