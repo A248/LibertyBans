@@ -41,6 +41,7 @@
         <module>warn-actions</module>
         <module>addon-integration</module>
         <module>command-staffrollback</module>
+        <module>command-checkuser</module>
     </modules>
 
     <dependencies>

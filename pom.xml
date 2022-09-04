@@ -264,7 +264,7 @@
 		<module>bans-core-addons</module>
 		<module>bans-env</module>
 		<module>bans-distribution</module>
-	</modules>
+    </modules>
 
 	<distributionManagement>
 		<repository>
