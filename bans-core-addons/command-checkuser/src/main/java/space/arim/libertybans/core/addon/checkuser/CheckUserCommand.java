@@ -74,8 +74,6 @@ public final class CheckUserCommand extends AbstractSubCommandGroup {
                 return null;
             }
 
-            String type = command().next();
-
             String name = command().next();
 
             return uuidManager.lookupPlayer(name)
