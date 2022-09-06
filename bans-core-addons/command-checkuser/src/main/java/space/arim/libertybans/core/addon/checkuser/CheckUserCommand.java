@@ -100,7 +100,7 @@ public final class CheckUserCommand extends AbstractSubCommandGroup {
                                                     return formatter.formatWithPunishment(config.layout(), punishment)
                                                             .thenAccept(sender()::sendMessage);
                                                 });
-                                        }
+                                    }
                                     Punishment punishment = optPunishment.get();
 
                                     return formatter.formatWithPunishment(config.layout(), punishment)
