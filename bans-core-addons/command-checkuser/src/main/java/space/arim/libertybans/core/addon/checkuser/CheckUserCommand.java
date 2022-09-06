@@ -74,6 +74,8 @@ public final class CheckUserCommand extends AbstractSubCommandGroup {
                 return null;
             }
 
+            String type = command().next();
+
             String name = command().next();
 
             return uuidManager.lookupPlayer(name)
@@ -87,9 +89,18 @@ public final class CheckUserCommand extends AbstractSubCommandGroup {
                         return selector.getApplicablePunishment(uuid.uuid(), uuid.address(), PunishmentType.BAN)
                                 .thenCompose(optPunishment -> {
                                     if (optPunishment.isEmpty()) {
-                                        sender().sendMessage(config.noPunishment());
-                                        return completedFuture(null);
-                                    }
+                                        return selector.getApplicablePunishment(uuid.uuid(), uuid.address(), PunishmentType.MUTE)
+                                                .thenCompose(optMute -> {
+                                                    if (optMute.isEmpty()) {
+                                                        sender().sendMessage(config.noPunishment());
+                                                        return completedFuture(null);
+                                                    }
+                                                    Punishment punishment = optMute.get();
+
+                                                    return formatter.formatWithPunishment(config.layout(), punishment)
+                                                            .thenAccept(sender()::sendMessage);
+                                                });
+                                        }
                                     Punishment punishment = optPunishment.get();
 
                                     return formatter.formatWithPunishment(config.layout(), punishment)
