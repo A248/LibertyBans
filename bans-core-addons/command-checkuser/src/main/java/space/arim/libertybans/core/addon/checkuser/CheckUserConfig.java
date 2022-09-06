@@ -24,7 +24,7 @@ public interface CheckUserConfig extends AddonConfig {
     Component noPunishment();
 
     @ConfDefault.DefaultStrings({
-            "&7Active punishment for player &e{player}",
+            "&7Active punishment for player &e%VICTIM%",
             "&7Type: &e%TYPE%",
             "&7Reason: &e%REASON%",
             "&7Operator: &e%OPERATOR%",
