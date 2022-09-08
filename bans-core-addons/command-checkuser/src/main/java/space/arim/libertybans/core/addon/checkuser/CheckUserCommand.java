@@ -77,13 +77,13 @@ public final class CheckUserCommand extends AbstractSubCommandGroup {
             String name = command().next();
 
             return uuidManager.lookupPlayer(name)
-                    .thenCompose(optUuid -> {
-                        if (optUuid.isEmpty()) {
+                    .thenCompose(optUuidAddress -> {
+                        if (optUuidAddress.isEmpty()) {
                             sender().sendMessage(config.doesNotExist());
                             return completedFuture(null);
                         }
 
-                        UUIDAndAddress uuid = optUuid.get();
+                        UUIDAndAddress uuid = optUuidAddress.get();
                         return selector.getApplicablePunishment(uuid.uuid(), uuid.address(), PunishmentType.BAN)
                                 .thenCompose(optPunishment -> {
                                     if (optPunishment.isEmpty()) {
