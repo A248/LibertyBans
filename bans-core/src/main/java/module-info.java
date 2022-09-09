@@ -39,9 +39,7 @@ module space.arim.libertybans.core {
 	exports space.arim.libertybans.core.selector;
 	exports space.arim.libertybans.core.selector.cache;
 	exports space.arim.libertybans.core.service;
-	exports space.arim.libertybans.core.uuid
-			to space.arim.dazzleconf, space.arim.injector;
-
+	exports space.arim.libertybans.core.uuid;
 	opens space.arim.libertybans.core.alts to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.commands.extra to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.config to space.arim.dazzleconf;

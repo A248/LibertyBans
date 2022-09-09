@@ -32,6 +32,12 @@ This addon provides the `/libertybans checkpunish <ID>` command. This command di
 
 Requires the permission `libertybans.addon.checkpunish.use`.
 
+## CheckUser
+
+Provides the `/libertybans checkuser <player>` command. This command displays if the given player is banned or muted.
+
+Requires the permission `libertybans.addon.checkuser.use`.
+
 ## StaffRollback
 
 Provides the `/libertybans staffrollback <operator> [time]` command. Performing a rollback fully purges all punishments by a certain staff member, which is useful if a staff member becomes rogue or has their account hacked.

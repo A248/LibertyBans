@@ -62,6 +62,11 @@
             <artifactId>addon-warn-actions</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>space.arim.libertybans</groupId>
+            <artifactId>addon-command-checkuser</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
