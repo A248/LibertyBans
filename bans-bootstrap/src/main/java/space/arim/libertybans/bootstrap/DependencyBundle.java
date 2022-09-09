@@ -21,8 +21,8 @@ package space.arim.libertybans.bootstrap;
 
 import space.arim.libertybans.bootstrap.depend.Dependency;
 import space.arim.libertybans.bootstrap.depend.DependencyLoaderBuilder;
-import space.arim.libertybans.bootstrap.depend.DownloadProcessor;
-import space.arim.libertybans.bootstrap.depend.JarWithinJarDownloadProcessor;
+import space.arim.libertybans.bootstrap.depend.ExistingDependency;
+import space.arim.libertybans.bootstrap.depend.ExtractNestedJars;
 import space.arim.libertybans.bootstrap.depend.Repository;
 
 import java.io.BufferedReader;
@@ -48,7 +48,7 @@ enum DependencyBundle {
 
 	private final Repository repository;
 
-	private DependencyBundle(Repository repository) {
+	DependencyBundle(Repository repository) {
 		this.repository = repository;
 	}
 
@@ -57,13 +57,13 @@ enum DependencyBundle {
 		return name().toLowerCase(Locale.ROOT).replace("_", "-");
 	}
 
-	DownloadProcessor existingFileProcessor() {
-		/*
-		Avoid unnecessarily copying jars if the file name does not contain "SNAPSHOT" -
-		release dependencies are not supposed to change
-		*/
-		return new JarWithinJarDownloadProcessor("jars/" + this)
-				.replaceExisting((jarName) -> jarName.contains("SNAPSHOT"));
+	ExistingDependency existingDependency() {
+		String jarResourceName = this + "-bundle.jar";
+		URL jarResource = getClass().getResource("/dependencies/jars/" + jarResourceName);
+		if (jarResource == null) {
+			throw new IllegalStateException("Cannot find nested jar resource for " + this);
+		}
+		return new ExtractNestedJars(jarResource, jarResourceName);
 	}
 
 	void prepareToDownload(DependencyLoaderBuilder loader) {
@@ -119,8 +119,8 @@ enum DependencyBundle {
 			throw malformatted("Lacking details, received only " + readDetails);
 		}
 		return Dependency.of(
-				readDetails.remove(), readDetails.remove(), readDetails.remove(), readDetails.remove(),
-				DownloadProcessor.simple());
+				readDetails.remove(), readDetails.remove(), readDetails.remove(), readDetails.remove()
+		);
 	}
 
 }

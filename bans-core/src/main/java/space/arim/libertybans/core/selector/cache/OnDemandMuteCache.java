@@ -137,9 +137,6 @@ public final class OnDemandMuteCache extends BaseMuteCache {
 	}
 
 	@Override
-	public void uncacheOnQuit(UUID uuid, NetworkAddress address) {}
-
-	@Override
 	void setCachedMute(MuteCacheKey cacheKey, Punishment mute) {
 		cache.asMap().compute(cacheKey, (key, future) -> {
 			if (future == null) {

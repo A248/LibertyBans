@@ -162,6 +162,7 @@ public class WarnActionsListenerTest {
 		when(formatter.formatWithPunishment(any(), eq(punishment))).thenAnswer((invocation) -> {
 			return futuresFactory.completedFuture(invocation.getArgument(0, ComponentText.class).asComponent());
 		});
+		when(envEnforcer.executeConsoleCommand(any())).thenReturn(futuresFactory.completedFuture(null));
 		when(drafter.draftBuilder()).thenReturn(draftBuilder);
 		when(autoPunishment.type()).thenReturn(PunishmentType.MUTE);
 		when(draftBuilder.type(PunishmentType.MUTE)).thenReturn(draftBuilder);

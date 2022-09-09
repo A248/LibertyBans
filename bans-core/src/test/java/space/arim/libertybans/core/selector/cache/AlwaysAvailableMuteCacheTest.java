@@ -108,7 +108,7 @@ public class AlwaysAvailableMuteCacheTest {
 
 		uuid = UUID.randomUUID();
 		address = RandomUtil.randomAddress();
-		when(envUserResolver.lookupName(uuid)).thenReturn(Optional.of("Username"));
+		when(envUserResolver.lookupName(uuid)).thenReturn(futuresFactory.completedFuture(Optional.of("Username")));
 	}
 
 	private void assertAvailableCacheResult(@Nullable Component muteMessage) {
@@ -391,8 +391,7 @@ public class AlwaysAvailableMuteCacheTest {
 		when(selector.getApplicablePunishment(uuid, address, PunishmentType.MUTE))
 				.thenReturn(databaseQuery);
 
-		muteCache.uncacheOnQuit(uuid, address);
-		when(envUserResolver.lookupName(uuid)).thenReturn(Optional.empty());
+		when(envUserResolver.lookupName(uuid)).thenReturn(futuresFactory.completedFuture(Optional.empty()));
 		// Player is now logged out, but mute is still cached
 		assertAvailableCacheResult(null);
 

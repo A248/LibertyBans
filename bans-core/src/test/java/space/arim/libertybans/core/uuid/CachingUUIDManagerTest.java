@@ -88,6 +88,11 @@ public class CachingUUIDManagerTest {
 
 		uuidManager.startup();
 		lenient().when(nameValidator.validateNameArgument(name)).thenReturn(true);
+
+		lenient().when(envUserResolver.lookupUUID(any())).thenReturn(completedFuture(Optional.empty()));
+		lenient().when(envUserResolver.lookupName(any())).thenReturn(completedFuture(Optional.empty()));
+		lenient().when(envUserResolver.lookupAddress(any())).thenReturn(completedFuture(Optional.empty()));
+		lenient().when(envUserResolver.lookupPlayer(any())).thenReturn(completedFuture(Optional.empty()));
 	}
 
 	private UUID lookupUUID(String name) {
@@ -117,7 +122,7 @@ public class CachingUUIDManagerTest {
 	@Test
 	public void resolveUUIDFromEnvironment() {
 		when(envUserResolver.lookupUUID(name)).thenReturn(
-				Optional.of(uuid), Optional.empty());
+				completedFuture(Optional.of(uuid)), completedFuture(Optional.empty()));
 
 		assertEquals(uuid, lookupUUID(name));
 		assertEquals(uuid, lookupUUID(name), "uuid should be cached");
@@ -129,7 +134,7 @@ public class CachingUUIDManagerTest {
 	@Test
 	public void resolveNameFromEnvironment() {
 		when(envUserResolver.lookupName(uuid)).thenReturn(
-				Optional.of(name), Optional.empty());
+				completedFuture(Optional.of(name)), completedFuture(Optional.empty()));
 
 		assertEquals(name, lookupName(uuid));
 		assertEquals(name, lookupName(uuid), "Name should be cached");
@@ -139,7 +144,7 @@ public class CachingUUIDManagerTest {
 
 	@Test
 	public void resolveAddressFromEnvironment() {
-		when(envUserResolver.lookupAddress(name)).thenReturn(Optional.of(address.toInetAddress()));
+		when(envUserResolver.lookupAddress(name)).thenReturn(completedFuture(Optional.of(address.toInetAddress())));
 
 		assertEquals(address, lookupAddress(name));
 
@@ -149,7 +154,7 @@ public class CachingUUIDManagerTest {
 	@Test
 	public void resolvePlayerFromEnvironment() {
 		UUIDAndAddress userDetails = new UUIDAndAddress(uuid, address);
-		when(envUserResolver.lookupPlayer(name)).thenReturn(Optional.of(userDetails));
+		when(envUserResolver.lookupPlayer(name)).thenReturn(completedFuture(Optional.of(userDetails)));
 
 		assertEquals(userDetails, lookupPlayer(name));
 

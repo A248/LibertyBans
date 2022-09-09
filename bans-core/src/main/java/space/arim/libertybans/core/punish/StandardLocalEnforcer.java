@@ -103,9 +103,9 @@ public final class StandardLocalEnforcer implements LocalEnforcer {
 					enforcementOptions.replaceTargetArgument(section.successNotification()),
 					punishment
 			);
-		}).thenAccept((notification) -> {
+		}).thenCompose((notification) -> {
 			boolean silent = enforcementOptions.broadcasting() == Broadcasting.SILENT;
-			envEnforcer.sendToThoseWithPermission(
+			return envEnforcer.sendToThoseWithPermission(
 					new PunishmentPermission(
 							punishment.getType(), Mode.DO
 					).notifyPermission(silent),
@@ -137,9 +137,9 @@ public final class StandardLocalEnforcer implements LocalEnforcer {
 				futureNotify = formatter.formatWithPunishmentAndUnoperator(successNotification, punishment, unOperator.get());
 			}
 		}
-		return futureNotify.thenAccept((notification) -> {
+		return futureNotify.thenCompose((notification) -> {
 			boolean silent = enforcementOptions.broadcasting() == EnforcementOptions.Broadcasting.SILENT;
-			envEnforcer.sendToThoseWithPermission(
+			return envEnforcer.sendToThoseWithPermission(
 					new PunishmentPermission(
 							punishment.getType(), Mode.UNDO
 					).notifyPermission(silent),
@@ -205,14 +205,14 @@ public final class StandardLocalEnforcer implements LocalEnforcer {
 			switch (victim.getType()) {
 			case PLAYER:
 				uuid = ((PlayerVictim) victim).getUUID();
-				return futureMessage.thenAccept((message) -> {
-					envEnforcer.doForPlayerIfOnline(uuid, enforcementCallback(punishment, message));
+				return futureMessage.thenCompose((message) -> {
+					return envEnforcer.doForPlayerIfOnline(uuid, enforcementCallback(punishment, message));
 				});
 			case ADDRESS:
 				address = ((AddressVictim) victim).getAddress();
 				return futureMessage
 						.thenCompose((message) -> matchAddressPunishment(punishment, message, address))
-						.thenAccept(envEnforcer::enforceMatcher);
+						.thenCompose(envEnforcer::enforceMatcher);
 			case COMPOSITE:
 				CompositeVictim compositeVictim = (CompositeVictim) victim;
 				address = compositeVictim.getAddress();
@@ -220,7 +220,7 @@ public final class StandardLocalEnforcer implements LocalEnforcer {
 				return futureMessage
 						.thenCompose((message) -> matchAddressPunishment(punishment, message, address))
 						.thenApply((addressMatcher) -> new AdditionalUUIDTargetMatcher<>(uuid, addressMatcher))
-						.thenAccept(envEnforcer::enforceMatcher);
+						.thenCompose(envEnforcer::enforceMatcher);
 			default:
 				throw MiscUtil.unknownVictimType(victim.getType());
 			}

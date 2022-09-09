@@ -19,7 +19,6 @@
 
 package space.arim.libertybans.bootstrap;
 
-import space.arim.libertybans.bootstrap.depend.AddableURLClassLoader;
 import space.arim.libertybans.bootstrap.depend.BootstrapLauncher;
 import space.arim.libertybans.bootstrap.depend.DependencyLoaderBuilder;
 import space.arim.libertybans.bootstrap.depend.ExistingDependency;
@@ -27,103 +26,110 @@ import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class LibertyBansLauncher {
+public final class LibertyBansLauncher {
 
+	private final Path folder;
 	private final BootstrapLogger logger;
 	private final Platform platform;
-	private final Path folder;
 	private final Executor executor;
-	private final Path jarFile;
 	private final CulpritFinder culpritFinder;
+	private final DistributionMode distributionMode;
+	private final ClassLoader parentLoader;
 
-	public LibertyBansLauncher(BootstrapLogger logger, Platform platform, Path folder, Executor executor,
-							   Path jarFile, CulpritFinder culpritFinder) {
+	private LibertyBansLauncher(Path folder, BootstrapLogger logger, Platform platform, Executor executor,
+								CulpritFinder culpritFinder, DistributionMode distributionMode, ClassLoader parentLoader) {
+		this.folder = Objects.requireNonNull(folder, "folder");
 		this.logger = Objects.requireNonNull(logger, "logger");
 		this.platform = Objects.requireNonNull(platform, "platform");
-		this.folder = Objects.requireNonNull(folder, "folder");
 		this.executor = Objects.requireNonNull(executor, "executor");
-		this.jarFile = Objects.requireNonNull(jarFile, "jarFile");
 		this.culpritFinder = Objects.requireNonNull(culpritFinder, "culpritFinder");
+		this.distributionMode = Objects.requireNonNull(distributionMode, "distributionMode");
+		this.parentLoader = Objects.requireNonNull(parentLoader, "parentLoader");
 	}
 
-	public LibertyBansLauncher(BootstrapLogger logger, Platform platform, Path folder, Executor executor,
-							   Path jarFile) {
-		this(logger, platform, folder, executor, jarFile, (clazz) -> Optional.empty());
-	}
+	private void filterLibrariesAndWarnRelocation(Set<ProtectedLibrary> librariesRequiringProtection) {
 
-	private void warnRelocation(String libName, String clazzName) {
-		Class<?> libClass;
-		try {
-			libClass = Class.forName(clazzName);
-		} catch (ClassNotFoundException ignored) {
+		StringJoiner collectedDetails = new StringJoiner("\n");
+		// Check all libraries; keep those which still require protection
+		for (Iterator<ProtectedLibrary> iterator = librariesRequiringProtection.iterator(); iterator.hasNext(); ) {
+			ProtectedLibrary library = iterator.next();
+			Class<?> libClass;
+			try {
+				libClass = Class.forName(library.sampleClass());
+			} catch (ClassNotFoundException ignored) {
+				iterator.remove();
+				continue;
+			}
+			if (platform.hasHiddenHikariCP() && library == ProtectedLibrary.HIKARICP) {
+				continue;
+			}
+			String pluginName = culpritFinder.findCulprit(libClass)
+					.map((name) -> "Plugin '" + name + '\'')
+					.orElse("<Unknown plugin>");
+			collectedDetails.add(
+					pluginName + " | " + library.libraryName() + " | " + libClass.getName()
+			);
+		}
+		if (collectedDetails.length() == 0) {
 			return;
 		}
-		String pluginName = culpritFinder.findCulprit(libClass)
-				.map((name) -> "Plugin '" + name + '\'')
-				.orElse("<Unknown plugin>");
 		if (Boolean.getBoolean("libertybans.relocationbug.disablecheck")) {
-			logger.info("Discovered unrelocated class " + libClass + " from plugin " + pluginName);
+			logger.info("Discovered unrelocated classes: \n" + collectedDetails);
 			return;
 		}
 		String line = "*******************************************";
-		String message = line + '\n'
-				+ pluginName + " has a critical bug. That plugin has shaded the library '"
-				+ libName + "' but did not relocate it, which will pose problems. "
+		logger.warn(line + '\n'
+				+ "We have detected bugs on your server which threaten your server's stability.\n"
+				+ "LibertyBans will continue to operate unaffected, but we strongly suggest you fix these bugs."
 				+ "\n\n"
-				+ "LibertyBans is not guaranteed to function if you do not fix this bug in " + pluginName
+				+ "These bugs are (most likely) due to other plugins' mistakes. "
+				+ "Each of the following plugins has shaded a library but did not relocate it. "
+				+ "You should report each bug to the plugin author."
 				+ "\n\n"
-				+ "Contact the author of this plugin and tell them to relocate their dependencies. "
-				+ "Unrelocated class detected was " + libClass.getName()
+				+ "Plugin Name | Library Name | Class Detected\n"
+				+ "----------------------------------------------\n"
+				+ collectedDetails
 				+ "\n\n"
-				+ "Note for advanced users: Understanding the consequences, you can disable this check by setting "
+				+ "Note for advanced users: Understanding the consequences, you can minimize this warning by setting "
 				+ "the system property libertybans.relocationbug.disablecheck to 'true'"
-				+ '\n' + line;
-		if (distributionMode() == DistributionMode.JAR_OF_JARS) {
-			// In development builds we have no patience for bugs
-			throw new IllegalStateException(message);
-		}
-		// In release builds, attempt to run despite the bug
-		logger.warn(message);
+				+ '\n' + line);
 	}
 
-	private Set<DependencyBundle> determineNeededDependencies() {
+	private Set<DependencyBundle> determineNeededDependencies(Set<ProtectedLibrary> librariesRequiringProtection) {
 		Set<DependencyBundle> bundles = EnumSet.noneOf(DependencyBundle.class);
-		if (!platform.hasSlf4jSupport()) {
-			warnRelocation("Slf4j", "org.slf4j.Logger");
-			warnRelocation("Slf4j-Simple", "org.slf4j.simple.SimpleLogger");
-			bundles.add(DependencyBundle.SLF4J);
-		}
-		if (!platform.isCaffeineProvided()) {
-			warnRelocation("Caffeine", "com.github.benmanes.caffeine.cache.Caffeine");
+		if (platform.isCaffeineProvided()) {
+			librariesRequiringProtection.remove(ProtectedLibrary.CAFFEINE);
+		} else {
 			bundles.add(DependencyBundle.CAFFEINE);
 		}
-		if (!platform.hasKyoriAdventureSupport()) {
-			warnRelocation("Kyori-Adventure", "net.kyori.adventure.audience.Audience");
-			warnRelocation("Kyori-Examination", "net.kyori.examination.Examinable");
+		if (platform.hasKyoriAdventureSupport()) {
+			librariesRequiringProtection.remove(ProtectedLibrary.KYORI_ADVENTURE);
+			librariesRequiringProtection.remove(ProtectedLibrary.KYORI_EXAMINATION);
+		} else {
 			bundles.add(DependencyBundle.KYORI);
+		}
+		if (platform.hasSlf4jSupport()) {
+			librariesRequiringProtection.remove(ProtectedLibrary.SLF4J_API);
+			librariesRequiringProtection.remove(ProtectedLibrary.SLF4J_SIMPLE);
+		} else {
+			bundles.add(DependencyBundle.SLF4J);
 		}
 		bundles.add(DependencyBundle.SELF_IMPLEMENTATION);
 		return bundles;
-	}
-
-	public DistributionMode distributionMode() {
-		if (getClass().getResource("/bans-executable_identifier") != null) {
-			return DistributionMode.JAR_OF_JARS;
-		}
-		return DistributionMode.DEPLOY_AND_DOWNLOAD;
 	}
 
 	private void migrateLegacyDirectory(Path oldPath, Path newPath) throws IOException {
@@ -145,25 +151,21 @@ public class LibertyBansLauncher {
 		}
 	}
 
-	public final CompletableFuture<ClassLoader> attemptLaunch() {
-		return attemptLaunch(getClass().getClassLoader());
-	}
-
-	public final CompletableFuture<ClassLoader> attemptLaunch(ClassLoader parentClassLoader) {
+	public CompletableFuture<ClassLoader> attemptLaunch() {
 
 		Path internalFolder = folder.resolve("internal");
 		// Migrate legacy directories from LibertyBans 1.0.x
 		migrateLegacyDirectories(internalFolder);
 
-		for (RelocationCheck library : RelocationCheck.values()) {
-			warnRelocation(library.libName(), library.className());
-		}
+		// Start with all libraries, then narrow down as necessary
+		Set<ProtectedLibrary> librariesRequiringProtection = EnumSet.allOf(ProtectedLibrary.class);
+
+		Set<ExistingDependency> existingDependencies = new HashSet<>();
 		DependencyLoaderBuilder loader = new DependencyLoaderBuilder()
 				.executor(executor)
 				.outputDirectory(internalFolder.resolve("libraries"));
-		Set<ExistingDependency> existingDependencies = new HashSet<>();
-		DistributionMode distributionMode = distributionMode();
-		for (DependencyBundle bundle : determineNeededDependencies()) {
+
+		for (DependencyBundle bundle : determineNeededDependencies(librariesRequiringProtection)) {
 			switch (distributionMode) {
 			case TESTING:
 				if (bundle == DependencyBundle.SELF_IMPLEMENTATION) {
@@ -175,17 +177,24 @@ public class LibertyBansLauncher {
 				bundle.prepareToDownload(loader);
 				break;
 			case JAR_OF_JARS:
-				existingDependencies.add(new ExistingDependency(jarFile, bundle.existingFileProcessor()));
+				existingDependencies.add(bundle.existingDependency());
 				break;
 			default:
 				throw new IllegalArgumentException("Unknown distributionMode " + distributionMode);
 			}
 		}
+		filterLibrariesAndWarnRelocation(librariesRequiringProtection);
 		// Begin to download dependencies
-		BootstrapLauncher launcher = BootstrapLauncher.create(
-				"LibertyBans", parentClassLoader,
-				loader.build(), existingDependencies);
-		CompletableFuture<AddableURLClassLoader> futureClassLoader = launcher.load();
+		BootstrapLauncher<AttachableClassLoader> launcher = new BootstrapLauncher<>(
+				new AttachableClassLoader(
+						"LibertyBans-ClassLoader",
+						(librariesRequiringProtection.isEmpty()) ?
+								parentLoader : new FilteringClassLoader(parentLoader, librariesRequiringProtection)
+				),
+				loader.build(),
+				existingDependencies
+		);
+		CompletableFuture<AttachableClassLoader> futureClassLoader = launcher.load();
 		// Detect addons and attachments in the meantime
 		Set<Path> additionalLibraries;
 		try {
@@ -212,15 +221,109 @@ public class LibertyBansLauncher {
 		}
 		return futureClassLoader.thenApply((classLoader) -> {
 			// Attach additional libraries here
-			for (Path additionalLibrary : additionalLibraries) {
-				try {
-					classLoader.addURL(additionalLibrary.toUri().toURL());
-				} catch (MalformedURLException ex) {
-					throw new UncheckedIOException(ex);
-				}
-			}
+			additionalLibraries.forEach(classLoader::addJarPath);
 			return classLoader;
 		});
+	}
+
+	public static final class Builder {
+
+		public Step0 folder(Path folder) {
+			return new Step0(folder);
+		}
+	}
+
+	public static final class Step0 {
+
+		private final Path folder;
+
+		private Step0(Path folder) {
+			this.folder = folder;
+		}
+
+		public Step1 logger(BootstrapLogger logger) {
+			return new Step1(folder, logger);
+		}
+	}
+	public static final class Step1 {
+
+		private final Path folder;
+		private final BootstrapLogger logger;
+
+		private Step1(Path folder, BootstrapLogger logger) {
+			this.folder = folder;
+			this.logger = logger;
+		}
+
+		public Step2 platform(Platform platform) {
+			return new Step2(this, platform);
+		}
+	}
+
+	public static final class Step2 {
+
+		private final Step1 step1;
+		private final Platform platform;
+
+		private Step2(Step1 step1, Platform platform) {
+			this.step1 = step1;
+			this.platform = platform;
+		}
+
+		public FinalStep executor(Executor executor) {
+			return new FinalStep(this, executor);
+		}
+	}
+
+	public static final class FinalStep {
+
+		private final Step2 step2;
+		private final Executor executor;
+
+		private CulpritFinder culpritFinder;
+		private DistributionMode distributionMode;
+		private ClassLoader parentLoader;
+
+		private FinalStep(Step2 step2, Executor executor) {
+			this.step2 = step2;
+			this.executor = executor;
+		}
+
+		public FinalStep culpritFinder(CulpritFinder culpritFinder) {
+			this.culpritFinder = culpritFinder;
+			return this;
+		}
+
+		public FinalStep distributionMode(DistributionMode distributionMode) {
+			this.distributionMode = distributionMode;
+			return this;
+		}
+
+		public FinalStep parentLoader(ClassLoader parentLoader) {
+			this.parentLoader = parentLoader;
+			return this;
+		}
+
+		public LibertyBansLauncher build() {
+			CulpritFinder culpritFinder = Objects.requireNonNullElse(this.culpritFinder, (clazz) -> Optional.empty());
+			DistributionMode distributionMode = Objects.requireNonNullElseGet(this.distributionMode, () -> {
+				if (getClass().getResource("/bans-executable_identifier") != null) {
+					return DistributionMode.JAR_OF_JARS;
+				}
+				return DistributionMode.DEPLOY_AND_DOWNLOAD;
+			});
+			ClassLoader parentLoader = Objects.requireNonNullElse(this.parentLoader, getClass().getClassLoader());
+			Step1 step1 = step2.step1;
+			return new LibertyBansLauncher(
+					step1.folder,
+					step1.logger,
+					step2.platform,
+					executor,
+					culpritFinder,
+					distributionMode,
+					parentLoader
+			);
+		}
 	}
 
 }

@@ -46,4 +46,9 @@ public final class Instantiator {
 		return clazz.getDeclaredConstructor(pluginType, Path.class).newInstance(plugin, folder).launch();
 	}
 
+	public <P, S> BaseFoundation invoke(Class<P> pluginType, P plugin, Class<S> serverType, S server, Path folder)
+			throws ReflectiveOperationException, IllegalArgumentException, SecurityException {
+		return clazz.getDeclaredConstructor(pluginType, serverType, Path.class).newInstance(plugin, server, folder).launch();
+	}
+
 }

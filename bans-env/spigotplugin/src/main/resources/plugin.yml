@@ -1,7 +1,7 @@
 name: ${plugin.name}
-main: ${project.groupId}.env.spigot.SpigotPlugin
+main: ${project.groupId}.env.spigot.plugin.SpigotPlugin
 version: ${plugin.version}
-author: ${plugin.author}
-website: ${plugin.url}
+author: '${plugin.author}'
 description: ${plugin.description}
+website: ${plugin.url}
 api-version: 1.13

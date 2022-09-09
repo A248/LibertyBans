@@ -1,0 +1,33 @@
+{
+  "loader": {
+    "name": "java_plain",
+    "version": "1.0"
+  },
+  "license": "AGPL-3.0-or-later",
+  "plugins": [
+    {
+      "id": "${plugin.id}",
+      "name": "${plugin.name}",
+      "version": "${plugin.version}",
+      "contributors": [
+        {
+          "name": "${plugin.author}",
+          "description": "Everyone who has ever contributed in any capacity whatsoever"
+        }
+      ],
+      "dependencies": [
+        {
+          "id": "spongeapi",
+          "version": "8.0.0"
+        }
+      ],
+      "description": "${plugin.description}",
+      "links": {
+        "homepage": "${plugin.url}",
+        "source": "${project.scm.url}",
+        "issues": "${project.scm.url}/issues"
+      },
+      "entrypoint": "${project.groupId}.env.sponge.plugin.SpongePlugin"
+    }
+  ]
+}

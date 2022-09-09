@@ -27,6 +27,38 @@ You can use any IDE you choose. Simply import the project and ensure it is confi
 
 The project is split into several Maven modules. You will want to make sure that your IDE recognizes these modules.
 
+## Code Formatting
+
+Please use tabs. Otherwise, try to follow the surrounding code style.
+
+Try to avoid nesting when working with `CompletableFuture`. If you place callbacks on a new line, the indentation becomes extreme. For example, prefer this:
+
+```java
+return selector.getActivePunishmentById(id).thenCompose((optPunishment) -> {
+	// Callback
+});
+```
+
+To this:
+
+```java
+return selector.getApplicablePunishment(id)
+	.thenCompose((optPunishment) -> {
+		// Callback
+		// Notice the extra indentation
+	});
+```
+
+If necessary, break the arguments to the method creating the future onto a new line:
+
+```java
+return selector.getApplicablePunishment(
+	uuid, address, PunishmentType.BAN
+).thenCompose((optPunishment) -> {
+	// Callback
+});
+```
+
 ## Architecture
 
 ### Project Structure
@@ -36,6 +68,7 @@ The project is split into several Maven modules. You will want to make sure that
 * Platform-specific plugins:
   * `bans-env-bungeeplugin` (extends Plugin)
   * `bans-env-spigotplugin` (extends JavaPlugin)
+  * `bans-env-spongeplugin` (@Plugin)
   * `bans-env-velocityplugin` (@Plugin)
 
 The following modules comprise the core implementation:
@@ -44,6 +77,7 @@ The following modules comprise the core implementation:
 * Platform-specific implementation code:
   * `bans-env-bungee`
   * `bans-env-spigot`
+  * `bans-env-sponge`
   * `bans-env-velocity`
 
 ### Startup Process
@@ -71,6 +105,12 @@ Config   Database     bans-env-velocity
 
 The implementation modules are placed in an isolated classloader. This classloader separation means that plugin classes are visible to implementation classes, but implementation classes are *not* visible to plugin classes.
 
+### Addons
+
+Addon modules, under `bans-core-addons`, may be installed at user preference.
+
+Installed addon jars are loaded by the isolated classloader, functioning as if part of `bans-core`.
+
 ## Distribution
 
 LibertyBans is distributed in two ways.
@@ -79,19 +119,9 @@ LibertyBans is distributed in two ways.
 
 The release distribution is a lightweight jar which downloads its dependencies at runtime, with SHA-512 hash verification. This jar is published to SpigotMC and Github Releases.
 
-### The development distribution (for compiling and running from source)
+### The development distribution
 
 The development distribution is intended for compiling and running from source. It uses a nested jar format and extracts these jars at runtime.
-
-### Relocation in Other Plugins
-
-Other plugins must relocate their dependencies for LibertyBans to work properly.
-
-Sometimes, the user's server is bugged -- another plugin did not relocate its dependencies properly. This happens most commonly with HikariCP, a widely-used library.
-
-When this happens, we print a massive warning message and identify the offending plugin.
-* For development builds, we fail-fast with an error message.
-* For release builds, we attempt to proceed, but we can make no guarantees that LibertyBans will function properly.
 
 ## Testing
 

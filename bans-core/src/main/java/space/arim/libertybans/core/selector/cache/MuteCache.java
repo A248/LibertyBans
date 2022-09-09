@@ -43,14 +43,6 @@ public interface MuteCache extends Part {
 	 */
 	CentralisedFuture<?> cacheOnLogin(UUID uuid, NetworkAddress address);
 
-	/**
-	 * Empties the cache, as needed, upon player quit
-	 *
-	 * @param uuid the user's uuid
-	 * @param address the user's address
-	 */
-	void uncacheOnQuit(UUID uuid, NetworkAddress address);
-
 	void setCachedMute(UUID uuid, NetworkAddress address, Punishment punishment);
 
 	void clearCachedMute(Punishment punishment);

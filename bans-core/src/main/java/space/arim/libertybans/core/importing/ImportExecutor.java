@@ -86,7 +86,7 @@ public class ImportExecutor {
 		} catch (ImportException | SQLException ex) {
 			logger.error(
 					"Unable to complete import successfully. It is recommended to remove " +
-							"the partially completed data, investigate the cause of failure, and " +
+							"any partially completed data, investigate the cause of failure, and " +
 							"try again when you are sure the problem has been corrected.", ex);
 			statistics.markFailed();
 		}

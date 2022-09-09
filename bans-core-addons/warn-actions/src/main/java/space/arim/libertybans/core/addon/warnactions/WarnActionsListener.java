@@ -114,9 +114,9 @@ public final class WarnActionsListener implements AsynchronousEventConsumer<Post
 			ComponentText commandText = ComponentText.create(
 					Component.text(command), TextGoal.SIMPLE_TEXT
 			);
-			return formatter.formatWithPunishment(commandText, warn).thenAccept((formattedCommand) -> {
+			return formatter.formatWithPunishment(commandText, warn).thenCompose((formattedCommand) -> {
 				String commandToExecute = ((TextComponent) formattedCommand).content();
-				envEnforcer.executeConsoleCommand(commandToExecute);
+				return envEnforcer.executeConsoleCommand(commandToExecute);
 			});
 		}
 

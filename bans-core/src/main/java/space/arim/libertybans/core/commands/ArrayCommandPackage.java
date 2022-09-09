@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.commands;
 
 import java.util.NoSuchElementException;
@@ -27,8 +28,6 @@ public final class ArrayCommandPackage implements CommandPackage {
 	/** Position never refers to a hidden command argument */
 	private transient int position;
 
-	private static final String HIDDEN_ARG_PREFIX = "-";
-
 	private ArrayCommandPackage(String[] args) {
 		this.args = args;
 	}
@@ -37,6 +36,7 @@ public final class ArrayCommandPackage implements CommandPackage {
 	 * Creates from an argument array. The input array is NOT cloned
 	 *
 	 * @param args the argument array, of which no elements can be null
+	 * @return the command package
 	 */
 	public static ArrayCommandPackage create(String...args) {
 		ArrayCommandPackage commandPackage = new ArrayCommandPackage(args);
@@ -68,7 +68,7 @@ public final class ArrayCommandPackage implements CommandPackage {
 	
 	@Override
 	public boolean hasNext() {
-		return args.length > position;
+		return position != args.length;
 	}
 
 	@Override

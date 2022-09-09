@@ -31,40 +31,45 @@ import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.TargetMatcher;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.net.InetAddress;
 import java.util.UUID;
 import java.util.function.Consumer;
 
 @Singleton
-public class BungeeEnforcer extends AbstractEnvEnforcer<CommandSender, ProxiedPlayer> {
+public class BungeeEnforcer extends AbstractEnvEnforcer<ProxiedPlayer> {
 
 	private final ProxyServer server;
 	private final AddressReporter addressReporter;
 
 	@Inject
-	public BungeeEnforcer(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
+	public BungeeEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter,
+						  AudienceRepresenter<CommandSender> audienceRepresenter,
 						  ProxyServer server, AddressReporter addressReporter) {
-		super(formatter, audienceRepresenter);
+		super(futuresFactory, formatter, audienceRepresenter);
 		this.server = server;
 		this.addressReporter = addressReporter;
 	}
 
 	@Override
-	protected void sendToThoseWithPermissionNoPrefix(String permission, Component message) {
+	protected CentralisedFuture<Void> sendToThoseWithPermissionNoPrefix(String permission, Component message) {
 		for (ProxiedPlayer player : server.getPlayers()) {
 			if (player.hasPermission(permission)) {
 				audienceRepresenter().toAudience(player).sendMessage(message);
 			}
 		}
+		return completedVoid();
 	}
 
 	@Override
-	public void doForPlayerIfOnline(UUID uuid, Consumer<ProxiedPlayer> callback) {
+	public CentralisedFuture<Void> doForPlayerIfOnline(UUID uuid, Consumer<ProxiedPlayer> callback) {
 		ProxiedPlayer player = server.getPlayer(uuid);
 		if (player != null) {
 			callback.accept(player);
 		}
+		return completedVoid();
 	}
 
 	@Override
@@ -74,12 +79,13 @@ public class BungeeEnforcer extends AbstractEnvEnforcer<CommandSender, ProxiedPl
 	}
 
 	@Override
-	public void enforceMatcher(TargetMatcher<ProxiedPlayer> matcher) {
+	public CentralisedFuture<Void> enforceMatcher(TargetMatcher<ProxiedPlayer> matcher) {
 		for (ProxiedPlayer player : server.getPlayers()) {
 			if (matcher.matches(player.getUniqueId(), addressReporter.getAddress(player))) {
 				matcher.callback().accept(player);
 			}
 		}
+		return completedVoid();
 	}
 
 	@Override
@@ -93,8 +99,9 @@ public class BungeeEnforcer extends AbstractEnvEnforcer<CommandSender, ProxiedPl
 	}
 
 	@Override
-	public void executeConsoleCommand(String command) {
+	public CentralisedFuture<Void> executeConsoleCommand(String command) {
 		server.getPluginManager().dispatchCommand(server.getConsole(), command);
+		return completedVoid();
 	}
 
 }

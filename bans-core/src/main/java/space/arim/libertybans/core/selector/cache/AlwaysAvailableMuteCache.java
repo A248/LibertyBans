@@ -38,6 +38,8 @@ import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.ScheduledTask;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -196,10 +198,6 @@ public final class AlwaysAvailableMuteCache extends BaseMuteCache {
 	}
 
 	@Override
-	public void uncacheOnQuit(UUID uuid, NetworkAddress address) {
-	}
-
-	@Override
 	void setCachedMute(MuteCacheKey cacheKey, Punishment mute) {
 		cache.map.compute(cacheKey, (key, entry) -> {
 			// If there is no existing entry, store the new entry
@@ -245,29 +243,38 @@ public final class AlwaysAvailableMuteCache extends BaseMuteCache {
 
 		private void startPurgeTask() {
 			purgeTask = enhancedExecutor.scheduleRepeating(() -> {
+
+				Collection<CentralisedFuture<Void>> removalFutures = new ArrayList<>(map.size() + 10);
 				long currentTime = nanoTime();
+
 				for (Map.Entry<MuteCacheKey, Entry> mapEntry : map.entrySet()) {
 					MuteCacheKey key = mapEntry.getKey();
-					if (envUserResolver.lookupName(key.uuid()).isPresent()) {
-						// The player is online
-						continue;
-					}
-					Entry entry = mapEntry.getValue();
-					if (currentTime - entry.lastUpdated <= GRACE_PERIOD_NANOS) {
-						/*
-						Not enough time has passed. This allows a grace period in which cache entries may exist
-						despite the player is not logged in.
+					var thisFuture = envUserResolver.lookupName(key.uuid()).thenAccept((nameIfOnline) -> {
+						if (nameIfOnline.isPresent()) {
+							// The player is online
+							return;
+						}
+						Entry entry = mapEntry.getValue();
+						if (currentTime - entry.lastUpdated <= GRACE_PERIOD_NANOS) {
+							/*
+							Not enough time has passed. This allows a grace period in which cache entries may exist
+							despite the player is not logged in.
 
-						This solves the login process conundrum which occurs when the client is between
-						the login event and join event (AsyncPlayerPreLoginEvent and PlayerJoinEvent on Bukkit).
-						We reasonably assume the time between login event and join event < 4 minutes.
-						 */
-						continue;
-					}
-					// The player is offline and the grace period has passed
-					// IMPORTANT: This relies on the exact Entry instance for concurrent correctness
-					map.remove(key, entry);
+							This solves the login process conundrum which occurs when the client is between
+							the login event and join event (AsyncPlayerPreLoginEvent and PlayerJoinEvent on Bukkit).
+							We reasonably assume the time between login event and join event < 4 minutes.
+							 */
+							return;
+						}
+						// The player is offline and the grace period has passed
+						// IMPORTANT: This relies on the exact Entry instance for concurrent correctness
+						map.remove(key, entry);
+					});
+					removalFutures.add(thisFuture);
 				}
+				// Wait for all futures to complete
+				futuresFactory.allOf(removalFutures).join();
+
 			}, PURGE_TASK_INTERVAL, DelayCalculators.fixedDelay());
 		}
 

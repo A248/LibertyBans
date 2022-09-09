@@ -114,5 +114,10 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 
 		api.getOmnibus().getRegistry().unregister(LibertyBans.class, apiRegistration);
 	}
-	
+
+	@Override
+	public Object platformAccess() {
+		return envManager.platformAccess();
+	}
+
 }

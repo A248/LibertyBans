@@ -75,11 +75,15 @@
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-env-bungeeplugin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-env-spigotplugin</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-env-bungeeplugin</artifactId>
+			<artifactId>bans-env-spongeplugin</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>

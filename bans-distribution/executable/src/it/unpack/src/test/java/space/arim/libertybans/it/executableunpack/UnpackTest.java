@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,25 +21,24 @@ package space.arim.libertybans.it.executableunpack;
 
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
-import org.slf4j.LoggerFactory;
 import space.arim.libertybans.bootstrap.DistributionMode;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
 import space.arim.libertybans.bootstrap.Platform;
-import space.arim.libertybans.bootstrap.logger.Slf4jBootstrapLogger;
+import space.arim.libertybans.bootstrap.Platforms;
+import space.arim.libertybans.bootstrap.logger.JulBootstrapLogger;
 
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.security.CodeSource;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -49,34 +48,24 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class UnpackTest {
 
-	private static URL getJarURL(Class<?> clazz) {
-		CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
-		assertNotNull(codeSource, "No CodeSource");
-		URL jar = codeSource.getLocation();
-		assertNotNull(jar, "No CodeSource#getLocation");
-		return jar;
-	}
+	private Path folder;
 
-	private static Path getJarFile() {
-		URL jar = getJarURL(LibertyBansLauncher.class);
-		try {
-			return Path.of(jar.toURI());
-		} catch (URISyntaxException ex) {
-			throw new RuntimeException(ex);
-		}
+	@BeforeEach
+	public void setFolder(@TempDir Path folder) {
+		this.folder = folder;
 	}
 
 	private ClassLoader unpack(Platform platform, ClassLoader parentClassLoader) {
-		Path jarFile = getJarFile();
-		LibertyBansLauncher launcher = new LibertyBansLauncher(
-				new Slf4jBootstrapLogger(LoggerFactory.getLogger(getClass())),
-				platform,
-				Path.of("target/folder"),
-				ForkJoinPool.commonPool(),
-				jarFile);
-		assertEquals(DistributionMode.JAR_OF_JARS, launcher.distributionMode());
+		LibertyBansLauncher launcher = new LibertyBansLauncher.Builder()
+				.folder(folder)
+				.logger(new JulBootstrapLogger(Logger.getLogger(getClass().getName())))
+				.platform(platform)
+				.executor(ForkJoinPool.commonPool())
+				.distributionMode(DistributionMode.JAR_OF_JARS)
+				.parentLoader(parentClassLoader)
+				.build();
 		System.setProperty("libertybans.relocationbug.disablecheck", "true");
-		CompletableFuture<ClassLoader> futureClassLoader = launcher.attemptLaunch(parentClassLoader);
+		CompletableFuture<ClassLoader> futureClassLoader = launcher.attemptLaunch();
 		futureClassLoader.orTimeout(5L, TimeUnit.SECONDS);
 		return assertDoesNotThrow(futureClassLoader::join);
 	}
@@ -90,7 +79,7 @@ public class UnpackTest {
 	@Test
 	public void unpackAndLink() {
 		ClassLoader isolatedParentClassLoader = new ClassLoader("EmptyCL", ClassLoader.getSystemClassLoader()) {};
-		Platform platform = Platform.forCategory(Platform.Category.BUKKIT).build("it-unpack-and-link");
+		Platform platform = Platforms.bukkit().build("it-unpack-and-link");
 		ClassLoader classLoader = unpack(platform, isolatedParentClassLoader);
 
 		List<String> classNames;

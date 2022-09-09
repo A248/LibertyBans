@@ -20,7 +20,6 @@
 package space.arim.libertybans.env.spigot;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -36,8 +35,7 @@ import space.arim.morepaperlib.adventure.MorePaperLibAdventure;
 import java.net.InetAddress;
 import java.util.UUID;
 
-@Singleton
-public class ConnectionListener extends ParallelisedListener<AsyncPlayerPreLoginEvent, Component> implements Listener {
+public final class ConnectionListener extends ParallelisedListener<AsyncPlayerPreLoginEvent, Component> implements Listener {
 
 	private final JavaPlugin plugin;
 	private final Guardian guardian;

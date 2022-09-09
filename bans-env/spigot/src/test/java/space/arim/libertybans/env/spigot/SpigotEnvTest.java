@@ -27,7 +27,7 @@ import space.arim.libertybans.core.env.PlatformListener;
 public class SpigotEnvTest {
 
 	@Test
-	public void testConstructor() {
+	public void allListenersDeclared() {
 		new InjectableConstructor(SpigotEnv.class)
 				.verifyParametersContainSubclassesOf(PlatformListener.class, (clazz) -> {
 					// Exclude CommandHandler since it is constructed directly

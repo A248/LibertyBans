@@ -25,6 +25,7 @@ import static space.arim.libertybans.bootstrap.RunState.LOADING;
 import static space.arim.libertybans.bootstrap.RunState.RUNNING;
 
 import java.time.Duration;
+import java.util.Locale;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -155,7 +156,12 @@ abstract class AbstractBaseFoundation implements BaseFoundation {
 	abstract void shutdown0();
 
 	private enum LoadPoint {
-		START, RESTART, STOP
+		START, RESTART, STOP;
+
+		@Override
+		public String toString() {
+			return name().toLowerCase(Locale.ROOT) + " phase";
+		}
 	}
 
 }

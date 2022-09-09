@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>space.arim.parent</groupId>
 		<artifactId>common-parent</artifactId>
-		<version>0.3.0</version>
+		<version>0.4.1</version>
 	</parent>
 
 	<groupId>space.arim.libertybans</groupId>
@@ -22,6 +22,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.outputTimestamp>2022-01-04T00:00:00Z</project.build.outputTimestamp>
+		<common-parent.deploy-url>https://maven.cloudsmith.io/anand-beh/affero-gpl3/</common-parent.deploy-url>
 
 		<!-- Testing dependencies -->
 		<junit.version>5.8.2</junit.version>
@@ -45,7 +46,7 @@
 		<jooq.version>3.15.1</jooq.version>
 		<adventure.version>4.7.0</adventure.version>
 		<examination.version>1.3.0</examination.version>
-		<arimapi.version>0.24.11</arimapi.version>
+		<arimapi.version>0.25.2</arimapi.version>
 		<managedwaits.version>0.1.3</managedwaits.version>
 		<morepaperlib.version>0.3.2</morepaperlib.version>
 
@@ -53,10 +54,10 @@
 		<self-implementation.hash>039d513199adf8afaba69a684ee097f68a734fc6ef4b4ab65dc9a1841f414a63e6def454e6177056e5c8851f295e09220cab7cfbed5f291cd79ccf0bc792d0ac</self-implementation.hash>
 
 		<!-- Plugin variables -->
+		<plugin.id>libertybans</plugin.id>
 		<plugin.name>LibertyBans</plugin.name>
-		<plugin.annotationId>libertybans</plugin.annotationId> <!-- Used for @Plugin annotation on Velocity -->
 		<plugin.version>${project.version}</plugin.version>
-		<plugin.author>A248</plugin.author>
+		<plugin.author>Contributors to LibertyBans</plugin.author>
 		<plugin.url>https://github.com/A248/LibertyBans</plugin.url>
 		<plugin.description>${project.description}</plugin.description>
 
@@ -68,6 +69,12 @@
 		<common-parent.skip-javadoc>true</common-parent.skip-javadoc>
 		<common-parent.skip-sources>true</common-parent.skip-sources>
 	</properties>
+
+	<scm>
+		<connection>scm:git:ssh://git@github.com/A248/LibertyBans.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/A248/LibertyBans.git</developerConnection>
+		<url>http://github.com/A248/LibertyBans</url>
+	</scm>
 
 	<licenses>
 		<license>
@@ -135,8 +142,8 @@
 		<pluginManagement>
 			<plugins>
 				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.8.1</version>
 					<configuration>
 						<release>11</release>
 						<testRelease>17</testRelease>
@@ -266,17 +273,6 @@
 		<module>bans-distribution</module>
 	</modules>
 
-	<distributionManagement>
-		<repository>
-			<id>cloudsmith-deploy</id>
-			<url>https://maven.cloudsmith.io/anand-beh/affero-gpl3/</url>
-		</repository>
-		<snapshotRepository>
-			<id>cloudsmith-deploy</id>
-			<url>https://maven.cloudsmith.io/anand-beh/affero-gpl3/</url>
-		</snapshotRepository>
-	</distributionManagement>
-
 	<dependencyManagement>
 		<dependencies>
 			<!-- Own dependencies -->
@@ -297,12 +293,17 @@
 			</dependency>
 			<dependency>
 				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-env-bungee</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
 				<artifactId>bans-env-spigot</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>space.arim.libertybans</groupId>
-				<artifactId>bans-env-bungee</artifactId>
+				<artifactId>bans-env-sponge</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -312,12 +313,17 @@
 			</dependency>
 			<dependency>
 				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-env-bungeeplugin</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
 				<artifactId>bans-env-spigotplugin</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>space.arim.libertybans</groupId>
-				<artifactId>bans-env-bungeeplugin</artifactId>
+				<artifactId>bans-env-spongeplugin</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -438,12 +444,17 @@
 			</dependency>
 			<dependency>
 				<groupId>space.arim.api</groupId>
-				<artifactId>arimapi-env-velocity</artifactId>
+				<artifactId>arimapi-env-bungee</artifactId>
 				<version>${arimapi.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>space.arim.api</groupId>
-				<artifactId>arimapi-env-bungee</artifactId>
+				<artifactId>arimapi-env-sponge</artifactId>
+				<version>${arimapi.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.api</groupId>
+				<artifactId>arimapi-env-velocity</artifactId>
 				<version>${arimapi.version}</version>
 			</dependency>
 			<dependency>

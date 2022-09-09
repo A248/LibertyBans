@@ -2,33 +2,42 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<parent>
 		<groupId>space.arim.libertybans</groupId>
 		<artifactId>bans-parent</artifactId>
 		<version>1.1.0-SNAPSHOT</version>
 	</parent>
-	
+
 	<artifactId>bans-env</artifactId>
 	<packaging>pom</packaging>
-	
+
 	<properties>
-		<spigot.version>1.8.8-R0.1-20160221.082514-43</spigot.version>
 		<bungeecord.version>1.16-R0.4</bungeecord.version>
+		<spigot.version>1.8.8-R0.1-20160221.082514-43</spigot.version>
+		<sponge.version>9.0.0</sponge.version>
 		<velocity.version>3.1.0</velocity.version>
 	</properties>
-	
+
 	<modules>
-		<module>spigot</module>
-		<module>spigotplugin</module>
 		<module>bungee</module>
 		<module>bungeeplugin</module>
+		<module>spigot</module>
+		<module>spigotplugin</module>
+		<module>sponge</module>
+		<module>spongeplugin</module>
 		<module>velocity</module>
 		<module>velocityplugin</module>
 	</modules>
-	
+
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>net.md-5</groupId>
+				<artifactId>bungeecord-api</artifactId>
+				<version>${bungeecord.version}</version>
+				<scope>provided</scope>
+			</dependency>
 			<dependency>
 				<groupId>org.spigotmc</groupId>
 				<artifactId>spigot-api</artifactId>
@@ -36,9 +45,9 @@
 				<scope>provided</scope>
 			</dependency>
 			<dependency>
-				<groupId>net.md-5</groupId>
-				<artifactId>bungeecord-api</artifactId>
-				<version>${bungeecord.version}</version>
+				<groupId>org.spongepowered</groupId>
+				<artifactId>spongeapi</artifactId>
+				<version>${sponge.version}</version>
 				<scope>provided</scope>
 			</dependency>
 			<dependency>
