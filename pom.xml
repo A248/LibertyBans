@@ -63,7 +63,7 @@
 
 		<!-- Database revision table -->
 		<dbrevision.major>3</dbrevision.major>
-		<dbrevision.minor>0</dbrevision.minor>
+		<dbrevision.minor>1</dbrevision.minor>
 
 		<!-- Skip javadocs and sources by default -->
 		<common-parent.skip-javadoc>true</common-parent.skip-javadoc>
