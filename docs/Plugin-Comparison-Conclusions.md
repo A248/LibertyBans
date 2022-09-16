@@ -42,7 +42,7 @@ However, BanManager still has its own structural issues. These issues cannot be 
 * If you are a developer, you may find working with BanManager more difficult, because the API is not clearly defined and is statically accessed.
 * With respect to codebases, we find that LibertyBans has better code quality, which suggests BanManager will experience more bugs as updates are released.
 
-Moreover, we judge that LibertyBans prioritize bugs to a greater extent than in BanManager. BanManager is more likely to work on new features than fix existing bugs:
+Moreover, we judge that LibertyBans prioritizes bugs to a greater extent than in BanManager. BanManager is more likely to work on new features than fix existing bugs:
 * As of this writing, there are multiple open issues with the "bug" label on the BanManager issue tracker; however, BanManager is working on significant new features rather than solving these bugs (such as Velocity support and moving to Gradle as the build system).
 * In contrast, it is a stated policy of LibertyBans that solution of bugs will be prioritized over new features.
 

@@ -20,3 +20,7 @@ For settings in sql.yml, and some other settings where documented, you need to e
 ```
 /libertybans restart
 ```
+
+### Addons
+
+Installing [addons](Addons) requires a full server restart.

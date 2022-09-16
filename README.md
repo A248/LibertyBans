@@ -76,6 +76,7 @@ Supported platforms:
 
 * Spigot/Paper or any forks thereof
 * BungeeCord
+* Sponge
 * Velocity
 
 Compatibility with Geyser/Floodgate usernames.

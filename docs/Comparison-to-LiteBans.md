@@ -83,9 +83,12 @@ LibertyBans requires certain minimum versions for database servers. At least MyS
 
 ## Platform Support
 
-Both LibertyBans and LiteBans support the same platforms. LiteBans had velocity support recently added (9 December 2021)
+* Bukkit, BungeeCord, and Velocity are supported by both plugins.
+* Sponge:
+  * LibertyBans supports Sponge.
+  * LiteBans declines to support Sponge on the author's reason that Sponge does not provide asynchronous chat events.<sup id="note3ret">[3](#note3)</sup>
 
-LiteBans' support for velocity came after months of users asking for the feature. It was suggested that LiteBans be made open-source so that someone could contribute a velocity version. The reluctance of the LiteBans author to add velocity support suggests that it may be unwise to rely on proprietary software for critical functionality.
+LiteBans' support for Velocity came after repeated user requests. It was suggested that LiteBans be made open-source so that someone could contribute a Velocity version. The reluctance of the LiteBans author to add Velocity support suggests that it may be unwise to rely on proprietary software for critical functionality.
 
 ## Features
 
@@ -135,6 +138,8 @@ Both LibertyBans and LiteBans provide synchronization across multiple instances,
 <a id="note1">1</a>: Falistos. "Start error under Java 18." LiteBans Gitlab Issue. https://gitlab.com/ruany/LiteBans/-/issues/408 [↩](#note1ret)
 
 <a id="note2">2</a>: Ruan. "LiteBans 2.5.4 - 2.5.9." SpigotMC Resource Update. https://www.spigotmc.org/resources/litebans.3715/update?update=341296 [↩](#note2ret)
+
+<a id="note3">3</a>: Ruan. "[Feature] Spongepowered?". LiteBans Gitlab Issue comment. https://gitlab.com/ruany/LiteBans/-/issues/41#note_324182783 [↩](#note3ret)
 
 ### Disclaimer
 

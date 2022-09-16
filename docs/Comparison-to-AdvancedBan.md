@@ -147,15 +147,13 @@ LibertyBans requires certain minimum versions for database servers. At least MyS
 
 ### Platform Support
 
-Both AdvancedBan and LibertyBans support the same platforms.
+LibertyBans supports Sponge and Velocity, which AdvancedBan does not. Both support Bukkit and BungeeCord.
 
-However, AdvancedBan's Velocity support is unstable and limited to development builds. According to user testing reports, the feature has known bugs. Contributors say it is not maintained.<sup id="note11ret">[11](#note11)</sup>
+Note that AdvancedBan has "unstable" Velocity support, but the feature has known bugs. Contributors say it is not maintained.<sup id="note11ret">[11](#note11)</sup>
 
 ## Features
 
-AdvancedBan has many features LibertyBans does not. It has punishment layouts and player notes, for example.
-
-LibertyBans avoids features it deems unnecessary. However, it has several features which AdvancedBan does not.
+AdvancedBan and LibertyBans each have several features the other does not.
 
 ### Core punishment types
 
