@@ -116,6 +116,10 @@ public interface SelectionOrder {
 	 */
 	long seekAfterId();
 
+	Instant seekBeforeStartTime();
+
+	long seekBeforeId();
+
 	/**
 	 * Gets the first punishment matching this selection, i.e. with the specified
 	 * details. <br>

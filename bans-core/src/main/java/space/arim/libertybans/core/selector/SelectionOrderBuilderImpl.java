@@ -41,6 +41,10 @@ class SelectionOrderBuilderImpl implements SelectionOrderBuilder {
 	private int skipCount;
 	private int limitToRetrieve;
 	private Instant seekAfterStartTime = Instant.EPOCH;
+
+	private Instant seekBeforeStartTime = Instant.EPOCH;
+
+	private long seekBeforeId;
 	private long seekAfterId;
 
 	SelectionOrderBuilderImpl(SelectorImpl selector) {
@@ -103,11 +107,18 @@ class SelectionOrderBuilderImpl implements SelectionOrderBuilder {
 	}
 
 	@Override
+	public SelectionOrderBuilder seekBefore(Instant maximumStartTime, long maximumId) {
+		this.seekBeforeStartTime = Objects.requireNonNull(maximumStartTime, "maximumStartTime");
+		this.seekBeforeId = maximumId;
+		return this;
+	}
+
+	@Override
 	public SelectionOrder build() {
 		return new SelectionOrderImpl(selector,
 				types, victims, operators, scopes,
 				selectActiveOnly, skipCount, limitToRetrieve,
-				seekAfterStartTime, seekAfterId
+				seekAfterStartTime, seekAfterId, seekBeforeStartTime, seekBeforeId
 		);
 	}
 	
