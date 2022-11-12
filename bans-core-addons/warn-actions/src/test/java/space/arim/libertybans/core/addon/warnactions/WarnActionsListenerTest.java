@@ -49,12 +49,12 @@ import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -130,11 +130,10 @@ public class WarnActionsListenerTest {
 		);
 		when(selector.selectionBuilder()).thenReturn(selectionBuilder);
 		when(selectionBuilder.victim(any())).thenReturn(selectionBuilder);
+		when(selectionBuilder.seekBefore(any(), anyLong())).thenReturn(selectionBuilder);
 		when(selectionBuilder.selectActiveOnly()).thenReturn(selectionBuilder);
 		when(selectionBuilder.build()).thenReturn(selectionOrder);
-		when(selectionOrder.getAllSpecificPunishments()).thenReturn(futuresFactory.completedStage(
-				List.of(mock(Punishment.class), mock(Punishment.class)) // Two warns
-		));
+		when(selectionOrder.countNumberOfPunishments()).thenReturn(futuresFactory.completedStage(2));
 		fireEvent();
 		verifyNoInteractions(envEnforcer, drafter);
 	}
@@ -154,11 +153,11 @@ public class WarnActionsListenerTest {
 		);
 		when(selector.selectionBuilder()).thenReturn(selectionBuilder);
 		when(selectionBuilder.victim(any())).thenReturn(selectionBuilder);
+		when(selectionBuilder.seekBefore(any(), anyLong())).thenReturn(selectionBuilder);
 		when(selectionBuilder.selectActiveOnly()).thenReturn(selectionBuilder);
 		when(selectionBuilder.build()).thenReturn(selectionOrder);
-		when(selectionOrder.getAllSpecificPunishments()).thenReturn(futuresFactory.completedStage(
-				List.of(mock(Punishment.class), mock(Punishment.class), mock(Punishment.class))
-		));
+		when(selectionOrder.countNumberOfPunishments()).thenReturn(futuresFactory.completedStage(3));
+
 		when(formatter.formatWithPunishment(any(), eq(punishment))).thenAnswer((invocation) -> {
 			return futuresFactory.completedFuture(invocation.getArgument(0, ComponentText.class).asComponent());
 		});

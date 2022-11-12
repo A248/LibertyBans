@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -33,9 +33,14 @@ import java.util.Optional;
 /**
  * A selection which will match punishments in the database with certain
  * details. <br>
+ * A punishment is said to match if it meets ALL of the following: <br>
+ * Its type matches that of this selection <br>
+ * Its victim and victim type matches that of this selection <br>
+ * Its operator matches that of this selection <br>
+ * Its scope matches that of this selection
  * <br>
  * To retrieve an instance, use the {@link SelectionOrderBuilder} obtained from
- * {@link PunishmentSelector#selectionBuilder()}
+ * {@link PunishmentSelector#selectionBuilder()}.
  * 
  * @author A248
  *
@@ -55,6 +60,13 @@ public interface SelectionOrder {
 	 * @return the victims
 	 */
 	SelectionPredicate<Victim> getVictims();
+
+	/**
+	 * Gets the victim types matched
+	 *
+	 * @return the victim types
+	 */
+	SelectionPredicate<Victim.VictimType> getVictimTypes();
 
 	/**
 	 * Gets the operators matched
@@ -153,25 +165,22 @@ public interface SelectionOrder {
 	ReactionStage<Optional<Punishment>> getFirstSpecificPunishment();
 
 	/**
-	 * Gets all punishments matching the given punishment selection, i.e. with the
-	 * specified details. <br>
+	 * Gets all punishments matching this selection. <br>
 	 * <br>
 	 * The returned list is ordered by the date the punishment was enacted. The
-	 * latest punishments come first. <br>
-	 * <br>
-	 * A punishment is said to match if it meets ALL of the following: <br>
-	 * Its type matches that of this selection <br>
-	 * Its victim matches that of this selection, or this selection's victim is
-	 * unspecified <br>
-	 * Its operator matches that of this selection, or this selection's operator is
-	 * unspecified <br>
-	 * Its scope matches that of this selection, or this selection's scope is
-	 * unspecified
+	 * latest punishments come first.
 	 * 
 	 * @return a future which yields all punishments matching this selection, or an
 	 *         empty set if none matched
 	 */
 	ReactionStage<List<Punishment>> getAllSpecificPunishments();
+
+	/**
+	 * Gets the number of punishments matching this selection.
+	 *
+	 * @return a future which yields the number of punishments matching this selection
+	 */
+	ReactionStage<Integer> countNumberOfPunishments();
 
 	/**
 	 * Whether this punishment selection is equal to another, i.e. if the other

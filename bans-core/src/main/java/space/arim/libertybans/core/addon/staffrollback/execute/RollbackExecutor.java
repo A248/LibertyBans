@@ -21,13 +21,9 @@ package space.arim.libertybans.core.addon.staffrollback.execute;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
-import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static space.arim.libertybans.core.schema.tables.Punishments.PUNISHMENTS;
 
@@ -46,18 +42,10 @@ public final class RollbackExecutor {
 		return selector.selectionBuilder()
 				.operator(rollback.operator())
 				.seekAfter(rollback.minStartTime(), 0L)
+				.seekBefore(rollback.maxStartTime(), Long.MAX_VALUE)
 				.selectAll()
 				.build()
-				.getAllSpecificPunishments()
-				.thenApply((punishmentList) -> {
-					List<Punishment> filtered = new ArrayList<>(punishmentList.size());
-					for (Punishment punishment : punishmentList) {
-						if (punishment.getStartDate().compareTo(rollback.maxStartTime()) <= 0) {
-							filtered.add(punishment);
-						}
-					}
-					return filtered.size();
-				})
+				.countNumberOfPunishments()
 				.toCompletableFuture();
 	}
 

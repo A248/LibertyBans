@@ -43,7 +43,7 @@
 		<pgjdbc.version>42.3.1</pgjdbc.version>
 		<caffeine.version>3.0.5</caffeine.version>
 		<flyway.version>8.2.0</flyway.version>
-		<jooq.version>3.15.1</jooq.version>
+		<jooq.version>3.17.0</jooq.version>
 		<adventure.version>4.7.0</adventure.version>
 		<examination.version>1.3.0</examination.version>
 		<arimapi.version>0.25.2</arimapi.version>
@@ -145,7 +145,7 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
 					<configuration>
-						<release>11</release>
+						<release>17</release>
 						<testRelease>17</testRelease>
 					</configuration>
 				</plugin>

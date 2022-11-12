@@ -35,6 +35,7 @@ class SelectionOrderBuilderImpl implements SelectionOrderBuilder {
 
 	private SelectionPredicate<PunishmentType> types = SelectionPredicate.matchingAll();
 	private SelectionPredicate<Victim> victims = SelectionPredicate.matchingAll();
+	private SelectionPredicate<Victim.VictimType> victimTypes = SelectionPredicate.matchingAll();
 	private SelectionPredicate<Operator> operators = SelectionPredicate.matchingAll();
 	private SelectionPredicate<ServerScope> scopes = SelectionPredicate.matchingAll();
 	private boolean selectActiveOnly = true;
@@ -58,6 +59,12 @@ class SelectionOrderBuilderImpl implements SelectionOrderBuilder {
 	@Override
 	public SelectionOrderBuilder victims(SelectionPredicate<Victim> victims) {
 		this.victims = Objects.requireNonNull(victims, "victims");
+		return this;
+	}
+
+	@Override
+	public SelectionOrderBuilder victimTypes(SelectionPredicate<Victim.VictimType> victimTypes) {
+		this.victimTypes = Objects.requireNonNull(victimTypes, "victimTypes");
 		return this;
 	}
 
@@ -114,7 +121,7 @@ class SelectionOrderBuilderImpl implements SelectionOrderBuilder {
 	@Override
 	public SelectionOrder build() {
 		return new SelectionOrderImpl(selector,
-				types, victims, operators, scopes,
+				types, victims, victimTypes, operators, scopes,
 				selectActiveOnly, skipCount, limitToRetrieve,
 				seekAfterStartTime, seekAfterId, seekBeforeStartTime, seekBeforeId
 		);

@@ -74,11 +74,11 @@ public final class WarnActionsListener implements AsynchronousEventConsumer<Post
 		}
 		selector.selectionBuilder()
 				.victim(punishment.getVictim())
+				.seekBefore(punishment.getStartDate(), punishment.getIdentifier())
 				.selectActiveOnly()
 				.build()
-				.getAllSpecificPunishments()
-				.thenCompose((punishmentList) -> {
-					int numberOfWarns = punishmentList.size();
+				.countNumberOfPunishments()
+				.thenCompose((numberOfWarns) -> {
 					return new Handler(punishment, numberOfWarns).handleActions();
 				})
 				.whenComplete((ignore, ex) -> {

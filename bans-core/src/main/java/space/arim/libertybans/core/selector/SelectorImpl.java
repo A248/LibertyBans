@@ -77,6 +77,10 @@ public class SelectorImpl implements InternalSelector {
 		return selectionImpl.getSpecificPunishments(selection);
 	}
 
+	ReactionStage<Integer> countNumberOfPunishments(SelectionOrder selection) {
+		return selectionImpl.countNumberOfPunishments(selection);
+	}
+
 	/*
 	 * 
 	 * ID related methods
