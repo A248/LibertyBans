@@ -46,12 +46,14 @@ class SelectionOrderImpl implements SelectionOrder {
 	private final int limitToRetrieve;
 	private final Instant seekAfterStartTime;
 	private final long seekAfterId;
+	private final Instant seekBeforeStartTime;
+	private final long seekBeforeId;
 
 	SelectionOrderImpl(SelectorImpl selector,
 					   SelectionPredicate<PunishmentType> types, SelectionPredicate<Victim> victims,
 					   SelectionPredicate<Operator> operators, SelectionPredicate<ServerScope> scopes,
 					   boolean selectActiveOnly, int skipCount, int limitToRetrieve,
-					   Instant seekAfterStartTime, long seekAfterId) {
+					   Instant seekAfterStartTime, long seekAfterId, Instant seekBeforeStartTime, long seekBeforeId) {
 		this.selector = Objects.requireNonNull(selector, "selector");
 
 		this.types = Objects.requireNonNull(types, "types");
@@ -62,8 +64,10 @@ class SelectionOrderImpl implements SelectionOrder {
 		this.skipCount = skipCount;
 		this.limitToRetrieve = limitToRetrieve;
 		this.seekAfterStartTime = Objects.requireNonNull(seekAfterStartTime, "seekAfterStartTime");
+		this.seekBeforeStartTime = Objects.requireNonNull(seekBeforeStartTime, "seekBeforeStartTime");
 		// Zero-out seekAfterId if start time is unset, so that equals and hashCode function reliably
 		this.seekAfterId = (seekAfterStartTime.equals(Instant.EPOCH) ? 0 : seekAfterId);
+		this.seekBeforeId = (seekBeforeStartTime.equals(Instant.EPOCH) ? 0 : seekBeforeId);
 	}
 
 	@Override
@@ -112,6 +116,16 @@ class SelectionOrderImpl implements SelectionOrder {
 	}
 
 	@Override
+	public Instant seekBeforeStartTime() {
+		return seekBeforeStartTime;
+	}
+
+	@Override
+	public long seekBeforeId() {
+		return seekBeforeId;
+	}
+
+	@Override
 	public ReactionStage<Optional<Punishment>> getFirstSpecificPunishment() {
 		return selector.getFirstSpecificPunishment(this).thenApply(Optional::ofNullable);
 	}
@@ -130,11 +144,13 @@ class SelectionOrderImpl implements SelectionOrder {
 				&& skipCount == that.skipCount
 				&& limitToRetrieve == that.limitToRetrieve
 				&& seekAfterId == that.seekAfterId
+				&& seekBeforeId == that.seekBeforeId
 				&& types.equals(that.types)
 				&& victims.equals(that.victims)
 				&& operators.equals(that.operators)
 				&& scopes.equals(that.scopes)
-				&& seekAfterStartTime.equals(that.seekAfterStartTime);
+				&& seekAfterStartTime.equals(that.seekAfterStartTime)
+				&& seekBeforeStartTime.equals(that.seekBeforeStartTime);
 	}
 
 	@Override
@@ -148,6 +164,8 @@ class SelectionOrderImpl implements SelectionOrder {
 		result = 31 * result + limitToRetrieve;
 		result = 31 * result + seekAfterStartTime.hashCode();
 		result = 31 * result + (int) (seekAfterId ^ (seekAfterId >>> 32));
+		result = 31 * result + seekBeforeStartTime.hashCode();
+		result = 31 * result + (int) (seekBeforeId ^ (seekBeforeId >>> 32));
 		return result;
 	}
 
@@ -163,6 +181,8 @@ class SelectionOrderImpl implements SelectionOrder {
 				", limitToRetrieve=" + limitToRetrieve +
 				", seekAfterStartTime=" + seekAfterStartTime +
 				", seekAfterId=" + seekAfterId +
+				", seekBeforeStartTime=" + seekBeforeStartTime +
+				", seekBeforeId=" + seekBeforeId +
 				'}';
 	}
 }

@@ -209,6 +209,30 @@ public interface SelectionOrderBuilder {
 	SelectionOrderBuilder seekAfter(Instant minimumStartTime, long minimumId);
 
 	/**
+	 * Sets the time before which punishments will be retrieved. Only punishments whose
+	 * start time ({@link Punishment#getStartDate()}) is before or equal to the given value will be
+	 * selected. <br>
+	 * <br>
+	 * If a punishment has a start time equal to {@code maximumStartTime}, its ID will be checked against
+	 * {@code maximumId}. The punishment will then be selected if its ID is equal to or less than
+	 * {@code maximumId}. <br>
+	 * <br>
+	 * To reset this option to the default value, use a maximum start time of {@link Instant#EPOCH},
+	 * in which case the maximum ID is ignored.
+	 * <br>
+	 * This method may be used to implement keyset pagination of selected punishments,
+	 * together with {@link #limitToRetrieve(int)}. <br>
+	 * <br>
+	 * Behavior is unspecified if this is used simultaneously with {@link #skipFirstRetrieved(int)}.
+	 * Callers should consider the methods exclusive to avoid unspecified behavior.
+	 *
+	 * @param maximumStartTime the maximum start time, or {@code Instant.EPOCH} to reset this option
+	 * @param maximumId the maximum ID
+	 * @return this builder
+	 */
+	SelectionOrderBuilder seekBefore(Instant maximumStartTime, long maximumId);
+
+	/**
 	 * Builds a {@link SelectionOrder} from the details of this builder. May be used
 	 * repeatedly without side effects.
 	 * 
