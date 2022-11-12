@@ -214,7 +214,7 @@ public interface SelectionOrderBuilder {
 	 * selected. <br>
 	 * <br>
 	 * If a punishment has a start time equal to {@code maximumStartTime}, its ID will be checked against
-	 * {@code maximumId}. The punishment will then be selected if its ID is equal to or greater than
+	 * {@code maximumId}. The punishment will then be selected if its ID is equal to or less than
 	 * {@code maximumId}. <br>
 	 * <br>
 	 * To reset this option to the default value, use a maximum start time of {@link Instant#EPOCH},
@@ -227,7 +227,7 @@ public interface SelectionOrderBuilder {
 	 * Callers should consider the methods exclusive to avoid unspecified behavior.
 	 *
 	 * @param maximumStartTime the maximum start time, or {@code Instant.EPOCH} to reset this option
-	 * @param maximumId the minimum ID
+	 * @param maximumId the maximum ID
 	 * @return this builder
 	 */
 	SelectionOrderBuilder seekBefore(Instant maximumStartTime, long maximumId);

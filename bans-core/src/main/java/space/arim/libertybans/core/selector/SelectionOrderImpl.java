@@ -67,7 +67,7 @@ class SelectionOrderImpl implements SelectionOrder {
 		this.seekBeforeStartTime = Objects.requireNonNull(seekBeforeStartTime, "seekBeforeStartTime");
 		// Zero-out seekAfterId if start time is unset, so that equals and hashCode function reliably
 		this.seekAfterId = (seekAfterStartTime.equals(Instant.EPOCH) ? 0 : seekAfterId);
-		this.seekBeforeId = (seekBeforeStartTime.equals(Instant.EPOCH)? 0 : seekBeforeId);
+		this.seekBeforeId = (seekBeforeStartTime.equals(Instant.EPOCH) ? 0 : seekBeforeId);
 	}
 
 	@Override
@@ -116,10 +116,14 @@ class SelectionOrderImpl implements SelectionOrder {
 	}
 
 	@Override
-	public Instant seekBeforeStartTime() { return seekBeforeStartTime; }
+	public Instant seekBeforeStartTime() {
+		return seekBeforeStartTime;
+	}
 
 	@Override
-	public long seekBeforeId() { return seekBeforeId; }
+	public long seekBeforeId() {
+		return seekBeforeId;
+	}
 
 	@Override
 	public ReactionStage<Optional<Punishment>> getFirstSpecificPunishment() {

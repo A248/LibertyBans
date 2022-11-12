@@ -41,11 +41,9 @@ class SelectionOrderBuilderImpl implements SelectionOrderBuilder {
 	private int skipCount;
 	private int limitToRetrieve;
 	private Instant seekAfterStartTime = Instant.EPOCH;
-
-	private Instant seekBeforeStartTime = Instant.EPOCH;
-
-	private long seekBeforeId;
 	private long seekAfterId;
+	private Instant seekBeforeStartTime = Instant.EPOCH;
+	private long seekBeforeId;
 
 	SelectionOrderBuilderImpl(SelectorImpl selector) {
 		this.selector = selector;

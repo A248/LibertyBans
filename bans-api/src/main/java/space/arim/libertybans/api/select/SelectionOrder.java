@@ -116,8 +116,22 @@ public interface SelectionOrder {
 	 */
 	long seekAfterId();
 
+	/**
+	 * Gets the maximum start time before which punishments will be selected. <br>
+	 * <br>
+	 * See {@link SelectionOrderBuilder#seekBefore(Instant, long)}
+	 *
+	 * @return the maximum start time, or {@link Instant#EPOCH} for none
+	 */
 	Instant seekBeforeStartTime();
 
+	/**
+	 * Gets the maximum ID before which punishments will be selected. <br>
+	 * <br>
+	 * See {@link SelectionOrderBuilder#seekBefore(Instant, long)}
+	 *
+	 * @return the maximum ID, which is meaningless if {@link #seekBeforeStartTime()} is {@code Instant.EPOCH}
+	 */
 	long seekBeforeId();
 
 	/**

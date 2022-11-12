@@ -164,7 +164,8 @@ public class SelectionImpl {
 						)
 				);
 			}
-		} else if(!seekBeforeStartTime.equals(Instant.EPOCH)){
+		}
+		if (!seekBeforeStartTime.equals(Instant.EPOCH)) {
 			long seekBeforeId = selection.seekBeforeId();
 			if (seekBeforeId == 0L) {
 				condition = condition.and(fields.start().lessOrEqual(seekBeforeStartTime));
