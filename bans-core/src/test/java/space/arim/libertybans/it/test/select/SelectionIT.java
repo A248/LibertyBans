@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -16,12 +16,15 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.it.test.select;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
+import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.Operator;
+import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.DraftPunishmentBuilder;
@@ -30,6 +33,7 @@ import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
+import space.arim.libertybans.api.select.SelectionPredicate;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
@@ -39,11 +43,13 @@ import space.arim.libertybans.it.resolver.RandomPunishmentTypeResolver;
 import space.arim.libertybans.it.resolver.RandomPunishmentTypeResolver.SingularPunishment;
 import space.arim.libertybans.it.resolver.RandomReasonResolver;
 import space.arim.libertybans.it.resolver.RandomVictimResolver;
+import space.arim.libertybans.it.util.RandomUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -163,7 +169,7 @@ public class SelectionIT {
 
 	@TestTemplate
 	public void selectHistoricalBansMutes(@DontInject @SingularPunishment PunishmentType type,
-			@DontInject Victim victim) {
+										  @DontInject Victim victim) {
 		Punishment expired1 = getPunishment(
 				draftBuilder(type, victim, "the first punishment").duration(ONE_SECOND));
 		time.advanceBy(TWO_SECONDS);
@@ -210,6 +216,51 @@ public class SelectionIT {
 		assertEquals(
 				List.of(warnFromOp2),
 				getPunishments(selector.selectionBuilder().operator(operator2)));
+	}
+
+	@TestTemplate
+	public void selectVictimsBySelfOrType() {
+		PlayerVictim uuid1 = PlayerVictim.of(UUID.randomUUID());
+		PlayerVictim uuid2 = PlayerVictim.of(UUID.randomUUID());
+		AddressVictim address1 = AddressVictim.of(RandomUtil.randomAddress());
+		AddressVictim address2 = AddressVictim.of(RandomUtil.randomAddress());
+
+		Punishment banUuid1 = getPunishment(
+				draftBuilder(PunishmentType.BAN, uuid1, "banned"));
+		Punishment warnUuid2 = getPunishment(
+				draftBuilder(PunishmentType.WARN, uuid2, "warned"));
+		Punishment banAddress1 = getPunishment(
+				draftBuilder(PunishmentType.BAN, address1, "kicked"));
+		Punishment muteAddress2 = getPunishment(
+				draftBuilder(PunishmentType.MUTE, address2, "muted"));
+
+		assertEquals(
+				List.of(warnUuid2, banUuid1),
+				getPunishments(selector.selectionBuilder().victimType(Victim.VictimType.PLAYER)));
+		assertEquals(
+				List.of(muteAddress2, banAddress1),
+				getPunishments(selector.selectionBuilder().victimTypes(
+						SelectionPredicate.matchingAnyOf(Victim.VictimType.ADDRESS, Victim.VictimType.COMPOSITE)
+				)));
+		assertEquals(
+				List.of(muteAddress2, banAddress1),
+				getPunishments(selector.selectionBuilder().victimTypes(
+						SelectionPredicate.matchingNone(Victim.VictimType.PLAYER)
+				)),
+				"Should be identical to previous assertion");
+		assertEquals(
+				List.of(),
+				getPunishments(selector.selectionBuilder().victimType(Victim.VictimType.COMPOSITE)));
+		assertEquals(
+				List.of(warnUuid2),
+				getPunishments(selector.selectionBuilder().victim(uuid2)));
+		assertEquals(
+				List.of(banAddress1, warnUuid2),
+				getPunishments(selector.selectionBuilder().victims(SelectionPredicate.matchingAnyOf(uuid2, address1))));
+		assertEquals(
+				List.of(banAddress1, warnUuid2),
+				getPunishments(selector.selectionBuilder().victims(SelectionPredicate.matchingNone(uuid1, address2))),
+				"Should be identical to previous assertion (in context)");
 	}
 
 }

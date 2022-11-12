@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -36,7 +36,7 @@ import java.time.Instant;
 public interface SelectionOrderBuilder {
 
 	/**
-	 * Sets the punishment type matched
+	 * Sets the punishment type matched. All are matched by default.
 	 * 
 	 * @param type the punishment type
 	 * @return this builder
@@ -46,7 +46,7 @@ public interface SelectionOrderBuilder {
 	}
 
 	/**
-	 * Sets the punishment types matched
+	 * Sets the punishment types matched. All are matched by default.
 	 *
 	 * @param types the punishment type predicate
 	 * @return this builder
@@ -54,8 +54,9 @@ public interface SelectionOrderBuilder {
 	SelectionOrderBuilder types(SelectionPredicate<PunishmentType> types);
 
 	/**
-	 * Sets the victim matched. Please see {@link #victims(SelectionPredicate)} for how this
-	 * interacts with composite victims.
+	 * Sets the victim matched. All are matched by default. <br>
+	 * <br>
+	 * Please see {@link #victims(SelectionPredicate)} for how this interacts with composite victims.
 	 * 
 	 * @param victim the victim
 	 * @return this builder
@@ -65,7 +66,7 @@ public interface SelectionOrderBuilder {
 	}
 
 	/**
-	 * Sets the victims matched. <br>
+	 * Sets the victims matched. All are matched by default. <br>
 	 * <br>
 	 * Composite victims have somewhat special handling which reflects their purpose as an "either-or"
 	 * kind of victim. That is, specifying a composite victim in set of the accepted victims will
@@ -83,7 +84,25 @@ public interface SelectionOrderBuilder {
 	SelectionOrderBuilder victims(SelectionPredicate<Victim> victims);
 
 	/**
-	 * Sets the operator matched
+	 * Sets the victim type matched. All are matched by default.
+	 *
+	 * @param victimType the victim type to match
+	 * @return this builder
+	 */
+	default SelectionOrderBuilder victimType(Victim.VictimType victimType) {
+		return victimTypes(SelectionPredicate.matchingOnly(victimType));
+	}
+
+	/**
+	 * Sets the victim types matched. All are matched by default.
+	 *
+	 * @param victimTypes the victim types
+	 * @return this builder
+	 */
+	SelectionOrderBuilder victimTypes(SelectionPredicate<Victim.VictimType> victimTypes);
+
+	/**
+	 * Sets the operator matched. All are matched by default.
 	 * 
 	 * @param operator the operator
 	 * @return this builder
@@ -93,7 +112,7 @@ public interface SelectionOrderBuilder {
 	}
 
 	/**
-	 * Sets the operators matched
+	 * Sets the operators matched. All are matched by default.
 	 *
 	 * @param operators the operator predicate
 	 * @return this builder
@@ -101,7 +120,7 @@ public interface SelectionOrderBuilder {
 	SelectionOrderBuilder operators(SelectionPredicate<Operator> operators);
 
 	/**
-	 * Sets the scope matched
+	 * Sets the scope matched. All are matched by default.
 	 * 
 	 * @param scope the scope
 	 * @return this builder
@@ -111,7 +130,7 @@ public interface SelectionOrderBuilder {
 	}
 
 	/**
-	 * Sets the scopes matched
+	 * Sets the scopes matched. All are matched by default.
 	 *
 	 * @param scopes the scope predicate
 	 * @return this builder

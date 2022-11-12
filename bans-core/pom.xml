@@ -219,6 +219,11 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>io.fabric8</groupId>
+				<artifactId>docker-maven-plugin</artifactId>
+				<version>0.38.1</version>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -275,13 +280,81 @@
 								<configuration>
 									<minPortNumber>40000</minPortNumber>
 									<maxPortNumber>50000</maxPortNumber>
-									<portNames>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>io.fabric8</groupId>
+						<artifactId>docker-maven-plugin</artifactId>
+						<configuration>
+							<containerNamePattern>%a</containerNamePattern>
+							<showLogs>true</showLogs>
+							<startParallel>true</startParallel>
+							<removeVolumes>true</removeVolumes>
+						</configuration>
+						<executions>
+							<execution>
+								<id>start-database-instances</id>
+								<phase>pre-integration-test</phase>
+								<goals>
+									<goal>volume-create</goal>
+									<goal>start</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>stop-database-instances</id>
+								<phase>post-integration-test</phase>
+								<goals>
+									<goal>stop</goal>
+									<goal>volume-remove</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-failsafe-plugin</artifactId>
+						<configuration>
+							<systemPropertyVariables>
+								<hsqldb.reconfig_logging>false</hsqldb.reconfig_logging>
+								<org.jooq.no-logo>true</org.jooq.no-logo>
+								<org.jooq.no-tips>true</org.jooq.no-tips>
+								<libertybans.it.mariadb.legacy.port>${it.mariadb.legacy.port}</libertybans.it.mariadb.legacy.port>
+								<libertybans.it.mariadb.modern.port>${it.mariadb.modern.port}</libertybans.it.mariadb.modern.port>
+								<libertybans.it.mysql.port>${it.mysql.port}</libertybans.it.mysql.port>
+								<libertybans.it.postgres.legacy.port>${it.postgres.legacy.port}</libertybans.it.postgres.legacy.port>
+								<libertybans.it.postgres.modern.port>${it.postgres.modern.port}</libertybans.it.postgres.modern.port>
+								<libertybans.it.cockroachdb.port>${it.cockroachdb.port}</libertybans.it.cockroachdb.port>
+							</systemPropertyVariables>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<!--
+		The following database-specific profiles may be used to disable certain database containers.
+		They are active by default, but have no effect unless the 'docker-enabled' profile is also active.
+		-->
+		<profile>
+			<id>docker-database-mariadb</id>
+			<activation>
+				<file>
+					<exists>/var/run/docker.sock</exists>
+				</file>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>build-helper-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>find-available-ports</id>
+								<configuration>
+									<portNames combine.children="append">
 										<portName>it.mariadb.legacy.port</portName>
 										<portName>it.mariadb.modern.port</portName>
-										<portName>it.mysql.port</portName>
-										<portName>it.postgres.legacy.port</portName>
-										<portName>it.postgres.modern.port</portName>
-										<portName>it.cockroachdb.port</portName>
 									</portNames>
 								</configuration>
 							</execution>
@@ -290,13 +363,8 @@
 					<plugin>
 						<groupId>io.fabric8</groupId>
 						<artifactId>docker-maven-plugin</artifactId>
-						<version>0.38.1</version>
 						<configuration>
-							<containerNamePattern>%a</containerNamePattern>
-							<showLogs>true</showLogs>
-							<startParallel>true</startParallel>
-							<removeVolumes>true</removeVolumes>
-							<images>
+							<images combine.children="append">
 								<image>
 									<name>mariadb:10.3</name>
 									<alias>mariadb-legacy</alias>
@@ -339,6 +407,56 @@
 										</volumes>
 									</run>
 								</image>
+							</images>
+							<volumes combine.children="append">
+								<volume>
+									<name>libertybans-build-mariadb-legacy</name>
+									<opts>
+										<type>tmpfs</type>
+										<device>tmpfs</device>
+									</opts>
+								</volume>
+								<volume>
+									<name>libertybans-build-mariadb-modern</name>
+									<opts>
+										<type>tmpfs</type>
+										<device>tmpfs</device>
+									</opts>
+								</volume>
+							</volumes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>docker-database-mysql</id>
+			<activation>
+				<file>
+					<exists>/var/run/docker.sock</exists>
+				</file>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>build-helper-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>find-available-ports</id>
+								<configuration>
+									<portNames combine.children="append">
+										<portName>it.mysql.port</portName>
+									</portNames>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>io.fabric8</groupId>
+						<artifactId>docker-maven-plugin</artifactId>
+						<configuration>
+							<images combine.children="append">
 								<image>
 									<name>mysql:8.0</name>
 									<alias>mysql</alias>
@@ -360,6 +478,50 @@
 										</volumes>
 									</run>
 								</image>
+							</images>
+							<volumes combine.children="append">
+								<volume>
+									<name>libertybans-build-mysql</name>
+									<opts>
+										<type>tmpfs</type>
+										<device>tmpfs</device>
+									</opts>
+								</volume>
+							</volumes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>docker-database-postgres</id>
+			<activation>
+				<file>
+					<exists>/var/run/docker.sock</exists>
+				</file>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>build-helper-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>find-available-ports</id>
+								<configuration>
+									<portNames combine.children="append">
+										<portName>it.postgres.legacy.port</portName>
+										<portName>it.postgres.modern.port</portName>
+									</portNames>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>io.fabric8</groupId>
+						<artifactId>docker-maven-plugin</artifactId>
+						<configuration>
+							<images combine.children="append">
 								<image>
 									<name>postgres:12</name>
 									<alias>postgresql-legacy</alias>
@@ -402,6 +564,56 @@
 										</volumes>
 									</run>
 								</image>
+							</images>
+							<volumes combine.children="append">
+								<volume>
+									<name>libertybans-build-postgresql-legacy</name>
+									<opts>
+										<type>tmpfs</type>
+										<device>tmpfs</device>
+									</opts>
+								</volume>
+								<volume>
+									<name>libertybans-build-postgresql-modern</name>
+									<opts>
+										<type>tmpfs</type>
+										<device>tmpfs</device>
+									</opts>
+								</volume>
+							</volumes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>docker-database-cockroachdb</id>
+			<activation>
+				<file>
+					<exists>/var/run/docker.sock</exists>
+				</file>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>build-helper-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>find-available-ports</id>
+								<configuration>
+									<portNames combine.children="append">
+										<portName>it.cockroachdb.port</portName>
+									</portNames>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>io.fabric8</groupId>
+						<artifactId>docker-maven-plugin</artifactId>
+						<configuration>
+							<images combine.children="append">
 								<image>
 									<name>cockroachdb/cockroach:latest</name>
 									<alias>cockroachdb</alias>
@@ -422,48 +634,7 @@
 									</run>
 								</image>
 							</images>
-							<volumes>
-								<!-- MariaDB Legacy container volume -->
-								<volume>
-									<name>libertybans-build-mariadb-legacy</name>
-									<opts>
-										<type>tmpfs</type>
-										<device>tmpfs</device>
-									</opts>
-								</volume>
-								<!-- MariaDB Modern container volume -->
-								<volume>
-									<name>libertybans-build-mariadb-modern</name>
-									<opts>
-										<type>tmpfs</type>
-										<device>tmpfs</device>
-									</opts>
-								</volume>
-								<!-- MySQL container volume -->
-								<volume>
-									<name>libertybans-build-mysql</name>
-									<opts>
-										<type>tmpfs</type>
-										<device>tmpfs</device>
-									</opts>
-								</volume>
-								<!-- Postgresql Legacy container volume -->
-								<volume>
-									<name>libertybans-build-postgresql-legacy</name>
-									<opts>
-										<type>tmpfs</type>
-										<device>tmpfs</device>
-									</opts>
-								</volume>
-								<!-- Postgresql Modern container volume -->
-								<volume>
-									<name>libertybans-build-postgresql-modern</name>
-									<opts>
-										<type>tmpfs</type>
-										<device>tmpfs</device>
-									</opts>
-								</volume>
-								<!-- Cockroachdb container volume -->
+							<volumes combine.children="append">
 								<volume>
 									<name>libertybans-build-cockroachdb</name>
 									<opts>
@@ -472,41 +643,6 @@
 									</opts>
 								</volume>
 							</volumes>
-						</configuration>
-						<executions>
-							<execution>
-								<id>start-database-instances</id>
-								<phase>pre-integration-test</phase>
-								<goals>
-									<goal>volume-create</goal>
-									<goal>start</goal>
-								</goals>
-							</execution>
-							<execution>
-								<id>stop-database-instances</id>
-								<phase>post-integration-test</phase>
-								<goals>
-									<goal>stop</goal>
-									<goal>volume-remove</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-failsafe-plugin</artifactId>
-						<configuration>
-							<systemPropertyVariables>
-								<hsqldb.reconfig_logging>false</hsqldb.reconfig_logging>
-								<org.jooq.no-logo>true</org.jooq.no-logo>
-								<org.jooq.no-tips>true</org.jooq.no-tips>
-								<libertybans.it.mariadb.legacy.port>${it.mariadb.legacy.port}</libertybans.it.mariadb.legacy.port>
-								<libertybans.it.mariadb.modern.port>${it.mariadb.modern.port}</libertybans.it.mariadb.modern.port>
-								<libertybans.it.mysql.port>${it.mysql.port}</libertybans.it.mysql.port>
-								<libertybans.it.postgres.legacy.port>${it.postgres.legacy.port}</libertybans.it.postgres.legacy.port>
-								<libertybans.it.postgres.modern.port>${it.postgres.modern.port}</libertybans.it.postgres.modern.port>
-								<libertybans.it.cockroachdb.port>${it.cockroachdb.port}</libertybans.it.cockroachdb.port>
-							</systemPropertyVariables>
 						</configuration>
 					</plugin>
 				</plugins>

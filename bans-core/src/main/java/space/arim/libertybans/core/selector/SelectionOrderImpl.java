@@ -33,12 +33,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-class SelectionOrderImpl implements SelectionOrder {
+final class SelectionOrderImpl implements SelectionOrder {
 
 	private transient final SelectorImpl selector;
 
 	private final SelectionPredicate<PunishmentType> types;
 	private final SelectionPredicate<Victim> victims;
+	private final SelectionPredicate<Victim.VictimType> victimTypes;
 	private final SelectionPredicate<Operator> operators;
 	private final SelectionPredicate<ServerScope> scopes;
 	private final boolean selectActiveOnly;
@@ -50,7 +51,8 @@ class SelectionOrderImpl implements SelectionOrder {
 	private final long seekBeforeId;
 
 	SelectionOrderImpl(SelectorImpl selector,
-					   SelectionPredicate<PunishmentType> types, SelectionPredicate<Victim> victims,
+					   SelectionPredicate<PunishmentType> types,
+					   SelectionPredicate<Victim> victims, SelectionPredicate<Victim.VictimType> victimTypes,
 					   SelectionPredicate<Operator> operators, SelectionPredicate<ServerScope> scopes,
 					   boolean selectActiveOnly, int skipCount, int limitToRetrieve,
 					   Instant seekAfterStartTime, long seekAfterId, Instant seekBeforeStartTime, long seekBeforeId) {
@@ -58,6 +60,7 @@ class SelectionOrderImpl implements SelectionOrder {
 
 		this.types = Objects.requireNonNull(types, "types");
 		this.victims = Objects.requireNonNull(victims, "victims");
+		this.victimTypes = Objects.requireNonNull(victimTypes, "victimTypes");
 		this.operators = Objects.requireNonNull(operators, "operators");
 		this.scopes = Objects.requireNonNull(scopes, "scopes");
 		this.selectActiveOnly = selectActiveOnly;
@@ -78,6 +81,11 @@ class SelectionOrderImpl implements SelectionOrder {
 	@Override
 	public SelectionPredicate<Victim> getVictims() {
 		return victims;
+	}
+
+	@Override
+	public SelectionPredicate<Victim.VictimType> getVictimTypes() {
+		return victimTypes;
 	}
 
 	@Override
@@ -136,6 +144,11 @@ class SelectionOrderImpl implements SelectionOrder {
 	}
 
 	@Override
+	public ReactionStage<Integer> countNumberOfPunishments() {
+		return selector.countNumberOfPunishments(this);
+	}
+
+	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
@@ -147,6 +160,7 @@ class SelectionOrderImpl implements SelectionOrder {
 				&& seekBeforeId == that.seekBeforeId
 				&& types.equals(that.types)
 				&& victims.equals(that.victims)
+				&& victimTypes.equals(that.victimTypes)
 				&& operators.equals(that.operators)
 				&& scopes.equals(that.scopes)
 				&& seekAfterStartTime.equals(that.seekAfterStartTime)
@@ -157,6 +171,7 @@ class SelectionOrderImpl implements SelectionOrder {
 	public int hashCode() {
 		int result = types.hashCode();
 		result = 31 * result + victims.hashCode();
+		result = 31 * result + victimTypes.hashCode();
 		result = 31 * result + operators.hashCode();
 		result = 31 * result + scopes.hashCode();
 		result = 31 * result + (selectActiveOnly ? 1 : 0);
@@ -174,6 +189,7 @@ class SelectionOrderImpl implements SelectionOrder {
 		return "SelectionOrderImpl{" +
 				"types=" + types +
 				", victims=" + victims +
+				", victimTypes=" + victimTypes +
 				", operators=" + operators +
 				", scopes=" + scopes +
 				", selectActiveOnly=" + selectActiveOnly +

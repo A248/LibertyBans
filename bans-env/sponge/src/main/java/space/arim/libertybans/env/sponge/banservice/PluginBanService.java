@@ -67,15 +67,15 @@ public final class PluginBanService implements BanService {
 			Set<Victim.VictimType> victimTypesAllowed, Function<Ban, B> castingFunction) {
 		return selector.selectionBuilder()
 				.type(PunishmentType.BAN)
+				.victimTypes(SelectionPredicate.matchingAnyOf(victimTypesAllowed))
 				.build()
 				.getAllSpecificPunishments()
 				.toCompletableFuture()
 				.thenCompose((bans) -> {
 					List<CentralisedFuture<Ban>> spongeBans = new ArrayList<>(bans.size());
 					for (Punishment ban : bans) {
-						if (victimTypesAllowed.contains(ban.getVictim().getType())) {
-							spongeBans.add(conversion.toSpongeBan(ban));
-						}
+						assert victimTypesAllowed.contains(ban.getVictim().getType());
+						spongeBans.add(conversion.toSpongeBan(ban));
 					}
 					// Convert list of futures to future of list
 					return futuresFactory.allOf(spongeBans).thenApply((ignore) -> {

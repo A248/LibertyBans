@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,9 +23,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import org.jooq.Condition;
-import org.jooq.DSLContext;
 import org.jooq.Field;
-import org.jooq.ResultQuery;
 import org.jooq.impl.DSL;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
@@ -87,7 +85,9 @@ public class SelectionImpl {
 			columns.add(fields.type());
 		}
 		if (selection.getVictims().isNotSimpleEquality()) {
-			columns.add(fields.victimType());
+			if (selection.getVictimTypes().isNotSimpleEquality()) {
+				columns.add(fields.victimType());
+			}
 			columns.add(fields.victimUuid());
 			columns.add(fields.victimAddress());
 		}
@@ -107,14 +107,17 @@ public class SelectionImpl {
 	private static <U> Condition matchesCriterion(SelectionPredicate<U> selection, Field<U> field) {
 		Set<U> acceptedValues = selection.acceptedValues();
 		Set<U> rejectedValues = selection.rejectedValues();
-		if (acceptedValues.isEmpty() && rejectedValues.isEmpty()) {
-			// Accepts everything
-			return DSL.noCondition();
-		}
-		Condition acceptedCondition = (acceptedValues.size() == 1) ?
-				field.eq(acceptedValues.iterator().next()) : field.in(acceptedValues);
-		Condition notRejectedCondition = (rejectedValues.size() == 1) ?
-				field.notEqual(rejectedValues.iterator().next()) : field.notIn(rejectedValues);
+
+		Condition acceptedCondition = switch (acceptedValues.size()) {
+			case 0 -> DSL.noCondition();
+			case 1 -> field.eq(acceptedValues.iterator().next());
+			default -> field.in(acceptedValues);
+		};
+		Condition notRejectedCondition = switch (rejectedValues.size()) {
+			case 0 -> DSL.noCondition();
+			case 1 -> field.notEqual(rejectedValues.iterator().next());
+			default -> field.notIn(rejectedValues);
+		};
 		return acceptedCondition.and(notRejectedCondition);
 	}
 
@@ -124,6 +127,7 @@ public class SelectionImpl {
 
 		condition = condition
 				.and(matchesCriterion(selection.getTypes(), fields.type()))
+				.and(matchesCriterion(selection.getVictimTypes(), fields.victimType()))
 				.and(matchesCriterion(selection.getOperators(), fields.operator()))
 				.and(matchesCriterion(selection.getScopes(), fields.scope()));
 		if (active) {
@@ -199,7 +203,9 @@ public class SelectionImpl {
 		if (victimSelection.isSimpleEquality()) {
 			victim = victimSelection.acceptedValues().iterator().next();
 		} else {
-			Victim.VictimType victimType = record.get(fields.victimType());
+			Victim.VictimType victimType = retrieveValueFromRecordOrSelection(
+					selection.getVictimTypes(), record, fields.victimType()
+			);
 			victim = new DeserializedVictim(
 					record.get(fields.victimUuid()),
 					record.get(fields.victimAddress())
@@ -222,34 +228,6 @@ public class SelectionImpl {
 				record.get(fields.end()));
 	}
 
-	private ResultQuery<org.jooq.Record> selectMatchingPunishments(SelectionOrder selection,
-																   PunishmentFields fields,
-																   DSLContext context,
-																   boolean singlePunishment) {
-		var selectOrderBy = context
-				.select(getColumns(selection, fields))
-				.from(fields.table())
-				.where(getPredication(selection, fields))
-				.orderBy(
-						fields.start().desc(), fields.id().desc()
-				);
-		// If limit == 0, omit LIMIT clause entirely
-		int limit = (singlePunishment) ? 1 : selection.limitToRetrieve();
-
-		Instant seekAfterStartTime = selection.seekAfterStartTime();
-		Instant seekBeforeStartTime = selection.seekBeforeStartTime();
-		int offset = selection.skipCount();
-		if (offset == 0) {
-			// No OFFSET
-			return (limit == 0) ? selectOrderBy : selectOrderBy.limit(limit);
-		} else {
-			// Has OFFSET
-			assert seekAfterStartTime.equals(Instant.EPOCH) : "seekAfter is exclusive with skipFirstRetrieved";
-			assert seekBeforeStartTime.equals(Instant.EPOCH) : "seekBefore is exclusive with skipFirstRetrieved";
-			var offsetQuery = selectOrderBy.offset(offset);
-			return (limit == 0) ? offsetQuery : offsetQuery.limit(limit);
-		}
-	}
 
 	private static boolean selectActiveKicks(SelectionOrder selection) {
 		return selection.selectActiveOnly()
@@ -265,7 +243,15 @@ public class SelectionImpl {
 		InternalDatabase database = dbProvider.get();
 		return database.query(SQLFunction.readOnly((context) -> {
 			PunishmentFields fields = getPunishmentFieldsToUse(selection);
-			return selectMatchingPunishments(selection, fields, context, true)
+			return context
+					.select(getColumns(selection, fields))
+					.from(fields.table())
+					.where(getPredication(selection, fields))
+					.orderBy(
+							fields.start().desc(), fields.id().desc()
+					)
+					.offset(selection.skipCount())
+					.limit(1)
 					.fetchOne((record) -> fromRecordAndSelection(record, selection, fields));
 		}));
 	}
@@ -275,11 +261,43 @@ public class SelectionImpl {
 			// Kicks cannot possibly be active. They are all history
 			return futuresFactory.completedFuture(List.of());
 		}
-		InternalDatabase database = dbProvider.get();
-		return database.query(SQLFunction.readOnly((context) -> {
+		return dbProvider.get().query(SQLFunction.readOnly((context) -> {
 			PunishmentFields fields = getPunishmentFieldsToUse(selection);
-			return selectMatchingPunishments(selection, fields, context, false)
+			return context
+					.select(getColumns(selection, fields))
+					.from(fields.table())
+					.where(getPredication(selection, fields))
+					.orderBy(
+							fields.start().desc(), fields.id().desc()
+					)
+					.offset(selection.skipCount())
+					.limit((selection.limitToRetrieve() == 0) ?
+							DSL.noField(Integer.class) : DSL.val(selection.limitToRetrieve())
+					)
 					.fetch((record) -> fromRecordAndSelection(record, selection, fields));
+		}));
+	}
+
+	ReactionStage<Integer> countNumberOfPunishments(SelectionOrder selection) {
+		if (selectActiveKicks(selection)) {
+			// Kicks cannot possibly be active.
+			return futuresFactory.completedFuture(0);
+		}
+		return dbProvider.get().query(SQLFunction.readOnly((context) -> {
+			PunishmentFields fields = getPunishmentFieldsToUse(selection);
+			return context
+					.select(DSL.count())
+					.from(fields.table())
+					.where(getPredication(selection, fields))
+					.orderBy(
+							fields.start().desc(), fields.id().desc()
+					)
+					.offset(selection.skipCount())
+					.limit((selection.limitToRetrieve() == 0) ?
+							DSL.noField(Integer.class) : DSL.val(selection.limitToRetrieve())
+					)
+					.fetchSingle()
+					.value1();
 		}));
 	}
 
