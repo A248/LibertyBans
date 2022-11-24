@@ -21,7 +21,6 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.build.outputTimestamp>2022-01-04T00:00:00Z</project.build.outputTimestamp>
 		<common-parent.deploy-url>https://maven.cloudsmith.io/anand-beh/affero-gpl3/</common-parent.deploy-url>
 
 		<!-- Testing dependencies -->
@@ -56,10 +55,11 @@
 		<!-- Plugin variables -->
 		<plugin.id>libertybans</plugin.id>
 		<plugin.name>LibertyBans</plugin.name>
-		<plugin.version>${project.version}</plugin.version>
+		<plugin.version>${project.version}-${plugin.timestamp}</plugin.version>
 		<plugin.author>Contributors to LibertyBans</plugin.author>
 		<plugin.url>https://github.com/A248/LibertyBans</plugin.url>
 		<plugin.description>${project.description}</plugin.description>
+		<plugin.timestamp>${maven.build.timestamp}</plugin.timestamp>
 
 		<!-- Database revision table -->
 		<dbrevision.major>3</dbrevision.major>
@@ -238,6 +238,10 @@
 		</profile>
 		<profile>
 			<id>check-hash</id>
+			<properties>
+				<project.build.outputTimestamp>2022-01-04T00:00:00Z</project.build.outputTimestamp>
+				<plugin.version>${project.version}</plugin.version>
+			</properties>
 			<build>
 				<plugins>
 					<plugin>
