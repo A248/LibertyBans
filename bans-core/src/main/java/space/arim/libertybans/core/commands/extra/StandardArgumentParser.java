@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,7 +32,6 @@ import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.UUIDAndAddress;
-import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -62,17 +61,18 @@ public class StandardArgumentParser implements ArgumentParser {
 
 	@Override
 	public CentralisedFuture<UUID> parseOrLookupUUID(CmdSender sender, String targetArg) {
-		switch (targetArg.length()) {
-		case 36:
+		return switch (targetArg.length()) {
+		case 36 -> {
 			UUID uuid;
 			try {
 				uuid = UUID.fromString(targetArg);
-			}  catch (IllegalArgumentException ex) {
+			} catch (IllegalArgumentException ex) {
 				sender.sendMessage(notFound().uuid().replaceText("%TARGET%", targetArg));
-				return completedFuture(null);
+				yield completedFuture(null);
 			}
-			return completedFuture(uuid);
-		case 32:
+			yield completedFuture(uuid);
+		}
+		case 32 -> {
 			long mostSigBits;
 			long leastSigBits;
 			try {
@@ -80,19 +80,18 @@ public class StandardArgumentParser implements ArgumentParser {
 				leastSigBits = Long.parseUnsignedLong(targetArg.substring(16, 32), 16);
 			} catch (NumberFormatException ex) {
 				sender.sendMessage(notFound().uuid().replaceText("%TARGET%", targetArg));
-				return completedFuture(null);
+				yield completedFuture(null);
 			}
-			return completedFuture(new UUID(mostSigBits, leastSigBits));
-		default:
-			break;
+			yield completedFuture(new UUID(mostSigBits, leastSigBits));
 		}
-		return uuidManager.lookupUUID(targetArg).thenApply((uuid) -> {
+		default -> uuidManager.lookupUUID(targetArg).thenApply((uuid) -> {
 			if (uuid.isEmpty()) {
 				sender.sendMessage(notFound().player().replaceText("%TARGET%", targetArg));
 				return null;
 			}
 			return uuid.get();
 		});
+		};
 	}
 
 	@Override
@@ -112,21 +111,18 @@ public class StandardArgumentParser implements ArgumentParser {
 			return completedFuture(AddressVictim.of(parsedAddress));
 		}
 		Victim.VictimType preferredType = how.preferredType();
-		switch (preferredType) {
-		case PLAYER:
-			return parseOrLookupUUID(sender, targetArg).thenApply((uuid) -> {
+		return switch (preferredType) {
+			case PLAYER -> parseOrLookupUUID(sender, targetArg).thenApply((uuid) -> {
 				return (uuid == null) ? null : PlayerVictim.of(uuid);
 			});
-		case ADDRESS:
-			return uuidManager.lookupAddress(targetArg).thenApply((address) -> {
+			case ADDRESS -> uuidManager.lookupAddress(targetArg).thenApply((address) -> {
 				if (address == null) {
 					sender.sendMessage(notFound().playerOrAddress().replaceText("%TARGET%", targetArg));
 					return null;
 				}
 				return AddressVictim.of(address);
 			});
-		case COMPOSITE:
-			return uuidManager.lookupPlayer(targetArg).thenApply((optUuidAndAddress) -> {
+			case COMPOSITE -> uuidManager.lookupPlayer(targetArg).thenApply((optUuidAndAddress) -> {
 				if (optUuidAndAddress.isEmpty()) {
 					sender.sendMessage(notFound().player().replaceText("%TARGET%", targetArg));
 					return null;
@@ -134,9 +130,7 @@ public class StandardArgumentParser implements ArgumentParser {
 				UUIDAndAddress uuidAndAddress = optUuidAndAddress.get();
 				return CompositeVictim.of(uuidAndAddress.uuid(), uuidAndAddress.address());
 			});
-		default:
-			throw MiscUtil.unknownVictimType(preferredType);
-		}
+		};
 	}
 
 }

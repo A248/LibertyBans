@@ -32,7 +32,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
-	
+
 	private final Revoker revoker;
 	private final long id;
 	private final PunishmentType type;
@@ -59,7 +59,7 @@ class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
 		this(revoker, -1, type, List.copyOf(victims));
 		assert getApproach() == Approach.TYPE_VICTIM;
 	}
-	
+
 	private enum Approach {
 		ID,
 		ID_TYPE,
@@ -97,37 +97,32 @@ class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
 	@Override
 	public ReactionStage<Boolean> undoPunishment(EnforcementOptions enforcementOptions) {
 		// Unenforcement needs both an ID and a type
-		// Revoking by ID needs to be special-cased so that unenforcement can use the punishment type
-		switch (getApproach()) {
-		case ID:
-			return revoker.undoPunishmentById(id).thenCompose((type) -> {
+		return switch (getApproach()) {
+			case ID -> revoker.undoPunishmentById(id).thenCompose((type) -> {
 				if (type == null) {
 					return revoker.futuresFactory().completedFuture(false);
 				}
 				return unenforceAndReturnTrue(id, type, enforcementOptions);
 			});
-		case ID_TYPE:
-			return revoker.undoPunishmentByIdAndType(id, type).thenCompose((revoked) -> {
+			case ID_TYPE -> revoker.undoPunishmentByIdAndType(id, type).thenCompose((revoked) -> {
 				if (!revoked) {
 					return revoker.futuresFactory().completedFuture(false);
 				}
 				return unenforceAndReturnTrue(id, type, enforcementOptions);
 			});
-		case TYPE_VICTIM:
-			return revoker.undoPunishmentByTypeAndPossibleVictims(type, victims).thenCompose((id) -> {
+			case TYPE_VICTIM -> revoker.undoPunishmentByTypeAndPossibleVictims(type, victims).thenCompose((id) -> {
 				if (id == null) {
 					return revoker.futuresFactory().completedFuture(false);
 				}
 				return unenforceAndReturnTrue(id, type, enforcementOptions);
 			});
-		default:
-			throw MiscUtil.unknownEnumEntry(getApproach());
-		}
+		};
 	}
 
 	private CentralisedFuture<Boolean> unenforceAndReturnTrue(long id, PunishmentType type,
 															  EnforcementOptions enforcementOptions) {
-		return revoker.enforcement().unenforce(id, type, (EnforcementOpts) enforcementOptions)
+		return revoker.enforcement()
+				.unenforce(id, type, (EnforcementOpts) enforcementOptions)
 				.thenApply((ignore) -> true);
 	}
 
@@ -142,16 +137,11 @@ class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
 	}
 
 	private ReactionStage<Punishment> undoAndGetPunishmentWithoutUnenforcement() {
-		switch (getApproach()) {
-		case ID:
-			return revoker.undoAndGetPunishmentById(id);
-		case ID_TYPE:
-			return revoker.undoAndGetPunishmentByIdAndType(id, type);
-		case TYPE_VICTIM:
-			return revoker.undoAndGetPunishmentByTypeAndPossibleVictims(type, victims);
-		default:
-			throw MiscUtil.unknownEnumEntry(getApproach());
-		}
+		return switch (getApproach()) {
+			case ID -> revoker.undoAndGetPunishmentById(id);
+			case ID_TYPE -> revoker.undoAndGetPunishmentByIdAndType(id, type);
+			case TYPE_VICTIM -> revoker.undoAndGetPunishmentByTypeAndPossibleVictims(type, victims);
+		};
 	}
 
 	@Override
@@ -174,5 +164,5 @@ class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
 	public String toString() {
 		return "RevocationOrderImpl [id=" + id + ", type=" + type + ", victims=" + victims + "]";
 	}
-	
+
 }

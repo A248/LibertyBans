@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,7 +24,6 @@ import jakarta.inject.Provider;
 import org.jooq.Condition;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.CompositeVictim;
-import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
@@ -78,21 +77,17 @@ public class AccountHistory {
 	 * @return the detected alts, sorted in order of oldest first
 	 */
 	public CentralisedFuture<List<KnownAccount>> knownAccounts(Victim victim) {
-		UUID uuid;
-		NetworkAddress address;
-		switch (victim.getType()) {
-		case PLAYER:
-			uuid = ((PlayerVictim) victim).getUUID();
-			return knownAccountsWhere(ADDRESSES.UUID.eq(uuid));
-		case ADDRESS:
-			address = ((AddressVictim) victim).getAddress();
-			return knownAccountsWhere(ADDRESSES.ADDRESS.eq(address));
-		case COMPOSITE:
-			CompositeVictim compositeVictim = (CompositeVictim) victim;
-			uuid = compositeVictim.getUUID();
-			address = compositeVictim.getAddress();
-			return knownAccountsWhere(ADDRESSES.UUID.eq(uuid).or(ADDRESSES.ADDRESS.eq(address)));
-		default:
+		if (victim instanceof PlayerVictim playerVictim) {
+			return knownAccountsWhere(ADDRESSES.UUID.eq(playerVictim.getUUID()));
+
+		} else if (victim instanceof AddressVictim addressVictim) {
+			return knownAccountsWhere(ADDRESSES.ADDRESS.eq(addressVictim.getAddress()));
+
+		} else if (victim instanceof CompositeVictim compositeVictim) {
+			return knownAccountsWhere(ADDRESSES.UUID.eq(compositeVictim.getUUID())
+					.or(ADDRESSES.ADDRESS.eq(compositeVictim.getAddress())));
+
+		} else {
 			throw MiscUtil.unknownVictimType(victim.getType());
 		}
 	}
@@ -107,4 +102,5 @@ public class AccountHistory {
 			return updateCount != 0;
 		});
 	}
+
 }

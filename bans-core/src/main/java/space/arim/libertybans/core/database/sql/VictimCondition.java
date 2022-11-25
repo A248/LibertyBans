@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,7 +23,6 @@ import org.jooq.Condition;
 import org.jooq.Field;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.core.punish.MiscUtil;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -61,28 +60,21 @@ public final class VictimCondition {
 				.and(fields.victimUuid().eq(uuid));
 	}
 
-	private Condition matchesVictimData(VictimData victim) {
-		Victim.VictimType victimType = victim.type();
-		switch (victimType) {
-		case PLAYER:
-			return fields.victimUuid().eq(victim.uuid());
-		case ADDRESS:
-			return fields.victimAddress().eq(victim.address());
-		case COMPOSITE:
-			UUID uuid = victim.uuid();
-			NetworkAddress address = victim.address();
-			Condition uuidCondition = (uuid.equals(WILDCARD_UUID)) ?
-					noCondition() : fields.victimUuid().eq(uuid);
-			Condition addressCondition = (address.equals(WILDCARD_ADDRESS)) ?
-					noCondition() : fields.victimAddress().eq(address);
-			return uuidCondition.and(addressCondition);
-		default:
-			throw MiscUtil.unknownVictimType(victimType);
-		}
-	}
-
-	public Condition matchesVictim(VictimData victimData) {
-		return fields.victimType().eq(victimData.type()).and(matchesVictimData(victimData));
+	public Condition matchesVictim(VictimData victim) {
+		Condition matchesData = switch (victim.type()) {
+			case PLAYER -> fields.victimUuid().eq(victim.uuid());
+			case ADDRESS -> fields.victimAddress().eq(victim.address());
+			case COMPOSITE -> {
+				UUID uuid = victim.uuid();
+				NetworkAddress address = victim.address();
+				Condition uuidCondition = (uuid.equals(WILDCARD_UUID)) ?
+						noCondition() : fields.victimUuid().eq(uuid);
+				Condition addressCondition = (address.equals(WILDCARD_ADDRESS)) ?
+						noCondition() : fields.victimAddress().eq(address);
+				yield uuidCondition.and(addressCondition);
+			}
+		};
+		return fields.victimType().eq(victim.type()).and(matchesData);
 	}
 
 	public Condition matchesVictim(Victim victim) {
@@ -97,4 +89,5 @@ public final class VictimCondition {
 				", fields.victimAddress()=" + fields.victimAddress() +
 				'}';
 	}
+
 }

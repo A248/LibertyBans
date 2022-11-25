@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,7 +24,6 @@ import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.core.punish.MiscUtil;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -44,30 +43,20 @@ public final class SerializedVictim implements VictimData {
 
 	@Override
 	public UUID uuid() {
-		switch (victim.getType()) {
-		case PLAYER:
-			return ((PlayerVictim) victim).getUUID();
-		case ADDRESS:
-			return EmptyData.UUID;
-		case COMPOSITE:
-			return ((CompositeVictim) victim).getUUID();
-		default:
-			throw MiscUtil.unknownVictimType(victim.getType());
-		}
+		return switch (victim.getType()) {
+			case PLAYER -> ((PlayerVictim) victim).getUUID();
+			case ADDRESS -> EmptyData.UUID;
+			case COMPOSITE -> ((CompositeVictim) victim).getUUID();
+		};
 	}
 
 	@Override
 	public NetworkAddress address() {
-		switch (victim.getType()) {
-		case PLAYER:
-			return EmptyData.ADDRESS;
-		case ADDRESS:
-			return ((AddressVictim) victim).getAddress();
-		case COMPOSITE:
-			return ((CompositeVictim) victim).getAddress();
-		default:
-			throw MiscUtil.unknownVictimType(victim.getType());
-		}
+		return switch (victim.getType()) {
+			case PLAYER -> EmptyData.ADDRESS;
+			case ADDRESS -> ((AddressVictim) victim).getAddress();
+			case COMPOSITE -> ((CompositeVictim) victim).getAddress();
+		};
 	}
 
 	@Override
@@ -76,4 +65,5 @@ public final class SerializedVictim implements VictimData {
 				"victim=" + victim +
 				'}';
 	}
+
 }

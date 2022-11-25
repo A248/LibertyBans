@@ -30,20 +30,13 @@ import space.arim.libertybans.core.ApiBindModule;
 import space.arim.libertybans.core.CommandsModule;
 import space.arim.libertybans.core.PillarOneBindModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
-
-import space.arim.injector.Identifier;
-import space.arim.injector.InjectorBuilder;
-import space.arim.injector.SpecificationSupport;
-
-import com.velocitypowered.api.plugin.PluginContainer;
-import com.velocitypowered.api.proxy.ProxyServer;
 import space.arim.libertybans.core.addon.AddonLoader;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
 import java.nio.file.Path;
 
-public class VelocityLauncher implements PlatformLauncher {
+public final class VelocityLauncher implements PlatformLauncher {
 
 	private final PluginContainer plugin;
 	private final ProxyServer server;

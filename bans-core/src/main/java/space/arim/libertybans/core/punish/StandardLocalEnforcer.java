@@ -175,16 +175,10 @@ public final class StandardLocalEnforcer implements LocalEnforcer {
 	// Enforcement of enacted punishments
 
 	private static boolean shouldKick(PunishmentType type) {
-		switch (type) {
-		case BAN:
-		case KICK:
-			return true;
-		case MUTE:
-		case WARN:
-			return false;
-		default:
-			throw MiscUtil.unknownType(type);
-		}
+		return switch (type) {
+			case BAN, KICK -> true;
+			case MUTE, WARN -> false;
+		};
 	}
 
 	private class Parameterized<P> {
@@ -199,29 +193,25 @@ public final class StandardLocalEnforcer implements LocalEnforcer {
 
 			CentralisedFuture<Component> futureMessage = formatter.getPunishmentMessage(punishment);
 			Victim victim = punishment.getVictim();
-			UUID uuid;
-			NetworkAddress address;
 
-			switch (victim.getType()) {
-			case PLAYER:
-				uuid = ((PlayerVictim) victim).getUUID();
+			if (victim instanceof PlayerVictim playerVictim) {
+				UUID uuid = playerVictim.getUUID();
 				return futureMessage.thenCompose((message) -> {
 					return envEnforcer.doForPlayerIfOnline(uuid, enforcementCallback(punishment, message));
 				});
-			case ADDRESS:
-				address = ((AddressVictim) victim).getAddress();
+			} else if (victim instanceof AddressVictim addressVictim) {
+				NetworkAddress address = addressVictim.getAddress();
 				return futureMessage
 						.thenCompose((message) -> matchAddressPunishment(punishment, message, address))
 						.thenCompose(envEnforcer::enforceMatcher);
-			case COMPOSITE:
-				CompositeVictim compositeVictim = (CompositeVictim) victim;
-				address = compositeVictim.getAddress();
-				uuid = compositeVictim.getUUID();
+			} else if (victim instanceof CompositeVictim compositeVictim) {
+				UUID uuid = compositeVictim.getUUID();
+				NetworkAddress address = compositeVictim.getAddress();
 				return futureMessage
 						.thenCompose((message) -> matchAddressPunishment(punishment, message, address))
 						.thenApply((addressMatcher) -> new AdditionalUUIDTargetMatcher<>(uuid, addressMatcher))
 						.thenCompose(envEnforcer::enforceMatcher);
-			default:
+			} else {
 				throw MiscUtil.unknownVictimType(victim.getType());
 			}
 		}
@@ -250,32 +240,18 @@ public final class StandardLocalEnforcer implements LocalEnforcer {
 
 		private CentralisedFuture<TargetMatcher<P>> matchAddressPunishment(
 				Punishment punishment, Component message, NetworkAddress address) {
-			CentralisedFuture<TargetMatcher<P>> futureMatcher;
+
+			Consumer<P> enforcementCallback = enforcementCallback(punishment, message);
 			AddressStrictness strictness = configs.getMainConfig().enforcement().addressStrictness();
-			switch (strictness) {
-			case LENIENT:
-				futureMatcher = completedFuture(
-						new ExactTargetMatcher<>(address, enforcementCallback(punishment, message)));
-				break;
-			case NORMAL:
-				futureMatcher = matchAddressPunishmentNormal(address, punishment, message);
-				break;
-			case STRICT:
-				futureMatcher = matchAddressPunishmentStrict(address, punishment, message);
-				break;
-			default:
-				throw MiscUtil.unknownAddressStrictness(strictness);
-			}
-			if (logger.isDebugEnabled()) {
-				futureMatcher.thenAccept((matcher) -> {
-					logger.debug("Enforcing {} address punishment with matcher {}", strictness, matcher);
-				});
-			}
-			return futureMatcher;
+			return switch (strictness) {
+				case LENIENT -> completedFuture(new ExactTargetMatcher<>(address, enforcementCallback));
+				case NORMAL -> matchAddressPunishmentNormal(address, enforcementCallback);
+				case STRICT -> matchAddressPunishmentStrict(address, enforcementCallback);
+			};
 		}
 
 		private CentralisedFuture<TargetMatcher<P>> matchAddressPunishmentNormal(
-				NetworkAddress address, Punishment punishment, Component message) {
+				NetworkAddress address, Consumer<P> enforcementCallback) {
 			return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
 				return context
 						.select(ADDRESSES.UUID)
@@ -283,12 +259,12 @@ public final class StandardLocalEnforcer implements LocalEnforcer {
 						.where(ADDRESSES.ADDRESS.eq(address))
 						.fetchSet(ADDRESSES.UUID);
 			})).thenApply((uuids) -> {
-				return new UUIDTargetMatcher<>(uuids, enforcementCallback(punishment, message));
+				return new UUIDTargetMatcher<>(uuids, enforcementCallback);
 			});
 		}
 
 		private CentralisedFuture<TargetMatcher<P>> matchAddressPunishmentStrict(
-				NetworkAddress address, Punishment punishment, Component message) {
+				NetworkAddress address, Consumer<P> enforcementCallback) {
 			return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
 				return context
 						.select(STRICT_LINKS.UUID2)
@@ -298,7 +274,7 @@ public final class StandardLocalEnforcer implements LocalEnforcer {
 						.where(ADDRESSES.ADDRESS.eq(address))
 						.fetchSet(STRICT_LINKS.UUID2);
 			})).thenApply((uuids) -> {
-				return new UUIDTargetMatcher<>(uuids, enforcementCallback(punishment, message));
+				return new UUIDTargetMatcher<>(uuids, enforcementCallback);
 			});
 		}
 	}

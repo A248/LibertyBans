@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,7 +24,6 @@ import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.core.punish.MiscUtil;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -40,17 +39,17 @@ public final class DeserializedVictim {
 	}
 
 	public Victim victim(Victim.VictimType victimType) {
-		switch (victimType) {
-		case PLAYER:
-			assert address.equals(EmptyData.ADDRESS) : "Address must be empty for player victims";
-			return PlayerVictim.of(uuid);
-		case ADDRESS:
-			assert uuid.equals(EmptyData.UUID) : "UUID must be empty for address victims";
-			return AddressVictim.of(address);
-		case COMPOSITE:
-			return CompositeVictim.of(uuid, address);
-		default:
-			throw MiscUtil.unknownVictimType(victimType);
-		}
+		return switch (victimType) {
+			case PLAYER -> {
+				assert address.equals(EmptyData.ADDRESS) : "Address must be empty for player victims";
+				yield PlayerVictim.of(uuid);
+			}
+			case ADDRESS -> {
+				assert uuid.equals(EmptyData.UUID) : "UUID must be empty for address victims";
+				yield AddressVictim.of(address);
+			}
+			case COMPOSITE ->  CompositeVictim.of(uuid, address);
+		};
 	}
+
 }

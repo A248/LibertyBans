@@ -38,7 +38,7 @@ import space.arim.libertybans.core.addon.AddonLoader;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
-public class BungeeLauncher implements PlatformLauncher {
+public final class BungeeLauncher implements PlatformLauncher {
 
 	private final Plugin plugin;
 	private final Path folder;

@@ -269,30 +269,22 @@ public class Formatter implements InternalFormatter {
 	
 	private CentralisedFuture<String> getFutureReplacement(FutureReplaceable futureReplaceable, Punishment punishment,
 			Operator unOperator) {
-		switch (futureReplaceable) {
-		case VICTIM:
-			return formatVictim(punishment.getVictim());
-		case OPERATOR:
-			return formatOperator(punishment.getOperator());
-		case UNOPERATOR:
-			return formatOperator(unOperator);
-		default:
-			throw new IllegalArgumentException("Unknown replaceable " + futureReplaceable);
-		}
+		return switch (futureReplaceable) {
+			case VICTIM -> formatVictim(punishment.getVictim());
+			case OPERATOR -> formatOperator(punishment.getOperator());
+			case UNOPERATOR -> formatOperator(unOperator);
+		};
 	}
-	
+
 	private String formatVictimId(Victim victim) {
 		UUID uuid;
-		switch (victim.getType()) {
-		case PLAYER:
-			uuid = ((PlayerVictim) victim).getUUID();
-			break;
-		case ADDRESS:
-			return formatAddressVictim((AddressVictim) victim);
-		case COMPOSITE:
-			uuid = ((CompositeVictim) victim).getUUID();
-			break;
-		default:
+		if (victim instanceof PlayerVictim playerVictim) {
+			uuid = playerVictim.getUUID();
+		} else if (victim instanceof AddressVictim addressVictim) {
+			return formatAddressVictim(addressVictim);
+		} else if (victim instanceof CompositeVictim compositeVictim) {
+			uuid = compositeVictim.getUUID();
+		} else {
 			throw MiscUtil.unknownVictimType(victim.getType());
 		}
 		return UUIDUtil.toShortString(uuid);
@@ -302,16 +294,13 @@ public class Formatter implements InternalFormatter {
 
 	private CentralisedFuture<String> formatVictim(Victim victim) {
 		UUID uuid;
-		switch (victim.getType()) {
-		case PLAYER:
-			uuid = ((PlayerVictim) victim).getUUID();
-			break;
-		case ADDRESS:
-			return futuresFactory.completedFuture(formatAddressVictim((AddressVictim) victim));
-		case COMPOSITE:
-			uuid = ((CompositeVictim) victim).getUUID();
-			break;
-		default:
+		if (victim instanceof PlayerVictim playerVictim) {
+			uuid = playerVictim.getUUID();
+		} else if (victim instanceof AddressVictim addressVictim) {
+			return futuresFactory.completedFuture(formatAddressVictim(addressVictim));
+		} else if (victim instanceof CompositeVictim compositeVictim) {
+			uuid = compositeVictim.getUUID();
+		} else {
 			throw MiscUtil.unknownVictimType(victim.getType());
 		}
 		/*
@@ -321,33 +310,25 @@ public class Formatter implements InternalFormatter {
 		return uuidManager.lookupName(uuid)
 				.thenApply((optName) -> optName.orElse(NAME_UNKNOWN_ERROR));
 	}
-	
+
 	private String formatOperatorId(Operator operator) {
-		switch (operator.getType()) {
-		case CONSOLE:
-			return messages().formatting().consoleDisplay();
-		case PLAYER:
-			return UUIDUtil.toShortString(((PlayerOperator) operator).getUUID());
-		default:
-			throw MiscUtil.unknownOperatorType(operator.getType());
+		if (operator instanceof PlayerOperator playerOperator) {
+			return UUIDUtil.toShortString(playerOperator.getUUID());
 		}
+		return messages().formatting().consoleDisplay();
 	}
 
 	@Override
 	public CentralisedFuture<String> formatOperator(Operator operator) {
-		switch (operator.getType()) {
-		case CONSOLE:
-			return futuresFactory.completedFuture(messages().formatting().consoleDisplay());
-		case PLAYER:
+		if (operator instanceof PlayerOperator playerOperator) {
 			/*
 			 * Similarly in #formatVictim, this should be a complete future every time we call this ourselves,
 			 * because of UUIDMaster's fastCache.
 			 */
-			return uuidManager.lookupName(((PlayerOperator) operator).getUUID())
+			return uuidManager.lookupName(playerOperator.getUUID())
 					.thenApply((optName) -> optName.orElse(NAME_UNKNOWN_ERROR));
-		default:
-			throw MiscUtil.unknownOperatorType(operator.getType());
 		}
+		return futuresFactory.completedFuture(messages().formatting().consoleDisplay());
 	}
 	
 	private String formatAddressVictim(AddressVictim addressVictim) {

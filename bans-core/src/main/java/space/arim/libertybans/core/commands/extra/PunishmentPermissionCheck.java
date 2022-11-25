@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,7 +23,6 @@ import net.kyori.adventure.text.Component;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.config.PunishmentPermissionSection;
 import space.arim.libertybans.core.env.CmdSender;
-import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.punish.PunishmentPermission;
 
 import java.util.Objects;
@@ -39,30 +38,20 @@ public final class PunishmentPermissionCheck {
 	}
 
 	private static String permissionForVictimType(Victim.VictimType victimType) {
-		switch (victimType) {
-		case PLAYER:
-			return "uuid";
-		case ADDRESS:
-			return "ip";
-		case COMPOSITE:
-			return "both";
-		default:
-			throw MiscUtil.unknownVictimType(victimType);
-		}
+		return switch (victimType) {
+			case PLAYER -> "uuid";
+			case ADDRESS -> "ip";
+			case COMPOSITE -> "both";
+		};
 	}
 
 	private static Component permissionMessageForVictimType(Victim.VictimType victimType,
 															PunishmentPermissionSection permissionSection) {
-		switch (victimType) {
-		case PLAYER:
-			return permissionSection.uuid();
-		case ADDRESS:
-			return permissionSection.ipAddress();
-		case COMPOSITE:
-			return permissionSection.both();
-		default:
-			throw MiscUtil.unknownVictimType(victimType);
-		}
+		return switch (victimType) {
+			case PLAYER -> permissionSection.uuid();
+			case ADDRESS -> permissionSection.ipAddress();
+			case COMPOSITE -> permissionSection.both();
+		};
 	}
 
 	public boolean hasPermission(Victim.VictimType victimType) {

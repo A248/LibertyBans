@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,11 +20,8 @@
 package space.arim.libertybans.core.punish;
 
 import space.arim.libertybans.api.CompositeVictim;
-import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.core.database.Vendor;
-import space.arim.libertybans.core.selector.AddressStrictness;
 
 import java.util.List;
 
@@ -64,8 +61,7 @@ public final class MiscUtil {
 	 * @throws IllegalArgumentException if the victim is composite and uses wildcards
 	 */
 	static void checkNoCompositeVictimWildcards(Victim victim) {
-		if (victim instanceof CompositeVictim) {
-			CompositeVictim compositeVictim = (CompositeVictim) victim;
+		if (victim instanceof CompositeVictim compositeVictim) {
 			if (compositeVictim.getUUID().equals(CompositeVictim.WILDCARD_UUID)) {
 				throw new IllegalArgumentException("Punishments cannot be made with CompositeVictim.WILDCARD_UUID");
 			}
@@ -75,45 +71,8 @@ public final class MiscUtil {
 		}
 	}
 
-	/*
-	 * Create exceptions indicating an enum entry was not identified, typically in a switch statement
-	 */
-
-	public static RuntimeException unknownType(PunishmentType type) {
-		return unknownEnumEntry(type);
-	}
-
 	public static RuntimeException unknownVictimType(Victim.VictimType victimType) {
-		return unknownEnumEntry(victimType);
+		return new IllegalStateException("Unknown victim type " + victimType);
 	}
 
-	public static RuntimeException unknownOperatorType(Operator.OperatorType operatorType) {
-		return unknownEnumEntry(operatorType);
-	}
-	
-	public static RuntimeException unknownAddressStrictness(AddressStrictness strictness) {
-		return unknownEnumEntry(strictness);
-	}
-	
-	public static RuntimeException unknownVendor(Vendor vendor) {
-		return unknownEnumEntry(vendor);
-	}
-	
-	static RuntimeException unknownEnumEntry(Enum<?> value) {
-		return new UnknownEnumEntryException(value);
-	}
-	
-	private static class UnknownEnumEntryException extends RuntimeException {
-
-		/**
-		 * Serial version uid
-		 */
-		private static final long serialVersionUID = 5616757616849475684L;
-		
-		UnknownEnumEntryException(Enum<?> value) {
-			super("Unknown enum entry " + value.name() + " in " + value.getDeclaringClass().getName());
-		}
-		
-	}
-	
 }

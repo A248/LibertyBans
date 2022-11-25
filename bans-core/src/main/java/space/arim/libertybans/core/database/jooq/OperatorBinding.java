@@ -30,7 +30,6 @@ import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.core.database.sql.EmptyData;
-import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.omnibus.util.UUIDUtil;
 
 import java.sql.PreparedStatement;
@@ -56,15 +55,10 @@ public final class OperatorBinding extends BaseBinding<UUID, Operator> {
 	}
 
 	private static byte[] operatorToBinary(Operator operator) {
-		Operator.OperatorType operatorType = operator.getType();
-		switch (operatorType) {
-		case PLAYER:
-			return UUIDUtil.toByteArray(((PlayerOperator) operator).getUUID());
-		case CONSOLE:
-			return EmptyData.UUID_BYTES;
-		default:
-			throw MiscUtil.unknownOperatorType(operatorType);
-		}
+		return switch (operator.getType()) {
+			case PLAYER -> UUIDUtil.toByteArray(((PlayerOperator) operator).getUUID());
+			case CONSOLE -> EmptyData.UUID_BYTES;
+		};
 	}
 
 	public Operator uuidToOperator(UUID uuid) {
@@ -75,15 +69,10 @@ public final class OperatorBinding extends BaseBinding<UUID, Operator> {
 	}
 
 	public UUID operatorToUuid(Operator operator) {
-		Operator.OperatorType operatorType = operator.getType();
-		switch (operatorType) {
-		case PLAYER:
-			return ((PlayerOperator) operator).getUUID();
-		case CONSOLE:
-			return EmptyData.UUID;
-		default:
-			throw MiscUtil.unknownOperatorType(operatorType);
-		}
+		return switch (operator.getType()) {
+			case PLAYER -> ((PlayerOperator) operator).getUUID();
+			case CONSOLE -> EmptyData.UUID;
+		};
 	}
 
 	@Override

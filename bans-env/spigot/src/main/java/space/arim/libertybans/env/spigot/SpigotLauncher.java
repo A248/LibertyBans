@@ -38,7 +38,7 @@ import space.arim.libertybans.core.addon.AddonLoader;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
-public class SpigotLauncher implements PlatformLauncher {
+public final class SpigotLauncher implements PlatformLauncher {
 
 	private final JavaPlugin plugin;
 	private final Path folder;

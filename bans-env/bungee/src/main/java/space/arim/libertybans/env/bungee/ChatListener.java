@@ -64,14 +64,13 @@ public final class ChatListener extends ParallelisedListener<ChatEvent, Componen
 	@EventHandler(priority = EventPriority.LOW)
 	public void onChatLow(ChatEvent event) {
 		Connection sender = event.getSender();
-		if (!(sender instanceof ProxiedPlayer)) {
+		if (!(sender instanceof ProxiedPlayer player)) {
 			return;
 		}
 		if (event.isCancelled()) {
 			debugPrematurelyDenied(event);
 			return;
 		}
-		ProxiedPlayer player = (ProxiedPlayer) sender;
 		InetAddress address = addressReporter.getAddress(player);
 		String command = (event.isCommand()) ? event.getMessage().substring(1) : null;
 		begin(event, guardian.checkChat(player.getUniqueId(), address, command));
@@ -85,7 +84,7 @@ public final class ChatListener extends ParallelisedListener<ChatEvent, Componen
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onChatHigh(ChatEvent event) {
 		Connection sender = event.getSender();
-		if (!(sender instanceof ProxiedPlayer)) {
+		if (!(sender instanceof ProxiedPlayer player)) {
 			return;
 		}
 		Component message = withdraw(event);
@@ -94,7 +93,7 @@ public final class ChatListener extends ParallelisedListener<ChatEvent, Componen
 			return;
 		}
 		event.setCancelled(true);
-		audienceRepresenter.toAudience((ProxiedPlayer) sender).sendMessage(message);
+		audienceRepresenter.toAudience(player).sendMessage(message);
 	}
 	
 }

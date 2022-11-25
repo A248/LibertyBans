@@ -95,23 +95,19 @@ public final class StandardGlobalEnforcement implements GlobalEnforcement {
 	private CentralisedFuture<?> handleSynchronizedEnforcement(Supplier<CentralisedFuture<?>> localEnforcement,
 															   EnforcementOptions enforcementOptions,
 															   SynchronizationMessage message) {
-		EnforcementOptions.Enforcement enforcement = enforcementOptions.enforcement();
-		switch (enforcement) {
-		case GLOBAL:
-			if (configs.getSqlConfig().synchronization().enabled()) {
-				// Need to dispatch message to other instances
-				return localEnforcement.get().thenCompose((ignore) -> {
-					return synchronizationMessenger.get().dispatch(synchronizationProtocol.serializeMessage(message));
-				});
+		return switch (enforcementOptions.enforcement()) {
+			case GLOBAL -> {
+				if (configs.getSqlConfig().synchronization().enabled()) {
+					// Need to dispatch message to other instances
+					yield localEnforcement.get().thenCompose((ignore) -> {
+						return synchronizationMessenger.get().dispatch(synchronizationProtocol.serializeMessage(message));
+					});
+				}
+				yield localEnforcement.get();
 			}
-			return localEnforcement.get();
-		case SINGLE_SERVER_ONLY:
-			return localEnforcement.get();
-		case NONE:
-			return futuresFactory.completedFuture(null);
-		default:
-			throw MiscUtil.unknownEnumEntry(enforcement);
-		}
+			case SINGLE_SERVER_ONLY -> localEnforcement.get();
+			case NONE -> futuresFactory.completedFuture(null);
+		};
 	}
 
 	// Reception

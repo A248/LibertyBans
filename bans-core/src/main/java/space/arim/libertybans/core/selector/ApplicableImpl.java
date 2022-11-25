@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -34,7 +34,6 @@ import space.arim.libertybans.core.database.sql.EndTimeCondition;
 import space.arim.libertybans.core.database.sql.EndTimeOrdering;
 import space.arim.libertybans.core.database.sql.TableForType;
 import space.arim.libertybans.core.database.sql.VictimCondition;
-import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.punish.PunishmentCreator;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -70,13 +69,11 @@ public class ApplicableImpl {
 	Punishment selectApplicable(DSLContext context,
 								UUID uuid, NetworkAddress address,
 								PunishmentType type, final Instant currentTime) {
+		var simpleView = new TableForType(type).simpleView();
 		var applView = new TableForType(type).applicableView();
 
-		AddressStrictness strictness = configs.getMainConfig().enforcement().addressStrictness();
-		switch (strictness) {
-		case LENIENT:
-			var simpleView = new TableForType(type).simpleView();
-			return context
+		return switch (configs.getMainConfig().enforcement().addressStrictness()) {
+			case LENIENT -> context
 					.select(
 							simpleView.id(),
 							simpleView.victimType(), simpleView.victimUuid(), simpleView.victimAddress(),
@@ -89,8 +86,7 @@ public class ApplicableImpl {
 					.orderBy(new EndTimeOrdering(simpleView).expiresLeastSoon())
 					.limit(1)
 					.fetchOne(creator.punishmentMapper(type));
-		case NORMAL:
-			return context
+			case NORMAL -> context
 					.select(
 							applView.id(),
 							applView.victimType(), applView.victimUuid(), applView.victimAddress(),
@@ -102,8 +98,7 @@ public class ApplicableImpl {
 					.orderBy(new EndTimeOrdering(applView).expiresLeastSoon())
 					.limit(1)
 					.fetchOne(creator.punishmentMapper(type));
-		case STRICT:
-			return context
+			case STRICT -> context
 					.select(
 							applView.id(),
 							applView.victimType(), applView.victimUuid(), applView.victimAddress(),
@@ -117,9 +112,7 @@ public class ApplicableImpl {
 					.orderBy(new EndTimeOrdering(applView).expiresLeastSoon())
 					.limit(1)
 					.fetchOne(creator.punishmentMapper(type));
-		default:
-			throw MiscUtil.unknownAddressStrictness(strictness);
-		}
+		};
 	}
 
 	CentralisedFuture<Punishment> getApplicablePunishment(UUID uuid, NetworkAddress address, PunishmentType type) {

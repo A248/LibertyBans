@@ -34,8 +34,6 @@ import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-import java.util.UUID;
-
 @Singleton
 public final class PlayerPunishCommands extends PunishCommands {
 
@@ -61,21 +59,12 @@ public final class PlayerPunishCommands extends PunishCommands {
 		var victimFuture = argumentParser().parseVictim(
 				sender, targetArg, new ParsePlayerVictimDynamicallyComposite(configs(), command)
 		);
-		switch (type) {
-		case BAN:
-		case MUTE:
-		case WARN:
-			return victimFuture;
-		case KICK:
-			// For kicks, users need to be screened to check that they are online
-			if (configs().getSqlConfig().synchronization().enabled()) {
-				// On a network with synchronization enabled, we do not check that the target is online
-				return victimFuture;
-			}
+		// For kicks, users need to be screened to check that they are online
+		// On a network with synchronization enabled, we skip this check
+		if (type == PunishmentType.KICK && !configs().getSqlConfig().synchronization().enabled()) {
 			return victimFuture.thenCompose((victim) -> {
-				if (victim instanceof PlayerVictim) {
-					UUID uuid = ((PlayerVictim) victim).getUUID();
-					return envUserResolver.lookupName(uuid).thenApply((optName) -> {
+				if (victim instanceof PlayerVictim vic) {
+					return envUserResolver.lookupName(vic.getUUID()).thenApply((optName) -> {
 						if (optName.isEmpty()) {
 							sender.sendMessage(messages().additions().kicks().mustBeOnline().replaceText("%TARGET%", targetArg));
 							return null;
@@ -85,9 +74,8 @@ public final class PlayerPunishCommands extends PunishCommands {
 				}
 				return completedFuture(victim);
 			});
-		default:
-			throw MiscUtil.unknownType(type);
 		}
+		return victimFuture;
 	}
 
 	@Override

@@ -193,104 +193,93 @@ public class DatabaseSettings {
 	}
 
 	private String getBaseUrl() {
-		String url;
-		switch (vendor) {
+		return switch (vendor) {
+			case MARIADB, MYSQL, POSTGRES, COCKROACH -> {
+				SqlConfig.AuthDetails authDetails = config.authDetails();
+				String host = authDetails.host();
+				int port = authDetails.port();
+				String database = authDetails.database();
 
-		case MARIADB:
-		case MYSQL:
-		case POSTGRES:
-		case COCKROACH:
-			SqlConfig.AuthDetails authDetails = config.authDetails();
-			String host = authDetails.host();
-			int port = authDetails.port();
-			String database = authDetails.database();
-
-			if (vendor.isPostgresLike()) {
-				url = "jdbc:postgresql://" + host + ":" + port + "/" + database;
-			} else {
-				assert vendor.isMySQLLike();
-				url = "jdbc:mariadb://" + host + ":" + port + "/" + database;
+				if (vendor.isPostgresLike()) {
+					yield "jdbc:postgresql://" + host + ":" + port + "/" + database;
+				} else {
+					assert vendor.isMySQLLike();
+					yield "jdbc:mariadb://" + host + ":" + port + "/" + database;
+				}
 			}
-			break;
-
-		case HSQLDB:
-			Path databaseFolder = folder.resolve("internal").resolve("hypersql");
-			try {
-				Files.createDirectories(databaseFolder);
-			} catch (IOException ex) {
-				throw new StartupException("Cannot create database folder", ex);
+			case HSQLDB -> {
+				Path databaseFolder = folder.resolve("internal").resolve("hypersql");
+				try {
+					Files.createDirectories(databaseFolder);
+				} catch (IOException ex) {
+					throw new StartupException("Cannot create database folder", ex);
+				}
+				Path databaseFile = databaseFolder.resolve("punishments-database").toAbsolutePath();
+				yield "jdbc:hsqldb:file:" + databaseFile;
 			}
-			Path databaseFile = databaseFolder.resolve("punishments-database").toAbsolutePath();
-			url = "jdbc:hsqldb:file:" + databaseFile;
-			break;
-
-		default:
-			throw MiscUtil.unknownVendor(vendor);
-		}
-		return url;
+		};
 	}
 	
 	private String getUrlProperties() {
-		Map<String, Object> properties = new HashMap<>();
+		Map<String, Object> properties = switch (vendor) {
+			case HSQLDB -> Map.of(
+					// Prevent execution of multiple queries in one Statement
+					"sql.restrict_exec", true,
+					// Make the names of generated indexes the same as the names of the constraints
+					"sql.sys_index_names", true,
+					/*
+					 * Enforce SQL standards on
+					 * 1.) table and column names
+					 * 2.) ambiguous column references
+					 * 3.) illegal type conversions
+					 */
+					"sql.enforce_names", true,
+					"sql.enforce_refs", true,
+					"sql.enforce_types", true,
+					// Respect interrupt status during query execution
+					"hsqldb.tx_interrupt_rollback", true,
+					// Use CACHED tables by default
+					"hsqldb.default_table_type", "cached"
+			);
+			case MARIADB, MYSQL -> {
+				Map<String, Object> props = new HashMap<>(Map.of(
+						// Performance improvements
+						"autocommit", DatabaseConstants.AUTOCOMMIT,
+						"defaultFetchSize", DatabaseConstants.FETCH_SIZE,
 
-		switch (vendor) {
-		case HSQLDB:
-			// Prevent execution of multiple queries in one Statement
-			properties.put("sql.restrict_exec", true);
-			// Make the names of generated indexes the same as the names of the constraints
-			properties.put("sql.sys_index_names", true);
-			/* 
-			 * Enforce SQL standards on
-			 * 1.) table and column names
-			 * 2.) ambiguous column references
-			 * 3.) illegal type conversions
-			 */
-			properties.put("sql.enforce_names", true);
-			properties.put("sql.enforce_refs", true);
-			properties.put("sql.enforce_types", true);
-			// Respect interrupt status during query execution
-			properties.put("hsqldb.tx_interrupt_rollback", true);
-			// Use CACHED tables by default
-			properties.put("hsqldb.default_table_type", "cached");
+						// Help debug in case of deadlock
+						"includeInnodbStatusInDeadlockExceptions", true,
+						"includeThreadDumpInDeadlockExceptions", true,
 
-			break;
+						// https://github.com/brettwooldridge/HikariCP/wiki/Rapid-Recovery#mysql
+						"socketTimeout", DatabaseConstants.SOCKET_TIMEOUT
+				));
+				// Properties preceding can be overridden
+				props.putAll(config.mariaDb().connectionProperties());
+				// Properties following cannot be overridden
 
-		case MARIADB:
-		case MYSQL:
-			// Performance improvements
-			properties.put("autocommit", DatabaseConstants.AUTOCOMMIT);
-			properties.put("defaultFetchSize", DatabaseConstants.FETCH_SIZE);
+				props.putAll(Map.of(
+						// Needed for use with connection init-SQL (hikariConf.setConnectionInitSql)
+						"allowMultiQueries", true,
+						// Help debug in case of exceptions
+						"dumpQueriesOnException", true
+				));
+				yield props;
+			}
+			case POSTGRES, COCKROACH -> {
+				Map<String, Object> props = new HashMap<>(Map.of(
+						// Set default connecting settings
+						"defaultRowFetchSize", DatabaseConstants.FETCH_SIZE,
 
-			// Help debug in case of deadlock
-			properties.put("includeInnodbStatusInDeadlockExceptions", true);
-			properties.put("includeThreadDumpInDeadlockExceptions", true);
+						// https://github.com/brettwooldridge/HikariCP/wiki/Rapid-Recovery#postgresql
+						"socketTimeout", DatabaseConstants.SOCKET_TIMEOUT
+				));
+				// Properties preceding can be overridden
+				props.putAll(config.postgres().connectionProperties());
 
-			// https://github.com/brettwooldridge/HikariCP/wiki/Rapid-Recovery#mysql
-			properties.put("socketTimeout", DatabaseConstants.SOCKET_TIMEOUT);
-
-			// Properties preceding can be overridden
-			properties.putAll(config.mariaDb().connectionProperties());
-			// Properties following cannot be overridden
-
-			// Needed for use with connection init-SQL (hikariConf.setConnectionInitSql)
-			properties.put("allowMultiQueries", true);
-			break;
-
-		case POSTGRES:
-		case COCKROACH:
-			// Set default connecting settings
-			properties.put("defaultRowFetchSize", DatabaseConstants.FETCH_SIZE);
-
-			// https://github.com/brettwooldridge/HikariCP/wiki/Rapid-Recovery#postgresql
-			properties.put("socketTimeout", DatabaseConstants.SOCKET_TIMEOUT);
-
-			// Properties preceding can be overridden
-			properties.putAll(config.postgres().connectionProperties());
-			break;
-
-		default:
-			throw MiscUtil.unknownVendor(vendor);
-		}
+				yield props;
+			}
+		};
 		logger.trace("Using connection properties {}", properties);
 		return vendor.driver().formatConnectionProperties(properties);
 	}

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,7 +28,6 @@ import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.scope.ServerScope;
-import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.schema.tables.ApplicableBans;
 import space.arim.libertybans.core.schema.tables.ApplicableMutes;
 import space.arim.libertybans.core.schema.tables.ApplicableWarns;
@@ -56,43 +55,25 @@ public final class TableForType {
 	}
 
 	private Table<? extends Record2<Long, Integer>> dataTable0() {
-		switch (type) {
-		case BAN:
-			return Bans.BANS;
-		case MUTE:
-			return Mutes.MUTES;
-		case WARN:
-			return Warns.WARNS;
-		case KICK:
-			throw new UnsupportedOperationException("Does not exist for kicks");
-		default:
-			throw MiscUtil.unknownType(type);
-		}
+		return switch (type) {
+			case BAN -> Bans.BANS;
+			case MUTE -> Mutes.MUTES;
+			case WARN -> Warns.WARNS;
+			case KICK -> throw new UnsupportedOperationException("Does not exist for kicks");
+		};
 	}
 
 	public SimpleViewFields<? extends Record10<
 			Long, PunishmentType,
 			Victim.VictimType, UUID, NetworkAddress,
 			Operator, String, ServerScope, Instant, Instant>> simpleView() {
-		return new SimpleViewFields<>(simpleView0());
-	}
-
-	private Table<? extends Record10<
-			Long, PunishmentType,
-			Victim.VictimType, UUID, NetworkAddress,
-			Operator, String, ServerScope, Instant, Instant>> simpleView0() {
-		switch (type) {
-		case BAN:
-			return SimpleBans.SIMPLE_BANS;
-		case MUTE:
-			return SimpleMutes.SIMPLE_MUTES;
-		case WARN:
-			return SimpleWarns.SIMPLE_WARNS;
-		case KICK:
-			throw new UnsupportedOperationException("Does not exist for kicks");
-		default:
-			throw MiscUtil.unknownType(type);
-		}
+		var view = switch (type) {
+			case BAN -> SimpleBans.SIMPLE_BANS;
+			case MUTE -> SimpleMutes.SIMPLE_MUTES;
+			case WARN -> SimpleWarns.SIMPLE_WARNS;
+			case KICK -> throw new UnsupportedOperationException("Does not exist for kicks");
+		};
+		return new SimpleViewFields<>(view);
 	}
 
 	public ApplicableViewFields<? extends Record12<
@@ -100,26 +81,13 @@ public final class TableForType {
 			Victim.VictimType, UUID, NetworkAddress,
 			Operator, String, ServerScope, Instant, Instant,
 			UUID, NetworkAddress>> applicableView() {
-		return new ApplicableViewFields<>(applicableView0());
-	}
-
-	private Table<? extends Record12<
-			Long, PunishmentType,
-			Victim.VictimType, UUID, NetworkAddress,
-			Operator, String, ServerScope, Instant, Instant,
-			UUID, NetworkAddress>> applicableView0() {
-		switch (type) {
-		case BAN:
-			return ApplicableBans.APPLICABLE_BANS;
-		case MUTE:
-			return ApplicableMutes.APPLICABLE_MUTES;
-		case WARN:
-			return ApplicableWarns.APPLICABLE_WARNS;
-		case KICK:
-			throw new UnsupportedOperationException("Does not exist for kicks");
-		default:
-			throw MiscUtil.unknownType(type);
-		}
+		var view = switch (type) {
+			case BAN -> ApplicableBans.APPLICABLE_BANS;
+			case MUTE -> ApplicableMutes.APPLICABLE_MUTES;
+			case WARN -> ApplicableWarns.APPLICABLE_WARNS;
+			case KICK -> throw new UnsupportedOperationException("Does not exist for kicks");
+		};
+		return new ApplicableViewFields<>(view);
 	}
 
 	@Override
