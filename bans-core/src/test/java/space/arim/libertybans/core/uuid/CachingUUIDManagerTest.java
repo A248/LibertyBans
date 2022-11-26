@@ -73,16 +73,15 @@ public class CachingUUIDManagerTest {
 		this.queryingImpl = queryingImpl;
 		this.time = time;
 
-		uuidManager = new CachingUUIDManager(configs, futuresFactory, envUserResolver, queryingImpl, time);
+		uuidManager = new CachingUUIDManager(configs, futuresFactory, envUserResolver, queryingImpl, nameValidator, time);
 	}
 
 	@BeforeEach
 	public void setup() {
 		MainConfig mainConfig = mock(MainConfig.class);
 		UUIDResolutionConfig uuidResolution = mock(UUIDResolutionConfig.class);
-		when(configs.getMainConfig()).thenReturn(mainConfig);
-		when(mainConfig.uuidResolution()).thenReturn(uuidResolution);
-		when(uuidResolution.nameValidator()).thenReturn(nameValidator);
+		lenient().when(configs.getMainConfig()).thenReturn(mainConfig);
+		lenient().when(mainConfig.uuidResolution()).thenReturn(uuidResolution);
 
 		when(time.toCaffeineTicker()).thenReturn(Ticker.disabledTicker());
 

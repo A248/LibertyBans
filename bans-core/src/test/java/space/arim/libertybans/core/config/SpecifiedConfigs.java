@@ -89,7 +89,7 @@ public class SpecifiedConfigs implements Configs {
 					return enforcement(original);
 				}
 				if (methodName.equals("uuidResolution")) {
-					return uuidResolution(original);
+					return uuidResolution();
 				}
 				return null;
 			}
@@ -104,7 +104,7 @@ public class SpecifiedConfigs implements Configs {
 					}
 				}.proxy();
 			}
-			private UUIDResolutionConfig uuidResolution(MainConfig original) {
+			private UUIDResolutionConfig uuidResolution() {
 				return new UUIDResolutionConfig() {
 					@Override
 					public ServerType serverType() {
@@ -114,11 +114,6 @@ public class SpecifiedConfigs implements Configs {
 					@Override
 					public RemoteApiBundle remoteApis() {
 						return new RemoteApiBundle(List.of());
-					}
-
-					@Override
-					public String geyserNamePrefix() {
-						return original.uuidResolution().geyserNamePrefix();
 					}
 				};
 			}

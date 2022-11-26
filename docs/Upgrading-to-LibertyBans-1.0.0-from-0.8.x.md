@@ -1,3 +1,4 @@
+
 LibertyBans 1.0.0 contains several breaking changes. This page is intended to help you migrate from 0.8.x.
 
 The upgrade should be mostly seamless and core functionality will work out of the box. No manual data migration will be necessary.

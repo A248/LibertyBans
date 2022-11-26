@@ -50,24 +50,27 @@ public final class CachingUUIDManager implements UUIDManager {
 	private final FactoryOfTheFuture futuresFactory;
 	private final EnvUserResolver envResolver;
 	private final QueryingImpl queryingImpl;
+	private final NameValidator nameValidator;
 	private final Time time;
 
 	private Cache<@NonNull String, @NonNull UUID> nameToUuidCache;
 	private Cache<@NonNull UUID, @NonNull String> uuidToNameCache;
-	private NameValidator nameValidator;
 
 	@Inject
 	public CachingUUIDManager(Configs configs, FactoryOfTheFuture futuresFactory,
-							  Provider<InternalDatabase> dbProvider, EnvUserResolver envResolver, Time time) {
-		this(configs, futuresFactory, envResolver, new QueryingImpl(dbProvider), time);
+							  Provider<InternalDatabase> dbProvider, EnvUserResolver envResolver,
+							  NameValidator nameValidator, Time time) {
+		this(configs, futuresFactory, envResolver, new QueryingImpl(dbProvider), nameValidator, time);
 	}
 
 	CachingUUIDManager(Configs configs, FactoryOfTheFuture futuresFactory,
-					   EnvUserResolver envResolver, QueryingImpl queryingImpl, Time time) {
+					   EnvUserResolver envResolver, QueryingImpl queryingImpl,
+					   NameValidator nameValidator, Time time) {
 		this.configs = configs;
 		this.futuresFactory = futuresFactory;
 		this.envResolver = envResolver;
 		this.queryingImpl = queryingImpl;
+		this.nameValidator = nameValidator;
 		this.time = time;
 	}
 
@@ -81,7 +84,6 @@ public final class CachingUUIDManager implements UUIDManager {
 				.ticker(time.toCaffeineTicker())
 				.expireAfterAccess(Duration.ofMinutes(15L))
 				.build();
-		nameValidator = uuidResolution().nameValidator();
 	}
 
 	@Override

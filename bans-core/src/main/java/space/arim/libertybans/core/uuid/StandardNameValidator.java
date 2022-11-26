@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.uuid;
 
 import java.util.Objects;
@@ -25,8 +26,23 @@ public final class StandardNameValidator implements NameValidator {
 
 	private final Pattern validNamePattern;
 
-	public StandardNameValidator(Pattern validNamePattern) {
+	private static final String VANILLA_NAME_PATTERN = "[a-zA-Z0-9_]*+";
+
+	private StandardNameValidator(Pattern validNamePattern) {
 		this.validNamePattern = Objects.requireNonNull(validNamePattern);
+	}
+
+	public static NameValidator vanilla() {
+		return new StandardNameValidator(Pattern.compile(VANILLA_NAME_PATTERN));
+	}
+
+	public static NameValidator createFromPrefix(String prefix) {
+		if (prefix.isEmpty()) {
+			// Avoid quoting empty strings (bad regex practice)
+			throw new IllegalArgumentException("Name prefix must not be empty");
+		}
+		String validNameRegex = "(" + Pattern.quote(prefix) + ")?" + VANILLA_NAME_PATTERN;
+		return new StandardNameValidator(Pattern.compile(validNameRegex));
 	}
 
 	@Override
@@ -34,5 +50,5 @@ public final class StandardNameValidator implements NameValidator {
 		// Geyser/Floodgate ensures player names are less than 16 characters
 		return name.length() <= 16 && validNamePattern.matcher(name).matches();
 	}
-	
+
 }
