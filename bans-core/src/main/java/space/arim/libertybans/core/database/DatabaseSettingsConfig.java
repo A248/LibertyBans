@@ -39,7 +39,7 @@ public interface DatabaseSettingsConfig {
 			"What RDMS vendor will you be using?",
 			"Available options:",
 			"'HSQLDB' - Local HyperSQL database. No additional requirements.",
-			"'MARIADB' - Requires an external MariaDB database. At least MariaDB 10.3 is required.",
+			"'MARIADB' - Requires an external MariaDB database. At least MariaDB 10.6 is required.",
 			"'MYSQL' - Requires an external MySQL database. At least MySQL 8.0 is required.",
 			"'POSTGRES' - Requires an external PostgreSQL database. At least PostgreSQL 12 is required.",
 			"'COCKROACH' - Requires an external CockroachDB database. The latest CockroachDB is required. " +

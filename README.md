@@ -70,7 +70,7 @@ Free software and high quality, LibertyBans is the best-designed punishment plug
 
 ### Requirements
 
-* Java 11
+* Java 17
 
 Supported platforms:
 

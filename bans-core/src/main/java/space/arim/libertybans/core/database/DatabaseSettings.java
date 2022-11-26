@@ -205,7 +205,6 @@ public class DatabaseSettings {
 			int port = authDetails.port();
 			String database = authDetails.database();
 
-			hikariConf.addDataSourceProperty("databaseName", database);
 			if (vendor.isPostgresLike()) {
 				url = "jdbc:postgresql://" + host + ":" + port + "/" + database;
 			} else {

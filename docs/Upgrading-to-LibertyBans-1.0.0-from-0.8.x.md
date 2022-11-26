@@ -31,7 +31,7 @@ Some options in the messages.yml configuration have been renamed. To migrate you
 ### Version Requirements
 
 If you use MariaDB or MySQL, you may need to upgrade your database server:
-* If you use MariaDB, at least MariaDB 10.3 is required. MariaDB 10.6 (the latest) is recommended.
+* If you use MariaDB, at least MariaDB 10.3 is required. The latest MariaDB version is recommended.
 * If you use MySQL, at least MySQL 8.0 is required. MySQL 8.0 is the latest version.
 
 From LibertyBans 0.8.1 onward, older database versions are detected and a warning admonishes you in the server console.

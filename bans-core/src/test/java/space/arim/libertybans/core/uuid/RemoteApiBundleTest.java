@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.api.util.web.RemoteApiResult;
-import space.arim.api.util.web.RemoteNameHistoryApi;
+import space.arim.api.util.web.RemoteNameUUIDApi;
 import space.arim.omnibus.util.UUIDUtil;
 
 import java.util.List;
@@ -59,26 +59,26 @@ public class RemoteApiBundleTest {
 
 	@Test
 	public void oneResolver() {
-		RemoteNameHistoryApi remoteNameHistoryApi = mock(RemoteNameHistoryApi.class);
-		when(remoteNameHistoryApi.lookupUUID(name)).thenReturn(completedResult(uuid));
-		when(remoteNameHistoryApi.lookupName(uuid)).thenReturn(completedResult(name));
-		RemoteApiBundle remoteApiBundle = new RemoteApiBundle(List.of(remoteNameHistoryApi));
+		RemoteNameUUIDApi RemoteNameUUIDApi = mock(RemoteNameUUIDApi.class);
+		when(RemoteNameUUIDApi.lookupUUID(name)).thenReturn(completedResult(uuid));
+		when(RemoteNameUUIDApi.lookupName(uuid)).thenReturn(completedResult(name));
+		RemoteApiBundle remoteApiBundle = new RemoteApiBundle(List.of(RemoteNameUUIDApi));
 
 		assertEquals(uuid, remoteApiBundle.lookup((remoteApi) -> remoteApi.lookupUUID(name)).join());
 		assertEquals(name, remoteApiBundle.lookup((remoteApi) -> remoteApi.lookupName(uuid)).join());
 
-		verify(remoteNameHistoryApi).lookupUUID(name);
-		verify(remoteNameHistoryApi).lookupName(uuid);
+		verify(RemoteNameUUIDApi).lookupUUID(name);
+		verify(RemoteNameUUIDApi).lookupName(uuid);
 	}
 
 	@Test
 	public void multipleResolvers() {
 		// One of the objectives here is to ensure remote APIs are not sent a burst of requests.
 		// Specifically, if the first remote API finds an answer, don't query the rest.
-		RemoteNameHistoryApi inconsistentRemoteApi = mock(RemoteNameHistoryApi.class);
+		RemoteNameUUIDApi inconsistentRemoteApi = mock(RemoteNameUUIDApi.class);
 		when(inconsistentRemoteApi.lookupUUID(name)).thenReturn(completedResult(uuid), emptyResult());
 		when(inconsistentRemoteApi.lookupName(uuid)).thenReturn(completedResult(name), emptyResult());
-		RemoteNameHistoryApi consistentRemoteApi = mock(RemoteNameHistoryApi.class);
+		RemoteNameUUIDApi consistentRemoteApi = mock(RemoteNameUUIDApi.class);
 		when(consistentRemoteApi.lookupUUID(name)).thenReturn(completedResult(uuid), completedResult(uuid));
 		when(consistentRemoteApi.lookupName(uuid)).thenReturn(completedResult(name), completedResult(name));
 		RemoteApiBundle remoteApiBundle = new RemoteApiBundle(List.of(inconsistentRemoteApi, consistentRemoteApi));

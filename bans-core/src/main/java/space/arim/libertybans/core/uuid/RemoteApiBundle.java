@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2022 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.uuid;
 
 import java.net.http.HttpClient;
@@ -33,7 +34,6 @@ import space.arim.api.util.web.HttpAshconApi;
 import space.arim.api.util.web.HttpMcHeadsApi;
 import space.arim.api.util.web.HttpMojangApi;
 import space.arim.api.util.web.RemoteApiResult;
-import space.arim.api.util.web.RemoteNameHistoryApi;
 import space.arim.api.util.web.RemoteNameUUIDApi;
 
 import space.arim.dazzleconf.error.BadValueException;
@@ -42,37 +42,33 @@ import space.arim.dazzleconf.serialiser.FlexibleType;
 import space.arim.dazzleconf.serialiser.ValueSerialiser;
 
 public class RemoteApiBundle {
-	
-	private final List<RemoteNameHistoryApi> remotes;
-	
+
+	private final List<RemoteNameUUIDApi> remotes;
+
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-	
-	public RemoteApiBundle(List<RemoteNameHistoryApi> remotes) {
+
+	public RemoteApiBundle(List<RemoteNameUUIDApi> remotes) {
 		this.remotes = List.copyOf(remotes);
 	}
 
-	private <T> T unboxResult(RemoteNameHistoryApi remoteApi, RemoteApiResult<T> remoteApiResult) {
-		switch (remoteApiResult.getResultType()) {
-		case FOUND:
-		case NOT_FOUND:
-			break;
-		case RATE_LIMITED:
-		case ERROR:
-		default:
-			Exception ex = remoteApiResult.getException();
-			if (ex == null) {
-				logger.warn("Request for name to remote web API {} failed", remoteApi);
-			} else {
-				logger.warn("Request for name to remote web API {} failed", remoteApi, ex);
+	private <T> T unboxResult(RemoteNameUUIDApi remoteApi, RemoteApiResult<T> remoteApiResult) {
+		return switch (remoteApiResult.getResultType()) {
+			case FOUND, NOT_FOUND -> remoteApiResult.getValue();
+			case RATE_LIMITED, ERROR -> {
+				Exception ex = remoteApiResult.getException();
+				if (ex == null) {
+					logger.warn("Request for name to remote web API {} failed", remoteApi);
+				} else {
+					logger.warn("Request for name to remote web API {} failed", remoteApi, ex);
+				}
+				yield null;
 			}
-			return null;
-		}
-		return remoteApiResult.getValue();
+		};
 	}
 	
 	<T> CompletableFuture<T> lookup(Function<RemoteNameUUIDApi, CompletableFuture<RemoteApiResult<T>>> intermediateResultFunction) {
 		CompletableFuture<T> future = null;
-		for (RemoteNameHistoryApi remoteApi : remotes) {
+		for (RemoteNameUUIDApi remoteApi : remotes) {
 
 			if (future == null) {
 				future = intermediateResultFunction.apply(remoteApi)
@@ -98,13 +94,13 @@ public class RemoteApiBundle {
 		MCHEADS(HttpMcHeadsApi::create),
 		MOJANG(HttpMojangApi::create);
 		
-		final Function<HttpClient, RemoteNameHistoryApi> creator;
-		
-		private RemoteType(Function<HttpClient, RemoteNameHistoryApi> creator) {
+		final Function<HttpClient, RemoteNameUUIDApi> creator;
+
+		RemoteType(Function<HttpClient, RemoteNameUUIDApi> creator) {
 			this.creator = creator;
 		}
-		
-		static RemoteType fromInstance(RemoteNameHistoryApi remote) {
+
+		static RemoteType fromInstance(RemoteNameUUIDApi remote) {
 			if (remote instanceof HttpAshconApi) {
 				return ASHCON;
 			}
@@ -118,7 +114,7 @@ public class RemoteApiBundle {
 		}
 	}
 
-	public static class SerialiserImpl implements ValueSerialiser<RemoteApiBundle> {
+	public static final class SerialiserImpl implements ValueSerialiser<RemoteApiBundle> {
 
 		@Override
 		public Class<RemoteApiBundle> getTargetClass() {
@@ -128,7 +124,7 @@ public class RemoteApiBundle {
 		@Override
 		public RemoteApiBundle deserialise(FlexibleType flexibleType) throws BadValueException {
 			HttpClient httpClient = HttpClient.newHttpClient();
-			List<RemoteNameHistoryApi> remotes = flexibleType.getList((flexibleElement) -> {
+			List<RemoteNameUUIDApi> remotes = flexibleType.getList((flexibleElement) -> {
 				RemoteType remoteType = flexibleElement.getObject(RemoteType.class);
 				return remoteType.creator.apply(httpClient);
 			});
@@ -138,12 +134,12 @@ public class RemoteApiBundle {
 		@Override
 		public Object serialise(RemoteApiBundle value, Decomposer decomposer) {
 			List<String> result = new ArrayList<>();
-			for (RemoteNameHistoryApi remote : value.remotes) {
+			for (RemoteNameUUIDApi remote : value.remotes) {
 				result.add(RemoteType.fromInstance(remote).name());
 			}
 			return result;
 		}
-		
+
 	}
-	
+
 }
