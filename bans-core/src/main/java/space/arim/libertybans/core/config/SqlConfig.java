@@ -39,7 +39,7 @@ import space.arim.libertybans.core.database.RefreshTaskRunnable;
 		"further configuration is made here.",
 		"",
 		"Database version requirements:",
-		"- MariaDB: Requires MariaDB 10.3 or newer.",
+		"- MariaDB: Requires MariaDB 10.6 or newer.",
 		"- MySQL: Requires MySQL 8.0 or newer.",
 		"- PostgreSQL: Requires PostgreSQL 12 or newer.",
 		"- CockroachDB: Requires the latest version. Support for this database is experimental.",

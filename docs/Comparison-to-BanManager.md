@@ -75,13 +75,13 @@ Disclaimer: This is not legal advice and the writer is not a lawyer.
 
 ### Java Version Support
 
-LibertyBans requires Java 11 whereas BanManager permits Java 8.
+LibertyBans requires Java 17 whereas BanManager permits Java 8.
 
 ### External Databases
 
 Using an external database in either plugin is optional. BanManager uses H2 by default while LibertyBans uses HSQLDB by default.
 
-LibertyBans requires certain minimum versions for database servers. At least MySQL 8.0, MariaDB 10.3, or PostgreSQL 12 is required. Older versions are not supported.
+LibertyBans requires certain minimum versions for database servers. At least MySQL 8.0, MariaDB 10.6, or PostgreSQL 12 is required. Older versions are not supported.
 
 ### Platform Support
 

@@ -91,10 +91,11 @@ public enum Vendor {
 			return Optional.empty();
 		case MARIADB:
 			// Justification
+			// 10.6 adds standards-compliant OFFSET/LIMIT, needed by JOOQ https://mariadb.com/kb/en/select-offset-fetch/
 			// 10.3 adds sequences https://mariadb.com/kb/en/create-sequence/
 			// 10.3 adds SIMULTANEOUS_ASSIGNMENT https://jira.mariadb.org/browse/MDEV-13417
 			// 10.2 is unsupported by Flyway
-			return Optional.of("10.3");
+			return Optional.of("10.6");
 		case MYSQL:
 			// Justification
 			// 8.0 enforces CHECK constraints https://dev.mysql.com/doc/refman/8.0/en/create-table-check-constraints.html

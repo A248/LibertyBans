@@ -366,7 +366,7 @@
 						<configuration>
 							<images combine.children="append">
 								<image>
-									<name>mariadb:10.3</name>
+									<name>mariadb:10.6</name>
 									<alias>mariadb-legacy</alias>
 									<run>
 										<env>
@@ -387,7 +387,7 @@
 									</run>
 								</image>
 								<image>
-									<name>mariadb:10.6</name>
+									<name>mariadb:10.10</name>
 									<alias>mariadb-modern</alias>
 									<run>
 										<env>
@@ -544,7 +544,7 @@
 									</run>
 								</image>
 								<image>
-									<name>postgres:14</name>
+									<name>postgres:15</name>
 									<alias>postgresql-modern</alias>
 									<run>
 										<env>
