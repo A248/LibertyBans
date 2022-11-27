@@ -23,6 +23,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import space.arim.omnibus.util.UUIDUtil;
+
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,14 +41,16 @@ public class GeyserNameValidatorTest {
 
 	@ParameterizedTest
 	@ValueSource(strings = {"A248", "ObsidianWolf_", "lol_haha_dead", "123Numbers"})
-	public void validPCNames(String name) {
+	public void validJavaEditionNames(String name) {
 		assertTrue(validator.validateNameArgument(name));
+		assertTrue(validator.isVanillaName(name));
 	}
 
 	@ParameterizedTest
 	@ValueSource(strings = {".BedrockPlayer", ".123Numbers"})
-	public void validBedrockNames(String name) {
+	public void validBedrockEditionNames(String name) {
 		assertTrue(validator.validateNameArgument(name));
+		assertFalse(validator.isVanillaName(name));
 	}
 
 	@Test
@@ -61,6 +66,13 @@ public class GeyserNameValidatorTest {
 	@Test
 	public void tooManyCharacters() {
 		assertFalse(validator.validateNameArgument("ThisNameHasMoreThan16Characters"));
+	}
+
+	@Test
+	public void validateUUIDs() {
+		assertTrue(validator.isVanillaUUID(UUIDUtil.fromShortString("ed5f12cd600745d9a4b9940524ddaecf")));
+		assertTrue(validator.isVanillaUUID(UUID.fromString("0b58c22d-56f5-3296-87b8-c0155a071d4d")), "Offline UUID");
+		assertFalse(validator.isVanillaUUID(UUID.fromString("00000000-0000-0000-0009-01f64f65c7c3")));
 	}
 
 }

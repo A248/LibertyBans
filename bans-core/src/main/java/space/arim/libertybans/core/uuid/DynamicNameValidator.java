@@ -21,6 +21,7 @@ package space.arim.libertybans.core.uuid;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.UUID;
 
 public final class DynamicNameValidator implements NameValidator {
 
@@ -66,6 +67,16 @@ public final class DynamicNameValidator implements NameValidator {
 	@Override
 	public boolean validateNameArgument(String name) {
 		return impl().validateNameArgument(name);
+	}
+
+	@Override
+	public boolean isVanillaName(String name) {
+		return impl().isVanillaName(name);
+	}
+
+	@Override
+	public boolean isVanillaUUID(UUID uuid) {
+		return impl().isVanillaUUID(uuid);
 	}
 
 }

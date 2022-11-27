@@ -19,8 +19,14 @@
 
 package space.arim.libertybans.core.uuid;
 
+import java.util.UUID;
+
 public interface NameValidator {
 
 	boolean validateNameArgument(String name);
+
+	boolean isVanillaName(String name);
+
+	boolean isVanillaUUID(UUID uuid);
 
 }

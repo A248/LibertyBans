@@ -20,9 +20,10 @@
 package space.arim.libertybans.core.uuid;
 
 import java.util.Objects;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
-public final class StandardNameValidator implements NameValidator {
+public class StandardNameValidator implements NameValidator {
 
 	private final Pattern validNamePattern;
 
@@ -42,7 +43,7 @@ public final class StandardNameValidator implements NameValidator {
 			throw new IllegalArgumentException("Name prefix must not be empty");
 		}
 		String validNameRegex = "(" + Pattern.quote(prefix) + ")?" + VANILLA_NAME_PATTERN;
-		return new StandardNameValidator(Pattern.compile(validNameRegex));
+		return new GeyserNameValidator(prefix, Pattern.compile(validNameRegex));
 	}
 
 	@Override
@@ -51,4 +52,34 @@ public final class StandardNameValidator implements NameValidator {
 		return name.length() <= 16 && validNamePattern.matcher(name).matches();
 	}
 
+	@Override
+	public boolean isVanillaName(String name) {
+		return true;
+	}
+
+	@Override
+	public boolean isVanillaUUID(UUID uuid) {
+		return true;
+	}
+
+	private static final class GeyserNameValidator extends StandardNameValidator {
+
+		private final String namePrefix;
+
+		private GeyserNameValidator(String namePrefix, Pattern validNamePattern) {
+			super(validNamePattern);
+			this.namePrefix = namePrefix;
+		}
+
+		@Override
+		public boolean isVanillaName(String name) {
+			return !name.startsWith(namePrefix);
+		}
+
+		@Override
+		public boolean isVanillaUUID(UUID uuid) {
+			return uuid.getMostSignificantBits() != 0;
+		}
+
+	}
 }

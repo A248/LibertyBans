@@ -163,7 +163,11 @@ public final class CachingUUIDManager implements UUIDManager {
 					return completedFuture(Optional.of(offlineUuid));
 				}
 				// Online or mixed mode server, or inexact lookup
-				return webLookup((remoteApi) -> remoteApi.lookupUUID(name));
+				if (nameValidator.isVanillaName(name)) {
+					return webLookup((remoteApi) -> remoteApi.lookupUUID(name));
+				} else {
+					return completedFuture(Optional.empty());
+				}
 			});
 		});
 	}
@@ -191,7 +195,11 @@ public final class CachingUUIDManager implements UUIDManager {
 				if (queriedName != null) {
 					return completedFuture(Optional.of(queriedName));
 				}
-				return webLookup((remoteApi) -> remoteApi.lookupName(uuid));
+				if (nameValidator.isVanillaUUID(uuid)) {
+					return webLookup((remoteApi) -> remoteApi.lookupName(uuid));
+				} else {
+					return completedFuture(Optional.empty());
+				}
 			});
 		});
 	}
@@ -199,7 +207,7 @@ public final class CachingUUIDManager implements UUIDManager {
 	private <T> CompletableFuture<Optional<T>> webLookup(Function<RemoteNameUUIDApi, CompletableFuture<RemoteApiResult<T>>> resultFunction) {
 		UUIDResolutionConfig uuidResolution = uuidResolution();
 		if (uuidResolution.serverType() != ServerType.ONLINE) {
-			return futuresFactory.completedFuture(Optional.empty());
+			return completedFuture(Optional.empty());
 		}
 		return uuidResolution.remoteApis().lookup(resultFunction).thenApply(Optional::ofNullable);
 	}
@@ -226,7 +234,7 @@ public final class CachingUUIDManager implements UUIDManager {
 		}
 		return envResolver.lookupPlayer(name).thenCompose((envResolve) -> {
 			if (envResolve.isPresent()) {
-				return futuresFactory.completedFuture(envResolve);
+				return completedFuture(envResolve);
 			}
 			return queryingImpl.resolvePlayer(name).thenApply(Optional::ofNullable);
 		});

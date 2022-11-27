@@ -217,6 +217,7 @@ public class CachingUUIDManagerTest {
 		mockConfig(ServerType.ONLINE, remoteApiBundle);
 		when(remoteApiBundle.lookup(any())).thenReturn(
 				completedFuture(uuid), completedFuture(null));
+		when(nameValidator.isVanillaName(name)).thenReturn(true);
 
 		assertEquals(uuid, lookupUUID(name));
 		assertEquals(uuid, lookupUUID(name), "uuid should be cached");
@@ -231,9 +232,27 @@ public class CachingUUIDManagerTest {
 		mockConfig(ServerType.ONLINE, remoteApiBundle);
 		when(remoteApiBundle.lookup(any())).thenReturn(
 				completedFuture(name), completedFuture(null));
+		when(nameValidator.isVanillaUUID(uuid)).thenReturn(true);
 
 		assertEquals(name, lookupName(uuid));
 		assertEquals(name, lookupName(uuid), "Name should be cached");
+	}
+
+	@Test
+	public void resolveBedrockUUIDWebLookup() {
+		when(queryingImpl.resolve(name)).thenReturn(completedFuture(null));
+		when(nameValidator.isVanillaName(name)).thenReturn(false);
+
+		assertNull(lookupUUID(name));
+		assertNull(lookupUUIDExact(name));
+	}
+
+	@Test
+	public void resolveBedrockNameWebLookup() {
+		when(queryingImpl.resolve(uuid)).thenReturn(completedFuture(null));
+		when(nameValidator.isVanillaUUID(uuid)).thenReturn(false);
+
+		assertNull(lookupName(uuid));
 	}
 
 	@Test
