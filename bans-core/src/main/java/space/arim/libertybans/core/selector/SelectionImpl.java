@@ -287,14 +287,16 @@ public class SelectionImpl {
 			PunishmentFields fields = getPunishmentFieldsToUse(selection);
 			return context
 					.select(DSL.count())
-					.from(fields.table())
-					.where(getPredication(selection, fields))
-					.orderBy(
-							fields.start().desc(), fields.id().desc()
-					)
-					.offset(selection.skipCount())
-					.limit((selection.limitToRetrieve() == 0) ?
-							DSL.noField(Integer.class) : DSL.val(selection.limitToRetrieve())
+					.from(context
+							.select(fields.start(), fields.id())
+							.from(fields.table())
+							.where(getPredication(selection, fields))
+							.orderBy(
+									fields.start().desc(), fields.id().desc()
+							)
+							.offset(selection.skipCount())
+							.limit((selection.limitToRetrieve() == 0) ?
+									DSL.noField(Integer.class) : DSL.val(selection.limitToRetrieve()))
 					)
 					.fetchSingle()
 					.value1();

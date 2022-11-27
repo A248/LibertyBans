@@ -136,8 +136,13 @@ public final class CachingUUIDManager implements UUIDManager {
 		if (cachedResolve != null) {
 			return completedFuture(Optional.of(cachedResolve));
 		}
-		boolean canComputeOffline = exact && uuidResolution().serverType() == ServerType.OFFLINE;
-		return lookupUUIDUncached(name, canComputeOffline).thenApply((optExternalUuid) -> {
+		if (exact && uuidResolution().serverType() == ServerType.OFFLINE) {
+			// Offline server and exact lookup
+			UUID offlineUuid = OfflineUUID.computeOfflineUuid(name);
+			addCache(offlineUuid, name);
+			return completedFuture(Optional.of(offlineUuid));
+		}
+		return lookupUUIDUncached(name).thenApply((optExternalUuid) -> {
 			if (optExternalUuid.isPresent()) {
 				addCache(optExternalUuid.get(), name);
 			}
@@ -145,7 +150,7 @@ public final class CachingUUIDManager implements UUIDManager {
 		});
 	}
 
-	private CentralisedFuture<Optional<UUID>> lookupUUIDUncached(String name, boolean canComputeOffline) {
+	private CentralisedFuture<Optional<UUID>> lookupUUIDUncached(String name) {
 		// 1. Resolve by environment
 		return envResolver.lookupUUID(name).thenCompose((envResolve) -> {
 			if (envResolve.isPresent()) {
@@ -156,13 +161,7 @@ public final class CachingUUIDManager implements UUIDManager {
 				if (queriedUuid != null) {
 					return completedFuture(Optional.of(queriedUuid));
 				}
-				// 3. Resolve by web API or offline UUID computation
-				if (canComputeOffline) {
-					// Offline server and exact lookup
-					UUID offlineUuid = OfflineUUID.computeOfflineUuid(name);
-					return completedFuture(Optional.of(offlineUuid));
-				}
-				// Online or mixed mode server, or inexact lookup
+				// 3. Resolve by web API
 				if (nameValidator.isVanillaName(name)) {
 					return webLookup((remoteApi) -> remoteApi.lookupUUID(name));
 				} else {
@@ -187,14 +186,17 @@ public final class CachingUUIDManager implements UUIDManager {
 	}
 
 	private CentralisedFuture<Optional<String>> lookupNameUncached(UUID uuid) {
+		// 1. Resolve by environment
 		return envResolver.lookupName(uuid).thenCompose((envResolve) -> {
 			if (envResolve.isPresent()) {
 				return completedFuture(envResolve);
 			}
+			// 2. Resolve by database query
 			return queryingImpl.resolve(uuid).thenCompose((queriedName) -> {
 				if (queriedName != null) {
 					return completedFuture(Optional.of(queriedName));
 				}
+				// 3. Resolve by web API
 				if (nameValidator.isVanillaUUID(uuid)) {
 					return webLookup((remoteApi) -> remoteApi.lookupName(uuid));
 				} else {

@@ -47,6 +47,7 @@ import space.arim.libertybans.it.util.RandomUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -261,6 +262,25 @@ public class SelectionIT {
 				List.of(banAddress1, warnUuid2),
 				getPunishments(selector.selectionBuilder().victims(SelectionPredicate.matchingNone(uuid1, address2))),
 				"Should be identical to previous assertion (in context)");
+	}
+
+	@TestTemplate
+	public void selectWarnCount() {
+		Victim victim = PlayerVictim.of(UUID.randomUUID());
+
+		getPunishment(
+				draftBuilder(PunishmentType.WARN, victim, "warning"));
+		getPunishment(
+				draftBuilder(PunishmentType.WARN, victim, "another warning"));
+		int warnCount = selector.selectionBuilder()
+				.victim(victim)
+				.seekBefore(Instant.now(), Long.MAX_VALUE)
+				.selectActiveOnly()
+				.build()
+				.countNumberOfPunishments()
+				.toCompletableFuture()
+				.join();
+		assertEquals(2, warnCount);
 	}
 
 }
