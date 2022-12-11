@@ -50,12 +50,16 @@ public interface EnforcementConfig {
 	@ConfKey("address-strictness")
 	@ConfComments({"",
 		"How strict should IP-based punishments be?",
-		"Available options are LENIENT, NORMAL, and STRICT",
+		"Available options are LENIENT, NORMAL, STERN, and STRICT",
 		"",
-		"LENIENT - If the player's current address matches the punished address, the punishment applies to the player",
-		"NORMAL - If any of player's past addresses matches the punished address, the punishment applies to the player",
-		"STRICT - If any of player's past addresses match any related address linked by a common player,",
-		"the punishment applies to the player"})
+		"An IP-based punishment applies to a player if:",
+		"LENIENT - The player's current address matches the punished address",
+		"NORMAL - Any of the player's past addresses matches the punished address",
+		"STERN - Any of the player's past addresses matches any of the past addresses of the punished user",
+		"",
+		"STRICT is the same as STERN, but also enforces user punishments as stringently as IP-based punishments.",
+		"    (Using STRICT turns all user punishments into IP-based punishments)"
+	})
 	@DefaultString("NORMAL")
 	AddressStrictness addressStrictness(); // Sensitive name used in integration testing
 
