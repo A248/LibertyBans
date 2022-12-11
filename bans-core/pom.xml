@@ -615,7 +615,7 @@
 						<configuration>
 							<images combine.children="append">
 								<image>
-									<name>cockroachdb/cockroach:latest</name>
+									<name>cockroachdb/cockroach:latest-v22.2</name>
 									<alias>cockroachdb</alias>
 									<run>
 										<cmd>start-single-node --insecure</cmd>

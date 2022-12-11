@@ -162,7 +162,7 @@ public class ListCommands extends AbstractSubCommandGroup {
 
 		private ReactionStage<Void> parsePageThenExecute(SelectionOrderBuilder selectionOrderBuilder) {
 			int selectedPage = parsePage();
-			if (selectedPage < 0) {
+			if (selectedPage <= 0) {
 				sender().sendMessage(section.usage());
 				return completedFuture(null);
 			}

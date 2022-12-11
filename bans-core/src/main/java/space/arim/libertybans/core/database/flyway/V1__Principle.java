@@ -81,15 +81,21 @@ public final class V1__Principle extends BaseJavaMigration {
 				statement.execute("INSERT INTO \"libertybans_punishment_ids\" VALUES (1, 1)");
 				statement.execute("INSERT INTO \"libertybans_victim_ids\" VALUES (" + Integer.MIN_VALUE + ", 1)");
 			} else {
+				// HSQLDB, PostgreSQL, and CockroachDB use the standard AS <DATATYPE>
+				String asDataType = switch (context.family()) {
+					case HSQLDB, POSTGRES -> "AS BIGINT ";
+					case MARIADB, MYSQL -> "";
+					default -> {
+						throw new IllegalArgumentException("Unsupported database " + context.family());
+					}
+				};
 				// MariaDB uses the non-standard NOCYCLE without a space
 				String noCycle = context.family() == SQLDialect.MARIADB ? "NOCYCLE" : "NO CYCLE";
-				// HSQLDB requires the standard clause AS <DATATYPE>
-				boolean hsqldb = context.family() == SQLDialect.HSQLDB;
 				// MariaDB's maximum permitted sequence is this number
 				long maxPunishmentId = Long.MAX_VALUE - 1;
 				statement.execute(
 						"CREATE SEQUENCE \"libertybans_punishment_ids\" " +
-								((hsqldb) ? "AS BIGINT " : "") +
+								asDataType +
 								"START WITH " + startingPunishmentId + " " +
 								"MINVALUE 1 " +
 								"MAXVALUE " + maxPunishmentId + " " +
