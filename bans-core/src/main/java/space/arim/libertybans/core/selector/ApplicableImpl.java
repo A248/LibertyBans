@@ -26,6 +26,7 @@ import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.Victim.VictimType;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.database.InternalDatabase;
@@ -72,7 +73,8 @@ public class ApplicableImpl {
 		var simpleView = new TableForType(type).simpleView();
 		var applView = new TableForType(type).applicableView();
 
-		return switch (configs.getMainConfig().enforcement().addressStrictness()) {
+		AddressStrictness strictness = configs.getMainConfig().enforcement().addressStrictness();
+		return switch (strictness) {
 			case LENIENT -> context
 					.select(
 							simpleView.id(),
@@ -98,7 +100,7 @@ public class ApplicableImpl {
 					.orderBy(new EndTimeOrdering(applView).expiresLeastSoon())
 					.limit(1)
 					.fetchOne(creator.punishmentMapper(type));
-			case STRICT -> context
+			case STERN, STRICT -> context
 					.select(
 							applView.id(),
 							applView.victimType(), applView.victimUuid(), applView.victimAddress(),
@@ -107,7 +109,16 @@ public class ApplicableImpl {
 					).from(applView.table())
 					.innerJoin(STRICT_LINKS)
 					.on(applView.uuid().eq(STRICT_LINKS.UUID1))
-					.where(STRICT_LINKS.UUID2.eq(uuid))
+					.where((strictness == AddressStrictness.STERN) ?
+							// STERN
+							// appl.uuid = strict_links.uuid1 = uuid
+							// OR victim_type != 'PLAYER' AND strict_links.uuid2 = uuid
+							applView.uuid().eq(uuid).or(
+									STRICT_LINKS.UUID2.eq(uuid).and(applView.victimType().notEqual(VictimType.PLAYER)))
+							// STRICT
+							// strict_links.uuid2 = uuid
+							: STRICT_LINKS.UUID2.eq(uuid)
+					)
 					.and(new EndTimeCondition(applView).isNotExpired(currentTime))
 					.orderBy(new EndTimeOrdering(applView).expiresLeastSoon())
 					.limit(1)
