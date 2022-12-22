@@ -31,7 +31,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerEvent;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.Plugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.api.env.AudienceRepresenter;
@@ -44,14 +44,14 @@ import java.util.concurrent.TimeUnit;
 
 public final class ChatListener implements PlatformListener, Listener {
 
-	private final JavaPlugin plugin;
+	private final Plugin plugin;
 	private final Guardian guardian;
 	private final AudienceRepresenter<CommandSender> audienceRepresenter;
 
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
 	@Inject
-	public ChatListener(JavaPlugin plugin, Guardian guardian, AudienceRepresenter<CommandSender> audienceRepresenter) {
+	public ChatListener(Plugin plugin, Guardian guardian, AudienceRepresenter<CommandSender> audienceRepresenter) {
 		this.plugin = plugin;
 		this.guardian = guardian;
 		this.audienceRepresenter = audienceRepresenter;

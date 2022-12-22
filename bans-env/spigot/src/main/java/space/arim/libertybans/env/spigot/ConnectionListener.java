@@ -27,7 +27,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.Plugin;
 import space.arim.libertybans.core.env.ParallelisedListener;
 import space.arim.libertybans.core.punish.Guardian;
 import space.arim.morepaperlib.adventure.MorePaperLibAdventure;
@@ -37,12 +37,12 @@ import java.util.UUID;
 
 public final class ConnectionListener extends ParallelisedListener<AsyncPlayerPreLoginEvent, Component> implements Listener {
 
-	private final JavaPlugin plugin;
+	private final Plugin plugin;
 	private final Guardian guardian;
 	private final MorePaperLibAdventure morePaperLibAdventure;
 
 	@Inject
-	public ConnectionListener(JavaPlugin plugin, Guardian guardian, MorePaperLibAdventure morePaperLibAdventure) {
+	public ConnectionListener(Plugin plugin, Guardian guardian, MorePaperLibAdventure morePaperLibAdventure) {
 		this.plugin = plugin;
 		this.guardian = guardian;
 		this.morePaperLibAdventure = morePaperLibAdventure;

@@ -24,6 +24,7 @@ import jakarta.inject.Singleton;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.core.addon.exempt.Exemption;
 import space.arim.libertybans.core.commands.extra.PunishmentPermissionCheck;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
@@ -34,9 +35,9 @@ public final class AddressPunishCommands extends PunishCommands implements Punis
 
 	@Inject
 	public AddressPunishCommands(Dependencies dependencies, PunishmentDrafter drafter,
-								 InternalFormatter formatter, TabCompletion tabCompletion) {
+								 Exemption exemption, InternalFormatter formatter, TabCompletion tabCompletion) {
 		super(dependencies, MiscUtil.punishmentTypes().stream().map((type) -> "ip" + type),
-				drafter, formatter, tabCompletion);
+				drafter, exemption, formatter, tabCompletion);
 	}
 
 	@Override

@@ -43,6 +43,8 @@ public interface AdditionsSection {
 		@SubSection
 		PunishmentPermissionSection permission();
 
+		ComponentText exempted();
+
 		ComponentText successMessage();
 		
 		ComponentText successNotification();
@@ -72,9 +74,13 @@ public interface AdditionsSection {
 		Component usage();
 
 		@Override
+		@DefaultString("&c&o%TARGET%&r&7 cannot be banned.")
+		ComponentText exempted();
+
+		@Override
 		@DefaultString("&c&o%TARGET%&r&7 is already banned.")
 		ComponentText conflicting();
-		
+
 		@Override
 		@ConfKey("success.message")
 		@DefaultString("&aBanned &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.")
@@ -107,9 +113,13 @@ public interface AdditionsSection {
 		Component usage();
 
 		@Override
+		@DefaultString("&c&o%TARGET%&r&7 cannot be muted.")
+		ComponentText exempted();
+
+		@Override
 		@DefaultString("&c&o%TARGET%&r&7 is already muted.")
 		ComponentText conflicting();
-		
+
 		@Override
 		@ConfKey("success.message")
 		@DefaultString("&aMuted &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.")
@@ -138,6 +148,10 @@ public interface AdditionsSection {
 		Component usage();
 
 		@Override
+		@DefaultString("&c&o%TARGET%&r&7 cannot be warned.")
+		ComponentText exempted();
+
+		@Override
 		@ConfKey("success.message")
 		@DefaultString("&aWarned &c&o%VICTIM%&r&a for &a&o%DURATION%&r&a because of &e&o%REASON%&r&a.")
 		ComponentText successMessage();
@@ -163,6 +177,10 @@ public interface AdditionsSection {
 		@Override
 		@DefaultString("&cUsage: /kick &e<player> <reason>&c.")
 		Component usage();
+
+		@Override
+		@DefaultString("&c&o%TARGET%&r&7 cannot be kicked.")
+		ComponentText exempted();
 
 		@Override
 		@ConfKey("success.message")

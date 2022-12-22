@@ -24,7 +24,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.Plugin;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.api.env.bukkit.BukkitCommandSkeleton;
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
@@ -56,13 +56,13 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 		private final InternalFormatter formatter;
 		private final AudienceRepresenter<CommandSender> audienceRepresenter;
 		private final Commands commands;
-		final JavaPlugin plugin;
+		final Plugin plugin;
 		private final FactoryOfTheFuture futuresFactory;
 		final CommandMapHelper commandMapHelper;
 		
 		@Inject
 		public CommandHelper(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
-							 Commands commands, JavaPlugin plugin,
+							 Commands commands, Plugin plugin,
 							 FactoryOfTheFuture futuresFactory, CommandMapHelper commandMapHelper) {
 			this.formatter = formatter;
 			this.audienceRepresenter = audienceRepresenter;

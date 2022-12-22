@@ -21,7 +21,7 @@ package space.arim.libertybans.env.spigot;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.Plugin;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
@@ -36,11 +36,11 @@ import java.util.stream.Stream;
 
 public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 
-	private final JavaPlugin plugin;
+	private final Plugin plugin;
 	final FactoryOfTheFuture futuresFactory;
 
 	SpigotCmdSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
-					CommandSender sender, Operator operator, JavaPlugin plugin, FactoryOfTheFuture futuresFactory) {
+					CommandSender sender, Operator operator, Plugin plugin, FactoryOfTheFuture futuresFactory) {
 		super(formatter, audienceRepresenter, sender, operator);
 		this.plugin = plugin;
 		this.futuresFactory = futuresFactory;
@@ -67,7 +67,7 @@ public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 	static class PlayerSender extends SpigotCmdSender {
 
 		PlayerSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
-					 Player player, JavaPlugin plugin, FactoryOfTheFuture futuresFactory) {
+					 Player player, Plugin plugin, FactoryOfTheFuture futuresFactory) {
 			super(formatter, audienceRepresenter,
 					player, PlayerOperator.of(player.getUniqueId()), plugin, futuresFactory);
 		}
@@ -82,7 +82,7 @@ public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 	static class ConsoleSender extends SpigotCmdSender {
 
 		ConsoleSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
-					  CommandSender sender, JavaPlugin plugin, FactoryOfTheFuture futuresFactory) {
+					  CommandSender sender, Plugin plugin, FactoryOfTheFuture futuresFactory) {
 			super(formatter, audienceRepresenter,
 					sender, ConsoleOperator.INSTANCE, plugin, futuresFactory);
 		}

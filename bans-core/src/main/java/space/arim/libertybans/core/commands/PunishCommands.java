@@ -27,6 +27,7 @@ import space.arim.libertybans.api.punish.DraftPunishment;
 import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.core.addon.exempt.Exemption;
 import space.arim.libertybans.core.commands.extra.DurationParser;
 import space.arim.libertybans.core.commands.extra.DurationPermissionCheck;
 import space.arim.libertybans.core.commands.extra.NotificationMessage;
@@ -54,14 +55,16 @@ import java.util.stream.Stream;
 abstract class PunishCommands extends AbstractSubCommandGroup implements PunishUnpunishCommands {
 
 	private final PunishmentDrafter drafter;
+	private final Exemption exemption;
 	private final InternalFormatter formatter;
 	private final TabCompletion tabCompletion;
 
 	PunishCommands(Dependencies dependencies, Stream<String> subCommands,
-				   PunishmentDrafter drafter, InternalFormatter formatter,
-				   TabCompletion tabCompletion) {
+				   PunishmentDrafter drafter, Exemption exemption,
+				   InternalFormatter formatter, TabCompletion tabCompletion) {
 		super(dependencies, subCommands);
 		this.drafter = drafter;
+		this.exemption = exemption;
 		this.formatter = formatter;
 		this.tabCompletion = tabCompletion;
 	}
@@ -133,7 +136,7 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 				if (!permissionCheck.checkPermission(victim, section.permission())) {
 					return completedFuture(null);
 				}
-				return performEnact(victim, targetArg);
+				return parseDurationThenPerformEnact(victim, targetArg);
 
 			}).thenCompose((punishment) -> {
 				if (punishment == null) {
@@ -143,7 +146,7 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 			});
 		}
 
-		private CompletionStage<Punishment> performEnact(Victim victim, String targetArg) {
+		private CompletionStage<Punishment> parseDurationThenPerformEnact(Victim victim, String targetArg) {
 			// Parse duration, uses Duration.ZERO for permanent
 			Duration duration = parseDuration();
 
@@ -155,6 +158,17 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 				sender().sendMessage(sectionWithDurationPerm.permission().duration().replaceText("%DURATION%", durationFormatted));
 				return completedFuture(null);
 			}
+			// Check exemption
+			return exemption.isVictimExempt(sender(), type(), victim, duration).thenCompose((isExempt) -> {
+				if (isExempt) {
+					sender().sendMessage(section.exempted().replaceText("%TARGET%", targetArg));
+					return completedFuture(null);
+				}
+				return performEnact(victim, duration, targetArg);
+			});
+		}
+
+		private CompletionStage<Punishment> performEnact(Victim victim, Duration duration, String targetArg) {
 			// Parse reason
 			String reason;
 			{
@@ -165,19 +179,14 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 					reason = command().allRemaining();
 				} else {
 					ReasonsConfig reasonsConfig = config().reasons();
-					switch (reasonsConfig.effectiveUnspecifiedReasonBehavior()) {
-					case USE_EMPTY_REASON:
-						reason = "";
-						break;
-					case REQUIRE_REASON:
+					reason = switch (reasonsConfig.effectiveUnspecifiedReasonBehavior()) {
+						case USE_EMPTY_REASON -> "";
+						case REQUIRE_REASON -> null; // Exit below
+						case SUBSTITUTE_DEFAULT -> reasonsConfig.defaultReason();
+					};
+					if (reason == null) {
 						sender().sendMessage(section.usage());
 						return completedFuture(null);
-					case SUBSTITUTE_DEFAULT:
-						reason = reasonsConfig.defaultReason();
-						break;
-					default:
-						throw new IllegalArgumentException("Unknown unspecified reason behavior "
-								+ reasonsConfig.effectiveUnspecifiedReasonBehavior());
 					}
 				}
 			}

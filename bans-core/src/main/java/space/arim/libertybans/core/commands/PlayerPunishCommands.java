@@ -25,6 +25,7 @@ import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.core.addon.exempt.Exemption;
 import space.arim.libertybans.core.commands.extra.ParsePlayerVictimDynamicallyComposite;
 import space.arim.libertybans.core.commands.extra.PunishmentPermissionCheck;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
@@ -41,10 +42,10 @@ public final class PlayerPunishCommands extends PunishCommands {
 
 	@Inject
 	public PlayerPunishCommands(Dependencies dependencies, PunishmentDrafter drafter,
-								InternalFormatter formatter, TabCompletion tabCompletion,
+								Exemption exemption, InternalFormatter formatter, TabCompletion tabCompletion,
 								EnvUserResolver envUserResolver) {
 		super(dependencies, MiscUtil.punishmentTypes().stream().map(PunishmentType::toString),
-				drafter, formatter, tabCompletion);
+				drafter, exemption, formatter, tabCompletion);
 		this.envUserResolver = envUserResolver;
 	}
 

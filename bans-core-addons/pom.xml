@@ -38,10 +38,12 @@
 
     <modules>
         <module>command-checkpunish</module>
+        <module>command-checkuser</module>
+        <module>command-staffrollback</module>
+        <module>exemption-luckperms</module>
+        <module>exemption-vault</module>
         <module>warn-actions</module>
         <module>addon-integration</module>
-        <module>command-staffrollback</module>
-        <module>command-checkuser</module>
     </modules>
 
     <dependencies>

@@ -22,6 +22,7 @@ module space.arim.libertybans.core {
 
 	exports space.arim.libertybans.core;
 	exports space.arim.libertybans.core.addon;
+	exports space.arim.libertybans.core.addon.exempt;
 	exports space.arim.libertybans.core.addon.staffrollback.execute;
 	exports space.arim.libertybans.core.alts to space.arim.dazzleconf, space.arim.injector;
 	exports space.arim.libertybans.core.commands;

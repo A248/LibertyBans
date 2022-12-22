@@ -21,6 +21,7 @@ package space.arim.libertybans.env.spigot;
 
 import java.nio.file.Path;
 
+import org.bukkit.plugin.Plugin;
 import space.arim.injector.SpecificationSupport;
 import space.arim.libertybans.bootstrap.BaseFoundation;
 import space.arim.libertybans.bootstrap.PlatformLauncher;
@@ -58,6 +59,7 @@ public final class SpigotLauncher implements PlatformLauncher {
 	public BaseFoundation launch() {
 		return new InjectorBuilder()
 				.bindInstance(JavaPlugin.class, plugin)
+				.bindInstance(Plugin.class, plugin)
 				.bindInstance(Server.class, plugin.getServer())
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
 				.bindInstance(Omnibus.class, omnibus)

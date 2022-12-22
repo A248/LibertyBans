@@ -12,13 +12,6 @@
 	<artifactId>bans-env</artifactId>
 	<packaging>pom</packaging>
 
-	<properties>
-		<bungeecord.version>1.16-R0.4</bungeecord.version>
-		<spigot.version>1.8.8-R0.1-20160221.082514-43</spigot.version>
-		<sponge.version>9.0.0</sponge.version>
-		<velocity.version>3.1.0</velocity.version>
-	</properties>
-
 	<modules>
 		<module>bungee</module>
 		<module>bungeeplugin</module>

@@ -30,6 +30,7 @@ import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.DraftPunishmentBuilder;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.core.addon.exempt.Exemption;
 import space.arim.libertybans.core.commands.extra.ArgumentParser;
 import space.arim.libertybans.core.config.ParsedDuration;
 import space.arim.libertybans.core.commands.extra.DurationPermissionsConfig;
@@ -103,7 +104,8 @@ public class UnspecifiedReasonsTest {
 		when(argParser.parseVictim(any(), eq("A248"), any())).thenAnswer((i) ->
 				new IndifferentFactoryOfTheFuture().completedFuture(PlayerVictim.of(UUID.randomUUID())));
 
-		punishCommands = new PlayerPunishCommands(dependencies, drafter, formatter, tabCompletion, envUserResolver);
+		Exemption exemption = new Exemption(dependencies.futuresFactory, Set.of());
+		punishCommands = new PlayerPunishCommands(dependencies, drafter, exemption, formatter, tabCompletion, envUserResolver);
 	}
 
 	private void executeBan(CmdSender sender) {
