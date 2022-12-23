@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Test;
 import space.arim.libertybans.core.addon.AddonLoader;
 import space.arim.libertybans.core.addon.checkpunish.CheckPunishModule;
 import space.arim.libertybans.core.addon.checkuser.CheckUserModule;
+import space.arim.libertybans.core.addon.exempt.luckperms.ExemptionLuckPermsModule;
+import space.arim.libertybans.core.addon.exempt.vault.ExemptionVaultModule;
 import space.arim.libertybans.core.addon.staffrollback.StaffRollbackModule;
 import space.arim.libertybans.core.addon.warnactions.WarnActionsModule;
 
@@ -37,8 +39,8 @@ public class ServiceLoadingIT {
 	public void loadAddons() {
 		assertEquals(
 				Set.of(
-						new CheckPunishModule(), new CheckUserModule(),
-						new StaffRollbackModule(), new WarnActionsModule()
+						new CheckPunishModule(), new CheckUserModule(), new StaffRollbackModule(),
+						new ExemptionLuckPermsModule(), new ExemptionVaultModule(), new WarnActionsModule()
 				),
 				assertDoesNotThrow(AddonLoader::loadAddonBindModules)
 		);

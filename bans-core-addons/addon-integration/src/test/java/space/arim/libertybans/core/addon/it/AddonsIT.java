@@ -20,6 +20,8 @@
 package space.arim.libertybans.core.addon.it;
 
 import jakarta.inject.Singleton;
+import org.bukkit.Server;
+import org.bukkit.plugin.ServicesManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,6 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -70,7 +73,7 @@ public class AddonsIT {
 	}
 
 	@BeforeEach
-	public void setupInjector(@TempDir Path folder, @Mock PlatformHandle handle,
+	public void setupInjector(@Mock Server server, @TempDir Path folder, @Mock PlatformHandle handle,
 							  @Mock EnvEnforcer<?> envEnforcer, @Mock EnvUserResolver envUserResolver) {
 		lenient().when(handle.createFuturesFactory()).thenReturn(new IndifferentFactoryOfTheFuture());
 		lenient().when(handle.createEnhancedExecutor()).thenReturn(new SimplifiedEnhancedExecutor() {
@@ -79,8 +82,10 @@ public class AddonsIT {
 				ForkJoinPool.commonPool().execute(command);
 			}
 		});
+		lenient().when(server.getServicesManager()).thenReturn(mock(ServicesManager.class));
 		this.folder = folder;
 		this.injector = new InjectorBuilder()
+				.bindInstance(Server.class, server)
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
 				.bindInstance(PlatformHandle.class, handle)
 				.bindInstance(Environment.class, environment)
