@@ -4,3 +4,4 @@ version: ${plugin.version}
 author: '${plugin.author}'
 description: ${plugin.description}
 website: ${plugin.url}
+softDepends: [LuckPerms]
