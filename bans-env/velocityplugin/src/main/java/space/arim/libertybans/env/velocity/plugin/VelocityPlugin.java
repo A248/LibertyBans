@@ -22,6 +22,7 @@ package space.arim.libertybans.env.velocity.plugin;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
@@ -37,8 +38,15 @@ import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 import javax.inject.Inject;
 import java.nio.file.Path;
 
-@Plugin(id = PluginInfo.ID, name = PluginInfo.NAME, version = PluginInfo.VERSION, authors = { PluginInfo.AUTHOR },
-		description = PluginInfo.DESCRIPTION, url = PluginInfo.URL)
+@Plugin(id = PluginInfo.ID,
+		name = PluginInfo.NAME,
+		version = PluginInfo.VERSION,
+		authors = { PluginInfo.AUTHOR },
+		description = PluginInfo.DESCRIPTION,
+		url = PluginInfo.URL,
+		dependencies = {
+			@Dependency(id = "luckperms", optional = true)
+		})
 public final class VelocityPlugin {
 
 	private final PluginContainer plugin;
