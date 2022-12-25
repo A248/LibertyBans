@@ -32,7 +32,7 @@ import space.arim.libertybans.core.alts.ConnectionLimiter;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
-import space.arim.libertybans.core.punish.Guardian;
+import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.core.selector.EnforcementConfig;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.DontInject;

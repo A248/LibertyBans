@@ -46,6 +46,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static space.arim.libertybans.core.schema.Tables.PUNISHMENTS;
 
@@ -105,10 +106,19 @@ public final class StandardDatabase implements InternalDatabase, AutoCloseable {
 
 	@Override
 	public void close() {
-		dataSource.close();
 		threadPool.shutdown();
+		try {
+			boolean terminated = threadPool.awaitTermination(5L, TimeUnit.SECONDS);
+			if (!terminated) {
+				logger.warn("Reached timeout while waiting for thread pool");
+			}
+		} catch (InterruptedException ex) {
+			Thread.currentThread().interrupt();
+			logger.warn("Interrupted while waiting for thread pool", ex);
+		}
+		dataSource.close();
 	}
-	
+
 	void closeCompletely() {
 		if (getVendor() == Vendor.HSQLDB) {
 			execute((context) -> context.query("SHUTDOWN").execute()).join();

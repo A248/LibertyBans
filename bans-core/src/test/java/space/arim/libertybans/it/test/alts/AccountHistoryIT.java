@@ -27,7 +27,7 @@ import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.core.alts.AccountHistory;
 import space.arim.libertybans.core.alts.KnownAccount;
-import space.arim.libertybans.core.punish.Guardian;
+import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetTime;

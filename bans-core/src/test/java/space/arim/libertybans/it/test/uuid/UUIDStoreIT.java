@@ -24,7 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.env.UUIDAndAddress;
-import space.arim.libertybans.core.punish.Guardian;
+import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;

@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import space.arim.omnibus.Omnibus;
+import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import space.arim.api.env.PlatformHandle;
@@ -51,6 +52,8 @@ public class StandardAsynchronicityManager implements AsynchronicityManager {
 	 */
 	private ExecutorService universalJoiner;
 	private FactoryOfTheFuture futuresFactory;
+
+	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
 	@Inject
 	public StandardAsynchronicityManager(Omnibus omnibus, PlatformHandle envHandle) {
@@ -74,7 +77,7 @@ public class StandardAsynchronicityManager implements AsynchronicityManager {
 			try {
 				future.toCompletableFuture().join();
 			} catch (CompletionException | CancellationException ex) {
-				getLogger().error("Exception during miscellaneous asynchronous computation", ex);
+				logger.error("Exception during miscellaneous asynchronous computation", ex);
 			}
 		});
 	}
@@ -111,13 +114,13 @@ public class StandardAsynchronicityManager implements AsynchronicityManager {
 				return universalJoiner.awaitTermination(6L, TimeUnit.SECONDS);
 			} catch (InterruptedException ex) {
 				Thread.currentThread().interrupt();
-				getLogger().warn("Failed to shutdown all chains of asynchronous execution (Interrupted)", ex);
+				logger.warn("Failed to shutdown all chains of asynchronous execution (Interrupted)", ex);
 				return true;
 			}
 		}).join();
 
 		if (!termination) {
-			getLogger().warn("Failed to shutdown all chains of asynchronous execution");
+			logger.warn("Failed to shutdown all chains of asynchronous execution");
 		}
 		if (futuresFactory instanceof AutoCloseable) {
 			try {
@@ -126,10 +129,6 @@ public class StandardAsynchronicityManager implements AsynchronicityManager {
 				throw new ShutdownException("Cannot shutdown factory of the future", ex);
 			}
 		}
-	}
-
-	private Logger getLogger() {
-		return LoggerFactory.getLogger(getClass());
 	}
 
 }

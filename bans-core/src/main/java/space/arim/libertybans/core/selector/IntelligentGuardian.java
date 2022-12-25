@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,14 +17,13 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.punish;
+package space.arim.libertybans.core.selector;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.selector.InternalSelector;
 import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;

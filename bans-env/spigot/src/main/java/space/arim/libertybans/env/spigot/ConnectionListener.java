@@ -29,7 +29,7 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 import org.bukkit.plugin.Plugin;
 import space.arim.libertybans.core.env.ParallelisedListener;
-import space.arim.libertybans.core.punish.Guardian;
+import space.arim.libertybans.core.selector.Guardian;
 import space.arim.morepaperlib.adventure.MorePaperLibAdventure;
 
 import java.net.InetAddress;

@@ -23,8 +23,25 @@ import space.arim.libertybans.core.addon.AddonBindModule;
 import space.arim.libertybans.core.addon.AddonProvider;
 
 public final class ExemptionVaultProvider implements AddonProvider {
+
 	@Override
 	public AddonBindModule[] bindModules() {
 		return new AddonBindModule[] {new ExemptionVaultModule()};
 	}
+
+	@Override
+	public Availability availability() {
+		try {
+			Class.forName("org.bukkit.Server");
+		} catch (ClassNotFoundException ignored) {
+			return Availability.UNSATISFIED_PLATFORM;
+		}
+		try {
+			Class.forName("net.milkbowl.vault.permission.Permission");
+			return Availability.YES;
+		} catch (ClassNotFoundException ignored) {
+			return Availability.UNSATISFIED_DEPENDENCIES;
+		}
+	}
+
 }

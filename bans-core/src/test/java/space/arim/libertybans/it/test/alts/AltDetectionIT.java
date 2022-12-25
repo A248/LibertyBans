@@ -33,7 +33,7 @@ import space.arim.libertybans.core.alts.DetectedAlt;
 import space.arim.libertybans.core.alts.DetectionKind;
 import space.arim.libertybans.core.alts.WhichAlts;
 import space.arim.libertybans.core.punish.EnforcementOpts;
-import space.arim.libertybans.core.punish.Guardian;
+import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetTime;

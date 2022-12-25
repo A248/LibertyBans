@@ -31,7 +31,7 @@ import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.env.ParallelisedListener;
-import space.arim.libertybans.core.punish.Guardian;
+import space.arim.libertybans.core.selector.Guardian;
 
 import java.net.InetAddress;
 

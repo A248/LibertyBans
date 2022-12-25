@@ -30,7 +30,7 @@ import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.command.ExecuteCommandEvent;
 import org.spongepowered.api.event.message.PlayerChatEvent;
 import space.arim.libertybans.core.env.PlatformListener;
-import space.arim.libertybans.core.punish.Guardian;
+import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.env.sponge.listener.RegisterListeners;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 

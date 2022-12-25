@@ -44,14 +44,13 @@ public final class ConnectionLimiter {
 		var config = configs.getMainConfig().enforcement().connectionLimiter();
 		if (config.enable()) {
 			Instant timeBeforeDuration = currentTime.minusSeconds(config.durationSeconds());
-			Integer count = context
+			int count = context
 					.selectCount()
 					.from(ADDRESSES)
 					.where(ADDRESSES.ADDRESS.eq(address))
 					.and(ADDRESSES.UPDATED.greaterOrEqual(timeBeforeDuration))
-					.fetchOne()
+					.fetchSingle()
 					.value1();
-			assert count != null;
 			if (count > config.limit()) {
 				return config.message();
 			}

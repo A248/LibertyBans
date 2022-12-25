@@ -31,7 +31,7 @@ import net.md_5.bungee.event.EventPriority;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.core.env.PlatformListener;
-import space.arim.libertybans.core.punish.Guardian;
+import space.arim.libertybans.core.selector.Guardian;
 import space.arim.omnibus.util.ThisClass;
 
 import java.net.InetAddress;

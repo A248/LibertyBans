@@ -26,7 +26,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import jakarta.inject.Inject;
 import net.kyori.adventure.text.Component;
-import space.arim.libertybans.core.punish.Guardian;
+import space.arim.libertybans.core.selector.Guardian;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.net.InetAddress;

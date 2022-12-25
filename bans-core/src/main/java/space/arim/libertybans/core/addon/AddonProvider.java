@@ -41,4 +41,20 @@ public interface AddonProvider {
 	 */
 	AddonBindModule[] bindModules();
 
+	/**
+	 * Determines whether this addon can load. For example, may return {@code UNSATISFIED_DEPENDENCIES}
+	 * if required dependencies are not present.
+	 *
+	 * @return whether this addon can load
+	 */
+	default Availability availability() {
+		return Availability.YES;
+	}
+
+	enum Availability {
+		YES,
+		UNSATISFIED_DEPENDENCIES,
+		UNSATISFIED_PLATFORM
+	}
+
 }

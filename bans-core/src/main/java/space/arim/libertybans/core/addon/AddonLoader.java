@@ -19,6 +19,9 @@
 
 package space.arim.libertybans.core.addon;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -35,8 +38,24 @@ public final class AddonLoader {
 
 	private Set<AddonBindModule> addonBindModules() {
 		Set<AddonBindModule> addonBindModules = new HashSet<>();
+		int count = 0;
+		Logger logger = LoggerFactory.getLogger(getClass());
 		for (AddonProvider addonProvider : addonProviders) {
-			addonBindModules.addAll(Arrays.asList(addonProvider.bindModules()));
+			switch (addonProvider.availability()) {
+			case YES -> {
+				addonBindModules.addAll(Arrays.asList(addonProvider.bindModules()));
+				count++;
+			}
+			case UNSATISFIED_DEPENDENCIES -> logger.warn(
+					"Skipping addon {} due to unsatisfied dependencies", addonProvider.getClass().getName());
+			case UNSATISFIED_PLATFORM -> logger.warn(
+					"Skipping addon {} because it does not support your server platform", addonProvider.getClass().getName());
+			}
+		}
+		if (count == 0) {
+			logger.info("No addons loaded");
+		} else {
+			logger.info("Loaded and verified {} addons", count);
 		}
 		return Collections.unmodifiableSet(addonBindModules);
 	}

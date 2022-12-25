@@ -23,8 +23,20 @@ import space.arim.libertybans.core.addon.AddonBindModule;
 import space.arim.libertybans.core.addon.AddonProvider;
 
 public final class ExemptionLuckPermsProvider implements AddonProvider {
+
 	@Override
 	public AddonBindModule[] bindModules() {
 		return new AddonBindModule[] {new ExemptionLuckPermsModule()};
 	}
+
+	@Override
+	public Availability availability() {
+		try {
+			Class.forName("net.luckperms.api.LuckPerms");
+			return Availability.YES;
+		} catch (ClassNotFoundException ignored) {
+			return Availability.UNSATISFIED_DEPENDENCIES;
+		}
+	}
+
 }

@@ -123,17 +123,10 @@ abstract class AbstractBaseFoundation implements BaseFoundation {
 		long startTime = System.nanoTime();
 		try {
 			switch (point) {
-			case START:
-				startup0();
-				break;
-			case RESTART:
-				restart0();
-				break;
-			case STOP:
-				shutdown0();
-				break;
-			default:
-				throw new IllegalArgumentException("Unknown load point " + point);
+			case START -> startup0();
+			case RESTART -> restart0();
+			case STOP -> shutdown0();
+			default -> throw new IllegalArgumentException("Unknown load point " + point);
 			}
 		} catch (LoadingException failure) {
 			logger.warn("Conducting " + point + " failed: " + failure.getMessage());

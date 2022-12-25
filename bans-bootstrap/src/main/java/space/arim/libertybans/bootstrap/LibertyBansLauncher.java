@@ -167,20 +167,15 @@ public final class LibertyBansLauncher {
 
 		for (DependencyBundle bundle : determineNeededDependencies(librariesRequiringProtection)) {
 			switch (distributionMode) {
-			case TESTING:
+			case TESTING -> {
 				if (bundle == DependencyBundle.SELF_IMPLEMENTATION) {
 					continue;
 				}
 				bundle.prepareToDownload(loader);
-				break;
-			case DEPLOY_AND_DOWNLOAD:
-				bundle.prepareToDownload(loader);
-				break;
-			case JAR_OF_JARS:
-				existingDependencies.add(bundle.existingDependency());
-				break;
-			default:
-				throw new IllegalArgumentException("Unknown distributionMode " + distributionMode);
+			}
+			case DEPLOY_AND_DOWNLOAD -> bundle.prepareToDownload(loader);
+			case JAR_OF_JARS -> existingDependencies.add(bundle.existingDependency());
+			default -> throw new IllegalArgumentException("Unknown distributionMode " + distributionMode);
 			}
 		}
 		filterLibrariesAndWarnRelocation(librariesRequiringProtection);

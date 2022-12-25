@@ -26,7 +26,7 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.network.ServerSideConnectionEvent;
 import space.arim.libertybans.core.env.ParallelisedListener;
-import space.arim.libertybans.core.punish.Guardian;
+import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.env.sponge.listener.RegisterListeners;
 
 import java.net.InetAddress;

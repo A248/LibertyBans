@@ -26,7 +26,7 @@ import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
-import space.arim.libertybans.core.punish.Guardian;
+import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.test.applicable.StrictnessAssertHelper;
 import space.arim.libertybans.it.util.RandomUtil;
