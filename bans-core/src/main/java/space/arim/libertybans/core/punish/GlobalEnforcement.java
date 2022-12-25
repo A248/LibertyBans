@@ -36,4 +36,6 @@ public interface GlobalEnforcement extends Runnable {
 
 	CentralisedFuture<?> unenforce(long id, PunishmentType type, EnforcementOpts enforcementOptions);
 
+	CentralisedFuture<?> clearExpunged(long id, EnforcementOpts enforcementOptions);
+
 }

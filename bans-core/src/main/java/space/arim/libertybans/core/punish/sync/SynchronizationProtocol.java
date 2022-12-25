@@ -21,16 +21,17 @@ package space.arim.libertybans.core.punish.sync;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UncheckedIOException;
-import java.util.Optional;
 import java.util.UUID;
 
 @Singleton
@@ -41,38 +42,55 @@ public final class SynchronizationProtocol {
 	/** Used to ensure we do not receive our own messages */
 	private final UUID instanceId = UUID.randomUUID();
 
+	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+
 	@Inject
 	public SynchronizationProtocol(FactoryOfTheFuture futuresFactory) {
 		this.futuresFactory = futuresFactory;
 	}
 
-	public byte[] serializeMessage(SynchronizationMessage message) {
-		try (ByteArrayOutputStream messageOutput = new ByteArrayOutputStream();
-			 DataOutputStream dataOutputStream = new DataOutputStream(messageOutput)) {
+	public byte[] serializeMessage(SynchronizationPacket message) {
+		try (ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
+			 ProtocolOutputStream output = new ProtocolOutputStream(byteOutput)) {
 
-			message.writeTo(instanceId, dataOutputStream);
+			output.writeByte(message.packetId());
+			output.writeUUID(instanceId);
+			message.writeTo(output);
 
-			return messageOutput.toByteArray();
+			return byteOutput.toByteArray();
 		} catch (IOException ex) {
-			throw new UncheckedIOException("Failed to write synchronization message data", ex);
+			throw new UncheckedIOException("Failed to write synchronization packet data", ex);
 		}
 	}
 
 	public ReactionStage<?> receiveMessage(byte[] messageData, MessageReceiver messageReceiver) {
-		Optional<SynchronizationMessage> optMessage;
-		try (ByteArrayInputStream messageInput = new ByteArrayInputStream(messageData);
-			 DataInputStream dataInputStream = new DataInputStream(messageInput)) {
+		try (ByteArrayInputStream byteInput = new ByteArrayInputStream(messageData);
+			 ProtocolInputStream input = new ProtocolInputStream(byteInput)) {
 
-			optMessage = SynchronizationMessage.readFrom(instanceId, dataInputStream);
+			byte packetId = input.readByte();
+			if (instanceId.equals(input.readUUID())) {
+				// This is our own message
+				logger.trace("Received own message");
+				return futuresFactory.completedFuture(null);
+			}
+			SynchronizationPacket message = switch (packetId) {
+				case PacketEnforceUnenforce.PACKET_ID -> PacketEnforceUnenforce.readFrom(input);
+				case PacketExpunge.PACKET_ID -> PacketExpunge.readFrom(input);
+				default -> null; // Exit below
+			};
+			if (message == null) {
+				logger.warn("Unknown synchronization packet ID: {}", packetId);
+				return futuresFactory.completedFuture(null);
+			}
+			long remainingBytes = input.transferTo(OutputStream.nullOutputStream());
+			if (remainingBytes != 0) {
+				throw new IllegalStateException("Stream must be empty after all data has been read");
+			}
+			return messageReceiver.onReception(message);
 
 		} catch (IOException ex) {
-			throw new UncheckedIOException("Failed to read synchronization message data", ex);
+			throw new UncheckedIOException("Failed to read synchronization packet data", ex);
 		}
-		if (optMessage.isEmpty()) {
-			return futuresFactory.completedFuture(null);
-		}
-		SynchronizationMessage message = optMessage.get();
-		return messageReceiver.onReception(message);
 	}
 
 }

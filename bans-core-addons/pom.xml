@@ -39,6 +39,7 @@
     <modules>
         <module>command-checkpunish</module>
         <module>command-checkuser</module>
+        <module>command-expunge</module>
         <module>command-staffrollback</module>
         <module>exemption-luckperms</module>
         <module>exemption-vault</module>

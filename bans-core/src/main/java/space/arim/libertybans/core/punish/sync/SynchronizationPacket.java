@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,10 +19,12 @@
 
 package space.arim.libertybans.core.punish.sync;
 
-import space.arim.omnibus.util.concurrent.ReactionStage;
+import java.io.IOException;
 
-public interface MessageReceiver {
+public interface SynchronizationPacket {
 
-	ReactionStage<?> onReception(SynchronizationPacket message);
+	byte packetId();
+
+	void writeTo(ProtocolOutputStream output) throws IOException;
 
 }

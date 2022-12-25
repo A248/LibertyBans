@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.ExpunctionOrder;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.RevocationOrder;
 import space.arim.libertybans.core.database.InternalDatabase;
@@ -106,6 +107,11 @@ public class Revoker implements InternalRevoker {
 		return new RevocationOrderImpl(this, type, victims);
 	}
 
+	@Override
+	public ExpunctionOrder expungePunishment(long id) {
+		return new ExpunctionOrderImpl(this, id);
+	}
+
 	private boolean deleteActivePunishmentByIdAndType(DSLContext context,
 													  final long id, final PunishmentType type) {
 		final Instant currentTime = time.currentTimestamp();
@@ -162,8 +168,7 @@ public class Revoker implements InternalRevoker {
 			// Kicks are never active
 			return futuresFactory.completedFuture(false);
 		}
-		InternalDatabase database = dbProvider.get();
-		return database.queryWithRetry((context, transaction) -> {
+		return dbProvider.get().queryWithRetry((context, transaction) -> {
 			return deleteActivePunishmentByIdAndType(context, id, type);
 		});
 	}
@@ -173,15 +178,13 @@ public class Revoker implements InternalRevoker {
 			// Kicks are never active
 			return futuresFactory.completedFuture(null);
 		}
-		InternalDatabase database = dbProvider.get();
-		return database.queryWithRetry((context, transaction) -> {
+		return dbProvider.get().queryWithRetry((context, transaction) -> {
 			return deleteAndGetActivePunishmentByIdAndType(context, id, type);
 		});
 	}
 
 	CentralisedFuture<PunishmentType> undoPunishmentById(final long id) {
-		InternalDatabase database = dbProvider.get();
-		return database.queryWithRetry((context, transaction) -> {
+		return dbProvider.get().queryWithRetry((context, transaction) -> {
 			PunishmentType type = context
 					.select(SIMPLE_ACTIVE.TYPE)
 					.from(SIMPLE_ACTIVE)
@@ -196,8 +199,7 @@ public class Revoker implements InternalRevoker {
 	}
 
 	CentralisedFuture<Punishment> undoAndGetPunishmentById(final long id) {
-		InternalDatabase database = dbProvider.get();
-		return database.queryWithRetry((context, transaction) -> {
+		return dbProvider.get().queryWithRetry((context, transaction) -> {
 			PunishmentType type = context
 					.select(SIMPLE_ACTIVE.TYPE)
 					.from(SIMPLE_ACTIVE)
@@ -224,8 +226,7 @@ public class Revoker implements InternalRevoker {
 
 	CentralisedFuture<Long> undoPunishmentByTypeAndPossibleVictims(final PunishmentType type, 
 																   final List<Victim> victims) {
-		InternalDatabase database = dbProvider.get();
-		return database.queryWithRetry((context, transaction) -> {
+		return dbProvider.get().queryWithRetry((context, transaction) -> {
 			var simpleView = new TableForType(type).simpleView();
 			Long id = context
 					.select(simpleView.id())
@@ -242,8 +243,7 @@ public class Revoker implements InternalRevoker {
 
 	CentralisedFuture<Punishment> undoAndGetPunishmentByTypeAndPossibleVictims(final PunishmentType type, 
 																			   final List<Victim> victims) {
-		InternalDatabase database = dbProvider.get();
-		return database.queryWithRetry((context, transaction) -> {
+		return dbProvider.get().queryWithRetry((context, transaction) -> {
 			var simpleView = new TableForType(type).simpleView();
 			Long id = context
 					.select(simpleView.id())
@@ -257,5 +257,15 @@ public class Revoker implements InternalRevoker {
 			return deleteAndGetActivePunishmentByIdAndType(context, id, type);
 		});
 	}
-	
+
+	CentralisedFuture<Boolean> expungeById(long id) {
+		return dbProvider.get().queryWithRetry((context, transaction) -> {
+			int deleteCount = context
+					.deleteFrom(PUNISHMENTS)
+					.where(PUNISHMENTS.ID.eq(id))
+					.execute();
+			return deleteCount != 0;
+		});
+	}
+
 }

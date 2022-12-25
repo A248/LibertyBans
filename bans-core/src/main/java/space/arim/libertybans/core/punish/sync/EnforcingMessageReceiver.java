@@ -48,7 +48,18 @@ public final class EnforcingMessageReceiver implements MessageReceiver {
 	}
 
 	@Override
-	public ReactionStage<?> onReception(SynchronizationMessage message) {
+	public ReactionStage<?> onReception(SynchronizationPacket message) {
+		if (message instanceof PacketEnforceUnenforce packetEnforceUnenforce) {
+			return onReception(packetEnforceUnenforce);
+		} else if (message instanceof PacketExpunge packetExpunge) {
+			return enforcer.clearExpungedWithoutSynchronization(packetExpunge.id);
+		} else {
+			logger.warn("Unknown packet {} ({})", message, message.getClass());
+			return futuresFactory.completedFuture(null);
+		}
+	}
+
+	private ReactionStage<?> onReception(PacketEnforceUnenforce message) {
 		EnforcementOpts enforcementOptions = EnforcementOpts
 				.builder()
 				.enforcement(EnforcementOptions.Enforcement.SINGLE_SERVER_ONLY)
@@ -75,4 +86,5 @@ public final class EnforcingMessageReceiver implements MessageReceiver {
 			return enforcer.enforceWithoutSynchronization(punishment, enforcementOptions);
 		});
 	}
+
 }

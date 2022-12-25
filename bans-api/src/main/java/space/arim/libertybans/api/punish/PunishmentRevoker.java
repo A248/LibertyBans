@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -16,6 +16,7 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.api.punish;
 
 import space.arim.libertybans.api.CompositeVictim;
@@ -92,5 +93,15 @@ public interface PunishmentRevoker {
 	 * @throws IllegalArgumentException if the list of victims is empty
 	 */
 	RevocationOrder revokeByTypeAndPossibleVictims(PunishmentType type, List<Victim> victims);
+
+	/**
+	 * Totally expunges a punishment according to its ID. This uses the most efficient means to completely
+	 * remove a punishment from the database without any trace leftover. <b>Punishments deleted through
+	 * this method are not recoverable.</b>
+	 *
+	 * @param id the id of the punishment to expunge
+	 * @return an expunction order
+	 */
+	ExpunctionOrder expungePunishment(long id);
 
 }

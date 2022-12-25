@@ -29,8 +29,10 @@ import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.punish.sync.MessageReceiver;
-import space.arim.libertybans.core.punish.sync.SynchronizationMessage;
+import space.arim.libertybans.core.punish.sync.PacketEnforceUnenforce;
+import space.arim.libertybans.core.punish.sync.PacketExpunge;
 import space.arim.libertybans.core.punish.sync.SynchronizationMessenger;
+import space.arim.libertybans.core.punish.sync.SynchronizationPacket;
 import space.arim.libertybans.core.punish.sync.SynchronizationProtocol;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -68,7 +70,7 @@ public final class StandardGlobalEnforcement implements GlobalEnforcement {
 		return handleSynchronizedEnforcement(
 				() -> enforcer.enforceWithoutSynchronization(punishment, enforcementOptions),
 				enforcementOptions,
-				new SynchronizationMessage(punishment, Mode.DO, enforcementOptions)
+				new PacketEnforceUnenforce(punishment, Mode.DO, enforcementOptions)
 		);
 	}
 
@@ -78,7 +80,7 @@ public final class StandardGlobalEnforcement implements GlobalEnforcement {
 		return handleSynchronizedEnforcement(
 				() -> enforcer.unenforceWithoutSynchronization(punishment, enforcementOptions),
 				enforcementOptions,
-				new SynchronizationMessage(punishment, Mode.UNDO, enforcementOptions)
+				new PacketEnforceUnenforce(punishment, Mode.UNDO, enforcementOptions)
 		);
 	}
 
@@ -88,13 +90,22 @@ public final class StandardGlobalEnforcement implements GlobalEnforcement {
 		return handleSynchronizedEnforcement(
 				() -> enforcer.unenforceWithoutSynchronization(id, type, enforcementOptions),
 				enforcementOptions,
-				new SynchronizationMessage(id, type, Mode.UNDO, enforcementOptions)
+				new PacketEnforceUnenforce(id, type, Mode.UNDO, enforcementOptions)
+		);
+	}
+
+	@Override
+	public CentralisedFuture<?> clearExpunged(long id, EnforcementOpts enforcementOptions) {
+		return handleSynchronizedEnforcement(
+				() -> enforcer.clearExpungedWithoutSynchronization(id),
+				enforcementOptions,
+				new PacketExpunge(id)
 		);
 	}
 
 	private CentralisedFuture<?> handleSynchronizedEnforcement(Supplier<CentralisedFuture<?>> localEnforcement,
 															   EnforcementOptions enforcementOptions,
-															   SynchronizationMessage message) {
+															   SynchronizationPacket message) {
 		return switch (enforcementOptions.enforcement()) {
 			case GLOBAL -> {
 				if (configs.getSqlConfig().synchronization().enabled()) {
@@ -145,4 +156,5 @@ public final class StandardGlobalEnforcement implements GlobalEnforcement {
 	private ReactionStage<?> receiveMessage(byte[] message) {
 		return synchronizationProtocol.receiveMessage(message, messageReceiver);
 	}
+
 }

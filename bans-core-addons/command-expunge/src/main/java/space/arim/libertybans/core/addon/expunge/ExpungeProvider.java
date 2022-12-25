@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,12 +17,14 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.punish.sync;
+package space.arim.libertybans.core.addon.expunge;
 
-import space.arim.omnibus.util.concurrent.ReactionStage;
+import space.arim.libertybans.core.addon.AddonBindModule;
+import space.arim.libertybans.core.addon.AddonProvider;
 
-public interface MessageReceiver {
-
-	ReactionStage<?> onReception(SynchronizationPacket message);
-
+public final class ExpungeProvider implements AddonProvider {
+	@Override
+	public AddonBindModule[] bindModules() {
+		return new AddonBindModule[] {new ExpungeModule()};
+	}
 }

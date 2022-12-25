@@ -1,8 +1,7 @@
 import space.arim.libertybans.core.addon.AddonProvider;
-import space.arim.libertybans.core.addon.staffrollback.StaffRollbackProvider;
+import space.arim.libertybans.core.addon.expunge.ExpungeProvider;
 
-module space.arim.libertybans.core.addon.staffrollback {
-	requires com.github.benmanes.caffeine;
+module space.arim.libertybans.core.addon.expunge {
 	requires jakarta.inject;
 	requires net.kyori.adventure;
 	requires net.kyori.examination.api;
@@ -12,6 +11,6 @@ module space.arim.libertybans.core.addon.staffrollback {
 	requires space.arim.dazzleconf;
 	requires space.arim.injector;
 	requires space.arim.libertybans.core;
-	exports space.arim.libertybans.core.addon.staffrollback;
-	provides AddonProvider with StaffRollbackProvider;
+	exports space.arim.libertybans.core.addon.expunge;
+	provides AddonProvider with ExpungeProvider;
 }

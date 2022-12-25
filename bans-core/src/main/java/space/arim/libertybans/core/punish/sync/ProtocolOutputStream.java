@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,10 +19,25 @@
 
 package space.arim.libertybans.core.punish.sync;
 
-import space.arim.omnibus.util.concurrent.ReactionStage;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.UUID;
 
-public interface MessageReceiver {
+final class ProtocolOutputStream extends DataOutputStream {
 
-	ReactionStage<?> onReception(SynchronizationPacket message);
+	ProtocolOutputStream(OutputStream out) {
+		super(out);
+	}
+
+	void writeUUID(UUID uuid) throws IOException {
+		writeLong(uuid.getMostSignificantBits());
+		writeLong(uuid.getLeastSignificantBits());
+	}
+
+	void writeNullableNonEmptyString(String value) throws IOException {
+		assert value == null || !value.isEmpty();
+		writeUTF(value == null ? "" : value);
+	}
 
 }

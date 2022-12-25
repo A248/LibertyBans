@@ -172,6 +172,12 @@ public final class StandardLocalEnforcer implements LocalEnforcer {
 		return completedFuture(null);
 	}
 
+	@Override
+	public CentralisedFuture<Void> clearExpungedWithoutSynchronization(long id) {
+		muteCache.clearCachedMute(id);
+		return completedFuture(null);
+	}
+
 	// Enforcement of enacted punishments
 
 	private class Parameterized<P> {

@@ -60,4 +60,13 @@ public interface LocalEnforcer {
 	 */
 	CentralisedFuture<Void> unenforceWithoutSynchronization(long id, PunishmentType type, EnforcementOpts enforcementOptions);
 
+	/**
+	 * Clears an expunged punishment. No punishment synchronization is performed (with regard to multiple
+	 * instances of LibertyBans). For synchronization see {@link GlobalEnforcement}
+	 *
+	 * @param id the id of the punishment expunged
+	 * @return a future completed once cleared
+	 */
+	CentralisedFuture<Void> clearExpungedWithoutSynchronization(long id);
+
 }

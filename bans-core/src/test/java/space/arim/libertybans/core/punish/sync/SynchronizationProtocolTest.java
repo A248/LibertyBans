@@ -54,7 +54,7 @@ public class SynchronizationProtocolTest {
 	@ParameterizedTest
 	@EnumSource(PunishmentType.class)
 	public void enactPunishment(PunishmentType type) {
-		communicateMessageSuccessfully(new SynchronizationMessage(
+		communicateMessageSuccessfully(new PacketEnforceUnenforce(
 				id, type, Mode.DO, EnforcementOptions.Broadcasting.NORMAL, "user1", null
 		));
 	}
@@ -62,14 +62,14 @@ public class SynchronizationProtocolTest {
 	@ParameterizedTest
 	@EnumSource(PunishmentType.class)
 	public void undoPunishment(PunishmentType type) {
-		communicateMessageSuccessfully(new SynchronizationMessage(
+		communicateMessageSuccessfully(new PacketEnforceUnenforce(
 				id, type, Mode.UNDO, EnforcementOptions.Broadcasting.NORMAL, "user2", PlayerOperator.of(UUID.randomUUID())
 		));
 	}
 
 	@Test
 	public void consoleOperator() {
-		communicateMessageSuccessfully(new SynchronizationMessage(
+		communicateMessageSuccessfully(new PacketEnforceUnenforce(
 				id, PunishmentType.BAN, Mode.UNDO, EnforcementOptions.Broadcasting.NORMAL, "user3", ConsoleOperator.INSTANCE
 		));
 	}
@@ -77,12 +77,17 @@ public class SynchronizationProtocolTest {
 	@ParameterizedTest
 	@EnumSource(EnforcementOptions.Broadcasting.class)
 	public void broadcasting(EnforcementOptions.Broadcasting broadcasting) {
-		communicateMessageSuccessfully(new SynchronizationMessage(
+		communicateMessageSuccessfully(new PacketEnforceUnenforce(
 				id, PunishmentType.KICK, Mode.DO, broadcasting, "user4", PlayerOperator.of(UUID.randomUUID())
 		));
 	}
 
-	private void communicateMessageSuccessfully(SynchronizationMessage message) {
+	@Test
+	public void expunge() {
+		communicateMessageSuccessfully(new PacketExpunge(id));
+	}
+
+	private void communicateMessageSuccessfully(SynchronizationPacket message) {
 		byte[] serializedMessage = synchronizationProtocol.serializeMessage(message);
 
 		synchronizationProtocol.receiveMessage(serializedMessage, receivedMessage -> {
