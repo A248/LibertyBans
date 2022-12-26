@@ -29,7 +29,7 @@ public final class Platform {
 	private final boolean kyoriAdventure;
 	private final boolean caffeine;
 	private final boolean hikariCP;
-	
+
 	Platform(Category category, String platformName,
 			 boolean slf4j, boolean kyoriAdventure, boolean caffeine, boolean hikariCP) {
 		this.category = Objects.requireNonNull(category, "category");
@@ -117,7 +117,9 @@ public final class Platform {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		Platform platform = (Platform) o;
-		return slf4j == platform.slf4j && kyoriAdventure == platform.kyoriAdventure && category == platform.category && platformName.equals(platform.platformName);
+		return slf4j == platform.slf4j && kyoriAdventure == platform.kyoriAdventure && caffeine == platform.caffeine
+				&& hikariCP == platform.hikariCP && category == platform.category
+				&& platformName.equals(platform.platformName);
 	}
 
 	@Override
@@ -126,6 +128,8 @@ public final class Platform {
 		result = 31 * result + platformName.hashCode();
 		result = 31 * result + (slf4j ? 1 : 0);
 		result = 31 * result + (kyoriAdventure ? 1 : 0);
+		result = 31 * result + (caffeine ? 1 : 0);
+		result = 31 * result + (hikariCP ? 1 : 0);
 		return result;
 	}
 
@@ -136,6 +140,12 @@ public final class Platform {
 				", platformName='" + platformName + '\'' +
 				", slf4j=" + slf4j +
 				", kyoriAdventure=" + kyoriAdventure +
+				", caffeine=" + caffeine +
+				", hikariCP=" + hikariCP +
+				", hasSlf4jSupport=" + hasSlf4jSupport() +
+				", hasKyoriAdventureSupport=" + hasKyoriAdventureSupport() +
+				", caffeineProvided=" + isCaffeineProvided() +
+				", hasHiddenHikariCP=" + hasHiddenHikariCP() +
 				'}';
 	}
 }
