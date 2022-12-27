@@ -62,6 +62,7 @@ Free software and high quality, LibertyBans is the best-designed punishment plug
   * Automatic enforcement to block alt accounts. *By default, when using IP-bans, alts are automatically banned from joining if the main account is banned.* This behavior is configurable, and you can even increase the strictness of alt-checking.
   * Manual /alts command - shows suspected alt accounts for a player.
   * Alts notification on join - tells staff members when a player whose suspected alt is banned or muted.
+* Exemption. For example, trainees cannot ban admins; admins cannot ban owners.
 * Options and behaviour are fully configurable. You can even tweak your connection pool and statement cache settings to fine-tune performance.
 * Full multi-proxy and multi-instance support. You can place LibertyBans on the proxy if you use a single proxy, or on multiple backend servers.
 * All dependencies are automatically downloaded with secure SHA-512 hashes used to validate the downloads. Additionally, builds of LibertyBans are reproducible from the source code, meaning checksums can be personally verified.

@@ -120,13 +120,11 @@ The following punishment types are exclusive to the plugin listed:
 
 LibertyBans supports ip-warns and ip-kicks by nature of its flexible design; it costs nothing to add these extra features.
 
-### Exempt Permissions
+### Exemption
 
-Users frequently ask about a feature known as exempt permissions, where a target player cannot be punished if they have certain permissions. For example, moderators cannot ban the owner.
+LibertyBans offers the exemption feature which prevents staff from banning each other. It requires the installation of a backend exemption provider - LuckPerms or Vault - for this feature to operate.
 
-Neither plugin supports exempt permissions:
-* BanManager supports *exemption*, but it does not use permissions. Players exempted from punishment must be written out in a YML file. The BanManager documentation states "This is required as Bukkit's permission system does not support offline players."<sup id="note6ret">[6](#note6)</sup>
-* LibertyBans does not provide exempt permissions, with the same reasoning as BanManager: offline player permission checks are not viable. Thus, the author of LibertyBans claims exempt permissions cannot be made into a reliable feature.
+BanManager supports exemption, but players exempted from punishment must be written out in a YML file. The BanManager documentation states "This is required as Bukkit's permission system does not support offline players."<sup id="note6ret">[6](#note6)</sup> This is true, and it is why LibertyBans must depend on third-party permission APIs rather than Bukkit.
 
 ### Importing From Other Plugins
 

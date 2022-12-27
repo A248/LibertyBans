@@ -41,7 +41,6 @@ import space.arim.libertybans.it.resolver.NotConsole;
 import space.arim.libertybans.it.resolver.RandomOperatorResolver;
 import space.arim.libertybans.it.resolver.RandomPunishmentTypeResolver;
 import space.arim.libertybans.it.resolver.RandomPunishmentTypeResolver.SingularPunishment;
-import space.arim.libertybans.it.resolver.RandomReasonResolver;
 import space.arim.libertybans.it.resolver.RandomVictimResolver;
 import space.arim.libertybans.it.util.RandomUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -57,8 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
-@ExtendWith({RandomPunishmentTypeResolver.class, RandomOperatorResolver.class,
-	RandomVictimResolver.class, RandomReasonResolver.class})
+@ExtendWith({RandomPunishmentTypeResolver.class, RandomOperatorResolver.class, RandomVictimResolver.class})
 public class SelectionIT {
 
 	private final PunishmentDrafter drafter;

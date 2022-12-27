@@ -167,12 +167,13 @@ LibertyBans supports multiple modes of IP address-based punishment, in order to 
 
 AdvancedBan has no similar functionality. It does have a command to check a player's IP address, however.
 
-### Exempt Permissions
+### Exemption
 
-AdvancedBan supports a feature known as exempt permissions, where a target player cannot be banned if they have a certain permission.
-  * Note that AdvancedBan's permission checking for offline players depends on LuckPerms when on a proxy, and when on a single single, it depends on Vault. If these conditions are not met, the feature breaks for offline players.
+Although both plugins support the exemption feature which prevents staff from banning each other, it is implemented slightly differently.
 
-LibertyBans does not provide this feature, on the author's claim that it cannot be made to work reliably for both online and offline players.
+For offline players, AdvancedBan's permission checking depends on LuckPerms on proxies and Vault permissions on single servers. If these conditions are not met, the feature breaks silently for offline players.
+
+LibertyBans' exemption feature will never break silently. However, this imposes greater requirements. LibertyBans requires the installation of a supported exemption provider - currently LuckPerms or Vault. Without an exemption provider, the feature is entirely unavailable.
 
 ### Importing From Other Plugins
 

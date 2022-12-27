@@ -110,12 +110,13 @@ Both LibertyBans and LiteBans have a command to check for alts as well as an aut
 
 LibertyBans further supports multiple modes of IP address-based punishment, in order to automatically block alt accounts. LiteBans does not have this feature.
 
-### Exempt Permissions
+### Exemption
 
-LiteBans supports the feature known as exempt permissions, where a target player cannot be banned if they have a certain permission.
- * Note that on a single server, LiteBans' permission checking for offline players depends on Vault, otherwise the feature breaks for offline players.
+Although both plugins support the exemption feature which prevents staff from banning each other, it is implemented slightly differently.
 
-LibertyBans does not provide this feature, on the author's claim that it cannot be made to work reliably for both online and offline players.
+For offline players, LiteBans's permission checking depends on Vault on single servers. Without a Vault-compatible permissions plugin, the feature breaks silently for offline players.
+
+LibertyBans' exemption feature will never break silently. However, this imposes greater requirements. LibertyBans requires the installation of a supported exemption provider - currently LuckPerms or Vault. Without an exemption provider, the feature is entirely unavailable.
 
 ### Importing From Other Plugins
 

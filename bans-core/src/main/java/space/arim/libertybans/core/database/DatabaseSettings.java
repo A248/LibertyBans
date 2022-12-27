@@ -45,7 +45,6 @@ import space.arim.omnibus.util.ThisClass;
 
 import space.arim.libertybans.bootstrap.StartupException;
 import space.arim.libertybans.core.config.SqlConfig;
-import space.arim.libertybans.core.punish.MiscUtil;
 
 /**
  * Database settings creator, NOT thread safe!
