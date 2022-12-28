@@ -21,6 +21,9 @@ package space.arim.libertybans.core.database.sql;
 
 import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.Record1;
+import org.jooq.Select;
+import org.jooq.impl.DSL;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Victim;
 
@@ -39,25 +42,36 @@ public final class VictimCondition {
 		this.fields = Objects.requireNonNull(fields, "fields");
 	}
 
-	public Condition simplyMatches(Field<UUID> uuid, Field<NetworkAddress> address) {
+	private Condition constructCondition(Condition matchesUUID, Condition matchesAddress) {
 		// victim_type = PLAYER AND victim_uuid = uuid
 		// OR victim_type = ADDRESS AND victim_address = address
 		// OR victim_type = COMPOSITE AND (victim_uuid = uuid OR victim_address = address)
-		return fields.victimType().eq(Victim.VictimType.PLAYER).and(fields.victimUuid().eq(uuid))
+		return fields.victimType().eq(DSL.inline(Victim.VictimType.PLAYER)).and(matchesUUID)
 				.or(
-						fields.victimType().eq(Victim.VictimType.ADDRESS).and(fields.victimAddress().eq(address))
+						fields.victimType().eq(DSL.inline(Victim.VictimType.ADDRESS)).and(matchesAddress)
 				).or(
-						fields.victimType().eq(Victim.VictimType.COMPOSITE).and(
-								fields.victimUuid().eq(uuid).or(fields.victimAddress().eq(address))
-						)
+						fields.victimType().eq(DSL.inline(Victim.VictimType.COMPOSITE)).and(matchesUUID.or(matchesAddress))
 				);
 	}
 
+	public Condition matches(Field<UUID> uuid, Field<NetworkAddress> address) {
+		return constructCondition(fields.victimUuid().eq(uuid), fields.victimAddress().eq(address));
+	}
+
+	public Condition matches(Field<UUID> uuid, Select<? extends Record1<NetworkAddress>> address) {
+		return constructCondition(fields.victimUuid().eq(uuid), fields.victimAddress().in(address));
+	}
+
+	public Condition matches(Select<? extends Record1<UUID>> uuid, Select<? extends Record1<NetworkAddress>> address) {
+		return constructCondition(fields.victimUuid().in(uuid), fields.victimAddress().in(address));
+	}
+
 	public Condition matchesUUID(Field<UUID> uuid) {
-		// (victim_type = PLAYER OR victim_type = COMPOSITE) AND (victim_uuid = uuid)
-		return fields.victimType().eq(Victim.VictimType.PLAYER)
-				.or(fields.victimType().eq(Victim.VictimType.COMPOSITE))
-				.and(fields.victimUuid().eq(uuid));
+		// (victim_uuid = uuid) AND (victim_type = PLAYER OR victim_type = COMPOSITE)
+		return fields.victimUuid().eq(uuid).and(
+				fields.victimType().eq(Victim.VictimType.PLAYER)
+						.or(fields.victimType().eq(Victim.VictimType.COMPOSITE))
+		);
 	}
 
 	public Condition matchesVictim(VictimData victim) {

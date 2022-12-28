@@ -22,10 +22,11 @@ package space.arim.libertybans.core.database.sql;
 import org.jooq.Field;
 import org.jooq.OrderField;
 import org.jooq.impl.DSL;
-import org.jooq.impl.SQLDataType;
 
 import java.time.Instant;
 import java.util.Objects;
+
+import static org.jooq.impl.DSL.inline;
 
 /**
  * Implements ordering by the end time of a punishment
@@ -50,9 +51,12 @@ public final class EndTimeOrdering {
 	 * @return an ordering which places longer-lasting punishments first
 	 */
 	public OrderField<?> expiresLeastSoon() {
-		return DSL.choose(endField)
-				.when(Instant.MAX, Long.MAX_VALUE)
-				.otherwise(endField.cast(SQLDataType.BIGINT))
+		// end = 0 defines a permanent punishment
+		var end = endField.coerce(Long.class);
+		return DSL.choose(end)
+				.when(inline(0L), inline(Long.MAX_VALUE))
+				.otherwise(end)
 				.desc();
 	}
+
 }

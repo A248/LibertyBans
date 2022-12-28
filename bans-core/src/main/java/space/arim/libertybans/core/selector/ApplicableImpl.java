@@ -26,7 +26,6 @@ import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim.VictimType;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.database.InternalDatabase;
@@ -44,6 +43,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
+import static space.arim.libertybans.core.schema.tables.Addresses.ADDRESSES;
 import static space.arim.libertybans.core.schema.tables.StrictLinks.STRICT_LINKS;
 
 @Singleton
@@ -70,60 +70,51 @@ public class ApplicableImpl {
 	Punishment selectApplicable(DSLContext context,
 								UUID uuid, NetworkAddress address,
 								PunishmentType type, final Instant currentTime) {
-		var simpleView = new TableForType(type).simpleView();
-		var applView = new TableForType(type).applicableView();
 
+		var simpleView = new TableForType(type).simpleView();
+		VictimCondition victimCondition = new VictimCondition(simpleView);
 		AddressStrictness strictness = configs.getMainConfig().enforcement().addressStrictness();
-		return switch (strictness) {
-			case LENIENT -> context
-					.select(
-							simpleView.id(),
-							simpleView.victimType(), simpleView.victimUuid(), simpleView.victimAddress(),
-							simpleView.operator(), simpleView.reason(),
-							simpleView.scope(), simpleView.start(), simpleView.end()
-					)
-					.from(simpleView.table())
-					.where(new VictimCondition(simpleView).simplyMatches(DSL.val(uuid), DSL.val(address)))
-					.and(new EndTimeCondition(simpleView).isNotExpired(currentTime))
-					.orderBy(new EndTimeOrdering(simpleView).expiresLeastSoon())
-					.limit(1)
-					.fetchOne(creator.punishmentMapper(type));
-			case NORMAL -> context
-					.select(
-							applView.id(),
-							applView.victimType(), applView.victimUuid(), applView.victimAddress(),
-							applView.operator(), applView.reason(),
-							applView.scope(), applView.start(), applView.end()
-					).from(applView.table())
-					.where(applView.uuid().eq(uuid))
-					.and(new EndTimeCondition(applView).isNotExpired(currentTime))
-					.orderBy(new EndTimeOrdering(applView).expiresLeastSoon())
-					.limit(1)
-					.fetchOne(creator.punishmentMapper(type));
-			case STERN, STRICT -> context
-					.select(
-							applView.id(),
-							applView.victimType(), applView.victimUuid(), applView.victimAddress(),
-							applView.operator(), applView.reason(),
-							applView.scope(), applView.start(), applView.end()
-					).from(applView.table())
-					.innerJoin(STRICT_LINKS)
-					.on(applView.uuid().eq(STRICT_LINKS.UUID1))
-					.where((strictness == AddressStrictness.STERN) ?
-							// STERN
-							// appl.uuid = strict_links.uuid1 = uuid
-							// OR victim_type != 'PLAYER' AND strict_links.uuid2 = uuid
-							applView.uuid().eq(uuid).or(
-									STRICT_LINKS.UUID2.eq(uuid).and(applView.victimType().notEqual(VictimType.PLAYER)))
-							// STRICT
-							// strict_links.uuid2 = uuid
-							: STRICT_LINKS.UUID2.eq(uuid)
-					)
-					.and(new EndTimeCondition(applView).isNotExpired(currentTime))
-					.orderBy(new EndTimeOrdering(applView).expiresLeastSoon())
-					.limit(1)
-					.fetchOne(creator.punishmentMapper(type));
-		};
+
+		return context
+				.select(
+						simpleView.id(),
+						simpleView.victimType(), simpleView.victimUuid(), simpleView.victimAddress(),
+						simpleView.operator(), simpleView.reason(),
+						simpleView.scope(), simpleView.start(), simpleView.end()
+				)
+				.from(simpleView.table())
+				.where(switch (strictness) {
+					case LENIENT -> victimCondition.matches(DSL.val(uuid), DSL.val(address));
+					case NORMAL -> victimCondition.matches(
+							DSL.val(uuid),
+							context.select(ADDRESSES.ADDRESS).from(ADDRESSES).where(ADDRESSES.UUID.eq(uuid))
+					);
+					case STERN -> victimCondition.matches(
+							DSL.val(uuid),
+							context
+									.select(ADDRESSES.ADDRESS)
+									.from(ADDRESSES)
+									.innerJoin(STRICT_LINKS)
+									.on(STRICT_LINKS.UUID1.eq(ADDRESSES.UUID))
+									.where(STRICT_LINKS.UUID2.eq(uuid))
+					);
+					case STRICT -> victimCondition.matches(
+							context
+									.select(STRICT_LINKS.UUID1)
+									.from(STRICT_LINKS)
+									.where(STRICT_LINKS.UUID2.eq(uuid)),
+							context
+									.select(ADDRESSES.ADDRESS)
+									.from(ADDRESSES)
+									.innerJoin(STRICT_LINKS)
+									.on(STRICT_LINKS.UUID1.eq(ADDRESSES.UUID))
+									.where(STRICT_LINKS.UUID2.eq(uuid))
+					);
+				})
+				.and(new EndTimeCondition(simpleView).isNotExpired(currentTime))
+				.orderBy(new EndTimeOrdering(simpleView).expiresLeastSoon())
+				.limit(1)
+				.fetchOne(creator.punishmentMapper(type));
 	}
 
 	CentralisedFuture<Punishment> getApplicablePunishment(UUID uuid, NetworkAddress address, PunishmentType type) {

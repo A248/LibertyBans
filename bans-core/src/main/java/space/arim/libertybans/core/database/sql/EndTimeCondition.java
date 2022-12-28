@@ -21,6 +21,7 @@ package space.arim.libertybans.core.database.sql;
 
 import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.impl.DSL;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -38,7 +39,7 @@ public final class EndTimeCondition {
 	}
 
 	public Condition isNotExpired(final Instant currentTime) {
-		return endField.eq(Instant.MAX).or(endField.greaterThan(currentTime));
+		return endField.eq(DSL.inline(Instant.MAX)).or(endField.greaterThan(currentTime));
 	}
 
 	@Override
