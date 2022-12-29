@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -16,6 +16,7 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.it;
 
 import org.junit.jupiter.api.extension.Extension;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
 import space.arim.injector.Injector;
 import space.arim.omnibus.util.ThisClass;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -42,31 +44,38 @@ public class InjectionInvocationContextProvider implements TestTemplateInvocatio
 	public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
 
 		boolean throwaway = context.getRequiredTestClass().isAnnotationPresent(ThrowawayInstance.class);
+		boolean irrelevantData = context.getRequiredTestMethod().isAnnotationPresent(IrrelevantData.class);
 
 		ResourceCreator creator = new ResourceCreator(context.getRoot().getStore(NAMESPACE));
 		return new ConfigSpecPossiblities(context.getElement().orElse(null))
 				.getAll()
 				.flatMap((throwaway) ? creator::createIsolated : creator::create)
-				.map((injector) -> new InjectorInvocationContext(injector, throwaway));
+				.map((injector) -> new InjectorInvocationContext(injector, throwaway, irrelevantData));
 	}
 
 	private static class InjectorInvocationContext implements TestTemplateInvocationContext {
 
 		private final Injector injector;
 		private final boolean throwaway;
+		private final boolean irrelevantData;
 
-		InjectorInvocationContext(Injector injector, boolean throwaway) {
+		InjectorInvocationContext(Injector injector, boolean throwaway, boolean irrelevantData) {
 			this.injector = injector;
 			this.throwaway = throwaway;
+			this.irrelevantData = irrelevantData;
 		}
 
 		@Override
 		public List<Extension> getAdditionalExtensions() {
-			var parameterResolver = new InjectorParameterResolver(injector);
-			if (throwaway) {
-				return List.of(parameterResolver);
+			List<Extension> extensions = new ArrayList<>(3);
+			extensions.add(new InjectorParameterResolver(injector));
+			if (!throwaway) {
+				extensions.add(new InjectorCleanupCallback(injector));
 			}
-			return List.of(parameterResolver, new InjectorCleanupCallback(injector));
+			if (irrelevantData) {
+				extensions.add(new IrrelevantDataCallback(injector));
+			}
+			return extensions;
 		}
 
 	}

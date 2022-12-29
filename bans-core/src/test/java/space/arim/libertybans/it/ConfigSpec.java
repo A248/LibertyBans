@@ -19,7 +19,7 @@
 package space.arim.libertybans.it;
 
 import space.arim.libertybans.core.database.Vendor;
-import space.arim.libertybans.core.selector.AddressStrictness;
+import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.core.uuid.ServerType;
 
 import java.time.Instant;

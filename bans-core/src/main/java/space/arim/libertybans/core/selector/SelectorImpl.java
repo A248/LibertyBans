@@ -19,43 +19,46 @@
 
 package space.arim.libertybans.core.selector;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
-
 import net.kyori.adventure.text.Component;
-import space.arim.libertybans.api.select.SelectionOrder;
+import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.select.AddressStrictness;
+import space.arim.libertybans.api.select.SelectionByApplicabilityBuilder;
+import space.arim.libertybans.api.select.SelectionOrderBuilder;
+import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
-import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.select.SelectionOrderBuilder;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 @Singleton
 public class SelectorImpl implements InternalSelector {
 
-	private final SelectionImpl selectionImpl;
+	private final Configs configs;
 	private final IDImpl idImpl;
-	private final ApplicableImpl applicableImpl;
 	private final Gatekeeper gatekeeper;
 	private final Provider<MuteCache> muteCache;
+	private final SelectionBaseSQL.Resources resources;
 
 	@Inject
-	public SelectorImpl(SelectionImpl selectionImpl, IDImpl idImpl, ApplicableImpl applicableImpl,
-						Gatekeeper gatekeeper, Provider<MuteCache> muteCache) {
-		this.selectionImpl = selectionImpl;
+	public SelectorImpl(Configs configs, IDImpl idImpl, Gatekeeper gatekeeper,
+						Provider<MuteCache> muteCache, SelectionBaseSQL.Resources resources) {
+		this.configs = configs;
 		this.idImpl = idImpl;
-		this.applicableImpl = applicableImpl;
 		this.gatekeeper = gatekeeper;
 		this.muteCache = muteCache;
+		this.resources = resources;
+	}
+
+	SelectionBaseSQL.Resources resources() {
+		return resources;
 	}
 
 	@Override
@@ -63,22 +66,10 @@ public class SelectorImpl implements InternalSelector {
 		return new SelectionOrderBuilderImpl(this);
 	}
 
-	/*
-	 * 
-	 * PunishmentSelection methods
-	 * 
-	 */
-
-	ReactionStage<Punishment> getFirstSpecificPunishment(SelectionOrder selection) {
-		return selectionImpl.getFirstSpecificPunishment(selection);
-	}
-
-	ReactionStage<List<Punishment>> getSpecificPunishments(SelectionOrder selection) {
-		return selectionImpl.getSpecificPunishments(selection);
-	}
-
-	ReactionStage<Integer> countNumberOfPunishments(SelectionOrder selection) {
-		return selectionImpl.countNumberOfPunishments(selection);
+	@Override
+	public SelectionByApplicabilityBuilderImpl selectionByApplicabilityBuilder(UUID uuid, NetworkAddress address) {
+		AddressStrictness strictness = configs.getMainConfig().enforcement().addressStrictness();
+		return new SelectionByApplicabilityBuilderImpl(this, uuid, address, strictness);
 	}
 
 	/*
@@ -115,23 +106,13 @@ public class SelectorImpl implements InternalSelector {
 
 	@Override
 	public CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address) {
-		return gatekeeper.executeAndCheckConnection(uuid, name, address);
-	}
-
-	@Override
-	public ReactionStage<Optional<Punishment>> getApplicablePunishment(UUID uuid, NetworkAddress address, PunishmentType type) {
-		return applicableImpl.getApplicablePunishment(uuid, address, type).thenApply(Optional::ofNullable);
+		return gatekeeper.executeAndCheckConnection(uuid, name, address, this);
 	}
 
 	@Override
 	public ReactionStage<Optional<Punishment>> getCachedMute(UUID uuid, NetworkAddress address) {
 		Objects.requireNonNull(uuid, "uuid");
 		return muteCache.get().getCachedMute(uuid, address);
-	}
-
-	@Override
-	public CentralisedFuture<Punishment> getApplicableMute(UUID uuid, NetworkAddress address) {
-		return applicableImpl.getApplicablePunishment(uuid, address, PunishmentType.MUTE);
 	}
 
 }

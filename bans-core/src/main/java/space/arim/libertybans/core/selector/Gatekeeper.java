@@ -25,6 +25,7 @@ import net.kyori.adventure.text.Component;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.select.SortPunishments;
 import space.arim.libertybans.core.alts.AltDetection;
 import space.arim.libertybans.core.alts.AltNotification;
 import space.arim.libertybans.core.alts.ConnectionLimiter;
@@ -52,12 +53,10 @@ public final class Gatekeeper {
 	private final AltNotification altNotification;
 	private final Time time;
 
-	private final ApplicableImpl applicableImpl;
-
 	@Inject
 	public Gatekeeper(Configs configs, FactoryOfTheFuture futuresFactory, Provider<QueryExecutor> queryExecutor,
 					  InternalFormatter formatter, ConnectionLimiter connectionLimiter, AltDetection altDetection,
-					  AltNotification altNotification, Time time, ApplicableImpl applicableImpl) {
+					  AltNotification altNotification, Time time) {
 		this.configs = configs;
 		this.futuresFactory = futuresFactory;
 		this.queryExecutor = queryExecutor;
@@ -66,10 +65,10 @@ public final class Gatekeeper {
 		this.altDetection = altDetection;
 		this.altNotification = altNotification;
 		this.time = time;
-		this.applicableImpl = applicableImpl;
 	}
 
-	CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address) {
+	CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address,
+														   SelectorImpl selector) {
 		return queryExecutor.get().queryWithRetry((context, transaction) -> {
 			Instant currentTime = time.currentTimestamp();
 
@@ -77,7 +76,10 @@ public final class Gatekeeper {
 			association.associateCurrentName(name, currentTime);
 			association.associateCurrentAddress(address, currentTime);
 
-			Punishment ban = applicableImpl.selectApplicable(context, uuid, address, PunishmentType.BAN, currentTime);
+			Punishment ban = selector.selectionByApplicabilityBuilder(uuid, address)
+					.type(PunishmentType.BAN)
+					.build()
+					.findFirstSpecificPunishment(context, () -> currentTime, SortPunishments.LATEST_END_DATE_FIRST);
 			if (ban != null) {
 				return ban;
 			}

@@ -17,12 +17,10 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.selector;
+package space.arim.libertybans.api.select;
 
 /**
- * When an address based punishment is enforced, how should it be?
- * 
- * @author A248
+ * How address punishments should be enforced
  *
  */
 public enum AddressStrictness {

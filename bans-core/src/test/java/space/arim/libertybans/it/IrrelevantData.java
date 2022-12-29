@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -16,32 +16,19 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.it;
 
-import space.arim.libertybans.api.select.AddressStrictness;
-
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-@Retention(RUNTIME)
-@Target(METHOD)
-public @interface SetAddressStrictness {
-
-	/**
-	 * Sets the address strictnesses
-	 * 
-	 * @return the address strictnesses to test
-	 */
-	AddressStrictness[] value() default {};
-
-	/**
-	 * Whether to use all address strictnesses. Overrides {@code value}
-	 *
-	 * @return true to use all strictnesses
-	 */
-	boolean all() default false;
-
+/**
+ * Inserts irrelevant punishments, UUIDs, and addresses into the database before running the test
+ *
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface IrrelevantData {
 }

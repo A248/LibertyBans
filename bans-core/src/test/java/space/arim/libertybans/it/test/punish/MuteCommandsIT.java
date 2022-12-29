@@ -55,7 +55,7 @@ public class MuteCommandsIT {
 	}
 
 	@TestTemplate
-	public void blockMuteCommand(Guardian guardian, PunishmentDrafter drafter) {
+	public void blockMuteCommandsCorrectly(Guardian guardian, PunishmentDrafter drafter) {
 		UUID uuid = UUID.randomUUID();
 		NetworkAddress address = RandomUtil.randomAddress();
 		assertHelper.connectAndAssumeUnbannedUser(uuid, "name", address);
@@ -68,5 +68,10 @@ public class MuteCommandsIT {
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
 		assertNotNull(guardian.checkChat(uuid, address, "msg").join());
+		assertNotNull(guardian.checkChat(uuid, address, "someplugin:msg").join());
+		assertNotNull(guardian.checkChat(uuid, address, "clan chat hello my clan").join());
+		assertNull(guardian.checkChat(uuid, address, "clan another clan command not block").join());
+		assertNull(guardian.checkChat(uuid, address, "notblocked").join());
 	}
+
 }

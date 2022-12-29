@@ -21,6 +21,7 @@ package space.arim.libertybans.core.database.jooq;
 
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
+import org.jooq.conf.BackslashEscaping;
 import org.jooq.conf.MappedSchema;
 import org.jooq.conf.MappedTable;
 import org.jooq.conf.RenderMapping;
@@ -53,6 +54,7 @@ public final class JooqContext {
 
 	private Settings createSettings() {
 		return new Settings()
+				.withBackslashEscaping(BackslashEscaping.OFF)
 				.withRenderSchema(false)
 				.withRenderMapping(new RenderMapping()
 						.withSchemata(new MappedSchema()

@@ -17,64 +17,77 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.selector;
+package space.arim.libertybans.it.test.applicable;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Provider;
-import jakarta.inject.Singleton;
 import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.OrderField;
+import org.jooq.Select;
 import org.jooq.impl.DSL;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim.VictimType;
-import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.core.database.InternalDatabase;
-import space.arim.libertybans.core.database.execute.SQLFunction;
+import space.arim.libertybans.core.database.jooq.JooqContext;
 import space.arim.libertybans.core.database.sql.EndTimeCondition;
-import space.arim.libertybans.core.database.sql.EndTimeOrdering;
+import space.arim.libertybans.core.database.sql.PunishmentFields;
 import space.arim.libertybans.core.database.sql.TableForType;
 import space.arim.libertybans.core.database.sql.VictimCondition;
-import space.arim.libertybans.core.punish.PunishmentCreator;
-import space.arim.libertybans.core.service.Time;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
+import space.arim.libertybans.core.selector.SelectionByApplicabilityImpl;
+import space.arim.libertybans.core.selector.SelectorImpl;
+import space.arim.libertybans.it.DontInject;
+import space.arim.libertybans.it.InjectionInvocationContextProvider;
+import space.arim.libertybans.it.SetAddressStrictness;
+import space.arim.libertybans.it.resolver.RandomPunishmentTypeResolver;
+import space.arim.libertybans.it.resolver.RandomPunishmentTypeResolver.NotAKick;
+import space.arim.libertybans.it.util.RandomUtil;
 
 import java.time.Instant;
-import java.util.Objects;
 import java.util.UUID;
 
+import static org.jooq.impl.DSL.inline;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static space.arim.libertybans.core.schema.tables.StrictLinks.STRICT_LINKS;
 
-@Singleton
-public class ApplicableImpl {
+@ExtendWith(InjectionInvocationContextProvider.class)
+@ExtendWith(RandomPunishmentTypeResolver.class)
+public class OptimizedQueriesIT {
 
-	private final Configs configs;
-	private final FactoryOfTheFuture futuresFactory;
-	private final Provider<InternalDatabase> dbProvider;
-	private final PunishmentCreator creator;
-
-	private final Time time;
+	private final SelectorImpl selector;
 
 	@Inject
-	public ApplicableImpl(Configs configs, FactoryOfTheFuture futuresFactory,
-						  Provider<InternalDatabase> dbProvider, PunishmentCreator creator,
-						  Time time) {
-		this.configs = configs;
-		this.futuresFactory = futuresFactory;
-		this.dbProvider = dbProvider;
-		this.creator = creator;
-		this.time = time;
+	public OptimizedQueriesIT(SelectorImpl selector) {
+		this.selector = selector;
 	}
 
-	Punishment selectApplicable(DSLContext context,
-								UUID uuid, NetworkAddress address,
-								PunishmentType type, final Instant currentTime) {
+	@TestTemplate
+	@SetAddressStrictness(all = true)
+	public void handwrittenQueriesAreIdentical(InternalDatabase database, @DontInject @NotAKick PunishmentType type) {
+		DSLContext context = new JooqContext(database.getVendor().dialect()).createRenderOnlyContext();
+
+		UUID uuid = UUID.randomUUID();
+		NetworkAddress address = RandomUtil.randomAddress();
+
+		SelectionByApplicabilityImpl selection = selector
+				.selectionByApplicabilityBuilder(uuid, address)
+				.type(type)
+				.build();
+		assertEquals(
+				renderHandwrittenQuery(context, uuid, address, selection.getAddressStrictness(), type),
+				selection.renderSingleApplicablePunishmentSQL(context)
+		);
+	}
+
+	private String renderHandwrittenQuery(DSLContext context, UUID uuid, NetworkAddress address,
+										  AddressStrictness strictness, PunishmentType type) {
 		var simpleView = new TableForType(type).simpleView();
 		var applView = new TableForType(type).applicableView();
 
-		AddressStrictness strictness = configs.getMainConfig().enforcement().addressStrictness();
-		return switch (strictness) {
+		Select<?> select = switch (strictness) {
 			case LENIENT -> context
 					.select(
 							simpleView.id(),
@@ -83,11 +96,10 @@ public class ApplicableImpl {
 							simpleView.scope(), simpleView.start(), simpleView.end()
 					)
 					.from(simpleView.table())
-					.where(new VictimCondition(simpleView).simplyMatches(DSL.val(uuid), DSL.val(address)))
-					.and(new EndTimeCondition(simpleView).isNotExpired(currentTime))
+					.where(new VictimCondition(simpleView).simplyMatches(uuid, address))
+					.and(new EndTimeCondition(simpleView).isNotExpired(Instant.EPOCH))
 					.orderBy(new EndTimeOrdering(simpleView).expiresLeastSoon())
-					.limit(1)
-					.fetchOne(creator.punishmentMapper(type));
+					.limit(inline(1));
 			case NORMAL -> context
 					.select(
 							applView.id(),
@@ -96,10 +108,9 @@ public class ApplicableImpl {
 							applView.scope(), applView.start(), applView.end()
 					).from(applView.table())
 					.where(applView.uuid().eq(uuid))
-					.and(new EndTimeCondition(applView).isNotExpired(currentTime))
+					.and(new EndTimeCondition(applView).isNotExpired(Instant.EPOCH))
 					.orderBy(new EndTimeOrdering(applView).expiresLeastSoon())
-					.limit(1)
-					.fetchOne(creator.punishmentMapper(type));
+					.limit(inline(1));
 			case STERN, STRICT -> context
 					.select(
 							applView.id(),
@@ -113,28 +124,33 @@ public class ApplicableImpl {
 							// STERN
 							// appl.uuid = strict_links.uuid1 = uuid
 							// OR victim_type != 'PLAYER' AND strict_links.uuid2 = uuid
-							applView.uuid().eq(uuid).or(
-									STRICT_LINKS.UUID2.eq(uuid).and(applView.victimType().notEqual(VictimType.PLAYER)))
+							STRICT_LINKS.UUID1.eq(uuid).or(
+									STRICT_LINKS.UUID2.eq(uuid).and(applView.victimType().notEqual(inline(VictimType.PLAYER))))
 							// STRICT
 							// strict_links.uuid2 = uuid
 							: STRICT_LINKS.UUID2.eq(uuid)
 					)
-					.and(new EndTimeCondition(applView).isNotExpired(currentTime))
+					.and(new EndTimeCondition(applView).isNotExpired(Instant.EPOCH))
 					.orderBy(new EndTimeOrdering(applView).expiresLeastSoon())
-					.limit(1)
-					.fetchOne(creator.punishmentMapper(type));
+					.limit(inline(1));
 		};
+		return select.getSQL();
 	}
 
-	CentralisedFuture<Punishment> getApplicablePunishment(UUID uuid, NetworkAddress address, PunishmentType type) {
-		Objects.requireNonNull(type, "type");
-		if (type == PunishmentType.KICK) {
-			// Kicks are never active
-			return futuresFactory.completedFuture(null);
+	record EndTimeOrdering(Field<Instant> endField) {
+
+		EndTimeOrdering(PunishmentFields fields) {
+			this(fields.end());
 		}
-		return dbProvider.get().query(SQLFunction.readOnly((context) -> {
-			return selectApplicable(context, uuid, address, type, time.currentTimestamp());
-		}));
+
+		OrderField<?> expiresLeastSoon() {
+			var end = endField.coerce(Long.class);
+			return DSL.choose(end)
+					.when(inline(0L), inline(Long.MAX_VALUE))
+					.otherwise(end)
+					.desc();
+		}
+
 	}
 
 }

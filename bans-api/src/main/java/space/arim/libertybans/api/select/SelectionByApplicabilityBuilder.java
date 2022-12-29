@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -16,32 +16,30 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.it;
 
-import space.arim.libertybans.api.select.AddressStrictness;
+package space.arim.libertybans.api.select;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-@Retention(RUNTIME)
-@Target(METHOD)
-public @interface SetAddressStrictness {
+/**
+ * Builder for {@link SelectionByApplicability}. No required details
+ *
+ */
+public interface SelectionByApplicabilityBuilder
+		extends SelectionBuilderBase<SelectionByApplicabilityBuilder, SelectionByApplicability> {
 
 	/**
-	 * Sets the address strictnesses
-	 * 
-	 * @return the address strictnesses to test
-	 */
-	AddressStrictness[] value() default {};
-
-	/**
-	 * Whether to use all address strictnesses. Overrides {@code value}
+	 * Sets the address strictness according to which applicability will be calculated
 	 *
-	 * @return true to use all strictnesses
+	 * @param addressStrictness the address strictness
+	 * @return this builder
 	 */
-	boolean all() default false;
+	SelectionByApplicabilityBuilder addressStrictness(AddressStrictness addressStrictness);
+
+	/**
+	 * Sets the address strictness according to which applicability will be calculated
+	 * back to the default address strictness
+	 *
+	 * @return this builder
+	 */
+	SelectionByApplicabilityBuilder defaultAddressStrictness();
 
 }

@@ -25,7 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.core.selector.AddressStrictness;
+import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetAddressStrictness;
 import space.arim.libertybans.it.util.RandomUtil;
