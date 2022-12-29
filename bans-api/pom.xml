@@ -16,7 +16,7 @@
 		<common-parent.skip-javadoc>false</common-parent.skip-javadoc>
 		<common-parent.skip-sources>false</common-parent.skip-sources>
 		<!-- Prevents javadocs 'Error fetching link' -->
-		<maven.compiler.release>11</maven.compiler.release>
+		<maven.compiler.release>17</maven.compiler.release>
 	</properties>
 	
 	<build>

@@ -26,7 +26,7 @@ import java.util.Set;
  * How a certain criterion can be used to exclude punishments from a {@link SelectionOrder}. <br>
  * <br>
  * For most use cases, the static factory methods can be used to create instances.
- * for advanced uses, it is also possible to extend this class directly; implementors
+ * For advanced uses, it is also possible to extend this class directly; implementors
  * must ensure that returned {@code Set}s are immutable and thread safe.
  *
  * @param <U> the type of the criterion
@@ -79,7 +79,7 @@ public abstract class SelectionPredicate<U> {
 	 * @return true if equal, false otherwise
 	 */
 	@Override
-	public boolean equals(Object o) {
+	public final boolean equals(Object o) {
 		if (this == o) return true;
 		if (!(o instanceof SelectionPredicate)) return false;
 		SelectionPredicate<?> that = (SelectionPredicate<?>) o;
@@ -88,7 +88,7 @@ public abstract class SelectionPredicate<U> {
 	}
 
 	@Override
-	public int hashCode() {
+	public final int hashCode() {
 		int result = acceptedValues().hashCode();
 		result = 31 * result + rejectedValues().hashCode();
 		return result;
@@ -143,14 +143,11 @@ public abstract class SelectionPredicate<U> {
 	 */
 	public static <U> SelectionPredicate<U> matchingAnyOf(Set<U> values) {
 		values = Set.copyOf(values);
-		switch (values.size()) {
-		case 0:
-			throw new IllegalArgumentException("Values must be not be empty");
-		case 1:
-			return matchingOnly(values.iterator().next());
-		default:
-			return new AnyOfPredicate<>(values);
-		}
+		return switch (values.size()) {
+			case 0 -> throw new IllegalArgumentException("Values must be not be empty");
+			case 1 -> matchingOnly(values.iterator().next());
+			default -> new AnyOfPredicate<>(values);
+		};
 	}
 
 	/**

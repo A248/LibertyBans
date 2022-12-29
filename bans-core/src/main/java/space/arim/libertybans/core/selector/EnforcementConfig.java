@@ -29,6 +29,7 @@ import space.arim.dazzleconf.annote.ConfDefault.DefaultString;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultStrings;
 import space.arim.dazzleconf.annote.NumericRange;
 import space.arim.dazzleconf.annote.SubSection;
+import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.core.alts.ConnectionLimitConfig;
 import space.arim.libertybans.core.alts.WhichAlts;
 
@@ -108,7 +109,8 @@ public interface EnforcementConfig {
 			"whisper",
 			"w",
 			"tell",
-			"t"
+			"t",
+			"clan chat"
 	})
 	Set<String> muteCommands();
 

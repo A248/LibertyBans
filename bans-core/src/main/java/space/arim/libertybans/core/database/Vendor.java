@@ -148,6 +148,7 @@ public enum Vendor {
 					"NO_ENGINE_SUBSTITUTION",
 					// Modes specifically used by LibertyBans, for better ANSI SQL compliance
 					"ANSI",
+					"NO_BACKSLASH_ESCAPES",
 					"SIMULTANEOUS_ASSIGNMENT", // MDEV-13417
 					"NO_ZERO_IN_DATE",
 					"NO_ZERO_DATE");
@@ -158,6 +159,7 @@ public enum Vendor {
 					"NO_ENGINE_SUBSTITUTION",
 					// Modes specifically used by LibertyBans
 					"ANSI",
+					"NO_BACKSLASH_ESCAPES",
 					"NO_ZERO_IN_DATE",
 					"NO_ZERO_DATE");
 			case POSTGRES -> "SET NAMES 'UTF8'";

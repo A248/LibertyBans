@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,26 +17,37 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.selector;
+package space.arim.libertybans.api.select;
 
-import net.kyori.adventure.text.Component;
 import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.api.select.PunishmentSelector;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.util.UUID;
 
-public interface InternalSelector extends PunishmentSelector {
+/**
+ * A selection that finds punishments applicable to a UUID/address pair.
+ *
+ */
+public interface SelectionByApplicability extends SelectionBase {
 
 	/**
-	 * Checks a player connection's in a single connection query, enforcing any applicable bans,
-	 * connection limits, and dealing out alt checks
-	 * 
-	 * @param uuid the player uuid
-	 * @param name the player name
-	 * @param address the player address
-	 * @return a future which yields the denial message, or null if there is none
+	 * Gets the UUID in terms of which applicability will be considered
+	 *
+	 * @return the uuid
 	 */
-	CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address);
+	UUID getUUID();
+
+	/**
+	 * Gets the address in terms of which applicability will be considered
+	 *
+	 * @return the address
+	 */
+	NetworkAddress getAddress();
+
+	/**
+	 * Gets the address strictness setting used to calculate applicability
+	 *
+	 * @return the address strictness used
+	 */
+	AddressStrictness getAddressStrictness();
 
 }

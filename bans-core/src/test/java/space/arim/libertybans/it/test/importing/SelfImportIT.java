@@ -23,6 +23,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.jooq.DSLContext;
 import org.jooq.Table;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -38,14 +39,12 @@ import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.importing.SelfImportProcess;
 import space.arim.libertybans.core.punish.PunishmentCreator;
 import space.arim.libertybans.core.scope.ScopeImpl;
+import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetAddress;
-import java.net.URL;
 import java.net.UnknownHostException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.UUID;
@@ -65,11 +64,10 @@ import static space.arim.libertybans.core.schema.Tables.WARNS;
 @ExtendWith(InjectionInvocationContextProvider.class)
 public class SelfImportIT {
 
-	@TempDir
-	public Path databaseDir;
-
 	private final SelfImportProcess selfImportProcess;
 	private final Provider<QueryExecutor> queryExecutor;
+
+	private SelfImportData selfImportData;
 
 	@Inject
 	public SelfImportIT(SelfImportProcess selfImportProcess, Provider<QueryExecutor> queryExecutor) {
@@ -77,20 +75,9 @@ public class SelfImportIT {
 		this.queryExecutor = queryExecutor;
 	}
 
-	private Path copyImportData(String sample) throws IOException {
-		Path folder = databaseDir.resolve(sample);
-		Path databaseFolder = folder.resolve("internal").resolve("hypersql");
-		Files.createDirectories(databaseFolder);
-
-		for (String extensionToCopy : new String[] {".script", ".properties"}) {
-			String filename = "punishments-database" + extensionToCopy;
-			URL resource = getClass().getResource("/import-data/self/" + sample + "/" + filename);
-			assert resource != null : "Missing resource";
-			try (InputStream inputStream = resource.openStream()) {
-				Files.copy(inputStream, databaseFolder.resolve(filename));
-			}
-		}
-		return folder;
+	@BeforeEach
+	public void setSelfImportData(@DontInject @TempDir Path temporaryFolder) {
+		selfImportData = new SelfImportData(temporaryFolder);
 	}
 
 	private static void assertCount(DSLContext context, int startLine, int endLine, Table<?> table) {
@@ -106,7 +93,7 @@ public class SelfImportIT {
 
 	@TestTemplate
 	public void blueTree242(PunishmentCreator creator) throws IOException {
-		Path folder = copyImportData("bluetree242");
+		Path folder = selfImportData.copyBlueTree242();
 
 		assertDoesNotThrow(selfImportProcess.transferAllData(folder)::join);
 
@@ -178,7 +165,7 @@ public class SelfImportIT {
 
 	@TestTemplate
 	public void blueTree242sequences(PunishmentDrafter drafter) throws IOException {
-		Path folder = copyImportData("bluetree242");
+		Path folder = selfImportData.copyBlueTree242();
 
 		selfImportProcess.transferAllData(folder).join();
 

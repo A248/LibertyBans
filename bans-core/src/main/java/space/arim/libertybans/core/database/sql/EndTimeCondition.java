@@ -25,6 +25,8 @@ import org.jooq.Field;
 import java.time.Instant;
 import java.util.Objects;
 
+import static org.jooq.impl.DSL.inline;
+
 public final class EndTimeCondition {
 
 	private final Field<Instant> endField;
@@ -38,7 +40,7 @@ public final class EndTimeCondition {
 	}
 
 	public Condition isNotExpired(final Instant currentTime) {
-		return endField.eq(Instant.MAX).or(endField.greaterThan(currentTime));
+		return endField.eq(inline(Instant.MAX)).or(endField.greaterThan(currentTime));
 	}
 
 	@Override

@@ -19,26 +19,29 @@
 
 package space.arim.libertybans.api.select;
 
-import space.arim.libertybans.api.Victim;
-
 /**
- * A selection based on the filtering of victims.
+ * Defines how punishments may be ordered. <br>
+ * <br>
+ * Combining multiple values of {@code SortPunishments} directives into an array implies that defacto ordering
+ * will depend on each directive in sequence. Punishments will be initially sorted by the first ordering directive;
+ * punishments considered equal by the first directive will be sorted by the second ordering directive, and so on.
  *
  */
-public interface SelectionOrder extends SelectionBase {
-
+public enum SortPunishments {
 	/**
-	 * Gets the victims matched
-	 * 
-	 * @return the victims
+	 * Punishments will be returned in descending date of enaction
 	 */
-	SelectionPredicate<Victim> getVictims();
-
+	NEWEST_FIRST,
 	/**
-	 * Gets the victim types matched
-	 *
-	 * @return the victim types
+	 * Punishments will be returned in ascending date of enaction
 	 */
-	SelectionPredicate<Victim.VictimType> getVictimTypes();
-
+	OLDEST_FIRST,
+	/**
+	 * Punishments will be returned in descending date of end time, permanent punishments coming first
+	 */
+	LATEST_END_DATE_FIRST,
+	/**
+	 * Punishments will be returned in ascending date of end time, permanent punishments coming last
+	 */
+	SOONEST_END_DATE_FIRST
 }

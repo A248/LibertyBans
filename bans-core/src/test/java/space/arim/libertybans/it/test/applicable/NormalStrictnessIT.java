@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -16,6 +16,7 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.it.test.applicable;
 
 import jakarta.inject.Inject;
@@ -24,7 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.core.selector.AddressStrictness;
+import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetAddressStrictness;
 import space.arim.libertybans.it.util.RandomUtil;
