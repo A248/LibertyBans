@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,7 +24,7 @@ import net.kyori.adventure.text.Component;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
-import space.arim.libertybans.core.env.TargetMatcher;
+import space.arim.libertybans.core.env.Interlocutor;
 import space.arim.libertybans.it.env.platform.QuackPlatform;
 import space.arim.libertybans.it.env.platform.QuackPlayer;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -39,18 +39,15 @@ public class QuackEnforcer extends AbstractEnvEnforcer<QuackPlayer> {
 	private final QuackPlatform platform;
 
 	@Inject
-	public QuackEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter, QuackPlatform platform) {
-		super(futuresFactory, formatter, AudienceRepresenter.identity());
+	public QuackEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter,
+						 Interlocutor interlocutor, QuackPlatform platform) {
+		super(futuresFactory, formatter, interlocutor, AudienceRepresenter.identity());
 		this.platform = platform;
 	}
 
 	@Override
-	protected CentralisedFuture<Void> sendToThoseWithPermissionNoPrefix(String permission, Component message) {
-		for (QuackPlayer player : platform.getAllPlayers()) {
-			if (player.hasPermission(permission)) {
-				player.sendMessage(message);
-			}
-		}
+	protected CentralisedFuture<Void> doForAllPlayers(Consumer<QuackPlayer> callback) {
+		platform.getAllPlayers().forEach(callback);
 		return completedVoid();
 	}
 
@@ -66,16 +63,6 @@ public class QuackEnforcer extends AbstractEnvEnforcer<QuackPlayer> {
 	}
 
 	@Override
-	public CentralisedFuture<Void> enforceMatcher(TargetMatcher<QuackPlayer> matcher) {
-		for (QuackPlayer player : platform.getAllPlayers()) {
-			if (matcher.matches(player.getUniqueId(), player.getAddress())) {
-				matcher.callback().accept(player);
-			}
-		}
-		return completedVoid();
-	}
-
-	@Override
 	public UUID getUniqueIdFor(QuackPlayer player) {
 		return player.getUniqueId();
 	}
@@ -83,6 +70,11 @@ public class QuackEnforcer extends AbstractEnvEnforcer<QuackPlayer> {
 	@Override
 	public InetAddress getAddressFor(QuackPlayer player) {
 		return player.getAddress();
+	}
+
+	@Override
+	public boolean hasPermission(QuackPlayer player, String permission) {
+		return player.hasPermission(permission);
 	}
 
 	@Override

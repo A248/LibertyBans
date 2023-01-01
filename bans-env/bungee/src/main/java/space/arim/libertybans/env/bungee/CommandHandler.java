@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -31,6 +31,7 @@ import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.env.Interlocutor;
 import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.omnibus.util.ArraysUtil;
 
@@ -48,14 +49,17 @@ public final class CommandHandler extends Command implements TabExecutor, Platfo
 	public static class CommandHelper {
 
 		private final InternalFormatter formatter;
+		private final Interlocutor interlocutor;
 		private final AudienceRepresenter<CommandSender> audienceRepresenter;
 		private final Commands commands;
 		final Plugin plugin;
-		
+
 		@Inject
-		public CommandHelper(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
+		public CommandHelper(InternalFormatter formatter, Interlocutor interlocutor,
+							 AudienceRepresenter<CommandSender> audienceRepresenter,
 							 Commands commands, Plugin plugin) {
 			this.formatter = formatter;
+			this.interlocutor = interlocutor;
 			this.audienceRepresenter = audienceRepresenter;
 			this.commands = commands;
 			this.plugin = plugin;
@@ -64,10 +68,10 @@ public final class CommandHandler extends Command implements TabExecutor, Platfo
 		private CmdSender adaptSender(CommandSender platformSender) {
 			if (platformSender instanceof ProxiedPlayer player) {
 				return new BungeeCmdSender.PlayerSender(
-						formatter, audienceRepresenter, player, plugin);
+						formatter, interlocutor, audienceRepresenter, player, plugin);
 			}
 			return new BungeeCmdSender.ConsoleSender(
-					formatter, audienceRepresenter, platformSender, plugin);
+					formatter, interlocutor, audienceRepresenter, platformSender, plugin);
 		}
 
 		void execute(CommandSender platformSender, CommandPackage command) {

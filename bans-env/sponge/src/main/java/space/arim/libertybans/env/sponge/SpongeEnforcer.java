@@ -29,7 +29,7 @@ import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
-import space.arim.libertybans.core.env.TargetMatcher;
+import space.arim.libertybans.core.env.Interlocutor;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -43,8 +43,9 @@ public final class SpongeEnforcer extends AbstractEnvEnforcer<ServerPlayer> {
 	private final Game game;
 
 	@Inject
-	public SpongeEnforcer(InternalFormatter formatter, FactoryOfTheFuture futuresFactory, Game game) {
-		super(futuresFactory, formatter, AudienceRepresenter.identity());
+	public SpongeEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter,
+						  Interlocutor interlocutor, Game game) {
+		super(futuresFactory, formatter, interlocutor, AudienceRepresenter.identity());
 		this.game = game;
 	}
 
@@ -55,14 +56,8 @@ public final class SpongeEnforcer extends AbstractEnvEnforcer<ServerPlayer> {
 	}
 
 	@Override
-	protected CentralisedFuture<Void> sendToThoseWithPermissionNoPrefix(String permission, Component message) {
-		return runSync(() -> {
-			for (ServerPlayer player : game.server().onlinePlayers()) {
-				if (player.hasPermission(permission)) {
-					player.sendMessage(message);
-				}
-			}
-		});
+	protected CentralisedFuture<Void> doForAllPlayers(Consumer<ServerPlayer> callback) {
+		return runSync(() -> game.server().onlinePlayers().forEach(callback));
 	}
 
 	@Override
@@ -76,17 +71,6 @@ public final class SpongeEnforcer extends AbstractEnvEnforcer<ServerPlayer> {
 	}
 
 	@Override
-	public CentralisedFuture<Void> enforceMatcher(TargetMatcher<ServerPlayer> matcher) {
-		return runSync(() -> {
-			for (ServerPlayer player : game.server().onlinePlayers()) {
-				if (matcher.matches(player.uniqueId(), player.connection().address().getAddress())) {
-					matcher.callback().accept(player);
-				}
-			}
-		});
-	}
-
-	@Override
 	public UUID getUniqueIdFor(ServerPlayer player) {
 		return player.uniqueId();
 	}
@@ -94,6 +78,11 @@ public final class SpongeEnforcer extends AbstractEnvEnforcer<ServerPlayer> {
 	@Override
 	public InetAddress getAddressFor(ServerPlayer player) {
 		return player.connection().address().getAddress();
+	}
+
+	@Override
+	public boolean hasPermission(ServerPlayer player, String permission) {
+		return player.hasPermission(permission);
 	}
 
 	@Override

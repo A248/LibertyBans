@@ -64,6 +64,7 @@ For obvious reasons, there are no duration permissions for kicks; moreover there
 * `libertybans.admin.restart` - /libertybans restart
 * `libertybans.admin.addon` - /libertybans addon
 * `libertybans.admin.import` - /libertybans import
+* `libertybans.admin.viewips` - Allows staff to view IP addresses if *censor-ip-addresses* is turned on in the configuration.
 
 ## Addons
 

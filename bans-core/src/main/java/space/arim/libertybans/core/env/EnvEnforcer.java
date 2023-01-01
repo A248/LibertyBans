@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -38,7 +38,7 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
  * @param <P> the player object type
  */
 public interface EnvEnforcer<@PlatformPlayer P> {
-	
+
 	/**
 	 * For all players with the specified permission, sends the message. <br>
 	 * Automatically prefixes the given message.
@@ -75,14 +75,14 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	 * @param message the message to send
 	 */
 	void sendMessageNoPrefix(P player, ComponentLike message);
-	
+
 	/**
 	 * Enforces a target matcher, invoking its callback for players matching its uuid or address set
 	 * 
 	 * @param matcher the target matcher
 	 */
 	CentralisedFuture<Void> enforceMatcher(TargetMatcher<P> matcher);
-	
+
 	/**
 	 * Gets the uuid of a player. <br>
 	 * <br>
@@ -102,6 +102,15 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	 * @return the address
 	 */
 	InetAddress getAddressFor(P player);
+
+	/**
+	 * Determines whether the player has a permission
+	 *
+	 * @param player the player
+	 * @param permission the permission
+	 * @return true if the player has the permission
+	 */
+	boolean hasPermission(P player, String permission);
 
 	/**
 	 * Executes a command on the behalf of the console

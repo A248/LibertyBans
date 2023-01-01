@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -34,6 +34,7 @@ import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.commands.StringCommandPackage;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.env.Interlocutor;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.util.Arrays;
@@ -43,13 +44,16 @@ import java.util.Optional;
 public final class CommandHandler implements Command.Raw {
 
 	private final InternalFormatter formatter;
+	private final Interlocutor interlocutor;
 	private final Commands commands;
 	private final Game game;
 	private final FactoryOfTheFuture futuresFactory;
 
 	@Inject
-	public CommandHandler(InternalFormatter formatter, Commands commands, Game game, FactoryOfTheFuture futuresFactory) {
+	public CommandHandler(InternalFormatter formatter, Interlocutor interlocutor,
+						  Commands commands, Game game, FactoryOfTheFuture futuresFactory) {
 		this.formatter = formatter;
+		this.interlocutor = interlocutor;
 		this.commands = commands;
 		this.game = game;
 		this.futuresFactory = futuresFactory;
@@ -57,9 +61,9 @@ public final class CommandHandler implements Command.Raw {
 
 	private CmdSender adaptSender(CommandCause platformSender) {
 		if (platformSender.root() instanceof ServerPlayer player) {
-			return new SpongeCmdSender.PlayerCmdSender(formatter, player, game, futuresFactory);
+			return new SpongeCmdSender.PlayerCmdSender(formatter, interlocutor, player, game, futuresFactory);
 		}
-		return new SpongeCmdSender.ConsoleSender(formatter, platformSender, game, futuresFactory);
+		return new SpongeCmdSender.ConsoleSender(formatter, interlocutor, platformSender, game, futuresFactory);
 	}
 
 	@Override

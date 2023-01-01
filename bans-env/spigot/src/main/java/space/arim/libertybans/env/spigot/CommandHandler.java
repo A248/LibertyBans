@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,6 +32,7 @@ import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.env.Interlocutor;
 import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.omnibus.util.ArraysUtil;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -54,17 +55,19 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 	public static class CommandHelper {
 		
 		private final InternalFormatter formatter;
+		private final Interlocutor interlocutor;
 		private final AudienceRepresenter<CommandSender> audienceRepresenter;
 		private final Commands commands;
 		final Plugin plugin;
 		private final FactoryOfTheFuture futuresFactory;
 		final CommandMapHelper commandMapHelper;
-		
+
 		@Inject
-		public CommandHelper(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
-							 Commands commands, Plugin plugin,
-							 FactoryOfTheFuture futuresFactory, CommandMapHelper commandMapHelper) {
+		public CommandHelper(InternalFormatter formatter, Interlocutor interlocutor,
+							 AudienceRepresenter<CommandSender> audienceRepresenter, Commands commands,
+							 Plugin plugin, FactoryOfTheFuture futuresFactory, CommandMapHelper commandMapHelper) {
 			this.formatter = formatter;
+			this.interlocutor = interlocutor;
 			this.audienceRepresenter = audienceRepresenter;
 			this.commands = commands;
 			this.plugin = plugin;
@@ -74,10 +77,10 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 
 		private CmdSender adaptSender(CommandSender platformSender) {
 			if (platformSender instanceof Player) {
-				return new SpigotCmdSender.PlayerSender(formatter, audienceRepresenter,
+				return new SpigotCmdSender.PlayerSender(formatter, interlocutor, audienceRepresenter,
 						(Player) platformSender, plugin, futuresFactory);
 			}
-			return new SpigotCmdSender.ConsoleSender(formatter, audienceRepresenter,
+			return new SpigotCmdSender.ConsoleSender(formatter, interlocutor, audienceRepresenter,
 					platformSender, plugin, futuresFactory);
 		}
 

@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
-import space.arim.libertybans.core.env.TargetMatcher;
+import space.arim.libertybans.core.env.Interlocutor;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -42,20 +42,17 @@ import java.util.function.Consumer;
 public class VelocityEnforcer extends AbstractEnvEnforcer<Player> {
 
 	private final ProxyServer server;
-	
+
 	@Inject
-	public VelocityEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter, ProxyServer server) {
-		super(futuresFactory, formatter, AudienceRepresenter.identity());
+	public VelocityEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter,
+							Interlocutor interlocutor, ProxyServer server) {
+		super(futuresFactory, formatter, interlocutor, AudienceRepresenter.identity());
 		this.server = server;
 	}
 
 	@Override
-	protected CentralisedFuture<Void> sendToThoseWithPermissionNoPrefix(String permission, Component message) {
-		for (Player player : server.getAllPlayers()) {
-			if (player.hasPermission(permission)) {
-				player.sendMessage(message);
-			}
-		}
+	protected CentralisedFuture<Void> doForAllPlayers(Consumer<Player> callback) {
+		server.getAllPlayers().forEach(callback);
 		return completedVoid();
 	}
 
@@ -71,16 +68,6 @@ public class VelocityEnforcer extends AbstractEnvEnforcer<Player> {
 	}
 
 	@Override
-	public CentralisedFuture<Void> enforceMatcher(TargetMatcher<Player> matcher) {
-		for (Player player : server.getAllPlayers()) {
-			if (matcher.matches(player.getUniqueId(), player.getRemoteAddress().getAddress())) {
-				matcher.callback().accept(player);
-			}
-		}
-		return completedVoid();
-	}
-
-	@Override
 	public UUID getUniqueIdFor(Player player) {
 		return player.getUniqueId();
 	}
@@ -88,6 +75,11 @@ public class VelocityEnforcer extends AbstractEnvEnforcer<Player> {
 	@Override
 	public InetAddress getAddressFor(Player player) {
 		return player.getRemoteAddress().getAddress();
+	}
+
+	@Override
+	public boolean hasPermission(Player player, String permission) {
+		return player.hasPermission(permission);
 	}
 
 	@Override

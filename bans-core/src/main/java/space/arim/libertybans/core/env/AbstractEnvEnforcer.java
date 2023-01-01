@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,17 +27,20 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public abstract class AbstractEnvEnforcer<P> implements EnvEnforcer<P> {
 
 	private final FactoryOfTheFuture futuresFactory;
 	private final InternalFormatter formatter;
+	private final Interlocutor interlocutor;
 	private final AudienceRepresenter<? super P> audienceRepresenter;
 
 	protected AbstractEnvEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter,
-								  AudienceRepresenter<? super P> audienceRepresenter) {
+								  Interlocutor interlocutor, AudienceRepresenter<? super P> audienceRepresenter) {
 		this.futuresFactory = Objects.requireNonNull(futuresFactory, "futuresFactory");
 		this.formatter = Objects.requireNonNull(formatter, "formatter");
+		this.interlocutor = Objects.requireNonNull(interlocutor, "interlocutor");
 		this.audienceRepresenter = Objects.requireNonNull(audienceRepresenter, "audienceRepresenter");
 	}
 
@@ -57,12 +60,46 @@ public abstract class AbstractEnvEnforcer<P> implements EnvEnforcer<P> {
 	public final CentralisedFuture<Void> sendToThoseWithPermission(String permission, ComponentLike message) {
 		return sendToThoseWithPermissionNoPrefix(permission, formatter.prefix(message).asComponent());
 	}
-	
-	protected abstract CentralisedFuture<Void> sendToThoseWithPermissionNoPrefix(String permission, Component message);
+
+	private CentralisedFuture<Void> sendToThoseWithPermissionNoPrefix(String permission, Component message) {
+		Consumer<P> callback;
+		if (interlocutor.shouldFilterIpAddresses()) {
+			Component stripped = interlocutor.stripIpAddresses(message);
+			callback = (player) -> {
+				if (hasPermission(player, permission)) {
+					Component chosen;
+					if (hasPermission(player, Interlocutor.PERMISSION_TO_VIEW_IPS)) {
+						chosen = message;
+					} else {
+						chosen = stripped;
+					}
+					sendMessageNoPrefix(player, chosen);
+				}
+			};
+		} else {
+			callback = (player) -> {
+				if (hasPermission(player, permission)) {
+					sendMessageNoPrefix(player, message);
+				}
+			};
+		}
+		return doForAllPlayers(callback);
+	}
+
+	protected abstract CentralisedFuture<Void> doForAllPlayers(Consumer<P> callback);
 
 	@Override
-	public void sendMessageNoPrefix(P player, ComponentLike message) {
+	public final void sendMessageNoPrefix(P player, ComponentLike message) {
 		audienceRepresenter.toAudience(player).sendMessage(message);
+	}
+
+	@Override
+	public final CentralisedFuture<Void> enforceMatcher(TargetMatcher<P> matcher) {
+		return doForAllPlayers((player) -> {
+			if (matcher.matches(getUniqueIdFor(player), getAddressFor(player))) {
+				matcher.callback().accept(player);
+			}
+		});
 	}
 
 }

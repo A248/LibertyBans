@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-env-velocity
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-env-velocity is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2023 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-env-velocity is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-env-velocity. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.env.velocity;
 
 import com.velocitypowered.api.command.CommandSource;
@@ -28,6 +29,7 @@ import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractCmdSender;
+import space.arim.libertybans.core.env.Interlocutor;
 
 import java.util.stream.Stream;
 
@@ -35,9 +37,9 @@ public abstract class VelocityCmdSender extends AbstractCmdSender<CommandSource>
 
 	private final ProxyServer server;
 
-	VelocityCmdSender(InternalFormatter formatter, CommandSource sender,
-					  Operator operator, ProxyServer server) {
-		super(formatter, AudienceRepresenter.identity(), sender, operator);
+	VelocityCmdSender(InternalFormatter formatter, Interlocutor interlocutor,
+					  CommandSource sender, Operator operator, ProxyServer server) {
+		super(formatter, interlocutor, AudienceRepresenter.identity(), sender, operator);
 		this.server = server;
 	}
 	
@@ -50,18 +52,19 @@ public abstract class VelocityCmdSender extends AbstractCmdSender<CommandSource>
 	public final Stream<String> getPlayerNames() {
 		return server.getAllPlayers().stream().map(Player::getUsername);
 	}
-	
+
 	static class PlayerSender extends VelocityCmdSender {
 
-		PlayerSender(InternalFormatter formatter, Player player, ProxyServer server) {
-			super(formatter, player, PlayerOperator.of(player.getUniqueId()), server);
+		PlayerSender(InternalFormatter formatter, Interlocutor interlocutor,
+					 Player player, ProxyServer server) {
+			super(formatter, interlocutor, player, PlayerOperator.of(player.getUniqueId()), server);
 		}
-		
+
 		@Override
 		public Player getRawSender() {
 			return (Player) super.getRawSender();
 		}
-		
+
 		@Override
 		public Stream<String> getPlayerNamesOnSameServer() {
 			Player player = getRawSender();
@@ -75,11 +78,12 @@ public abstract class VelocityCmdSender extends AbstractCmdSender<CommandSource>
 	}
 
 	static class ConsoleSender extends VelocityCmdSender {
-		
-		ConsoleSender(InternalFormatter formatter, CommandSource sender, ProxyServer server) {
-			super(formatter, sender, ConsoleOperator.INSTANCE, server);
+
+		ConsoleSender(InternalFormatter formatter, Interlocutor interlocutor,
+					  CommandSource sender, ProxyServer server) {
+			super(formatter, interlocutor, sender, ConsoleOperator.INSTANCE, server);
 		}
-		
+
 		@Override
 		public Stream<String> getPlayerNamesOnSameServer() {
 			return getPlayerNames();

@@ -173,6 +173,9 @@ public class FormatterTest {
 		lenient().when(formatting.globalScopeDisplay()).thenReturn("global");
 		lenient().when(formatting.punishmentTypeDisplay()).thenReturn(Map.of());
 		lenient().when(formatting.noTimeRemainingDisplay()).thenReturn("(No time remaining)");
+		MessagesConfig.Formatting.VictimDisplay victimDisplay = mock(MessagesConfig.Formatting.VictimDisplay.class);
+		lenient().when(victimDisplay.playerNameUnknown()).thenReturn("-NameUnknown-");
+		lenient().when(formatting.victimDisplay()).thenReturn(victimDisplay);
 		MessagesConfig.Formatting.PunishmentExpiredDisplay expiredDisplay = mock(MessagesConfig.Formatting.PunishmentExpiredDisplay.class);
 		lenient().when(expiredDisplay.notExpired()).thenReturn("not expired");
 		lenient().when(expiredDisplay.expired()).thenReturn("expired");

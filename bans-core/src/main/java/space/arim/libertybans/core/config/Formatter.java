@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -290,8 +290,6 @@ public class Formatter implements InternalFormatter {
 		return UUIDUtil.toShortString(uuid);
 	}
 
-	private static final String NAME_UNKNOWN_ERROR = "-NameUnknown-";
-
 	private CentralisedFuture<String> formatVictim(Victim victim) {
 		UUID uuid;
 		if (victim instanceof PlayerVictim playerVictim) {
@@ -308,7 +306,9 @@ public class Formatter implements InternalFormatter {
 		 * However, for API calls, the uuid/name might not be added to the cache.
 		 */
 		return uuidManager.lookupName(uuid)
-				.thenApply((optName) -> optName.orElse(NAME_UNKNOWN_ERROR));
+				.thenApply((optName) -> optName.orElse(
+						messages().formatting().victimDisplay().playerNameUnknown()
+				));
 	}
 
 	private String formatOperatorId(Operator operator) {
@@ -326,11 +326,13 @@ public class Formatter implements InternalFormatter {
 			 * because of UUIDMaster's fastCache.
 			 */
 			return uuidManager.lookupName(playerOperator.getUUID())
-					.thenApply((optName) -> optName.orElse(NAME_UNKNOWN_ERROR));
+					.thenApply((optName) -> optName.orElse(
+							messages().formatting().victimDisplay().playerNameUnknown()
+					));
 		}
 		return futuresFactory.completedFuture(messages().formatting().consoleDisplay());
 	}
-	
+
 	private String formatAddressVictim(AddressVictim addressVictim) {
 		return addressVictim.getAddress().toString();
 	}

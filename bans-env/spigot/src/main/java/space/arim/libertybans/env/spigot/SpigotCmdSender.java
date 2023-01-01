@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,6 +28,7 @@ import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractCmdSender;
+import space.arim.libertybans.core.env.Interlocutor;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.util.Collection;
@@ -39,9 +40,10 @@ public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 	private final Plugin plugin;
 	final FactoryOfTheFuture futuresFactory;
 
-	SpigotCmdSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
+	SpigotCmdSender(InternalFormatter formatter, Interlocutor interlocutor,
+					AudienceRepresenter<CommandSender> audienceRepresenter,
 					CommandSender sender, Operator operator, Plugin plugin, FactoryOfTheFuture futuresFactory) {
-		super(formatter, audienceRepresenter, sender, operator);
+		super(formatter, interlocutor, audienceRepresenter, sender, operator);
 		this.plugin = plugin;
 		this.futuresFactory = futuresFactory;
 	}
@@ -64,34 +66,31 @@ public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 		return getPlayerNames();
 	}
 
+	@Override
+	public final boolean hasPermission(String permission) {
+		return getRawSender().hasPermission(permission);
+	}
+
 	static class PlayerSender extends SpigotCmdSender {
 
-		PlayerSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
+		PlayerSender(InternalFormatter formatter, Interlocutor interlocutor,
+					 AudienceRepresenter<CommandSender> audienceRepresenter,
 					 Player player, Plugin plugin, FactoryOfTheFuture futuresFactory) {
-			super(formatter, audienceRepresenter,
+			super(formatter, interlocutor, audienceRepresenter,
 					player, PlayerOperator.of(player.getUniqueId()), plugin, futuresFactory);
-		}
-
-		@Override
-		public boolean hasPermission(String permission) {
-			return getRawSender().hasPermission(permission);
 		}
 
 	}
 
 	static class ConsoleSender extends SpigotCmdSender {
 
-		ConsoleSender(InternalFormatter formatter, AudienceRepresenter<CommandSender> audienceRepresenter,
+		ConsoleSender(InternalFormatter formatter, Interlocutor interlocutor,
+					  AudienceRepresenter<CommandSender> audienceRepresenter,
 					  CommandSender sender, Plugin plugin, FactoryOfTheFuture futuresFactory) {
-			super(formatter, audienceRepresenter,
+			super(formatter, interlocutor, audienceRepresenter,
 					sender, ConsoleOperator.INSTANCE, plugin, futuresFactory);
 		}
-		
-		@Override
-		public boolean hasPermission(String permission) {
-			return true;
-		}
-		
+
 	}
 	
 }

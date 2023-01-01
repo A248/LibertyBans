@@ -28,7 +28,7 @@ import org.bukkit.entity.Player;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
-import space.arim.libertybans.core.env.TargetMatcher;
+import space.arim.libertybans.core.env.Interlocutor;
 import space.arim.morepaperlib.adventure.MorePaperLibAdventure;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -44,11 +44,10 @@ public class SpigotEnforcer extends AbstractEnvEnforcer<Player> {
 	private final MorePaperLibAdventure morePaperLibAdventure;
 
 	@Inject
-	public SpigotEnforcer(InternalFormatter formatter,
-						  AudienceRepresenter<CommandSender> audienceRepresenter,
-						  FactoryOfTheFuture futuresFactory, Server server,
-						  MorePaperLibAdventure morePaperLibAdventure) {
-		super(futuresFactory, formatter, audienceRepresenter);
+	public SpigotEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter,
+						  Interlocutor interlocutor, AudienceRepresenter<CommandSender> audienceRepresenter,
+						  Server server, MorePaperLibAdventure morePaperLibAdventure) {
+		super(futuresFactory, formatter, interlocutor, audienceRepresenter);
 		this.server = server;
 		this.morePaperLibAdventure = morePaperLibAdventure;
 	}
@@ -60,14 +59,8 @@ public class SpigotEnforcer extends AbstractEnvEnforcer<Player> {
 	}
 
 	@Override
-	protected CentralisedFuture<Void> sendToThoseWithPermissionNoPrefix(String permission, Component message) {
-		return runSync(() -> {
-			for (Player player : server.getOnlinePlayers()) {
-				if (player.hasPermission(permission)) {
-					audienceRepresenter().toAudience(player).sendMessage(message);
-				}
-			}
-		});
+	protected CentralisedFuture<Void> doForAllPlayers(Consumer<Player> callback) {
+		return runSync(() -> server.getOnlinePlayers().forEach(callback));
 	}
 
 	@Override
@@ -86,17 +79,6 @@ public class SpigotEnforcer extends AbstractEnvEnforcer<Player> {
 	}
 
 	@Override
-	public CentralisedFuture<Void> enforceMatcher(TargetMatcher<Player> matcher) {
-		return runSync(() -> {
-			for (Player player : server.getOnlinePlayers()) {
-				if (matcher.matches(player.getUniqueId(), player.getAddress().getAddress())) {
-					matcher.callback().accept(player);
-				}
-			}
-		});
-	}
-
-	@Override
 	public UUID getUniqueIdFor(Player player) {
 		return player.getUniqueId();
 	}
@@ -104,6 +86,11 @@ public class SpigotEnforcer extends AbstractEnvEnforcer<Player> {
 	@Override
 	public InetAddress getAddressFor(Player player) {
 		return player.getAddress().getAddress();
+	}
+
+	@Override
+	public boolean hasPermission(Player player, String permission) {
+		return player.hasPermission(permission);
 	}
 
 	@Override

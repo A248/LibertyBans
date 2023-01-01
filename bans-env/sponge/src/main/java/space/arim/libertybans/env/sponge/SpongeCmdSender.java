@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -30,6 +30,7 @@ import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractCmdSender;
+import space.arim.libertybans.core.env.Interlocutor;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.util.Collection;
@@ -41,16 +42,16 @@ public abstract class SpongeCmdSender<C extends Subject> extends AbstractCmdSend
 	private final Game game;
 	private final FactoryOfTheFuture futuresFactory;
 
-	SpongeCmdSender(InternalFormatter formatter, AudienceRepresenter<C> audienceRepresenter,
-					C rawSender, Operator operator,
-					Game game, FactoryOfTheFuture futuresFactory) {
-		super(formatter, audienceRepresenter, rawSender, operator);
+	SpongeCmdSender(InternalFormatter formatter, Interlocutor interlocutor,
+					AudienceRepresenter<C> audienceRepresenter,
+					C rawSender, Operator operator, Game game, FactoryOfTheFuture futuresFactory) {
+		super(formatter, interlocutor, audienceRepresenter, rawSender, operator);
 		this.game = game;
 		this.futuresFactory = futuresFactory;
 	}
 
 	@Override
-	public Stream<String> getPlayerNames() {
+	public final Stream<String> getPlayerNames() {
 		// Make sure not to transfer streams across threads
 		return futuresFactory.supplySync(() -> {
 			Collection<ServerPlayer> players = game.server().onlinePlayers();
@@ -63,21 +64,21 @@ public abstract class SpongeCmdSender<C extends Subject> extends AbstractCmdSend
 	}
 
 	@Override
-	public Stream<String> getPlayerNamesOnSameServer() {
+	public final Stream<String> getPlayerNamesOnSameServer() {
 		return getPlayerNames();
 	}
 
 	@Override
-	public boolean hasPermission(String permission) {
+	public final boolean hasPermission(String permission) {
 		// The PermissionService is required to be thread-safe
 		return getRawSender().hasPermission(permission);
 	}
 
 	static class PlayerCmdSender extends SpongeCmdSender<ServerPlayer> {
 
-		PlayerCmdSender(InternalFormatter formatter, ServerPlayer player,
-						Game game, FactoryOfTheFuture futuresFactory) {
-			super(formatter, AudienceRepresenter.identity(),
+		PlayerCmdSender(InternalFormatter formatter, Interlocutor interlocutor,
+						ServerPlayer player, Game game, FactoryOfTheFuture futuresFactory) {
+			super(formatter, interlocutor, AudienceRepresenter.identity(),
 					player, PlayerOperator.of(player.uniqueId()), game, futuresFactory);
 		}
 
@@ -85,9 +86,9 @@ public abstract class SpongeCmdSender<C extends Subject> extends AbstractCmdSend
 
 	static class ConsoleSender extends SpongeCmdSender<CommandCause> {
 
-		ConsoleSender(InternalFormatter formatter, CommandCause sender,
-					  Game game, FactoryOfTheFuture futuresFactory) {
-			super(formatter, new SpongeAudienceRepresenter(),
+		ConsoleSender(InternalFormatter formatter, Interlocutor interlocutor,
+					  CommandCause sender, Game game, FactoryOfTheFuture futuresFactory) {
+			super(formatter, interlocutor, new SpongeAudienceRepresenter(),
 					sender, ConsoleOperator.INSTANCE, game, futuresFactory);
 		}
 

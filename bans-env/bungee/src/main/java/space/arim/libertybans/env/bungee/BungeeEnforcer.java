@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -30,7 +30,7 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
-import space.arim.libertybans.core.env.TargetMatcher;
+import space.arim.libertybans.core.env.Interlocutor;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -46,20 +46,16 @@ public class BungeeEnforcer extends AbstractEnvEnforcer<ProxiedPlayer> {
 
 	@Inject
 	public BungeeEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter,
-						  AudienceRepresenter<CommandSender> audienceRepresenter,
+						  Interlocutor interlocutor, AudienceRepresenter<CommandSender> audienceRepresenter,
 						  ProxyServer server, AddressReporter addressReporter) {
-		super(futuresFactory, formatter, audienceRepresenter);
+		super(futuresFactory, formatter, interlocutor, audienceRepresenter);
 		this.server = server;
 		this.addressReporter = addressReporter;
 	}
 
 	@Override
-	protected CentralisedFuture<Void> sendToThoseWithPermissionNoPrefix(String permission, Component message) {
-		for (ProxiedPlayer player : server.getPlayers()) {
-			if (player.hasPermission(permission)) {
-				audienceRepresenter().toAudience(player).sendMessage(message);
-			}
-		}
+	protected CentralisedFuture<Void> doForAllPlayers(Consumer<ProxiedPlayer> callback) {
+		server.getPlayers().forEach(callback);
 		return completedVoid();
 	}
 
@@ -79,16 +75,6 @@ public class BungeeEnforcer extends AbstractEnvEnforcer<ProxiedPlayer> {
 	}
 
 	@Override
-	public CentralisedFuture<Void> enforceMatcher(TargetMatcher<ProxiedPlayer> matcher) {
-		for (ProxiedPlayer player : server.getPlayers()) {
-			if (matcher.matches(player.getUniqueId(), addressReporter.getAddress(player))) {
-				matcher.callback().accept(player);
-			}
-		}
-		return completedVoid();
-	}
-
-	@Override
 	public UUID getUniqueIdFor(ProxiedPlayer player) {
 		return player.getUniqueId();
 	}
@@ -96,6 +82,11 @@ public class BungeeEnforcer extends AbstractEnvEnforcer<ProxiedPlayer> {
 	@Override
 	public InetAddress getAddressFor(ProxiedPlayer player) {
 		return addressReporter.getAddress(player);
+	}
+
+	@Override
+	public boolean hasPermission(ProxiedPlayer player, String permission) {
+		return player.hasPermission(permission);
 	}
 
 	@Override

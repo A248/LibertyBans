@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,6 +32,7 @@ import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.env.Interlocutor;
 import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.omnibus.util.ArraysUtil;
 
@@ -52,14 +53,16 @@ public final class CommandHandler implements SimpleCommand, PlatformListener {
 	public static class CommandHelper {
 
 		private final InternalFormatter formatter;
+		private final Interlocutor interlocutor;
 		private final Commands commands;
 		private final PluginContainer plugin;
 		private final ProxyServer server;
 
 		@Inject
-		public CommandHelper(InternalFormatter formatter, Commands commands,
-							 PluginContainer plugin, ProxyServer server) {
+		public CommandHelper(InternalFormatter formatter, Interlocutor interlocutor,
+							 Commands commands, PluginContainer plugin, ProxyServer server) {
 			this.formatter = formatter;
+			this.interlocutor = interlocutor;
 			this.commands = commands;
 			this.plugin = plugin;
 			this.server = server;
@@ -67,9 +70,9 @@ public final class CommandHandler implements SimpleCommand, PlatformListener {
 
 		private CmdSender adaptSender(CommandSource platformSender) {
 			if (platformSender instanceof Player player) {
-				return new VelocityCmdSender.PlayerSender(formatter, player, server);
+				return new VelocityCmdSender.PlayerSender(formatter, interlocutor, player, server);
 			}
-			return new VelocityCmdSender.ConsoleSender(formatter, platformSender, server);
+			return new VelocityCmdSender.ConsoleSender(formatter, interlocutor, platformSender, server);
 		}
 
 		void execute(CommandSource platformSender, CommandPackage command) {

@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2023 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core.config;
 
 import java.time.temporal.ChronoUnit;
@@ -221,7 +222,7 @@ public interface MessagesConfig {
 	Formatting formatting();
 	
 	interface Formatting {
-		
+
 		@ConfKey("permanent-arguments")
 		@ConfComments({
 				"There are 2 ways to make permanent punishments. The first is to not specify a time (/ban <player> <reason>).",
@@ -229,26 +230,26 @@ public interface MessagesConfig {
 				"When typing commands, what time arguments will be counted as permanent?"})
 		@DefaultStrings({"perm", "permanent", "permanently"})
 		Set<String> permanentArguments();
-		
+
 		@ConfKey("permanent-display")
 		@ConfComments("How should 'permanent' be displayed as a length of time?")
 		@SubSection
 		PermanentDisplay permanentDisplay();
-		
+
 		interface PermanentDisplay {
-			
+
 			@ConfComments("What do you call a permanent duration?")
 			@DefaultString("Infinite")
 			String duration();
-			
+
 			@ConfComments("How do you describe the time remaining in a permanent punishment?")
 			@DefaultString("Permanent")
 			String relative();
-			
+
 			@ConfComments("When does a permanent punishment end?")
 			@DefaultString("Never")
 			String absolute();
-			
+
 		}
 
 		@ConfKey("no-time-remaining-display")
@@ -257,7 +258,35 @@ public interface MessagesConfig {
 				"this becomes the value of the %TIME_REMAINING% variable"})
 		@DefaultString("N/A")
 		String noTimeRemainingDisplay();
-		
+
+		@ConfKey("victim-display")
+		@ConfComments("Controls how victims are displayed")
+		@SubSection
+		VictimDisplay victimDisplay();
+
+		interface VictimDisplay {
+
+			@ConfKey("censor-ip-addresses")
+			@ConfComments("Whether to censor IP addresses for players without the libertybans.admin.viewips permission")
+			@DefaultBoolean(false)
+			boolean censorIpAddresses();
+
+			@ConfKey("censored-ip-address")
+			@ConfComments("The substitute text when an IP address cannot be viewed because the user lacks permission")
+			@DefaultString("<censored IP address>")
+			String censoredIpAddress();
+
+			@ConfKey("player-name-unknown")
+			@ConfComments({
+					"In rare cases, you may have punishments for a user whose name is unknown. This can happen because",
+					"users are punished by UUID, but on some configurations it is not possible to lookup player names.",
+					"When this occurs, the following text is used instead of the player name."
+			})
+			@DefaultString("-NameUnknown-")
+			String playerNameUnknown();
+
+		}
+
 		@ConfKey("console-arguments")
 		@ConfComments("When using /blame, how should the console be specified?")
 		@DefaultStrings("console")
@@ -267,7 +296,7 @@ public interface MessagesConfig {
 		@ConfComments("How should the console be displayed?")
 		@DefaultString("Console")
 		String consoleDisplay();
-		
+
 		@ConfKey("global-scope-display")
 		@ConfComments("How should the global scope be displayed?")
 		@DefaultString("All servers")
