@@ -208,10 +208,12 @@ public class DatabaseSettings {
 			}
 			case HSQLDB -> {
 				Path databaseFolder = folder.resolve("internal").resolve("hypersql");
-				try {
-					Files.createDirectories(databaseFolder);
-				} catch (IOException ex) {
-					throw new StartupException("Cannot create database folder", ex);
+				if (!Files.exists(databaseFolder)) {
+					try {
+						Files.createDirectories(databaseFolder);
+					} catch (IOException ex) {
+						throw new StartupException("Cannot create database folder", ex);
+					}
 				}
 				Path databaseFile = databaseFolder.resolve("punishments-database").toAbsolutePath();
 				yield "jdbc:hsqldb:file:" + databaseFile;
