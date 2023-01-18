@@ -136,6 +136,16 @@ public interface MainConfig {
 		@DefaultBoolean(true)
 		boolean blameShowsActiveOnly();
 
+		@ConfKey("show-applicable-for-history")
+		@ConfComments({
+				"By default, /history shows all active punishments for the player requested.",
+				"Enabling this option will make /history scan all punishments which would apply to the player",
+				"",
+				"For example, an IP ban may apply to a player, but it will not be in the player's /history unless this is enabled"
+		})
+		@DefaultBoolean(false)
+		boolean showApplicableForHistory();
+
 	}
 
 	@SubSection

@@ -29,7 +29,8 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.select.PunishmentSelector;
-import space.arim.libertybans.api.select.SelectionOrder;
+import space.arim.libertybans.api.select.SelectionBase;
+import space.arim.libertybans.api.select.SelectionBuilderBase;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
 import space.arim.libertybans.api.select.SelectionPredicate;
 import space.arim.libertybans.core.commands.extra.AsCompositeWildcard;
@@ -107,35 +108,37 @@ public class ListCommands extends AbstractSubCommandGroup {
 				sender().sendMessage(section.permissionCommand());
 				return null;
 			}
-			SelectionOrderBuilder selectionOrderBuilder = selector.selectionBuilder();
-			switch (listType) {
-			case BANLIST:
-				return parsePageThenExecute(selectionOrderBuilder.type(PunishmentType.BAN));
-			case MUTELIST:
-				return parsePageThenExecute(selectionOrderBuilder.type(PunishmentType.MUTE));
-			case WARNS:
-				selectionOrderBuilder.type(PunishmentType.WARN);
-				break;
-			case HISTORY:
-				selectionOrderBuilder.selectAll();
-				break;
-			case BLAME:
-				selectionOrderBuilder.selectActiveOnly(config().commands().blameShowsActiveOnly());
-				break;
-			default:
-				throw new IllegalArgumentException("Could not recognise " + listType);
-			}
-			assert listType.requiresTarget() : listType;
+			return switch (listType) {
+			case BANLIST ->
+					parsePageThenExecute(selector.selectionBuilder().type(PunishmentType.BAN));
+			case MUTELIST ->
+					parsePageThenExecute(selector.selectionBuilder().type(PunishmentType.MUTE));
+			case HISTORY, WARNS -> {
+				if (!command().hasNext()) {
+					sender().sendMessage(section.usage());
+					yield null;
+				}
+				target = command().next();
 
-			if (!command().hasNext()) {
-				sender().sendMessage(section.usage());
-				return null;
-			}
-			target = command().next();
-			switch (listType) {
-			case HISTORY:
-			case WARNS:
-				return argumentParser().parseVictim(
+				if (config().commands().showApplicableForHistory()) {
+					yield argumentParser().parsePlayer(sender(), target).thenCompose((uuidAndAddress) -> {
+						if (uuidAndAddress == null) {
+							return completedFuture(null);
+						}
+						return parsePageThenExecute(
+								selector.selectionByApplicabilityBuilder(
+										uuidAndAddress.uuid(), uuidAndAddress.address()
+								).selectAll()
+						);
+					});
+				}
+				SelectionOrderBuilder selectionOrderBuilder = selector.selectionBuilder();
+				if (listType == ListType.HISTORY) {
+					selectionOrderBuilder.selectAll();
+				} else {
+					selectionOrderBuilder.type(PunishmentType.WARN);
+				}
+				yield argumentParser().parseVictim(
 						sender(), target, ParseVictim.ofPreferredType(Victim.VictimType.PLAYER)
 				).thenCompose((victim) -> {
 					if (victim == null) {
@@ -146,28 +149,36 @@ public class ListCommands extends AbstractSubCommandGroup {
 					SelectionPredicate<Victim> victimSelection = matchingAnyOf(victim, compositeWildcard);
 					return parsePageThenExecute(selectionOrderBuilder.victims(victimSelection));
 				});
-			case BLAME:
-				return argumentParser().parseOperator(
+			}
+			case BLAME -> {
+				if (!command().hasNext()) {
+					sender().sendMessage(section.usage());
+					yield null;
+				}
+				target = command().next();
+
+				SelectionOrderBuilder selectionBuilder = selector.selectionBuilder();
+				selectionBuilder.selectActiveOnly(config().commands().blameShowsActiveOnly());
+				yield argumentParser().parseOperator(
 						sender(), target
 				).thenCompose((operator) -> {
 					if (operator == null) {
 						return completedFuture(null);
 					}
-					return parsePageThenExecute(selectionOrderBuilder.operator(operator));
+					return parsePageThenExecute(selectionBuilder.operator(operator));
 				});
-			default:
-				throw new IllegalArgumentException("Could not recognize " + listType);
 			}
+			};
 		}
 
-		private ReactionStage<Void> parsePageThenExecute(SelectionOrderBuilder selectionOrderBuilder) {
+		private ReactionStage<Void> parsePageThenExecute(SelectionBuilderBase<?, ?> selectionBuilder) {
 			int selectedPage = parsePage();
 			if (selectedPage <= 0) {
 				sender().sendMessage(section.usage());
 				return completedFuture(null);
 			}
 			int perPage = section.perPage();
-			SelectionOrder selection = selectionOrderBuilder
+			SelectionBase selection = selectionBuilder
 					.skipFirstRetrieved(perPage * (selectedPage - 1))
 					.limitToRetrieve(perPage)
 					.build();
@@ -187,8 +198,8 @@ public class ListCommands extends AbstractSubCommandGroup {
 			return page;
 		}
 
-		private ReactionStage<Void> continueWithPageAndSelection(SelectionOrder selectionOrder, int page) {
-			return selectionOrder.getAllSpecificPunishments().thenCompose((punishments) -> {
+		private ReactionStage<Void> continueWithPageAndSelection(SelectionBase selection, int page) {
+			return selection.getAllSpecificPunishments().thenCompose((punishments) -> {
 				return showPunishmentsOnPage(punishments, page);
 			});
 		}

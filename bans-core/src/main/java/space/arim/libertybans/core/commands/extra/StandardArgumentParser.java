@@ -122,15 +122,24 @@ public class StandardArgumentParser implements ArgumentParser {
 				}
 				return AddressVictim.of(address);
 			});
-			case COMPOSITE -> uuidManager.lookupPlayer(targetArg).thenApply((optUuidAndAddress) -> {
-				if (optUuidAndAddress.isEmpty()) {
-					sender.sendMessage(notFound().player().replaceText("%TARGET%", targetArg));
+			case COMPOSITE -> parsePlayer(sender, targetArg).thenApply((uuidAndAddress) -> {
+				if (uuidAndAddress == null) {
 					return null;
 				}
-				UUIDAndAddress uuidAndAddress = optUuidAndAddress.get();
 				return CompositeVictim.of(uuidAndAddress.uuid(), uuidAndAddress.address());
 			});
 		};
+	}
+
+	@Override
+	public CentralisedFuture<UUIDAndAddress> parsePlayer(CmdSender sender, String targetArg) {
+		return  uuidManager.lookupPlayer(targetArg).thenApply((optUuidAndAddress) -> {
+			if (optUuidAndAddress.isEmpty()) {
+				sender.sendMessage(notFound().player().replaceText("%TARGET%", targetArg));
+				return null;
+			}
+			return optUuidAndAddress.get();
+		});
 	}
 
 }

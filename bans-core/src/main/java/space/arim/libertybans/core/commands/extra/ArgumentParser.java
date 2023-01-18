@@ -22,6 +22,7 @@ package space.arim.libertybans.core.commands.extra;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.env.UUIDAndAddress;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.util.UUID;
@@ -31,6 +32,8 @@ public interface ArgumentParser {
 	CentralisedFuture<UUID> parseOrLookupUUID(CmdSender sender, String targetArg);
 
 	CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg, ParseVictim how);
+
+	CentralisedFuture<UUIDAndAddress> parsePlayer(CmdSender sender, String targetArg);
 
 	CentralisedFuture<Operator> parseOperator(CmdSender sender, String operatorArg);
 	
