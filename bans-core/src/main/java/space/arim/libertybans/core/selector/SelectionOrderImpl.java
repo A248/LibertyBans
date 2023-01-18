@@ -93,7 +93,7 @@ final class SelectionOrderImpl extends SelectionBaseSQL implements SelectionOrde
 					.and(victimAcceptedCondition)
 					.and(victimNotRejectedCondition);
 		}
-		return new QueryBuilder(fields, additionalColumns, additionalPredication) {
+		return new QueryBuilder(parameters, fields, fields.table()) {
 			@Override
 			Victim victimFromRecord(Record record) {
 				if (getVictims().isSimpleEquality()) {
@@ -103,12 +103,17 @@ final class SelectionOrderImpl extends SelectionBaseSQL implements SelectionOrde
 							getVictimTypes(), record, fields.victimType()
 					);
 					return new DeserializedVictim(
-							record.get(fields.victimUuid()),
-							record.get(fields.victimAddress())
+							record.get(aggregateIfNeeded(fields.victimUuid())),
+							record.get(aggregateIfNeeded(fields.victimAddress()))
 					).victim(victimType);
 				}
 			}
-		}.constructSelect(parameters, fields.table());
+
+			@Override
+			boolean mightRepeatIds() {
+				return false;
+			}
+		}.constructSelect(additionalColumns, additionalPredication);
 	}
 
 	@Override

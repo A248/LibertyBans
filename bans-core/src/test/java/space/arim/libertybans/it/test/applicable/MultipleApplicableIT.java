@@ -20,12 +20,12 @@
 package space.arim.libertybans.it.test.applicable;
 
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
@@ -35,12 +35,11 @@ import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.api.select.SortPunishments;
 import space.arim.libertybans.core.service.SettableTime;
+import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.IrrelevantData;
 import space.arim.libertybans.it.SetAddressStrictness;
 import space.arim.libertybans.it.resolver.RandomOperatorResolver;
-import space.arim.libertybans.it.resolver.RandomPunishmentTypeResolver;
-import space.arim.libertybans.it.resolver.RandomVictimResolver;
 import space.arim.libertybans.it.util.RandomUtil;
 
 import java.time.Duration;
@@ -53,27 +52,31 @@ import static space.arim.libertybans.api.PunishmentType.MUTE;
 import static space.arim.libertybans.api.PunishmentType.WARN;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
-@ExtendWith({RandomPunishmentTypeResolver.class, RandomOperatorResolver.class, RandomVictimResolver.class})
+@ExtendWith(RandomOperatorResolver.class)
 public class MultipleApplicableIT {
 
 	private final PunishmentDrafter drafter;
 	private final PunishmentSelector selector;
 	private final StrictnessAssertHelper strictnessAssertHelper;
 	private final SettableTime time;
+	private final Operator operator;
 
 	@Inject
 	public MultipleApplicableIT(PunishmentDrafter drafter, PunishmentSelector selector,
-								StrictnessAssertHelper strictnessAssertHelper, SettableTime time) {
+								StrictnessAssertHelper strictnessAssertHelper, SettableTime time,
+								@DontInject Operator operator) {
 		this.drafter = drafter;
 		this.selector = selector;
 		this.strictnessAssertHelper = strictnessAssertHelper;
 		this.time = time;
+		this.operator = operator;
 	}
 
 	private Punishment addPunishment(PunishmentType type, Victim victim, String reason, Duration time) {
 		return drafter.draftBuilder()
 				.type(type)
 				.victim(victim)
+				.operator(operator)
 				.reason(reason)
 				.duration(time)
 				.build()
@@ -85,6 +88,7 @@ public class MultipleApplicableIT {
 
 	@TestTemplate
 	@SetAddressStrictness(AddressStrictness.NORMAL)
+	@IrrelevantData
 	public void selectHistory() {
 		UUID uuid = UUID.randomUUID();
 		NetworkAddress address = RandomUtil.randomAddress();
@@ -109,24 +113,46 @@ public class MultipleApplicableIT {
 	}
 
 	@TestTemplate
-	@SetAddressStrictness(AddressStrictness.NORMAL)
+	@SetAddressStrictness(AddressStrictness.STRICT)
 	@IrrelevantData
-	@Disabled
-	public void selectHistoryAssumingBlueTree242Dataset() {
-		UUID uuid = UUID.fromString("0f7f47f3-1dc2-3c37-876f-4edb177c8ffb");
-		List<Long> ids =
-				selector.selectionByApplicabilityBuilder(uuid, RandomUtil.randomAddress())
-						.selectAll()
+	public void avoidDuplicateApplicablePunishments() {
+		UUID uuid = UUID.randomUUID();
+		NetworkAddress address = RandomUtil.randomAddress();
+		strictnessAssertHelper.connectAndAssertUnbannedUser(uuid, "username", address);
+		UUID altUuid = UUID.randomUUID();
+		NetworkAddress altAddress = RandomUtil.randomAddress();
+		strictnessAssertHelper.connectAndAssertUnbannedUser(altUuid, "alt username", address);
+		strictnessAssertHelper.connectAndAssertUnbannedUser(altUuid, "alt username", altAddress);
+
+		Punishment banOnAddress = addPunishment(BAN, AddressVictim.of(address), "ban on address", Duration.ofMinutes(2L));
+		Punishment muteOnAltUuid = addPunishment(MUTE, PlayerVictim.of(altUuid), "mute on alt uuid", Duration.ZERO);
+		Punishment warnOnAltAddress = addPunishment(WARN, AddressVictim.of(altAddress), "warn on alt address", Duration.ofMinutes(3L));
+
+		assertEquals(
+				List.of(muteOnAltUuid),
+				selector.selectionByApplicabilityBuilder(uuid, address)
+						.type(MUTE)
 						.build()
-						.getAllSpecificPunishments(SortPunishments.OLDEST_FIRST)
+						.getAllSpecificPunishments()
 						.toCompletableFuture()
 						.join()
-						.stream()
-						.map(Punishment::getIdentifier)
-						.toList();
+		);
 		assertEquals(
-				List.of(7L, 8L, 9L, 14L),
-				ids
+				List.of(banOnAddress),
+				selector.selectionByApplicabilityBuilder(uuid, address)
+						.type(BAN)
+						.build()
+						.getAllSpecificPunishments()
+						.toCompletableFuture()
+						.join()
+		);
+		assertEquals(
+				List.of(muteOnAltUuid, warnOnAltAddress, banOnAddress), // Ordered by end date
+				selector.selectionByApplicabilityBuilder(uuid, address)
+						.build()
+						.getAllSpecificPunishments(SortPunishments.LATEST_END_DATE_FIRST)
+						.toCompletableFuture()
+						.join()
 		);
 	}
 

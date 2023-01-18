@@ -112,17 +112,22 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 				fields.victimType(), fields.victimUuid(), fields.victimAddress()
 		);
 		assert table != null;
-		return new QueryBuilder(fields, additionalColumns, additionalPredication) {
+		return new QueryBuilder(parameters, fields, table) {
 			@Override
 			Victim victimFromRecord(Record record) {
 				return new DeserializedVictim(
-						record.get(fields.victimUuid()),
-						record.get(fields.victimAddress())
+						record.get(aggregateIfNeeded(fields.victimUuid())),
+						record.get(aggregateIfNeeded(fields.victimAddress()))
 				).victim(
-						record.get(fields.victimType())
+						record.get(aggregateIfNeeded(fields.victimType()))
 				);
 			}
-		}.constructSelect(parameters, table);
+
+			@Override
+			boolean mightRepeatIds() {
+				return strictness != AddressStrictness.LENIENT;
+			}
+		}.constructSelect(additionalColumns, additionalPredication);
 	}
 
 	@Override

@@ -27,8 +27,10 @@ import org.jooq.Field;
 import org.jooq.OrderField;
 import org.jooq.Record;
 import org.jooq.RecordMapper;
+import org.jooq.SQLDialect;
 import org.jooq.Select;
 import org.jooq.Table;
+import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
@@ -53,15 +55,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static org.jooq.impl.DSL.choose;
-import static org.jooq.impl.DSL.count;
-import static org.jooq.impl.DSL.inline;
-import static org.jooq.impl.DSL.noCondition;
-import static org.jooq.impl.DSL.noField;
-import static org.jooq.impl.DSL.val;
+import static org.jooq.impl.DSL.*;
 import static space.arim.libertybans.core.schema.tables.ApplicableActive.APPLICABLE_ACTIVE;
 import static space.arim.libertybans.core.schema.tables.ApplicableHistory.APPLICABLE_HISTORY;
 import static space.arim.libertybans.core.schema.tables.SimpleActive.SIMPLE_ACTIVE;
@@ -90,7 +88,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	 */
 
 	private <F extends PunishmentFields> F determineFields(Function<TableForType, F> forType,
-														  Function<Boolean, F> forActiveOrHistorical) {
+														   Function<Boolean, F> forActiveOrHistorical) {
 		boolean active = selectActiveOnly();
 		if (active && getTypes().isSimpleEquality()) {
 			PunishmentType type = getTypes().acceptedValues().iterator().next();
@@ -139,33 +137,41 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 		return shouldInline ? inline(value) : val(value);
 	}
 
-	static <U> U retrieveValueFromRecordOrSelection(SelectionPredicate<U> selection, Record record,
-													Field<U> field) {
-		if (selection.isSimpleEquality()) {
-			return selection.acceptedValues().iterator().next();
-		}
-		return record.get(field);
-	}
-
 	abstract class QueryBuilder {
 
+		private final QueryParameters parameters;
 		final PunishmentFields fields;
-		private final List<Field<?>> additionalColumns;
-		private final Condition additionalPredication;
+		private final Table<?> table;
 
-		QueryBuilder(PunishmentFields fields, List<Field<?>> additionalColumns,
-					 Condition additionalPredication) {
+		QueryBuilder(QueryParameters parameters, PunishmentFields fields, Table<?> table) {
+			this.parameters = parameters;
 			this.fields = fields;
-			this.additionalColumns = additionalColumns;
-			this.additionalPredication = additionalPredication;
+			this.table = table;
 		}
 
 		abstract Victim victimFromRecord(Record record);
 
-		private List<Field<?>> getColumnsToRetrieve() {
-			List<Field<?>> columns = new ArrayList<>();
-			columns.add(fields.id());
-			columns.addAll(additionalColumns);
+		abstract boolean mightRepeatIds();
+
+		private boolean groupByIdForDeduplication() {
+			return mightRepeatIds() && parameters.limit != 1;
+		}
+
+		private <U> Field<U> aggregate(Field<U> field) {
+			if (parameters.context.family() == SQLDialect.POSTGRES) {
+				Class<U> fieldType = field.getType();
+				// PostgreSQL does not define MAX/MIN for the UUID or BYTEA types
+				if (fieldType.equals(UUID.class) || fieldType.equals(NetworkAddress.class) || fieldType.equals(Operator.class)) {
+					return arrayGet(arrayAgg(
+							field(field.getQualifiedName(), fieldType)
+					), inline(1));
+				}
+			}
+			return max(field);
+		}
+
+		private List<Field<?>> getColumnsToRetrieve(List<Field<?>> additionalColumns) {
+			List<Field<?>> columns = new ArrayList<>(additionalColumns);
 			if (getTypes().isNotSimpleEquality()) {
 				columns.add(fields.type());
 			}
@@ -178,6 +184,10 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			}
 			columns.add(fields.start());
 			columns.add(fields.end());
+			if (groupByIdForDeduplication()) {
+				columns.replaceAll(this::aggregate);
+			}
+			columns.add(fields.id());
 			return columns;
 		}
 
@@ -193,8 +203,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			}
 			condition = condition
 					.and(matchesCriterion(getOperators(), fields.operator()))
-					.and(matchesCriterion(getScopes(), fields.scope()))
-					.and(additionalPredication);
+					.and(matchesCriterion(getScopes(), fields.scope()));
 			if (active) {
 				condition = condition
 						.and(new EndTimeCondition(fields).isNotExpired(timeSupplier.get()));
@@ -233,6 +242,17 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			return condition;
 		}
 
+		<U> Field<U> aggregateIfNeeded(Field<U> field) {
+			return groupByIdForDeduplication() ? aggregate(field) : field;
+		}
+
+		<U> U retrieveValueFromRecordOrSelection(SelectionPredicate<U> selection, Record record, Field<U> field) {
+			if (selection.isSimpleEquality()) {
+				return selection.acceptedValues().iterator().next();
+			}
+			return record.get(aggregateIfNeeded(field));
+		}
+
 		private Punishment mapRecord(Record record) {
 			PunishmentType type = retrieveValueFromRecordOrSelection(
 					getTypes(), record, fields.type()
@@ -251,31 +271,29 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 					type,
 					victim,
 					operator,
-					record.get(fields.reason()),
+					record.get(aggregateIfNeeded(fields.reason())),
 					scope,
-					record.get(fields.start()),
-					record.get(fields.end())
+					record.get(aggregateIfNeeded(fields.start())),
+					record.get(aggregateIfNeeded(fields.end()))
 			);
 		}
 
-		/*
-		In some databases, fields referenced in ORDER BY must be included in the SELECT clause
-		 */
 		private List<OrderField<?>> buildOrdering(SortPunishments[] ordering) {
+			Field<Instant> start = aggregateIfNeeded(fields.start());
+			Field<Long> end = aggregateIfNeeded(fields.end()).coerce(Long.class);
 
 			List<OrderField<?>> orderFields = new ArrayList<>(ordering.length * 2);
 			for (SortPunishments sortPunishments : ordering) {
 				switch (sortPunishments) {
 				case NEWEST_FIRST -> {
-					orderFields.add(fields.start().desc());
+					orderFields.add(start.desc());
 					orderFields.add(fields.id().desc());
 				}
 				case OLDEST_FIRST -> {
-					orderFields.add(fields.start().asc());
+					orderFields.add(start.asc());
 					orderFields.add(fields.id().asc());
 				}
 				case LATEST_END_DATE_FIRST -> {
-					var end = fields.end().coerce(Long.class);
 					// Since, end = 0 defines a permanent punishment use
 					// CASE WHEN end = 0 THEN Long.MAX_VALUE ELSE end END
 					orderFields.add(choose(end)
@@ -284,7 +302,6 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 							.desc());
 				}
 				case SOONEST_END_DATE_FIRST -> {
-					var end = fields.end().coerce(Long.class);
 					orderFields.add(choose(end)
 							.when(inline(0L), inline(Long.MAX_VALUE))
 							.otherwise(end)
@@ -295,17 +312,20 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			return orderFields;
 		}
 
-		Query<?> constructSelect(QueryParameters parameters, Table<?> table) {
-			List<Field<?>> selection = getColumnsToRetrieve();
-			List<OrderField<?>> ordering = buildOrdering(parameters.ordering);
+		Query<?> constructSelect(List<Field<?>> additionalColumns, Condition additionalPredication) {
 			return new Query<>(
 					parameters.context
-							.select(selection)
+							.select(getColumnsToRetrieve(additionalColumns))
 							.from(table)
-							.where(getPredication(parameters.timeSupplier))
-							.orderBy(ordering)
+							.where(getPredication(parameters.timeSupplier).and(additionalPredication))
+							.groupBy(groupByIdForDeduplication() ? fields.id() : noField())
+							.orderBy(buildOrdering(parameters.ordering))
 							.offset((skipCount() == 0) ? noField(Integer.class) : val(skipCount()))
-							.limit(parameters.limit),
+							.limit(switch (parameters.limit) {
+								case 0 -> noField(Integer.class);
+								case 1 -> inline(1);
+								default -> val(parameters.limit);
+							}),
 					this::mapRecord
 			);
 		}
@@ -327,7 +347,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 		}
 	}
 
-	record QueryParameters(DSLContext context, Field<Integer> limit,
+	record QueryParameters(DSLContext context, int limit,
 						   Supplier<Instant> timeSupplier, SortPunishments...ordering) {}
 
 	abstract Query<?> requestQuery(QueryParameters parameters);
@@ -346,7 +366,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	 */
 	public String renderSingleApplicablePunishmentSQL(DSLContext context) {
 		return requestQuery(
-				new QueryParameters(context, inline(1), () -> Instant.EPOCH, SortPunishments.LATEST_END_DATE_FIRST)
+				new QueryParameters(context, 1, () -> Instant.EPOCH, SortPunishments.LATEST_END_DATE_FIRST)
 		).renderSQL();
 	}
 
@@ -362,7 +382,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	public Punishment findFirstSpecificPunishment(DSLContext context, Supplier<Instant> timeSupplier,
 												  SortPunishments...prioritization) {
 		return requestQuery(
-				new QueryParameters(context, inline(1), timeSupplier, prioritization)
+				new QueryParameters(context, 1, timeSupplier, prioritization)
 		).fetchOne();
 	}
 
@@ -388,7 +408,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 		return resources.dbProvider.get().query(SQLFunction.readOnly((context) -> requestQuery(
 				new QueryParameters(
 						context,
-						(limitToRetrieve() == 0) ? noField(Integer.class) : val(limitToRetrieve()),
+						limitToRetrieve(),
 						resources.time::currentTimestamp,
 						ordering
 				)
@@ -405,7 +425,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			Query<?> query = requestQuery(
 					new QueryParameters(
 							context,
-							(limitToRetrieve() == 0) ? noField(Integer.class) : val(limitToRetrieve()),
+							limitToRetrieve(),
 							resources.time::currentTimestamp
 					)
 			);

@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 public final class SelfImportData {
 
@@ -43,7 +44,7 @@ public final class SelfImportData {
 			URL resource = getClass().getResource("/import-data/self/" + sample + "/" + filename);
 			assert resource != null : "Missing resource";
 			try (InputStream inputStream = resource.openStream()) {
-				Files.copy(inputStream, databaseFolder.resolve(filename));
+				Files.copy(inputStream, databaseFolder.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
 			}
 		}
 		return sampleFolder;

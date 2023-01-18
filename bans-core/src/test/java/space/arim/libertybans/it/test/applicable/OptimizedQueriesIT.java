@@ -90,37 +90,38 @@ public class OptimizedQueriesIT {
 		Select<?> select = switch (strictness) {
 			case LENIENT -> context
 					.select(
-							simpleView.id(),
 							simpleView.victimType(), simpleView.victimUuid(), simpleView.victimAddress(),
 							simpleView.operator(), simpleView.reason(),
-							simpleView.scope(), simpleView.start(), simpleView.end()
+							simpleView.scope(), simpleView.start(), simpleView.end(),
+							simpleView.id()
 					)
 					.from(simpleView.table())
-					.where(new VictimCondition(simpleView).simplyMatches(uuid, address))
-					.and(new EndTimeCondition(simpleView).isNotExpired(Instant.EPOCH))
+					.where(new EndTimeCondition(simpleView).isNotExpired(Instant.EPOCH))
+					.and(new VictimCondition(simpleView).simplyMatches(uuid, address))
 					.orderBy(new EndTimeOrdering(simpleView).expiresLeastSoon())
 					.limit(inline(1));
 			case NORMAL -> context
 					.select(
-							applView.id(),
 							applView.victimType(), applView.victimUuid(), applView.victimAddress(),
 							applView.operator(), applView.reason(),
-							applView.scope(), applView.start(), applView.end()
+							applView.scope(), applView.start(), applView.end(),
+							applView.id()
 					).from(applView.table())
-					.where(applView.uuid().eq(uuid))
-					.and(new EndTimeCondition(applView).isNotExpired(Instant.EPOCH))
+					.where(new EndTimeCondition(applView).isNotExpired(Instant.EPOCH))
+					.and(applView.uuid().eq(uuid))
 					.orderBy(new EndTimeOrdering(applView).expiresLeastSoon())
 					.limit(inline(1));
 			case STERN, STRICT -> context
 					.select(
-							applView.id(),
 							applView.victimType(), applView.victimUuid(), applView.victimAddress(),
 							applView.operator(), applView.reason(),
-							applView.scope(), applView.start(), applView.end()
+							applView.scope(), applView.start(), applView.end(),
+							applView.id()
 					).from(applView.table())
 					.innerJoin(STRICT_LINKS)
 					.on(applView.uuid().eq(STRICT_LINKS.UUID1))
-					.where((strictness == AddressStrictness.STERN) ?
+					.where(new EndTimeCondition(applView).isNotExpired(Instant.EPOCH))
+					.and((strictness == AddressStrictness.STERN) ?
 							// STERN
 							// appl.uuid = strict_links.uuid1 = uuid
 							// OR victim_type != 'PLAYER' AND strict_links.uuid2 = uuid
@@ -130,7 +131,6 @@ public class OptimizedQueriesIT {
 							// strict_links.uuid2 = uuid
 							: STRICT_LINKS.UUID2.eq(uuid)
 					)
-					.and(new EndTimeCondition(applView).isNotExpired(Instant.EPOCH))
 					.orderBy(new EndTimeOrdering(applView).expiresLeastSoon())
 					.limit(inline(1));
 		};
