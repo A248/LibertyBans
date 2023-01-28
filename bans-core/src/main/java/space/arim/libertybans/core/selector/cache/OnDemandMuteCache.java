@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -68,16 +68,10 @@ public final class OnDemandMuteCache extends BaseMuteCache {
 	void installCache(Duration expirationTime, SqlConfig.MuteCaching.ExpirationSemantic expirationSemantic) {
 
 		Caffeine<Object, Object> builder = Caffeine.newBuilder();
-		switch (expirationSemantic) {
-		case EXPIRE_AFTER_ACCESS:
-			builder = builder.expireAfterAccess(expirationTime);
-			break;
-		case EXPIRE_AFTER_WRITE:
-			builder = builder.expireAfterWrite(expirationTime);
-			break;
-		default:
-			throw new IllegalStateException("Unknown expiration semantic " + expirationSemantic);
-		}
+		builder = switch (expirationSemantic) {
+			case EXPIRE_AFTER_ACCESS -> builder.expireAfterAccess(expirationTime);
+			case EXPIRE_AFTER_WRITE -> builder.expireAfterWrite(expirationTime);
+		};
 		cache = builder
 				.scheduler(Scheduler.disabledScheduler())
 				.ticker(time.toCaffeineTicker())
@@ -133,6 +127,10 @@ public final class OnDemandMuteCache extends BaseMuteCache {
 
 	@Override
 	public CentralisedFuture<?> cacheOnLogin(UUID uuid, NetworkAddress address) {
+		// Correctness: It is possible a cached mute's details changed while the player was offline
+		// In that case, re-enforcement via LocalEnforcer#updateDetails will not find the player online
+		// Therefore, to be sure, we must re-compute mutes cached before login
+		cache.asMap().remove(new MuteCacheKey(uuid, address));
 		return futuresFactory.completedFuture(null);
 	}
 

@@ -281,6 +281,11 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 		private List<OrderField<?>> buildOrdering(SortPunishments[] ordering) {
 			Field<Instant> start = aggregateIfNeeded(fields.start());
 			Field<Long> end = aggregateIfNeeded(fields.end()).coerce(Long.class);
+			// Since end = 0 defines a permanent punishment, use
+			// CASE WHEN end = 0 THEN Long.MAX_VALUE ELSE end END
+			end = choose(end)
+					.when(inline(0L), inline(Long.MAX_VALUE))
+					.otherwise(end);
 
 			List<OrderField<?>> orderFields = new ArrayList<>(ordering.length * 2);
 			for (SortPunishments sortPunishments : ordering) {
@@ -293,20 +298,8 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 					orderFields.add(start.asc());
 					orderFields.add(fields.id().asc());
 				}
-				case LATEST_END_DATE_FIRST -> {
-					// Since, end = 0 defines a permanent punishment use
-					// CASE WHEN end = 0 THEN Long.MAX_VALUE ELSE end END
-					orderFields.add(choose(end)
-							.when(inline(0L), inline(Long.MAX_VALUE))
-							.otherwise(end)
-							.desc());
-				}
-				case SOONEST_END_DATE_FIRST -> {
-					orderFields.add(choose(end)
-							.when(inline(0L), inline(Long.MAX_VALUE))
-							.otherwise(end)
-							.asc());
-				}
+				case LATEST_END_DATE_FIRST -> orderFields.add(end.desc());
+				case SOONEST_END_DATE_FIRST -> orderFields.add(end.asc());
 				}
 			}
 			return orderFields;

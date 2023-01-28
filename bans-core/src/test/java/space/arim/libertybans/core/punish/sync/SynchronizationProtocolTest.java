@@ -87,6 +87,11 @@ public class SynchronizationProtocolTest {
 		communicateMessageSuccessfully(new PacketExpunge(id));
 	}
 
+	@Test
+	public void updateDetails() {
+		communicateMessageSuccessfully(new PacketUpdateDetails(id));
+	}
+
 	private void communicateMessageSuccessfully(SynchronizationPacket message) {
 		byte[] serializedMessage = synchronizationProtocol.serializeMessage(message);
 

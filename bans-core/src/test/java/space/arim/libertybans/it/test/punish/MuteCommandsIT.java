@@ -47,6 +47,7 @@ public class MuteCommandsIT {
 	}
 
 	@TestTemplate
+	@Inject
 	public void muteCommandNotMuted(Guardian guardian) {
 		UUID uuid = UUID.randomUUID();
 		NetworkAddress address = RandomUtil.randomAddress();
@@ -55,6 +56,7 @@ public class MuteCommandsIT {
 	}
 
 	@TestTemplate
+	@Inject
 	public void blockMuteCommandsCorrectly(Guardian guardian, PunishmentDrafter drafter) {
 		UUID uuid = UUID.randomUUID();
 		NetworkAddress address = RandomUtil.randomAddress();

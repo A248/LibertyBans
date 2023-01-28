@@ -113,7 +113,7 @@ public class SelectorIT {
 
 	@TestTemplate
 	public void selectHistoricalById() {
-		Punishment punishment = enactPunishment(PunishmentType.WARN);
+		Punishment punishment = enactPunishment(PunishmentType.MUTE);
 		long id = punishment.getIdentifier();
 		assertEquals(
 				punishment,
@@ -121,10 +121,10 @@ public class SelectorIT {
 		);
 		assertEquals(
 				punishment,
-				selector.getHistoricalPunishmentByIdAndType(id, PunishmentType.WARN).toCompletableFuture().join().orElse(null)
+				selector.getHistoricalPunishmentByIdAndType(id, PunishmentType.MUTE).toCompletableFuture().join().orElse(null)
 		);
 		assertNull(
-				selector.getHistoricalPunishmentByIdAndType(id, PunishmentType.MUTE).toCompletableFuture().join().orElse(null),
+				selector.getHistoricalPunishmentByIdAndType(id, PunishmentType.WARN).toCompletableFuture().join().orElse(null),
 				"Different type requested"
 		);
 	}

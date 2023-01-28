@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.it.test;
 
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.bootstrap.BaseFoundation;
@@ -28,7 +29,9 @@ import space.arim.libertybans.it.InjectionInvocationContextProvider;
 public class LifecycleIT {
 
 	@TestTemplate
+	@Inject
 	public void fullRestart(BaseFoundation foundation) {
 		foundation.fullRestart();
 	}
+
 }

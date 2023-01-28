@@ -17,30 +17,38 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.api.punish;
+package space.arim.libertybans.core.addon.extend;
 
-import space.arim.omnibus.util.concurrent.ReactionStage;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import space.arim.libertybans.core.addon.AbstractAddon;
+import space.arim.libertybans.core.addon.AddonCenter;
 
-/**
- * An order to completely delete a punishment without any trace leftover. Obtained from {@link PunishmentRevoker}
- *
- */
-public interface ExpunctionOrder extends EnforcementOptionsFactory {
+@Singleton
+public final class ExtendAddon extends AbstractAddon<ExtendConfig> {
 
-	/**
-	 * Gets the ID of the punishment which will be expunged
-	 *
-	 * @return the ID
-	 */
-	long getID();
+	@Inject
+	public ExtendAddon(AddonCenter addonCenter) {
+		super(addonCenter);
+	}
 
-	/**
-	 * Expunges the punishment. <br>
-	 * <br>
-	 * An expunged punishment is not "undone" and therefore does not trigger undo notifications.
-	 *
-	 * @return a future which yields true if the punishment existed and was expunged
-	 */
-	ReactionStage<Boolean> expunge();
+	@Override
+	public void startup() {
 
+	}
+
+	@Override
+	public void shutdown() {
+
+	}
+
+	@Override
+	public Class<ExtendConfig> configInterface() {
+		return ExtendConfig.class;
+	}
+
+	@Override
+	public String identifier() {
+		return "command-extend";
+	}
 }

@@ -26,6 +26,7 @@ import space.arim.libertybans.core.addon.checkuser.CheckUserModule;
 import space.arim.libertybans.core.addon.exempt.luckperms.ExemptionLuckPermsModule;
 import space.arim.libertybans.core.addon.exempt.vault.ExemptionVaultModule;
 import space.arim.libertybans.core.addon.expunge.ExpungeModule;
+import space.arim.libertybans.core.addon.extend.ExtendModule;
 import space.arim.libertybans.core.addon.staffrollback.StaffRollbackModule;
 import space.arim.libertybans.core.addon.warnactions.WarnActionsModule;
 
@@ -40,8 +41,9 @@ public class ServiceLoadingIT {
 	public void loadAddons() {
 		assertEquals(
 				Set.of(
-						new CheckPunishModule(), new CheckUserModule(), new ExpungeModule(), new StaffRollbackModule(),
-						new ExemptionLuckPermsModule(), new ExemptionVaultModule(), new WarnActionsModule()
+						new CheckPunishModule(), new CheckUserModule(), new ExpungeModule(), new ExtendModule(),
+						new StaffRollbackModule(), new ExemptionLuckPermsModule(), new ExemptionVaultModule(),
+						new WarnActionsModule()
 				),
 				assertDoesNotThrow(AddonLoader::loadAddonBindModules)
 		);

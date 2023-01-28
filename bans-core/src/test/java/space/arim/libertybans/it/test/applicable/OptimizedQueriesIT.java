@@ -66,6 +66,7 @@ public class OptimizedQueriesIT {
 
 	@TestTemplate
 	@SetAddressStrictness(all = true)
+	@Inject
 	public void handwrittenQueriesAreIdentical(InternalDatabase database, @DontInject @NotAKick PunishmentType type) {
 		DSLContext context = new JooqContext(database.getVendor().dialect()).createRenderOnlyContext();
 

@@ -27,7 +27,6 @@ import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.select.AddressStrictness;
-import space.arim.libertybans.api.select.SelectionByApplicabilityBuilder;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.selector.cache.MuteCache;

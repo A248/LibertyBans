@@ -66,7 +66,7 @@ Although MariaDB and PostgreSQL support dialect-specific forms of creating comme
   * `type` - The punishment type. 0 for bans, 1 for mutes, 2 for warns, 3 for kicks.
   * `operator` - The operator UUID. The zero-valued UUID, a UUID of all zero bytes, represents the console.
   * `start` - a unix timestamp, in seconds, of when the punishment was created
-  * `end` - a unix timestamp, in seconds, of when the punishment will end
+  * `end` - a unix timestamp, in seconds, of when the punishment will end. We guarantee that `end > start`.
 * For tables of the form `libertybans_<type>` (the type is 'bans', 'mutes', 'warns', or 'history'):
   * The tables bans, mutes, and warns store active punishments for their respective punishment types.
   * The history table stores all punishments, active and inactive. It is also the only place where kicks are located, since kicks are never active.

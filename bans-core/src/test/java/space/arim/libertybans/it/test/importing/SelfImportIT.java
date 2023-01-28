@@ -92,6 +92,7 @@ public class SelfImportIT {
 	}
 
 	@TestTemplate
+	@Inject
 	public void blueTree242(PunishmentCreator creator) throws IOException {
 		Path folder = selfImportData.copyBlueTree242();
 
@@ -164,6 +165,7 @@ public class SelfImportIT {
 	}
 
 	@TestTemplate
+	@Inject
 	public void blueTree242sequences(PunishmentDrafter drafter) throws IOException {
 		Path folder = selfImportData.copyBlueTree242();
 

@@ -17,30 +17,23 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.api.punish;
+package space.arim.libertybans.core.addon.extend;
 
-import space.arim.omnibus.util.concurrent.ReactionStage;
+import space.arim.injector.MultiBinding;
+import space.arim.libertybans.core.addon.Addon;
+import space.arim.libertybans.core.addon.AddonBindModule;
+import space.arim.libertybans.core.commands.SubCommandGroup;
 
-/**
- * An order to completely delete a punishment without any trace leftover. Obtained from {@link PunishmentRevoker}
- *
- */
-public interface ExpunctionOrder extends EnforcementOptionsFactory {
+public final class ExtendModule extends AddonBindModule {
 
-	/**
-	 * Gets the ID of the punishment which will be expunged
-	 *
-	 * @return the ID
-	 */
-	long getID();
+	@MultiBinding
+	public Addon<?> extendAddon(ExtendAddon addon) {
+		return addon;
+	}
 
-	/**
-	 * Expunges the punishment. <br>
-	 * <br>
-	 * An expunged punishment is not "undone" and therefore does not trigger undo notifications.
-	 *
-	 * @return a future which yields true if the punishment existed and was expunged
-	 */
-	ReactionStage<Boolean> expunge();
+	@MultiBinding
+	public SubCommandGroup extendCommand(ExtendCommand extendCommand) {
+		return extendCommand;
+	}
 
 }

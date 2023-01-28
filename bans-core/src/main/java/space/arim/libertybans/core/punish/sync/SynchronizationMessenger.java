@@ -23,7 +23,7 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 public interface SynchronizationMessenger {
 
-	CentralisedFuture<?> dispatch(byte[] message);
+	CentralisedFuture<Void> dispatch(byte[] message);
 
 	CentralisedFuture<byte[][]> poll();
 

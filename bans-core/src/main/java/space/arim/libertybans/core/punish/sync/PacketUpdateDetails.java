@@ -17,43 +17,40 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.punish;
+package space.arim.libertybans.core.punish.sync;
 
-import space.arim.libertybans.api.punish.ExpunctionOrder;
-import space.arim.omnibus.util.concurrent.ReactionStage;
+import java.io.IOException;
 
-class ExpunctionOrderImpl implements ExpunctionOrder, EnforcementOpts.Factory {
+public final class PacketUpdateDetails implements SynchronizationPacket {
 
-	private final Revoker revoker;
-	private final long id;
+	final long id;
 
-	ExpunctionOrderImpl(Revoker revoker, long id) {
-		this.revoker = revoker;
+	static final byte PACKET_ID = (byte) 3;
+
+	public PacketUpdateDetails(long id) {
 		this.id = id;
 	}
 
 	@Override
-	public long getID() {
-		return id;
+	public byte packetId() {
+		return PACKET_ID;
 	}
 
 	@Override
-	public ReactionStage<Boolean> expunge() {
-		return revoker.expungeById(id).thenCompose((expunged) -> {
-			if (!expunged) {
-				return revoker.futuresFactory().completedFuture(false);
-			}
-			return revoker.enforcement()
-					.clearExpunged(id)
-					.thenApply((ignore) -> true);
-		});
+	public void writeTo(ProtocolOutputStream output) throws IOException {
+		output.writeLong(id);
+	}
+
+	static PacketUpdateDetails readFrom(ProtocolInputStream input) throws IOException {
+		long id = input.readLong();
+		return new PacketUpdateDetails(id);
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		ExpunctionOrderImpl that = (ExpunctionOrderImpl) o;
+		PacketUpdateDetails that = (PacketUpdateDetails) o;
 		return id == that.id;
 	}
 
@@ -64,7 +61,7 @@ class ExpunctionOrderImpl implements ExpunctionOrder, EnforcementOpts.Factory {
 
 	@Override
 	public String toString() {
-		return "ExpunctionOrderImpl{" +
+		return "PacketUpdateDetails{" +
 				"id=" + id +
 				'}';
 	}

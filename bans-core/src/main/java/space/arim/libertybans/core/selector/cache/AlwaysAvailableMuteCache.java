@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -283,17 +283,7 @@ public final class AlwaysAvailableMuteCache extends BaseMuteCache {
 		}
 	}
 
-	private static final class Entry {
-
-		private final @Nullable MuteAndMessage currentValue;
-		private final long lastUpdated;
-		private final @Nullable CentralisedFuture<@Nullable MuteAndMessage> nextValue;
-
-		private Entry(@Nullable MuteAndMessage currentValue, long lastUpdated,
-					  @Nullable CentralisedFuture<@Nullable MuteAndMessage> nextValue) {
-			this.currentValue = currentValue;
-			this.lastUpdated = lastUpdated;
-			this.nextValue = nextValue;
+	private record Entry(@Nullable MuteAndMessage currentValue, long lastUpdated,
+						 @Nullable CentralisedFuture<MuteAndMessage> nextValue) {
 		}
-	}
 }

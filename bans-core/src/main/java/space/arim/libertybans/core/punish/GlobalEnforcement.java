@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -30,12 +30,14 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
  */
 public interface GlobalEnforcement extends Runnable {
 
-	CentralisedFuture<?> enforce(Punishment punishment, EnforcementOpts enforcementOptions);
+	CentralisedFuture<Void> enforce(Punishment punishment, EnforcementOpts enforcementOptions);
 
-	CentralisedFuture<?> unenforce(Punishment punishment, EnforcementOpts enforcementOptions);
+	CentralisedFuture<Void> unenforce(Punishment punishment, EnforcementOpts enforcementOptions);
 
-	CentralisedFuture<?> unenforce(long id, PunishmentType type, EnforcementOpts enforcementOptions);
+	CentralisedFuture<Void> unenforce(long id, PunishmentType type, EnforcementOpts enforcementOptions);
 
-	CentralisedFuture<?> clearExpunged(long id, EnforcementOpts enforcementOptions);
+	CentralisedFuture<Void> clearExpunged(long id);
+
+	CentralisedFuture<Void> updateDetails(Punishment punishment);
 
 }

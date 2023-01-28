@@ -20,6 +20,7 @@
 package space.arim.libertybans.core.punish;
 
 import org.jooq.Record10;
+import org.jooq.Record3;
 import org.jooq.Record8;
 import org.jooq.Record9;
 import org.jooq.RecordMapper;
@@ -54,5 +55,9 @@ public interface PunishmentCreator {
 	RecordMapper<Record8<
 			Victim.VictimType, UUID, NetworkAddress, Operator, String, ServerScope, Instant, Instant>,
 			Punishment> punishmentMapper(long id, PunishmentType type);
+
+	RecordMapper<Record3<
+			String, ServerScope, Instant>,
+			Punishment> punishmentMapperForModifications(Punishment oldPunishment);
 
 }

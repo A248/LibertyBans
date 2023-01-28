@@ -53,6 +53,8 @@ public final class EnforcingMessageReceiver implements MessageReceiver {
 			return onReception(packetEnforceUnenforce);
 		} else if (message instanceof PacketExpunge packetExpunge) {
 			return enforcer.clearExpungedWithoutSynchronization(packetExpunge.id);
+		} else if (message instanceof PacketUpdateDetails packetUpdateDetails) {
+			return enforcer.updateDetailsWithoutSynchronization(packetUpdateDetails.id);
 		} else {
 			logger.warn("Unknown packet {} ({})", message, message.getClass());
 			return futuresFactory.completedFuture(null);

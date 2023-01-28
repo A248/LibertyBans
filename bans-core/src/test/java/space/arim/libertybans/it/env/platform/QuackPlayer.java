@@ -75,6 +75,10 @@ public class QuackPlayer implements MessageOnlyAudience {
 		platform.remove(this, message);
 	}
 
+	public void readdToPlatform() {
+		platform.addPlayer(this);
+	}
+
 	@Override
 	public void sendMessage(@NonNull Identity source, @NonNull Component message, @NonNull MessageType type) {
 		String displayMessage = platform.toDisplay(message);

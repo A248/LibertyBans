@@ -19,10 +19,12 @@
 
 package space.arim.libertybans.api.punish;
 
+import space.arim.omnibus.util.concurrent.ReactionStage;
+
 import java.time.Clock;
 import java.time.Instant;
-
-import space.arim.omnibus.util.concurrent.ReactionStage;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * A full punishment, identifiable by its ID. <br>
@@ -224,6 +226,19 @@ public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 	 * @return a future completed when unenforcement has been conducted
 	 */
 	ReactionStage<?> unenforcePunishment(EnforcementOptions enforcementOptions);
+
+	/**
+	 * Modifies this punishment and yields the new instance. <br>
+	 * <br>
+	 * This punishment instance is invalidated by use of this method. The new punishment
+	 * returned should be used as soon as it becomes available.
+	 *
+	 * @param editorConsumer the actions applied to modify this punishment. Note that the editor
+	 *                          is made invalid as soon as the consumer exits scope.
+	 * @return the new punishment after changes have been propagated to the database, or
+	 * an empty optional if the punishment has since been expunged
+	 */
+	ReactionStage<Optional<Punishment>> modifyPunishment(Consumer<PunishmentEditor> editorConsumer);
 
 	/**
 	 * Whether this punishment is equal to another. The other punishment must

@@ -76,6 +76,7 @@ public final class SynchronizationProtocol {
 			SynchronizationPacket message = switch (packetId) {
 				case PacketEnforceUnenforce.PACKET_ID -> PacketEnforceUnenforce.readFrom(input);
 				case PacketExpunge.PACKET_ID -> PacketExpunge.readFrom(input);
+				case PacketUpdateDetails.PACKET_ID -> PacketUpdateDetails.readFrom(input);
 				default -> null; // Exit below
 			};
 			if (message == null) {

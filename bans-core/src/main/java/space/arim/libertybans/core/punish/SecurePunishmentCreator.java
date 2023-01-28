@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,6 +23,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import org.jooq.Record10;
+import org.jooq.Record3;
 import org.jooq.Record8;
 import org.jooq.Record9;
 import org.jooq.RecordMapper;
@@ -42,11 +43,14 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 
 	private final Provider<InternalRevoker> revoker;
 	private final Provider<GlobalEnforcement> enforcement;
+	private final Provider<Modifier> modifier;
 
 	@Inject
-	public SecurePunishmentCreator(Provider<InternalRevoker> revoker, Provider<GlobalEnforcement> enforcement) {
+	public SecurePunishmentCreator(Provider<InternalRevoker> revoker, Provider<GlobalEnforcement> enforcement,
+								   Provider<Modifier> modifier) {
 		this.revoker = revoker;
 		this.enforcement = enforcement;
+		this.modifier = modifier;
 	}
 
 	InternalRevoker revoker() {
@@ -55,6 +59,10 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 
 	GlobalEnforcement enforcement() {
 		return enforcement.get();
+	}
+
+	Modifier modifer() {
+		return modifier.get();
 	}
 
 	@Override
@@ -119,6 +127,18 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					id, type, // id, type
 					victim, record.value4(), record.value5(), // victim, operator, reason
 					record.value6(), record.value7(), record.value8() // scope, start, end
+			);
+		};
+	}
+
+	@Override
+	public RecordMapper<Record3<String, ServerScope, Instant>, Punishment> punishmentMapperForModifications(Punishment oldPunishment) {
+		return (record) -> {
+			return new SecurePunishment(
+					SecurePunishmentCreator.this,
+					oldPunishment.getIdentifier(), oldPunishment.getType(),
+					oldPunishment.getVictim(), oldPunishment.getOperator(), record.value1(),
+					record.value2(), oldPunishment.getStartDate(), record.value3()
 			);
 		};
 	}

@@ -51,7 +51,7 @@ public final class SQLSynchronizationMessenger implements SynchronizationMesseng
 	}
 
 	@Override
-	public CentralisedFuture<?> dispatch(byte[] message) {
+	public CentralisedFuture<Void> dispatch(byte[] message) {
 		return queryExecutor.get().execute((context) -> {
 			context
 					.insertInto(MESSAGES)

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -156,10 +156,11 @@ public final class StandardLocalEnforcer implements LocalEnforcer {
 		if (enforcementOptions.broadcasting() != EnforcementOptions.Broadcasting.NONE) {
 			// In order to send broadcast messages we need the full punishment details
 			// Therefore we need to fetch the punishment, then redirect to the other unenforce method
-			logger.debug("Fetching punishment details for id {} and type {}", id, type);
+			logger.trace("Fetching punishment details for id {} and type {}", id, type);
 			return selector.getHistoricalPunishmentByIdAndType(id, type).thenCompose((optPunishment) -> {
 				if (optPunishment.isEmpty()) {
-					logger.warn("Tried to unenforce non-existent punishment with id {} and type {}", id, type);
+					// Possible race condition if punishment is expunged
+					logger.debug("Tried to unenforce non-existent punishment with id {} and type {}", id, type);
 					return completedFuture(null);
 				}
 				Punishment punishment = optPunishment.get();
@@ -176,6 +177,28 @@ public final class StandardLocalEnforcer implements LocalEnforcer {
 	public CentralisedFuture<Void> clearExpungedWithoutSynchronization(long id) {
 		muteCache.clearCachedMute(id);
 		return completedFuture(null);
+	}
+
+	@Override
+	public CentralisedFuture<Void> updateDetailsWithoutSynchronization(Punishment punishment) {
+		return ((SecurePunishment) punishment).enforcePunishment(
+				punishment.enforcementOptionsBuilder()
+						.broadcasting(Broadcasting.NONE)
+						.enforcement(EnforcementOptions.Enforcement.SINGLE_SERVER_ONLY)
+						.build()
+		);
+	}
+
+	@Override
+	public CentralisedFuture<Void> updateDetailsWithoutSynchronization(long id) {
+		return selector.getHistoricalPunishmentById(id).thenCompose((optPunishment) -> {
+			if (optPunishment.isEmpty()) {
+				// Possible race condition if punishment is expunged
+				logger.debug("Tried to update details of non-existent punishment with id {}", id);
+				return futuresFactory.completedFuture(null);
+			}
+			return updateDetailsWithoutSynchronization(optPunishment.get());
+		}).toCompletableFuture();
 	}
 
 	// Enforcement of enacted punishments

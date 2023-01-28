@@ -97,7 +97,7 @@ public class AdvancedBanImportIT {
 	@TestTemplate
 	@SetTime(unixTime = SetTime.DEFAULT_TIME)
 	@SetServerType(ServerType.ONLINE)
-	public void sampleTwoOnline(UUIDManager uuidManager) {
+	public void sampleTwoOnline() {
 		addToCache("ed5f12cd600745d9a4b9940524ddaecf", "A248", "Aerodactyl_");
 		addToCache("840d1667a0e24934a3bd1a7ebbbc0732", "Cxleos");
 		addToCache("00140fe8de0841e9ab79e53b9f3f0fbd", "Ecotastic");

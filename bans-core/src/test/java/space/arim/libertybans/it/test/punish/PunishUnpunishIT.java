@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -78,8 +78,12 @@ public class PunishUnpunishIT {
 	}
 
 	private DraftPunishment draftPunishment() {
-		return drafter.draftBuilder().type(type).victim(victim)
-				.operator(operator).reason(reason).build();
+		return drafter.draftBuilder()
+				.type(type)
+				.victim(victim)
+				.operator(operator)
+				.reason(reason)
+				.build();
 	}
 
 	private void ensureTypeSingular() {
@@ -314,6 +318,7 @@ public class PunishUnpunishIT {
 
 	@TestTemplate
 	@SetAddressStrictness(all = true)
+	@Inject
 	public void expunge(PunishmentSelector selector) {
 		long id = draftPunishment()
 				.enactPunishment()
@@ -322,19 +327,6 @@ public class PunishUnpunishIT {
 				.getIdentifier();
 		ExpunctionOrder expunctionOrder = revoker.expungePunishment(id);
 		assertTrue(expunctionOrder.expunge().toCompletableFuture().join());
-		assertEquals(Optional.empty(), selector.getHistoricalPunishmentById(id).toCompletableFuture().join());
-	}
-
-	@TestTemplate
-	@SetAddressStrictness(all = true)
-	public void expungeWithoutUnenforcement(PunishmentSelector selector) {
-		long id = draftPunishment()
-				.enactPunishment()
-				.toCompletableFuture().join()
-				.orElseThrow(AssertionError::new)
-				.getIdentifier();
-		ExpunctionOrder expunctionOrder = revoker.expungePunishment(id);
-		assertTrue(expunctionOrder.expunge(noEnforcement()).toCompletableFuture().join());
 		assertEquals(Optional.empty(), selector.getHistoricalPunishmentById(id).toCompletableFuture().join());
 	}
 

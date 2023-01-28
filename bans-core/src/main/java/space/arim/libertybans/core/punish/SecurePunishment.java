@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,9 +21,13 @@ package space.arim.libertybans.core.punish;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import space.arim.libertybans.api.punish.EnforcementOptions;
+import space.arim.libertybans.api.punish.PunishmentEditor;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.api.Operator;
@@ -65,7 +69,7 @@ class SecurePunishment extends AbstractPunishmentBase implements Punishment, Enf
 	}
 
 	@Override
-	public ReactionStage<?> enforcePunishment(EnforcementOptions enforcementOptions) {
+	public CentralisedFuture<Void> enforcePunishment(EnforcementOptions enforcementOptions) {
 		return creator.enforcement().enforce(this, (EnforcementOpts) enforcementOptions);
 	}
 
@@ -82,6 +86,13 @@ class SecurePunishment extends AbstractPunishmentBase implements Punishment, Enf
 	@Override
 	public ReactionStage<?> unenforcePunishment(EnforcementOptions enforcementOptions) {
 		return creator.enforcement().unenforce(this, (EnforcementOpts) enforcementOptions);
+	}
+
+	@Override
+	public ReactionStage<Optional<Punishment>> modifyPunishment(Consumer<PunishmentEditor> editorConsumer) {
+		Modifier.Editor editor = creator.modifer().new Editor(this);
+		editorConsumer.accept(editor);
+		return editor.modify();
 	}
 
 	@Override

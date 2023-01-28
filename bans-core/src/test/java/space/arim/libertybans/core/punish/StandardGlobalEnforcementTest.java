@@ -34,9 +34,11 @@ import space.arim.libertybans.core.config.SqlConfig;
 import space.arim.libertybans.core.punish.sync.MessageReceiver;
 import space.arim.libertybans.core.punish.sync.SynchronizationMessenger;
 import space.arim.libertybans.core.punish.sync.SynchronizationProtocol;
+import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
+import java.time.Clock;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -45,7 +47,7 @@ import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,15 +58,18 @@ public class StandardGlobalEnforcementTest {
 	private final LocalEnforcer enforcer;
 	private final SynchronizationProtocol synchronizationProtocol = new SynchronizationProtocol(futuresFactory);
 	private final SynchronizationMessenger synchronizationMessenger;
+	private final Time time;
 
 	private StandardGlobalEnforcement globalEnforcement;
 
 	public StandardGlobalEnforcementTest(@Mock SqlConfig.Synchronization conf,
 										 @Mock LocalEnforcer enforcer,
-										 @Mock SynchronizationMessenger synchronizationMessenger) {
+										 @Mock SynchronizationMessenger synchronizationMessenger,
+										 @Mock Time time) {
 		this.conf = conf;
 		this.enforcer = enforcer;
 		this.synchronizationMessenger = synchronizationMessenger;
+		this.time = time;
 	}
 
 	@BeforeEach
@@ -81,7 +86,9 @@ public class StandardGlobalEnforcementTest {
 
 		globalEnforcement = new StandardGlobalEnforcement(
 				configs, futuresFactory, enforcer,
-				synchronizationProtocol, () -> synchronizationMessenger, mock(MessageReceiver.class));
+				synchronizationProtocol, () -> synchronizationMessenger, mock(MessageReceiver.class),
+				time
+		);
 	}
 
 	private Punishment punishmentWithType(PunishmentType type) {
@@ -110,7 +117,7 @@ public class StandardGlobalEnforcementTest {
 		globalEnforcement.enforce(punishment, enforcementOpts).join();
 		globalEnforcement.unenforce(punishment, enforcementOpts).join();
 		globalEnforcement.unenforce(punishment.getIdentifier(), type, enforcementOpts).join();
-		verifyNoMoreInteractions(synchronizationMessenger, enforcer);
+		verifyNoInteractions(synchronizationMessenger, enforcer);
 	}
 
 	// Single server only
@@ -125,7 +132,7 @@ public class StandardGlobalEnforcementTest {
 				.build();
 		globalEnforcement.enforce(punishment, enforcementOpts).join();
 		verify(enforcer).enforceWithoutSynchronization(punishment, enforcementOpts);
-		verifyNoMoreInteractions(synchronizationMessenger);
+		verifyNoInteractions(synchronizationMessenger);
 	}
 
 	@Test
@@ -138,7 +145,7 @@ public class StandardGlobalEnforcementTest {
 				.build();
 		globalEnforcement.unenforce(punishment, enforcementOpts).join();
 		verify(enforcer).unenforceWithoutSynchronization(punishment, enforcementOpts);
-		verifyNoMoreInteractions(synchronizationMessenger);
+		verifyNoInteractions(synchronizationMessenger);
 	}
 
 	@ParameterizedTest
@@ -152,7 +159,7 @@ public class StandardGlobalEnforcementTest {
 				.build();
 		globalEnforcement.unenforce(punishment.getIdentifier(), type, enforcementOpts).join();
 		verify(enforcer).unenforceWithoutSynchronization(punishment.getIdentifier(), type, enforcementOpts);
-		verifyNoMoreInteractions(synchronizationMessenger);
+		verifyNoInteractions(synchronizationMessenger);
 	}
 
 	// Global but sync disabled
@@ -167,7 +174,7 @@ public class StandardGlobalEnforcementTest {
 				.build();
 		globalEnforcement.enforce(punishment, enforcementOpts).join();
 		verify(enforcer).enforceWithoutSynchronization(punishment, enforcementOpts);
-		verifyNoMoreInteractions(synchronizationMessenger);
+		verifyNoInteractions(synchronizationMessenger);
 	}
 
 	@Test
@@ -180,7 +187,7 @@ public class StandardGlobalEnforcementTest {
 				.build();
 		globalEnforcement.unenforce(punishment, enforcementOpts).join();
 		verify(enforcer).unenforceWithoutSynchronization(punishment, enforcementOpts);
-		verifyNoMoreInteractions(synchronizationMessenger);
+		verifyNoInteractions(synchronizationMessenger);
 	}
 
 	@ParameterizedTest
@@ -194,7 +201,7 @@ public class StandardGlobalEnforcementTest {
 				.build();
 		globalEnforcement.unenforce(punishment.getIdentifier(), type, enforcementOpts).join();
 		verify(enforcer).unenforceWithoutSynchronization(punishment.getIdentifier(), type, enforcementOpts);
-		verifyNoMoreInteractions(synchronizationMessenger);
+		verifyNoInteractions(synchronizationMessenger);
 	}
 
 	// Global and sync enabled
@@ -244,4 +251,44 @@ public class StandardGlobalEnforcementTest {
 		verify(enforcer).unenforceWithoutSynchronization(punishment.getIdentifier(), type, enforcementOpts);
 		verify(synchronizationMessenger).dispatch(notNull());
 	}
+
+	// Miscellaneous
+
+	@Test
+	public void clearExpunged() {
+		when(enforcer.clearExpungedWithoutSynchronization(anyLong())).thenReturn(futuresFactory.completedFuture(null));
+
+		Punishment punishment = punishmentWithType(PunishmentType.BAN);
+		globalEnforcement.clearExpunged(punishment.getIdentifier()).join();
+		verify(enforcer).clearExpungedWithoutSynchronization(punishment.getIdentifier());
+	}
+
+	@Test
+	public void updateDetailsWarnOrKick() {
+		Punishment punishment = punishmentWithType(PunishmentType.WARN);
+		globalEnforcement.updateDetails(punishment).join();
+		verifyNoInteractions(enforcer);
+	}
+
+	@Test
+	public void updateDetailsExpired() {
+		Punishment punishment = punishmentWithType(PunishmentType.MUTE);
+		Clock clock = Clock.systemUTC();
+		when(time.toJdkClock()).thenReturn(clock);
+		when(punishment.isExpired(clock)).thenReturn(true);
+
+		globalEnforcement.updateDetails(punishment).join();
+		verifyNoInteractions(enforcer);
+	}
+
+	@Test
+	public void updateDetails() {
+		when(enforcer.updateDetailsWithoutSynchronization(any())).thenReturn(futuresFactory.completedFuture(null));
+
+		Punishment punishment = punishmentWithType(PunishmentType.BAN);
+		when(punishment.isExpired(any())).thenReturn(false);
+		globalEnforcement.updateDetails(punishment).join();
+		verify(enforcer).updateDetailsWithoutSynchronization(punishment);
+	}
+
 }

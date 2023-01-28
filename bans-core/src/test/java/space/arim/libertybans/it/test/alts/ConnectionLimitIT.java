@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.it.test.alts;
 
+import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import net.kyori.adventure.text.Component;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,6 +60,7 @@ public class ConnectionLimitIT {
 
 	private ConnectionLimiter limiter;
 
+	@Inject
 	public ConnectionLimitIT(Provider<QueryExecutor> queryExecutor, SettableTime time,
 							 @Mock @DontInject ConnectionLimitConfig conf) {
 		this.queryExecutor = queryExecutor;

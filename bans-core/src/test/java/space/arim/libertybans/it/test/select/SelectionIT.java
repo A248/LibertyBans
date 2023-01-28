@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.it.test.select;
 
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -67,6 +68,7 @@ public class SelectionIT {
 	private static final Duration ONE_SECOND = Duration.ofSeconds(1L);
 	private static final Duration TWO_SECONDS = ONE_SECOND.multipliedBy(2L);
 
+	@Inject
 	public SelectionIT(PunishmentDrafter drafter, PunishmentSelector selector,
 					   ScopeManager scopeManager, SettableTime time) {
 		this.drafter = drafter;

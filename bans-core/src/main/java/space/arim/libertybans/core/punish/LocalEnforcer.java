@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -68,5 +68,23 @@ public interface LocalEnforcer {
 	 * @return a future completed once cleared
 	 */
 	CentralisedFuture<Void> clearExpungedWithoutSynchronization(long id);
+
+	/**
+	 * Updates punishment details. No punishment synchronization is performed (with regard to multiple
+	 * instances of LibertyBans). For synchronization see {@link GlobalEnforcement}
+	 *
+	 * @param punishment the new punishment received
+	 * @return a future completed once updated
+	 */
+	CentralisedFuture<Void> updateDetailsWithoutSynchronization(Punishment punishment);
+
+	/**
+	 * Updates punishment details. No punishment synchronization is performed (with regard to multiple
+	 * instances of LibertyBans). For synchronization see {@link GlobalEnforcement}
+	 *
+	 * @param id the id of the punishment updated
+	 * @return a future completed once updated
+	 */
+	CentralisedFuture<Void> updateDetailsWithoutSynchronization(long id);
 
 }
