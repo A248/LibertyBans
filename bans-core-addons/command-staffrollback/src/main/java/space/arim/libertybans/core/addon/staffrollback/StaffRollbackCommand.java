@@ -117,10 +117,11 @@ public final class StaffRollbackCommand extends AbstractSubCommandGroup {
 				if (command().hasNext()) {
 					String timeAgo = command().next();
 					Duration duration = new DurationParser(Set.of()).parse(timeAgo);
-					if (duration.isZero()) {
+					if (duration.isNegative()) {
 						sender().sendMessage(config.invalidDuration());
 						return completedFuture(null);
 					}
+					assert !duration.isZero();
 					afterWhich = currentTime.minus(duration);
 				} else {
 					afterWhich = Instant.EPOCH;

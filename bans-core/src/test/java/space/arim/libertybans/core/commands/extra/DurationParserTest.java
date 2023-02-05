@@ -65,7 +65,7 @@ public class DurationParserTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {"unparsable", "1", "d", "mo", "any other special case that needs testing?"})
+	@ValueSource(strings = {"unparsable", "1", "d", "mo", "1p", "any other special case that needs testing?"})
 	public void parseInvalid(String argument) {
 		Duration duration = parser.parse(argument);
 		assertTrue(duration.isNegative(), () -> "Should have failed to parse " + argument);

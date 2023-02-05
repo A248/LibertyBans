@@ -56,37 +56,20 @@ public class DurationParser {
 			return Duration.ofNanos(-1L);
 		}
 		long number = Long.parseLong(argument.substring(0, unitIndex));
-		ChronoUnit unit = unitFromString(argument.substring(unitIndex));
-		if (unit != null) {
-			// Do not use Duration.of which does not accept estimated durations
-			return unit.getDuration().multipliedBy(number);
+		ChronoUnit unit = switch (argument.substring(unitIndex)) {
+			case "Y", "y" -> ChronoUnit.YEARS;
+			case "MO", "mo" -> ChronoUnit.MONTHS;
+			case "W", "w" -> ChronoUnit.WEEKS;
+			case "D", "d" -> ChronoUnit.DAYS;
+			case "H", "h" -> ChronoUnit.HOURS;
+			case "M", "m" -> ChronoUnit.MINUTES;
+			default -> null;
+		};
+		if (unit == null) {
+			return Duration.ofNanos(-1L);
 		}
-		return Duration.ZERO;
+		// Do not use Duration.of which does not accept estimated durations
+		return unit.getDuration().multipliedBy(number);
 	}
 
-	private static ChronoUnit unitFromString(String str) {
-		switch (str) {
-		case "Y":
-		case "y":
-			return ChronoUnit.YEARS;
-		case "MO":
-		case "mo":
-			return ChronoUnit.MONTHS;
-		case "W":
-		case "w":
-			return ChronoUnit.WEEKS;
-		case "D":
-		case "d":
-			return ChronoUnit.DAYS;
-		case "H":
-		case "h":
-			return ChronoUnit.HOURS;
-		case "M":
-		case "m":
-			return ChronoUnit.MINUTES;
-		default:
-			return null;
-		}
-	}
-	
 }
