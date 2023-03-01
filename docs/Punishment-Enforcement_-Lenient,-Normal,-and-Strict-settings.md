@@ -1,15 +1,24 @@
 
-Here's how punishments are enforced. I'll use bans in this explanation, but the same can be said for mutes.
+This page explains how punishments are enforced. I'll use bans as an example, but the same can be said for mutes.
+
+Punishment enforcement depends on the `address-strictness` setting you configure.
+
+## Choosing an Address Strictness
+
+The default address strictness is `NORMAL`. The behavior in other punishment plugins is similar to `LENIENT` in LibertyBans.
+
+For large servers, there are also [performance considerations](Database-Performance) to choosing the strictness.
 
 ## User Ban
 
-The ban applies only to the target user. That user may change their name, but they will still be banned according to their UUID.
+On lenient, normal, or stern address strictness:
+* The ban applies only to the target user. That user may change their name, but they will still be banned according to their UUID.
+
+On strict strictness, user bans are treated as if IP bans.
 
 ## IP Bans
 
-How an IP ban is applied depends on the `address-strictness` you configure.
-
-Note that if "strict" is used, user bans are treated as if IP bans.
+Behavior depends on the strictness configured.
 
 ### Lenient strictness
 

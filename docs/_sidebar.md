@@ -14,9 +14,10 @@
   * [Versioning and Support Policy](Versioning-and-Support-Policies)
   * [Upgrading 1.0.x -> 1.1.0](Upgrading-to-LibertyBans-1.1.0-from-1.0.x.md) + [Full changelog for 1.1.0](Changes-in-LibertyBans-1.1.0.md)
   * [Upgrading 0.8.x -> 1.0.0](Upgrading-to-LibertyBans-1.0.0-from-0.8.x) + [Full changelog for 1.0.0](Changes-in-LibertyBans-1.0.0)
-* For Developers
+* Technical
   * [Developer API](Developer-API)
   * [The Database Schema](The-Database-Schema)
+  * [Achieving High Performance](Database-Performance)
 * Relations to other software
   * [Importing from other plugins](Importing-from-Other-Plugins)
   * [Dealing with misbehaving plugins](Misbehaving-Plugins)

@@ -18,9 +18,9 @@ You should be familiar with UUIDs and IP addresses, the relation of these to use
 With respect to enforcing punishments, a composite ban is much akin to an IP-ban.
 * Using LENIENT strictness, any user with the banned UUID or the banned address will be banned.
   * Composite bans are thus useful if you desire punishment stricter than a LENIENT IP ban, which bans only players with the address, but not as restricting as a NORMAL IP ban, which bans all players that have ever had that address.
-* Using NORMAL or STRICT strictness, the applicable users are the same as if the ban was an IP ban.
-  * This is because, under NORMAL/STRICT strictness, an IP ban will always apply to the user who had that IP address, so it will be as if the user's UUID was banned too.
-  * Recall the explanations of [NORMAL and STRICT enforcement](Punishment-Enforcement_-Lenient,-Normal,-and-Strict-settings)
+* Using NORMAL, STERN, or STRICT strictness, the applicable users are the same as if the ban was an IP ban.
+  * This is because, under STERN/NORMAL/STRICT strictness, an IP ban will always apply to the user who had that IP address, so it will be as if the user's UUID was banned too.
+  * Recall the explanations of [punishment enforcement](Punishment-Enforcement_-Lenient,-Normal,-and-Strict-settings)
 
 With respect to creating, undoing, and listing punishments with commands, composite bans are arguably easier to use than IP bans.
   * In punishment messages, composite victims are displayed as a username rather than an IP address.
