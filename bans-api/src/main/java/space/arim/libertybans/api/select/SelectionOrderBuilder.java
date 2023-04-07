@@ -19,7 +19,12 @@
 
 package space.arim.libertybans.api.select;
 
+import space.arim.libertybans.api.Operator;
+import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.scope.ServerScope;
+
+import java.time.Instant;
 
 /**
  * Builder for {@link SelectionOrder}. No required details
@@ -74,5 +79,58 @@ public interface SelectionOrderBuilder extends SelectionBuilderBase<SelectionOrd
 	 * @return this builder
 	 */
 	SelectionOrderBuilder victimTypes(SelectionPredicate<Victim.VictimType> victimTypes);
+
+	/*
+	Redeclare methods from SelectionBuilderBase for 1.0 API compatibility
+	 */
+
+	@Override
+	default SelectionOrderBuilder type(PunishmentType type) {
+		return types(SelectionPredicate.matchingOnly(type));
+	}
+
+	@Override
+	SelectionOrderBuilder types(SelectionPredicate<PunishmentType> types);
+
+	@Override
+	default SelectionOrderBuilder operator(Operator operator) {
+		return SelectionBuilderBase.super.operator(operator);
+	}
+
+	@Override
+	SelectionOrderBuilder operators(SelectionPredicate<Operator> operators);
+
+	@Override
+	default SelectionOrderBuilder scope(ServerScope scope) {
+		return SelectionBuilderBase.super.scope(scope);
+	}
+
+	@Override
+	SelectionOrderBuilder scopes(SelectionPredicate<ServerScope> scopes);
+
+	@Override
+	SelectionOrderBuilder selectActiveOnly(boolean selectActiveOnly);
+
+	@Override
+	default SelectionOrderBuilder selectActiveOnly() {
+		return SelectionBuilderBase.super.selectActiveOnly();
+	}
+
+	@Override
+	default SelectionOrderBuilder selectAll() {
+		return SelectionBuilderBase.super.selectAll();
+	}
+
+	@Override
+	SelectionOrderBuilder skipFirstRetrieved(int skipCount);
+
+	@Override
+	SelectionOrderBuilder limitToRetrieve(int limitToRetrieve);
+
+	@Override
+	SelectionOrderBuilder seekAfter(Instant minimumStartTime, long minimumId);
+
+	@Override
+	SelectionOrder build();
 
 }

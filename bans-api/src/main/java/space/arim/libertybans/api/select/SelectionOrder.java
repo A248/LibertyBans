@@ -19,7 +19,16 @@
 
 package space.arim.libertybans.api.select;
 
+import space.arim.libertybans.api.Operator;
+import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.omnibus.util.concurrent.ReactionStage;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * A selection based on the filtering of victims.
@@ -40,5 +49,46 @@ public interface SelectionOrder extends SelectionBase {
 	 * @return the victim types
 	 */
 	SelectionPredicate<Victim.VictimType> getVictimTypes();
+
+	/*
+	Redeclare methods from SelectionBase for 1.0 API compatibility
+	 */
+
+	@Override
+	SelectionPredicate<PunishmentType> getTypes();
+
+	@Override
+	SelectionPredicate<Operator> getOperators();
+
+	@Override
+	SelectionPredicate<ServerScope> getScopes();
+
+	@Override
+	boolean selectActiveOnly();
+
+	@Override
+	int skipCount();
+
+	@Override
+	int limitToRetrieve();
+
+	@Override
+	Instant seekAfterStartTime();
+
+	@Override
+	long seekAfterId();
+
+	@Override
+	default ReactionStage<Optional<Punishment>> getFirstSpecificPunishment() {
+		return SelectionBase.super.getFirstSpecificPunishment();
+	}
+
+	@Override
+	default ReactionStage<List<Punishment>> getAllSpecificPunishments() {
+		return SelectionBase.super.getAllSpecificPunishments();
+	}
+
+	@Override
+	boolean equals(Object object);
 
 }
