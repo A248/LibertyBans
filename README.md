@@ -75,7 +75,7 @@ Free software and high quality, LibertyBans is the best-designed punishment plug
 
 Supported platforms:
 
-* Spigot/Paper or any forks thereof
+* Spigot / Paper, including Folia
 * BungeeCord
 * Sponge
 * Velocity
