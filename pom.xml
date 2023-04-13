@@ -45,9 +45,9 @@
 		<jooq.version>3.17.0</jooq.version>
 		<adventure.version>4.7.0</adventure.version>
 		<examination.version>1.3.0</examination.version>
-		<arimapi.version>0.26.3</arimapi.version>
+		<arimapi.version>0.26.4</arimapi.version>
 		<managedwaits.version>0.1.3</managedwaits.version>
-		<morepaperlib.version>0.3.2</morepaperlib.version>
+		<morepaperlib.version>0.4.2</morepaperlib.version>
 
 		<!-- Platform dependencies -->
 		<bungeecord.version>1.16-R0.4</bungeecord.version>

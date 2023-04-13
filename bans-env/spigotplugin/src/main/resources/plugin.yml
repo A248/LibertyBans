@@ -6,3 +6,4 @@ description: ${plugin.description}
 website: ${plugin.url}
 api-version: 1.13
 softdepend: [LuckPerms, Vault]
+folia-supported: true

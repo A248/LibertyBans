@@ -60,6 +60,10 @@ public class SpigotEnforcer extends AbstractEnvEnforcer<Player> {
 
 	@Override
 	protected CentralisedFuture<Void> doForAllPlayers(Consumer<Player> callback) {
+		if (morePaperLibAdventure.getMorePaperLib().scheduling().isUsingFolia()) {
+			server.getOnlinePlayers().forEach(callback);
+			return completedVoid();
+		}
 		return runSync(() -> server.getOnlinePlayers().forEach(callback));
 	}
 
@@ -70,6 +74,13 @@ public class SpigotEnforcer extends AbstractEnvEnforcer<Player> {
 
 	@Override
 	public CentralisedFuture<Void> doForPlayerIfOnline(UUID uuid, Consumer<Player> callback) {
+		if (morePaperLibAdventure.getMorePaperLib().scheduling().isUsingFolia()) {
+			Player player = server.getPlayer(uuid);
+			if (player != null) {
+				callback.accept(player);
+			}
+			return completedVoid();
+		}
 		return runSync(() -> {
 			Player player = server.getPlayer(uuid);
 			if (player != null) {
@@ -95,6 +106,7 @@ public class SpigotEnforcer extends AbstractEnvEnforcer<Player> {
 
 	@Override
 	public CentralisedFuture<Void> executeConsoleCommand(String command) {
+		// Automatically uses the global region on Folia
 		return runSync(() -> server.dispatchCommand(server.getConsoleSender(), command));
 	}
 

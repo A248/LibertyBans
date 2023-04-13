@@ -54,7 +54,7 @@ public class SimpleCommandMapHelper implements CommandMapHelper {
 
 	@Override
 	public CommandMap getCommandMap() {
-		return morePaperLib.getServerCommandMap();
+		return morePaperLib.commandRegistration().getServerCommandMap();
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public class SimpleCommandMapHelper implements CommandMapHelper {
 					replacementClass, pluginName);
 			return null;
 		}
-		return morePaperLib.getCommandMapKnownCommands(simpleCommandMap);
+		return morePaperLib.commandRegistration().getCommandMapKnownCommands(simpleCommandMap);
 	}
 
 }
