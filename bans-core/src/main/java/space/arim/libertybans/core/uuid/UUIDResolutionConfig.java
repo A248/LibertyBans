@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -50,5 +50,17 @@ public interface UUIDResolutionConfig {
 		"(If the server is not in ONLINE mode, this option is ignored)"})
 	@DefaultStrings("MOJANG")
 	RemoteApiBundle remoteApis();
+
+	@ConfKey("force-geyser-prefix")
+	@ConfComments({
+			"By default, LibertyBans will automatically detect if you are running Geyser or Floodgate.",
+			"The prefix will be determined using the Geyser API",
+			"",
+			"However, in rare cases, you may want to force LibertyBans to acknowledge the presence of Geyser usernames",
+			"If so, set this option to the value of the prefix you use for Geyser/Floodgate.",
+			"(An empty string will revert this option to automatic detection)"
+	})
+	@DefaultString("")
+	String forceGeyserPrefix();
 
 }

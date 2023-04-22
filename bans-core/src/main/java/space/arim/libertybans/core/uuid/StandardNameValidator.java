@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -47,6 +47,11 @@ public class StandardNameValidator implements NameValidator {
 	}
 
 	@Override
+	public String associatedPrefix() {
+		return "";
+	}
+
+	@Override
 	public boolean validateNameArgument(String name) {
 		// Geyser/Floodgate ensures player names are less than 16 characters
 		return name.length() <= 16 && validNamePattern.matcher(name).matches();
@@ -69,6 +74,11 @@ public class StandardNameValidator implements NameValidator {
 		private GeyserNameValidator(String namePrefix, Pattern validNamePattern) {
 			super(validNamePattern);
 			this.namePrefix = namePrefix;
+		}
+
+		@Override
+		public String associatedPrefix() {
+			return namePrefix;
 		}
 
 		@Override

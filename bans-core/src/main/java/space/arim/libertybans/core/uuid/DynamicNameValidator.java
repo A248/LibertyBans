@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,15 +19,32 @@
 
 package space.arim.libertybans.core.uuid;
 
+import jakarta.inject.Inject;
+import space.arim.libertybans.core.config.Configs;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.UUID;
 
 public final class DynamicNameValidator implements NameValidator {
 
+	private final Configs configs;
 	private volatile NameValidator impl;
 
+	@Inject
+	public DynamicNameValidator(Configs configs) {
+		this.configs = configs;
+	}
+
+	private String forcedPrefix() {
+		return configs.getMainConfig().uuidResolution().forceGeyserPrefix();
+	}
+
 	public String detectNamePrefix() {
+		String forcedPrefix = forcedPrefix();
+		if (!forcedPrefix.isEmpty()) {
+			return forcedPrefix;
+		}
 		Class<?> floodgateApiClass;
 		try {
 			floodgateApiClass = Class.forName("org.geysermc.floodgate.api.FloodgateApi");
@@ -48,8 +65,7 @@ public final class DynamicNameValidator implements NameValidator {
 		return playerPrefix;
 	}
 
-	private NameValidator initImpl() {
-		String namePrefix = detectNamePrefix();
+	private NameValidator initImpl(String namePrefix) {
 		if (namePrefix.isEmpty()) {
 			return StandardNameValidator.vanilla();
 		} else {
@@ -58,10 +74,23 @@ public final class DynamicNameValidator implements NameValidator {
 	}
 
 	private NameValidator impl() {
+		NameValidator impl = this.impl;
 		if (impl == null) {
-			impl = initImpl();
+			impl = initImpl(detectNamePrefix());
+			this.impl = impl;
+		} else {
+			String forcedPrefix = forcedPrefix();
+			if (!forcedPrefix.equals(impl.associatedPrefix())) {
+				impl = initImpl(forcedPrefix);
+				this.impl = impl;
+			}
 		}
 		return impl;
+	}
+
+	@Override
+	public String associatedPrefix() {
+		return impl().associatedPrefix();
 	}
 
 	@Override
