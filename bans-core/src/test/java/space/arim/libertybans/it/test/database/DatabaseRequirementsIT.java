@@ -23,6 +23,7 @@ import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.core.database.DatabaseManager;
 import space.arim.libertybans.core.database.DatabaseRequirements;
+import space.arim.libertybans.core.database.Vendor;
 import space.arim.libertybans.it.DatabaseInstance;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 
@@ -37,11 +38,10 @@ public class DatabaseRequirementsIT {
 	@TestTemplate
 	public void databaseVersion(DatabaseManager databaseManager,
 								DatabaseInstance databaseInstance) throws SQLException {
-		System.setProperty("libertybans.database.disablecheck", "true");
-
+		Vendor vendor = databaseInstance.getVendor();
 		try (Connection connection = databaseManager.getInternal().getConnection()) {
 			assertDoesNotThrow(
-					new DatabaseRequirements(databaseInstance.getVendor(), connection)::checkRequirements);
+					new DatabaseRequirements(vendor, connection)::checkRequirementsAndYieldRetroSupport);
 		}
 	}
 

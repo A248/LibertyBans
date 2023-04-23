@@ -20,6 +20,7 @@
 package space.arim.libertybans.core.database;
 
 import org.flywaydb.core.api.MigrationVersion;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.bootstrap.StartupException;
 
@@ -44,32 +45,22 @@ public final class DatabaseRequirements {
 		this.connection = Objects.requireNonNull(connection, "connection");
 	}
 
-	// We use the same MigrationVersion which flyway relies on
-	private MigrationVersion databaseSemanticVersion() throws SQLException {
-		DatabaseMetaData metaData = connection.getMetaData();
-		return MigrationVersion.fromVersion(
-				metaData.getDatabaseMajorVersion() + "." + metaData.getDatabaseMinorVersion()
-		);
-	}
-
 	private boolean isMariaDbPerMetadata() throws SQLException {
 		DatabaseMetaData metaData = connection.getMetaData();
 		String databaseProductVersion = metaData.getDatabaseProductVersion();
 		return databaseProductVersion.toLowerCase(Locale.ROOT).contains("mariadb");
 	}
 
-	public void checkRequirements() throws SQLException {
+	public boolean checkRequirementsAndYieldRetroSupport() throws SQLException {
 		if (vendor == Vendor.MARIADB && !isMariaDbPerMetadata()) {
 			throw specifyThisVendorInstead(Vendor.MYSQL);
 		}
 		if (vendor == Vendor.MYSQL && isMariaDbPerMetadata()) {
 			throw specifyThisVendorInstead(Vendor.MARIADB);
 		}
-		Optional<String> minimumVersion = vendor.requiredMinimumVersion();
-		if (minimumVersion.isPresent()) {
-			requireMinimumVersion(minimumVersion.get());
-		}
+		boolean needsRetroSupport = checkVersionRequirementsAndYieldRetroSupport();
 		checkGrants();
+		return needsRetroSupport;
 	}
 
 	private StartupException specifyThisVendorInstead(Vendor actual) {
@@ -78,12 +69,32 @@ public final class DatabaseRequirements {
 				"Please set the option to '" + actual.name() + "' since you are really using " + actual);
 	}
 
-	private void requireMinimumVersion(String requiredVersion) throws SQLException {
-		if (!databaseSemanticVersion().isAtLeast(requiredVersion)) {
-			throw databaseMisconfiguration("If you are using " + vendor + ", you must be on " +
-					vendor + " " + requiredVersion + " or a newer version. " +
-					"Earlier versions are not supported. You are responsible for keeping your database up-to-date.");
+	private boolean checkVersionRequirementsAndYieldRetroSupport() throws SQLException {
+		String minimumVersion = vendor.requiredMinimumVersion().orElse(null);
+		if (minimumVersion == null) {
+			return false;
 		}
+		// We use the same MigrationVersion which flyway relies on
+		DatabaseMetaData metaData = connection.getMetaData();
+		String rawSemanticVersion = metaData.getDatabaseMajorVersion() + "." + metaData.getDatabaseMinorVersion();
+		MigrationVersion semanticVersion = MigrationVersion.fromVersion(rawSemanticVersion);
+		if (semanticVersion.isAtLeast(minimumVersion)) {
+			return false;
+		}
+		// We might still provide retrograde compatibility with very old databases
+		Optional<String> retroVersion = vendor.retroSupportVersion();
+		if (retroVersion.isPresent() && semanticVersion.isAtLeast(retroVersion.get())) {
+			Logger logger = LoggerFactory.getLogger(getClass());
+			logger.warn(
+					"You are using " + vendor + " version " + rawSemanticVersion + ". This database version is old " +
+							"and only supported for retrograde compatibility. It is strongly recommended to update " +
+							"your database to at least version " + minimumVersion + ". Support may be dropped for " +
+							"version " + rawSemanticVersion + " in the future.");
+			return true;
+		}
+		throw databaseMisconfiguration("If you are using " + vendor + ", you must be on " + vendor + " " +
+				minimumVersion + " or a newer version. Earlier versions such as " + rawSemanticVersion + "(yours) " +
+				"are not supported. You are responsible for keeping your database up-to-date.");
 	}
 
 	private void checkGrants() throws SQLException {

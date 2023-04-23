@@ -320,6 +320,7 @@
 								<hsqldb.reconfig_logging>false</hsqldb.reconfig_logging>
 								<org.jooq.no-logo>true</org.jooq.no-logo>
 								<org.jooq.no-tips>true</org.jooq.no-tips>
+								<libertybans.it.mariadb.retro.port>${it.mariadb.retro.port}</libertybans.it.mariadb.retro.port>
 								<libertybans.it.mariadb.legacy.port>${it.mariadb.legacy.port}</libertybans.it.mariadb.legacy.port>
 								<libertybans.it.mariadb.modern.port>${it.mariadb.modern.port}</libertybans.it.mariadb.modern.port>
 								<libertybans.it.mysql.port>${it.mysql.port}</libertybans.it.mysql.port>
@@ -327,6 +328,7 @@
 								<libertybans.it.postgres.modern.port>${it.postgres.modern.port}</libertybans.it.postgres.modern.port>
 								<libertybans.it.cockroachdb.port>${it.cockroachdb.port}</libertybans.it.cockroachdb.port>
 							</systemPropertyVariables>
+							<argLine>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005</argLine>
 						</configuration>
 					</plugin>
 				</plugins>
@@ -353,6 +355,7 @@
 								<id>find-available-ports</id>
 								<configuration>
 									<portNames combine.children="append">
+										<portName>it.mariadb.retro.port</portName>
 										<portName>it.mariadb.legacy.port</portName>
 										<portName>it.mariadb.modern.port</portName>
 									</portNames>
@@ -365,6 +368,27 @@
 						<artifactId>docker-maven-plugin</artifactId>
 						<configuration>
 							<images combine.children="append">
+								<image>
+									<name>mariadb:10.3</name>
+									<alias>mariadb-retro</alias>
+									<run>
+										<env>
+											<MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>true</MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>
+										</env>
+										<ports>
+											<port>127.0.0.1:${it.mariadb.retro.port}:3306</port>
+										</ports>
+										<wait>
+											<time>60000</time>
+											<log>Server socket created on IP: '::'</log>
+										</wait>
+										<volumes>
+											<bind>
+												<volume>libertybans-build-mariadb-retro:/var/lib/mysql</volume>
+											</bind>
+										</volumes>
+									</run>
+								</image>
 								<image>
 									<name>mariadb:10.6</name>
 									<alias>mariadb-legacy</alias>
@@ -409,6 +433,13 @@
 								</image>
 							</images>
 							<volumes combine.children="append">
+								<volume>
+									<name>libertybans-build-mariadb-retro</name>
+									<opts>
+										<type>tmpfs</type>
+										<device>tmpfs</device>
+									</opts>
+								</volume>
 								<volume>
 									<name>libertybans-build-mariadb-legacy</name>
 									<opts>

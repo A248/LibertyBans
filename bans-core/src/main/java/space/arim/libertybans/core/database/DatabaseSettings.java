@@ -87,21 +87,8 @@ public class DatabaseSettings {
 		this.config = config;
 		vendor = config.vendor();
 		hikariConf = new HikariConfig();
-
 		setHikariConfig();
-
-		HikariDataSource dataSource = new HikariDataSource(hikariConf);
-		// Check database preconditions before yielding data source
-		if (!Boolean.getBoolean("libertybans.database.disablecheck")) {
-			try (Connection connection = dataSource.getConnection()) {
-				connection.setReadOnly(true);
-				new DatabaseRequirements(vendor, connection).checkRequirements();
-			} catch (java.sql.SQLException ex) {
-				throw new IllegalStateException(
-						"Unable to connect to database. Please make sure your authentication details are correct.", ex);
-			}
-		}
-		return dataSource;
+		return new HikariDataSource(hikariConf);
 	}
 
 	/**
@@ -112,8 +99,10 @@ public class DatabaseSettings {
 	 */
 	public DatabaseResult create(DatabaseSettingsConfig config) {
 		HikariDataSource hikariDataSource = createDataSource(config);
+		// Check database compatibility and provide retro support if necessary
+		boolean retroSupport = checkCompatibilityAndYieldRetroSupport(hikariDataSource);
 
-		JooqContext jooqContext = new JooqContext(vendor.dialect());
+		JooqContext jooqContext = new JooqContext(vendor.dialect(), retroSupport);
 		ExecutorService threadPool = Executors.newFixedThreadPool(
 				hikariConf.getMaximumPoolSize(),
 				SimpleThreadFactory.create("Database")
@@ -134,6 +123,23 @@ public class DatabaseSettings {
 			return new DatabaseResult(database, jooqClassloading, false);
 		}
 		return new DatabaseResult(database, jooqClassloading, true);
+	}
+
+	private boolean checkCompatibilityAndYieldRetroSupport(HikariDataSource dataSource) {
+		if (Boolean.getBoolean("libertybans.database.disablecheck")) {
+			return false;
+		}
+		try (Connection connection = dataSource.getConnection()) {
+			connection.setReadOnly(true);
+
+			return new DatabaseRequirements(
+					vendor, connection
+			).checkRequirementsAndYieldRetroSupport();
+
+		} catch (java.sql.SQLException ex) {
+			throw new IllegalStateException(
+					"Unable to connect to database. Please make sure your authentication details are correct.", ex);
+		}
 	}
 
 	private void setHikariConfig() {

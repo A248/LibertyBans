@@ -19,14 +19,20 @@
 
 package space.arim.libertybans.core.database.jooq;
 
+import org.jooq.ConnectionProvider;
 import org.jooq.DSLContext;
+import org.jooq.ExecuteListenerProvider;
+import org.jooq.Log;
 import org.jooq.SQLDialect;
 import org.jooq.conf.BackslashEscaping;
 import org.jooq.conf.MappedSchema;
 import org.jooq.conf.MappedTable;
 import org.jooq.conf.RenderMapping;
 import org.jooq.conf.Settings;
-import org.jooq.impl.DSL;
+import org.jooq.exception.DataAccessException;
+import org.jooq.impl.DefaultConfiguration;
+import org.jooq.impl.NoConnectionProvider;
+import org.jooq.tools.JooqLogger;
 
 import java.sql.Connection;
 import java.util.Objects;
@@ -34,10 +40,21 @@ import java.util.regex.Pattern;
 
 public final class JooqContext {
 
+	static {
+		// Silence JOOQ warnings about our database version
+		JooqLogger.globalThreshold(Log.Level.ERROR);
+	}
+
 	private final SQLDialect dialect;
+	private final boolean retroSupport;
+
+	public JooqContext(SQLDialect dialect, boolean retroSupport) {
+		this.dialect = Objects.requireNonNull(dialect, "dialect");
+		this.retroSupport = retroSupport;
+	}
 
 	public JooqContext(SQLDialect dialect) {
-		this.dialect = Objects.requireNonNull(dialect, "dialect");
+		this(dialect, false);
 	}
 
 	private static final Pattern MATCH_ALL_EXCEPT_INFORMATION_SCHEMA = Pattern.compile("^(?!INFORMATION_SCHEMA)(.*?)$");
@@ -45,11 +62,33 @@ public final class JooqContext {
 	static final String REPLACEMENT = "libertybans_$0";
 
 	public DSLContext createContext(Connection connection) {
-		return DSL.using(connection, dialect, createSettings());
+		record SimpleConnectionProvider(Connection connection) implements ConnectionProvider {
+
+			@Override
+			public Connection acquire() throws DataAccessException {
+				return connection;
+			}
+
+			@Override
+			public void release(Connection connection) throws DataAccessException {}
+		}
+		return createWith(new SimpleConnectionProvider(connection));
 	}
 
 	public DSLContext createRenderOnlyContext() {
-		return DSL.using(dialect, createSettings());
+		return createWith(new NoConnectionProvider());
+	}
+
+	private DSLContext createWith(ConnectionProvider connectionProvider) {
+		return new DefaultConfiguration()
+				.set(connectionProvider)
+				.set(dialect)
+				.set(createSettings())
+				.set(retroSupport ?
+						new ExecuteListenerProvider[] { new RetroSupportListener().new Provider() }
+						: new ExecuteListenerProvider[0]
+				)
+				.dsl();
 	}
 
 	private Settings createSettings() {
@@ -71,6 +110,8 @@ public final class JooqContext {
 	public String toString() {
 		return "JooqContext{" +
 				"dialect=" + dialect +
+				", retroSupport=" + retroSupport +
 				'}';
 	}
+
 }

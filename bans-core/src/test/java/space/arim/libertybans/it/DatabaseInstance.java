@@ -35,6 +35,7 @@ import java.util.stream.Stream;
 public enum DatabaseInstance {
 	HSQLDB(Vendor.HSQLDB),
 	// See pom.xml for where these port properties come from
+	MARIADB_RETRO(Vendor.MARIADB, "libertybans.it.mariadb.retro.port"),
 	MARIADB_LEGACY(Vendor.MARIADB, "libertybans.it.mariadb.legacy.port"),
 	MARIADB_MODERN(Vendor.MARIADB, "libertybans.it.mariadb.modern.port"),
 	MYSQL(Vendor.MYSQL, "libertybans.it.mysql.port"),
@@ -79,33 +80,26 @@ public enum DatabaseInstance {
 	}
 
 	Optional<DatabaseInfo> createInfo() {
-		switch (port) {
-		case NO_PORT_APPLICABLE:
-			return Optional.of(new DatabaseInfo());
-		case NO_PORT_CONFIGURED:
-			return Optional.empty();
-		default:
-			break;
-		}
-		String database = "libertybans_it_" + DB_NAME_COUNTER.incrementAndGet();
-		createDatabase(database);
-		return Optional.of(new DatabaseInfo(port, database));
+		return switch (port) {
+			case NO_PORT_APPLICABLE -> Optional.of(new DatabaseInfo());
+			case NO_PORT_CONFIGURED -> Optional.empty();
+			default -> {
+				String database = "libertybans_it_" + DB_NAME_COUNTER.incrementAndGet();
+				createDatabase(database);
+				yield Optional.of(new DatabaseInfo(port, database));
+			}
+		};
 	}
 
 	private void createDatabase(String database) {
 		switch (this) {
-		case MARIADB_LEGACY:
-		case MARIADB_MODERN:
-		case MYSQL:
+		case MARIADB_RETRO, MARIADB_LEGACY, MARIADB_MODERN, MYSQL -> {
 			createDatabaseUsing("jdbc:mariadb", database, " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-			break;
-		case POSTGRES_LEGACY:
-		case POSTGRES_MODERN:
-		case COCKROACHDB:
+		}
+		case POSTGRES_LEGACY, POSTGRES_MODERN, COCKROACHDB -> {
 			createDatabaseUsing("jdbc:postgresql", database, "");
-			break;
-		default:
-			throw new IllegalStateException("No database creation exists");
+		}
+		default -> throw new IllegalStateException("No database creation exists");
 		}
 	}
 

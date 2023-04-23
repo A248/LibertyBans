@@ -76,6 +76,11 @@ public enum Vendor {
 		};
 	}
 
+	/**
+	 * Minimum version needed for healthy operability of LibertyBans
+	 *
+	 * @return the minimum RDMS version for efficient, healthy operation
+	 */
 	Optional<String> requiredMinimumVersion() {
 		return switch (this) {
 			case HSQLDB, COCKROACH -> // Assume CockroachDB users know what they are doing
@@ -97,6 +102,15 @@ public enum Vendor {
 				// 12 adds generated columns https://www.postgresql.org/docs/12/ddl-generated-columns.html
 					Optional.of("12");
 		};
+	}
+
+	/**
+	 * The lowest supported retrograde version allowed if {@link #requiredMinimumVersion()} is not met
+	 *
+	 * @return the lowest supported version whose use may entail compatibility hacks
+	 */
+	Optional<String> retroSupportVersion() {
+		return (this == MARIADB) ? Optional.of("10.3") : Optional.empty();
 	}
 
 	public String getGeneratedColumnSuffix() {
