@@ -42,4 +42,15 @@ public interface PunishEvent extends Cancellable, AsyncEvent {
 	 */
 	DraftPunishment getDraftPunishment();
 
+
+	/**
+	 * Sets the draft punishment which will be put into place. <br>
+	 *
+	 * The draft punishment includes the operator who is enacting this punishment,
+	 * the victim who is being punished, and several other details.
+	 *
+	 * @param draftPunishment the new draft punishment
+	 */
+	void setDraftPunishment(DraftPunishment draftPunishment);
+
 }
