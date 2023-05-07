@@ -27,19 +27,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
-import space.arim.libertybans.api.AddressVictim;
-import space.arim.libertybans.api.ConsoleOperator;
-import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.DraftPunishment;
 import space.arim.libertybans.api.punish.DraftPunishmentBuilder;
-import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.core.addon.AddonCenter;
 import space.arim.libertybans.core.addon.shortcutreasons.ShortcutReasonsAddon;
 import space.arim.libertybans.core.addon.shortcutreasons.ShortcutReasonsConfig;
 import space.arim.libertybans.core.addon.shortcutreasons.ShortcutReasonsListener;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.event.PunishEventImpl;
-import space.arim.libertybans.core.scope.ScopeImpl;
 import space.arim.omnibus.DefaultOmnibus;
 import space.arim.omnibus.Omnibus;
 
@@ -47,7 +42,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -57,21 +51,19 @@ import static org.mockito.Mockito.when;
 public class ShortcutReasonsListenerTest {
 
 	private final Omnibus omnibus = new DefaultOmnibus();
-	private final PunishmentDrafter drafter;
 	private final ShortcutReasonsConfig config;
 
 	private ShortcutReasonsAddon addon;
 	private ShortcutReasonsListener listener;
 
-	public ShortcutReasonsListenerTest(@Mock PunishmentDrafter drafter, @Mock ShortcutReasonsConfig config) {
+	public ShortcutReasonsListenerTest(@Mock ShortcutReasonsConfig config) {
 		this.config = config;
-		this.drafter = drafter;
 	}
 
 	@BeforeEach
 	public void setupListener(@Mock AddonCenter addonCenter) {
 		addon = new ShortcutReasonsAddon(addonCenter, omnibus, () -> listener);
-		listener = new ShortcutReasonsListener(addon, drafter);
+		listener = new ShortcutReasonsListener(addon);
 		when(addonCenter.configurationFor(addon)).thenReturn(config);
 
 		addon.startup();
@@ -87,7 +79,7 @@ public class ShortcutReasonsListenerTest {
 		when(config.shortcutIdentifier()).thenReturn("#");
 		when(draftPunishment.getReason()).thenReturn("no match");
 		var event = fireEvent(draftPunishment);
-		assertSame(draftPunishment, event.getDraftPunishment());
+		assertSame(draftPunishment, event.getDraftSanction());
 		verifyNoMoreInteractions(event.getSender());
 	}
 
@@ -100,23 +92,13 @@ public class ShortcutReasonsListenerTest {
 				"spamming", "don't be a spammer, thank you"
 		));
 
-		when(draftPunishment.getType()).thenReturn(PunishmentType.KICK);
-		when(draftPunishment.getVictim()).thenReturn(AddressVictim.of(new byte[4]));
-		when(draftPunishment.getOperator()).thenReturn(ConsoleOperator.INSTANCE);
 		when(draftPunishment.getReason()).thenReturn("#hacking");
-		when(draftPunishment.getScope()).thenReturn(ScopeImpl.GLOBAL);
-
-		when(drafter.draftBuilder()).thenReturn(newBuilder);
-		when(newBuilder.type(PunishmentType.KICK)).thenReturn(newBuilder);
-		when(newBuilder.victim(AddressVictim.of(new byte[4]))).thenReturn(newBuilder);
-		when(newBuilder.operator(ConsoleOperator.INSTANCE)).thenReturn(newBuilder);
+		when(draftPunishment.toBuilder()).thenReturn(newBuilder);
 		when(newBuilder.reason("hello hackers")).thenReturn(newBuilder);
-		when(newBuilder.duration(any())).thenReturn(newBuilder);
-		when(newBuilder.scope(ScopeImpl.GLOBAL)).thenReturn(newBuilder);
 		when(newBuilder.build()).thenReturn(newPunishment);
 
 		var event = fireEvent(draftPunishment);
-		assertSame(newPunishment, event.getDraftPunishment());
+		assertSame(newPunishment, event.getDraftSanction());
 		verifyNoMoreInteractions(event.getSender());
 	}
 

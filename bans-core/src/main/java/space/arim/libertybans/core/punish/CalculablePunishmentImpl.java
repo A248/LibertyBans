@@ -19,9 +19,8 @@
 
 package space.arim.libertybans.core.punish;
 
-import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.CalculablePunishment;
+import space.arim.libertybans.api.punish.CalculablePunishmentBuilder;
 import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
@@ -53,6 +52,15 @@ class CalculablePunishmentImpl extends AbstractSanctionBase implements Calculabl
 	@Override
 	public EscalationTrack getEscalationTrack() {
 		return escalationTrack;
+	}
+
+	@Override
+	public CalculablePunishmentBuilder toBuilder() {
+		return enactor.calculablePunishmentBuilder()
+				.victim(getVictim())
+				.operator(getOperator())
+				.calculator(getCalculator())
+				.escalationTrack(getEscalationTrack());
 	}
 
 	@Override

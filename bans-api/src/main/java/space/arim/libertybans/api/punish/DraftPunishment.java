@@ -50,6 +50,13 @@ public interface DraftPunishment extends PunishmentBase, DraftSanction {
 	@Override
 	ReactionStage<Optional<Punishment>> enactPunishment(EnforcementOptions enforcementOptions);
 
+	/**
+	 * Creates a new {@link DraftPunishmentBuilder}, copying all properties of this draft.
+	 *
+	 * @return A new builder
+	 */
+	DraftPunishmentBuilder toBuilder();
+
 	@Override
 	boolean equals(Object object);
 

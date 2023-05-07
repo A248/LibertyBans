@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import space.arim.libertybans.api.punish.DraftPunishmentBuilder;
 import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
@@ -56,6 +57,18 @@ class DraftPunishmentImpl extends AbstractPunishmentBase implements DraftPunishm
 	}
 
 	@Override
+	public DraftPunishmentBuilder toBuilder() {
+		return enactor.draftBuilder()
+				.type(getType())
+				.victim(getVictim())
+				.operator(getOperator())
+				.reason(getReason())
+				.duration(getDuration())
+				.scope(getScope())
+				.escalationTrack(getEscalationTrack().orElse(null));
+	}
+
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
@@ -71,10 +84,9 @@ class DraftPunishmentImpl extends AbstractPunishmentBase implements DraftPunishm
 		if (!super.equals(object)) {
 			return false;
 		}
-		if (!(object instanceof DraftPunishmentImpl)) {
+		if (!(object instanceof DraftPunishmentImpl other)) {
 			return false;
 		}
-		DraftPunishmentImpl other = (DraftPunishmentImpl) object;
 		return duration.equals(other.duration);
 	}
 

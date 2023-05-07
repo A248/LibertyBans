@@ -23,7 +23,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import space.arim.libertybans.api.event.PunishEvent;
 import space.arim.libertybans.api.punish.DraftPunishment;
-import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.core.event.PunishEventImpl;
 import space.arim.omnibus.events.ListeningMethod;
 
@@ -31,18 +30,16 @@ import space.arim.omnibus.events.ListeningMethod;
 public final class ShortcutReasonsListener {
 
 	private final ShortcutReasonsAddon addon;
-	private final PunishmentDrafter drafter;
 
 	@Inject
-	public ShortcutReasonsListener(ShortcutReasonsAddon addon, PunishmentDrafter drafter) {
+	public ShortcutReasonsListener(ShortcutReasonsAddon addon) {
 		this.addon = addon;
-		this.drafter = drafter;
 	}
 
 	@ListeningMethod
 	public void onPunish(PunishEvent event) {
 		ShortcutReasonsConfig config = addon.config();
-		DraftPunishment originalPunishment = event.getDraftPunishment();
+		DraftPunishment originalPunishment = event.getDraftSanction();
 		String originalReason = originalPunishment.getReason();
 		String shortcutIdentifier = config.shortcutIdentifier();
 		if (!originalReason.startsWith(shortcutIdentifier)) {
@@ -56,17 +53,8 @@ public final class ShortcutReasonsListener {
 			event.cancel();
 			return;
 		}
-		// TODO Cleanup by using originalPunishment.toBuilder()
-		event.setDraftPunishment(drafter
-				.draftBuilder()
-				.type(originalPunishment.getType())
-				.victim(originalPunishment.getVictim())
-				.operator(originalPunishment.getOperator())
-				.reason(newReason)
-				.duration(originalPunishment.getDuration())
-				.scope(originalPunishment.getScope())
-				.build()
-		);
+		DraftPunishment newPunishment = originalPunishment.toBuilder().reason(newReason).build();
+		event.setDraftSanction(newPunishment);
 	}
 
 }

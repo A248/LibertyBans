@@ -39,4 +39,11 @@ public interface CalculablePunishment extends DraftSanction {
 	 */
 	EscalationTrack getEscalationTrack();
 
+	/**
+	 * Creates a new {@link CalculablePunishmentBuilder}, copying all properties of this calculable.
+	 *
+	 * @return A new builder
+	 */
+	CalculablePunishmentBuilder toBuilder();
+
 }
