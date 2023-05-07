@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import space.arim.libertybans.api.punish.DraftPunishmentBuilder;
 import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
@@ -52,6 +53,17 @@ class DraftPunishmentImpl extends AbstractPunishmentBase implements DraftPunishm
 			}
 			return punishment.enforcePunishment(enforcementOptions).thenApply((ignore) -> Optional.of(punishment));
 		});
+	}
+
+	@Override
+	public DraftPunishmentBuilder toBuilder() {
+		return enactor.draftBuilder()
+				.type(getType())
+				.victim(getVictim())
+				.operator(getOperator())
+				.reason(getReason())
+				.duration(getDuration())
+				.scope(getScope());
 	}
 
 	@Override

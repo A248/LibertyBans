@@ -73,6 +73,13 @@ public interface DraftPunishment extends PunishmentBase, EnforcementOptionsFacto
 	ReactionStage<Optional<Punishment>> enactPunishment(EnforcementOptions enforcementOptions);
 
 	/**
+	 * Creates a new {@link DraftPunishmentBuilder}, copying all properties of this draft.
+	 *
+	 * @return A new builder
+	 */
+	DraftPunishmentBuilder toBuilder();
+
+	/**
 	 * Whether this draft punishment is equal to another. The other draft punishment
 	 * must have the same details as this one
 	 * 
