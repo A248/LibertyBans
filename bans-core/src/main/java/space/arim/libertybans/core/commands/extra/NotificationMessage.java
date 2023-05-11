@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,29 +19,25 @@
 
 package space.arim.libertybans.core.commands.extra;
 
-import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.env.CmdSender;
-import space.arim.libertybans.core.punish.Mode;
-import space.arim.libertybans.core.punish.PunishmentPermission;
+import space.arim.libertybans.core.punish.permission.PermissionBase;
 
 import java.util.Objects;
 
 public final class NotificationMessage {
 
-	private final PunishmentPermissionCheck permissionCheck;
+	private final CmdSender sender;
+	private final PermissionBase permissionBase;
 	private boolean silent;
 
-	public NotificationMessage(PunishmentPermissionCheck permissionCheck) {
-		this.permissionCheck = Objects.requireNonNull(permissionCheck, "permissionCheck");
-	}
-
-	public NotificationMessage(CmdSender sender, PunishmentType type, Mode mode) {
-		this(new PunishmentPermissionCheck(sender, new PunishmentPermission(type, mode)));
+	public NotificationMessage(CmdSender sender, PermissionBase permissionBase) {
+		this.sender = Objects.requireNonNull(sender);
+		this.permissionBase = Objects.requireNonNull(permissionBase);
 	}
 
 	public void evaluate(CommandPackage command) {
-		silent = permissionCheck.canUseSilence() && command.findHiddenArgument("s");
+		silent = sender.hasPermission(permissionBase.permission("silent")) && command.findHiddenArgument("s");
 	}
 
 	public boolean isSilent() {

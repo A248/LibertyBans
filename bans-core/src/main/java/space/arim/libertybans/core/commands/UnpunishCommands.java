@@ -30,7 +30,8 @@ import space.arim.libertybans.api.punish.PunishmentRevoker;
 import space.arim.libertybans.api.punish.RevocationOrder;
 import space.arim.libertybans.core.commands.extra.AsCompositeWildcard;
 import space.arim.libertybans.core.commands.extra.NotificationMessage;
-import space.arim.libertybans.core.commands.extra.PunishmentPermissionCheck;
+import space.arim.libertybans.core.punish.permission.VictimPermissionCheck;
+import space.arim.libertybans.core.punish.permission.VictimTypeCheck;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.RemovalsSection.PunishmentRemoval;
@@ -40,7 +41,7 @@ import space.arim.libertybans.core.event.PardonEventImpl;
 import space.arim.libertybans.core.event.PostPardonEventImpl;
 import space.arim.libertybans.core.punish.EnforcementOpts;
 import space.arim.libertybans.core.punish.Mode;
-import space.arim.libertybans.core.punish.PunishmentPermission;
+import space.arim.libertybans.core.punish.permission.PunishmentPermission;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
@@ -69,11 +70,12 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 	@Override
 	public final CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
 		PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
-		PunishmentPermissionCheck permissionCheck;
+		PunishmentPermission punishmentPermission = new PunishmentPermission(type, Mode.UNDO);
 		return new Execution(
 				sender, command, type,
-				(permissionCheck = new PunishmentPermissionCheck(sender, new PunishmentPermission(type, Mode.UNDO))),
-				new NotificationMessage(permissionCheck));
+				new VictimTypeCheck(sender, punishmentPermission),
+				new NotificationMessage(sender, punishmentPermission)
+		);
 	}
 
 	@Override
@@ -94,7 +96,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 	@Override
 	public final boolean hasTabCompletePermission(CmdSender sender, String arg) {
 		PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
-		PunishmentPermissionCheck permissionCheck = new PunishmentPermissionCheck(sender, new PunishmentPermission(type, Mode.UNDO));
+		VictimTypeCheck permissionCheck = new VictimTypeCheck(sender, new PunishmentPermission(type, Mode.UNDO));
 		// Accept either the preferred victim or composite wildcard; see execution below
 		return permissionCheck.hasPermission(preferredVictimType())
 				|| permissionCheck.hasPermission(Victim.VictimType.COMPOSITE);
@@ -102,12 +104,12 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 
 	private class Execution extends TypeSpecificExecution {
 
-		private final PunishmentPermissionCheck permissionCheck;
+		private final VictimPermissionCheck permissionCheck;
 		private final NotificationMessage notificationMessage;
 		private final PunishmentRemoval section;
 
 		Execution(CmdSender sender, CommandPackage command, PunishmentType type,
-				  PunishmentPermissionCheck permissionCheck, NotificationMessage notificationMessage) {
+				  VictimPermissionCheck permissionCheck, NotificationMessage notificationMessage) {
 			super(sender, command, type);
 			this.permissionCheck = permissionCheck;
 			this.notificationMessage = notificationMessage;
@@ -125,7 +127,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 				if (victim == null) {
 					return completedFuture(null);
 				}
-				if (!permissionCheck.checkPermission(victim, section.permission())) {
+				if (!permissionCheck.checkPermission(victim, section)) {
 					return completedFuture(null);
 				}
 				return performUndo(victim, targetArg);

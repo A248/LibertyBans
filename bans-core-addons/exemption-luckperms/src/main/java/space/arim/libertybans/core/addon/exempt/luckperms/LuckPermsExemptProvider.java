@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,13 +28,11 @@ import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.addon.exempt.ExemptProvider;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
-import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 
@@ -50,7 +48,7 @@ public final class LuckPermsExemptProvider implements ExemptProvider {
 	}
 
 	@Override
-	public CompletionStage<Boolean> isExempted(CmdSender sender, PunishmentType type, Victim target, Duration duration) {
+	public CompletionStage<Boolean> isExempted(CmdSender sender, String category, Victim target) {
 		LuckPerms luckPerms;
 		if (!addon.config().enable() || (luckPerms = addon.luckPerms()) == null) {
 			return futuresFactory.completedFuture(false);

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,7 +28,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.select.AddressStrictness;
+import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.jooq.JooqContext;
+import space.arim.libertybans.core.punish.PunishmentCreator;
+import space.arim.libertybans.core.service.Time;
+import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
 import java.net.InetAddress;
 import java.util.UUID;
@@ -42,13 +46,15 @@ public class SelectionBaseSQLTest {
 	@ParameterizedTest
 	@EnumSource(AddressStrictness.class)
 	public void optimizedApplicabilityQuery(AddressStrictness strictness) {
-		SelectorImpl selector = mock(SelectorImpl.class);
-
+		SelectionResources selectionResources = new SelectionResources(
+				new IndifferentFactoryOfTheFuture(), () -> mock(QueryExecutor.class),
+				mock(PunishmentCreator.class), mock(Time.class)
+		);
 		UUID uuid = UUID.randomUUID();
 		NetworkAddress address = NetworkAddress.of(InetAddress.getLoopbackAddress());
 		DSLContext context = new JooqContext(SQLDialect.HSQLDB).createRenderOnlyContext();
 
-		String sql = new SelectionByApplicabilityBuilderImpl(selector, uuid, address, strictness)
+		String sql = new SelectionByApplicabilityBuilderImpl(selectionResources, uuid, address, strictness)
 				.type(PunishmentType.BAN)
 				.build()
 				.renderSingleApplicablePunishmentSQL(context);
@@ -64,7 +70,8 @@ public class SelectionBaseSQLTest {
 select "libertybans_simple_bans"."victim_type", \
 "libertybans_simple_bans"."victim_uuid", "libertybans_simple_bans"."victim_address", \
 "libertybans_simple_bans"."operator", "libertybans_simple_bans"."reason", "libertybans_simple_bans"."scope", \
-"libertybans_simple_bans"."start", "libertybans_simple_bans"."end", "libertybans_simple_bans"."id" \
+"libertybans_simple_bans"."start", "libertybans_simple_bans"."end", "libertybans_simple_bans"."track", \
+"libertybans_simple_bans"."id" \
 from "libertybans_simple_bans" where \
 (("libertybans_simple_bans"."end" = 0 or "libertybans_simple_bans"."end" > cast(? as bigint)) \
 and \
@@ -79,7 +86,7 @@ select "libertybans_applicable_bans"."victim_type", \
 "libertybans_applicable_bans"."victim_uuid", "libertybans_applicable_bans"."victim_address", \
 "libertybans_applicable_bans"."operator", "libertybans_applicable_bans"."reason", \
 "libertybans_applicable_bans"."scope", "libertybans_applicable_bans"."start", \
-"libertybans_applicable_bans"."end", "libertybans_applicable_bans"."id" \
+"libertybans_applicable_bans"."end", "libertybans_applicable_bans"."track", "libertybans_applicable_bans"."id" \
 from "libertybans_applicable_bans" where \
 (("libertybans_applicable_bans"."end" = 0 or "libertybans_applicable_bans"."end" > cast(? as bigint)) \
 and \
@@ -91,7 +98,7 @@ select "libertybans_applicable_bans"."victim_type", \
 "libertybans_applicable_bans"."victim_uuid", "libertybans_applicable_bans"."victim_address", \
 "libertybans_applicable_bans"."operator", "libertybans_applicable_bans"."reason", \
 "libertybans_applicable_bans"."scope", "libertybans_applicable_bans"."start", \
-"libertybans_applicable_bans"."end", "libertybans_applicable_bans"."id" \
+"libertybans_applicable_bans"."end", "libertybans_applicable_bans"."track", "libertybans_applicable_bans"."id" \
 from "libertybans_applicable_bans" \
 join "libertybans_strict_links" on "libertybans_applicable_bans"."uuid" = "libertybans_strict_links"."uuid1" \
 where (("libertybans_applicable_bans"."end" = 0 or "libertybans_applicable_bans"."end" > cast(? as bigint)) \
@@ -105,7 +112,7 @@ select "libertybans_applicable_bans"."victim_type", \
 "libertybans_applicable_bans"."victim_uuid", "libertybans_applicable_bans"."victim_address", \
 "libertybans_applicable_bans"."operator", "libertybans_applicable_bans"."reason", \
 "libertybans_applicable_bans"."scope", "libertybans_applicable_bans"."start", \
-"libertybans_applicable_bans"."end", "libertybans_applicable_bans"."id" \
+"libertybans_applicable_bans"."end", "libertybans_applicable_bans"."track", "libertybans_applicable_bans"."id" \
 from "libertybans_applicable_bans" \
 join "libertybans_strict_links" on "libertybans_applicable_bans"."uuid" = "libertybans_strict_links"."uuid1" \
 where (("libertybans_applicable_bans"."end" = 0 or "libertybans_applicable_bans"."end" > cast(? as bigint)) \

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,13 +26,11 @@ import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.addon.exempt.ExemptProvider;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
-import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 
@@ -50,7 +48,7 @@ public final class VaultExemptProvider implements ExemptProvider {
 	}
 
 	@Override
-	public CompletionStage<Boolean> isExempted(CmdSender sender, PunishmentType type, Victim target, Duration duration) {
+	public CompletionStage<Boolean> isExempted(CmdSender sender, String category, Victim target) {
 		ExemptionVaultConfig config;
 		Permission permissions;
 		if (!(config = addon.config()).enable() || (permissions = addon.permissions()) == null) {
@@ -64,7 +62,7 @@ public final class VaultExemptProvider implements ExemptProvider {
 		} else {
 			return futuresFactory.completedFuture(false);
 		}
-		ExemptionCheck check = new ExemptionCheck(sender, type, targetUuid, permissions, config.maxLevelToScanFor());
+		ExemptionCheck check = new ExemptionCheck(sender, category, targetUuid, permissions, config.maxLevelToScanFor());
 		return switch (config.permissionCheckThreadContext()) {
 
 			case RUN_ANYWHERE -> futuresFactory.completedFuture(check.check());
@@ -85,15 +83,15 @@ public final class VaultExemptProvider implements ExemptProvider {
 	private final class ExemptionCheck {
 
 		private final CmdSender sender;
-		private final PunishmentType type;
+		private final String category;
 		private final UUID targetUuid;
 		private final Permission permissions;
 		private final int maxLevelToScanFor;
 
-		private ExemptionCheck(CmdSender sender, PunishmentType type, UUID targetUuid,
+		private ExemptionCheck(CmdSender sender, String category, UUID targetUuid,
 							   Permission permissions, int maxLevelToScanFor) {
 			this.sender = sender;
-			this.type = type;
+			this.category = category;
 			this.targetUuid = targetUuid;
 			this.permissions = permissions;
 			this.maxLevelToScanFor = maxLevelToScanFor;
@@ -104,7 +102,7 @@ public final class VaultExemptProvider implements ExemptProvider {
 		}
 
 		private boolean checkWith(OfflinePlayer targetPlayer) {
-			String permissionPrefix = "libertybans." + type + ".exempt.level.";
+			String permissionPrefix = "libertybans." + category + ".exempt.level.";
 			// Determine operator's level first; scan descending
 			int operatorLevel = -1;
 			for (int n = maxLevelToScanFor; n >= 0; n--) {

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -93,7 +93,7 @@ public class OptimizedQueriesIT {
 					.select(
 							simpleView.victimType(), simpleView.victimUuid(), simpleView.victimAddress(),
 							simpleView.operator(), simpleView.reason(),
-							simpleView.scope(), simpleView.start(), simpleView.end(),
+							simpleView.scope(), simpleView.start(), simpleView.end(), simpleView.track(),
 							simpleView.id()
 					)
 					.from(simpleView.table())
@@ -105,7 +105,7 @@ public class OptimizedQueriesIT {
 					.select(
 							applView.victimType(), applView.victimUuid(), applView.victimAddress(),
 							applView.operator(), applView.reason(),
-							applView.scope(), applView.start(), applView.end(),
+							applView.scope(), applView.start(), applView.end(), applView.track(),
 							applView.id()
 					).from(applView.table())
 					.where(new EndTimeCondition(applView).isNotExpired(Instant.EPOCH))
@@ -116,7 +116,7 @@ public class OptimizedQueriesIT {
 					.select(
 							applView.victimType(), applView.victimUuid(), applView.victimAddress(),
 							applView.operator(), applView.reason(),
-							applView.scope(), applView.start(), applView.end(),
+							applView.scope(), applView.start(), applView.end(), applView.track(),
 							applView.id()
 					).from(applView.table())
 					.innerJoin(STRICT_LINKS)

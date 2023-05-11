@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,6 +20,7 @@
 package space.arim.libertybans.core.config;
 
 import net.kyori.adventure.text.Component;
+import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.dazzleconf.annote.ConfDefault;
 import space.arim.dazzleconf.annote.ConfKey;
 
@@ -27,7 +28,7 @@ import space.arim.dazzleconf.annote.ConfKey;
  * Section for permission messages, used for both punishment additions and removals
  *
  */
-public interface PunishmentPermissionSection {
+public interface VictimPermissionSection {
 
 	@ConfDefault.DefaultString("&cYou may not do this to players.")
 	Component uuid();
@@ -38,5 +39,12 @@ public interface PunishmentPermissionSection {
 
 	@ConfDefault.DefaultString("&cYou may not do this to players and their IP addresses.")
 	Component both();
+
+	interface WithDuration extends VictimPermissionSection {
+
+		@ConfDefault.DefaultString("&cYou may not do this for &e%DURATION%&c.")
+		ComponentText duration();
+
+	}
 
 }

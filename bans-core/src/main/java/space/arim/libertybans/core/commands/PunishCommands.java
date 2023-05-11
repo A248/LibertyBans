@@ -19,64 +19,128 @@
 
 package space.arim.libertybans.core.commands;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.ComponentLike;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.event.BasePunishEvent;
 import space.arim.libertybans.api.punish.DraftPunishment;
-import space.arim.libertybans.api.punish.EnforcementOptions;
-import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
-import space.arim.libertybans.core.addon.exempt.Exemption;
 import space.arim.libertybans.core.commands.extra.DurationParser;
-import space.arim.libertybans.core.commands.extra.DurationPermissionCheck;
-import space.arim.libertybans.core.commands.extra.NotificationMessage;
-import space.arim.libertybans.core.commands.extra.PunishmentPermissionCheck;
 import space.arim.libertybans.core.commands.extra.ReasonsConfig;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
-import space.arim.libertybans.core.config.AdditionsSection;
-import space.arim.libertybans.core.config.AdditionsSection.ExclusivePunishmentAddition;
-import space.arim.libertybans.core.config.AdditionsSection.PunishmentAdditionWithDurationPerm;
+import space.arim.libertybans.core.config.AdditionAssistant;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.config.PunishmentAdditionSection;
 import space.arim.libertybans.core.env.CmdSender;
-import space.arim.libertybans.core.event.PostPunishEventImpl;
 import space.arim.libertybans.core.event.PunishEventImpl;
-import space.arim.libertybans.core.punish.EnforcementOpts;
 import space.arim.libertybans.core.punish.Mode;
-import space.arim.libertybans.core.punish.PunishmentPermission;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.libertybans.core.punish.permission.DurationPermissionCheck;
+import space.arim.libertybans.core.punish.permission.PermissionBase;
+import space.arim.libertybans.core.punish.permission.PunishmentPermission;
+import space.arim.libertybans.core.punish.permission.VictimPermissionCheck;
+import space.arim.libertybans.core.punish.permission.VictimTypeCheck;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.time.Duration;
 import java.util.Locale;
-import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
 
 abstract class PunishCommands extends AbstractSubCommandGroup implements PunishUnpunishCommands {
 
 	private final PunishmentDrafter drafter;
-	private final Exemption exemption;
 	private final InternalFormatter formatter;
+	private final AdditionAssistant additionAssistant;
 	private final TabCompletion tabCompletion;
 
 	PunishCommands(Dependencies dependencies, Stream<String> subCommands,
-				   PunishmentDrafter drafter, Exemption exemption,
-				   InternalFormatter formatter, TabCompletion tabCompletion) {
+				   PunishmentDrafter drafter, InternalFormatter formatter,
+				   AdditionAssistant additionAssistant, TabCompletion tabCompletion) {
 		super(dependencies, subCommands);
 		this.drafter = drafter;
-		this.exemption = exemption;
 		this.formatter = formatter;
+		this.additionAssistant = additionAssistant;
 		this.tabCompletion = tabCompletion;
 	}
 
 	@Override
 	public final CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
 		PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
-		PunishmentPermissionCheck permissionCheck;
-		return new Execution(
-				sender, command, type,
-				(permissionCheck = new PunishmentPermissionCheck(sender, new PunishmentPermission(type, Mode.DO))),
-				new NotificationMessage(permissionCheck));
+		PunishmentAdditionSection section = messages().additions().forType(type);
+		var client = new AdditionAssistant.Client<DraftPunishment, Duration>() {
+
+			@Override
+			public ReactionStage<Victim> parseVictim(String targetArg) {
+				return PunishCommands.this.parseVictim(sender, command, targetArg, type);
+			}
+
+			@Override
+			public Duration parseImplement() {
+				if (type == PunishmentType.KICK) {
+					return Duration.ZERO; // Always permanent
+				}
+				if (command.hasNext()) {
+					String time = command.peek();
+					Duration parsed = new DurationParser(messages().formatting().permanentArguments()).parse(time);
+					if (!parsed.isNegative()) {
+						// Successful parse; consume this argument
+						command.next();
+						return parsed;
+					}
+				}
+				// Fallback to permanent if unable to parse
+				return Duration.ZERO;
+			}
+
+			@Override
+			public PermissionBase createPermission(Duration duration) {
+				return new PunishmentPermission(type, Mode.DO);
+			}
+
+			@Override
+			public VictimPermissionCheck createPermissionCheck(Duration duration) {
+				return VictimPermissionCheck.combine(
+						new VictimTypeCheck(sender, createPermission(duration)),
+						new DurationPermissionCheck(sender, config().durationPermissions(), formatter, type, duration)
+				);
+			}
+
+			@Override
+			public String exemptionCategory() {
+				return type.name().toLowerCase(Locale.ROOT);
+			}
+
+			@Override
+			public @Nullable DraftPunishment buildDraftSanction(Victim victim, Duration duration, String targetArg) {
+				String reason;
+				if (command.hasNext()) {
+					reason = command.allRemaining();
+				} else {
+					ReasonsConfig reasonsConfig = config().reasons();
+					reason = switch (reasonsConfig.effectiveUnspecifiedReasonBehavior()) {
+						case USE_EMPTY_REASON -> "";
+						case REQUIRE_REASON -> null; // Exit below
+						case SUBSTITUTE_DEFAULT -> reasonsConfig.defaultReason();
+					};
+					if (reason == null) {
+						sender.sendMessage(section.usage());
+						return null;
+					}
+				}
+				return drafter.draftBuilder()
+						.type(type)
+						.victim(victim)
+						.operator(sender.getOperator())
+						.reason(reason)
+						.duration(duration)
+						.build();
+			}
+
+			@Override
+			public BasePunishEvent<DraftPunishment> constructEvent(DraftPunishment draftSanction) {
+				return new PunishEventImpl(draftSanction, sender);
+			}
+		};
+		return additionAssistant.new Execution<>(sender, command, section, client);
 	}
 
 	@Override
@@ -102,176 +166,10 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 	@Override
 	public boolean hasTabCompletePermission(CmdSender sender, String arg) {
 		PunishmentType type = parseType(arg.toUpperCase(Locale.ROOT));
-		PunishmentPermissionCheck permissionCheck = new PunishmentPermissionCheck(sender, new PunishmentPermission(type, Mode.DO));
+		VictimTypeCheck permissionCheck = new VictimTypeCheck(sender, new PunishmentPermission(type, Mode.DO));
 		return hasTabCompletePermission(permissionCheck);
 	}
 
-	public abstract boolean hasTabCompletePermission(PunishmentPermissionCheck permissionCheck);
-
-	private class Execution extends TypeSpecificExecution {
-
-		private final PunishmentPermissionCheck permissionCheck;
-		private final NotificationMessage notificationMessage;
-		private final AdditionsSection.PunishmentAddition section;
-
-		Execution(CmdSender sender, CommandPackage command, PunishmentType type,
-				  PunishmentPermissionCheck permissionCheck, NotificationMessage notificationMessage) {
-			super(sender, command, type);
-			this.permissionCheck = permissionCheck;
-			this.notificationMessage = notificationMessage;
-			section = messages().additions().forType(type);
-		}
-
-		@Override
-		public ReactionStage<Void> execute() {
-			if (!command().hasNext()) {
-				sender().sendMessage(section.usage());
-				return null;
-			}
-			String targetArg = command().next();
-			return parseVictim(sender(), command(), targetArg, type()).thenCompose((victim) -> {
-				if (victim == null) {
-					return completedFuture(null);
-				}
-				if (!permissionCheck.checkPermission(victim, section.permission())) {
-					return completedFuture(null);
-				}
-				return parseDurationThenPerformEnact(victim, targetArg);
-
-			}).thenCompose((punishment) -> {
-				if (punishment == null) {
-					return completedFuture(null);
-				}
-				return enforceAndSendSuccess(punishment, targetArg);
-			});
-		}
-
-		private CompletionStage<Punishment> parseDurationThenPerformEnact(Victim victim, String targetArg) {
-			// Parse duration, uses Duration.ZERO for permanent
-			Duration duration = parseDuration();
-
-			// Check duration permissions
-			if (!new DurationPermissionCheck(sender(), config()).isDurationPermitted(type(), duration)) {
-				// Sender does not have enough duration permissions
-				String durationFormatted = formatter.formatDuration(duration);
-				PunishmentAdditionWithDurationPerm sectionWithDurationPerm = ((PunishmentAdditionWithDurationPerm) section);
-				sender().sendMessage(sectionWithDurationPerm.permission().duration().replaceText("%DURATION%", durationFormatted));
-				return completedFuture(null);
-			}
-			// Check exemption
-			return exemption.isVictimExempt(sender(), type(), victim, duration).thenCompose((isExempt) -> {
-				if (isExempt) {
-					sender().sendMessage(section.exempted().replaceText("%TARGET%", targetArg));
-					return completedFuture(null);
-				}
-				return performEnact(victim, duration, targetArg);
-			});
-		}
-
-		private CompletionStage<Punishment> performEnact(Victim victim, Duration duration, String targetArg) {
-			// Parse reason
-			String reason;
-			{
-				// Evaluate -s before using allRemaining
-				notificationMessage.evaluate(command());
-
-				if (command().hasNext()) {
-					reason = command().allRemaining();
-				} else {
-					ReasonsConfig reasonsConfig = config().reasons();
-					reason = switch (reasonsConfig.effectiveUnspecifiedReasonBehavior()) {
-						case USE_EMPTY_REASON -> "";
-						case REQUIRE_REASON -> null; // Exit below
-						case SUBSTITUTE_DEFAULT -> reasonsConfig.defaultReason();
-					};
-					if (reason == null) {
-						sender().sendMessage(section.usage());
-						return completedFuture(null);
-					}
-				}
-			}
-
-			DraftPunishment draftPunishment = drafter.draftBuilder()
-					.type(type()).victim(victim).operator(sender().getOperator())
-					.reason(reason).duration(duration)
-					.build();
-
-			return fireWithTimeout(new PunishEventImpl(draftPunishment, sender())).thenCompose((event) -> {
-				if (event.isCancelled()) {
-					return completedFuture(null);
-				}
-				// Enforce the punishment later, after we are sure it is valid
-				EnforcementOptions enforcementOptions = event.getDraftPunishment()
-						.enforcementOptionsBuilder()
-						.enforcement(EnforcementOptions.Enforcement.NONE)
-						.broadcasting(EnforcementOptions.Broadcasting.NONE)
-						.build();
-				return event.getDraftPunishment().enactPunishment(enforcementOptions).thenApply((optPunishment) -> {
-					if (optPunishment.isEmpty()) {
-						sendConflict(targetArg);
-						return null;
-					}
-					return optPunishment.get();
-				});
-			});
-		}
-
-		/*
-		 * Argument parsing
-		 */
-
-		private Duration parseDuration() {
-			if (type() == PunishmentType.KICK) {
-				return Duration.ZERO; // Always permanent
-			}
-			if (command().hasNext()) {
-				String time = command().peek();
-				Duration parsed = new DurationParser(messages().formatting().permanentArguments()).parse(time);
-				if (!parsed.isNegative()) {
-					// Successful parse; consume this argument
-					command().next();
-					return parsed;
-				}
-			}
-			// Fallback to permanent if unable to parse
-			return Duration.ZERO;
-		}
-
-		// Outcomes
-
-		private void sendConflict(String targetArg) {
-			ComponentLike message;
-			if (type().isSingular()) {
-				message = ((ExclusivePunishmentAddition) section).conflicting().replaceText("%TARGET%", targetArg);
-			} else {
-				message = messages().misc().unknownError();
-			}
-			sender().sendMessage(message);
-		}
-
-		private CentralisedFuture<Void> enforceAndSendSuccess(Punishment punishment, String targetArg) {
-
-			EnforcementOptions enforcementOptions = EnforcementOpts
-					.builder()
-					.enforcement(EnforcementOptions.Enforcement.GLOBAL)
-					.broadcasting(notificationMessage.isSilent() ?
-							EnforcementOptions.Broadcasting.SILENT : EnforcementOptions.Broadcasting.NORMAL
-					)
-					.targetArgument(targetArg)
-					.build();
-			CentralisedFuture<?> enforcement = punishment
-					.enforcePunishment(enforcementOptions)
-					.toCompletableFuture();
-			CentralisedFuture<Component> futureMessage = formatter.formatWithPunishment(
-					section.successMessage().replaceText("%TARGET%", targetArg), punishment);
-
-			return futuresFactory().allOf(enforcement, futureMessage).thenCompose((ignore) -> {
-				return fireWithTimeout(new PostPunishEventImpl(punishment, targetArg));
-			}).thenRun(() -> {
-				sender().sendMessage(futureMessage.join());
-			});
-		}
-		
-	}
+	public abstract boolean hasTabCompletePermission(VictimTypeCheck permissionCheck);
 
 }

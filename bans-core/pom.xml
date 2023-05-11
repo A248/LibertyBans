@@ -100,6 +100,7 @@
 						<uuidtype>UUID</uuidtype>
 						<inettype>VARBINARY(16)</inettype>
 						<arbitrarybinarytype>BLOB</arbitrarybinarytype>
+						<alterviewstatement>ALTER VIEW</alterviewstatement>
 					</placeholders>
 					<locations>
 						<location>filesystem:src/main/resources/database-migrations</location>
@@ -192,6 +193,12 @@
 									<converter>space.arim.libertybans.core.database.jooq.ServerScopeConverter</converter>
 									<includeExpression>.*\.scope$</includeExpression>
 									<includeTypes>^CHARACTER\ VARYING\(32\)$</includeTypes>
+								</forcedType>
+								<forcedType>
+									<userType>space.arim.libertybans.api.punish.EscalationTrack</userType>
+									<converter>space.arim.libertybans.core.database.jooq.EscalationTrackConverter</converter>
+									<includeExpression>.*\.track$</includeExpression>
+									<includeTypes>^CHARACTER\ VARYING\(129\)$</includeTypes>
 								</forcedType>
 							</forcedTypes>
 						</database>

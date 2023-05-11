@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -29,12 +29,14 @@ import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.DraftPunishmentBuilder;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
 import space.arim.libertybans.api.select.SelectionPredicate;
+import space.arim.libertybans.api.select.SortPunishments;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
@@ -86,7 +88,7 @@ public class SelectionIT {
 	}
 
 	private static List<Punishment> getPunishments(SelectionOrderBuilder selectionBuilder) {
-		return selectionBuilder.build().getAllSpecificPunishments().toCompletableFuture().join();
+		return selectionBuilder.build().getAllSpecificPunishments(SortPunishments.OLDEST_FIRST).toCompletableFuture().join();
 	}
 
 	private static void assertEmpty(SelectionOrderBuilder selectionBuilder) {
@@ -103,8 +105,10 @@ public class SelectionIT {
 		assertEmpty(selectionBuilder(type).operator(operator));
 		assertEmpty(selectionBuilder(type).victim(victim));
 		assertEmpty(selectionBuilder(type).operator(operator).victim(victim));
+		assertEmpty(selectionBuilder(type).operator(operator).victim(victim).escalationTrack(null));
 		assertEmpty(selectionBuilder(type).scope(scopeManager.specificScope("servername")));
 		assertEmpty(selectionBuilder(type).victim(victim).scope(scopeManager.specificScope("servername")));
+		assertEmpty(selectionBuilder(type).scope(scopeManager.specificScope("servername")).escalationTrack(EscalationTrack.createDefault("track")));
 		assertEmpty(selectionBuilder(type).limitToRetrieve(20));
 		assertEmpty(selectionBuilder(type).operator(operator).limitToRetrieve(15));
 		assertEmpty(selectionBuilder(type).victim(victim).skipFirstRetrieved(10).limitToRetrieve(30));
@@ -154,13 +158,13 @@ public class SelectionIT {
 				draftBuilder(type, victim, "More punishments all around"));
 
 		assertEquals(
-				List.of(pun3, pun2, pun1),
+				List.of(pun1, pun2, pun3),
 				getPunishments(selectionBuilder(type).victim(victim)));
 		assertEquals(
-				List.of(pun2, pun1),
+				List.of(pun2, pun3),
 				getPunishments(selectionBuilder(type).victim(victim).skipFirstRetrieved(1)));
 		assertEquals(
-				List.of(pun3),
+				List.of(pun1),
 				getPunishments(selectionBuilder(type).victim(victim).limitToRetrieve(1)));
 		assertEquals(
 				List.of(pun2),
@@ -189,13 +193,10 @@ public class SelectionIT {
 				List.of(active),
 				getPunishments(selectionBuilder(type).victim(victim)));
 		assertEquals(
-				List.of(active, expired2, expired1),
+				List.of(expired1, expired2, active),
 				getPunishments(selectionBuilder(type).victim(victim).selectAll()));
 		assertEquals(
-				List.of(expired1),
-				getPunishments(selectionBuilder(type).victim(victim).selectAll().skipFirstRetrieved(2)));
-		assertEquals(
-				List.of(active, expired2),
+				List.of(expired1, expired2),
 				getPunishments(selectionBuilder(type).victim(victim).selectAll().limitToRetrieve(2)));
 	}
 
@@ -212,7 +213,7 @@ public class SelectionIT {
 				draftBuilder(PunishmentType.MUTE, victim2, "muted").operator(operator1));
 
 		assertEquals(
-				List.of(muteOfVictim2FromOp1, banFromOp1),
+				List.of(banFromOp1, muteOfVictim2FromOp1),
 				getPunishments(selector.selectionBuilder().operator(operator1)));
 		assertEquals(
 				List.of(warnFromOp2),
@@ -236,15 +237,15 @@ public class SelectionIT {
 				draftBuilder(PunishmentType.MUTE, address2, "muted"));
 
 		assertEquals(
-				List.of(warnUuid2, banUuid1),
+				List.of(banUuid1, warnUuid2),
 				getPunishments(selector.selectionBuilder().victimType(Victim.VictimType.PLAYER)));
 		assertEquals(
-				List.of(muteAddress2, banAddress1),
+				List.of(banAddress1, muteAddress2),
 				getPunishments(selector.selectionBuilder().victimTypes(
 						SelectionPredicate.matchingAnyOf(Victim.VictimType.ADDRESS, Victim.VictimType.COMPOSITE)
 				)));
 		assertEquals(
-				List.of(muteAddress2, banAddress1),
+				List.of(banAddress1, muteAddress2),
 				getPunishments(selector.selectionBuilder().victimTypes(
 						SelectionPredicate.matchingNone(Victim.VictimType.PLAYER)
 				)),
@@ -256,10 +257,10 @@ public class SelectionIT {
 				List.of(warnUuid2),
 				getPunishments(selector.selectionBuilder().victim(uuid2)));
 		assertEquals(
-				List.of(banAddress1, warnUuid2),
+				List.of(warnUuid2, banAddress1),
 				getPunishments(selector.selectionBuilder().victims(SelectionPredicate.matchingAnyOf(uuid2, address1))));
 		assertEquals(
-				List.of(banAddress1, warnUuid2),
+				List.of(warnUuid2, banAddress1),
 				getPunishments(selector.selectionBuilder().victims(SelectionPredicate.matchingNone(uuid1, address2))),
 				"Should be identical to previous assertion (in context)");
 	}
@@ -281,6 +282,52 @@ public class SelectionIT {
 				.toCompletableFuture()
 				.join();
 		assertEquals(2, warnCount);
+	}
+
+	@TestTemplate
+	public void selectByTrackOrItsInexistence() {
+		EscalationTrack track1 = EscalationTrack.createDefault("track1");
+		EscalationTrack track2 = EscalationTrack.create("other", "track2");
+		EscalationTrack track1Alt = EscalationTrack.create("other", "track1");
+
+		Victim victim = PlayerVictim.of(UUID.randomUUID());
+		Punishment warn1Track1 = getPunishment(
+				draftBuilder(PunishmentType.WARN, victim, "warning").escalationTrack(track1));
+		Punishment warn2Track1 = getPunishment(
+				draftBuilder(PunishmentType.WARN, victim, "another warning").escalationTrack(track1));
+		Punishment warn3Track2 = getPunishment(
+				draftBuilder(PunishmentType.WARN, victim, "another warning but in track 2").escalationTrack(track2));
+		Punishment warn4Track1Alt = getPunishment(
+				draftBuilder(PunishmentType.WARN, victim, "still another warning").escalationTrack(track1Alt));
+		Punishment ban1Track1 = getPunishment(
+				draftBuilder(PunishmentType.BAN, AddressVictim.of(RandomUtil.randomAddress()), "a ban")
+						.escalationTrack(track1));
+		Punishment ban2NoTrack = getPunishment(
+				draftBuilder(PunishmentType.BAN, AddressVictim.of(RandomUtil.randomAddress()), "a ban"));
+		Punishment muteTrack1Alt = getPunishment(
+				draftBuilder(PunishmentType.MUTE, PlayerVictim.of(UUID.randomUUID()), "a mute")
+						.escalationTrack(track1Alt));
+		Punishment kickNoTrack = getPunishment(
+				draftBuilder(PunishmentType.KICK, victim, "kicked"));
+
+		assertEquals(
+				List.of(warn1Track1, warn2Track1, ban1Track1),
+				getPunishments(selector.selectionBuilder().escalationTrack(track1)));
+		assertEquals(
+				List.of(warn1Track1, warn2Track1, warn3Track2, ban1Track1),
+				getPunishments(selector.selectionBuilder().escalationTracks(
+						SelectionPredicate.matchingAnyOf(Optional.of(track1), Optional.of(track2))
+				)));
+		assertEquals(
+				List.of(warn1Track1, warn2Track1, warn4Track1Alt, ban1Track1, muteTrack1Alt),
+				getPunishments(selector.selectionBuilder().escalationTracks(
+						SelectionPredicate.matchingAnyOf(Optional.of(track1), Optional.of(track1Alt))
+				)));
+		assertEquals(
+				List.of(warn1Track1, warn2Track1, ban1Track1, ban2NoTrack, kickNoTrack),
+				getPunishments(selector.selectionBuilder().selectAll().escalationTracks(
+						SelectionPredicate.matchingAnyOf(Optional.of(track1), Optional.empty())
+				)));
 	}
 
 }

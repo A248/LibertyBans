@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,12 +21,10 @@ package space.arim.libertybans.core.addon.exempt;
 
 import jakarta.inject.Inject;
 import space.arim.injector.MultiBinding;
-import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
-import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 
@@ -41,10 +39,10 @@ public final class Exemption {
 		this.providers = providers;
 	}
 
-	public CompletionStage<Boolean> isVictimExempt(CmdSender sender, PunishmentType type, Victim target, Duration duration) {
+	public CompletionStage<Boolean> isVictimExempt(CmdSender sender, String category, Victim target) {
 		CompletionStage<Boolean> isExemptFuture = null;
 		for (ExemptProvider provider : providers) {
-			var thisFuture = provider.isExempted(sender, type, target, duration);
+			var thisFuture = provider.isExempted(sender, category, target);
 			if (isExemptFuture == null) {
 				isExemptFuture = thisFuture;
 			} else {

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -16,6 +16,7 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.it.util;
 
 import space.arim.libertybans.api.punish.Punishment;
@@ -39,6 +40,7 @@ public final class TestingUtil {
 		assertEquals(expected.getOperator(), actual.getOperator());
 		assertEquals(expected.getReason(), actual.getReason());
 		assertEquals(expected.getScope(), actual.getScope());
+		assertEquals(expected.getEscalationTrack(), actual.getEscalationTrack());
 		if (expected instanceof Punishment && actual instanceof Punishment) {
 			assertEqualDetailsFinish((Punishment) expected, (Punishment) actual);
 		}

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,6 +27,7 @@ import space.arim.libertybans.core.addon.exempt.luckperms.ExemptionLuckPermsModu
 import space.arim.libertybans.core.addon.exempt.vault.ExemptionVaultModule;
 import space.arim.libertybans.core.addon.expunge.ExpungeModule;
 import space.arim.libertybans.core.addon.extend.ExtendModule;
+import space.arim.libertybans.core.addon.layouts.LayoutsModule;
 import space.arim.libertybans.core.addon.shortcutreasons.ShortcutReasonsModule;
 import space.arim.libertybans.core.addon.staffrollback.StaffRollbackModule;
 import space.arim.libertybans.core.addon.warnactions.WarnActionsModule;
@@ -44,7 +45,7 @@ public class ServiceLoadingIT {
 				Set.of(
 						new CheckPunishModule(), new CheckUserModule(), new ExpungeModule(), new ExtendModule(),
 						new StaffRollbackModule(), new ExemptionLuckPermsModule(), new ExemptionVaultModule(),
-						new ShortcutReasonsModule(), new WarnActionsModule()
+						new LayoutsModule(), new ShortcutReasonsModule(), new WarnActionsModule()
 				),
 				assertDoesNotThrow(AddonLoader::loadAddonBindModules)
 		);

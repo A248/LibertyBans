@@ -26,6 +26,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import space.arim.libertybans.api.punish.EnforcementOptions;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.PunishmentEditor;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
@@ -44,9 +45,9 @@ class SecurePunishment extends AbstractPunishmentBase implements Punishment, Enf
 	private final Instant endDate;
 
 	SecurePunishment(SecurePunishmentCreator creator,
-			long id, PunishmentType type, Victim victim, Operator operator,
-			String reason, ServerScope scope, Instant startDate, Instant endDate) {
-		super(type, victim, operator, reason, scope);
+					 long id, PunishmentType type, Victim victim, Operator operator, String reason,
+					 ServerScope scope, Instant startDate, Instant endDate, EscalationTrack escalationTrack) {
+		super(type, victim, operator, reason, scope, escalationTrack);
 		this.creator = Objects.requireNonNull(creator, "creator");
 		this.id = id;
 		this.startDate = Objects.requireNonNull(startDate, "startDate");
@@ -113,6 +114,7 @@ class SecurePunishment extends AbstractPunishmentBase implements Punishment, Enf
 		return "SecurePunishment [id=" + id + ", getType()=" + getType() + ", getVictim()=" + getVictim()
 				+ ", getOperator()=" + getOperator() + ", getReason()=" + getReason() + ", getScope()=" + getScope()
 				+ ", getStartDateSeconds()=" + getStartDateSeconds() + ", getEndDateSeconds()=" + getEndDateSeconds()
+				+ ", getEscalationTrack()=" + getEscalationTrack()
 				+ "]";
 	}
 

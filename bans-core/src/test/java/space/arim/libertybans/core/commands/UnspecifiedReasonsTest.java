@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,8 +32,10 @@ import space.arim.libertybans.api.punish.DraftPunishmentBuilder;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.core.addon.exempt.Exemption;
 import space.arim.libertybans.core.commands.extra.ArgumentParser;
+import space.arim.libertybans.core.config.AdditionAssistant;
 import space.arim.libertybans.core.config.ParsedDuration;
-import space.arim.libertybans.core.commands.extra.DurationPermissionsConfig;
+import space.arim.libertybans.core.event.FireEventWithTimeout;
+import space.arim.libertybans.core.punish.permission.DurationPermissionsConfig;
 import space.arim.libertybans.core.commands.extra.ReasonsConfig;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.AdditionsSection;
@@ -43,6 +45,7 @@ import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.EnvUserResolver;
+import space.arim.omnibus.DefaultOmnibus;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
 import java.util.Set;
@@ -104,8 +107,16 @@ public class UnspecifiedReasonsTest {
 		when(argParser.parseVictim(any(), eq("A248"), any())).thenAnswer((i) ->
 				new IndifferentFactoryOfTheFuture().completedFuture(PlayerVictim.of(UUID.randomUUID())));
 
-		Exemption exemption = new Exemption(dependencies.futuresFactory, Set.of());
-		punishCommands = new PlayerPunishCommands(dependencies, drafter, exemption, formatter, tabCompletion, envUserResolver);
+		punishCommands = new PlayerPunishCommands(
+				dependencies, drafter, formatter,
+				new AdditionAssistant(
+						dependencies.futuresFactory,
+						new FireEventWithTimeout(new DefaultOmnibus()),
+						formatter,
+						new Exemption(dependencies.futuresFactory, Set.of())
+				),
+				tabCompletion, envUserResolver
+		);
 	}
 
 	private void executeBan(CmdSender sender) {

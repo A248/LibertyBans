@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -46,7 +46,7 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 	private final NetworkAddress address;
 	private final AddressStrictness strictness;
 
-	SelectionByApplicabilityImpl(Details details, Resources resources,
+	SelectionByApplicabilityImpl(Details details, SelectionResources resources,
 								 UUID uuid, NetworkAddress address, AddressStrictness strictness) {
 		super(details, resources);
 		this.uuid = Objects.requireNonNull(uuid, "uuid");

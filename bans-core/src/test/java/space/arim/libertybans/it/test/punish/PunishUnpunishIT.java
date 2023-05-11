@@ -27,6 +27,7 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.DraftPunishment;
 import space.arim.libertybans.api.punish.EnforcementOptions;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.ExpunctionOrder;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
@@ -38,6 +39,7 @@ import space.arim.libertybans.core.punish.LocalEnforcer;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetAddressStrictness;
+import space.arim.libertybans.it.resolver.RandomEscalationTrackResolver;
 import space.arim.libertybans.it.resolver.RandomOperatorResolver;
 import space.arim.libertybans.it.resolver.RandomPunishmentTypeResolver;
 import space.arim.libertybans.it.resolver.RandomReasonResolver;
@@ -51,8 +53,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static space.arim.libertybans.it.util.TestingUtil.assertEqualDetails;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
-@ExtendWith({RandomPunishmentTypeResolver.class, RandomOperatorResolver.class,
-	RandomVictimResolver.class, RandomReasonResolver.class})
+@ExtendWith({
+		RandomPunishmentTypeResolver.class, RandomVictimResolver.class, RandomOperatorResolver.class,
+		RandomReasonResolver.class, RandomEscalationTrackResolver.class})
 @RandomPunishmentTypeResolver.NotAKick
 public class PunishUnpunishIT {
 
@@ -60,21 +63,23 @@ public class PunishUnpunishIT {
 	private final PunishmentRevoker revoker;
 	private final LocalEnforcer enforcer;
 	private PunishmentType type;
-	private final Operator operator;
 	private final Victim victim;
+	private final Operator operator;
 	private final String reason;
+	private final EscalationTrack escalationTrack;
 
 	@Inject
 	public PunishUnpunishIT(PunishmentDrafter drafter, PunishmentRevoker revoker, LocalEnforcer enforcer,
-			@DontInject PunishmentType type, @DontInject Operator operator, @DontInject Victim victim,
-			@DontInject @Reason String reason) {
+							@DontInject PunishmentType type, @DontInject Victim victim, @DontInject Operator operator,
+							@DontInject @Reason String reason, @DontInject EscalationTrack escalationTrack) {
 		this.drafter = drafter;
 		this.revoker = revoker;
 		this.enforcer = enforcer;
 		this.type = type;
-		this.operator = operator;
 		this.victim = victim;
+		this.operator = operator;
 		this.reason = reason;
+		this.escalationTrack = escalationTrack;
 	}
 
 	private DraftPunishment draftPunishment() {
@@ -83,6 +88,7 @@ public class PunishUnpunishIT {
 				.victim(victim)
 				.operator(operator)
 				.reason(reason)
+				.escalationTrack(escalationTrack)
 				.build();
 	}
 

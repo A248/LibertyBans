@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -51,7 +51,8 @@ public final class MigrateWithFlyway {
 
 	private Flyway createFlyway(MigrationState migrationState) {
 		var classProvider = migrationState.asClassProvider(List.of(
-				V1__Principle.class, V16__Complete_migration_from_08x.class, R__Set_Revision.class
+				V1__Principle.class, V16__Complete_migration_from_08x.class,
+				V31__Track_identifier_sequence.class, R__Set_Revision.class
 		));
 		return Flyway
 				.configure(getClass().getClassLoader())
@@ -64,7 +65,8 @@ public final class MigrateWithFlyway {
 						"extratableoptions", vendor.getExtraTableOptions(),
 						"uuidtype", vendor.uuidType(),
 						"inettype", vendor.inetType(),
-						"arbitrarybinarytype", vendor.arbitraryBinaryType()
+						"arbitrarybinarytype", vendor.arbitraryBinaryType(),
+						"alterviewstatement", vendor.alterViewStatement()
 				))
 				.locations("classpath:database-migrations")
 				// Override classpath scanning

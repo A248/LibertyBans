@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,10 +21,12 @@ package space.arim.libertybans.api.select;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 
 import java.time.Instant;
+import java.util.Optional;
 
 /**
  * Base interface for the builder of a selection.
@@ -87,6 +89,25 @@ public interface SelectionBuilderBase<B extends SelectionBuilderBase<B, S>, S ex
 	 * @return this builder
 	 */
 	B scopes(SelectionPredicate<ServerScope> scopes);
+
+	/**
+	 * Sets the escalation track matched. All are matched by default.
+	 *
+	 * @param escalationTrack the escalation track, or null to match the inexistence of a track
+	 * @return this builder
+	 */
+	default B escalationTrack(EscalationTrack escalationTrack) {
+		return escalationTracks(SelectionPredicate.matchingOnly(Optional.ofNullable(escalationTrack)));
+	}
+
+	/**
+	 * Sets the escalation tracks matched. All are matched by default. An empty optional indicates
+	 * the inexistence of a track
+	 *
+	 * @param escalationTracks the escalation track predicate
+	 * @return this builder
+	 */
+	B escalationTracks(SelectionPredicate<Optional<EscalationTrack>> escalationTracks);
 
 	/**
 	 * Sets whether only active punishments should be matched. True by default,

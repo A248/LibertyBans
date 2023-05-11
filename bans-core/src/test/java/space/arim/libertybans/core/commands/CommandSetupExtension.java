@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,6 +27,7 @@ import org.mockito.Mockito;
 import space.arim.libertybans.core.commands.extra.ArgumentParser;
 import space.arim.libertybans.core.commands.usage.UsageGlossary;
 import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.event.FireEventWithTimeout;
 import space.arim.omnibus.DefaultOmnibus;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
@@ -68,8 +69,8 @@ public final class CommandSetupExtension implements ParameterResolver {
 		assert type.equals(AbstractSubCommandGroup.Dependencies.class);
 		return extensionContext.getStore(NAMESPACE).getOrComputeIfAbsent(type, (k) -> {
 			return new AbstractSubCommandGroup.Dependencies(
-					new DefaultOmnibus(),
 					new IndifferentFactoryOfTheFuture(),
+					new FireEventWithTimeout(new DefaultOmnibus()),
 					configs,
 					argParser);
 		});

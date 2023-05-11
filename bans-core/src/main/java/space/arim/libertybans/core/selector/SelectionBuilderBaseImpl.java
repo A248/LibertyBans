@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,6 +21,7 @@ package space.arim.libertybans.core.selector;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.SelectionBase;
 import space.arim.libertybans.api.select.SelectionBuilderBase;
@@ -28,6 +29,7 @@ import space.arim.libertybans.api.select.SelectionPredicate;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 
 abstract class SelectionBuilderBaseImpl<B extends SelectionBuilderBase<B, S>, S extends SelectionBase>
 		implements SelectionBuilderBase<B, S> {
@@ -35,6 +37,7 @@ abstract class SelectionBuilderBaseImpl<B extends SelectionBuilderBase<B, S>, S 
 	private SelectionPredicate<PunishmentType> types = SelectionPredicate.matchingAll();
 	private SelectionPredicate<Operator> operators = SelectionPredicate.matchingAll();
 	private SelectionPredicate<ServerScope> scopes = SelectionPredicate.matchingAll();
+	private SelectionPredicate<Optional<EscalationTrack>> escalationTracks = SelectionPredicate.matchingAll();
 	private boolean selectActiveOnly = true;
 	private int skipCount;
 	private int limitToRetrieve;
@@ -62,6 +65,12 @@ abstract class SelectionBuilderBaseImpl<B extends SelectionBuilderBase<B, S>, S 
 	@Override
 	public B scopes(SelectionPredicate<ServerScope> scopes) {
 		this.scopes = Objects.requireNonNull(scopes, "scopes");
+		return yieldSelf();
+	}
+
+	@Override
+	public B escalationTracks(SelectionPredicate<Optional<EscalationTrack>> escalationTracks) {
+		this.escalationTracks = Objects.requireNonNull(escalationTracks, "escalationTracks");
 		return yieldSelf();
 	}
 
@@ -106,7 +115,7 @@ abstract class SelectionBuilderBaseImpl<B extends SelectionBuilderBase<B, S>, S 
 	@Override
 	public S build() {
 		return buildWith(new SelectionBaseImpl.Details(
-				types, operators, scopes, selectActiveOnly, skipCount, limitToRetrieve,
+				types, operators, scopes, escalationTracks, selectActiveOnly, skipCount, limitToRetrieve,
 				seekAfterStartTime, seekAfterId, seekBeforeStartTime, seekBeforeId
 		));
 	}

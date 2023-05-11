@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,14 +19,15 @@
 
 package space.arim.libertybans.core.database.sql;
 
-import org.jooq.Record10;
-import org.jooq.Record12;
+import org.jooq.Record11;
+import org.jooq.Record13;
 import org.jooq.Record2;
 import org.jooq.Table;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.schema.tables.ApplicableBans;
 import space.arim.libertybans.core.schema.tables.ApplicableMutes;
@@ -63,10 +64,9 @@ public final class TableForType {
 		};
 	}
 
-	public SimpleViewFields<? extends Record10<
-			Long, PunishmentType,
-			Victim.VictimType, UUID, NetworkAddress,
-			Operator, String, ServerScope, Instant, Instant>> simpleView() {
+	public SimpleViewFields<? extends Record11<
+				Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress,
+				Operator, String, ServerScope, Instant, Instant, EscalationTrack>> simpleView() {
 		var view = switch (type) {
 			case BAN -> SimpleBans.SIMPLE_BANS;
 			case MUTE -> SimpleMutes.SIMPLE_MUTES;
@@ -76,11 +76,11 @@ public final class TableForType {
 		return new SimpleViewFields<>(view);
 	}
 
-	public ApplicableViewFields<? extends Record12<
-			Long, PunishmentType,
-			Victim.VictimType, UUID, NetworkAddress,
-			Operator, String, ServerScope, Instant, Instant,
-			UUID, NetworkAddress>> applicableView() {
+	public ApplicableViewFields<? extends Record13<
+				Long, PunishmentType,
+				Victim.VictimType, UUID, NetworkAddress,
+				Operator, String, ServerScope, Instant, Instant,
+				UUID, NetworkAddress, EscalationTrack>> applicableView() {
 		var view = switch (type) {
 			case BAN -> ApplicableBans.APPLICABLE_BANS;
 			case MUTE -> ApplicableMutes.APPLICABLE_MUTES;

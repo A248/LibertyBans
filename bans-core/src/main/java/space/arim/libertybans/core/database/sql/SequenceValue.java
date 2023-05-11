@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.database.sql;
 
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.SQLDialect;
@@ -27,11 +28,14 @@ import org.jooq.Table;
 import org.jooq.impl.DSL;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 
-public final class SequenceValue<R extends Number> {
+import static org.jooq.impl.DSL.val;
+
+public class SequenceValue<R extends Number> {
 
 	private final Sequence<R> sequence;
-	private R lastValueForMySQL;
+	private Field<R> lastValueForMySQL;
 
 	public SequenceValue(Sequence<R> sequence) {
 		this.sequence = Objects.requireNonNull(sequence, "sequence");
@@ -58,9 +62,7 @@ public final class SequenceValue<R extends Number> {
 					.update(emulationTable)
 					.set(valueField, valueField.plus(1))
 					.execute();
-			lastValueForMySQL = sequenceValue;
-
-			return DSL.val(sequenceValue, sequence.getDataType());
+			return (lastValueForMySQL = val(sequenceValue, sequence.getDataType()));
 		} else {
 			return sequence.nextval();
 		}
@@ -72,7 +74,7 @@ public final class SequenceValue<R extends Number> {
 				throw new IllegalStateException("For MySQL, a value must be previously generated " +
 						"with #nextValue before #lastValueInSession can be used");
 			}
-			return DSL.val(lastValueForMySQL, sequence.getDataType());
+			return lastValueForMySQL;
 		} else {
 			return sequence.currval();
 		}
@@ -80,30 +82,37 @@ public final class SequenceValue<R extends Number> {
 
 	public void setValue(DSLContext context, R value) {
 		switch (context.family()) {
-		case MYSQL:
-			context
-					.update(emulationTable())
-					.set(emulationTableValueField(), value)
-					.execute();
-			break;
-		case HSQLDB:
-			context
-					.alterSequence(sequence)
-					.restartWith(value)
-					.execute();
-			break;
-		case MARIADB:
-			context
-					.query("SELECT SETVAL(" + sequence.getName() + ", " + value + ")")
-					.execute();
-			break;
-		case POSTGRES:
-			context
-					.query("SELECT SETVAL('" + sequence.getName() + "', " + value + ")")
-					.execute();
-			break;
-		default:
-			throw new UnsupportedOperationException("Not supported: " + context.family());
+		case MYSQL -> context
+				.update(emulationTable())
+				.set(emulationTableValueField(), value)
+				.execute();
+		case HSQLDB -> context
+				.alterSequence(sequence)
+				.restartWith(value)
+				.execute();
+		case MARIADB -> context
+				.query("SELECT SETVAL(" + sequence.getName() + ", " + value + ")")
+				.execute();
+		case POSTGRES -> context
+				.query("SELECT SETVAL('" + sequence.getName() + "', " + value + ")")
+				.execute();
+		default -> throw new UnsupportedOperationException("Not supported: " + context.family());
 		}
 	}
+
+	Field<R> retrieveOrGenerateMatchingRow(DSLContext context,
+										   Table<?> table, Field<R> sequenceValueField,
+										   Condition matchExisting, Consumer<Field<R>> insertNew) {
+		R existingId = context
+				.select(sequenceValueField)
+				.from(table)
+				.where(matchExisting)
+				.fetchOne(sequenceValueField);
+		if (existingId != null) {
+			return val(existingId);
+		}
+		insertNew.accept(nextValue(context));
+		return lastValueInSession(context);
+	}
+
 }

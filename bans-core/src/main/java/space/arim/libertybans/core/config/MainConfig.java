@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,7 +26,7 @@ import space.arim.dazzleconf.annote.ConfDefault.DefaultStrings;
 import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.SubSection;
-import space.arim.libertybans.core.commands.extra.DurationPermissionsConfig;
+import space.arim.libertybans.core.punish.permission.DurationPermissionsConfig;
 import space.arim.libertybans.core.commands.extra.ReasonsConfig;
 import space.arim.libertybans.core.commands.extra.TabCompletionConfig;
 import space.arim.libertybans.core.selector.EnforcementConfig;

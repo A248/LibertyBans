@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -30,12 +30,13 @@ import space.arim.libertybans.api.PunishmentType;
 @ConfHeader("Regards /unban, /unmute, /unwarn")
 public interface RemovalsSection {
 
-	interface PunishmentRemoval {
+	interface PunishmentRemoval extends PunishmentSection {
 
 		Component usage();
 
 		@SubSection
-		PunishmentPermissionSection permission();
+		@Override
+		VictimPermissionSection permission();
 
 		ComponentText notFound();
 		

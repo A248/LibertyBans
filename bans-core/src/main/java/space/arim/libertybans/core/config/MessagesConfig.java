@@ -69,6 +69,9 @@ import space.arim.libertybans.core.alts.AltsSection;
 		"%TIME_REMAINING% - the time until the punishment ends, or formatting.permanent-display.relative for permanent punishments",
 		"%TIME_REMAINING_SIMPLE% - the time until the punishment ends, rounded to the biggest time unit possible (e.g. 10 days instead of 9 days 13 hours)",
 		"%HAS_EXPIRED% - Shows if a punishments duration has run out. Does not check if the punishment is revoked!",
+		"%TRACK% - the escalation track of the punishment, for example if you are using layouts",
+		"%TRACK_ID% - the ID of the escalation track",
+		"%TRACK_NAMESPACE% - the namespace of a track can be used by other plugins to implement their own layouts",
 		"",
 		"The following variables have limited availability:",
 		"%TARGET% - the original target argument of a command. For example, in '/ipban Player1', %TARGET% is Player1",
@@ -340,6 +343,52 @@ public interface MessagesConfig {
 
 		}
 
+		@ConfKey("track-display")
+		@SubSection
+		TrackDisplay trackDisplay();
+
+		@ConfHeader("Controls how the %TRACK%, %TRACK_ID%, and %TRACK_NAMESPACE% variables are displayed")
+		interface TrackDisplay {
+
+			@ConfKey("no-track")
+			@ConfComments({
+					"How do you describe the lack of an escalation track?",
+					"The value will be displayed for the %TRACK% variable"
+			})
+			@DefaultString("No track")
+			String noTrack();
+
+			@ConfKey("no-track-id")
+			@ConfComments({
+					"How do you describe the lack of an escalation track with respect to its ID?",
+					"The value will be displayed for the %TRACK_ID% variable"
+			})
+			@DefaultString("No track ID")
+			String noTrackId();
+
+			@ConfKey("no-track-namespace")
+			@ConfComments({
+					"How do you describe the lack of an escalation track with respect to its namespace?",
+					"The value will be displayed for the %TRACK_NAMESPACE% variable"
+			})
+			@DefaultString("(none)")
+			String noTrackNamespace();
+
+			@ConfKey("track-display-names")
+			@ConfComments({
+					"You may wish to override the track display names. Normally the track ID is displayed,",
+					"which is lowercase and stored in the database. If you want a different name to be displayed",
+					"for the track, write it here.",
+					"",
+					"This option affects the %TRACK% variable but not the %TRACK_ID% variable."
+			})
+			@DefaultMap({
+					"hacking", "Hacking",
+					"spam", "Spamming"
+			})
+			Map<String, String> trackDisplayNames();
+
+		}
 	}
 	
 	@SubSection

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -31,19 +31,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -94,9 +91,8 @@ public class LuckPermsExemptProviderTest {
 	private void assertIsExempted(boolean outcome) {
 		assertEquals(outcome, exemptProvider.isExempted(
 				when(mock(CmdSender.class).getOperator()).thenReturn(PlayerOperator.of(senderUuid)).getMock(),
-				PunishmentType.BAN,
-				PlayerVictim.of(targetUuid),
-				Duration.ZERO
+				"ban",
+				PlayerVictim.of(targetUuid)
 		).toCompletableFuture().join());
 	}
 

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -36,39 +36,8 @@ import space.arim.libertybans.api.PunishmentType;
 		""})
 public interface AdditionsSection {
 
-	interface PunishmentAddition {
+	interface BanAddition extends PunishmentAdditionSection.WithDurationPerm {
 
-		Component usage();
-
-		@SubSection
-		PunishmentPermissionSection permission();
-
-		ComponentText exempted();
-
-		ComponentText successMessage();
-		
-		ComponentText successNotification();
-		
-		ComponentText layout();
-		
-	}
-
-	interface PunishmentAdditionWithDurationPerm extends PunishmentAddition {
-
-		@Override
-		@SubSection
-		PunishmentPermissionSectionWithDuration permission();
-
-	}
-	
-	interface ExclusivePunishmentAddition extends PunishmentAdditionWithDurationPerm {
-		
-		ComponentText conflicting();
-		
-	}
-	
-	interface BanAddition extends ExclusivePunishmentAddition {
-		
 		@Override
 		@DefaultString("&cUsage: /ban &e<player> [time] <reason>&c.")
 		Component usage();
@@ -105,8 +74,8 @@ public interface AdditionsSection {
 		ComponentText layout();
 		
 	}
-	
-	interface MuteAddition extends ExclusivePunishmentAddition {
+
+	interface MuteAddition extends PunishmentAdditionSection.WithDurationPerm {
 		
 		@Override
 		@DefaultString("&cUsage: /mute &e<player> [time] <reason>&c.")
@@ -141,7 +110,7 @@ public interface AdditionsSection {
 		
 	}
 	
-	interface WarnAddition extends PunishmentAdditionWithDurationPerm {
+	interface WarnAddition extends PunishmentAdditionSection.WithDurationPerm {
 		
 		@Override
 		@DefaultString("&cUsage: /warn &e<player> [time] <reason>&c.")
@@ -150,6 +119,11 @@ public interface AdditionsSection {
 		@Override
 		@DefaultString("&c&o%TARGET%&r&7 cannot be warned.")
 		ComponentText exempted();
+
+		@Override
+		default ComponentText conflicting() {
+			return SHOULD_NOT_CONFLICT;
+		}
 
 		@Override
 		@ConfKey("success.message")
@@ -171,9 +145,9 @@ public interface AdditionsSection {
 		ComponentText layout();
 		
 	}
-	
-	interface KickAddition extends PunishmentAddition {
-		
+
+	interface KickAddition extends PunishmentAdditionSection.WithLayout {
+
 		@Override
 		@DefaultString("&cUsage: /kick &e<player> <reason>&c.")
 		Component usage();
@@ -181,6 +155,11 @@ public interface AdditionsSection {
 		@Override
 		@DefaultString("&c&o%TARGET%&r&7 cannot be kicked.")
 		ComponentText exempted();
+
+		@Override
+		default ComponentText conflicting() {
+			return SHOULD_NOT_CONFLICT;
+		}
 
 		@Override
 		@ConfKey("success.message")
@@ -218,7 +197,7 @@ public interface AdditionsSection {
 	@SubSection
 	KickAddition kicks();
 
-	default PunishmentAddition forType(PunishmentType type) {
+	default PunishmentAdditionSection.WithLayout forType(PunishmentType type) {
 		return switch (type) {
 			case BAN -> bans();
 			case MUTE -> mutes();

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2020 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -63,7 +63,8 @@ public class ImportFunction {
 		return Optional.of(new Enaction.OrderDetails(
 				knownDetails.type(), victim, operator,
 				knownDetails.reason(), knownDetails.scope(),
-				knownDetails.start(), knownDetails.end()));
+				knownDetails.start(), knownDetails.end(), null
+		));
 	}
 
 	private Victim toVictim(PortablePunishment.VictimInfo victimInfo, ImportSink importSink) {

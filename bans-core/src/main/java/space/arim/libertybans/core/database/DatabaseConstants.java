@@ -19,9 +19,7 @@
 
 package space.arim.libertybans.core.database;
 
-import org.jooq.Name;
 import org.jooq.Table;
-import org.jooq.impl.DSL;
 
 import java.time.Duration;
 
@@ -38,7 +36,6 @@ public final class DatabaseConstants {
 	static final long SOCKET_TIMEOUT = Duration.ofSeconds(30L).toMillis();
 
 	public static final String LIBERTYBANS_08X_FLYWAY_TABLE = "libertybans_flyway";
-	public static final Name LIBERTYBANS_08X_FLYWAY_TABLE_NAME = DSL.quotedName("flyway");
 
 	private DatabaseConstants() {}
 

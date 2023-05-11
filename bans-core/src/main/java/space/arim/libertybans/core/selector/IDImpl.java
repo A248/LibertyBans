@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -61,7 +61,7 @@ public class IDImpl {
 							SIMPLE_ACTIVE.TYPE,
 							SIMPLE_ACTIVE.VICTIM_TYPE, SIMPLE_ACTIVE.VICTIM_UUID, SIMPLE_ACTIVE.VICTIM_ADDRESS,
 							SIMPLE_ACTIVE.OPERATOR, SIMPLE_ACTIVE.REASON,
-							SIMPLE_ACTIVE.SCOPE, SIMPLE_ACTIVE.START, SIMPLE_ACTIVE.END
+							SIMPLE_ACTIVE.SCOPE, SIMPLE_ACTIVE.START, SIMPLE_ACTIVE.END, SIMPLE_ACTIVE.TRACK
 					)
 					.from(SIMPLE_ACTIVE)
 					.where(SIMPLE_ACTIVE.ID.eq(id))
@@ -82,7 +82,7 @@ public class IDImpl {
 					.select(
 							simpleView.victimType(), simpleView.victimUuid(), simpleView.victimAddress(),
 							simpleView.operator(), simpleView.reason(),
-							simpleView.scope(), simpleView.start(), simpleView.end()
+							simpleView.scope(), simpleView.start(), simpleView.end(), simpleView.track()
 					)
 					.from(simpleView.table())
 					.where(simpleView.id().eq(id))
@@ -99,7 +99,7 @@ public class IDImpl {
 							SIMPLE_HISTORY.TYPE,
 							SIMPLE_HISTORY.VICTIM_TYPE, SIMPLE_HISTORY.VICTIM_UUID, SIMPLE_HISTORY.VICTIM_ADDRESS,
 							SIMPLE_HISTORY.OPERATOR, SIMPLE_HISTORY.REASON,
-							SIMPLE_HISTORY.SCOPE, SIMPLE_HISTORY.START, SIMPLE_HISTORY.END
+							SIMPLE_HISTORY.SCOPE, SIMPLE_HISTORY.START, SIMPLE_HISTORY.END, SIMPLE_HISTORY.TRACK
 					)
 					.from(SIMPLE_HISTORY)
 					.where(SIMPLE_HISTORY.ID.eq(id))
@@ -114,7 +114,7 @@ public class IDImpl {
 					.select(
 							SIMPLE_HISTORY.VICTIM_TYPE, SIMPLE_HISTORY.VICTIM_UUID, SIMPLE_HISTORY.VICTIM_ADDRESS,
 							SIMPLE_HISTORY.OPERATOR, SIMPLE_HISTORY.REASON,
-							SIMPLE_HISTORY.SCOPE, SIMPLE_HISTORY.START, SIMPLE_HISTORY.END
+							SIMPLE_HISTORY.SCOPE, SIMPLE_HISTORY.START, SIMPLE_HISTORY.END, SIMPLE_HISTORY.TRACK
 					)
 					.from(SIMPLE_HISTORY)
 					.where(SIMPLE_HISTORY.ID.eq(id))

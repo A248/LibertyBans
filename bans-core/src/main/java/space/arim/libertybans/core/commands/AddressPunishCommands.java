@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,20 +24,20 @@ import jakarta.inject.Singleton;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
-import space.arim.libertybans.core.addon.exempt.Exemption;
-import space.arim.libertybans.core.commands.extra.PunishmentPermissionCheck;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
+import space.arim.libertybans.core.config.AdditionAssistant;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.punish.MiscUtil;
+import space.arim.libertybans.core.punish.permission.VictimTypeCheck;
 
 @Singleton
 public final class AddressPunishCommands extends PunishCommands implements PunishUnpunishCommands.WithPreferredVictim {
 
 	@Inject
-	public AddressPunishCommands(Dependencies dependencies, PunishmentDrafter drafter,
-								 Exemption exemption, InternalFormatter formatter, TabCompletion tabCompletion) {
+	public AddressPunishCommands(Dependencies dependencies, PunishmentDrafter drafter, InternalFormatter formatter,
+								 AdditionAssistant additionAssistant, TabCompletion tabCompletion) {
 		super(dependencies, MiscUtil.punishmentTypes().stream().map((type) -> "ip" + type),
-				drafter, exemption, formatter, tabCompletion);
+				drafter, formatter, additionAssistant, tabCompletion);
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public final class AddressPunishCommands extends PunishCommands implements Punis
 	}
 
 	@Override
-	public boolean hasTabCompletePermission(PunishmentPermissionCheck permissionCheck) {
+	public boolean hasTabCompletePermission(VictimTypeCheck permissionCheck) {
 		return permissionCheck.hasPermission(Victim.VictimType.ADDRESS);
 	}
 

@@ -26,6 +26,7 @@ import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.punish.PunishmentRevoker;
@@ -36,6 +37,7 @@ import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.env.platform.QuackPlatform;
 import space.arim.libertybans.it.env.platform.QuackPlayer;
 import space.arim.libertybans.it.env.platform.QuackPlayerBuilder;
+import space.arim.libertybans.it.resolver.RandomEscalationTrackResolver;
 import space.arim.libertybans.it.resolver.RandomOperatorResolver;
 import space.arim.libertybans.it.resolver.RandomPunishmentTypeResolver;
 import space.arim.libertybans.it.resolver.RandomVictimResolver;
@@ -55,25 +57,27 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static space.arim.libertybans.it.util.TestingUtil.assertEqualDetails;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
-@ExtendWith({RandomPunishmentTypeResolver.class, RandomOperatorResolver.class, RandomVictimResolver.class})
+@ExtendWith({RandomPunishmentTypeResolver.class, RandomVictimResolver.class, RandomOperatorResolver.class, RandomEscalationTrackResolver.class})
 public class UpdateDetailsIT {
 
 	private final PunishmentDrafter drafter;
 	private final PunishmentSelector selector;
 	private final PunishmentType type;
-	private final Operator operator;
 	private final Victim victim;
+	private final Operator operator;
+	private final EscalationTrack escalationTrack;
 	private final SettableTime time;
 
 	@Inject
 	public UpdateDetailsIT(PunishmentDrafter drafter, PunishmentSelector selector,
-						   @DontInject PunishmentType type, @DontInject Operator operator, @DontInject Victim victim,
-						   SettableTime time) {
+						   @DontInject PunishmentType type, @DontInject Victim victim, @DontInject Operator operator,
+						   @DontInject EscalationTrack escalationTrack, SettableTime time) {
 		this.drafter = drafter;
 		this.selector = selector;
 		this.type = type;
-		this.operator = operator;
 		this.victim = victim;
+		this.operator = operator;
+		this.escalationTrack = escalationTrack;
 		this.time = time;
 	}
 
@@ -83,6 +87,7 @@ public class UpdateDetailsIT {
 				.victim(victim)
 				.operator(operator)
 				.reason(reason)
+				.escalationTrack(escalationTrack)
 				.duration(duration)
 				.build()
 				.enactPunishment()

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,35 +17,24 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.punish;
+package space.arim.libertybans.core.addon.layouts;
 
-import space.arim.libertybans.api.PunishmentType;
+import space.arim.dazzleconf.error.BadValueException;
+import space.arim.dazzleconf.validator.ValueValidator;
+import space.arim.libertybans.core.addon.layouts.Track.Ladder.Progression;
 
-import java.util.Objects;
+import java.util.Map;
 
-public final class PunishmentPermission {
-
-	private final PunishmentType type;
-	private final Mode mode;
-
-	public PunishmentPermission(PunishmentType type, Mode mode) {
-		this.type = Objects.requireNonNull(type, "type");
-		this.mode = Objects.requireNonNull(mode, "mode");
-	}
-
-	public String permission(String suffix) {
-		return "libertybans." + type + '.' + mode + '.' + suffix;
-	}
-
-	public String notifyPermission(boolean silent) {
-		return permission((silent) ? "notifysilent" : "notify");
-	}
-
+public final class BaseProgressionValidator implements ValueValidator {
 	@Override
-	public String toString() {
-		return "PunishmentPermission{" +
-				"type=" + type +
-				", mode=" + mode +
-				'}';
+	public void validate(String key, Object value) throws BadValueException {
+		@SuppressWarnings("unchecked")
+		Map<Integer, Progression> progressions = (Map<Integer, Progression>) value;
+		if (!progressions.containsKey(1)) {
+			throw new BadValueException.Builder()
+					.key(key)
+					.message("There must be a progression defined for the first punishment")
+					.build();
+		}
 	}
 }

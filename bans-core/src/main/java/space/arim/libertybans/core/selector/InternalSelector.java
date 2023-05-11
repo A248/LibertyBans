@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,11 +22,20 @@ package space.arim.libertybans.core.selector;
 import net.kyori.adventure.text.Component;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.select.PunishmentSelector;
+import space.arim.libertybans.api.select.SelectionOrderBuilder;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.util.UUID;
 
 public interface InternalSelector extends PunishmentSelector {
+
+	/**
+	 * Creates a selection builder using the given selection resources
+	 *
+	 * @param resources the selection resources
+	 * @return a selection order builder
+	 */
+	SelectionOrderBuilder selectionBuilder(SelectionResources resources);
 
 	/**
 	 * Checks a player connection's in a single connection query, enforcing any applicable bans,

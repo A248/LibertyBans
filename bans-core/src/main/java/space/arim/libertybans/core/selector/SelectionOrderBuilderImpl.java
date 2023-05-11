@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -29,12 +29,12 @@ import java.util.Objects;
 final class SelectionOrderBuilderImpl extends SelectionBuilderBaseImpl<SelectionOrderBuilder, SelectionOrder>
 		implements SelectionOrderBuilder {
 
-	private final SelectorImpl selector;
+	private final SelectionResources resources;
 	private SelectionPredicate<Victim> victims = SelectionPredicate.matchingAll();
 	private SelectionPredicate<Victim.VictimType> victimTypes = SelectionPredicate.matchingAll();
 
-	SelectionOrderBuilderImpl(SelectorImpl selector) {
-		this.selector = selector;
+	SelectionOrderBuilderImpl(SelectionResources resources) {
+		this.resources = resources;
 	}
 
 	@Override
@@ -57,7 +57,7 @@ final class SelectionOrderBuilderImpl extends SelectionBuilderBaseImpl<Selection
 	@Override
 	SelectionOrder buildWith(SelectionBaseImpl.Details details) {
 		return new SelectionOrderImpl(
-				details, selector.resources(), victims, victimTypes
+				details, resources, victims, victimTypes
 		);
 	}
 

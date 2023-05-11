@@ -66,4 +66,11 @@ public interface PunishmentEditor {
 	 */
 	void extendEndDate(Duration endDateDelta);
 
+	/**
+	 * Sets the new escalation track, or {@code null} for none
+	 *
+	 * @param escalationTrack the new escalation track or null to clear the track
+	 */
+	void setEscalationTrack(EscalationTrack escalationTrack);
+
 }

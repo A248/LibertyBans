@@ -85,6 +85,31 @@ Configuration:
 2. Set the `max-level-to-scan-for` to the value of the highest exemption level you granted.
 3. Change the `permission-check-thread-context` value to suit your permissions plugin.
 
+## Layouts
+
+The layouts addon provides the `/libertybans punish` command. It is a straightforward yet powerful means of defining punishment templates, ladders, tracks -- however you want to call them.
+
+After a punishment is created via a layout track, it is treated like any other punishment. However, of course, new punishments created using the same track will apply a configured ladder to calculate punishment details.
+
+### Configuration
+
+The configuration works by defining a ladder for each layout track. Each entry on the ladder specifies the punishment to be applied when a player reaches that many (or more) punishments.
+
+### Permission
+
+Permissions to use layouts are similar for permissions to create punishments normally. However, permissions are specific to each layout. Replace `<track>` with the name of the layout track you want to grant permission for.
+
+* `libertybans.addon.layout.use.<track>.target.uuid` - punish players
+* `libertybans.addon.layout.use.<track>.target.ip` - punish IP addresses
+* `libertybans.addon.layout.use.<track>.target.both` - punish player and IP address in the same punishment
+* `libertybans.addon.layout.use.<track>.silent` - use the silent feature
+
+Please note that the notification permissions remain tied to the punishment type. In other words, the permissions `libertybans.<type>.<do|undo>.<notify|notifysilent>` remain the same; there are no notification permissions specifically for layouts.
+
+### Interaction with Exemption Permissions
+
+If you are using the Vault permissions exemption addon, then the `libertybans.layout.exempt.level.<level>` permission defines exemption levels. (The typical permission cannot be used because exemption is checked before the punishment is executed).
+
 ## Other
 
 ### Shortcut Reasons

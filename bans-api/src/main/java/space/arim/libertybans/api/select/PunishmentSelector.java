@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.api.select;
 
+import java.net.InetAddress;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -66,6 +67,25 @@ public interface PunishmentSelector {
 	 * @return a selection by applicability builder
 	 */
 	SelectionByApplicabilityBuilder selectionByApplicabilityBuilder(UUID uuid, NetworkAddress address);
+
+	/**
+	 * Begins creating a selection to retrieve punishments applicable to a certain user
+	 * represented by a UUID and current IP address. <br>
+	 * <br>
+	 * Applicability is synonymous with enforceability, taking into account address strictness.
+	 * For example, if a ban would prevent a player from joining the server, the ban is said to be applicable to
+	 * the player's UUID and IP. It may be, the player's IP is banned, the player's UUID is banned,
+	 * or the player has played on a banned IP and that IP is banned  while strict address enforcement is enabled. <br>
+	 * <br>
+	 * By default, the server's configured address strictness is used, but this may be changed if desired.
+	 *
+	 * @param uuid the uuid of the user for whom to select applicable punishments
+	 * @param address the current or most recent address of the same user
+	 * @return a selection by applicability builder
+	 */
+	default SelectionByApplicabilityBuilder selectionByApplicabilityBuilder(UUID uuid, InetAddress address) {
+		return selectionByApplicabilityBuilder(uuid, NetworkAddress.of(address));
+	}
 
 	/**
 	 * Gets an active punishment matching a specific ID, if a punishment with such
