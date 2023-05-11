@@ -25,7 +25,7 @@ import space.arim.libertybans.api.punish.DraftPunishment;
 
 public class PunishEventImpl extends AbstractCancellable implements PunishEvent {
 
-	private final DraftPunishment draftPunishment;
+	private DraftPunishment draftPunishment;
 
 	public PunishEventImpl(DraftPunishment draftPunishment) {
 		this.draftPunishment = Objects.requireNonNull(draftPunishment);
@@ -36,4 +36,8 @@ public class PunishEventImpl extends AbstractCancellable implements PunishEvent 
 		return draftPunishment;
 	}
 
+	@Override
+	public void setDraftPunishment(DraftPunishment draftPunishment) {
+		this.draftPunishment = draftPunishment;
+	}
 }

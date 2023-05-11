@@ -201,12 +201,12 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 					return completedFuture(null);
 				}
 				// Enforce the punishment later, after we are sure it is valid
-				EnforcementOptions enforcementOptions = draftPunishment
+				EnforcementOptions enforcementOptions = event.getDraftPunishment()
 						.enforcementOptionsBuilder()
 						.enforcement(EnforcementOptions.Enforcement.NONE)
 						.broadcasting(EnforcementOptions.Broadcasting.NONE)
 						.build();
-				return draftPunishment.enactPunishment(enforcementOptions).thenApply((optPunishment) -> {
+				return event.getDraftPunishment().enactPunishment(enforcementOptions).thenApply((optPunishment) -> {
 					if (optPunishment.isEmpty()) {
 						sendConflict(targetArg);
 						return null;
