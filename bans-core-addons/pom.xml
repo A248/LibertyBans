@@ -44,6 +44,7 @@
         <module>command-staffrollback</module>
         <module>exemption-luckperms</module>
         <module>exemption-vault</module>
+        <module>shortcut-reasons</module>
         <module>warn-actions</module>
         <module>addon-integration</module>
     </modules>

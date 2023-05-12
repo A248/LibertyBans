@@ -196,7 +196,7 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 					.reason(reason).duration(duration)
 					.build();
 
-			return fireWithTimeout(new PunishEventImpl(draftPunishment)).thenCompose((event) -> {
+			return fireWithTimeout(new PunishEventImpl(draftPunishment, sender())).thenCompose((event) -> {
 				if (event.isCancelled()) {
 					return completedFuture(null);
 				}

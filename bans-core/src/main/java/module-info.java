@@ -23,7 +23,7 @@ module space.arim.libertybans.core {
 	exports space.arim.libertybans.core;
 	exports space.arim.libertybans.core.addon;
 	exports space.arim.libertybans.core.addon.exempt;
-	exports space.arim.libertybans.core.addon.staffrollback.execute;
+	exports space.arim.libertybans.core.addon.staffrollback.execute to space.arim.libertybans.core.addon.staffrollback;
 	exports space.arim.libertybans.core.alts to space.arim.dazzleconf, space.arim.injector;
 	exports space.arim.libertybans.core.commands;
 	exports space.arim.libertybans.core.commands.extra;
@@ -33,6 +33,7 @@ module space.arim.libertybans.core {
 	exports space.arim.libertybans.core.database.execute to space.arim.injector;
 	exports space.arim.libertybans.core.database.flyway to org.flywaydb.core;
 	exports space.arim.libertybans.core.env;
+	exports space.arim.libertybans.core.event to space.arim.libertybans.core.addon.shortcutreasons;
 	exports space.arim.libertybans.core.importing;
 	exports space.arim.libertybans.core.punish;
 	exports space.arim.libertybans.core.punish.sync to space.arim.injector;
