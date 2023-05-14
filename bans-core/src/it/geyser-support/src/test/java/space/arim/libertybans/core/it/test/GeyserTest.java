@@ -75,14 +75,18 @@ public class GeyserTest {
 	public void detectGeyserPrefix() {
 		setForcedPrefixOption("");
 		when(floodgateApi.getPlayerPrefix()).thenReturn("!");
-		assertEquals("!", new DynamicNameValidator(configs).detectNamePrefix());
+		var validator = new DynamicNameValidator(configs);
+		assertEquals("!", validator.associatedPrefix());
+		assertEquals("!", validator.associatedPrefix());
 	}
 
 	@Test
 	public void overrideDetectedGeyserPrefix() {
 		setForcedPrefixOption("*");
 		lenient().when(floodgateApi.getPlayerPrefix()).thenReturn("!");
-		assertEquals("*", new DynamicNameValidator(configs).detectNamePrefix());
+		var validator = new DynamicNameValidator(configs);
+		assertEquals("*", validator.associatedPrefix());
+		assertEquals("*", validator.associatedPrefix());
 	}
 
 }

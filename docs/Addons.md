@@ -91,7 +91,7 @@ Configuration:
 
 Allows substituting faster shortcuts for commonly-used punishment reasons. For example, `/ban A248 30d #hacking` becomes `/ban A248 30d You are banned for hacking`.
 
-Configuration is straight-forward otherwise. If a staff member specifies an invalid shortcut, the command is denied to prevent mistakes.
+Configuration is straight-forward otherwise. If a staff member specifies an invalid shortcut, the command is denied to prevent mistakes. Shortcuts are case-sensitive.
 
 ### Warn Actions
 

@@ -80,7 +80,7 @@ public final class DynamicNameValidator implements NameValidator {
 			this.impl = impl;
 		} else {
 			String forcedPrefix = forcedPrefix();
-			if (!forcedPrefix.equals(impl.associatedPrefix())) {
+			if (!forcedPrefix.isEmpty() && !forcedPrefix.equals(impl.associatedPrefix())) {
 				impl = initImpl(forcedPrefix);
 				this.impl = impl;
 			}

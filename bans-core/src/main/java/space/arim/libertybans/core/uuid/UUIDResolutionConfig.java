@@ -58,7 +58,7 @@ public interface UUIDResolutionConfig {
 			"",
 			"However, in rare cases, you may want to force LibertyBans to acknowledge the presence of Geyser usernames",
 			"If so, set this option to the value of the prefix you use for Geyser/Floodgate.",
-			"(An empty string will revert this option to automatic detection)"
+			"An empty string will revert this option to automatic detection, which requires a server restart to take effect."
 	})
 	@DefaultString("")
 	String forceGeyserPrefix();
