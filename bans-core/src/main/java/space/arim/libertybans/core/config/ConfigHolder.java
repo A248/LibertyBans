@@ -21,6 +21,7 @@ package space.arim.libertybans.core.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 import space.arim.dazzleconf.AuxiliaryKeys;
 import space.arim.dazzleconf.ConfigurationFactory;
 import space.arim.dazzleconf.ConfigurationOptions;
@@ -55,7 +56,7 @@ public final class ConfigHolder<C> {
 		ConfigSerialisers.addTo(optionsBuilder);
 		CONFIG_OPTIONS = optionsBuilder.build();
 
-		YAML_OPTIONS = new SnakeYamlOptions.Builder().commentMode(CommentMode.alternativeWriter()).build();
+		YAML_OPTIONS = new SnakeYamlOptions.Builder().yamlSupplier(Yaml::new).commentMode(CommentMode.alternativeWriter()).build();
 	}
 	
 	public ConfigHolder(Class<C> configClass) {
