@@ -1,6 +1,6 @@
 <!--
   ~ LibertyBans
-  ~ Copyright © 2022 Anand Beh
+  ~ Copyright © 2023 Anand Beh
   ~
   ~ LibertyBans is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as
@@ -37,6 +37,11 @@
             <outputDirectory>/dependencies/jars/</outputDirectory>
             <source>${project.build.directory}/bundles/${project.build.finalName}-caffeine-bundle.jar</source>
             <destName>caffeine-bundle.jar</destName>
+        </file>
+        <file>
+            <outputDirectory>/dependencies/jars/</outputDirectory>
+            <source>${project.build.directory}/bundles/${project.build.finalName}-jakarta-bundle.jar</source>
+            <destName>jakarta-bundle.jar</destName>
         </file>
         <file>
             <outputDirectory>/dependencies/jars/</outputDirectory>

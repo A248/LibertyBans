@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -42,6 +42,7 @@ import java.util.concurrent.BlockingQueue;
 enum DependencyBundle {
 
 	CAFFEINE(Repositories.CENTRAL_REPO),
+	JAKARTA(Repositories.CENTRAL_REPO),
 	KYORI(Repositories.CENTRAL_REPO),
 	SELF_IMPLEMENTATION(Repositories.ARIM_AFFERO_GPL3),
 	SLF4J(Repositories.CENTRAL_REPO);

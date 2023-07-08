@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -115,6 +115,11 @@ public final class LibertyBansLauncher {
 			librariesRequiringProtection.remove(ProtectedLibrary.CAFFEINE);
 		} else {
 			bundles.add(DependencyBundle.CAFFEINE);
+		}
+		if (platform.isJakartaProvided()) {
+			librariesRequiringProtection.remove(ProtectedLibrary.JAKARTA_INJECT);
+		} else {
+			bundles.add(DependencyBundle.JAKARTA);
 		}
 		if (platform.hasKyoriAdventureSupport()) {
 			librariesRequiringProtection.remove(ProtectedLibrary.KYORI_ADVENTURE);

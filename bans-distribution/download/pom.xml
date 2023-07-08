@@ -36,6 +36,7 @@
 							<exclude>net.kyori:*</exclude>
 							<exclude>org.jetbrains:annotations</exclude>
 							<exclude>com.github.ben-manes.caffeine:caffeine</exclude>
+							<exclude>jakarta.inject:jakarta.inject-api</exclude>
 						</excludes>
 					</artifactSet>
 				</configuration>

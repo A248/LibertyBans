@@ -1,6 +1,6 @@
 <!--
   ~ LibertyBans
-  ~ Copyright © 2022 Anand Beh
+  ~ Copyright © 2023 Anand Beh
   ~
   ~ LibertyBans is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as
@@ -34,6 +34,8 @@
             <excludes>
                 <!-- caffeine.xml -->
                 <exclude>com.github.ben-manes.caffeine:caffeine</exclude>
+                <!-- jakarta.xml -->
+                <exclude>jakarta.inject:jakarta.inject-api</exclude>
                 <!-- kyori.xml -->
                 <exclude>net.kyori:*</exclude>
                 <!-- slf4j.xml -->

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,15 +28,17 @@ public final class Platform {
 	private final boolean slf4j;
 	private final boolean kyoriAdventure;
 	private final boolean caffeine;
+	private final boolean jakarta;
 	private final boolean hikariCP;
 
 	Platform(Category category, String platformName,
-			 boolean slf4j, boolean kyoriAdventure, boolean caffeine, boolean hikariCP) {
+			 boolean slf4j, boolean kyoriAdventure, boolean caffeine, boolean jakarta, boolean hikariCP) {
 		this.category = Objects.requireNonNull(category, "category");
 		this.platformName = Objects.requireNonNull(platformName, "platformName");
 		this.slf4j = slf4j;
 		this.kyoriAdventure = kyoriAdventure;
 		this.caffeine = caffeine;
+		this.jakarta = jakarta;
 		this.hikariCP = hikariCP;
 	}
 
@@ -60,6 +62,10 @@ public final class Platform {
 		return caffeine;
 	}
 
+	public boolean isJakartaProvided() {
+		return jakarta;
+	}
+
 	public boolean hasHiddenHikariCP() {
 		return hikariCP;
 	}
@@ -74,6 +80,7 @@ public final class Platform {
 		private boolean slf4j;
 		private boolean kyoriAdventure;
 		private boolean caffeine;
+		private boolean jakarta;
 		private boolean hikariCP;
 
 		private Builder(Category category) {
@@ -95,13 +102,18 @@ public final class Platform {
 			return this;
 		}
 
+		public Builder jakartaProvided(LibraryDetection jakarta) {
+			this.jakarta = jakarta.evaluatePresence();
+			return this;
+		}
+
 		public Builder hiddenHikariCP(LibraryDetection hikariCP) {
 			this.hikariCP = hikariCP.evaluatePresence();
 			return this;
 		}
 
 		public Platform build(String platformName) {
-			return new Platform(category, platformName, slf4j, kyoriAdventure, caffeine, hikariCP);
+			return new Platform(category, platformName, slf4j, kyoriAdventure, caffeine, jakarta, hikariCP);
 		}
 	}
 

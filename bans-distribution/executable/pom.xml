@@ -30,6 +30,7 @@
 							<attach>false</attach>
 							<descriptors>
 								<descriptor>src/assembly/caffeine.xml</descriptor>
+								<descriptor>src/assembly/jakarta.xml</descriptor>
 								<descriptor>src/assembly/kyori.xml</descriptor>
 								<descriptor>src/assembly/self-implementation.xml</descriptor>
 								<descriptor>src/assembly/slf4j.xml</descriptor>

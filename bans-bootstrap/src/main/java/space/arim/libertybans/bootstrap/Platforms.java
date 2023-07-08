@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -54,6 +54,7 @@ public final class Platforms {
 				.kyoriAdventureSupport(LibraryDetection.enabled())
 				// Caffeine is an internal dependency
 				.caffeineProvided(new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.CAFFEINE, platformClassLoader))
+				.jakartaProvided(new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.JAKARTA_INJECT, platformClassLoader))
 				.build("Velocity");
 	}
 
@@ -61,18 +62,18 @@ public final class Platforms {
 	public static Stream<Platform> allPossiblePlatforms(String platformName) {
 		Set<Platform> platforms = new HashSet<>();
 		for (Platform.Category category : Platform.Category.values()) {
-			for (boolean adventure : new boolean[] {true, false}) {
-				for (boolean slf4j : new boolean[] {true, false}) {
-					for (boolean caffeine : new boolean[] {true, false}) {
-						platforms.add(Platform.builderForCategory(category)
-								.kyoriAdventureSupport(() -> adventure)
-								.slf4jSupport(() -> slf4j)
-								.caffeineProvided(() -> caffeine)
-								.build("Testing"));
-					}
-				}
+			// Count from 0000 to 1111 in binary
+			for (int setting = 0; setting < 0b10000; setting++) {
+				final int flags = setting;
+				platforms.add(Platform.builderForCategory(category)
+						.kyoriAdventureSupport(() -> (flags & 0b0001) != 0)
+						.slf4jSupport(() -> (flags & 0b0010) != 0)
+						.caffeineProvided(() -> (flags & 0b0100) != 0)
+						.jakartaProvided(() -> (flags & 0b1000) != 0)
+						.build(platformName));
 			}
 		}
 		return platforms.stream();
 	}
+
 }
