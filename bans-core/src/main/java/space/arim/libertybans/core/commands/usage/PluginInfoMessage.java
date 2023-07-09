@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -78,7 +78,7 @@ public final class PluginInfoMessage {
 				"&7" + PluginInfo.DESCRIPTION + "\n" +
 				"&7" + PluginInfo.URL + "\n" +
 				"&9-- Contributors --\n" +
-				"&7Maintainer(s): " + maintainers + "\n" +
+				"&7Maintainers: " + maintainers + "\n" +
 				"&7Collaborators: " + collaborators + "\n" +
 				"&7Commended Users: " + commendedUsers + "\n" +
 				"&9----------------------------------------------------------\n";
