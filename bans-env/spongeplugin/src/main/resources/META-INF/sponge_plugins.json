@@ -30,8 +30,8 @@
       "description": "${plugin.description}",
       "links": {
         "homepage": "${plugin.url}",
-        "source": "${project.scm.url}",
-        "issues": "${project.scm.url}/issues"
+        "source": "${plugin.url}",
+        "issues": "${plugin.url}/issues"
       },
       "entrypoint": "${project.groupId}.env.sponge.plugin.SpongePlugin"
     }
