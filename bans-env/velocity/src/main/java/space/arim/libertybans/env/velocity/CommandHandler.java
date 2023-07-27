@@ -28,7 +28,6 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import jakarta.inject.Inject;
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
-import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
@@ -75,18 +74,6 @@ public final class CommandHandler implements SimpleCommand, PlatformListener {
 			return new VelocityCmdSender.ConsoleSender(formatter, interlocutor, platformSender, server);
 		}
 
-		void execute(CommandSource platformSender, CommandPackage command) {
-			commands.execute(adaptSender(platformSender), command);
-		}
-
-		List<String> suggest(CommandSource platformSender, String[] args) {
-			return commands.suggest(adaptSender(platformSender), args);
-		}
-
-		boolean testPermission(CommandSource platformSender, String command) {
-			return commands.hasPermissionFor(adaptSender(platformSender), command);
-		}
-
 	}
 
 	@Override
@@ -121,20 +108,29 @@ public final class CommandHandler implements SimpleCommand, PlatformListener {
 	public void execute(Invocation invocation) {
 		CommandSource platformSender = invocation.source();
 		String[] args = invocation.arguments();
-		commandHelper.execute(platformSender, ArrayCommandPackage.create(adaptArgs(args, false)));
+		commandHelper.commands.execute(
+				commandHelper.adaptSender(platformSender),
+				ArrayCommandPackage.create(adaptArgs(args, false))
+		);
 	}
 
 	@Override
 	public List<String> suggest(Invocation invocation) {
 		CommandSource platformSender = invocation.source();
 		String[] args = invocation.arguments();
-		return commandHelper.suggest(platformSender, adaptArgs(args, true));
+		return commandHelper.commands.suggest(
+				commandHelper.adaptSender(platformSender),
+				adaptArgs(args, true)
+		);
 	}
 
 	@Override
 	public boolean hasPermission(Invocation invocation) {
 		CommandSource platformSender = invocation.source();
-		return commandHelper.testPermission(platformSender, name);
+		return commandHelper.commands.hasPermissionFor(
+				commandHelper.adaptSender(platformSender),
+				name
+		);
 	}
 
 }

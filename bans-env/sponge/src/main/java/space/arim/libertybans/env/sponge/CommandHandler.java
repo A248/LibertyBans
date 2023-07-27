@@ -35,7 +35,6 @@ import space.arim.libertybans.core.commands.StringCommandPackage;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.Interlocutor;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.util.Arrays;
 import java.util.List;
@@ -47,23 +46,21 @@ public final class CommandHandler implements Command.Raw {
 	private final Interlocutor interlocutor;
 	private final Commands commands;
 	private final Game game;
-	private final FactoryOfTheFuture futuresFactory;
 
 	@Inject
 	public CommandHandler(InternalFormatter formatter, Interlocutor interlocutor,
-						  Commands commands, Game game, FactoryOfTheFuture futuresFactory) {
+						  Commands commands, Game game) {
 		this.formatter = formatter;
 		this.interlocutor = interlocutor;
 		this.commands = commands;
 		this.game = game;
-		this.futuresFactory = futuresFactory;
 	}
 
 	private CmdSender adaptSender(CommandCause platformSender) {
 		if (platformSender.root() instanceof ServerPlayer player) {
-			return new SpongeCmdSender.PlayerCmdSender(formatter, interlocutor, player, game, futuresFactory);
+			return new SpongeCmdSender.PlayerCmdSender(formatter, interlocutor, player, game);
 		}
-		return new SpongeCmdSender.ConsoleSender(formatter, interlocutor, platformSender, game, futuresFactory);
+		return new SpongeCmdSender.ConsoleSender(formatter, interlocutor, platformSender, game);
 	}
 
 	@Override

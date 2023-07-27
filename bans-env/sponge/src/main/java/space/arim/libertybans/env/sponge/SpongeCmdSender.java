@@ -31,36 +31,23 @@ import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractCmdSender;
 import space.arim.libertybans.core.env.Interlocutor;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.stream.Stream;
 
 public abstract class SpongeCmdSender<C extends Subject> extends AbstractCmdSender<C> {
 
 	private final Game game;
-	private final FactoryOfTheFuture futuresFactory;
 
 	SpongeCmdSender(InternalFormatter formatter, Interlocutor interlocutor,
 					AudienceRepresenter<C> audienceRepresenter,
-					C rawSender, Operator operator, Game game, FactoryOfTheFuture futuresFactory) {
+					C rawSender, Operator operator, Game game) {
 		super(formatter, interlocutor, audienceRepresenter, rawSender, operator);
 		this.game = game;
-		this.futuresFactory = futuresFactory;
 	}
 
 	@Override
 	public final Stream<String> getPlayerNames() {
-		// Make sure not to transfer streams across threads
-		return futuresFactory.supplySync(() -> {
-			Collection<ServerPlayer> players = game.server().onlinePlayers();
-			Collection<String> names = new HashSet<>(players.size());
-			for (ServerPlayer player : players) {
-				names.add(player.name());
-			}
-			return names;
-		}).join().stream();
+		return game.server().onlinePlayers().stream().map(ServerPlayer::name);
 	}
 
 	@Override
@@ -77,9 +64,9 @@ public abstract class SpongeCmdSender<C extends Subject> extends AbstractCmdSend
 	static class PlayerCmdSender extends SpongeCmdSender<ServerPlayer> {
 
 		PlayerCmdSender(InternalFormatter formatter, Interlocutor interlocutor,
-						ServerPlayer player, Game game, FactoryOfTheFuture futuresFactory) {
+						ServerPlayer player, Game game) {
 			super(formatter, interlocutor, AudienceRepresenter.identity(),
-					player, PlayerOperator.of(player.uniqueId()), game, futuresFactory);
+					player, PlayerOperator.of(player.uniqueId()), game);
 		}
 
 	}
@@ -87,9 +74,9 @@ public abstract class SpongeCmdSender<C extends Subject> extends AbstractCmdSend
 	static class ConsoleSender extends SpongeCmdSender<CommandCause> {
 
 		ConsoleSender(InternalFormatter formatter, Interlocutor interlocutor,
-					  CommandCause sender, Game game, FactoryOfTheFuture futuresFactory) {
+					  CommandCause sender, Game game) {
 			super(formatter, interlocutor, new SpongeAudienceRepresenter(),
-					sender, ConsoleOperator.INSTANCE, game, futuresFactory);
+					sender, ConsoleOperator.INSTANCE, game);
 		}
 
 	}

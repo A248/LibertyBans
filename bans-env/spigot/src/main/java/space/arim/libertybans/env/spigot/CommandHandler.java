@@ -28,14 +28,12 @@ import org.bukkit.plugin.Plugin;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.api.env.bukkit.BukkitCommandSkeleton;
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
-import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.Interlocutor;
 import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.omnibus.util.ArraysUtil;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.util.List;
 import java.util.Locale;
@@ -58,42 +56,28 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 		private final Interlocutor interlocutor;
 		private final AudienceRepresenter<CommandSender> audienceRepresenter;
 		private final Commands commands;
-		final Plugin plugin;
-		private final FactoryOfTheFuture futuresFactory;
-		final CommandMapHelper commandMapHelper;
+		private final Plugin plugin;
+		private final CommandMapHelper commandMapHelper;
 
 		@Inject
 		public CommandHelper(InternalFormatter formatter, Interlocutor interlocutor,
 							 AudienceRepresenter<CommandSender> audienceRepresenter, Commands commands,
-							 Plugin plugin, FactoryOfTheFuture futuresFactory, CommandMapHelper commandMapHelper) {
+							 Plugin plugin, CommandMapHelper commandMapHelper) {
 			this.formatter = formatter;
 			this.interlocutor = interlocutor;
 			this.audienceRepresenter = audienceRepresenter;
 			this.commands = commands;
 			this.plugin = plugin;
-			this.futuresFactory = futuresFactory;
 			this.commandMapHelper = commandMapHelper;
 		}
 
 		private CmdSender adaptSender(CommandSender platformSender) {
 			if (platformSender instanceof Player) {
 				return new SpigotCmdSender.PlayerSender(formatter, interlocutor, audienceRepresenter,
-						(Player) platformSender, plugin, futuresFactory);
+						(Player) platformSender, plugin);
 			}
 			return new SpigotCmdSender.ConsoleSender(formatter, interlocutor, audienceRepresenter,
-					platformSender, plugin, futuresFactory);
-		}
-
-		void execute(CommandSender platformSender, CommandPackage command) {
-			commands.execute(adaptSender(platformSender), command);
-		}
-
-		List<String> suggest(CommandSender platformSender, String[] args) {
-			return commands.suggest(adaptSender(platformSender), args);
-		}
-
-		boolean testPermission(CommandSender platformSender, String command) {
-			return commands.hasPermissionFor(adaptSender(platformSender), command);
+					platformSender, plugin);
 		}
 
 	}
@@ -130,17 +114,26 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 
 	@Override
 	protected void execute(CommandSender platformSender, String[] args) {
-		commandHelper.execute(platformSender, ArrayCommandPackage.create(adaptArgs(args)));
+		commandHelper.commands.execute(
+				commandHelper.adaptSender(platformSender),
+				ArrayCommandPackage.create(adaptArgs(args))
+		);
 	}
 
 	@Override
 	protected List<String> suggest(CommandSender platformSender, String[] args) {
-		return commandHelper.suggest(platformSender, adaptArgs(args));
+		return commandHelper.commands.suggest(
+				commandHelper.adaptSender(platformSender),
+				adaptArgs(args)
+		);
 	}
 
 	@Override
 	public boolean testPermissionSilent(CommandSender platformSender) {
-		return commandHelper.testPermission(platformSender, getName());
+		return commandHelper.commands.hasPermissionFor(
+				commandHelper.adaptSender(platformSender),
+				getName()
+		);
 	}
 
 }

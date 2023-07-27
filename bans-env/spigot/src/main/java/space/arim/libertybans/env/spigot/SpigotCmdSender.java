@@ -29,36 +29,23 @@ import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractCmdSender;
 import space.arim.libertybans.core.env.Interlocutor;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.stream.Stream;
 
 public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 
 	private final Plugin plugin;
-	final FactoryOfTheFuture futuresFactory;
 
 	SpigotCmdSender(InternalFormatter formatter, Interlocutor interlocutor,
 					AudienceRepresenter<CommandSender> audienceRepresenter,
-					CommandSender sender, Operator operator, Plugin plugin, FactoryOfTheFuture futuresFactory) {
+					CommandSender sender, Operator operator, Plugin plugin) {
 		super(formatter, interlocutor, audienceRepresenter, sender, operator);
 		this.plugin = plugin;
-		this.futuresFactory = futuresFactory;
 	}
 
 	@Override
 	public final Stream<String> getPlayerNames() {
-		// Make sure not to transfer streams across threads
-		return futuresFactory.supplySync(() -> {
-			Collection<? extends Player> players = plugin.getServer().getOnlinePlayers();
-			Collection<String> names = new HashSet<>(players.size());
-			for (Player player : players) {
-				names.add(player.getName());
-			}
-			return names;
-		}).join().stream();
+		return plugin.getServer().getOnlinePlayers().stream().map(Player::getName);
 	}
 
 	@Override
@@ -75,9 +62,9 @@ public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 
 		PlayerSender(InternalFormatter formatter, Interlocutor interlocutor,
 					 AudienceRepresenter<CommandSender> audienceRepresenter,
-					 Player player, Plugin plugin, FactoryOfTheFuture futuresFactory) {
+					 Player player, Plugin plugin) {
 			super(formatter, interlocutor, audienceRepresenter,
-					player, PlayerOperator.of(player.getUniqueId()), plugin, futuresFactory);
+					player, PlayerOperator.of(player.getUniqueId()), plugin);
 		}
 
 	}
@@ -86,9 +73,9 @@ public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 
 		ConsoleSender(InternalFormatter formatter, Interlocutor interlocutor,
 					  AudienceRepresenter<CommandSender> audienceRepresenter,
-					  CommandSender sender, Plugin plugin, FactoryOfTheFuture futuresFactory) {
+					  CommandSender sender, Plugin plugin) {
 			super(formatter, interlocutor, audienceRepresenter,
-					sender, ConsoleOperator.INSTANCE, plugin, futuresFactory);
+					sender, ConsoleOperator.INSTANCE, plugin);
 		}
 
 	}

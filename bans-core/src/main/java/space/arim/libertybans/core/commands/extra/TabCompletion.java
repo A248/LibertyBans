@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,6 +25,11 @@ import space.arim.libertybans.core.env.CmdSender;
 
 import java.util.stream.Stream;
 
+/**
+ * Tab completion. Methods should be called from and only from the same thread as that on which
+ * tab completion was requested by the platform.
+ *
+ */
 public interface TabCompletion extends Part {
 
 	Stream<String> completeOnlinePlayerNames(CmdSender sender);

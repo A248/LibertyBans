@@ -27,7 +27,6 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.TabExecutor;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
-import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
@@ -52,7 +51,7 @@ public final class CommandHandler extends Command implements TabExecutor, Platfo
 		private final Interlocutor interlocutor;
 		private final AudienceRepresenter<CommandSender> audienceRepresenter;
 		private final Commands commands;
-		final Plugin plugin;
+		private final Plugin plugin;
 
 		@Inject
 		public CommandHelper(InternalFormatter formatter, Interlocutor interlocutor,
@@ -72,18 +71,6 @@ public final class CommandHandler extends Command implements TabExecutor, Platfo
 			}
 			return new BungeeCmdSender.ConsoleSender(
 					formatter, interlocutor, audienceRepresenter, platformSender, plugin);
-		}
-
-		void execute(CommandSender platformSender, CommandPackage command) {
-			commands.execute(adaptSender(platformSender), command);
-		}
-
-		Iterable<String> suggest(CommandSender platformSender, String[] args) {
-			return commands.suggest(adaptSender(platformSender), args);
-		}
-
-		boolean testPermission(CommandSender platformSender, String command) {
-			return commands.hasPermissionFor(adaptSender(platformSender), command);
 		}
 
 	}
@@ -108,17 +95,26 @@ public final class CommandHandler extends Command implements TabExecutor, Platfo
 
 	@Override
 	public void execute(CommandSender platformSender, String[] args) {
-		commandHelper.execute(platformSender, ArrayCommandPackage.create(adaptArgs(args)));
+		commandHelper.commands.execute(
+				commandHelper.adaptSender(platformSender),
+				ArrayCommandPackage.create(adaptArgs(args))
+		);
 	}
 
 	@Override
 	public Iterable<String> onTabComplete(CommandSender platformSender, String[] args) {
-		return commandHelper.suggest(platformSender, adaptArgs(args));
+		return commandHelper.commands.suggest(
+				commandHelper.adaptSender(platformSender),
+				adaptArgs(args)
+		);
 	}
 
 	@Override
-	public boolean hasPermission(CommandSender sender) {
-		return commandHelper.testPermission(sender, getName());
+	public boolean hasPermission(CommandSender platformSender) {
+		return commandHelper.commands.hasPermissionFor(
+				commandHelper.adaptSender(platformSender),
+				getName()
+		);
 	}
 
 }
