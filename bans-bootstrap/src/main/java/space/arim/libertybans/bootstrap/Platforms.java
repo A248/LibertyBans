@@ -58,6 +58,10 @@ public final class Platforms {
 				.build("Velocity");
 	}
 
+	public static Platform standalone() {
+		return Platform.builderForCategory(Platform.Category.STANDALONE).build("Standalone");
+	}
+
 	// Used for testing purposes
 	public static Stream<Platform> allPossiblePlatforms(String platformName) {
 		Set<Platform> platforms = new HashSet<>();

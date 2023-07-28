@@ -48,6 +48,7 @@
                 <exclude>space.arim.libertybans:bans-env-spigotplugin</exclude>
                 <exclude>space.arim.libertybans:bans-env-spongeplugin</exclude>
                 <exclude>space.arim.libertybans:bans-env-velocityplugin</exclude>
+                <exclude>space.arim.libertybans:bans-env-standalonelauncher</exclude>
                 <exclude>space.arim.licenser:licenser-agpl3</exclude>
                 <!-- platform-provided -->
                 <exclude>org.yaml:snakeyaml</exclude>

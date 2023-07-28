@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -80,11 +80,6 @@ public final class BungeePlugin extends Plugin {
 				.culpritFinder(new BungeeCulpritFinder(getLogger()))
 				.build();
 		ClassLoader launchLoader = launcher.attemptLaunch().join();
-
-		if (launchLoader == null) {
-			getLogger().warning("Failed to launch LibertyBans");
-			return null;
-		}
 		BaseFoundation base;
 		try {
 			base = new Instantiator("space.arim.libertybans.env.bungee.BungeeLauncher", launchLoader)

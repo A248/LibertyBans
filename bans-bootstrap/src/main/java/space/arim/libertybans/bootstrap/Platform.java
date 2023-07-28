@@ -121,7 +121,8 @@ public final class Platform {
 		BUKKIT,
 		BUNGEE,
 		SPONGE,
-		VELOCITY
+		VELOCITY,
+		STANDALONE
 	}
 
 	@Override

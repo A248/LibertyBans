@@ -1,3 +1,22 @@
+<!--
+  ~ LibertyBans
+  ~ Copyright © 2023 Anand Beh
+  ~
+  ~ LibertyBans is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
+  ~
+  ~ LibertyBans is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
+  ~ and navigate to version 3 of the GNU Affero General Public License.
+  -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -49,6 +68,11 @@
 							<descriptors>
 								<descriptor>src/assembly/final-executable.xml</descriptor>
 							</descriptors>
+							<archive>
+								<manifest>
+									<mainClass>space.arim.libertybans.env.standalone.launcher.StandaloneApplication</mainClass>
+								</manifest>
+							</archive>
 						</configuration>
 					</execution>
 				</executions>
@@ -82,6 +106,10 @@
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-env-standalonelauncher</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-env-bungee</artifactId>
 		</dependency>
 		<dependency>
@@ -95,6 +123,10 @@
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-env-velocity</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-env-standalone</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>

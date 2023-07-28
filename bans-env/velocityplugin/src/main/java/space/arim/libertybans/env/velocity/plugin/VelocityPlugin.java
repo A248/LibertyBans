@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -94,11 +94,6 @@ public final class VelocityPlugin {
 				.culpritFinder(new VelocityCulpritFinder(server))
 				.build();
 		ClassLoader launchLoader = launcher.attemptLaunch().join();
-
-		if (launchLoader == null) {
-			logger.warn("Failed to launch LibertyBans");
-			return null;
-		}
 		BaseFoundation base;
 		try {
 			base = new Instantiator("space.arim.libertybans.env.velocity.VelocityLauncher", launchLoader)

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -139,10 +139,6 @@ public final class SpongePlugin {
 				.culpritFinder(new SpongeCulpritFinder(game))
 				.build();
 		return launcher.attemptLaunch().thenApply((launchLoader) -> {
-			if (launchLoader == null) {
-				logger.warn("Failed to launch LibertyBans");
-				return null;
-			}
 			BaseFoundation base;
 			try {
 				base = new Instantiator("space.arim.libertybans.env.sponge.SpongeLauncher", launchLoader)

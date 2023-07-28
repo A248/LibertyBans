@@ -73,6 +73,7 @@
                 <include>space.arim.libertybans:bans-env-spigotplugin</include>
                 <include>space.arim.libertybans:bans-env-spongeplugin</include>
                 <include>space.arim.libertybans:bans-env-velocityplugin</include>
+                <include>space.arim.libertybans:bans-env-standalonelauncher</include>
                 <include>space.arim.licenser:licenser-agpl3</include>
             </includes>
             <unpackOptions>

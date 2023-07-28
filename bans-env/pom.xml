@@ -21,6 +21,8 @@
 		<module>spongeplugin</module>
 		<module>velocity</module>
 		<module>velocityplugin</module>
+		<module>standalone</module>
+		<module>standalonelauncher</module>
 	</modules>
 
 	<dependencyManagement>

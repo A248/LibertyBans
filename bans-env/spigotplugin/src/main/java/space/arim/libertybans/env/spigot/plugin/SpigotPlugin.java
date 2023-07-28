@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -100,10 +100,6 @@ public final class SpigotPlugin extends JavaPlugin {
 		} finally {
 			executor.shutdown();
 			assert executor.isTerminated();
-		}
-		if (launchLoader == null) {
-			getLogger().warning("Failed to launch LibertyBans");
-			return null;
 		}
 		BaseFoundation base;
 		try {

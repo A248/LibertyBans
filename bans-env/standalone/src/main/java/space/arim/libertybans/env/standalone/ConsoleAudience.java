@@ -17,26 +17,9 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.env;
+package space.arim.libertybans.env.standalone;
 
-import java.util.Set;
+import net.kyori.adventure.audience.Audience;
 
-public interface Environment {
-
-	Set<PlatformListener> createListeners();
-
-	PlatformListener createAliasCommand(String command);
-
-	/**
-	 * Used for Sponge and the standalone application only. <br>
-	 * <br>
-	 * Sponge requires early command registration and service provision, while for the standalone application
-	 * this usage is merely convenient.
-	 *
-	 * @return the platform accessors
-	 */
-	default Object platformAccess() {
-		throw new UnsupportedOperationException("Used for Sponge only");
-	}
-
+public interface ConsoleAudience extends Audience {
 }
