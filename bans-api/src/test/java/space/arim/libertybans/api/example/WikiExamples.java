@@ -1,30 +1,36 @@
-/* 
- * LibertyBans-api
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-api is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2023 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-api is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-api. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
-package space.arim.libertybans.api.example;
 
-import java.util.List;
-import java.util.UUID;
+package space.arim.libertybans.api.example;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import space.arim.libertybans.api.LibertyBans;
+import space.arim.libertybans.api.PlayerOperator;
+import space.arim.libertybans.api.PlayerVictim;
+import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.event.PunishEvent;
+import space.arim.libertybans.api.punish.DraftPunishment;
+import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.api.punish.PunishmentRevoker;
+import space.arim.libertybans.api.punish.RevocationOrder;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 import space.arim.omnibus.events.EventConsumer;
@@ -32,16 +38,10 @@ import space.arim.omnibus.events.ListenerPriorities;
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
-import space.arim.libertybans.api.LibertyBans;
-import space.arim.libertybans.api.PlayerOperator;
-import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.punish.DraftPunishment;
-import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.punish.PunishmentDrafter;
-import space.arim.libertybans.api.punish.PunishmentRevoker;
-import space.arim.libertybans.api.punish.RevocationOrder;
-import space.arim.libertybans.api.select.PunishmentSelector;
+import java.net.InetAddress;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public class WikiExamples {
 
@@ -79,12 +79,22 @@ public class WikiExamples {
 			logger.info("ID of the enacted punishment is {}", optPunishment.get().getIdentifier());
 		});
 	}
-	
-	public ReactionStage<List<Punishment>> getMutesFrom(UUID staffMemberUuid) {
-		PunishmentSelector selector = libertyBans.getSelector();
 
-		return selector.selectionBuilder().operator(PlayerOperator.of(staffMemberUuid)).type(PunishmentType.MUTE)
-				.build().getAllSpecificPunishments();
+	public ReactionStage<List<Punishment>> getMutesFrom(UUID staffMemberUuid) {
+		return libertyBans.getSelector()
+				.selectionBuilder()
+				.type(PunishmentType.MUTE)
+				.operator(PlayerOperator.of(staffMemberUuid))
+				.build()
+				.getAllSpecificPunishments();
+	}
+
+	public ReactionStage<Optional<Punishment>> getMutesApplyingTo(UUID playerUuid, InetAddress playerAddress) {
+		return libertyBans.getSelector()
+				.selectionByApplicabilityBuilder(playerUuid, playerAddress)
+				.type(PunishmentType.MUTE)
+				.build()
+				.getFirstSpecificPunishment();
 	}
 
 	public ReactionStage<?> revokeBanFor(UUID bannedPlayer) {

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,14 +25,14 @@ import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
-import space.arim.libertybans.core.addon.exempt.Exemption;
 import space.arim.libertybans.core.commands.extra.ParsePlayerVictimDynamicallyComposite;
-import space.arim.libertybans.core.commands.extra.PunishmentPermissionCheck;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
+import space.arim.libertybans.core.config.AdditionAssistant;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.punish.MiscUtil;
+import space.arim.libertybans.core.punish.permission.VictimTypeCheck;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 @Singleton
@@ -41,11 +41,11 @@ public final class PlayerPunishCommands extends PunishCommands {
 	private final EnvUserResolver envUserResolver;
 
 	@Inject
-	public PlayerPunishCommands(Dependencies dependencies, PunishmentDrafter drafter,
-								Exemption exemption, InternalFormatter formatter, TabCompletion tabCompletion,
+	public PlayerPunishCommands(Dependencies dependencies, PunishmentDrafter drafter, InternalFormatter formatter,
+								AdditionAssistant additionAssistant, TabCompletion tabCompletion,
 								EnvUserResolver envUserResolver) {
 		super(dependencies, MiscUtil.punishmentTypes().stream().map(PunishmentType::toString),
-				drafter, exemption, formatter, tabCompletion);
+				drafter, formatter, additionAssistant, tabCompletion);
 		this.envUserResolver = envUserResolver;
 	}
 
@@ -80,7 +80,7 @@ public final class PlayerPunishCommands extends PunishCommands {
 	}
 
 	@Override
-	public boolean hasTabCompletePermission(PunishmentPermissionCheck permissionCheck) {
+	public boolean hasTabCompletePermission(VictimTypeCheck permissionCheck) {
 		return permissionCheck.hasPermission(Victim.VictimType.PLAYER)
 				|| permissionCheck.hasPermission(Victim.VictimType.COMPOSITE);
 	}

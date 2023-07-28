@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -37,7 +37,7 @@ import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.MessagesConfig;
-import space.arim.libertybans.core.config.PunishmentPermissionSection;
+import space.arim.libertybans.core.config.VictimPermissionSection;
 import space.arim.libertybans.core.config.RemovalsSection;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.punish.EmptyRevocationOrder;
@@ -126,7 +126,7 @@ public class PlayerUnpunishCommandsTest {
 		Component noPermission = Component.text("No permission");
 		{
 			RemovalsSection.PunishmentRemoval punishmentRemoval = mock(RemovalsSection.PunishmentRemoval.class);
-			PunishmentPermissionSection permissionSection = mock(PunishmentPermissionSection.class);
+			VictimPermissionSection permissionSection = mock(VictimPermissionSection.class);
 			when(punishmentRemoval.permission()).thenReturn(permissionSection);
 			when(permissionSection.ipAddress()).thenReturn(noPermission);
 			lenient().when(punishmentRemoval.notFound()).thenReturn(ComponentText.create(Component.text("Not found")));

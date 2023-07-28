@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -41,7 +41,7 @@ public interface TabCompletionConfig {
 	@ConfHeader({
 			"Regards tab completing the names of players who have formerly joined",
 			"This can be a bit heavy on memory for large servers, so it's disabled by default.",
-			"To tune how long player names are retained for, see offline-player-names-retention-hours"})
+			"To tune how long player names are retained for, see the retention-minutes option"})
 	interface OfflinePlayerNames {
 
 		@ConfComments("Whether to enable this feature")

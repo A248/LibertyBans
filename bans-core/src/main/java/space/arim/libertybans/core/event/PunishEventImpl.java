@@ -19,35 +19,31 @@
 
 package space.arim.libertybans.core.event;
 
-import java.util.Objects;
-
 import space.arim.libertybans.api.event.PunishEvent;
 import space.arim.libertybans.api.punish.DraftPunishment;
 import space.arim.libertybans.core.env.CmdSender;
 
-public class PunishEventImpl extends AbstractCancellable implements PunishEvent {
+public final class PunishEventImpl extends BasePunishEventImpl<DraftPunishment> implements PunishEvent {
 
-	private DraftPunishment draftPunishment;
 	private final CmdSender sender;
 
 	public PunishEventImpl(DraftPunishment draftPunishment, CmdSender sender) {
-		this.draftPunishment = Objects.requireNonNull(draftPunishment);
+		super(draftPunishment);
 		this.sender = sender;
-	}
-
-	@Override
-	public DraftPunishment getDraftPunishment() {
-		return draftPunishment;
-	}
-
-	@Override
-	public void setDraftPunishment(DraftPunishment draftPunishment) {
-		this.draftPunishment = draftPunishment;
 	}
 
 	// For internal use by LibertyBans addons
 	public CmdSender getSender() {
 		return sender;
+	}
+
+	@Override
+	public String toString() {
+		return "PunishEventImpl{" +
+				"sender=" + sender +
+				", draftSanction=" + getDraftSanction() +
+				", cancelled=" + isCancelled() +
+				'}';
 	}
 
 }

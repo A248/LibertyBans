@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -29,6 +29,7 @@ import space.arim.libertybans.core.commands.ArrayCommandPackage;
 import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.punish.Mode;
+import space.arim.libertybans.core.punish.permission.PunishmentPermission;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,9 +48,13 @@ public class NotificationMessageTest {
 		command = ArrayCommandPackage.create("-s", "user");
 	}
 
+	private NotificationMessage newFor(CmdSender sender, PunishmentType type, Mode mode) {
+		return new NotificationMessage(sender, new PunishmentPermission(type, mode));
+	}
+
 	@Test
 	public void noSilentPermissions(@Mock CmdSender sender) {
-		var message = new NotificationMessage(sender, PunishmentType.BAN, Mode.DO);
+		var message = newFor(sender, PunishmentType.BAN, Mode.DO);
 
 		when(sender.hasPermission(any())).thenReturn(false);
 		message.evaluate(command);
@@ -59,7 +64,7 @@ public class NotificationMessageTest {
 
 	@Test
 	public void silentPermissionForDifferentType(@Mock CmdSender sender) {
-		var message = new NotificationMessage(sender, PunishmentType.WARN, Mode.DO);
+		var message = newFor(sender, PunishmentType.WARN, Mode.DO);
 
 		lenient().when(sender.hasPermission("libertybans.mute.do.silent")).thenReturn(true);
 		message.evaluate(command);
@@ -69,7 +74,7 @@ public class NotificationMessageTest {
 
 	@Test
 	public void silentPermissionForDifferentMode(@Mock CmdSender sender) {
-		var message = new NotificationMessage(sender, PunishmentType.MUTE, Mode.DO);
+		var message = newFor(sender, PunishmentType.MUTE, Mode.DO);
 
 		lenient().when(sender.hasPermission("libertybans.mute.undo.silent")).thenReturn(true);
 		message.evaluate(command);
@@ -79,7 +84,7 @@ public class NotificationMessageTest {
 
 	@Test
 	public void silentPermissionSuccess(@Mock CmdSender sender) {
-		var message = new NotificationMessage(sender, PunishmentType.WARN, Mode.UNDO);
+		var message = newFor(sender, PunishmentType.WARN, Mode.UNDO);
 
 		when(sender.hasPermission("libertybans.warn.undo.silent")).thenReturn(true);
 		message.evaluate(command);

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,15 +19,13 @@
 
 package space.arim.libertybans.core.addon.exempt;
 
-import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.env.CmdSender;
 
-import java.time.Duration;
 import java.util.concurrent.CompletionStage;
 
 public interface ExemptProvider {
 
-	CompletionStage<Boolean> isExempted(CmdSender sender, PunishmentType type, Victim target, Duration duration);
+	CompletionStage<Boolean> isExempted(CmdSender sender, String category, Victim target);
 
 }

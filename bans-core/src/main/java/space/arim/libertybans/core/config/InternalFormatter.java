@@ -22,6 +22,7 @@ package space.arim.libertybans.core.config;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
+import space.arim.libertybans.api.Victim;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.libertybans.api.Operator;
@@ -75,6 +76,14 @@ public interface InternalFormatter extends PunishmentFormatter {
 	CentralisedFuture<Component> formatWithPunishmentAndUnoperator(ComponentText componentText,
 																   Punishment punishment,
 																   Operator unOperator);
+
+	/**
+	 * Formats the value of a victim variable
+	 *
+	 * @param victim the victim
+	 * @return the formatted victim
+	 */
+	CentralisedFuture<String> formatVictim(Victim victim);
 
 	/**
 	 * Formats the value of an operator variable

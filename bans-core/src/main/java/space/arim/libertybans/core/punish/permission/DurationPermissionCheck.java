@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,33 +17,41 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.commands.extra;
+package space.arim.libertybans.core.punish.permission;
 
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.core.config.MainConfig;
+import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.formatter.PunishmentFormatter;
 import space.arim.libertybans.core.config.ParsedDuration;
+import space.arim.libertybans.core.config.PunishmentAdditionSection;
+import space.arim.libertybans.core.config.PunishmentSection;
 import space.arim.libertybans.core.env.CmdSender;
 
 import java.time.Duration;
 
-public class DurationPermissionCheck {
+public record DurationPermissionCheck(CmdSender sender, DurationPermissionsConfig config, PunishmentFormatter formatter,
+									  PunishmentType type, Duration attemptedDuration) implements VictimPermissionCheck {
 
-	private final CmdSender sender;
-	private final MainConfig config;
-
-	public DurationPermissionCheck(CmdSender sender, MainConfig config) {
-		this.sender = sender;
-		this.config = config;
+	@Override
+	public boolean checkPermission(Victim victim, PunishmentSection section) {
+		if (!isDurationPermitted()) {
+			// Sender does not have enough duration permissions
+			String durationFormatted = formatter.formatDuration(attemptedDuration);
+			PunishmentAdditionSection.WithDurationPerm sectionWithDurationPerm = ((PunishmentAdditionSection.WithDurationPerm) section);
+			sender.sendMessage(sectionWithDurationPerm.permission().duration().replaceText("%DURATION%", durationFormatted));
+			return false;
+		}
+		return true;
 	}
 
-	public boolean isDurationPermitted(PunishmentType type, Duration attemptedDuration) {
+	boolean isDurationPermitted() {
 		if (type == PunishmentType.KICK) {
 			return attemptedDuration.isZero();
 		}
-		if (!config.durationPermissions().enable()) {
+		if (!config.enable()) {
 			return true;
 		}
-		Duration greatestPermitted = getGreatestPermittedDuration(type);
+		Duration greatestPermitted = getGreatestPermittedDuration();
 		if (greatestPermitted.isZero()) {
 			// User can punish permanently
 			return true;
@@ -56,9 +64,9 @@ public class DurationPermissionCheck {
 		return greatestPermitted.compareTo(attemptedDuration) >= 0;
 	}
 
-	private Duration getGreatestPermittedDuration(PunishmentType type) {
+	private Duration getGreatestPermittedDuration() {
 		Duration greatestPermission = Duration.ofNanos(-1L);
-		for (ParsedDuration durationPermission : config.durationPermissions().permissionsToCheck()) {
+		for (ParsedDuration durationPermission : config.permissionsToCheck()) {
 			if (!durationPermission.hasDurationPermission(sender, type)) {
 				continue;
 			}

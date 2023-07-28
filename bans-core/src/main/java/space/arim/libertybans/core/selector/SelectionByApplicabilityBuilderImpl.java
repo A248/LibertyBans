@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,15 +32,15 @@ public final class SelectionByApplicabilityBuilderImpl
 		extends SelectionBuilderBaseImpl<SelectionByApplicabilityBuilder, SelectionByApplicability>
 		implements SelectionByApplicabilityBuilder {
 
-	private final SelectorImpl selector;
+	private final SelectionResources resources;
 	private final UUID uuid;
 	private final NetworkAddress address;
 	private AddressStrictness strictness;
 	private final AddressStrictness defaultStrictness;
 
-	SelectionByApplicabilityBuilderImpl(SelectorImpl selector,
+	SelectionByApplicabilityBuilderImpl(SelectionResources resources,
 										UUID uuid, NetworkAddress address, AddressStrictness defaultStrictness) {
-		this.selector = selector;
+		this.resources = resources;
 		this.uuid = uuid;
 		this.address = address;
 		this.defaultStrictness = defaultStrictness;
@@ -66,7 +66,7 @@ public final class SelectionByApplicabilityBuilderImpl
 	@Override
 	SelectionByApplicability buildWith(SelectionBaseImpl.Details details) {
 		return new SelectionByApplicabilityImpl(
-				details, selector.resources(), uuid, address, strictness
+				details, resources, uuid, address, strictness
 		);
 	}
 

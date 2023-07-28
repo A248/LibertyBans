@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -31,10 +31,12 @@ import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.core.config.PunishmentPermissionSection;
+import space.arim.libertybans.core.config.PunishmentSection;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.punish.Mode;
-import space.arim.libertybans.core.punish.PunishmentPermission;
+import space.arim.libertybans.core.punish.permission.PunishmentPermission;
+import space.arim.libertybans.core.config.VictimPermissionSection;
+import space.arim.libertybans.core.punish.permission.VictimTypeCheck;
 import space.arim.libertybans.it.util.RandomUtil;
 
 import java.util.UUID;
@@ -51,24 +53,25 @@ import static org.mockito.Mockito.when;
 public class PunishmentPermissionCheckTest {
 
 	private final CmdSender sender;
-	private final PunishmentPermissionSection section;
+	private final PunishmentSection section;
 
 	private static final Component NO_PERMISSION_UUID = Component.text("You cannot do this to UUIDs");
 	private static final Component NO_PERMISSION_IP = Component.text("You cannot do this to IP addresses");
 
-	public PunishmentPermissionCheckTest(@Mock CmdSender sender, @Mock PunishmentPermissionSection section) {
+	public PunishmentPermissionCheckTest(@Mock CmdSender sender, @Mock PunishmentSection section) {
 		this.sender = sender;
 		this.section = section;
 	}
 
 	@BeforeEach
-	public void setupSection() {
-		lenient().when(section.uuid()).thenReturn(NO_PERMISSION_UUID);
-		lenient().when(section.ipAddress()).thenReturn(NO_PERMISSION_IP);
+	public void setupSection(@Mock VictimPermissionSection permissionSection) {
+		lenient().when(section.permission()).thenReturn(permissionSection);
+		lenient().when(permissionSection.uuid()).thenReturn(NO_PERMISSION_UUID);
+		lenient().when(permissionSection.ipAddress()).thenReturn(NO_PERMISSION_IP);
 	}
 
 	private boolean checkPermission(PunishmentType type, Victim victim, Mode mode) {
-		return new PunishmentPermissionCheck(
+		return new VictimTypeCheck(
 				sender,
 				new PunishmentPermission(type, mode)
 		).checkPermission(victim, section);

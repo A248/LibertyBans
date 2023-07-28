@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,6 +25,7 @@ import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.scope.ServerScope;
 
 import java.time.Instant;
@@ -46,15 +47,18 @@ public interface PunishmentFields extends VictimFields {
 
 	Field<Instant> end();
 
+	Field<EscalationTrack> track();
+
 	default PunishmentFields withNewTable(Table<?> newTable) {
 		record ModifiedTable(Field<Long> id, Field<PunishmentType> type, Field<Victim.VictimType> victimType,
 							 Field<UUID> victimUuid, Field<NetworkAddress> victimAddress,
 							 Field<Operator> operator, Field<String> reason, Field<ServerScope> scope,
-							 Field<Instant> start, Field<Instant> end, Table<?> table)
+							 Field<Instant> start, Field<Instant> end, Field<EscalationTrack> track,
+							 Table<?> table)
 				implements PunishmentFields { }
 		return new ModifiedTable(
 				id(), type(), victimType(), victimUuid(), victimAddress(),
-				operator(), reason(), scope(), start(), end(), newTable
+				operator(), reason(), scope(), start(), end(), track(), newTable
 		);
 	};
 

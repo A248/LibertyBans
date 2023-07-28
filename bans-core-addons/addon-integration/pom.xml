@@ -39,6 +39,7 @@
                             <excludeArtifactIds>bans-core</excludeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>target/addon-jars</outputDirectory>
+                            <stripVersion>true</stripVersion>
                         </configuration>
                     </execution>
                 </executions>
@@ -80,6 +81,11 @@
         <dependency>
             <groupId>space.arim.libertybans</groupId>
             <artifactId>addon-exemption-vault</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>space.arim.libertybans</groupId>
+            <artifactId>addon-layouts</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

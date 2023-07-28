@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -29,10 +29,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.env.CmdSender;
 
-import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -90,7 +88,7 @@ public class VaultExemptProviderTest {
 
 	private CompletableFuture<Boolean> checkExempted() {
 		return exemptProvider.isExempted(
-				sender, PunishmentType.BAN, PlayerVictim.of(targetUuid), Duration.ZERO
+				sender, "ban", PlayerVictim.of(targetUuid)
 		).toCompletableFuture();
 	}
 

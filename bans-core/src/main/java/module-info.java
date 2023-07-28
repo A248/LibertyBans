@@ -1,3 +1,24 @@
+/*
+ * LibertyBans
+ * Copyright © 2023 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
+ * and navigate to version 3 of the GNU Affero General Public License.
+ */
+
+import space.arim.libertybans.core.addon.AddonProvider;
+
 module space.arim.libertybans.core {
 	requires com.github.benmanes.caffeine;
 	requires com.zaxxer.hikari;
@@ -19,7 +40,6 @@ module space.arim.libertybans.core {
 	requires space.arim.injector;
 	requires transitive space.arim.libertybans.api;
 	requires transitive space.arim.libertybans.bootstrap;
-
 	exports space.arim.libertybans.core;
 	exports space.arim.libertybans.core.addon;
 	exports space.arim.libertybans.core.addon.exempt;
@@ -33,7 +53,7 @@ module space.arim.libertybans.core {
 	exports space.arim.libertybans.core.database.execute to space.arim.injector;
 	exports space.arim.libertybans.core.database.flyway to org.flywaydb.core;
 	exports space.arim.libertybans.core.env;
-	exports space.arim.libertybans.core.event to space.arim.libertybans.core.addon.shortcutreasons;
+	exports space.arim.libertybans.core.event to space.arim.injector, space.arim.libertybans.core.addon.shortcutreasons, space.arim.libertybans.core.addon.layouts;
 	exports space.arim.libertybans.core.importing;
 	exports space.arim.libertybans.core.punish;
 	exports space.arim.libertybans.core.punish.sync to space.arim.injector;
@@ -48,6 +68,7 @@ module space.arim.libertybans.core {
 	opens space.arim.libertybans.core.importing to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.selector to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.uuid to space.arim.dazzleconf;
-
-	uses space.arim.libertybans.core.addon.AddonProvider;
+	exports space.arim.libertybans.core.punish.permission;
+	opens space.arim.libertybans.core.punish.permission to space.arim.dazzleconf;
+	uses AddonProvider;
 }

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -44,11 +44,11 @@ public class SelectorImpl implements InternalSelector {
 	private final IDImpl idImpl;
 	private final Gatekeeper gatekeeper;
 	private final Provider<MuteCache> muteCache;
-	private final SelectionBaseSQL.Resources resources;
+	private final SelectionResources resources;
 
 	@Inject
 	public SelectorImpl(Configs configs, IDImpl idImpl, Gatekeeper gatekeeper,
-						Provider<MuteCache> muteCache, SelectionBaseSQL.Resources resources) {
+						Provider<MuteCache> muteCache, SelectionResources resources) {
 		this.configs = configs;
 		this.idImpl = idImpl;
 		this.gatekeeper = gatekeeper;
@@ -56,19 +56,20 @@ public class SelectorImpl implements InternalSelector {
 		this.resources = resources;
 	}
 
-	SelectionBaseSQL.Resources resources() {
-		return resources;
+	@Override
+	public SelectionOrderBuilder selectionBuilder() {
+		return new SelectionOrderBuilderImpl(resources);
 	}
 
 	@Override
-	public SelectionOrderBuilder selectionBuilder() {
-		return new SelectionOrderBuilderImpl(this);
+	public SelectionOrderBuilder selectionBuilder(SelectionResources resources) {
+		return new SelectionOrderBuilderImpl(resources);
 	}
 
 	@Override
 	public SelectionByApplicabilityBuilderImpl selectionByApplicabilityBuilder(UUID uuid, NetworkAddress address) {
 		AddressStrictness strictness = configs.getMainConfig().enforcement().addressStrictness();
-		return new SelectionByApplicabilityBuilderImpl(this, uuid, address, strictness);
+		return new SelectionByApplicabilityBuilderImpl(resources, uuid, address, strictness);
 	}
 
 	/*

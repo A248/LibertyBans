@@ -102,24 +102,27 @@ Creating punishments starts with a `DraftPunishment`, which is obtained from `Pu
 Building on the previous example, here's what that might look like.
 
 ```java
-	public void banPlayerUsingLibertyBans(UUID uuidToBan) {
+public void banPlayerUsingLibertyBans(UUID uuidToBan) {
 
-		PunishmentDrafter drafter = libertyBans.getDrafter();
+	PunishmentDrafter drafter = libertyBans.getDrafter();
 
-		DraftPunishment draftBan = drafter.draftBuilder().type(PunishmentType.BAN).victim(PlayerVictim.of(uuidToBan))
-				.reason("Because I said so").build();
+	DraftPunishment draftBan = drafter
+		.draftBuilder()
+		.type(PunishmentType.BAN)
+		.victim(PlayerVictim.of(uuidToBan))
+		.reason("Because I said so")
+		.build();
 
-		draftBan.enactPunishment().thenAcceptSync((punishment) -> {
-
-			// In this example it is assumed you have a logger
-			// You should not copy and paste examples verbatim
-			if (punishment == null) {
-				logger.info("UUID {} is already banned", uuidToBan);
-				return;
-			}
-			logger.info("ID of the enacted punishment is {}", punishment.getIdentifier());
-		});
-	}
+	draftBan.enactPunishment().thenAcceptSync((punishment) -> {
+		// In this example it is assumed you have a logger
+		// You should not copy and paste examples verbatim
+		if (punishment == null) {
+			logger.info("UUID {} is already banned", uuidToBan);
+			return;
+		}
+		logger.info("ID of the enacted punishment is {}", punishment.getIdentifier());
+	});
+}
 ```
 
 ### Getting Punishments
@@ -127,12 +130,26 @@ Building on the previous example, here's what that might look like.
 There is a comprehensive punishment selection API which allows you to retrieve punishments with certain details. For example, to get all mutes issued by a specific staff member:
 
 ```java
-	public ReactionStage<Set<Punishment>> getMutesFrom(UUID staffMemberUuid) {
-		return libertyBans.getSelector().selectionBuilder()
-				.type(PunishmentType.MUTE)
-				.operator(PlayerOperator.of(staffMemberUuid))
-				.build().getAllSpecificPunishments();
-	}
+public ReactionStage<List<Punishment>> getMutesFrom(UUID staffMemberUuid) {
+	return libertyBans.getSelector()
+		.selectionBuilder()
+		.type(PunishmentType.MUTE)
+		.operator(PlayerOperator.of(staffMemberUuid))
+		.build()
+		.getAllSpecificPunishments();
+}
+```
+
+If you want to determine whether a player is muted, you should select *applicable* punishments (i.e., which includes user and IP mutes):
+
+```java
+public ReactionStage<Optional<Punishment>> getMutesApplyingTo(UUID playerUuid, InetAddress playerAddress) {
+	return libertyBans.getSelector()
+		.selectionByApplicabilityBuilder(playerUuid, playerAddress)
+		.type(PunishmentType.MUTE)
+		.build()
+		.getFirstSpecificPunishment();
+}
 ```
 
 ### Removing Punishments
@@ -142,19 +159,21 @@ Assuming you already have a `Punishment` instance, `Punishment#undoPunishment` w
 If you don't have a punishment instance on hand, you can use the `PunishmentRevoker`:
 
 ```java
-	public ReactionStage<?> revokeBanFor(UUID bannedPlayer) {
-		PunishmentRevoker revoker = libertyBans.getRevoker();
+public ReactionStage<?> revokeBanFor(UUID bannedPlayer) {
+	PunishmentRevoker revoker = libertyBans.getRevoker();
 
-		// Relies on the fact a single victim can only have 1 active ban
-		RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(PunishmentType.BAN, PlayerVictim.of(bannedPlayer));
-		return revocationOrder.undoPunishment().thenAccept((undone) -> {
-			if (undone) {
-				// ban existed and was undone
-			} else {
-				// there was no ban
-			}
-		});
-	}
+	// Relies on the fact a single victim can only have 1 active ban
+        RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(
+		PunishmentType.BAN, PlayerVictim.of(bannedPlayer)
+        );
+	return revocationOrder.undoPunishment().thenAccept((undone) -> {
+		if (undone) {
+			// ban existed and was undone
+		} else {
+			// there was no ban
+		}
+	});
+}
 ```
 
 ### Listening to Events
@@ -162,15 +181,15 @@ If you don't have a punishment instance on hand, you can use the `PunishmentRevo
 Suppose you want to run code when a player is punished. Here's how you'd do that using `PunishEvent`:
 
 ```java
-	public void listenToPunishEvent() {
-		EventConsumer<PunishEvent> listener = new EventConsumer<>() {
-			@Override
-			public void accept(PunishEvent event) {
-				logger.info("Listening to punish event {}", event);
-			}
-		};
-		omnibus.getEventBus().registerListener(PunishEvent.class, ListenerPriorities.NORMAL, listener);
-	}
+public void listenToPunishEvent() {
+	EventConsumer<PunishEvent> listener = new EventConsumer<>() {
+		@Override
+        public void accept(PunishEvent event) {
+			logger.info("Listening to punish event {}", event);
+		}
+	};
+	omnibus.getEventBus().registerListener(PunishEvent.class, ListenerPriorities.NORMAL, listener);
+}
 ```
 
 The full list of events is in the javadoc.

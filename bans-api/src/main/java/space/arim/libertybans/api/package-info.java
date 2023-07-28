@@ -5,7 +5,7 @@
  * Unless stated otherwise, no method will return {@code null}. All nullability is explicitly mentioned in the javadoc,
  * therefore the lack of such mention implies the return value or method parameter in question will be or must be nonnull. <br>
  * <br>
- * This further implies all methods not declared to accept {@code null} parameters throw {@code NullPointerException}
+ * This further implies all methods not declared to accept {@code null} parameters may throw {@code NullPointerException}
  * on null input. <br>
  * <br>
  * <b>Thread Safety</b> <br>

@@ -1,21 +1,22 @@
-/* 
- * LibertyBans-api
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-api is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2023 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-api is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-api. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.api.punish;
 
 import space.arim.libertybans.api.Operator;
@@ -23,13 +24,13 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.scope.ServerScope;
 
+import java.util.Optional;
+
 /**
- * Base interface for {@link DraftPunishment} and {@link Punishment}
- * 
- * @author A248
+ * Base interface for punishments
  *
  */
-public interface PunishmentBase {
+public interface PunishmentBase extends SanctionBase {
 
 	/**
 	 * Gets the type of the punishment
@@ -38,18 +39,14 @@ public interface PunishmentBase {
 	 */
 	PunishmentType getType();
 
-	/**
-	 * Gets the victim of the punishment
-	 * 
-	 * @return the victim
+	/*
+	Redeclare victim and operator methods from SanctionBase for 1.0 API compatibility
 	 */
+
+	@Override
 	Victim getVictim();
 
-	/**
-	 * Gets the operator of the punishment
-	 * 
-	 * @return the operator
-	 */
+	@Override
 	Operator getOperator();
 
 	/**
@@ -65,5 +62,12 @@ public interface PunishmentBase {
 	 * @return the scope
 	 */
 	ServerScope getScope();
+
+	/**
+	 * Gets the escalation track of the punishment if there is one
+	 *
+	 * @return the escalation track if set
+	 */
+	Optional<EscalationTrack> getEscalationTrack();
 
 }

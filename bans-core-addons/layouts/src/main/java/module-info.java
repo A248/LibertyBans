@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,14 +17,19 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.config;
+import space.arim.libertybans.core.addon.AddonProvider;
+import space.arim.libertybans.core.addon.layouts.LayoutsProvider;
 
-import space.arim.api.jsonchat.adventure.util.ComponentText;
-import space.arim.dazzleconf.annote.ConfDefault;
-
-public interface PunishmentPermissionSectionWithDuration extends PunishmentPermissionSection {
-
-	@ConfDefault.DefaultString("&cYou may not do this for &e%DURATION%&c.")
-	ComponentText duration();
-
+module space.arim.libertybans.core.addon.layouts {
+	requires jakarta.inject;
+	requires net.kyori.adventure;
+	requires net.kyori.examination.api;
+	requires org.checkerframework.checker.qual;
+	requires org.slf4j;
+	requires space.arim.api.jsonchat;
+	requires space.arim.dazzleconf;
+	requires space.arim.injector;
+	requires space.arim.libertybans.core;
+	exports space.arim.libertybans.core.addon.layouts;
+	provides AddonProvider with LayoutsProvider;
 }

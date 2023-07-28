@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,12 +21,14 @@ package space.arim.libertybans.core.selector;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.SelectionBase;
 import space.arim.libertybans.api.select.SelectionPredicate;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 
 abstract class SelectionBaseImpl implements SelectionBase {
 
@@ -38,6 +40,7 @@ abstract class SelectionBaseImpl implements SelectionBase {
 
 	record Details(SelectionPredicate<PunishmentType> types,
 				   SelectionPredicate<Operator> operators, SelectionPredicate<ServerScope> scopes,
+				   SelectionPredicate<Optional<EscalationTrack>> escalationTracks,
 				   boolean selectActiveOnly, int skipCount, int limitToRetrieve,
 				   Instant seekAfterStartTime, long seekAfterId, Instant seekBeforeStartTime, long seekBeforeId) {
 
@@ -45,6 +48,7 @@ abstract class SelectionBaseImpl implements SelectionBase {
 			Objects.requireNonNull(types, "types");
 			Objects.requireNonNull(operators, "operators");
 			Objects.requireNonNull(scopes, "scopes");
+			Objects.requireNonNull(escalationTracks, "escalationTracks");
 			Objects.requireNonNull(seekAfterStartTime, "seekAfterStartTime");
 			Objects.requireNonNull(seekBeforeStartTime, "seekBeforeStartTime");
 			// Zero-out seek IDs if start time is unset, so that equals and hashCode function reliably
@@ -67,6 +71,11 @@ abstract class SelectionBaseImpl implements SelectionBase {
 	@Override
 	public SelectionPredicate<ServerScope> getScopes() {
 		return details.scopes;
+	}
+
+	@Override
+	public SelectionPredicate<Optional<EscalationTrack>> getEscalationTracks() {
+		return details.escalationTracks;
 	}
 
 	@Override

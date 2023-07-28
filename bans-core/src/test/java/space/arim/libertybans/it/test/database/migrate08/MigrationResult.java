@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -106,10 +106,9 @@ record MigrationResult(List<Punishment> activePunishments,
 			} else {
 				end = start.plus(duration);
 			}
+			long id = idGenerator.getAndIncrement();
 			Punishment punishment = creator.createPunishment(
-					idGenerator.getAndIncrement(),
-					type, victim, operator, reason,
-					ScopeImpl.GLOBAL, start, end
+					id, type, victim, operator, reason, ScopeImpl.GLOBAL, start, end, null
 			);
 			zeroeightInterlocutor.insertPunishment(punishment, active);
 			if (active) {

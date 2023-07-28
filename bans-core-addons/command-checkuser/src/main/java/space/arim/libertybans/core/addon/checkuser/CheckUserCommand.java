@@ -1,3 +1,22 @@
+/*
+ * LibertyBans
+ * Copyright © 2023 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
+ * and navigate to version 3 of the GNU Affero General Public License.
+ */
+
 package space.arim.libertybans.core.addon.checkuser;
 
 import jakarta.inject.Inject;
@@ -9,6 +28,7 @@ import space.arim.libertybans.core.commands.AbstractCommandExecution;
 import space.arim.libertybans.core.commands.AbstractSubCommandGroup;
 import space.arim.libertybans.core.commands.CommandExecution;
 import space.arim.libertybans.core.commands.CommandPackage;
+import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.UUIDAndAddress;
@@ -22,15 +42,18 @@ public final class CheckUserCommand extends AbstractSubCommandGroup {
 	private final PunishmentSelector selector;
 	private final UUIDManager uuidManager;
 	private final InternalFormatter formatter;
+	private final TabCompletion tabCompletion;
 	private final CheckUserAddon checkUserAddon;
 
 	@Inject
 	public CheckUserCommand(Dependencies dependencies,
-							PunishmentSelector selector, UUIDManager uuidManager, InternalFormatter internalFormatter, CheckUserAddon checkUserAddon) {
+							PunishmentSelector selector, UUIDManager uuidManager, InternalFormatter internalFormatter,
+							TabCompletion tabCompletion, CheckUserAddon checkUserAddon) {
 		super(dependencies, "checkuser");
 		this.selector = selector;
 		this.uuidManager = uuidManager;
 		this.formatter = internalFormatter;
+		this.tabCompletion = tabCompletion;
 		this.checkUserAddon = checkUserAddon;
 	}
 
@@ -41,6 +64,9 @@ public final class CheckUserCommand extends AbstractSubCommandGroup {
 
 	@Override
 	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
+		if (argIndex == 0) {
+			return tabCompletion.completeOfflinePlayerNames(sender);
+		}
 		return Stream.empty();
 	}
 

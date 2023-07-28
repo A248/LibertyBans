@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,14 +25,13 @@ import space.arim.libertybans.core.commands.extra.ArgumentParser;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.config.MessagesConfig;
-import space.arim.omnibus.Omnibus;
+import space.arim.libertybans.core.event.FireEventWithTimeout;
 import space.arim.omnibus.events.AsyncEvent;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -61,16 +60,16 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 	@Singleton
 	public static class Dependencies {
 
-		final Omnibus omnibus;
 		final FactoryOfTheFuture futuresFactory;
+		final FireEventWithTimeout fireEventWithTimeout;
 		final Configs configs;
 		final ArgumentParser argumentParser;
 
 		@Inject
-		public Dependencies(Omnibus omnibus, FactoryOfTheFuture futuresFactory,
+		public Dependencies(FactoryOfTheFuture futuresFactory, FireEventWithTimeout fireEventWithTimeout,
 							Configs configs, ArgumentParser argumentParser) {
-			this.omnibus = omnibus;
 			this.futuresFactory = futuresFactory;
+			this.fireEventWithTimeout = fireEventWithTimeout;
 			this.configs = configs;
 			this.argumentParser = argumentParser;
 		}
@@ -113,7 +112,7 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 	}
 
 	<E extends AsyncEvent> CompletionStage<E> fireWithTimeout(E event) {
-		return dependencies.omnibus.getEventBus().fireAsyncEvent(event).orTimeout(10L, TimeUnit.SECONDS);
+		return dependencies.fireEventWithTimeout.fire(event);
 	}
 
 }

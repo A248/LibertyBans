@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,8 +19,6 @@
 
 package space.arim.libertybans.core.selector;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Provider;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
@@ -34,27 +32,23 @@ import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.SelectionPredicate;
 import space.arim.libertybans.api.select.SortPunishments;
-import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.database.sql.ApplicableViewFields;
 import space.arim.libertybans.core.database.sql.EndTimeCondition;
 import space.arim.libertybans.core.database.sql.PunishmentFields;
 import space.arim.libertybans.core.database.sql.SimpleViewFields;
 import space.arim.libertybans.core.database.sql.TableForType;
-import space.arim.libertybans.core.punish.PunishmentCreator;
-import space.arim.libertybans.core.service.Time;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -67,19 +61,11 @@ import static space.arim.libertybans.core.schema.tables.SimpleHistory.SIMPLE_HIS
 
 public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 
-	private final Resources resources;
+	private final SelectionResources resources;
 
-	SelectionBaseSQL(Details details, Resources resources) {
+	SelectionBaseSQL(Details details, SelectionResources resources) {
 		super(details);
 		this.resources = resources;
-	}
-
-	public record Resources(FactoryOfTheFuture futuresFactory,
-							Provider<InternalDatabase> dbProvider,
-							PunishmentCreator creator,
-							Time time) {
-		@Inject
-		public Resources {}
 	}
 
 	/*
@@ -111,30 +97,6 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 				(active) -> active ?
 						new ApplicableViewFields<>(APPLICABLE_ACTIVE) : new ApplicableViewFields<>(APPLICABLE_HISTORY)
 		);
-	}
-
-	static <U> Condition matchesCriterion(SelectionPredicate<U> selection, Field<U> field) {
-		Set<U> acceptedValues = selection.acceptedValues();
-		Set<U> rejectedValues = selection.rejectedValues();
-
-		Condition acceptedCondition = switch (acceptedValues.size()) {
-			case 0 -> noCondition();
-			case 1 -> field.eq(inlineIfNeeded(field, acceptedValues.iterator().next()));
-			default -> field.in(acceptedValues);
-		};
-		Condition notRejectedCondition = switch (rejectedValues.size()) {
-			case 0 -> noCondition();
-			case 1 -> field.notEqual(inlineIfNeeded(field, rejectedValues.iterator().next()));
-			default -> field.notIn(rejectedValues);
-		};
-		return acceptedCondition.and(notRejectedCondition);
-	}
-
-	private static <U> Field<U> inlineIfNeeded(Field<U> field, U value) {
-		// Automatically inline PunishmentType and VictimType comparisons
-		Class<U> fieldType = field.getType();
-		boolean shouldInline = fieldType.equals(PunishmentType.class) || fieldType.equals(Victim.VictimType.class);
-		return shouldInline ? inline(value) : val(value);
 	}
 
 	abstract class QueryBuilder {
@@ -184,6 +146,9 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			}
 			columns.add(fields.start());
 			columns.add(fields.end());
+			if (getEscalationTracks().isNotSimpleEquality()) {
+				columns.add(fields.track());
+			}
 			if (groupByIdForDeduplication()) {
 				columns.replaceAll(this::aggregate);
 			}
@@ -199,11 +164,14 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 				// Type is ensured by selected table
 			} else {
 				condition = condition
-						.and(matchesCriterion(getTypes(), fields.type()));
+						.and(new Criteria<>(getTypes()).matchesField(fields.type()));
 			}
 			condition = condition
-					.and(matchesCriterion(getOperators(), fields.operator()))
-					.and(matchesCriterion(getScopes(), fields.scope()));
+					.and(new Criteria<>(getOperators()).matchesField(fields.operator()))
+					.and(new Criteria<>(getScopes()).matchesField(fields.scope()))
+					.and(Criteria.createViaTransform(getEscalationTracks(), (optTrack) -> optTrack.orElse(null))
+							.matchesField(fields.track())
+					);
 			if (active) {
 				condition = condition
 						.and(new EndTimeCondition(fields).isNotExpired(timeSupplier.get()));
@@ -246,11 +214,16 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			return groupByIdForDeduplication() ? aggregate(field) : field;
 		}
 
-		<U> U retrieveValueFromRecordOrSelection(SelectionPredicate<U> selection, Record record, Field<U> field) {
+		private <F, G> F retrieveValueFromRecordOrSelection(
+				SelectionPredicate<G> selection, Record record, Field<F> field, Function<G, F> converter) {
 			if (selection.isSimpleEquality()) {
-				return selection.acceptedValues().iterator().next();
+				return converter.apply(selection.acceptedValues().iterator().next());
 			}
 			return record.get(aggregateIfNeeded(field));
+		}
+
+		<F> F retrieveValueFromRecordOrSelection(SelectionPredicate<F> selection, Record record, Field<F> field) {
+			return retrieveValueFromRecordOrSelection(selection, record, field, Function.identity());
 		}
 
 		private Punishment mapRecord(Record record) {
@@ -266,7 +239,11 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			ServerScope scope = retrieveValueFromRecordOrSelection(
 					getScopes(), record, fields.scope()
 			);
-			return resources.creator.createPunishment(
+			EscalationTrack escalationTrack = retrieveValueFromRecordOrSelection(
+					getEscalationTracks(), record, fields.track(),
+					(optTrack) -> optTrack.orElse(null)
+			);
+			return resources.creator().createPunishment(
 					record.get(fields.id()),
 					type,
 					victim,
@@ -274,7 +251,8 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 					record.get(aggregateIfNeeded(fields.reason())),
 					scope,
 					record.get(aggregateIfNeeded(fields.start())),
-					record.get(aggregateIfNeeded(fields.end()))
+					record.get(aggregateIfNeeded(fields.end())),
+					escalationTrack
 			);
 		}
 
@@ -383,11 +361,11 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	public ReactionStage<Optional<Punishment>> getFirstSpecificPunishment(SortPunishments...prioritization) {
 		if (selectActiveKicks()) {
 			// Kicks cannot possibly be active. They are all history
-			return resources.futuresFactory.completedFuture(Optional.empty());
+			return resources.futuresFactory().completedFuture(Optional.empty());
 		}
-		return resources.dbProvider.get()
+		return resources.dbProvider().get()
 				.query(SQLFunction.readOnly((context) -> {
-					return findFirstSpecificPunishment(context, resources.time::currentTimestamp, prioritization);
+					return findFirstSpecificPunishment(context, resources.time()::currentTimestamp, prioritization);
 				}))
 				.thenApply(Optional::ofNullable);
 	}
@@ -396,13 +374,13 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	public ReactionStage<List<Punishment>> getAllSpecificPunishments(SortPunishments...ordering) {
 		if (selectActiveKicks()) {
 			// Kicks cannot possibly be active
-			return resources.futuresFactory.completedFuture(List.of());
+			return resources.futuresFactory().completedFuture(List.of());
 		}
-		return resources.dbProvider.get().query(SQLFunction.readOnly((context) -> requestQuery(
+		return resources.dbProvider().get().query(SQLFunction.readOnly((context) -> requestQuery(
 				new QueryParameters(
 						context,
 						limitToRetrieve(),
-						resources.time::currentTimestamp,
+						resources.time()::currentTimestamp,
 						ordering
 				)
 		).fetch()));
@@ -412,14 +390,14 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	public ReactionStage<Integer> countNumberOfPunishments() {
 		if (selectActiveKicks()) {
 			// Kicks cannot possibly be active
-			return resources.futuresFactory.completedFuture(0);
+			return resources.futuresFactory().completedFuture(0);
 		}
-		return resources.dbProvider.get().query(SQLFunction.readOnly((context) -> {
+		return resources.dbProvider().get().query(SQLFunction.readOnly((context) -> {
 			Query<?> query = requestQuery(
 					new QueryParameters(
 							context,
 							limitToRetrieve(),
-							resources.time::currentTimestamp
+							resources.time()::currentTimestamp
 					)
 			);
 			return context

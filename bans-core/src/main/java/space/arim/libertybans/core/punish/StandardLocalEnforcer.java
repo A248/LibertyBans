@@ -36,10 +36,11 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.api.punish.EnforcementOptions.Broadcasting;
 import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.api.select.PunishmentSelector;
-import space.arim.libertybans.core.config.AdditionsSection;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.config.PunishmentAdditionSection;
 import space.arim.libertybans.core.config.RemovalsSection;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.execute.SQLFunction;
@@ -48,7 +49,7 @@ import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.ExactTargetMatcher;
 import space.arim.libertybans.core.env.TargetMatcher;
 import space.arim.libertybans.core.env.UUIDTargetMatcher;
-import space.arim.libertybans.api.select.AddressStrictness;
+import space.arim.libertybans.core.punish.permission.PunishmentPermission;
 import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -92,7 +93,7 @@ public final class StandardLocalEnforcer implements LocalEnforcer {
 																 EnforcementOpts enforcementOptions) {
 		assert enforcementOptions.enforcement() != EnforcementOptions.Enforcement.NONE : "Handled elsewhere";
 
-		AdditionsSection.PunishmentAddition section = configs.getMessagesConfig().additions().forType(punishment.getType());
+		PunishmentAdditionSection section = configs.getMessagesConfig().additions().forType(punishment.getType());
 
 		var arrestsAndNotices = new Parameterized<>(envEnforcer).enforceArrestsAndNotices(punishment);
 		if (enforcementOptions.broadcasting() == Broadcasting.NONE) {

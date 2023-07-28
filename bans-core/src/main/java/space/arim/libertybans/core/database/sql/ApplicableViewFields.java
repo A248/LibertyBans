@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,23 +21,24 @@ package space.arim.libertybans.core.database.sql;
 
 import org.jooq.Field;
 import org.jooq.Record;
-import org.jooq.Record12;
+import org.jooq.Record13;
 import org.jooq.Table;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.scope.ServerScope;
 
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public final class ApplicableViewFields<R extends Record12<
+public final class ApplicableViewFields<R extends Record13<
 		Long, PunishmentType,
 		Victim.VictimType, UUID, NetworkAddress,
 		Operator, String, ServerScope, Instant, Instant,
-		UUID, NetworkAddress>> implements PunishmentFields {
+		UUID, NetworkAddress, EscalationTrack>> implements PunishmentFields {
 
 	private final Table<R> applicableView;
 	private final R fieldSupplier;
@@ -100,6 +101,11 @@ public final class ApplicableViewFields<R extends Record12<
 	@Override
 	public Field<Instant> end() {
 		return fieldSupplier.field10();
+	}
+
+	@Override
+	public Field<EscalationTrack> track() {
+		return fieldSupplier.field13();
 	}
 
 	public Field<UUID> uuid() {

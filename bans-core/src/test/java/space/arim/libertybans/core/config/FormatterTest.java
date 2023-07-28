@@ -35,6 +35,7 @@ import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.scope.InternalScopeManager;
@@ -179,7 +180,13 @@ public class FormatterTest {
 		MessagesConfig.Formatting.PunishmentExpiredDisplay expiredDisplay = mock(MessagesConfig.Formatting.PunishmentExpiredDisplay.class);
 		lenient().when(expiredDisplay.notExpired()).thenReturn("not expired");
 		lenient().when(expiredDisplay.expired()).thenReturn("expired");
-		lenient().when(formatting.punishmentExpiredDisplay()).thenReturn(expiredDisplay);
+		when(formatting.punishmentExpiredDisplay()).thenReturn(expiredDisplay);
+		MessagesConfig.Formatting.TrackDisplay trackDisplay = mock(MessagesConfig.Formatting.TrackDisplay.class);
+		lenient().when(trackDisplay.noTrack()).thenReturn("no track");
+		lenient().when(trackDisplay.noTrackId()).thenReturn("no track id");
+		lenient().when(trackDisplay.noTrackNamespace()).thenReturn("no track namespace");
+		lenient().when(trackDisplay.trackDisplayNames()).thenReturn(Map.of("simpletrack", "SimpleTrack"));
+		when(formatting.trackDisplay()).thenReturn(trackDisplay);
 	}
 
 	private void setupSimpleDefaults() {
@@ -197,7 +204,7 @@ public class FormatterTest {
 		Instant end = INSTANT_2021_01_05.plus(Duration.ofHours(2L)).plus(Duration.ofMinutes(15L));
 		Punishment punishment = punishmentFor(testInfo, start, end);
 
-		String layout = "%TYPE% > %OPERATOR% enacted against %VICTIM% for %DURATION% due to %REASON%. " +
+		String layout = "%TYPE% [%TRACK%] > %OPERATOR% enacted against %VICTIM% for %DURATION% due to %REASON%. " +
 				"Starts on %START_DATE%. Ends on %END_DATE%. Remaining time is %TIME_REMAINING%. " +
 				"Time passed is %TIME_PASSED%. Operator ID is %OPERATOR_ID%; Victim ID is %VICTIM_ID%.";
 		String expectedFormat = testInfo.formatVariables(layout)
@@ -205,7 +212,35 @@ public class FormatterTest {
 				.replace("%TIME_REMAINING%", "2 hours, and 15 minutes")
 				.replace("%START_DATE%", "01/01/2021 24:00")
 				.replace("%END_DATE%", "05/01/2021 02:15")
-				.replace("%TIME_PASSED%", "4 days");
+				.replace("%TIME_PASSED%", "4 days")
+				.replace("%TRACK%", "no track");
+
+		assertEquals(expectedFormat, format(punishment, layout));
+	}
+
+	@ParameterizedTest
+	@ArgumentsSource(FormatterTestArgumentsProvider.class)
+	public void formatPunishmentWithTrack(FormatterTestInfo testInfo) {
+		setupSimpleDefaults();
+
+		Instant start = INSTANT_2021_01_01;
+		Instant end = INSTANT_2021_01_05.plus(Duration.ofHours(2L)).plus(Duration.ofMinutes(15L));
+		Punishment punishment = punishmentFor(testInfo, start, end);
+		setEscalationTrack(punishment, EscalationTrack.create("trackspace", "simpletrack"));
+
+		String layout = "%TYPE% > %OPERATOR% enacted against %VICTIM% for %DURATION% due to %REASON%. " +
+				"Starts on %START_DATE%. Ends on %END_DATE%. Remaining time is %TIME_REMAINING%. " +
+				"Time passed is %TIME_PASSED%. Operator ID is %OPERATOR_ID%; Victim ID is %VICTIM_ID%. " +
+				"On track %TRACK%/%TRACK_ID% in %TRACK_NAMESPACE%.";
+		String expectedFormat = testInfo.formatVariables(layout)
+				.replace("%DURATION%", "4 days, 2 hours, and 15 minutes")
+				.replace("%TIME_REMAINING%", "2 hours, and 15 minutes")
+				.replace("%START_DATE%", "01/01/2021 24:00")
+				.replace("%END_DATE%", "05/01/2021 02:15")
+				.replace("%TIME_PASSED%", "4 days")
+				.replace("%TRACK%", "SimpleTrack")
+				.replace("%TRACK_ID%", "simpletrack")
+				.replace("%TRACK_NAMESPACE%", "trackspace");
 
 		assertEquals(expectedFormat, format(punishment, layout));
 	}
@@ -290,6 +325,9 @@ public class FormatterTest {
 		// Start and end
 		setStartAndEnd(punishment, start, end);
 
+		// No track by default
+		setEscalationTrack(punishment, null);
+
 		return punishment;
 	}
 
@@ -324,4 +362,9 @@ public class FormatterTest {
 		when(punishment.getEndDateSeconds()).thenReturn(end.getEpochSecond());
 		when(punishment.isPermanent()).thenReturn(end.equals(Instant.MAX));
 	}
+
+	private void setEscalationTrack(Punishment punishment, EscalationTrack escalationTrack) {
+		when(punishment.getEscalationTrack()).thenReturn(Optional.ofNullable(escalationTrack));
+	}
+
 }

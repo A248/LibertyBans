@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -132,7 +132,7 @@ public class SelfImportIT {
 					creator.createPunishment(
 							17L, PunishmentType.BAN, AddressVictim.of(addressUnchecked("80.100.23.146")),
 							PlayerOperator.of(UUID.fromString("f360da52-6304-3af4-8b30-b7d9c5e6e162")), "swearing",
-							ScopeImpl.GLOBAL, Instant.ofEpochSecond(1636139831L), Instant.MAX
+							ScopeImpl.GLOBAL, Instant.ofEpochSecond(1636139831L), Instant.MAX, null
 					),
 					context
 							.selectFrom(SIMPLE_ACTIVE)
@@ -143,7 +143,7 @@ public class SelfImportIT {
 					creator.createPunishment(
 							44L, PunishmentType.WARN, PlayerVictim.of(UUID.fromString("ef1275f7-5c3a-36ed-92f6-6b3716c72896")),
 							PlayerOperator.of(UUID.fromString("f360da52-6304-3af4-8b30-b7d9c5e6e162")), "abusing and getting items from creative",
-							ScopeImpl.GLOBAL, Instant.ofEpochSecond(1636916014L), Instant.MAX
+							ScopeImpl.GLOBAL, Instant.ofEpochSecond(1636916014L), Instant.MAX, null
 					),
 					context
 							.selectFrom(SIMPLE_ACTIVE)
@@ -154,7 +154,7 @@ public class SelfImportIT {
 					creator.createPunishment(
 							135L, PunishmentType.BAN, PlayerVictim.of(UUID.fromString("47df0fc2-3213-3401-af68-58cafb0e99f5")),
 							ConsoleOperator.INSTANCE, "Everyone wants you banned, nerd",
-							ScopeImpl.GLOBAL, Instant.ofEpochSecond(1638635845L), Instant.ofEpochSecond(1639240645L)
+							ScopeImpl.GLOBAL, Instant.ofEpochSecond(1638635845L), Instant.ofEpochSecond(1639240645L), null
 					),
 					context
 							.selectFrom(SIMPLE_HISTORY)

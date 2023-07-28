@@ -21,6 +21,7 @@ package space.arim.libertybans.api.select;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.omnibus.util.concurrent.ReactionStage;
@@ -57,6 +58,13 @@ public interface SelectionBase {
 	 * @return the scopes
 	 */
 	SelectionPredicate<ServerScope> getScopes();
+
+	/**
+	 * Gets the escalation tracks matched
+	 *
+	 * @return the escalation tracks
+	 */
+	SelectionPredicate<Optional<EscalationTrack>> getEscalationTracks();
 
 	/**
 	 * Whether this selection will match only active, non-expired punishments. If

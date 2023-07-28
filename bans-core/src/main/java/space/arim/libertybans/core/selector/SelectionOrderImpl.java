@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -41,7 +41,7 @@ final class SelectionOrderImpl extends SelectionBaseSQL implements SelectionOrde
 	private final SelectionPredicate<Victim> victims;
 	private final SelectionPredicate<Victim.VictimType> victimTypes;
 
-	SelectionOrderImpl(Details details, Resources resources,
+	SelectionOrderImpl(Details details, SelectionResources resources,
 					   SelectionPredicate<Victim> victims, SelectionPredicate<Victim.VictimType> victimTypes) {
 		super(details, resources);
 		this.victims = Objects.requireNonNull(victims, "victims");
@@ -89,7 +89,7 @@ final class SelectionOrderImpl extends SelectionBaseSQL implements SelectionOrde
 				victimNotRejectedCondition = victimNotRejectedCondition.and(notEqual);
 			}
 			// Check victim type is accepted
-			additionalPredication = matchesCriterion(getVictimTypes(), fields.victimType())
+			additionalPredication = new Criteria<>(getVictimTypes()).matchesField(fields.victimType())
 					.and(victimAcceptedCondition)
 					.and(victimNotRejectedCondition);
 		}

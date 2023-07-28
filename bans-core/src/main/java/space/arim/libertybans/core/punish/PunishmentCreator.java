@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,14 +20,15 @@
 package space.arim.libertybans.core.punish;
 
 import org.jooq.Record10;
-import org.jooq.Record3;
-import org.jooq.Record8;
+import org.jooq.Record11;
+import org.jooq.Record5;
 import org.jooq.Record9;
 import org.jooq.RecordMapper;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 
@@ -38,26 +39,22 @@ public interface PunishmentCreator {
 
 	Punishment createPunishment(long id, PunishmentType type, Victim victim,
 								Operator operator, String reason,
-								ServerScope scope, Instant start, Instant end);
+								ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack);
 
-	RecordMapper<Record10<
-			Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, ServerScope, Instant, Instant>,
+	RecordMapper<Record11<
+				Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, ServerScope, Instant, Instant, EscalationTrack>,
 			Punishment> punishmentMapper();
 
-	RecordMapper<Record9<
-			PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, ServerScope, Instant, Instant>,
+	RecordMapper<Record10<
+			PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, ServerScope, Instant, Instant, EscalationTrack>,
 			Punishment> punishmentMapper(long id);
 
 	RecordMapper<Record9<
-			Long, Victim.VictimType, UUID, NetworkAddress, Operator, String, ServerScope, Instant, Instant>,
-			Punishment> punishmentMapper(PunishmentType type);
-
-	RecordMapper<Record8<
-			Victim.VictimType, UUID, NetworkAddress, Operator, String, ServerScope, Instant, Instant>,
+			Victim.VictimType, UUID, NetworkAddress, Operator, String, ServerScope, Instant, Instant, EscalationTrack>,
 			Punishment> punishmentMapper(long id, PunishmentType type);
 
-	RecordMapper<Record3<
-			String, ServerScope, Instant>,
+	RecordMapper<Record5<
+			String, ServerScope, Instant, String, String>,
 			Punishment> punishmentMapperForModifications(Punishment oldPunishment);
 
 }

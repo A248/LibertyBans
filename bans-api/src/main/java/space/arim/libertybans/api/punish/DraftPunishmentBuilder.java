@@ -1,40 +1,37 @@
-/* 
- * LibertyBans-api
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-api is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2023 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-api is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-api. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.api.punish;
 
-import java.time.Duration;
-
-import space.arim.libertybans.api.CompositeVictim;
-import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.scope.ServerScope;
 
+import java.time.Duration;
+
 /**
  * Builder of draft punishments. It is required to set the type, victim, and
  * reason.
- * 
- * @author A248
  *
  */
-public interface DraftPunishmentBuilder {
+public interface DraftPunishmentBuilder extends DraftSanctionBuilder<DraftPunishmentBuilder, DraftPunishment> {
 
 	/**
 	 * Sets the punishment type of this builder to the specified one. Required
@@ -45,26 +42,14 @@ public interface DraftPunishmentBuilder {
 	 */
 	DraftPunishmentBuilder type(PunishmentType type);
 
-	/**
-	 * Sets the victim of this builder to the specified one. Required operation. <br>
-	 * <br>
-	 * If the victim is a {@code CompositeVictim}, it cannot use either {@link CompositeVictim#WILDCARD_UUID}
-	 * or {@link CompositeVictim#WILDCARD_ADDRESS}
-	 * 
-	 * @param victim the victim of the punishmnt
-	 * @return this builder
-	 * @throws IllegalArgumentException if the victim is a {@code CompositeVictim} and uses either
-	 * {@code WILDCARD_UUID} or {@code WILDCARD_ADDRESS}
+	/*
+	Redeclare victim and operator methods from DraftSanctionBuilder for 1.0 API compatibility
 	 */
+
+	@Override
 	DraftPunishmentBuilder victim(Victim victim);
 
-	/**
-	 * Sets the operator of this builder to the specified one. If unspecified, the
-	 * console operator is used ({@link ConsoleOperator#INSTANCE})
-	 * 
-	 * @param operator the operator of the punishment, by default the console
-	 * @return this builder
-	 */
+	@Override
 	DraftPunishmentBuilder operator(Operator operator);
 
 	/**
@@ -96,8 +81,15 @@ public interface DraftPunishmentBuilder {
 	DraftPunishmentBuilder scope(ServerScope scope);
 
 	/**
-	 * Builds into a full draft punishment. All the required information must be set
-	 * on this builder. <br>
+	 * Sets the escalation track of this builder. If unspecified, no escalation track is used.
+	 *
+	 * @param escalationTrack the escalation track, or {@code null} for none
+	 * @return this builder
+	 */
+	DraftPunishmentBuilder escalationTrack(EscalationTrack escalationTrack);
+
+	/**
+	 * Builds into a full draft punishment. All the required information must be set on this builder. <br>
 	 * <br>
 	 * May be used repeatedly without side effects.
 	 * 
@@ -108,6 +100,8 @@ public interface DraftPunishmentBuilder {
 	 *                                  {@link PunishmentType#KICK} and the duration
 	 *                                  is not permanent
 	 */
+	// Redeclare from DraftSanctionBuilder for 1.0 API compatibility
+	@Override
 	DraftPunishment build();
 
 }

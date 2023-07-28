@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,6 +21,7 @@ package space.arim.libertybans.core.punish;
 
 import org.junit.jupiter.api.Test;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.core.punish.permission.PunishmentPermission;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

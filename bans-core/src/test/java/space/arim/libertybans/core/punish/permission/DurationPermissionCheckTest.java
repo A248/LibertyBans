@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,7 +17,7 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.commands.extra;
+package space.arim.libertybans.core.punish.permission;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.core.config.MainConfig;
+import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.ParsedDuration;
 import space.arim.libertybans.core.env.CmdSender;
 
@@ -41,30 +41,27 @@ import static org.mockito.Mockito.when;
 public class DurationPermissionCheckTest {
 
 	private final CmdSender sender;
-	private final MainConfig config;
+	private final DurationPermissionsConfig config;
 
-	private final DurationPermissionCheck check;
-
-	public DurationPermissionCheckTest(@Mock CmdSender sender, @Mock MainConfig config) {
+	public DurationPermissionCheckTest(@Mock CmdSender sender, @Mock DurationPermissionsConfig config) {
 		this.sender = sender;
 		this.config = config;
-
-		check = new DurationPermissionCheck(sender, config);
 	}
 
 	private boolean isBanPermitted(Duration duration) {
-		return check.isDurationPermitted(PunishmentType.BAN, duration);
+		return new DurationPermissionCheck(
+				sender, config, mock(InternalFormatter.class), PunishmentType.BAN, duration
+		).isDurationPermitted();
 	}
 
 	@BeforeEach
 	public void registerPermissions() {
-		DurationPermissionsConfig durationPermissions = mock(DurationPermissionsConfig.class);
-		when(config.durationPermissions()).thenReturn(durationPermissions);
-		when(durationPermissions.enable()).thenReturn(true);
-		when(durationPermissions.permissionsToCheck()).thenReturn(Set.of(
+		when(config.enable()).thenReturn(true);
+		when(config.permissionsToCheck()).thenReturn(Set.of(
 				new ParsedDuration("1m", Duration.ofMinutes(1L)),
 				new ParsedDuration("4h", Duration.ofHours(4L)),
-				new ParsedDuration("perm", Duration.ZERO)));
+				new ParsedDuration("perm", Duration.ZERO))
+		);
 	}
 
 	@Test
@@ -83,4 +80,5 @@ public class DurationPermissionCheckTest {
 		assertTrue(isBanPermitted(Duration.ofDays(30L)), "User can ban permanently so 30 days is acceptable");
 		assertTrue(isBanPermitted(Duration.ZERO), "User can ban permanently");
 	}
+
 }

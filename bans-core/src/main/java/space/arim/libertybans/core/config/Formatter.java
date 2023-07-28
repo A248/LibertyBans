@@ -33,6 +33,7 @@ import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.service.Time;
@@ -155,8 +156,12 @@ public class Formatter implements InternalFormatter {
 		END_DATE,
 		TIME_REMAINING,
 		TIME_REMAINING_SIMPLE,
-		HAS_EXPIRED;
-		
+		HAS_EXPIRED,
+		TRACK,
+		TRACK_ID,
+		TRACK_NAMESPACE,
+		;
+
 		String getVariable() {
 			return "%" + name() + "%";
 		}
@@ -174,50 +179,7 @@ public class Formatter implements InternalFormatter {
 	}
 	
 	private Map<SimpleReplaceable, String> getSimpleReplacements(Punishment punishment, Operator unOperator) {
-
-		final long now = time.currentTime();
-		final long start = punishment.getStartDateSeconds();
-
-		final long timePassed = now - start;
-
-		final String durationFormatted;
-		final String relativeEndFormatted, relativeEndFormattedSimple;
-		boolean notExpired = false;
-
-		if (punishment.isPermanent()) {
-			// Permanent punishment
-			MessagesConfig.Formatting.PermanentDisplay display = messages().formatting().permanentDisplay();
-			durationFormatted = display.duration();
-			relativeEndFormatted = display.relative();
-			relativeEndFormattedSimple = relativeEndFormatted;
-			notExpired = true;
-
-		} else {
-			final long end = punishment.getEndDateSeconds();
-			assert end != 0 : end;
-			// Temporary punishment
-			long duration = end - start;
-			durationFormatted = formatRelative(duration);
-
-			if (timePassed < MARGIN_OF_INITIATION) {
-				// Punishment recently enacted
-				// Using a margin of initiation prevents the "29 days, 23 hours, 59 minutes" issue
-				relativeEndFormatted = durationFormatted;
-				relativeEndFormattedSimple = formatRelativeSimple(duration);
-				notExpired = true;
-
-			} else if (timePassed >= duration) {
-				// Expired punishment
-				relativeEndFormatted = messages().formatting().noTimeRemainingDisplay();
-				relativeEndFormattedSimple = relativeEndFormatted;
-			} else {
-				// Punishment still active
-				long timeRemaining = end - now;
-				relativeEndFormatted = formatRelative(timeRemaining);
-				relativeEndFormattedSimple = formatRelativeSimple(timeRemaining);
-				notExpired = true;
-			}
-		}
+		MessagesConfig.Formatting formatting = messages().formatting();
 
 		Map<SimpleReplaceable, String> simpleReplacements = new EnumMap<>(SimpleReplaceable.class);
 		simpleReplacements.put(SimpleReplaceable.ID, Long.toString(punishment.getIdentifier()));
@@ -229,15 +191,76 @@ public class Formatter implements InternalFormatter {
 			simpleReplacements.put(SimpleReplaceable.UNOPERATOR_ID, formatOperatorId(unOperator));
 		simpleReplacements.put(SimpleReplaceable.REASON, punishment.getReason());
 		simpleReplacements.put(SimpleReplaceable.SCOPE, formatScope(punishment.getScope()));
-		simpleReplacements.put(SimpleReplaceable.DURATION, durationFormatted);
-		simpleReplacements.put(SimpleReplaceable.START_DATE, formatAbsoluteDate(punishment.getStartDate()));
-		simpleReplacements.put(SimpleReplaceable.TIME_PASSED, formatRelative(timePassed));
-		simpleReplacements.put(SimpleReplaceable.TIME_PASSED_SIMPLE, formatRelativeSimple(timePassed));
-		simpleReplacements.put(SimpleReplaceable.END_DATE, formatAbsoluteDate(punishment.getEndDate()));
-		simpleReplacements.put(SimpleReplaceable.TIME_REMAINING, relativeEndFormatted);
-		simpleReplacements.put(SimpleReplaceable.TIME_REMAINING_SIMPLE, relativeEndFormattedSimple);
-		MessagesConfig.Formatting.PunishmentExpiredDisplay display = messages().formatting().punishmentExpiredDisplay();
-		simpleReplacements.put(SimpleReplaceable.HAS_EXPIRED, (notExpired) ? display.notExpired() : display.expired());
+		{
+			final long now = time.currentTime();
+			final long start = punishment.getStartDateSeconds();
+
+			final long timePassed = now - start;
+
+			final String durationFormatted;
+			final String relativeEndFormatted, relativeEndFormattedSimple;
+			boolean notExpired = false;
+
+			if (punishment.isPermanent()) {
+				// Permanent punishment
+				MessagesConfig.Formatting.PermanentDisplay display = formatting.permanentDisplay();
+				durationFormatted = display.duration();
+				relativeEndFormatted = display.relative();
+				relativeEndFormattedSimple = relativeEndFormatted;
+				notExpired = true;
+
+			} else {
+				final long end = punishment.getEndDateSeconds();
+				assert end != 0 : end;
+				// Temporary punishment
+				long duration = end - start;
+				durationFormatted = formatRelative(duration);
+
+				if (timePassed < MARGIN_OF_INITIATION) {
+					// Punishment recently enacted
+					// Using a margin of initiation prevents the "29 days, 23 hours, 59 minutes" issue
+					relativeEndFormatted = durationFormatted;
+					relativeEndFormattedSimple = formatRelativeSimple(duration);
+					notExpired = true;
+
+				} else if (timePassed >= duration) {
+					// Expired punishment
+					relativeEndFormatted = formatting.noTimeRemainingDisplay();
+					relativeEndFormattedSimple = relativeEndFormatted;
+				} else {
+					// Punishment still active
+					long timeRemaining = end - now;
+					relativeEndFormatted = formatRelative(timeRemaining);
+					relativeEndFormattedSimple = formatRelativeSimple(timeRemaining);
+					notExpired = true;
+				}
+			}
+			simpleReplacements.put(SimpleReplaceable.DURATION, durationFormatted);
+			simpleReplacements.put(SimpleReplaceable.START_DATE, formatAbsoluteDate(punishment.getStartDate()));
+			simpleReplacements.put(SimpleReplaceable.TIME_PASSED, formatRelative(timePassed));
+			simpleReplacements.put(SimpleReplaceable.TIME_PASSED_SIMPLE, formatRelativeSimple(timePassed));
+			simpleReplacements.put(SimpleReplaceable.END_DATE, formatAbsoluteDate(punishment.getEndDate()));
+			simpleReplacements.put(SimpleReplaceable.TIME_REMAINING, relativeEndFormatted);
+			simpleReplacements.put(SimpleReplaceable.TIME_REMAINING_SIMPLE, relativeEndFormattedSimple);
+			MessagesConfig.Formatting.PunishmentExpiredDisplay display = formatting.punishmentExpiredDisplay();
+			simpleReplacements.put(SimpleReplaceable.HAS_EXPIRED, (notExpired) ? display.notExpired() : display.expired());
+		}
+		String track, trackId, trackNamespace;
+		MessagesConfig.Formatting.TrackDisplay trackDisplay = formatting.trackDisplay();
+		EscalationTrack escalationTrack = punishment.getEscalationTrack().orElse(null);
+		if (escalationTrack == null) {
+			track = trackDisplay.noTrack();
+			trackId = trackDisplay.noTrackId();
+			trackNamespace = trackDisplay.noTrackNamespace();
+		} else {
+			String id = escalationTrack.getValue();
+			track = trackDisplay.trackDisplayNames().getOrDefault(id, id);
+			trackId = id;
+			trackNamespace = escalationTrack.getNamespace();
+		}
+		simpleReplacements.put(SimpleReplaceable.TRACK, track);
+		simpleReplacements.put(SimpleReplaceable.TRACK_ID, trackId);
+		simpleReplacements.put(SimpleReplaceable.TRACK_NAMESPACE, trackNamespace);
 
 		return simpleReplacements;
 	}
@@ -290,7 +313,8 @@ public class Formatter implements InternalFormatter {
 		return UUIDUtil.toShortString(uuid);
 	}
 
-	private CentralisedFuture<String> formatVictim(Victim victim) {
+	@Override
+	public CentralisedFuture<String> formatVictim(Victim victim) {
 		UUID uuid;
 		if (victim instanceof PlayerVictim playerVictim) {
 			uuid = playerVictim.getUUID();

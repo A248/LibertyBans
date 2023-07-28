@@ -22,26 +22,28 @@ package space.arim.libertybans.core.punish;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.jooq.Field;
-import org.slf4j.LoggerFactory;
+import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentEditor;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.database.sql.TrackIdSequenceValue;
 import space.arim.libertybans.core.scope.InternalScopeManager;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletionException;
 
 import static org.jooq.impl.DSL.greatest;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.when;
 import static space.arim.libertybans.core.schema.tables.Punishments.PUNISHMENTS;
+import static space.arim.libertybans.core.schema.tables.Tracks.TRACKS;
 
 public final class Modifier {
 
@@ -61,6 +63,9 @@ public final class Modifier {
 		this.enforcement = enforcement;
 	}
 
+	/** Holder for nullable escalation track */
+	record EscalationTrackBox(EscalationTrack track) {}
+
 	class Editor implements PunishmentEditor {
 
 		private final Punishment oldInstance;
@@ -68,6 +73,7 @@ public final class Modifier {
 		private ServerScope scope;
 		private Instant endDate;
 		private Duration endDateDelta;
+		private EscalationTrackBox escalationTrackBox;
 
 		Editor(Punishment oldInstance) {
 			this.oldInstance = oldInstance;
@@ -100,8 +106,14 @@ public final class Modifier {
 			this.endDateDelta = Objects.requireNonNull(endDateDelta);
 		}
 
+		@Override
+		public void setEscalationTrack(EscalationTrack escalationTrack) {
+			this.escalationTrackBox = new EscalationTrackBox(escalationTrack);
+		}
+
 		ReactionStage<Optional<Punishment>> modify() {
-			if (reason == null && scope == null && endDate == null && endDateDelta == null) {
+			if (reason == null && scope == null && endDate == null && endDateDelta == null
+					&& escalationTrackBox == null) {
 				return futuresFactory.completedFuture(Optional.of(oldInstance));
 			}
 			return dbProvider.get().queryWithRetry((context, transaction) -> {
@@ -115,7 +127,12 @@ public final class Modifier {
 				if (endDate != null) {
 					record.setEnd(endDate);
 				}
-				Map<Field<?>, Field<?>> endDateExtension = Map.of();
+				Map<Field<?>, Field<?>> furtherModifications = new HashMap<>(3, 0.99f);
+				if (escalationTrackBox != null) {
+					Field<Integer> newTrack = new TrackIdSequenceValue()
+							.retrieveTrackIdField(context, escalationTrackBox.track);
+					furtherModifications.put(PUNISHMENTS.TRACK, newTrack);
+				}
 				if (endDateDelta != null) {
 					Field<Instant> newEndDate = when(
 							// Pass-through permanent punishments
@@ -124,36 +141,32 @@ public final class Modifier {
 							// For temporary punishments, guarantee positive duration
 							greatest(PUNISHMENTS.START.plus(inline(1L)), PUNISHMENTS.END.plus(endDateDelta.getSeconds()))
 					);
-					endDateExtension = Map.of(PUNISHMENTS.END, newEndDate);
+					furtherModifications.put(PUNISHMENTS.END, newEndDate);
 				}
 				long id = oldInstance.getIdentifier();
 				context
 						.update(PUNISHMENTS)
 						.set(record)
-						.set(endDateExtension)
+						.set(furtherModifications)
 						.where(PUNISHMENTS.ID.eq(id))
 						.execute();
 				return context
-						.select(PUNISHMENTS.REASON, PUNISHMENTS.SCOPE, PUNISHMENTS.END)
+						.select(
+								PUNISHMENTS.REASON, PUNISHMENTS.SCOPE, PUNISHMENTS.END,
+								TRACKS.NAMESPACE, TRACKS.VALUE
+						)
 						.from(PUNISHMENTS)
+						.leftJoin(TRACKS)
+						.on(PUNISHMENTS.TRACK.eq(TRACKS.ID))
 						.where(PUNISHMENTS.ID.eq(id))
 						// Can return null if punishment was expunged
 						.fetchOne(creator.punishmentMapperForModifications(oldInstance));
 
 			}).thenCompose((newInstance) -> {
 				if (newInstance == null) {
-					return futuresFactory.completedFuture(null);
+					return futuresFactory.completedFuture(Optional.empty());
 				}
-				return enforcement.updateDetails(newInstance).thenApply((ignore) -> newInstance);
-			}).handle((updated, ex) -> {
-				if (ex != null) {
-					// Log and re-throw in case the caller does not use #completion
-					LoggerFactory.getLogger(getClass()).warn(
-							"Exception while updating punishment using editor {}", this, ex
-					);
-					throw ((ex instanceof RuntimeException rex) ? rex : new CompletionException(ex));
-				}
-				return Optional.ofNullable(updated);
+				return enforcement.updateDetails(newInstance).thenApply((ignore) -> Optional.of(newInstance));
 			});
 		}
 
@@ -165,6 +178,7 @@ public final class Modifier {
 					", scope=" + scope +
 					", endDate=" + endDate +
 					", endDateDelta=" + endDateDelta +
+					", escalationTrackBox=" + escalationTrackBox +
 					'}';
 		}
 

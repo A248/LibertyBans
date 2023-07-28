@@ -149,6 +149,13 @@ public enum Vendor {
 		return "BLOB";
 	}
 
+	public String alterViewStatement() {
+		return switch (this) {
+			case HSQLDB, MYSQL, MARIADB -> "ALTER VIEW";
+			case POSTGRES, COCKROACH -> "CREATE OR REPLACE VIEW";
+		};
+	}
+
 	String getConnectionInitSql() {
 
 		return switch (this) {
