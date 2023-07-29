@@ -4,6 +4,7 @@ It may be published in the future with spigot.api rewritten to org.bukkit
 */
 module space.arim.libertybans.env.spigot {
 	requires jakarta.inject;
+	requires net.kyori.adventure.text.serializer.legacy;
 	requires org.slf4j;
 	requires space.arim.api.env;
 	requires space.arim.api.env.bukkit;

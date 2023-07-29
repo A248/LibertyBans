@@ -154,6 +154,24 @@ public interface MainConfig {
 	interface Platforms {
 
 		@SubSection
+		Bukkit bukkit();
+
+		interface Bukkit {
+
+			@ConfKey("kick-via-plugin-messaging")
+			@ConfComments({
+					"This option is relevant for backend servers running within a network (BungeeCord or Velocity).",
+					"It instructs the proxy to kick the player from the network via plugin messaging.",
+					"",
+					"If enabled, the player will NOT be kicked by the backend server, so you MUST use a proxy",
+					"otherwise players will not be kicked at all."
+			})
+			@DefaultBoolean(false)
+			boolean kickViaPluginMessaging();
+
+		}
+
+		@SubSection
 		Sponge sponge();
 
 		interface Sponge {

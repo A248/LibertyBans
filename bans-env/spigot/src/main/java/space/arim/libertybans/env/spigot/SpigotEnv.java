@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,14 +32,15 @@ public final class SpigotEnv implements Environment {
 	private final Provider<ConnectionListener> connectionListener;
 	private final Provider<ChatListener> chatListener;
 	private final CommandHandler.CommandHelper commandHelper;
+	private final ChannelRegistration channelRegistration;
 
 	@Inject
-	public SpigotEnv(Provider<ConnectionListener> connectionListener,
-					 Provider<ChatListener> chatListener,
-					 CommandHandler.CommandHelper commandHelper) {
+	public SpigotEnv(Provider<ConnectionListener> connectionListener, Provider<ChatListener> chatListener,
+					 CommandHandler.CommandHelper commandHelper, ChannelRegistration channelRegistration) {
 		this.connectionListener = connectionListener;
 		this.chatListener = chatListener;
 		this.commandHelper = commandHelper;
+		this.channelRegistration = channelRegistration;
 	}
 
 	@Override
@@ -47,7 +48,8 @@ public final class SpigotEnv implements Environment {
 		return Set.of(
 				connectionListener.get(),
 				chatListener.get(),
-				new CommandHandler(commandHelper, Commands.BASE_COMMAND_NAME, false)
+				new CommandHandler(commandHelper, Commands.BASE_COMMAND_NAME, false),
+				channelRegistration
 		);
 	}
 

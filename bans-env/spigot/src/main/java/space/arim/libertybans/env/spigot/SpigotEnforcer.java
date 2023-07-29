@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,10 +22,12 @@ package space.arim.libertybans.env.spigot;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import space.arim.api.env.AudienceRepresenter;
+import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.Interlocutor;
@@ -33,6 +35,10 @@ import space.arim.morepaperlib.adventure.MorePaperLibAdventure;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -40,14 +46,16 @@ import java.util.function.Consumer;
 @Singleton
 public class SpigotEnforcer extends AbstractEnvEnforcer<Player> {
 
+	private final Configs configs;
 	private final Server server;
 	private final MorePaperLibAdventure morePaperLibAdventure;
 
 	@Inject
 	public SpigotEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter,
 						  Interlocutor interlocutor, AudienceRepresenter<CommandSender> audienceRepresenter,
-						  Server server, MorePaperLibAdventure morePaperLibAdventure) {
+						  Configs configs, Server server, MorePaperLibAdventure morePaperLibAdventure) {
 		super(futuresFactory, formatter, interlocutor, audienceRepresenter);
+		this.configs = configs;
 		this.server = server;
 		this.morePaperLibAdventure = morePaperLibAdventure;
 	}
@@ -69,7 +77,26 @@ public class SpigotEnforcer extends AbstractEnvEnforcer<Player> {
 
 	@Override
 	public void kickPlayer(Player player, Component message) {
-		morePaperLibAdventure.kickPlayer(player, message);
+		if (configs.getMainConfig().platforms().bukkit().kickViaPluginMessaging()) {
+			byte[] kickData;
+			try (ByteArrayOutputStream kickDataStream = new ByteArrayOutputStream();
+				 DataOutputStream write = new DataOutputStream(kickDataStream)) {
+
+				write.writeUTF("KickPlayer");
+				write.writeUTF(player.getName());
+				write.writeUTF(LegacyComponentSerializer.legacySection().serialize(message));
+				kickData = kickDataStream.toByteArray();
+			} catch (IOException ex) {
+				throw new UncheckedIOException(ex);
+			}
+			player.sendPluginMessage(
+					morePaperLibAdventure.getMorePaperLib().getPlugin(),
+					ChannelRegistration.BUNGEE_CHANNEL,
+					kickData
+			);
+		} else {
+			morePaperLibAdventure.kickPlayer(player, message);
+		}
 	}
 
 	@Override
