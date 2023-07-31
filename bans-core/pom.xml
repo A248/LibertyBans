@@ -268,9 +268,9 @@
 		<profile>
 			<id>docker-enabled</id>
 			<activation>
-				<file>
-					<exists>/var/run/docker.sock</exists>
-				</file>
+				<property>
+					<name>env.DOCKER_HOST</name>
+				</property>
 			</activation>
 			<build>
 				<plugins>
@@ -348,9 +348,9 @@
 		<profile>
 			<id>docker-database-mariadb</id>
 			<activation>
-				<file>
-					<exists>/var/run/docker.sock</exists>
-				</file>
+				<property>
+					<name>env.DOCKER_HOST</name>
+				</property>
 			</activation>
 			<build>
 				<plugins>
@@ -470,9 +470,9 @@
 		<profile>
 			<id>docker-database-mysql</id>
 			<activation>
-				<file>
-					<exists>/var/run/docker.sock</exists>
-				</file>
+				<property>
+					<name>env.DOCKER_HOST</name>
+				</property>
 			</activation>
 			<build>
 				<plugins>
@@ -534,9 +534,9 @@
 		<profile>
 			<id>docker-database-postgres</id>
 			<activation>
-				<file>
-					<exists>/var/run/docker.sock</exists>
-				</file>
+				<property>
+					<name>env.DOCKER_HOST</name>
+				</property>
 			</activation>
 			<build>
 				<plugins>
@@ -627,9 +627,9 @@
 		<profile>
 			<id>docker-database-cockroachdb</id>
 			<activation>
-				<file>
-					<exists>/var/run/docker.sock</exists>
-				</file>
+				<property>
+					<name>env.DOCKER_HOST</name>
+				</property>
 			</activation>
 			<build>
 				<plugins>
