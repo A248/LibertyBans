@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,24 +22,36 @@ package space.arim.libertybans.env.sponge.listener;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.spongepowered.api.Game;
+import org.spongepowered.api.event.EventManager;
 import org.spongepowered.plugin.PluginContainer;
 import space.arim.libertybans.core.env.PlatformListener;
 
+import java.lang.invoke.MethodHandles;
+
 @Singleton
-public final class RegisterListenersStandard implements RegisterListeners {
+public final class RegisterListenersWithLookup implements RegisterListeners {
 
 	private final PluginContainer plugin;
 	private final Game game;
 
 	@Inject
-	public RegisterListenersStandard(PluginContainer plugin, Game game) {
+	public RegisterListenersWithLookup(PluginContainer plugin, Game game) {
 		this.plugin = plugin;
 		this.game = game;
 	}
 
+	public static boolean detectIfUsable() {
+		try {
+			EventManager.class.getMethod("registerListeners", PluginContainer.class, Object.class, MethodHandles.Lookup.class);
+			return true;
+		} catch (NoSuchMethodException ex) {
+			return false;
+		}
+	}
+
 	@Override
 	public void register(PlatformListener listener) {
-		game.eventManager().registerListeners(plugin, listener);
+		game.eventManager().registerListeners(plugin, listener, MethodHandles.lookup());
 	}
 
 	@Override

@@ -53,13 +53,6 @@ public final class RegisterListenersByMethodScan implements RegisterListeners {
 		this.game = game;
 	}
 
-	public static class Module {
-
-		public RegisterListeners registerListeners(RegisterListenersByMethodScan registerListeners) {
-			return registerListeners;
-		}
-	}
-
 	@Override
 	public void register(PlatformListener listener) {
 		if (registrations.containsKey(listener)) {

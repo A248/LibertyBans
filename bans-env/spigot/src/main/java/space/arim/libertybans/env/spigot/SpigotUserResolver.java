@@ -24,6 +24,7 @@ import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import space.arim.libertybans.core.env.SimpleEnvUserResolver;
 import space.arim.libertybans.core.env.UUIDAndAddress;
+import space.arim.morepaperlib.MorePaperLib;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -36,15 +37,20 @@ public final class SpigotUserResolver extends SimpleEnvUserResolver {
 
 	private final FactoryOfTheFuture futuresFactory;
 	private final Server server;
+	private final MorePaperLib morePaperLib;
 
 	@Inject
-	public SpigotUserResolver(FactoryOfTheFuture futuresFactory, Server server) {
+	public SpigotUserResolver(FactoryOfTheFuture futuresFactory, Server server, MorePaperLib morePaperLib) {
 		this.futuresFactory = futuresFactory;
 		this.server = server;
+		this.morePaperLib = morePaperLib;
 	}
 
 	@Override
 	protected <U> CentralisedFuture<U> performLookup(Supplier<U> rootImplementation) {
+		if (morePaperLib.scheduling().isUsingFolia()) {
+			return futuresFactory.completedFuture(rootImplementation.get());
+		}
 		return futuresFactory.supplySync(rootImplementation);
 	}
 

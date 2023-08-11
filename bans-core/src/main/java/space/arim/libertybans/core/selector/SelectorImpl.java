@@ -112,6 +112,7 @@ public class SelectorImpl implements InternalSelector {
 	@Override
 	public ReactionStage<Optional<Punishment>> getCachedMute(UUID uuid, NetworkAddress address) {
 		Objects.requireNonNull(uuid, "uuid");
+		Objects.requireNonNull(address, "address");
 		return muteCache.get().getCachedMute(uuid, address);
 	}
 

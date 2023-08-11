@@ -161,7 +161,29 @@ public final class AlwaysAvailableMuteCache extends BaseMuteCache {
 
 	@Override
 	void clearCachedMuteIf(Predicate<Punishment> removeIfMatches) {
-		// Do nothing - the mute will automatically expire in due time
+		ConcurrentHashMap<MuteCacheKey, Entry> map = cache.map;
+
+		for (Map.Entry<MuteCacheKey, Entry> mapEntry : map.entrySet()) {
+			MuteCacheKey key = mapEntry.getKey();
+			Entry entry = mapEntry.getValue();
+
+			// Replace the current value with NULL if it matches the predicate
+			// However, perform the operation atomically with respect to entry updates
+			MuteAndMessage currentValue;
+			while ((currentValue = entry.currentValue) != null && removeIfMatches.test(currentValue.mute())) {
+				Entry newEntry = new Entry(null, entry.lastUpdated, entry.nextValue);
+				// Compare-and-swap the old entry with the new one
+				if (map.replace(key, entry, newEntry)) {
+					// Success
+					break;
+				}
+				entry = map.get(key);
+				if (entry == null) {
+					// Player logged off
+					break;
+				}
+			}
+		}
 	}
 
 	@Override
@@ -284,6 +306,6 @@ public final class AlwaysAvailableMuteCache extends BaseMuteCache {
 	}
 
 	private record Entry(@Nullable MuteAndMessage currentValue, long lastUpdated,
-						 @Nullable CentralisedFuture<MuteAndMessage> nextValue) {
-		}
+						 @Nullable CentralisedFuture<MuteAndMessage> nextValue) { }
+
 }

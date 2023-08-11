@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.env.sponge;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.api.Game;
 import org.spongepowered.plugin.PluginContainer;
@@ -31,8 +32,10 @@ import space.arim.libertybans.core.ApiBindModule;
 import space.arim.libertybans.core.CommandsModule;
 import space.arim.libertybans.core.PillarOneBindModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
+import space.arim.libertybans.env.sponge.listener.RegisterListeners;
 import space.arim.libertybans.env.sponge.listener.RegisterListenersByMethodScan;
 import space.arim.libertybans.env.sponge.listener.RegisterListenersStandard;
+import space.arim.libertybans.env.sponge.listener.RegisterListenersWithLookup;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
@@ -58,12 +61,26 @@ public final class SpongeLauncher implements PlatformLauncher {
 
 	@Override
 	public BaseFoundation launch() {
-		boolean spongeApi9;
+		Class<? extends RegisterListeners> registerListenersBinding;
 		{
 			int dataVersion = game.platform().minecraftVersion().dataVersion().orElseThrow();
 			// Sponge servers beyond MC 1.16.5 (data version 2586) use API 9
-			spongeApi9 = dataVersion > 2586;
-			LoggerFactory.getLogger(getClass()).info("Using Sponge API 9+: {}", spongeApi9);
+			boolean spongeApi9 = dataVersion > 2586;
+			Logger logger = LoggerFactory.getLogger(getClass());
+			logger.info("Using Sponge API 9+: {}", spongeApi9);
+
+			if (!spongeApi9) {
+				registerListenersBinding = RegisterListenersStandard.class;
+			} else if (RegisterListenersWithLookup.detectIfUsable()) {
+				logger.info("Listener registration with lookup API detected and available");
+				registerListenersBinding = RegisterListenersWithLookup.class;
+			} else {
+				// Fallback to manual method scanning
+				logger.warn(
+						"Proper listener registration for Sponge API 9 is not available on your outdated version. " +
+								"Please update your Sponge implementation so that the latest APIs are usable.");
+				registerListenersBinding = RegisterListenersByMethodScan.class;
+			}
 		}
 		return new InjectorBuilder()
 				.bindInstance(PluginContainer.class, plugin)
@@ -75,9 +92,9 @@ public final class SpongeLauncher implements PlatformLauncher {
 						new PillarOneBindModule(),
 						new PillarTwoBindModule(),
 						new CommandsModule(),
-						new SpongeBindModule(),
-						spongeApi9 ? new RegisterListenersByMethodScan.Module() : new RegisterListenersStandard.Module()
+						new SpongeBindModule()
 				)
+				.bindIdentifier(RegisterListeners.class, registerListenersBinding)
 				.specification(SpecificationSupport.JAKARTA)
 				.multiBindings(true)
 				.build()
