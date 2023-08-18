@@ -34,10 +34,12 @@ import static org.jooq.impl.DSL.val;
 
 public class SequenceValue<R extends Number> {
 
+	final DSLContext context;
 	private final Sequence<R> sequence;
 	private Field<R> lastValueForMySQL;
 
-	public SequenceValue(Sequence<R> sequence) {
+	public SequenceValue(DSLContext context, Sequence<R> sequence) {
+		this.context = context;
 		this.sequence = Objects.requireNonNull(sequence, "sequence");
 	}
 
@@ -49,7 +51,7 @@ public class SequenceValue<R extends Number> {
 		return DSL.field("value", sequence.getDataType());
 	}
 
-	public Field<R> nextValue(DSLContext context) {
+	public Field<R> nextValue() {
 		if (context.family() == SQLDialect.MYSQL) {
 			Table<?> emulationTable = emulationTable();
 			Field<R> valueField = emulationTableValueField();
@@ -68,7 +70,7 @@ public class SequenceValue<R extends Number> {
 		}
 	}
 
-	public Field<R> lastValueInSession(DSLContext context) {
+	public Field<R> lastValueInSession() {
 		if (context.family() == SQLDialect.MYSQL) {
 			if (lastValueForMySQL == null) {
 				throw new IllegalStateException("For MySQL, a value must be previously generated " +
@@ -80,7 +82,7 @@ public class SequenceValue<R extends Number> {
 		}
 	}
 
-	public void setValue(DSLContext context, R value) {
+	public void setValue(R value) {
 		switch (context.family()) {
 		case MYSQL -> context
 				.update(emulationTable())
@@ -100,19 +102,46 @@ public class SequenceValue<R extends Number> {
 		}
 	}
 
-	Field<R> retrieveOrGenerateMatchingRow(DSLContext context,
-										   Table<?> table, Field<R> sequenceValueField,
-										   Condition matchExisting, Consumer<Field<R>> insertNew) {
-		R existingId = context
-				.select(sequenceValueField)
-				.from(table)
-				.where(matchExisting)
-				.fetchOne(sequenceValueField);
-		if (existingId != null) {
-			return val(existingId);
+	class RetrieveOrGenerate {
+
+		private final Table<?> table;
+		private final Field<R> sequenceValueField;
+		private final Condition matchExisting;
+		private final Consumer<Field<R>> insertNew;
+
+		RetrieveOrGenerate(Table<?> table, Field<R> sequenceValueField,
+						   Condition matchExisting, Consumer<Field<R>> insertNew) {
+			this.table = table;
+			this.sequenceValueField = sequenceValueField;
+			this.matchExisting = matchExisting;
+			this.insertNew = insertNew;
 		}
-		insertNew.accept(nextValue(context));
-		return lastValueInSession(context);
+
+		Field<R> execute() {
+			R existingId = context
+					.select(sequenceValueField)
+					.from(table)
+					.where(matchExisting)
+					.fetchOne(sequenceValueField);
+			if (existingId != null) {
+				return val(existingId);
+			}
+			insertNew.accept(nextValue());
+			return lastValueInSession();
+		}
+
+		R executeReified() {
+			R existingId = context
+					.select(sequenceValueField)
+					.from(table)
+					.where(matchExisting)
+					.fetchOne(sequenceValueField);
+			if (existingId != null) {
+				return existingId;
+			}
+			insertNew.accept(nextValue());
+			return context.select(lastValueInSession()).fetchSingle(sequenceValueField);
+		}
 	}
 
 }

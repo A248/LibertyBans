@@ -23,11 +23,13 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.punish.PunishmentCreator;
+import space.arim.libertybans.core.scope.InternalScopeManager;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 public record SelectionResources(FactoryOfTheFuture futuresFactory,
 								 Provider<QueryExecutor> dbProvider,
+								 InternalScopeManager scopeManager,
 								 PunishmentCreator creator,
 								 Time time) {
 

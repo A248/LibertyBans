@@ -20,6 +20,8 @@
 package space.arim.libertybans.core.addon.it;
 
 import jakarta.inject.Singleton;
+import space.arim.libertybans.core.env.EnvMessageChannel;
+import space.arim.libertybans.core.env.EnvServerNameDetection;
 import space.arim.libertybans.core.importing.PlatformImportSource;
 import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.libertybans.core.selector.cache.OnDemandMuteCache;
@@ -35,6 +37,14 @@ public class AddonITModule {
 
 	public MuteCache muteCache(OnDemandMuteCache muteCache) {
 		return muteCache;
+	}
+
+	public EnvMessageChannel<?> messageChannel(EnvMessageChannel.NoOp messageChannel) {
+		return messageChannel;
+	}
+
+	public EnvServerNameDetection serverNameDetection() {
+		return (scopeManager) -> {};
 	}
 
 	public PlatformImportSource platformImportSource() {

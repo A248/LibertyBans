@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,36 +20,43 @@
 package space.arim.libertybans.env.bungee;
 
 import jakarta.inject.Inject;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.PendingConnection;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.LoginEvent;
+import net.md_5.bungee.api.event.ServerConnectEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.libertybans.core.selector.Guardian;
 import space.arim.omnibus.util.ThisClass;
 
 import java.net.InetAddress;
-import java.util.UUID;
 
 public final class ConnectionListener implements Listener, PlatformListener {
 
 	private final Plugin plugin;
 	private final Guardian guardian;
 	private final AddressReporter addressReporter;
+	private final AudienceRepresenter<CommandSender> audienceRepresenter;
 
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
 	@Inject
-	public ConnectionListener(Plugin plugin, Guardian guardian, AddressReporter addressReporter) {
+	public ConnectionListener(Plugin plugin, Guardian guardian, AddressReporter addressReporter,
+							  AudienceRepresenter<CommandSender> audienceRepresenter) {
 		this.plugin = plugin;
 		this.guardian = guardian;
 		this.addressReporter = addressReporter;
+		this.audienceRepresenter = audienceRepresenter;
 	}
 
 	@Override
@@ -65,17 +72,17 @@ public final class ConnectionListener implements Listener, PlatformListener {
 	@EventHandler(priority = EventPriority.LOW)
 	public void onConnect(LoginEvent event) {
 		if (event.isCancelled()) {
-			logger.debug("Event {} is already blocked", event);
+			logger.trace("Event {} is already blocked", event);
 			return;
 		}
 		PendingConnection connection = event.getConnection();
-		UUID uuid = connection.getUniqueId();
-		String name = connection.getName();
 		InetAddress address = addressReporter.getAddress(connection);
 
 		event.registerIntent(plugin);
 
-		guardian.executeAndCheckConnection(uuid, name, address).thenAccept((message) -> {
+		guardian.executeAndCheckConnection(
+				connection.getUniqueId(), connection.getName(), address
+		).thenAccept((message) -> {
 			if (message == null) {
 				logger.trace("Event {} will be permitted", event);
 			} else {
@@ -89,6 +96,24 @@ public final class ConnectionListener implements Listener, PlatformListener {
 			}
 			event.completeIntent(plugin);
 		});
+	}
+
+	@EventHandler(priority = EventPriority.HIGH)
+	public void onServerSwitch(ServerConnectEvent event) {
+		if (event.getReason() == ServerConnectEvent.Reason.LOBBY_FALLBACK) {
+			// Don't kick players if there is no alternative server for them
+			return;
+		}
+		ProxiedPlayer player = event.getPlayer();
+		InetAddress address = addressReporter.getAddress(player);
+
+		Component message = guardian.checkServerSwitch(
+				player.getUniqueId(), address, event.getTarget().getName()
+		).join();
+		if (message != null) {
+			event.setCancelled(true);
+			audienceRepresenter.toAudience(player).sendMessage(message);
+		}
 	}
 
 }

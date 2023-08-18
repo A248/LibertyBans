@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,7 +27,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.selector.EnforcementConfig;
 import space.arim.libertybans.core.selector.Guardian;
@@ -65,11 +67,12 @@ public class IntelligentGuardianTest {
 	}
 
 	@BeforeEach
-	public void setup(@Mock Configs configs, @Mock InternalSelector selector, @Mock UUIDManager uuidManager) {
+	public void setup(@Mock Configs configs, @Mock ScopeManager scopeManager, @Mock InternalFormatter formatter,
+					  @Mock InternalSelector selector, @Mock UUIDManager uuidManager) {
 		uuid = UUID.randomUUID();
 		address = RandomUtil.randomAddress();
 
-		guardian = new IntelligentGuardian(configs, futuresFactory, selector, uuidManager, muteCache);
+		guardian = new IntelligentGuardian(configs, futuresFactory, scopeManager, formatter, selector, uuidManager, muteCache);
 
 		MainConfig mainConfig = mock(MainConfig.class);
 		EnforcementConfig enforcementConfig = mock(EnforcementConfig.class);

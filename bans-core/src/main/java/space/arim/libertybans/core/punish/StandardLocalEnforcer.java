@@ -25,6 +25,7 @@ import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import space.arim.api.env.annote.PlatformPlayer;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.CompositeVictim;
@@ -47,8 +48,10 @@ import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.env.AdditionalUUIDTargetMatcher;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.ExactTargetMatcher;
+import space.arim.libertybans.core.env.InstanceType;
 import space.arim.libertybans.core.env.TargetMatcher;
 import space.arim.libertybans.core.env.UUIDTargetMatcher;
+import space.arim.libertybans.core.env.message.KickPlayer;
 import space.arim.libertybans.core.punish.permission.PunishmentPermission;
 import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.omnibus.util.ThisClass;
@@ -63,22 +66,24 @@ import static space.arim.libertybans.core.schema.tables.Addresses.ADDRESSES;
 import static space.arim.libertybans.core.schema.tables.StrictLinks.STRICT_LINKS;
 
 @Singleton
-public final class StandardLocalEnforcer implements LocalEnforcer {
+public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnforcer {
 
+	private final InstanceType instanceType;
 	private final Configs configs;
 	private final FactoryOfTheFuture futuresFactory;
 	private final Provider<QueryExecutor> queryExecutor;
 	private final PunishmentSelector selector;
 	private final InternalFormatter formatter;
+	private final EnvEnforcer<P> envEnforcer;
 	private final MuteCache muteCache;
-	private final EnvEnforcer<?> envEnforcer;
 
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
 	@Inject
-	public StandardLocalEnforcer(Configs configs, FactoryOfTheFuture futuresFactory,
+	public StandardLocalEnforcer(InstanceType instanceType, Configs configs, FactoryOfTheFuture futuresFactory,
 								 Provider<QueryExecutor> queryExecutor, PunishmentSelector selector,
-								 InternalFormatter formatter, EnvEnforcer<?> envEnforcer, MuteCache muteCache) {
+								 InternalFormatter formatter, EnvEnforcer<P> envEnforcer, MuteCache muteCache) {
+		this.instanceType = instanceType;
 		this.configs = configs;
 		this.futuresFactory = futuresFactory;
 		this.queryExecutor = queryExecutor;
@@ -95,7 +100,7 @@ public final class StandardLocalEnforcer implements LocalEnforcer {
 
 		PunishmentAdditionSection section = configs.getMessagesConfig().additions().forType(punishment.getType());
 
-		var arrestsAndNotices = new Parameterized<>(envEnforcer).enforceArrestsAndNotices(punishment);
+		var arrestsAndNotices = enforceArrestsAndNotices(punishment);
 		if (enforcementOptions.broadcasting() == Broadcasting.NONE) {
 			return arrestsAndNotices;
 		}
@@ -196,123 +201,120 @@ public final class StandardLocalEnforcer implements LocalEnforcer {
 			if (optPunishment.isEmpty()) {
 				// Possible race condition if punishment is expunged
 				logger.debug("Tried to update details of non-existent punishment with id {}", id);
-				return futuresFactory.completedFuture(null);
+				return completedFuture(null);
 			}
 			return updateDetailsWithoutSynchronization(optPunishment.get());
 		}).toCompletableFuture();
 	}
 
-	// Enforcement of enacted punishments
+	private CentralisedFuture<Void> enforceArrestsAndNotices(Punishment punishment) {
 
-	private class Parameterized<P> {
+		return formatter.getPunishmentMessage(punishment).thenCompose((message) -> {
 
-		private final EnvEnforcer<P> envEnforcer;
+			Victim victim = punishment.getVictim();
+			Consumer<P> enforcementCallback = enforcementCallback(punishment, message);
+			AddressStrictness strictness = configs.getMainConfig().enforcement().addressStrictness();
 
-		Parameterized(EnvEnforcer<P> envEnforcer) {
-			this.envEnforcer = envEnforcer;
-		}
-
-		CentralisedFuture<Void> enforceArrestsAndNotices(Punishment punishment) {
-
-			return formatter.getPunishmentMessage(punishment).thenCompose((message) -> {
-
-				Victim victim = punishment.getVictim();
-				Consumer<P> enforcementCallback = enforcementCallback(punishment, message);
-				AddressStrictness strictness = configs.getMainConfig().enforcement().addressStrictness();
-
-				if (victim instanceof PlayerVictim playerVictim) {
-					UUID uuid = playerVictim.getUUID();
-					if (strictness == AddressStrictness.STRICT) {
-						return matchUserPunishmentStrict(uuid, enforcementCallback)
-								.thenCompose(envEnforcer::enforceMatcher);
-					}
-					return envEnforcer.doForPlayerIfOnline(uuid, enforcementCallback);
-
-				} else if (victim instanceof AddressVictim addressVictim) {
-					NetworkAddress address = addressVictim.getAddress();
-					return matchAddressPunishment(strictness, enforcementCallback, address)
+			if (victim instanceof PlayerVictim playerVictim) {
+				UUID uuid = playerVictim.getUUID();
+				if (strictness == AddressStrictness.STRICT) {
+					return matchUserPunishmentStrict(uuid, enforcementCallback)
 							.thenCompose(envEnforcer::enforceMatcher);
-
-				} else if (victim instanceof CompositeVictim compositeVictim) {
-					UUID uuid = compositeVictim.getUUID();
-					NetworkAddress address = compositeVictim.getAddress();
-					return matchAddressPunishment(strictness, enforcementCallback, address)
-							.thenApply((addressMatcher) -> new AdditionalUUIDTargetMatcher<>(uuid, addressMatcher))
-							.thenCompose(envEnforcer::enforceMatcher);
-
-				} else {
-					throw MiscUtil.unknownVictimType(victim.getType());
 				}
-			});
-		}
+				return envEnforcer.doForPlayerIfOnline(uuid, enforcementCallback);
 
-		private Consumer<P> enforcementCallback(Punishment punishment, Component message) {
-			return switch (punishment.getType()) {
-				case BAN, KICK -> (player) -> envEnforcer.kickPlayer(player, message);
-				case MUTE -> (player) -> {
-					/*
-					 * Mute enforcement must additionally take into account the mute cache
-					 */
-					UUID uuid = envEnforcer.getUniqueIdFor(player);
-					NetworkAddress address = NetworkAddress.of(envEnforcer.getAddressFor(player));
-					muteCache.setCachedMute(uuid, address, punishment);
+			} else if (victim instanceof AddressVictim addressVictim) {
+				NetworkAddress address = addressVictim.getAddress();
+				return matchAddressPunishment(strictness, enforcementCallback, address)
+						.thenCompose(envEnforcer::enforceMatcher);
 
-					envEnforcer.sendMessageNoPrefix(player, message);
-				};
-				case WARN -> (player) -> envEnforcer.sendMessageNoPrefix(player, message);
+			} else if (victim instanceof CompositeVictim compositeVictim) {
+				UUID uuid = compositeVictim.getUUID();
+				NetworkAddress address = compositeVictim.getAddress();
+				return matchAddressPunishment(strictness, enforcementCallback, address)
+						.thenApply((addressMatcher) -> new AdditionalUUIDTargetMatcher<>(uuid, addressMatcher))
+						.thenCompose(envEnforcer::enforceMatcher);
+
+			} else {
+				throw MiscUtil.unknownVictimType(victim.getType());
+			}
+		});
+	}
+
+	private Consumer<P> enforcementCallback(Punishment punishment, Component message) {
+		return switch (punishment.getType()) {
+			case BAN, KICK -> (player) -> {
+				if (instanceType == InstanceType.GAME_SERVER
+						&& configs.getMainConfig().platforms().gameServers().usePluginMessaging()) {
+					envEnforcer.sendPluginMessage(
+							player, new KickPlayer(), new KickPlayer.Data(envEnforcer.getNameFor(player), message)
+					);
+				} else {
+					envEnforcer.kickPlayer(player, message);
+				}
 			};
-		}
+			case MUTE -> (player) -> {
+				/*
+				 * Mute enforcement must additionally take into account the mute cache
+				 */
+				UUID uuid = envEnforcer.getUniqueIdFor(player);
+				NetworkAddress address = NetworkAddress.of(envEnforcer.getAddressFor(player));
+				muteCache.setCachedMute(uuid, address, punishment);
 
-		private CentralisedFuture<TargetMatcher<P>> matchAddressPunishment(
-				AddressStrictness strictness, Consumer<P> enforcementCallback, NetworkAddress address) {
-			return switch (strictness) {
-				case LENIENT -> completedFuture(new ExactTargetMatcher<>(address, enforcementCallback));
-				case NORMAL -> matchAddressPunishmentNormal(address, enforcementCallback);
-				case STERN, STRICT -> matchAddressPunishmentSternOrStrict(address, enforcementCallback);
+				envEnforcer.sendMessageNoPrefix(player, message);
 			};
-		}
+			case WARN -> (player) -> envEnforcer.sendMessageNoPrefix(player, message);
+		};
+	}
 
-		private CentralisedFuture<TargetMatcher<P>> matchAddressPunishmentNormal(
-				NetworkAddress address, Consumer<P> enforcementCallback) {
-			return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
-				return context
-						.select(ADDRESSES.UUID)
-						.from(ADDRESSES)
-						.where(ADDRESSES.ADDRESS.eq(address))
-						.fetchSet(ADDRESSES.UUID);
-			})).thenApply((uuids) -> {
-				return new UUIDTargetMatcher<>(uuids, enforcementCallback);
-			});
-		}
+	private CentralisedFuture<TargetMatcher<P>> matchAddressPunishment(
+			AddressStrictness strictness, Consumer<P> enforcementCallback, NetworkAddress address) {
+		return switch (strictness) {
+			case LENIENT -> completedFuture(new ExactTargetMatcher<>(address, enforcementCallback));
+			case NORMAL -> matchAddressPunishmentNormal(address, enforcementCallback);
+			case STERN, STRICT -> matchAddressPunishmentSternOrStrict(address, enforcementCallback);
+		};
+	}
 
-		private CentralisedFuture<TargetMatcher<P>> matchAddressPunishmentSternOrStrict(
-				NetworkAddress address, Consumer<P> enforcementCallback) {
-			return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
-				return context
-						.select(STRICT_LINKS.UUID2)
-						.from(STRICT_LINKS)
-						.innerJoin(ADDRESSES)
-						.on(STRICT_LINKS.UUID1.eq(ADDRESSES.UUID))
-						.where(ADDRESSES.ADDRESS.eq(address))
-						.fetchSet(STRICT_LINKS.UUID2);
-			})).thenApply((uuids) -> {
-				return new UUIDTargetMatcher<>(uuids, enforcementCallback);
-			});
-		}
+	private CentralisedFuture<TargetMatcher<P>> matchAddressPunishmentNormal(
+			NetworkAddress address, Consumer<P> enforcementCallback) {
+		return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
+			return context
+					.select(ADDRESSES.UUID)
+					.from(ADDRESSES)
+					.where(ADDRESSES.ADDRESS.eq(address))
+					.fetchSet(ADDRESSES.UUID);
+		})).thenApply((uuids) -> {
+			return new UUIDTargetMatcher<>(uuids, enforcementCallback);
+		});
+	}
 
-		private CentralisedFuture<TargetMatcher<P>> matchUserPunishmentStrict(
-				UUID uuid, Consumer<P> enforcementCallback) {
-			return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
-				return context
-						.select(STRICT_LINKS.UUID2)
-						.from(STRICT_LINKS)
-						.where(STRICT_LINKS.UUID1.eq(uuid))
-						.fetchSet(STRICT_LINKS.UUID2);
-			})).thenApply((uuids) -> {
-				return new UUIDTargetMatcher<>(uuids, enforcementCallback);
-			});
-		}
+	private CentralisedFuture<TargetMatcher<P>> matchAddressPunishmentSternOrStrict(
+			NetworkAddress address, Consumer<P> enforcementCallback) {
+		return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
+			return context
+					.select(STRICT_LINKS.UUID2)
+					.from(STRICT_LINKS)
+					.innerJoin(ADDRESSES)
+					.on(STRICT_LINKS.UUID1.eq(ADDRESSES.UUID))
+					.where(ADDRESSES.ADDRESS.eq(address))
+					.fetchSet(STRICT_LINKS.UUID2);
+		})).thenApply((uuids) -> {
+			return new UUIDTargetMatcher<>(uuids, enforcementCallback);
+		});
+	}
 
+	private CentralisedFuture<TargetMatcher<P>> matchUserPunishmentStrict(
+			UUID uuid, Consumer<P> enforcementCallback) {
+		return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
+			return context
+					.select(STRICT_LINKS.UUID2)
+					.from(STRICT_LINKS)
+					.where(STRICT_LINKS.UUID1.eq(uuid))
+					.fetchSet(STRICT_LINKS.UUID2);
+		})).thenApply((uuids) -> {
+			return new UUIDTargetMatcher<>(uuids, enforcementCallback);
+		});
 	}
 
 	private <T> CentralisedFuture<T> completedFuture(T value) {

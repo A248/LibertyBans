@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,10 +20,12 @@ package space.arim.libertybans.it;
 
 import space.arim.libertybans.core.database.Vendor;
 import space.arim.libertybans.api.select.AddressStrictness;
+import space.arim.libertybans.core.env.InstanceType;
 import space.arim.libertybans.core.uuid.ServerType;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -32,22 +34,24 @@ class ConfigSpecPossiblities {
 	private final AnnotatedElement element;
 
 	ConfigSpecPossiblities(AnnotatedElement element) {
-		this.element = element;
+		this.element = Objects.requireNonNull(element);
 	}
 
-	private Stream<ConfigSpec> getAllPossible(long time) {
+	private Stream<ConfigSpec> getAllPossible(InstanceType instanceType, boolean pluginMessaging, long time) {
 		Set<ConfigSpec> possibilities = new HashSet<>();
 		for (Vendor vendor : Vendor.values()) {
 			for (AddressStrictness addressStrictness : AddressStrictness.values()) {
 				for (ServerType serverType : ServerType.values()) {
-					possibilities.add(new ConfigSpec(vendor, addressStrictness, serverType, time));
+					possibilities.add(new ConfigSpec(
+							vendor, addressStrictness, serverType, instanceType, pluginMessaging, time
+					));
 				}
 			}
 		}
 		return possibilities.stream();
 	}
 
-	private ConfigConstraints getConstraints() {
+	private ConfigConstraints getConstraints(PlatformSpecs platformSpecs) {
 		if (element.getAnnotation(NoDbAccess.class) != null) {
 			return new ConfigConstraints(
 					Set.of(Vendor.HSQLDB), Set.of(AddressStrictness.NORMAL), Set.of(ServerType.ONLINE));
@@ -64,15 +68,13 @@ class ConfigSpecPossiblities {
 			}
 		}
 		Set<ServerType> serverTypes;
-		{
-			SetServerType serverTypeConstraint = element.getAnnotation(SetServerType.class);
-			if (serverTypeConstraint == null) {
-				serverTypes = Set.of(ServerType.ONLINE);
-			} else if (serverTypeConstraint.all()) {
-				serverTypes = Set.of(ServerType.values());
-			} else {
-				serverTypes = Set.of(serverTypeConstraint.value());
-			}
+		PlatformSpecs.ServerTypes serverTypeConstraint;
+		if (platformSpecs == null) {
+			serverTypes = Set.of(ServerType.ONLINE);
+		} else if ((serverTypeConstraint = platformSpecs.serverTypes()).all()) {
+			serverTypes = Set.of(ServerType.values());
+		} else {
+			serverTypes = Set.of(serverTypeConstraint.value());
 		}
 		Set<Vendor> vendors;
 		{
@@ -86,39 +88,38 @@ class ConfigSpecPossiblities {
 		return new ConfigConstraints(vendors, addressStrictnesses, serverTypes);
 	}
 
-	private static class ConfigConstraints {
-
-		private final Set<AddressStrictness> strictnesses;
-		private final Set<Vendor> vendors;
-		private final Set<ServerType> serverTypes;
-
-		ConfigConstraints(Set<Vendor> vendors, Set<AddressStrictness> strictnesses, Set<ServerType> serverTypes) {
-
-			this.vendors = vendors;
-			this.strictnesses = strictnesses;
-			this.serverTypes = serverTypes;
-		}
+	private record ConfigConstraints(Set<Vendor> vendors, Set<AddressStrictness> strictnesses,
+									 Set<ServerType> serverTypes) {
 
 		boolean allows(ConfigSpec configSpec) {
-			return vendors.contains(configSpec.vendor())
-					&& strictnesses.contains(configSpec.addressStrictness())
-					&& serverTypes.contains(configSpec.serverType());
+				return vendors.contains(configSpec.vendor())
+						&& strictnesses.contains(configSpec.addressStrictness())
+						&& serverTypes.contains(configSpec.serverType());
 		}
 
 	}
 
 	Stream<ConfigSpec> getAll() {
-		long defaultTime = SetTime.DEFAULT_TIME;
-		if (element == null) {
-			return getAllPossible(defaultTime);
-		}
-		long time = defaultTime;
+		long time;
 		SetTime setTime = element.getAnnotation(SetTime.class);
-		if (setTime != null) {
+		if (setTime == null) {
+			time = SetTime.DEFAULT_TIME;
+		} else {
 			time = setTime.unixTime();
 		}
-		Stream<ConfigSpec> configurations = getAllPossible(time);
-		ConfigConstraints constraints = getConstraints();
+		InstanceType instanceType;
+		boolean pluginMessaging;
+		PlatformSpecs platformSpecs = element.getAnnotation(PlatformSpecs.class);
+		if (platformSpecs == null) {
+			// Make sure these defaults match those in PlatformSpecs
+			instanceType = InstanceType.PROXY;
+			pluginMessaging = false;
+		} else {
+			instanceType = platformSpecs.instanceType();
+			pluginMessaging = platformSpecs.pluginMessaging();
+		}
+		Stream<ConfigSpec> configurations = getAllPossible(instanceType, pluginMessaging, time);
+		ConfigConstraints constraints = getConstraints(platformSpecs);
 		return configurations.filter(constraints::allows);
 	}
 

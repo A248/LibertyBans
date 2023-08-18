@@ -28,6 +28,7 @@ import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.database.execute.Transaction;
+import space.arim.libertybans.core.database.sql.ScopeIdSequenceValue;
 import space.arim.libertybans.core.database.sql.SequenceValue;
 import space.arim.libertybans.core.database.sql.TableForType;
 import space.arim.libertybans.core.database.sql.TrackIdSequenceValue;
@@ -84,25 +85,27 @@ public class Enaction {
 								 DSLContext context, Transaction transaction, boolean active) {
 			MiscUtil.checkNoCompositeVictimWildcards(victim);
 
-			Field<Integer> escalationTrackId = new TrackIdSequenceValue().retrieveTrackIdField(context, escalationTrack);
+			Field<Integer> escalationTrackId = new TrackIdSequenceValue(context).retrieveTrackId(escalationTrack);
+			Field<Integer> scopeId = new ScopeIdSequenceValue(context).retrieveScopeId(scope);
 
-			SequenceValue<Long> punishmentIdSequence = new SequenceValue<>(LIBERTYBANS_PUNISHMENT_IDS);
+			SequenceValue<Long> punishmentIdSequence = new SequenceValue<>(context, LIBERTYBANS_PUNISHMENT_IDS);
 			context
 					.insertInto(PUNISHMENTS)
 					.columns(
 							PUNISHMENTS.ID, PUNISHMENTS.TYPE, PUNISHMENTS.OPERATOR, PUNISHMENTS.REASON,
-							PUNISHMENTS.SCOPE, PUNISHMENTS.START, PUNISHMENTS.END, PUNISHMENTS.TRACK
+							PUNISHMENTS.SCOPE, PUNISHMENTS.START, PUNISHMENTS.END,
+							PUNISHMENTS.TRACK, PUNISHMENTS.SCOPE_ID
 					)
 					.values(
-							punishmentIdSequence.nextValue(context), val(type, PUNISHMENTS.TYPE),
+							punishmentIdSequence.nextValue(), val(type, PUNISHMENTS.TYPE),
 							val(operator, PUNISHMENTS.OPERATOR), val(reason, PUNISHMENTS.REASON),
-							val(scope, PUNISHMENTS.SCOPE), val(start, PUNISHMENTS.START), val(end, PUNISHMENTS.END),
-							escalationTrackId
+							val("", PUNISHMENTS.SCOPE), val(start, PUNISHMENTS.START), val(end, PUNISHMENTS.END),
+							escalationTrackId, scopeId
 					)
 					.execute();
 
-			Field<Long> punishmentIdField = punishmentIdSequence.lastValueInSession(context);
-			Field<Integer> victimIdField = new VictimIdSequenceValue().retrieveVictimIdField(context, victim);
+			Field<Long> punishmentIdField = punishmentIdSequence.lastValueInSession();
+			Field<Integer> victimIdField = new VictimIdSequenceValue(context).retrieveVictimId(victim);
 
 			if (active && type != PunishmentType.KICK) {
 				var dataTable = new TableForType(type).dataTable();

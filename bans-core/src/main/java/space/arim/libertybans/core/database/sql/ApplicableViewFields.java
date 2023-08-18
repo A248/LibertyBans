@@ -21,31 +21,28 @@ package space.arim.libertybans.core.database.sql;
 
 import org.jooq.Field;
 import org.jooq.Record;
-import org.jooq.Record13;
+import org.jooq.Record14;
 import org.jooq.Table;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EscalationTrack;
-import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.scope.ScopeType;
 
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public final class ApplicableViewFields<R extends Record13<
+public record ApplicableViewFields<R extends Record14<
 		Long, PunishmentType,
 		Victim.VictimType, UUID, NetworkAddress,
-		Operator, String, ServerScope, Instant, Instant,
-		UUID, NetworkAddress, EscalationTrack>> implements PunishmentFields {
-
-	private final Table<R> applicableView;
-	private final R fieldSupplier;
+		Operator, String, String, Instant, Instant,
+		UUID, NetworkAddress, EscalationTrack, ScopeType
+		>>(Table<R> applicableView, R fieldSupplier) implements PunishmentFields {
 
 	public ApplicableViewFields(Table<R> applicableView) {
-		this.applicableView = applicableView;
-		this.fieldSupplier = applicableView.newRecord();
+		this(applicableView, applicableView.newRecord());
 	}
 
 	@Override
@@ -89,7 +86,7 @@ public final class ApplicableViewFields<R extends Record13<
 	}
 
 	@Override
-	public Field<ServerScope> scope() {
+	public Field<String> scope() {
 		return fieldSupplier.field8();
 	}
 
@@ -108,14 +105,13 @@ public final class ApplicableViewFields<R extends Record13<
 		return fieldSupplier.field13();
 	}
 
+	@Override
+	public Field<ScopeType> scopeType() {
+		return fieldSupplier.field14();
+	}
+
 	public Field<UUID> uuid() {
 		return Objects.requireNonNull(fieldSupplier.field11(), "uuid field does not exist");
 	}
 
-	@Override
-	public String toString() {
-		return "ApplicableViewFields{" +
-				"applicableView=" + applicableView +
-				'}';
-	}
 }

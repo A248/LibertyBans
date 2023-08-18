@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,6 +25,8 @@ import jakarta.inject.Singleton;
 import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.velocity.VelocityPlatformHandle;
 import space.arim.libertybans.core.env.EnvEnforcer;
+import space.arim.libertybans.core.env.EnvMessageChannel;
+import space.arim.libertybans.core.env.EnvServerNameDetection;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.importing.PlatformImportSource;
@@ -52,6 +54,14 @@ public class VelocityBindModule {
 
 	public EnvUserResolver resolver(VelocityUserResolver resolver) {
 		return resolver;
+	}
+
+	public EnvMessageChannel<?> messageChannel(VelocityMessageChannel messageChannel) {
+		return messageChannel;
+	}
+
+	public EnvServerNameDetection serverNameDetection() {
+		return (scopeManager) -> scopeManager.detectServerName("proxy");
 	}
 
 	public PlatformImportSource platformImportSource() {

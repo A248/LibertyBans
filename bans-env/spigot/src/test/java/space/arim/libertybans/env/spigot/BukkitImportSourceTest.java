@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,15 +20,17 @@
 package space.arim.libertybans.env.spigot;
 
 import org.bukkit.Server;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ScopeManager;
+import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.importing.PortablePunishment;
-import space.arim.libertybans.core.scope.ScopeImpl;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
@@ -47,10 +49,15 @@ import static space.arim.libertybans.env.spigot.ServerWithBanListCreator.userBan
 @ExtendWith(MockitoExtension.class)
 public class BukkitImportSourceTest {
 
-	private Set<PortablePunishment> sourcePunishments(Server server) {
-		ScopeManager scopeManager = mock(ScopeManager.class);
-		lenient().when(scopeManager.globalScope()).thenReturn(ScopeImpl.GLOBAL);
+	private ScopeManager scopeManager;
 
+	@BeforeEach
+	public void setScopeManager(@Mock ScopeManager scopeManager) {
+		this.scopeManager = scopeManager;
+		lenient().when(scopeManager.globalScope()).thenReturn(mock(ServerScope.class));
+	}
+
+	private Set<PortablePunishment> sourcePunishments(Server server) {
 		FactoryOfTheFuture futuresFactory = new IndifferentFactoryOfTheFuture();
 		return new BukkitImportSource(futuresFactory, scopeManager, server)
 				.sourcePunishments().collect(Collectors.toUnmodifiableSet());
@@ -81,7 +88,7 @@ public class BukkitImportSourceTest {
 				Set.of(new PortablePunishment(
 						null,
 						new PortablePunishment.KnownDetails(
-								PunishmentType.BAN, reason, ScopeImpl.GLOBAL,
+								PunishmentType.BAN, reason, scopeManager.globalScope(),
 								start, Punishment.PERMANENT_END_DATE),
 						new PortablePunishment.VictimInfo(null, username, null),
 						PortablePunishment.OperatorInfo.createUser(null, operator),
@@ -104,7 +111,7 @@ public class BukkitImportSourceTest {
 				Set.of(new PortablePunishment(
 						null,
 						new PortablePunishment.KnownDetails(
-								PunishmentType.BAN, reason, ScopeImpl.GLOBAL,
+								PunishmentType.BAN, reason, scopeManager.globalScope(),
 								start, Punishment.PERMANENT_END_DATE),
 						new PortablePunishment.VictimInfo(null, null, NetworkAddress.of(address)),
 						PortablePunishment.OperatorInfo.createUser(null, operator),
@@ -127,7 +134,7 @@ public class BukkitImportSourceTest {
 				Set.of(new PortablePunishment(
 						null,
 						new PortablePunishment.KnownDetails(
-								PunishmentType.BAN, reason, ScopeImpl.GLOBAL,
+								PunishmentType.BAN, reason, scopeManager.globalScope(),
 								start, end),
 						new PortablePunishment.VictimInfo(null, username, null),
 						PortablePunishment.OperatorInfo.createUser(null, operator),

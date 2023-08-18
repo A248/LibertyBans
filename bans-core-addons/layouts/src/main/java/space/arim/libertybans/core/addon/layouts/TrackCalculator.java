@@ -44,7 +44,7 @@ record TrackCalculator(ScopeManager scopeManager, Track.Ladder ladder) implement
 		var progression = findProgression(existingPunishments + 1);
 		return new PunishmentDetailsCalculator.CalculationResult(
 				progression.type(), progression.reason(),
-				progression.duration().duration(), scopeManager.globalScope()
+				progression.duration().duration(), progression.scope().actualize(scopeManager)
 		);
 	}
 

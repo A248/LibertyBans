@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -61,7 +61,7 @@ public final class ChatListener implements PlatformListener {
 		combinedChatEvent(event, null);
 	}
 
-	@Listener
+	@Listener(order = Order.LATE)
 	public void onCommand(ExecuteCommandEvent.Pre event) {
 		combinedChatEvent(event, event.command());
 	}

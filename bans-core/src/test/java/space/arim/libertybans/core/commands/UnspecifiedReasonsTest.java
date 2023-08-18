@@ -30,21 +30,24 @@ import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.DraftPunishmentBuilder;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.api.scope.ScopeManager;
+import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.addon.exempt.Exemption;
 import space.arim.libertybans.core.commands.extra.ArgumentParser;
-import space.arim.libertybans.core.config.AdditionAssistant;
-import space.arim.libertybans.core.config.ParsedDuration;
-import space.arim.libertybans.core.event.FireEventWithTimeout;
-import space.arim.libertybans.core.punish.permission.DurationPermissionsConfig;
+import space.arim.libertybans.core.commands.extra.ParseScope;
 import space.arim.libertybans.core.commands.extra.ReasonsConfig;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
+import space.arim.libertybans.core.config.AdditionAssistant;
 import space.arim.libertybans.core.config.AdditionsSection;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.config.MessagesConfig;
+import space.arim.libertybans.core.config.ParsedDuration;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.EnvUserResolver;
+import space.arim.libertybans.core.event.FireEventWithTimeout;
+import space.arim.libertybans.core.punish.permission.DurationPermissionsConfig;
 import space.arim.omnibus.DefaultOmnibus;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
@@ -84,7 +87,7 @@ public class UnspecifiedReasonsTest {
 	@BeforeEach
 	public void setConfigSection(AbstractSubCommandGroup.Dependencies dependencies,
 			/* Mock */ Configs configs, /* Mock */ ArgumentParser argParser,
-			@Mock EnvUserResolver envUserResolver) {
+			@Mock ScopeManager scopeManager, @Mock EnvUserResolver envUserResolver) {
 		{
 			MainConfig mainConfig = mock(MainConfig.class);
 			when(configs.getMainConfig()).thenReturn(mainConfig);
@@ -106,6 +109,10 @@ public class UnspecifiedReasonsTest {
 		}
 		when(argParser.parseVictim(any(), eq("A248"), any())).thenAnswer((i) ->
 				new IndifferentFactoryOfTheFuture().completedFuture(PlayerVictim.of(UUID.randomUUID())));
+		when(argParser.parseScope(any(), any(), any())).thenAnswer((invocation) -> {
+			return invocation.getArgument(2, ParseScope.class).defaultValue(scopeManager);
+		});
+		when(scopeManager.defaultPunishingScope()).thenReturn(mock(ServerScope.class));
 
 		punishCommands = new PlayerPunishCommands(
 				dependencies, drafter, formatter,

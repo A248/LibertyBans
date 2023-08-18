@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,29 +19,34 @@
 
 package space.arim.libertybans.core.env;
 
-import java.util.List;
-import java.util.Set;
-
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-
 import space.arim.libertybans.bootstrap.StartupException;
 import space.arim.libertybans.core.Part;
 import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.scope.InternalScopeManager;
+
+import java.util.List;
+import java.util.Set;
 
 @Singleton
 public final class EnvironmentManager implements Part {
 
 	private final Environment environment;
 	private final Configs configs;
+	private final EnvServerNameDetection serverNameDetection;
+	private final InternalScopeManager scopeManager;
 
 	private Set<PlatformListener> listeners;
 	private PlatformListener[] commandAliases;
 
 	@Inject
-	public EnvironmentManager(Environment environment, Configs configs) {
+	public EnvironmentManager(Environment environment, Configs configs,
+							  EnvServerNameDetection serverNameDetection, InternalScopeManager scopeManager) {
 		this.environment = environment;
 		this.configs = configs;
+		this.serverNameDetection = serverNameDetection;
+		this.scopeManager = scopeManager;
 	}
 
 	public Object platformAccess() {
@@ -68,6 +73,7 @@ public final class EnvironmentManager implements Part {
 	public void startup() {
 		registerListeners();
 		registerAliases();
+		serverNameDetection.detectName(scopeManager);
 	}
 
 	@Override
@@ -82,6 +88,7 @@ public final class EnvironmentManager implements Part {
 		for (PlatformListener commandAlias : commandAliases) {
 			commandAlias.unregister();
 		}
+		scopeManager.clearDetectedServerName();
 	}
 
 }

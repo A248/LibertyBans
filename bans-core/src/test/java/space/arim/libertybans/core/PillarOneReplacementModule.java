@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -16,6 +16,7 @@
  * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core;
 
 import jakarta.inject.Singleton;
@@ -34,7 +35,7 @@ public class PillarOneReplacementModule extends PillarOneBindModuleMinusConfigs 
 
 	@Singleton
 	public SettableTime time(ConfigSpec configSpec) {
-		return new SettableTimeImpl(configSpec.unixTime());
+		return new SettableTimeImpl(configSpec.unixTimestamp());
 	}
 
 	public Time time(SettableTime time) {

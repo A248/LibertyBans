@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.commands;
 
+import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.StringJoiner;
 
@@ -46,7 +47,10 @@ public final class ArrayCommandPackage implements CommandPackage {
 
 	// Maintains the guarantee that position never refers to a hidden argument
 	private void movePastHiddenArguments() {
-		while (position < args.length && args[position].startsWith(HIDDEN_ARG_PREFIX)) {
+		String currentArg;
+		while (position < args.length
+				&& !(currentArg = args[position]).isEmpty()
+				&& currentArg.charAt(0) == HIDDEN_ARG_PREFIX) {
 			position++;
 		}
 	}
@@ -73,13 +77,24 @@ public final class ArrayCommandPackage implements CommandPackage {
 
 	@Override
 	public boolean findHiddenArgument(String argument) {
-		String searchFor = "-" + argument;
+		String searchFor = '-' + argument;
 		for (int n = 0; n < position; n++) {
 			if (args[n].equalsIgnoreCase(searchFor)) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public String findHiddenArgumentSpecifiedValue(String argPrefix) {
+		String searchFor = '-' + argPrefix + '=';
+		for (int n = 0; n < position; n++) {
+			if (args[n].toLowerCase(Locale.ROOT).startsWith(searchFor)) {
+				return args[n].substring(searchFor.length());
+			}
+		}
+		return null;
 	}
 
 	@Override

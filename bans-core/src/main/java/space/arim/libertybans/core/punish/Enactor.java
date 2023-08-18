@@ -33,6 +33,7 @@ import space.arim.libertybans.api.punish.DraftPunishmentBuilder;
 import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.execute.SQLFunction;
@@ -133,13 +134,14 @@ public class Enactor implements PunishmentDrafter {
 				database.clearExpiredPunishments(context, type, start);
 			}
 			Duration duration = calculationResult.duration();
+			ServerScope scope = scopeManager.checkScope(calculationResult.scope());
 			Instant end = duration.isZero() ?
 					Punishment.PERMANENT_END_DATE : start.plusSeconds(duration.toSeconds());
 
 			Enaction enaction = new Enaction(
 					new Enaction.OrderDetails(
 							type, victim, operator,
-							calculationResult.reason(), calculationResult.scope(),
+							calculationResult.reason(), scope,
 							start, end, escalationTrack
 					),
 					creator);
@@ -200,6 +202,7 @@ public class Enactor implements PunishmentDrafter {
 		return new SelectionResources(
 				futuresFactory,
 				() -> contextualExecutor,
+				scopeManager,
 				creator,
 				time
 		);

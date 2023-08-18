@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,6 +27,8 @@ import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.bukkit.BukkitAudienceRepresenter;
 import space.arim.api.env.bukkit.BukkitPlatformHandle;
 import space.arim.libertybans.core.env.EnvEnforcer;
+import space.arim.libertybans.core.env.EnvMessageChannel;
+import space.arim.libertybans.core.env.EnvServerNameDetection;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.importing.PlatformImportSource;
@@ -62,6 +64,10 @@ public class SpigotBindModule {
 		return resolver;
 	}
 
+	public EnvMessageChannel<?> messageChannel(SpigotMessageChannel messageChannel) {
+		return messageChannel;
+	}
+
 	@Singleton
 	public CommandMapHelper commandMapHelper(SimpleCommandMapHelper scmh) {
 		return new CachingCommandMapHelper(scmh);
@@ -75,6 +81,10 @@ public class SpigotBindModule {
 	@Singleton
 	public MorePaperLibAdventure morePaperLibAdventure(MorePaperLib morePaperLib) {
 		return new MorePaperLibAdventure(morePaperLib);
+	}
+
+	public EnvServerNameDetection serverNameDetection() {
+		return (scopeManager) -> {};
 	}
 
 	public PlatformImportSource platformImportSource(BukkitImportSource importSource) {

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,6 +28,7 @@ import space.arim.api.jsonchat.adventure.implementor.MessageOnlyAudience;
 import space.arim.omnibus.util.ThisClass;
 
 import java.net.InetAddress;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -39,6 +40,7 @@ public class QuackPlayer implements MessageOnlyAudience {
 	private final InetAddress address;
 	
 	private final Set<String> permissions;
+	private final Set<ReceivedPluginMessage<?>> receivedPluginMessages = new HashSet<>();
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
@@ -77,6 +79,10 @@ public class QuackPlayer implements MessageOnlyAudience {
 
 	public void readdToPlatform() {
 		platform.addPlayer(this);
+	}
+
+	public Set<ReceivedPluginMessage<?>> receivedPluginMessages() {
+		return receivedPluginMessages;
 	}
 
 	@Override

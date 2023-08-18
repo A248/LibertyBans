@@ -26,6 +26,7 @@ module space.arim.libertybans.core {
 	requires static java.compiler;
 	requires net.kyori.adventure;
 	requires net.kyori.examination.api;
+	requires net.kyori.adventure.text.serializer.legacy;
 	requires org.flywaydb.core;
 	requires static org.checkerframework.checker.qual;
 	requires static org.jetbrains.annotations;
@@ -53,6 +54,7 @@ module space.arim.libertybans.core {
 	exports space.arim.libertybans.core.database.execute to space.arim.injector;
 	exports space.arim.libertybans.core.database.flyway to org.flywaydb.core;
 	exports space.arim.libertybans.core.env;
+	exports space.arim.libertybans.core.env.message;
 	exports space.arim.libertybans.core.event to space.arim.injector, space.arim.libertybans.core.addon.shortcutreasons, space.arim.libertybans.core.addon.layouts;
 	exports space.arim.libertybans.core.importing;
 	exports space.arim.libertybans.core.punish;

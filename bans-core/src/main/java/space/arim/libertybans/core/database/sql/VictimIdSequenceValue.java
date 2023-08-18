@@ -29,14 +29,14 @@ import static space.arim.libertybans.core.schema.tables.Victims.VICTIMS;
 
 public final class VictimIdSequenceValue extends SequenceValue<Integer> {
 
-	public VictimIdSequenceValue() {
-		super(LIBERTYBANS_VICTIM_IDS);
+	public VictimIdSequenceValue(DSLContext context) {
+		super(context, LIBERTYBANS_VICTIM_IDS);
 	}
 
-	public Field<Integer> retrieveVictimIdField(DSLContext context, Victim victim) {
+	public Field<Integer> retrieveVictimId(Victim victim) {
 		VictimData victimData = FixedVictimData.from(new SerializedVictim(victim));
-		return retrieveOrGenerateMatchingRow(
-				context, VICTIMS, VICTIMS.ID,
+		return new RetrieveOrGenerate(
+				VICTIMS, VICTIMS.ID,
 				new VictimCondition(new VictimTableFields()).matchesVictim(victimData),
 				(newId) -> {
 					context
@@ -50,7 +50,7 @@ public final class VictimIdSequenceValue extends SequenceValue<Integer> {
 							)
 							.execute();
 				}
-		);
+		).execute();
 	}
 
 }

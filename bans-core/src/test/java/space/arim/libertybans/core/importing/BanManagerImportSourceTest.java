@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -34,7 +34,6 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.scope.ServerScope;
-import space.arim.libertybans.core.scope.ScopeImpl;
 import space.arim.libertybans.it.util.RandomUtil;
 import space.arim.omnibus.util.UUIDUtil;
 
@@ -63,7 +62,7 @@ public class BanManagerImportSourceTest {
 	private ImportSource importSource;
 
 	private final UUID consoleUuid = UUID.randomUUID();
-	private ServerScope globalScope = ScopeImpl.GLOBAL;
+	private ServerScope globalScope;
 
 	@BeforeEach
 	public void setup(DSLContext context, ConnectionSource connectionSource) throws SQLException {

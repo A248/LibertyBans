@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -31,7 +31,6 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.scope.ServerScope;
-import space.arim.libertybans.core.scope.ScopeImpl;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -57,14 +56,17 @@ public class LiteBansImportSourceTest {
 	private ImportSource importSource;
 	private DSLContext context;
 
-	private final ServerScope globalScope = ScopeImpl.GLOBAL;
-	private final ServerScope kitpvpScope = ScopeImpl.specificServer("kitpvp");
-	private final ServerScope lobbyScope = ScopeImpl.specificServer("lobby");
+	private ServerScope globalScope;
+	private ServerScope kitpvpScope;
+	private ServerScope lobbyScope;
 
 	@BeforeEach
 	public void setup(DSLContext context, ConnectionSource connectionSource) throws SQLException, IOException {
 		this.context = context;
 
+		globalScope = mock(ServerScope.class);
+		kitpvpScope = mock(ServerScope.class);
+		lobbyScope = mock(ServerScope.class);
 		ScopeManager scopeManager = mock(ScopeManager.class);
 		lenient().when(scopeManager.globalScope()).thenReturn(globalScope);
 		lenient().when(scopeManager.specificScope("kitpvp")).thenReturn(kitpvpScope);

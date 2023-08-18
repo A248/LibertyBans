@@ -23,6 +23,8 @@ import jakarta.inject.Singleton;
 import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.PlatformPluginInfo;
 import space.arim.libertybans.core.env.EnvEnforcer;
+import space.arim.libertybans.core.env.EnvMessageChannel;
+import space.arim.libertybans.core.env.EnvServerNameDetection;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.importing.PlatformImportSource;
@@ -79,6 +81,14 @@ public class StandaloneBindModule {
 
 	public EnvUserResolver resolver(StandaloneResolver resolver) {
 		return resolver;
+	}
+
+	public EnvMessageChannel<?> messageChannel(EnvMessageChannel.NoOp messageChannel) {
+		return messageChannel;
+	}
+
+	public EnvServerNameDetection serverNameDetection() {
+		return (scopeManager) -> scopeManager.detectServerName("standalone");
 	}
 
 	public PlatformImportSource platformImportSource() {

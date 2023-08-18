@@ -28,7 +28,7 @@ import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDetailsCalculator;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
-import space.arim.libertybans.core.scope.ScopeImpl;
+import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.IrrelevantData;
@@ -46,12 +46,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class EscalationIT {
 
 	private final PunishmentDrafter drafter;
+	private final ScopeManager scopeManager;
 	private final Victim victim;
 	private final EscalationTrack escalationTrack;
 
-	public EscalationIT(PunishmentDrafter drafter,
+	public EscalationIT(PunishmentDrafter drafter, ScopeManager scopeManager, 
 						@DontInject Victim victim, @DontInject @NonNullTrack EscalationTrack escalationTrack) {
 		this.drafter = drafter;
+		this.scopeManager = scopeManager;
 		this.victim = victim;
 		this.escalationTrack = escalationTrack;
 	}
@@ -101,7 +103,7 @@ public class EscalationIT {
 			}
 			PunishmentType type = PunishmentType.WARN;
 			return new PunishmentDetailsCalculator.CalculationResult(
-					type, "Now at " + (existingPunishments + 1), Duration.ZERO, ScopeImpl.GLOBAL
+					type, "Now at " + (existingPunishments + 1), Duration.ZERO, scopeManager.globalScope()
 			);
 		};
 		addPunishment(PunishmentType.WARN, operator1, "first warn");
@@ -129,7 +131,7 @@ public class EscalationIT {
 			}
 			PunishmentType type = PunishmentType.WARN;
 			return new PunishmentDetailsCalculator.CalculationResult(
-					type, "Now at " + (existingPunishments + 1), Duration.ZERO, ScopeImpl.GLOBAL
+					type, "Now at " + (existingPunishments + 1), Duration.ZERO, scopeManager.globalScope()
 			);
 		};
 		addPunishment(PunishmentType.WARN, operator1, "first warn");

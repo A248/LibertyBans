@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -33,7 +33,7 @@ import space.arim.libertybans.core.punish.SecurePunishmentCreator;
 import space.arim.libertybans.core.punish.StandardGlobalEnforcement;
 import space.arim.libertybans.core.punish.StandardLocalEnforcer;
 import space.arim.libertybans.core.scope.InternalScopeManager;
-import space.arim.libertybans.core.scope.Scoper;
+import space.arim.libertybans.core.scope.StandardScopeManager;
 import space.arim.libertybans.core.selector.InternalSelector;
 import space.arim.libertybans.core.selector.SelectorImpl;
 
@@ -55,7 +55,7 @@ public abstract class PillarOneBindModuleMinusConfigs {
 		return enforcement;
 	}
 
-	public LocalEnforcer enforcer(StandardLocalEnforcer enforcer) {
+	public LocalEnforcer enforcer(StandardLocalEnforcer<?> enforcer) {
 		return enforcer;
 	}
 
@@ -67,7 +67,7 @@ public abstract class PillarOneBindModuleMinusConfigs {
 		return selector;
 	}
 
-	public InternalScopeManager scopeManager(Scoper scopeManager) {
+	public InternalScopeManager scopeManager(StandardScopeManager scopeManager) {
 		return scopeManager;
 	}
 

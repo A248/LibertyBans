@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -31,13 +31,15 @@ public final class SpongeEnv implements Environment {
 
 	private final Provider<ConnectionListener> connectionListener;
 	private final Provider<ChatListener> chatListener;
+	private final Provider<ServerNameListener> serverNameListener;
 	private final PlatformAccess platformAccess;
 
 	@Inject
 	public SpongeEnv(Provider<ConnectionListener> connectionListener, Provider<ChatListener> chatListener,
-					 PlatformAccess platformAccess) {
+					 Provider<ServerNameListener> serverNameListener, PlatformAccess platformAccess) {
 		this.connectionListener = connectionListener;
 		this.chatListener = chatListener;
+		this.serverNameListener = serverNameListener;
 		this.platformAccess = platformAccess;
 	}
 
@@ -45,7 +47,8 @@ public final class SpongeEnv implements Environment {
 	public Set<PlatformListener> createListeners() {
 		return Set.of(
 				connectionListener.get(),
-				chatListener.get()
+				chatListener.get(),
+				serverNameListener.get()
 		);
 	}
 

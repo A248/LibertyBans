@@ -77,9 +77,9 @@ LibertyBans requires Java 17 whereas LiteBans permits Java 8.
 
 Neither LibertyBans nor LiteBans requires an external database. LibertyBans uses HSQLDB by default, and LiteBans uses H2 by default.
 
-Both LibertyBans and LiteBans supports MariaDB, MySQL, and PostgreSQL. LiteBans also has support for SQLite, but SQLite usage is discouraged by LiteBans.
+Both LibertyBans and LiteBans support MariaDB, MySQL, and PostgreSQL. LiteBans also has support for SQLite, but SQLite usage is discouraged by LiteBans.
 
-LibertyBans requires certain minimum versions for database servers. At least MySQL 8.0, MariaDB 10.6, or PostgreSQL 12 is required. Older versions are not supported.
+LibertyBans requires certain minimum versions for database servers. At least MySQL 8.0, MariaDB 10.3, or PostgreSQL 12 is required. Older versions are not supported.
 
 ## Platform Support
 
@@ -94,7 +94,9 @@ LiteBans' support for Velocity came after repeated user requests. It was suggest
 
 ### Geyser Support
 
-LibertyBans has Geyser support (since 30 May 2021), whereas LiteBans does not.
+LibertyBans and LiteBans have Geyser support.
+
+However, documentation suggests LiteBans requires the prefix to be the period character (".").<sup id="note4ret">[4](#note4)</sup>
 
 ### Core punishment types
 
@@ -116,7 +118,7 @@ Although both plugins support the exemption feature which prevents staff from ba
 
 For offline players, LiteBans's permission checking depends on Vault on single servers. Without a Vault-compatible permissions plugin, the feature breaks silently for offline players.
 
-LibertyBans' exemption feature will never break silently. However, this imposes greater requirements. LibertyBans requires the installation of a supported exemption provider - currently LuckPerms or Vault. Without an exemption provider, the feature is entirely unavailable.
+LibertyBans' exemption feature will never break silently. However, it requires the installation of a supported exemption provider - currently LuckPerms or Vault. Without an exemption provider, the feature is entirely unavailable.
 
 ### Importing From Other Plugins
 
@@ -126,9 +128,9 @@ LiteBans supports importing from AdvancedBan, BanManager, BungeeAdminTools, MaxB
 
 ### Server Scopes
 
-LiteBans enables punishments scoped to certain servers.
+Both plugins enable punishments scoped to certain servers.
 
-LibertyBans does not implement this feature.
+However, LiteBans lacks scope categories, or the ability to group servers into a single scope.<sup id="note5ret">[5](#note5)</sup>
 
 ### Multi-Proxy / Multi-Instance Synchronization
 
@@ -141,6 +143,10 @@ Both LibertyBans and LiteBans provide synchronization across multiple instances,
 <a id="note2">2</a>: Ruan. "LiteBans 2.5.4 - 2.5.9." SpigotMC Resource Update. https://www.spigotmc.org/resources/litebans.3715/update?update=341296 [↩](#note2ret)
 
 <a id="note3">3</a>: Ruan. "[Feature] Spongepowered?". LiteBans Gitlab Issue comment. https://gitlab.com/ruany/LiteBans/-/issues/41#note_324182783 [↩](#note3ret)
+
+<a id="note4">4</a>: Ruan. "LiteBans 2.7.5 (Connection error fix)". SpigotMC Resource Update. https://www.spigotmc.org/resources/litebans.3715/update?update=414133
+
+<a id="note5">5</a>: lewisakura. "Server scope groups". LiteBans Gitlab Issue. https://gitlab.com/ruany/LiteBans/-/issues/452
 
 ### Disclaimer
 

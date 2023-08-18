@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,27 +17,9 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.scope;
+package space.arim.libertybans.it.env.platform;
 
-import space.arim.dazzleconf.error.BadValueException;
-import space.arim.dazzleconf.serialiser.Decomposer;
-import space.arim.dazzleconf.serialiser.FlexibleType;
-import space.arim.dazzleconf.serialiser.ValueSerialiser;
-import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.env.message.PluginMessage;
 
-public final class ScopeSerializer implements ValueSerialiser<ServerScope> {
-	@Override
-	public Class<ServerScope> getTargetClass() {
-		return ServerScope.class;
-	}
-
-	@Override
-	public ServerScope deserialise(FlexibleType flexibleType) throws BadValueException {
-		return ScopeImpl.GLOBAL;
-	}
-
-	@Override
-	public Object serialise(ServerScope value, Decomposer decomposer) {
-		return "*";
-	}
+public record ReceivedPluginMessage<D>(PluginMessage<D, ?> pluginMessage, D data) {
 }

@@ -19,8 +19,8 @@
 
 package space.arim.libertybans.core.database.sql;
 
-import org.jooq.Record11;
-import org.jooq.Record13;
+import org.jooq.Record12;
+import org.jooq.Record14;
 import org.jooq.Record2;
 import org.jooq.Table;
 import space.arim.libertybans.api.NetworkAddress;
@@ -28,7 +28,6 @@ import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EscalationTrack;
-import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.schema.tables.ApplicableBans;
 import space.arim.libertybans.core.schema.tables.ApplicableMutes;
 import space.arim.libertybans.core.schema.tables.ApplicableWarns;
@@ -38,6 +37,7 @@ import space.arim.libertybans.core.schema.tables.SimpleBans;
 import space.arim.libertybans.core.schema.tables.SimpleMutes;
 import space.arim.libertybans.core.schema.tables.SimpleWarns;
 import space.arim.libertybans.core.schema.tables.Warns;
+import space.arim.libertybans.core.scope.ScopeType;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -64,9 +64,9 @@ public final class TableForType {
 		};
 	}
 
-	public SimpleViewFields<? extends Record11<
-				Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress,
-				Operator, String, ServerScope, Instant, Instant, EscalationTrack>> simpleView() {
+	public SimpleViewFields<? extends Record12<
+					Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress,
+					Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>> simpleView() {
 		var view = switch (type) {
 			case BAN -> SimpleBans.SIMPLE_BANS;
 			case MUTE -> SimpleMutes.SIMPLE_MUTES;
@@ -76,11 +76,11 @@ public final class TableForType {
 		return new SimpleViewFields<>(view);
 	}
 
-	public ApplicableViewFields<? extends Record13<
-				Long, PunishmentType,
-				Victim.VictimType, UUID, NetworkAddress,
-				Operator, String, ServerScope, Instant, Instant,
-				UUID, NetworkAddress, EscalationTrack>> applicableView() {
+	public ApplicableViewFields<? extends Record14<
+					Long, PunishmentType,
+					Victim.VictimType, UUID, NetworkAddress,
+					Operator, String, String, Instant, Instant,
+					UUID, NetworkAddress, EscalationTrack, ScopeType>> applicableView() {
 		var view = switch (type) {
 			case BAN -> ApplicableBans.APPLICABLE_BANS;
 			case MUTE -> ApplicableMutes.APPLICABLE_MUTES;

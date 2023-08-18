@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -31,18 +31,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(METHOD)
 public @interface SetServerType {
 
-	/**
-	 * Sets the server types
-	 *
-	 * @return the server types to test
-	 */
-	ServerType[] value() default {};
-
-	/**
-	 * Whether to use all server types. Overrides {@code value}
-	 *
-	 * @return true to use all server types
-	 */
-	boolean all() default false;
+	ServerType value();
 
 }

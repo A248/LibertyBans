@@ -24,6 +24,7 @@ import space.arim.dazzleconf.annote.ConfValidator;
 import space.arim.dazzleconf.annote.SubSection;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.config.ParsedDuration;
+import space.arim.libertybans.core.scope.ConfiguredScope;
 
 import java.util.Map;
 
@@ -45,8 +46,7 @@ public record Track(String id, Ladder ladder) {
 
 			ParsedDuration duration();
 
-			@ConfValidator(ForcedEmptyScopeValidator.class)
-			String scope();
+			ConfiguredScope scope();
 
 		}
 	}

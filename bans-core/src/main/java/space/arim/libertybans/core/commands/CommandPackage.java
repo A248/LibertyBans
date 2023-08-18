@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -18,6 +18,8 @@
  */
 
 package space.arim.libertybans.core.commands;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Iterator;
 
@@ -43,7 +45,7 @@ public interface CommandPackage extends Iterator<String> {
 	/**
 	 * The prefix denoting a hidden argument
 	 */
-	String HIDDEN_ARG_PREFIX = "-";
+	char HIDDEN_ARG_PREFIX = '-';
 
 	/**
 	 * Gets the current argument and advances to the next argument
@@ -78,6 +80,16 @@ public interface CommandPackage extends Iterator<String> {
 	 * @return whether the hidden argument is present in the arguments which have been encountered so far
 	 */
 	boolean findHiddenArgument(String argument);
+
+	/**
+	 * Finds a certain hidden argument such as "arg=value" and yields the associated value.
+	 * This is akin to using {@link #findHiddenArgument(String)} except the argument is a wildcard
+	 * wih respect to the specified value.
+	 *
+	 * @param argPrefix the first part of the hidden argument, i.e. "arg" in "arg=value"
+	 * @return the value if it exists
+	 */
+	@Nullable String findHiddenArgumentSpecifiedValue(String argPrefix);
 
 	/**
 	 * Concatenates the current argument and all remaining arguments. This would

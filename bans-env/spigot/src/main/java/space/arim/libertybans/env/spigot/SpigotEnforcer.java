@@ -22,42 +22,39 @@ package space.arim.libertybans.env.spigot;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import space.arim.api.env.AudienceRepresenter;
-import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.Interlocutor;
+import space.arim.libertybans.core.env.message.PluginMessage;
 import space.arim.morepaperlib.adventure.MorePaperLibAdventure;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.InetAddress;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Consumer;
 
 @Singleton
 public class SpigotEnforcer extends AbstractEnvEnforcer<Player> {
 
-	private final Configs configs;
 	private final Server server;
 	private final MorePaperLibAdventure morePaperLibAdventure;
+	private final SpigotMessageChannel messageChannel;
 
 	@Inject
 	public SpigotEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter,
 						  Interlocutor interlocutor, AudienceRepresenter<CommandSender> audienceRepresenter,
-						  Configs configs, Server server, MorePaperLibAdventure morePaperLibAdventure) {
+						  Server server, MorePaperLibAdventure morePaperLibAdventure,
+						  SpigotMessageChannel messageChannel) {
 		super(futuresFactory, formatter, interlocutor, audienceRepresenter);
-		this.configs = configs;
 		this.server = server;
 		this.morePaperLibAdventure = morePaperLibAdventure;
+		this.messageChannel = messageChannel;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -67,36 +64,22 @@ public class SpigotEnforcer extends AbstractEnvEnforcer<Player> {
 	}
 
 	@Override
-	protected CentralisedFuture<Void> doForAllPlayers(Consumer<Player> callback) {
+	public CentralisedFuture<Void> doForAllPlayers(Consumer<Collection<? extends Player>> callback) {
 		if (morePaperLibAdventure.getMorePaperLib().scheduling().isUsingFolia()) {
-			server.getOnlinePlayers().forEach(callback);
+			callback.accept(server.getOnlinePlayers());
 			return completedVoid();
 		}
-		return runSync(() -> server.getOnlinePlayers().forEach(callback));
+		return runSync(() -> callback.accept(server.getOnlinePlayers()));
 	}
 
 	@Override
 	public void kickPlayer(Player player, Component message) {
-		if (configs.getMainConfig().platforms().bukkit().kickViaPluginMessaging()) {
-			byte[] kickData;
-			try (ByteArrayOutputStream kickDataStream = new ByteArrayOutputStream();
-				 DataOutputStream write = new DataOutputStream(kickDataStream)) {
+		morePaperLibAdventure.kickPlayer(player, message);
+	}
 
-				write.writeUTF("KickPlayer");
-				write.writeUTF(player.getName());
-				write.writeUTF(LegacyComponentSerializer.legacySection().serialize(message));
-				kickData = kickDataStream.toByteArray();
-			} catch (IOException ex) {
-				throw new UncheckedIOException(ex);
-			}
-			player.sendPluginMessage(
-					morePaperLibAdventure.getMorePaperLib().getPlugin(),
-					ChannelRegistration.BUNGEE_CHANNEL,
-					kickData
-			);
-		} else {
-			morePaperLibAdventure.kickPlayer(player, message);
-		}
+	@Override
+	public <D> boolean sendPluginMessageIfListening(Player player, PluginMessage<D, ?> pluginMessage, D data) {
+		return messageChannel.sendPluginMessage(player, pluginMessage, data);
 	}
 
 	@Override
@@ -124,6 +107,11 @@ public class SpigotEnforcer extends AbstractEnvEnforcer<Player> {
 	@Override
 	public InetAddress getAddressFor(Player player) {
 		return player.getAddress().getAddress();
+	}
+
+	@Override
+	public String getNameFor(Player player) {
+		return player.getName();
 	}
 
 	@Override

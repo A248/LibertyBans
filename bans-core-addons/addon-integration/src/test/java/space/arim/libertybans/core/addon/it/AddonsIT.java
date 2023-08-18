@@ -43,6 +43,7 @@ import space.arim.libertybans.core.addon.AddonLoader;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.env.Environment;
+import space.arim.libertybans.core.env.InstanceType;
 import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.SimplifiedEnhancedExecutor;
@@ -87,6 +88,7 @@ public class AddonsIT {
 		this.injector = new InjectorBuilder()
 				.bindInstance(Server.class, server)
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(InstanceType.class, InstanceType.STANDALONE)
 				.bindInstance(PlatformHandle.class, handle)
 				.bindInstance(Environment.class, environment)
 				.bindInstance(EnvEnforcer.class, envEnforcer)

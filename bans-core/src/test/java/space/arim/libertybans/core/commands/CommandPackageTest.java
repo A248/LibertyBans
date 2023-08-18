@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,6 +26,7 @@ import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -172,6 +173,30 @@ public class CommandPackageTest {
 		assertFalse(cmd.findHiddenArgument("green"));
 
 		assertEquals("teaming", cmd.peek());
+		assertEquals("teaming -green in kitpvp", cmd.allRemaining());
+		assertFalse(cmd.hasNext());
+	}
+
+	@ParameterizedTest
+	@ArgumentsSource(CommandPackageImpl.Provider.class)
+	public void hiddenArgSpecifiedValue(CommandPackageImpl impl) {
+		CommandPackage cmd = impl.create("user1 -s -scope=hello 30d teaming -green in kitpvp");
+
+		assertFalse(cmd.findHiddenArgument("s"), "-s not yet visible");
+		assertNull(cmd.findHiddenArgumentSpecifiedValue("scope"), "scope not yet visible");
+		assertNull(cmd.findHiddenArgumentSpecifiedValue("track"));
+
+		assertTrue(cmd.hasNext());
+		assertEquals("user1", cmd.next());
+
+		assertTrue(cmd.hasNext());
+		assertEquals("30d", cmd.next());
+
+		assertTrue(cmd.findHiddenArgument("s"));
+		assertEquals("hello", cmd.findHiddenArgumentSpecifiedValue("scope"));
+		assertFalse(cmd.findHiddenArgument("green"));
+		assertNull(cmd.findHiddenArgumentSpecifiedValue("track"));
+
 		assertEquals("teaming -green in kitpvp", cmd.allRemaining());
 		assertFalse(cmd.hasNext());
 	}

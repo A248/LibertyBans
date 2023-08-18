@@ -50,37 +50,29 @@ A good reason to use BanManager would be if you absolutely needed to use Java 8,
 
 ## Why not LiteBans
 
-Little information is known about LiteBans. In fact, it may be illegal for us to disclose the results of our investigation into the workings of LiteBans.
+Most importantly, LiteBans is proprietary and closed-source. The developer team consists of a single individual, and the plugin jar is obfuscated. If LiteBans were ever to halt development, or the author to vanish, the whole plugin would have to be rewritten from scratch, because the source code could not be recovered.
 
-Because it is impossible for us to audit LiteBans, we cannot make any hard conclusions regarding the LiteBans codebase. It may be wholly *incorrect* or *unreliable*. We can't say.
+Due to LiteBans' proprietary nature, even simple updates and bug fixes must wait for the lone author. Contrast this to LibertyBans, which has two official maintainers, A248 and Simon. If one of them is absent, LibertyBans can still receive critical bug fixes such as updates to newer Minecraft versions, which has happened before.
 
-We will focus on the major *known* reason not to use LiteBans. There may be other reasons than this.
+As a further consequence, it is impossible for us to fully audit LiteBans. We cannot make any hard conclusions regarding the LiteBans codebase. It may be wholly *incorrect* or *unreliable*. We can't say. LiteBans might break down in specific situations, or fail silently in some cases. Or it might run fine all the time. LiteBans might have security vulnerabilities from using H2, a database which has [a history of vulnerabilities](https://www.cvedetails.com/vulnerability-list.php?vendor_id=17893&product_id=45580). We'll never know.
 
-### The Future is Uncertain
+There are other reasons not to use LiteBans. Evidence suggests LiteBans does not employ automated testing much, increasing the prevalence of bugs in releases. Moreover, its database schema does not utilize integrity constraints, which can lead to data corruption. Yet because accessing the database is recommended over API use, LiteBans has to keep backwards compatibility with its backwards database, hindering development.
 
-The most compelling reason not to use LiteBans regards its future. LiteBans' future is arguably in peril. By relying on LiteBans, you place your server at risk.
+Features that languish on the LiteBans issue tracker will stay incomplete until the author decides to add them. No one else can contribute them or prioritize them. Even if a feature is heavily demanded, only the LiteBans author decides. As of 18 August 2023, the following LiteBans feature requests are fully implemented by LibertyBans:
+* [Define scopes in punishment templates](https://gitlab.com/ruany/LiteBans/-/issues/502)
+* [Extend punishment duration](https://gitlab.com/ruany/LiteBans/-/issues/494)
+* [Purge a punishment completely](https://gitlab.com/ruany/LiteBans/-/issues/494) (same link)
+* [Server scope groups](https://gitlab.com/ruany/LiteBans/-/issues/452)
+* [Default reason for kicking](https://gitlab.com/ruany/LiteBans/-/issues/406)
+* [Tab complete offline player names](https://gitlab.com/ruany/LiteBans/-/issues/349)
+* [Add /ipkick command](https://gitlab.com/ruany/LiteBans/-/issues/301)
+* [Confirmation for /staffrollback](https://gitlab.com/ruany/LiteBans/-/issues/185)
+* [Notification permissions per punishment type](https://gitlab.com/ruany/LiteBans/-/issues/130)
+* [Support Sponge platform](https://gitlab.com/ruany/LiteBans/-/issues/41)
+* [Import vanilla IP bans](https://gitlab.com/ruany/LiteBans/-/issues/22)
 
-The development of LiteBans depends on a single person. This has several implications, which bear on both the present and future:
+For developers, the LiteBans API is poorly defined and commonly cited as a pain to work with. This makes it harder to integrate other plugins with LiteBans, unless the developer resorts to brittle command execution, forfeiting API guarantees. Not to mention that the inability to look at method implementations shackles debugging attempts. The API does not fully follow semantic versioning, either.
 
-* If, for any reason, the author loses interest, has a better job, or is otherwise busy with other matters, development of LiteBans will stop.
-  * Unlike other proprietary plugins, LiteBans is a 1-person team. Other popular proprietary plugins are often composed of a team, so that if one developer leaves, development as a whole may continue.
-  * If the development of LiteBans stops, that is the end of LiteBans. No on else has a copy of the source code. No amount of money would bring LiteBans back if the author decided to abandon it permanently.
+Ultimately, little information is known about LiteBans. In fact, it may even be illegal for us to disclose the results of our investigation into the workings of LiteBans.
 
-* Only the author can debug the plugin.
-  * Even if you never plan to debug any of your plugins, other users will. As a user, you benefit from *other users* who *do* debug a plugin you both use.
-  * On a large network, it is imperative that you retain the ability to debug your own plugins not only *in isolation*, but also *in relation to one another*. Complex bugs can arise through interactions between plugins.
-    * See also [The Bug Nobody is Allowed to Understand](https://www.gnu.org/philosophy/bug-nobody-allowed-to-understand.en.html)
-    * Complex bugs arising from multiple plugins need not be LiteBans' fault, but they can still exist because of the presence of LiteBans. Sometimes, a bug is dependent on the most extraneous circumstances. Retaining the ability to debug your own proxy, with all its various intricacies, is essential.
-    * The LiteBans author will not personally debug your entire proxy.
-
-* Only the author can make a new release. LiteBans follows a fixed release model.
-  * Suppose a bug is fixed. The LiteBans author tells you to wait for the next release. You *must* wait until the next release; there is no alternative.
-  * If a critical security vulnerability is discovered, you will need to shut down your server until a new LiteBans release is made.
-    * It is naïve to think that the LiteBans author will *always* respond in a timely manner to the latest security vulnerabilities. Sometimes, you need to patch your own software. Even if you aren't a developer, you can apply someone else's patch. With LiteBans, this is impossible.
-    * Think security vulnerabilities don't happen to plugins? Think again. The H2 database, bundled by LiteBans, has [multiple security notices (CVEs)](https://www.cvedetails.com/vulnerability-list.php?vendor_id=17893&product_id=45580). It is possible to be vulnerable to problems in H2 even if you do not use H2 with LiteBans.
-    * More importantly, the modern software chain depends on code from dozens of libraries. Through no fault of a plugin, a plugin can rely on a library which has a security exploit. This can, in extreme situations, lead to a system takeover.
-
-* Have a feature request, but the author of LiteBans doesn't want to implement it? You will *never* see the request implemented.
-  * No one can fork LiteBans and add the feature.
-  * Even if you try to hire another developer, the other developer will not be able to modify LiteBans.
-  * Because only LiteBans can implement feature requests, and no one can fork it, competition is reduced. Intentionally limiting competition is an indicator of a bad product.
+Imagine one day that you find a very complex bug and track it down to LiteBans. Complex bugs arising from multiple plugins need not even be LiteBans' fault, but they can still exist because of the presence of LiteBans. Sometimes, a bug is dependent on the most extraneous circumstances. However, with LiteBans, we'd have a case of [The Bug Nobody is Allowed to Understand](https://www.gnu.org/philosophy/bug-nobody-allowed-to-understand.en.html).

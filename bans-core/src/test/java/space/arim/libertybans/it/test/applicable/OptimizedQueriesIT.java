@@ -92,9 +92,8 @@ public class OptimizedQueriesIT {
 			case LENIENT -> context
 					.select(
 							simpleView.victimType(), simpleView.victimUuid(), simpleView.victimAddress(),
-							simpleView.operator(), simpleView.reason(),
-							simpleView.scope(), simpleView.start(), simpleView.end(), simpleView.track(),
-							simpleView.id()
+							simpleView.operator(), simpleView.reason(), simpleView.scopeType(), simpleView.scope(),
+							simpleView.start(), simpleView.end(), simpleView.track(), simpleView.id()
 					)
 					.from(simpleView.table())
 					.where(new EndTimeCondition(simpleView).isNotExpired(Instant.EPOCH))
@@ -104,9 +103,8 @@ public class OptimizedQueriesIT {
 			case NORMAL -> context
 					.select(
 							applView.victimType(), applView.victimUuid(), applView.victimAddress(),
-							applView.operator(), applView.reason(),
-							applView.scope(), applView.start(), applView.end(), applView.track(),
-							applView.id()
+							applView.operator(), applView.reason(), applView.scopeType(), applView.scope(),
+							applView.start(), applView.end(), applView.track(), applView.id()
 					).from(applView.table())
 					.where(new EndTimeCondition(applView).isNotExpired(Instant.EPOCH))
 					.and(applView.uuid().eq(uuid))
@@ -115,9 +113,8 @@ public class OptimizedQueriesIT {
 			case STERN, STRICT -> context
 					.select(
 							applView.victimType(), applView.victimUuid(), applView.victimAddress(),
-							applView.operator(), applView.reason(),
-							applView.scope(), applView.start(), applView.end(), applView.track(),
-							applView.id()
+							applView.operator(), applView.reason(), applView.scopeType(), applView.scope(),
+							applView.start(), applView.end(), applView.track(), applView.id()
 					).from(applView.table())
 					.innerJoin(STRICT_LINKS)
 					.on(applView.uuid().eq(STRICT_LINKS.UUID1))

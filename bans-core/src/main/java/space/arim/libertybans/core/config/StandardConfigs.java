@@ -1,19 +1,19 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2023 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 package space.arim.libertybans.core.config;
@@ -47,6 +47,7 @@ public class StandardConfigs implements Configs {
 	private final ConfigHolder<MessagesConfig> messagesHolder = new ConfigHolder<>(MessagesConfig.class);
 	private final ConfigHolder<SqlConfig> sqlHolder = new ConfigHolder<>(SqlConfig.class);
 	private final ConfigHolder<ImportConfig> importHolder = new ConfigHolder<>(ImportConfig.class);
+	private final ConfigHolder<ScopeConfig> scopeHolder = new ConfigHolder<>(ScopeConfig.class);
 	
 	@Inject
 	public StandardConfigs(@Named("folder") Path folder) {
@@ -72,7 +73,12 @@ public class StandardConfigs implements Configs {
 	public ImportConfig getImportConfig() {
 		return importHolder.getConfigData();
 	}
-	
+
+	@Override
+	public ScopeConfig getScopeConfig() {
+		return scopeHolder.getConfigData();
+	}
+
 	@Override
 	public CompletableFuture<Boolean> reloadConfigs() {
 		Path langFolder = folder.resolve("lang");
@@ -90,6 +96,8 @@ public class StandardConfigs implements Configs {
 		CompletableFuture<ConfigResult> reloadSql = sqlHolder.reload(folder.resolve("sql.yml"));
 		// Reload import config
 		CompletableFuture<ConfigResult> reloadImport = importHolder.reload(folder.resolve("import.yml"));
+		// Reload scope config
+		CompletableFuture<ConfigResult> reloadScope = scopeHolder.reload(folder.resolve("scope.yml"));
 
 		// Reload messages config from specified language file
 		CompletableFuture<ConfigResult> reloadMessages = CompletableFuture.allOf(futureLangFiles, reloadMain)
@@ -100,9 +108,9 @@ public class StandardConfigs implements Configs {
 					String langFileOption = mainHolder.getConfigData().langFile();
 					return messagesHolder.reload(langFolder.resolve("messages_" + langFileOption + ".yml"));
 				});
-		return CompletableFuture.allOf(reloadMessages, reloadSql, reloadImport).thenApply((ignore) -> {
+		return CompletableFuture.allOf(reloadMessages, reloadSql, reloadImport, reloadScope).thenApply((ignore) -> {
 			ConfigResult combinedResult = ConfigResult.combinePessimistically(
-					reloadMain.join(), reloadMessages.join(), reloadSql.join(), reloadImport.join()
+					reloadMain.join(), reloadMessages.join(), reloadSql.join(), reloadImport.join(), reloadScope.join()
 			);
 			return combinedResult != ConfigResult.IO_ERROR;
 		});

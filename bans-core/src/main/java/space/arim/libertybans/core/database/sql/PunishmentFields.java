@@ -26,12 +26,12 @@ import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EscalationTrack;
-import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.scope.ScopeType;
 
 import java.time.Instant;
 import java.util.UUID;
 
-public interface PunishmentFields extends VictimFields {
+public interface PunishmentFields extends VictimFields, ScopeFields {
 
 	Field<Long> id();
 
@@ -40,8 +40,6 @@ public interface PunishmentFields extends VictimFields {
 	Field<Operator> operator();
 
 	Field<String> reason();
-
-	Field<ServerScope> scope();
 
 	Field<Instant> start();
 
@@ -52,14 +50,14 @@ public interface PunishmentFields extends VictimFields {
 	default PunishmentFields withNewTable(Table<?> newTable) {
 		record ModifiedTable(Field<Long> id, Field<PunishmentType> type, Field<Victim.VictimType> victimType,
 							 Field<UUID> victimUuid, Field<NetworkAddress> victimAddress,
-							 Field<Operator> operator, Field<String> reason, Field<ServerScope> scope,
-							 Field<Instant> start, Field<Instant> end, Field<EscalationTrack> track,
+							 Field<Operator> operator, Field<String> reason, Field<String> scope,
+							 Field<Instant> start, Field<Instant> end, Field<EscalationTrack> track, Field<ScopeType> scopeType,
 							 Table<?> table)
 				implements PunishmentFields { }
 		return new ModifiedTable(
 				id(), type(), victimType(), victimUuid(), victimAddress(),
-				operator(), reason(), scope(), start(), end(), track(), newTable
+				operator(), reason(), scope(), start(), end(), track(), scopeType(), newTable
 		);
-	};
+	}
 
 }

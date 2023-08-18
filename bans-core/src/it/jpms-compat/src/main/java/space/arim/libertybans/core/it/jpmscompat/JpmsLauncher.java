@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,8 +28,10 @@ import space.arim.libertybans.core.ApiBindModule;
 import space.arim.libertybans.core.PillarOneBindModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
 import space.arim.libertybans.core.env.EnvEnforcer;
+import space.arim.libertybans.core.env.EnvServerNameDetection;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.env.Environment;
+import space.arim.libertybans.core.env.InstanceType;
 import space.arim.omnibus.DefaultOmnibus;
 import space.arim.omnibus.Omnibus;
 
@@ -56,11 +58,13 @@ public class JpmsLauncher implements PlatformLauncher {
 	public BaseFoundation launch() {
 		return new InjectorBuilder()
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(InstanceType.class, InstanceType.STANDALONE)
 				.bindInstance(Omnibus.class, new DefaultOmnibus())
 				.bindInstance(PlatformHandle.class, handle)
 				.bindInstance(Environment.class, environment)
 				.bindInstance(EnvEnforcer.class, envEnforcer)
 				.bindInstance(EnvUserResolver.class, envUserResolver)
+				.bindInstance(EnvServerNameDetection.class, (scopeManager) -> {})
 				.addBindModules(
 						new ApiBindModule(),
 						new PillarOneBindModule(),

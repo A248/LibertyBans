@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -35,6 +35,7 @@ import space.arim.injector.InjectorBuilder;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
 import space.arim.libertybans.core.addon.AddonLoader;
+import space.arim.libertybans.core.env.InstanceType;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
@@ -60,6 +61,7 @@ public final class BungeeLauncher implements PlatformLauncher {
 				.bindInstance(Plugin.class, plugin)
 				.bindInstance(ProxyServer.class, plugin.getProxy())
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(InstanceType.class, InstanceType.PROXY)
 				.bindInstance(Omnibus.class, omnibus)
 				.addBindModules(
 						new ApiBindModule(),

@@ -21,30 +21,26 @@ package space.arim.libertybans.core.database.sql;
 
 import org.jooq.Field;
 import org.jooq.Record;
-import org.jooq.Record11;
+import org.jooq.Record12;
 import org.jooq.Table;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EscalationTrack;
-import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.scope.ScopeType;
 
 import java.time.Instant;
 import java.util.UUID;
 
-public final class SimpleViewFields<R extends Record11<
+public record SimpleViewFields<R extends Record12<
 		Long, PunishmentType,
 		Victim.VictimType, UUID, NetworkAddress,
-		Operator, String, ServerScope, Instant, Instant, EscalationTrack
-		>> implements PunishmentFields {
-
-	private final Table<R> simpleView;
-	private final R fieldSupplier;
+		Operator, String, String, Instant, Instant, EscalationTrack, ScopeType
+		>>(Table<R> simpleView, R fieldSupplier) implements PunishmentFields {
 
 	public SimpleViewFields(Table<R> simpleView) {
-		this.simpleView = simpleView;
-		this.fieldSupplier = simpleView.newRecord();
+		this(simpleView, simpleView.newRecord());
 	}
 
 	@Override
@@ -88,7 +84,7 @@ public final class SimpleViewFields<R extends Record11<
 	}
 
 	@Override
-	public Field<ServerScope> scope() {
+	public Field<String> scope() {
 		return fieldSupplier.field8();
 	}
 
@@ -108,9 +104,8 @@ public final class SimpleViewFields<R extends Record11<
 	}
 
 	@Override
-	public String toString() {
-		return "SimpleViewFields{" +
-				"simpleView=" + simpleView +
-				'}';
+	public Field<ScopeType> scopeType() {
+		return fieldSupplier.field12();
 	}
+
 }

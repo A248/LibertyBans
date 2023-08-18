@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -30,10 +30,12 @@ import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.Interlocutor;
+import space.arim.libertybans.core.env.message.PluginMessage;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.net.InetAddress;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -41,12 +43,14 @@ import java.util.function.Consumer;
 public final class SpongeEnforcer extends AbstractEnvEnforcer<ServerPlayer> {
 
 	private final Game game;
+	private final SpongeMessageChannel messageChannel;
 
 	@Inject
 	public SpongeEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter,
-						  Interlocutor interlocutor, Game game) {
+						  Interlocutor interlocutor, Game game, SpongeMessageChannel messageChannel) {
 		super(futuresFactory, formatter, interlocutor, AudienceRepresenter.identity());
 		this.game = game;
+		this.messageChannel = messageChannel;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -56,8 +60,8 @@ public final class SpongeEnforcer extends AbstractEnvEnforcer<ServerPlayer> {
 	}
 
 	@Override
-	protected CentralisedFuture<Void> doForAllPlayers(Consumer<ServerPlayer> callback) {
-		return runSync(() -> game.server().onlinePlayers().forEach(callback));
+	public CentralisedFuture<Void> doForAllPlayers(Consumer<Collection<? extends ServerPlayer>> callback) {
+		return runSync(() -> callback.accept(game.server().onlinePlayers()));
 	}
 
 	@Override
@@ -71,6 +75,11 @@ public final class SpongeEnforcer extends AbstractEnvEnforcer<ServerPlayer> {
 	}
 
 	@Override
+	public <D> boolean sendPluginMessageIfListening(ServerPlayer player, PluginMessage<D, ?> pluginMessage, D data) {
+		return messageChannel.sendPluginMessage(player, pluginMessage, data);
+	}
+
+	@Override
 	public UUID getUniqueIdFor(ServerPlayer player) {
 		return player.uniqueId();
 	}
@@ -78,6 +87,11 @@ public final class SpongeEnforcer extends AbstractEnvEnforcer<ServerPlayer> {
 	@Override
 	public InetAddress getAddressFor(ServerPlayer player) {
 		return player.connection().address().getAddress();
+	}
+
+	@Override
+	public String getNameFor(ServerPlayer player) {
+		return player.name();
 	}
 
 	@Override

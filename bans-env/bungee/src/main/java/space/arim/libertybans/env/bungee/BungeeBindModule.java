@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,6 +28,8 @@ import space.arim.api.env.bungee.BungeeAudienceRepresenter;
 import space.arim.api.env.bungee.BungeePlatformHandle;
 import space.arim.api.env.PlatformHandle;
 import space.arim.libertybans.core.env.EnvEnforcer;
+import space.arim.libertybans.core.env.EnvMessageChannel;
+import space.arim.libertybans.core.env.EnvServerNameDetection;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.importing.PlatformImportSource;
@@ -61,8 +63,16 @@ public class BungeeBindModule {
 		return resolver;
 	}
 
+	public EnvMessageChannel<?> messageChannel(BungeeMessageChannel messageChannel) {
+		return messageChannel;
+	}
+
 	public AddressReporter reporter(StandardAddressReporter reporter) {
 		return reporter;
+	}
+
+	public EnvServerNameDetection serverNameDetection() {
+		return (scopeManager) -> scopeManager.detectServerName("proxy");
 	}
 
 	public PlatformImportSource platformImportSource() {

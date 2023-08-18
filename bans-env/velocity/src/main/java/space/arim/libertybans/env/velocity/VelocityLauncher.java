@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -31,6 +31,7 @@ import space.arim.libertybans.core.CommandsModule;
 import space.arim.libertybans.core.PillarOneBindModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
 import space.arim.libertybans.core.addon.AddonLoader;
+import space.arim.libertybans.core.env.InstanceType;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
@@ -60,6 +61,7 @@ public final class VelocityLauncher implements PlatformLauncher {
 				.bindInstance(PluginContainer.class, plugin)
 				.bindInstance(ProxyServer.class, server)
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(InstanceType.class, InstanceType.PROXY)
 				.bindInstance(Omnibus.class, omnibus)
 				.addBindModules(
 						new ApiBindModule(),

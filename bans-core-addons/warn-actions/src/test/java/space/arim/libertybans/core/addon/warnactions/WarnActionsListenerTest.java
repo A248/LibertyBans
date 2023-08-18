@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -35,6 +35,7 @@ import space.arim.libertybans.api.punish.DraftPunishmentBuilder;
 import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.api.select.SelectionOrder;
@@ -43,6 +44,7 @@ import space.arim.libertybans.core.addon.AddonCenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.ParsedDuration;
 import space.arim.libertybans.core.env.EnvEnforcer;
+import space.arim.libertybans.core.scope.ConfiguredScope;
 import space.arim.omnibus.DefaultOmnibus;
 import space.arim.omnibus.events.EventFireController;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -92,10 +94,10 @@ public class WarnActionsListenerTest {
 	}
 
 	@BeforeEach
-	public void setWarnActionsListener() {
+	public void setWarnActionsListener(@Mock ScopeManager scopeManager) {
 		WarnActionsAddon addon = new WarnActionsAddon(addonCenter, new DefaultOmnibus(), () -> warnActionsListener);
 		warnActionsListener = new WarnActionsListener(
-				futuresFactory, drafter, selector, formatter, envEnforcer, addon
+				futuresFactory, drafter, scopeManager, selector, formatter, envEnforcer, addon
 		);
 	}
 
@@ -172,7 +174,7 @@ public class WarnActionsListenerTest {
 		when(draftBuilder.reason("no reason at all")).thenReturn(draftBuilder);
 		when(autoPunishment.duration()).thenReturn(new ParsedDuration("3h", Duration.ofHours(3L)));
 		when(draftBuilder.duration(Duration.ofHours(3L))).thenReturn(draftBuilder);
-		when(autoPunishment.scope()).thenReturn(autoPunishmentScope);
+		when(autoPunishment.scope()).thenReturn(ConfiguredScope.create(autoPunishmentScope));
 		when(draftBuilder.scope(autoPunishmentScope)).thenReturn(draftBuilder);
 		when(draftBuilder.build()).thenReturn(draftPunishment);
 		when(draftPunishment.enforcementOptionsBuilder()).thenReturn(enforcementOptionsBuilder);

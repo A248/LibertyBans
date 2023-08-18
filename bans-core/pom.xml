@@ -1,3 +1,22 @@
+<!--
+  ~ LibertyBans
+  ~ Copyright © 2023 Anand Beh
+  ~
+  ~ LibertyBans is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
+  ~
+  ~ LibertyBans is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
+  ~ and navigate to version 3 of the GNU Affero General Public License.
+  -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -101,6 +120,9 @@
 						<inettype>VARBINARY(16)</inettype>
 						<arbitrarybinarytype>BLOB</arbitrarybinarytype>
 						<alterviewstatement>ALTER VIEW</alterviewstatement>
+						<zerosmallintliteral>CAST(0 AS SMALLINT)</zerosmallintliteral>
+						<migratescopestart>CAST(</migratescopestart>
+						<migratescopeend> AS CHARACTER VARYING(32))</migratescopeend>
 					</placeholders>
 					<locations>
 						<location>filesystem:src/main/resources/database-migrations</location>
@@ -189,16 +211,16 @@
 									<includeTypes>^UUID$</includeTypes>
 								</forcedType>
 								<forcedType>
-									<userType>space.arim.libertybans.api.scope.ServerScope</userType>
-									<converter>space.arim.libertybans.core.database.jooq.ServerScopeConverter</converter>
-									<includeExpression>.*\.scope$</includeExpression>
-									<includeTypes>^CHARACTER\ VARYING\(32\)$</includeTypes>
-								</forcedType>
-								<forcedType>
 									<userType>space.arim.libertybans.api.punish.EscalationTrack</userType>
 									<converter>space.arim.libertybans.core.database.jooq.EscalationTrackConverter</converter>
 									<includeExpression>.*\.track$</includeExpression>
 									<includeTypes>^CHARACTER\ VARYING\(129\)$</includeTypes>
+								</forcedType>
+								<forcedType>
+									<userType>space.arim.libertybans.core.scope.ScopeType</userType>
+									<converter>space.arim.libertybans.core.database.jooq.ScopeTypeConverter</converter>
+									<includeExpression>^(scopes\.type|punishments\.scope_type|simple_.*\.scope_type|applicable_.*\.scope_type)$</includeExpression>
+									<includeTypes>^SMALLINT$</includeTypes>
 								</forcedType>
 							</forcedTypes>
 						</database>
@@ -708,11 +730,6 @@
 		</dependency>
 		<dependency>
 			<groupId>net.kyori</groupId>
-			<artifactId>adventure-text-serializer-legacy</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>net.kyori</groupId>
 			<artifactId>adventure-text-serializer-plain</artifactId>
 			<scope>test</scope>
 		</dependency>
@@ -781,6 +798,10 @@
 		<dependency>
 			<groupId>space.arim.api</groupId>
 			<artifactId>arimapi-util-testing</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.kyori</groupId>
+			<artifactId>adventure-text-serializer-legacy</artifactId>
 		</dependency>
 		<!-- JDBC drivers -->
 		<dependency>

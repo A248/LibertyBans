@@ -88,7 +88,7 @@
 
 		<!-- Database revision table -->
 		<dbrevision.major>3</dbrevision.major>
-		<dbrevision.minor>4</dbrevision.minor>
+		<dbrevision.minor>5</dbrevision.minor>
 
 		<!-- Skip javadocs and sources by default -->
 		<common-parent.skip-javadoc>true</common-parent.skip-javadoc>

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,7 +32,7 @@ import static org.jooq.impl.DSL.noCondition;
 import static space.arim.libertybans.api.CompositeVictim.WILDCARD_ADDRESS;
 import static space.arim.libertybans.api.CompositeVictim.WILDCARD_UUID;
 
-public final class VictimCondition {
+public final class VictimCondition implements MultiFieldCriterion<Victim> {
 
 	private final VictimFields fields;
 
@@ -79,7 +79,8 @@ public final class VictimCondition {
 		return fields.victimType().eq(inline(victim.type())).and(matchesData);
 	}
 
-	public Condition matchesVictim(Victim victim) {
+	@Override
+	public Condition matchesValue(Victim victim) {
 		return matchesVictim(new SerializedVictim(victim));
 	}
 

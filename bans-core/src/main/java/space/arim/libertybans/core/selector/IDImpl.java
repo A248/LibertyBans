@@ -60,8 +60,8 @@ public class IDImpl {
 					.select(
 							SIMPLE_ACTIVE.TYPE,
 							SIMPLE_ACTIVE.VICTIM_TYPE, SIMPLE_ACTIVE.VICTIM_UUID, SIMPLE_ACTIVE.VICTIM_ADDRESS,
-							SIMPLE_ACTIVE.OPERATOR, SIMPLE_ACTIVE.REASON,
-							SIMPLE_ACTIVE.SCOPE, SIMPLE_ACTIVE.START, SIMPLE_ACTIVE.END, SIMPLE_ACTIVE.TRACK
+							SIMPLE_ACTIVE.OPERATOR, SIMPLE_ACTIVE.REASON, SIMPLE_ACTIVE.SCOPE,
+							SIMPLE_ACTIVE.START, SIMPLE_ACTIVE.END, SIMPLE_ACTIVE.TRACK, SIMPLE_ACTIVE.SCOPE_TYPE
 					)
 					.from(SIMPLE_ACTIVE)
 					.where(SIMPLE_ACTIVE.ID.eq(id))
@@ -81,8 +81,8 @@ public class IDImpl {
 			return context
 					.select(
 							simpleView.victimType(), simpleView.victimUuid(), simpleView.victimAddress(),
-							simpleView.operator(), simpleView.reason(),
-							simpleView.scope(), simpleView.start(), simpleView.end(), simpleView.track()
+							simpleView.operator(), simpleView.reason(), simpleView.scope(),
+							simpleView.start(), simpleView.end(), simpleView.track(), simpleView.scopeType()
 					)
 					.from(simpleView.table())
 					.where(simpleView.id().eq(id))
@@ -98,8 +98,8 @@ public class IDImpl {
 					.select(
 							SIMPLE_HISTORY.TYPE,
 							SIMPLE_HISTORY.VICTIM_TYPE, SIMPLE_HISTORY.VICTIM_UUID, SIMPLE_HISTORY.VICTIM_ADDRESS,
-							SIMPLE_HISTORY.OPERATOR, SIMPLE_HISTORY.REASON,
-							SIMPLE_HISTORY.SCOPE, SIMPLE_HISTORY.START, SIMPLE_HISTORY.END, SIMPLE_HISTORY.TRACK
+							SIMPLE_HISTORY.OPERATOR, SIMPLE_HISTORY.REASON, SIMPLE_HISTORY.SCOPE,
+							SIMPLE_HISTORY.START, SIMPLE_HISTORY.END, SIMPLE_HISTORY.TRACK, SIMPLE_HISTORY.SCOPE_TYPE
 					)
 					.from(SIMPLE_HISTORY)
 					.where(SIMPLE_HISTORY.ID.eq(id))
@@ -113,8 +113,8 @@ public class IDImpl {
 			return context
 					.select(
 							SIMPLE_HISTORY.VICTIM_TYPE, SIMPLE_HISTORY.VICTIM_UUID, SIMPLE_HISTORY.VICTIM_ADDRESS,
-							SIMPLE_HISTORY.OPERATOR, SIMPLE_HISTORY.REASON,
-							SIMPLE_HISTORY.SCOPE, SIMPLE_HISTORY.START, SIMPLE_HISTORY.END, SIMPLE_HISTORY.TRACK
+							SIMPLE_HISTORY.OPERATOR, SIMPLE_HISTORY.REASON, SIMPLE_HISTORY.SCOPE,
+							SIMPLE_HISTORY.START, SIMPLE_HISTORY.END, SIMPLE_HISTORY.TRACK, SIMPLE_HISTORY.SCOPE_TYPE
 					)
 					.from(SIMPLE_HISTORY)
 					.where(SIMPLE_HISTORY.ID.eq(id))

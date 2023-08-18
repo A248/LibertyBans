@@ -30,30 +30,26 @@ import static space.arim.libertybans.core.schema.tables.Tracks.TRACKS;
 
 public final class TrackIdSequenceValue extends SequenceValue<Integer> {
 
-	public TrackIdSequenceValue() {
-		super(LIBERTYBANS_TRACK_IDS);
+	public TrackIdSequenceValue(DSLContext context) {
+		super(context, LIBERTYBANS_TRACK_IDS);
 	}
 
-	public Field<Integer> retrieveTrackIdField(DSLContext context, EscalationTrack escalationTrack) {
+	public Field<Integer> retrieveTrackId(EscalationTrack escalationTrack) {
 		if (escalationTrack == null) {
 			return castNull(Integer.class);
 		}
-		return retrieveOrGenerateMatchingRow(
-				context, TRACKS, TRACKS.ID,
+		return new RetrieveOrGenerate(
+				TRACKS, TRACKS.ID,
 				TRACKS.NAMESPACE.eq(escalationTrack.getNamespace())
 						.and(TRACKS.VALUE.eq(escalationTrack.getValue())),
 				(newId) -> {
 					context
 							.insertInto(TRACKS)
 							.columns(TRACKS.ID, TRACKS.NAMESPACE, TRACKS.VALUE)
-							.values(
-									newId,
-									val(escalationTrack.getNamespace()),
-									val(escalationTrack.getValue())
-							)
+							.values(newId, val(escalationTrack.getNamespace()), val(escalationTrack.getValue()))
 							.execute();
 				}
-		);
+		).execute();
 	}
 
 }

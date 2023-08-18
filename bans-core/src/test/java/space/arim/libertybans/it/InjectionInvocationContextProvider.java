@@ -47,37 +47,28 @@ public class InjectionInvocationContextProvider implements TestTemplateInvocatio
 		boolean irrelevantData = context.getRequiredTestMethod().isAnnotationPresent(IrrelevantData.class);
 
 		ResourceCreator creator = new ResourceCreator(context.getRoot().getStore(NAMESPACE));
-		return new ConfigSpecPossiblities(context.getElement().orElse(null))
+		return new ConfigSpecPossiblities(context.getElement().orElseThrow())
 				.getAll()
 				.flatMap((throwaway) ? creator::createIsolated : creator::create)
 				.map((injector) -> new InjectorInvocationContext(injector, throwaway, irrelevantData));
 	}
 
-	private static class InjectorInvocationContext implements TestTemplateInvocationContext {
-
-		private final Injector injector;
-		private final boolean throwaway;
-		private final boolean irrelevantData;
-
-		InjectorInvocationContext(Injector injector, boolean throwaway, boolean irrelevantData) {
-			this.injector = injector;
-			this.throwaway = throwaway;
-			this.irrelevantData = irrelevantData;
-		}
+	private record InjectorInvocationContext(Injector injector, boolean throwaway,
+											 boolean irrelevantData) implements TestTemplateInvocationContext {
 
 		@Override
-		public List<Extension> getAdditionalExtensions() {
-			List<Extension> extensions = new ArrayList<>(3);
-			extensions.add(new InjectorParameterResolver(injector));
-			if (!throwaway) {
-				extensions.add(new InjectorCleanupCallback(injector));
+			public List<Extension> getAdditionalExtensions() {
+				List<Extension> extensions = new ArrayList<>(3);
+				extensions.add(new InjectorParameterResolver(injector));
+				if (!throwaway) {
+					extensions.add(new InjectorCleanupCallback(injector));
+				}
+				if (irrelevantData) {
+					extensions.add(new IrrelevantDataCallback(injector));
+				}
+				return extensions;
 			}
-			if (irrelevantData) {
-				extensions.add(new IrrelevantDataCallback(injector));
-			}
-			return extensions;
-		}
 
-	}
+		}
 
 }

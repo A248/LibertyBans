@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,10 +25,9 @@ import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.SubSection;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.addon.AddonConfig;
 import space.arim.libertybans.core.config.ParsedDuration;
-import space.arim.libertybans.core.scope.ScopeImpl;
+import space.arim.libertybans.core.scope.ConfiguredScope;
 
 import java.time.Duration;
 import java.util.Map;
@@ -68,10 +67,7 @@ public interface WarnActionsConfig extends AddonConfig {
 			"Punishments to perform.",
 			"",
 			"Each punishment is performed as if by the console. The setting broadcast-notification controls whether",
-			"punishment notifications will be broadcast as usual; if false, no notifications are sent.",
-			"",
-			"Note that 'scope' is currently useless -- it is reserved for a future plugin feature.",
-			"In LibertyBans 1.1.0, a feature will be added to enable punishments scoped to specific backend servers."
+			"punishment notifications will be broadcast as usual; if false, no notifications are sent."
 	})
 	@ConfDefault.DefaultObject("autoPunishmentsDefaults")
 	Map<Integer, @SubSection WarnActionPunishment> autoPunishments();
@@ -95,8 +91,8 @@ public interface WarnActionsConfig extends AddonConfig {
 					}
 
 					@Override
-					public ServerScope scope() {
-						return ScopeImpl.GLOBAL;
+					public ConfiguredScope scope() {
+						return ConfiguredScope.defaultPunishingScope();
 					}
 
 					@Override
@@ -121,8 +117,8 @@ public interface WarnActionsConfig extends AddonConfig {
 					}
 
 					@Override
-					public ServerScope scope() {
-						return ScopeImpl.GLOBAL;
+					public ConfiguredScope scope() {
+						return ConfiguredScope.defaultPunishingScope();
 					}
 
 					@Override
@@ -141,7 +137,7 @@ public interface WarnActionsConfig extends AddonConfig {
 
 		ParsedDuration duration();
 
-		ServerScope scope();
+		ConfiguredScope scope();
 
 		@ConfKey("broadcast-notification")
 		boolean broadcastNotification();

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,17 +19,19 @@
 
 package space.arim.libertybans.core.commands;
 
-import java.util.HashSet;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 public final class StringCommandPackage implements CommandPackage {
 
 	private final String args;
 	/** Position never refers to a hidden command argument */
 	private transient int position;
-	private final Set<String> hiddenArguments = new HashSet<>();
+	private final Map<String, String> hiddenArguments = new HashMap<>();
 
 	private StringCommandPackage(String args) {
 		this.args = args;
@@ -73,14 +75,19 @@ public final class StringCommandPackage implements CommandPackage {
 			if (position == args.length()) {
 				return;
 			}
-			if (args.charAt(position) != '-') {
+			if (args.charAt(position) != HIDDEN_ARG_PREFIX) {
 				return;
 			}
 			// Position on the first character of the hidden argument
 			position++;
 			// Collect the hidden argument as if it were a plain argument
 			String hiddenArgument = consumeCurrentArgument();
-			hiddenArguments.add(hiddenArgument.toLowerCase(Locale.ROOT));
+			// Then parse it and add it to our known collection
+			String[] hiddenArgPieces = hiddenArgument.split("=", 2);
+			hiddenArguments.put(
+					hiddenArgPieces[0].toLowerCase(Locale.ROOT),
+					hiddenArgPieces.length == 2 ? hiddenArgPieces[1] : null
+			);
 			// At this point we will be positioned on the next argument
 		}
 	}
@@ -110,7 +117,12 @@ public final class StringCommandPackage implements CommandPackage {
 
 	@Override
 	public boolean findHiddenArgument(String argument) {
-		return hiddenArguments.contains(argument.toLowerCase(Locale.ROOT));
+		return hiddenArguments.containsKey(argument);
+	}
+
+	@Override
+	public @Nullable String findHiddenArgumentSpecifiedValue(String argPrefix) {
+		return hiddenArguments.get(argPrefix);
 	}
 
 	@Override
@@ -124,7 +136,7 @@ public final class StringCommandPackage implements CommandPackage {
 	public CommandPackage copy() {
 		StringCommandPackage copy = new StringCommandPackage(args);
 		copy.position = position;
-		copy.hiddenArguments.addAll(hiddenArguments);
+		copy.hiddenArguments.putAll(hiddenArguments);
 		return copy;
 	}
 
