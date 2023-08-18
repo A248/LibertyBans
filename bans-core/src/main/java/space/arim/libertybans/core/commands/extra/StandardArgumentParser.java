@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,6 +20,7 @@
 package space.arim.libertybans.core.commands.extra;
 
 import jakarta.inject.Inject;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.ConsoleOperator;
@@ -28,26 +29,36 @@ import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.formatter.PunishmentFormatter;
+import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.UUIDAndAddress;
+import space.arim.libertybans.core.scope.InternalScopeManager;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public class StandardArgumentParser implements ArgumentParser {
 
 	private final FactoryOfTheFuture futuresFactory;
 	private final Configs configs;
+	private final InternalScopeManager scopeManager;
+	private final PunishmentFormatter formatter;
 	private final UUIDManager uuidManager;
-	
+
 	@Inject
-	public StandardArgumentParser(FactoryOfTheFuture futuresFactory, Configs configs, UUIDManager uuidManager) {
+	public StandardArgumentParser(FactoryOfTheFuture futuresFactory, Configs configs, InternalScopeManager scopeManager,
+								  PunishmentFormatter formatter, UUIDManager uuidManager) {
 		this.futuresFactory = futuresFactory;
 		this.configs = configs;
+		this.scopeManager = scopeManager;
+		this.formatter = formatter;
 		this.uuidManager = uuidManager;
 	}
 	
@@ -55,12 +66,16 @@ public class StandardArgumentParser implements ArgumentParser {
 		return futuresFactory.completedFuture(value);
 	}
 
+	private MessagesConfig.All all() {
+		return configs.getMessagesConfig().all();
+	}
+
 	private MessagesConfig.All.NotFound notFound() {
-		return configs.getMessagesConfig().all().notFound();
+		return all().notFound();
 	}
 
 	@Override
-	public CentralisedFuture<UUID> parseOrLookupUUID(CmdSender sender, String targetArg) {
+	public CentralisedFuture<@Nullable UUID> parseOrLookupUUID(CmdSender sender, String targetArg) {
 		return switch (targetArg.length()) {
 		case 36 -> {
 			UUID uuid;
@@ -95,7 +110,7 @@ public class StandardArgumentParser implements ArgumentParser {
 	}
 
 	@Override
-	public CentralisedFuture<Operator> parseOperator(CmdSender sender, String operatorArg) {
+	public CentralisedFuture<@Nullable Operator> parseOperator(CmdSender sender, String operatorArg) {
 		if (ContainsCI.containsIgnoreCase(configs.getMessagesConfig().formatting().consoleArguments(), operatorArg)) {
 			return completedFuture(ConsoleOperator.INSTANCE);
 		}
@@ -105,7 +120,7 @@ public class StandardArgumentParser implements ArgumentParser {
 	}
 
 	@Override
-	public CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg, ParseVictim how) {
+	public CentralisedFuture<@Nullable Victim> parseVictim(CmdSender sender, String targetArg, ParseVictim how) {
 		NetworkAddress parsedAddress = AddressParser.parseIpv4(targetArg);
 		if (parsedAddress != null) {
 			return completedFuture(AddressVictim.of(parsedAddress));
@@ -132,7 +147,7 @@ public class StandardArgumentParser implements ArgumentParser {
 	}
 
 	@Override
-	public CentralisedFuture<UUIDAndAddress> parsePlayer(CmdSender sender, String targetArg) {
+	public CentralisedFuture<@Nullable UUIDAndAddress> parsePlayer(CmdSender sender, String targetArg) {
 		return  uuidManager.lookupPlayer(targetArg).thenApply((optUuidAndAddress) -> {
 			if (optUuidAndAddress.isEmpty()) {
 				sender.sendMessage(notFound().player().replaceText("%TARGET%", targetArg));
@@ -140,6 +155,49 @@ public class StandardArgumentParser implements ArgumentParser {
 			}
 			return optUuidAndAddress.get();
 		});
+	}
+
+	@Override
+	public <R> @Nullable R parseScope(CmdSender sender, CommandPackage command, ParseScope<R> how) {
+
+		boolean requirePermissions = configs.getScopeConfig().requirePermissions();
+		ServerScope explicitScope;
+		String specificServer, category, rawScopeInput;
+
+		if ((specificServer = command.findHiddenArgumentSpecifiedValue("server")) != null) {
+			explicitScope = scopeManager.specificScope(specificServer);
+
+		} else if ((category = command.findHiddenArgumentSpecifiedValue("category")) != null) {
+			explicitScope = scopeManager.category(category);
+
+		} else if ((rawScopeInput = command.findHiddenArgumentSpecifiedValue("scope")) != null) {
+			Optional<ServerScope> parsed = scopeManager.parseFrom(rawScopeInput);
+			if (parsed.isEmpty()) {
+				sender.sendMessage(all().scopes().invalid().replaceText("%SCOPE_ARG%", rawScopeInput));
+				return null;
+			}
+			explicitScope = parsed.get();
+		} else {
+			if (requirePermissions && !sender.hasPermission("libertybans.scope.default")) {
+				sender.sendMessage(all().scopes().noPermissionForDefault());
+				return null;
+			}
+			return how.defaultValue(scopeManager);
+		}
+		if (requirePermissions) {
+			String permissionSuffix = scopeManager.deconstruct(explicitScope, (type, value) -> {
+				return switch (type) {
+					case GLOBAL -> "global";
+					case SERVER -> "server." + value;
+					case CATEGORY -> "category." + value;
+				};
+			});
+			if (!sender.hasPermission("libertybans.scope." + permissionSuffix)) {
+				sender.sendMessage(all().scopes().noPermission().replaceText("%SCOPE%", formatter.formatScope(explicitScope)));
+				return null;
+			}
+		}
+		return how.explicitScope(explicitScope);
 	}
 
 }

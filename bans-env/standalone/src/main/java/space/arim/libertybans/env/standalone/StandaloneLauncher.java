@@ -31,6 +31,7 @@ import space.arim.libertybans.core.CommandsModule;
 import space.arim.libertybans.core.PillarOneBindModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
 import space.arim.libertybans.core.addon.AddonLoader;
+import space.arim.libertybans.core.env.InstanceType;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
@@ -53,6 +54,7 @@ public final class StandaloneLauncher implements PlatformLauncher {
 	public Injector createInjector(ConsoleAudience consoleAudience) {
 		return new InjectorBuilder()
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(InstanceType.class, InstanceType.STANDALONE)
 				.bindInstance(Omnibus.class, omnibus)
 				.bindInstance(ConsoleAudience.class, consoleAudience)
 				.addBindModules(

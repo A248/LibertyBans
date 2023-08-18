@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.jooq.impl.DSL.noCondition;
-import static org.jooq.impl.DSL.not;
 
 final class SelectionOrderImpl extends SelectionBaseSQL implements SelectionOrder {
 
@@ -70,29 +69,10 @@ final class SelectionOrderImpl extends SelectionBaseSQL implements SelectionOrde
 			additionalColumns.add(fields.victimUuid());
 			additionalColumns.add(fields.victimAddress());
 		}
-		Condition additionalPredication;
-		{
-			VictimCondition victimCondition = new VictimCondition(fields);
-			// Check victim is accepted
-			Condition victimAcceptedCondition = noCondition();
-			for (Victim acceptedVictim : getVictims().acceptedValues()) {
-				victimAcceptedCondition = victimAcceptedCondition.or(
-						victimCondition.matchesVictim(acceptedVictim)
-				);
-			}
-			// Check victim is not rejected
-			Condition victimNotRejectedCondition = noCondition();
-			for (Victim rejectedVictim : getVictims().rejectedValues()) {
-				Condition notEqual = not(
-						victimCondition.matchesVictim(rejectedVictim)
-				);
-				victimNotRejectedCondition = victimNotRejectedCondition.and(notEqual);
-			}
-			// Check victim type is accepted
-			additionalPredication = new Criteria<>(getVictimTypes()).matchesField(fields.victimType())
-					.and(victimAcceptedCondition)
-					.and(victimNotRejectedCondition);
-		}
+		Condition additionalPredication = noCondition()
+				.and(new SingleFieldCriterion<>(fields.victimType()).matches(getVictimTypes()))
+				.and(new VictimCondition(fields).buildCondition(getVictims()));
+
 		return new QueryBuilder(parameters, fields, fields.table()) {
 			@Override
 			Victim victimFromRecord(Record record) {

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,46 +19,85 @@
 
 package space.arim.libertybans.env.velocity;
 
+import com.velocitypowered.api.event.EventTask;
+import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
+import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.LoginEvent;
+import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import jakarta.inject.Inject;
-import net.kyori.adventure.text.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.libertybans.core.selector.Guardian;
-import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.ThisClass;
 
-import java.net.InetAddress;
-import java.util.UUID;
+public final class ConnectionListener implements PlatformListener {
 
-public final class ConnectionListener extends VelocityAsyncListener<LoginEvent, Component> {
-
+	private final PluginContainer plugin;
+	private final ProxyServer server;
 	private final Guardian guardian;
+
+	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
 	@Inject
 	public ConnectionListener(PluginContainer plugin, ProxyServer server, Guardian guardian) {
-		super(plugin, server);
+		this.plugin = plugin;
+		this.server = server;
 		this.guardian = guardian;
 	}
 
 	@Override
-	public Class<LoginEvent> getEventClass() {
-		return LoginEvent.class;
+	public void register() {
+		server.getEventManager().register(plugin, this);
 	}
 
 	@Override
-	protected CentralisedFuture<Component> beginComputation(LoginEvent event) {
+	public void unregister() {
+		server.getEventManager().unregisterListener(plugin, this);
+	}
+
+	@Subscribe(order = PostOrder.EARLY)
+	public EventTask onConnect(LoginEvent event) {
+		if (!event.getResult().isAllowed()) {
+			logger.trace("Event {} is already blocked", event);
+			return null;
+		}
 		Player player = event.getPlayer();
-		UUID uuid = player.getUniqueId();
-		String name = player.getUsername();
-		InetAddress address = player.getRemoteAddress().getAddress();
-		return guardian.executeAndCheckConnection(uuid, name, address);
+		return EventTask.resumeWhenComplete(guardian.executeAndCheckConnection(
+				player.getUniqueId(), player.getUsername(), player.getRemoteAddress().getAddress()
+		).thenAccept((message) -> {
+			if (message == null) {
+				logger.trace("Event {} will be permitted", event);
+			} else {
+				event.setResult(ComponentResult.denied(message));
+			}
+		}));
 	}
 
-	@Override
-	protected void executeNonNullResult(LoginEvent event, Component message) {
-		event.setResult(ComponentResult.denied(message));
+	@Subscribe(order = PostOrder.EARLY)
+	public EventTask onServerSwitch(ServerPreConnectEvent event) {
+		if (!event.getResult().isAllowed()) {
+			return null;
+		}
+		RegisteredServer destination = event.getResult().getServer().orElse(null);
+		if (destination == null) {
+			// Properly speaking, the API does not exclude this possibility
+			return null;
+		}
+		Player player = event.getPlayer();
+		return EventTask.resumeWhenComplete(guardian.checkServerSwitch(
+				player.getUniqueId(), player.getRemoteAddress().getAddress(), destination.getServerInfo().getName()
+		).thenAccept((message) -> {
+			if (message != null) {
+				event.setResult(ServerPreConnectEvent.ServerResult.denied());
+				player.sendMessage(message);
+			}
+		}));
 	}
 
 }

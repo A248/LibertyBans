@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -34,6 +34,7 @@ import space.arim.libertybans.api.punish.DraftPunishment;
 import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.EnvEnforcer;
@@ -48,17 +49,19 @@ public final class WarnActionsListener implements AsynchronousEventConsumer<Post
 
 	private final FactoryOfTheFuture futuresFactory;
 	private final PunishmentDrafter drafter;
+	private final ScopeManager scopeManager;
 	private final PunishmentSelector selector;
 	private final InternalFormatter formatter;
 	private final EnvEnforcer<?> envEnforcer;
 	private final WarnActionsAddon addon;
 
 	@Inject
-	public WarnActionsListener(FactoryOfTheFuture futuresFactory, PunishmentDrafter drafter,
+	public WarnActionsListener(FactoryOfTheFuture futuresFactory, PunishmentDrafter drafter, ScopeManager scopeManager,
 							   PunishmentSelector selector, InternalFormatter formatter,
 							   EnvEnforcer<?> envEnforcer, WarnActionsAddon addon) {
 		this.futuresFactory = futuresFactory;
 		this.drafter = drafter;
+		this.scopeManager = scopeManager;
 		this.selector = selector;
 		this.formatter = formatter;
 		this.envEnforcer = envEnforcer;
@@ -131,7 +134,7 @@ public final class WarnActionsListener implements AsynchronousEventConsumer<Post
 					.operator(ConsoleOperator.INSTANCE)
 					.reason(additionalPunishment.reason())
 					.duration(additionalPunishment.duration().duration())
-					.scope(additionalPunishment.scope())
+					.scope(additionalPunishment.scope().actualize(scopeManager))
 					.build();
 			EnforcementOptions enforcementOptions = draftPunishment
 					.enforcementOptionsBuilder()

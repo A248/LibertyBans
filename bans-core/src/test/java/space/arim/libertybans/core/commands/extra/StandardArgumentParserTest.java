@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -36,11 +36,17 @@ import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.formatter.PunishmentFormatter;
+import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.commands.ComponentMatcher;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MessagesConfig;
+import space.arim.libertybans.core.config.ScopeConfig;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.UUIDAndAddress;
+import space.arim.libertybans.core.scope.InternalScopeManager;
+import space.arim.libertybans.core.scope.ScopeParsing;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.libertybans.it.util.RandomUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -53,8 +59,10 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -66,33 +74,38 @@ public class StandardArgumentParserTest {
 
 	private final FactoryOfTheFuture futuresFactory = new IndifferentFactoryOfTheFuture();
 	private final Configs configs;
+	private final InternalScopeManager scopeManager;
 	private final UUIDManager uuidManager;
 	private final CmdSender sender;
 
 	private final ArgumentParser argumentParser;
 
 	private final MessagesConfig messagesConfig;
-	private final MessagesConfig.All.NotFound notFound;
+	private final MessagesConfig.All allConfig;
+	private final MessagesConfig.All.NotFound notFoundConfig;
 
 	private final Component notFoundMessage = Component.text("Not found", NamedTextColor.RED);
 
-	public StandardArgumentParserTest(@Mock Configs configs, @Mock UUIDManager uuidManager, @Mock CmdSender sender,
-									  @Mock MessagesConfig messagesConfig, @Mock MessagesConfig.All.NotFound notFound) {
+	public StandardArgumentParserTest(
+			@Mock Configs configs, @Mock InternalScopeManager scopeManager, @Mock PunishmentFormatter formatter,
+			@Mock UUIDManager uuidManager, @Mock CmdSender sender, @Mock MessagesConfig messagesConfig,
+			@Mock MessagesConfig.All allConfig, @Mock MessagesConfig.All.NotFound notFoundConfig) {
 		this.configs = configs;
+		this.scopeManager = scopeManager;
 		this.uuidManager = uuidManager;
 		this.sender = sender;
 		this.messagesConfig = messagesConfig;
-		this.notFound = notFound;
+		this.allConfig = allConfig;
+		this.notFoundConfig = notFoundConfig;
 
-		argumentParser = new StandardArgumentParser(futuresFactory, configs, uuidManager);
+		argumentParser = new StandardArgumentParser(futuresFactory, configs, scopeManager, formatter, uuidManager);
 	}
 
 	@BeforeEach
 	public void setupMocks() {
 		lenient().when(configs.getMessagesConfig()).thenReturn(messagesConfig).getMock();
-		MessagesConfig.All all = mock(MessagesConfig.All.class);
-		lenient().when(messagesConfig.all()).thenReturn(all);
-		lenient().when(all.notFound()).thenReturn(notFound);
+		lenient().when(messagesConfig.all()).thenReturn(allConfig);
+		lenient().when(allConfig.notFound()).thenReturn(notFoundConfig);
 	}
 
 	private <T> CentralisedFuture<T> completedFuture(T value) {
@@ -143,7 +156,7 @@ public class StandardArgumentParserTest {
 		public void unknownPlayerVictimForName() {
 			String name = "A248";
 			when(uuidManager.lookupUUID(name)).thenReturn(completedFuture(Optional.empty()));
-			when(notFound.player()).thenReturn(ComponentText.create(notFoundMessage));
+			when(notFoundConfig.player()).thenReturn(ComponentText.create(notFoundMessage));
 
 			assertNull(parseVictim(name));
 
@@ -179,7 +192,7 @@ public class StandardArgumentParserTest {
 		public void unknownPlayerVictimForName() {
 			String name = "A248";
 			when(uuidManager.lookupPlayer(name)).thenReturn(completedFuture(Optional.empty()));
-			when(notFound.player()).thenReturn(ComponentText.create(notFoundMessage));
+			when(notFoundConfig.player()).thenReturn(ComponentText.create(notFoundMessage));
 
 			assertNull(parseVictim(name));
 
@@ -231,7 +244,7 @@ public class StandardArgumentParserTest {
 			String name = "A248";
 			mockConsoleArguments(Set.of());
 			when(uuidManager.lookupUUID(name)).thenReturn(completedFuture(Optional.empty()));
-			when(notFound.player()).thenReturn(ComponentText.create(notFoundMessage));
+			when(notFoundConfig.player()).thenReturn(ComponentText.create(notFoundMessage));
 
 			assertNull(parseOperator(name));
 
@@ -282,7 +295,7 @@ public class StandardArgumentParserTest {
 		public void unknownAddressVictimForName() {
 			String name = "A248";
 			when(uuidManager.lookupAddress(name)).thenReturn(completedFuture(null));
-			when(notFound.playerOrAddress()).thenReturn(ComponentText.create(notFoundMessage));
+			when(notFoundConfig.playerOrAddress()).thenReturn(ComponentText.create(notFoundMessage));
 
 			assertNull(parseVictim(name));
 
@@ -291,5 +304,98 @@ public class StandardArgumentParserTest {
 		}
 
 	}
-	
+
+	@Nested
+	public class ParseScopeFromCommand {
+
+		@BeforeEach
+		public void setup(@Mock ScopeConfig scopeConfig) {
+			lenient().when(scopeManager.parseFrom(any())).thenAnswer((invocation) -> {
+				return new ScopeParsing() {
+					@Override
+					public ServerScope specificScope(String server) {
+						return scopeManager.specificScope(server);
+					}
+
+					@Override
+					public ServerScope category(String category) {
+						return scopeManager.category(category);
+					}
+
+					@Override
+					public ServerScope globalScope() {
+						return scopeManager.globalScope();
+					}
+				}.parseInputOptionally(invocation.getArgument(0));
+			});
+			when(configs.getScopeConfig()).thenReturn(scopeConfig);
+			when(scopeConfig.requirePermissions()).thenReturn(false);
+		}
+
+		@Test
+		public void noneSpecified(@Mock CommandPackage command,
+								  @Mock ServerScope defaultScope) {
+			when(scopeManager.defaultPunishingScope()).thenReturn(defaultScope);
+			when(command.findHiddenArgumentSpecifiedValue(any())).thenReturn(null);
+			assertEquals(defaultScope, argumentParser.parseScope(sender, command, ParseScope.fallbackToDefaultPunishingScope()));
+			verify(sender, never()).sendMessage(any());
+		}
+
+		@Test
+		public void serverScope(@Mock CommandPackage command, @Mock ServerScope scope) {
+			when(scopeManager.specificScope("lobby")).thenReturn(scope);
+			when(command.findHiddenArgumentSpecifiedValue("server")).thenReturn("lobby");
+			assertEquals(scope, argumentParser.parseScope(sender, command, ParseScope.fallbackToDefaultPunishingScope()));
+			verify(sender, never()).sendMessage(any());
+		}
+
+		@Test
+		public void serverScopeLiteral(@Mock CommandPackage command, @Mock ServerScope scope) {
+			when(scopeManager.specificScope("lobby")).thenReturn(scope);
+			when(command.findHiddenArgumentSpecifiedValue("scope")).thenReturn("server:lobby");
+			when(command.findHiddenArgumentSpecifiedValue(not(eq("scope")))).thenReturn(null);
+			assertEquals(scope, argumentParser.parseScope(sender, command, ParseScope.fallbackToDefaultPunishingScope()));
+			verify(sender, never()).sendMessage(any());
+		}
+
+		@Test
+		public void categoryScope(@Mock CommandPackage command, @Mock ServerScope scope) {
+			when(scopeManager.category("pvp")).thenReturn(scope);
+			when(command.findHiddenArgumentSpecifiedValue("category")).thenReturn("pvp");
+			when(command.findHiddenArgumentSpecifiedValue(not(eq("category")))).thenReturn(null);
+			assertEquals(scope, argumentParser.parseScope(sender, command, ParseScope.fallbackToDefaultPunishingScope()));
+			verify(sender, never()).sendMessage(any());
+		}
+
+		@Test
+		public void categoryScopeLiteral(@Mock CommandPackage command, @Mock ServerScope scope) {
+			when(scopeManager.category("pvp")).thenReturn(scope);
+			when(command.findHiddenArgumentSpecifiedValue("scope")).thenReturn("category:pvp");
+			when(command.findHiddenArgumentSpecifiedValue(not(eq("scope")))).thenReturn(null);
+			assertEquals(scope, argumentParser.parseScope(sender, command, ParseScope.fallbackToDefaultPunishingScope()));
+			verify(sender, never()).sendMessage(any());
+		}
+
+		@Test
+		public void globalLiteral(@Mock CommandPackage command, @Mock ServerScope globalScope) {
+			when(scopeManager.globalScope()).thenReturn(globalScope);
+			when(command.findHiddenArgumentSpecifiedValue("scope")).thenReturn(ScopeParsing.GLOBAL_SCOPE_USER_INPUT);
+			when(command.findHiddenArgumentSpecifiedValue(not(eq("scope")))).thenReturn(null);
+			assertEquals(globalScope, argumentParser.parseScope(sender, command, ParseScope.fallbackToDefaultPunishingScope()));
+			verify(sender, never()).sendMessage(any());
+		}
+
+		@Test
+		public void invalidScope(@Mock CommandPackage command, @Mock MessagesConfig.All.Scopes section) {
+			ComponentText errorMsg = ComponentText.create(Component.text("Not a valid scope"));
+			when(allConfig.scopes()).thenReturn(section);
+			when(section.invalid()).thenReturn(errorMsg);
+
+			when(command.findHiddenArgumentSpecifiedValue("scope")).thenReturn("gibberish");
+			when(command.findHiddenArgumentSpecifiedValue(not(eq("scope")))).thenReturn(null);
+			assertNull(argumentParser.parseScope(sender, command, ParseScope.fallbackToDefaultPunishingScope()));
+			verify(sender).sendMessage(errorMsg);
+		}
+	}
+
 }

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,13 +21,10 @@ package space.arim.libertybans.it;
 
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import space.arim.injector.Identifier;
 import space.arim.injector.Injector;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.punish.sync.SQLSynchronizationMessenger;
 import space.arim.libertybans.core.service.SettableTime;
-
-import java.time.Instant;
 
 final class InjectorCleanupCallback implements AfterEachCallback {
 
@@ -42,8 +39,7 @@ final class InjectorCleanupCallback implements AfterEachCallback {
 		// Reset database
 		injector.request(InternalDatabase.class).truncateAllTables();
 		// Reset global clock
-		Instant startTime = injector.request(Identifier.ofTypeAndNamed(Instant.class, "testStartTime"));
-		injector.request(SettableTime.class).setTimestamp(startTime);
+		injector.request(SettableTime.class).reset();
 		// Reset synchronization
 		injector.request(SQLSynchronizationMessenger.class).resetLastTimestamp();
 	}

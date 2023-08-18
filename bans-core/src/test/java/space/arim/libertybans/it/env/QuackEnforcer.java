@@ -25,12 +25,15 @@ import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.Interlocutor;
+import space.arim.libertybans.core.env.message.PluginMessage;
 import space.arim.libertybans.it.env.platform.QuackPlatform;
 import space.arim.libertybans.it.env.platform.QuackPlayer;
+import space.arim.libertybans.it.env.platform.ReceivedPluginMessage;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.net.InetAddress;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -46,8 +49,8 @@ public class QuackEnforcer extends AbstractEnvEnforcer<QuackPlayer> {
 	}
 
 	@Override
-	protected CentralisedFuture<Void> doForAllPlayers(Consumer<QuackPlayer> callback) {
-		platform.getAllPlayers().forEach(callback);
+	public CentralisedFuture<Void> doForAllPlayers(Consumer<Collection<? extends QuackPlayer>> callback) {
+		callback.accept(platform.getAllPlayers());
 		return completedVoid();
 	}
 
@@ -63,6 +66,12 @@ public class QuackEnforcer extends AbstractEnvEnforcer<QuackPlayer> {
 	}
 
 	@Override
+	public <D> boolean sendPluginMessageIfListening(QuackPlayer player, PluginMessage<D, ?> pluginMessage, D data) {
+		player.receivedPluginMessages().add(new ReceivedPluginMessage<>(pluginMessage, data));
+		return true;
+	}
+
+	@Override
 	public UUID getUniqueIdFor(QuackPlayer player) {
 		return player.getUniqueId();
 	}
@@ -70,6 +79,11 @@ public class QuackEnforcer extends AbstractEnvEnforcer<QuackPlayer> {
 	@Override
 	public InetAddress getAddressFor(QuackPlayer player) {
 		return player.getAddress();
+	}
+
+	@Override
+	public String getNameFor(QuackPlayer player) {
+		return player.getName();
 	}
 
 	@Override

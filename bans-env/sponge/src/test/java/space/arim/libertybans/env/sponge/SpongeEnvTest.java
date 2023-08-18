@@ -21,7 +21,6 @@ package space.arim.libertybans.env.sponge;
 
 import org.junit.jupiter.api.Test;
 import space.arim.api.util.testing.InjectableConstructor;
-import space.arim.libertybans.core.env.ParallelisedListener;
 import space.arim.libertybans.core.env.PlatformListener;
 
 public class SpongeEnvTest {
@@ -31,10 +30,10 @@ public class SpongeEnvTest {
 		new InjectableConstructor(SpongeEnv.class)
 				.verifyParametersContainSubclassesOf(PlatformListener.class, (clazz) -> {
 					// Exclude CommandHandler since it is constructed directly
-					// Exclude ParallelisedListener, which would never be injected
+					// Use only classes in our package or subpackages
 					// Exclude anonymous or local classes
 					return !clazz.equals(CommandHandler.class)
-							&& !clazz.equals(ParallelisedListener.class)
+							&& clazz.getPackageName().startsWith(getClass().getPackageName())
 							&& !clazz.isAnonymousClass()
 							&& !clazz.isLocalClass();
 				});

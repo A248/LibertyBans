@@ -8,6 +8,8 @@ As a pre-requisite for any command, you must have the permission:
 
 `libertybans.commands`
 
+## Punishment ##
+
 ### Bans ###
 
 * `libertybans.ban.do.target.uuid` - ban players
@@ -65,6 +67,10 @@ For obvious reasons, there are no duration permissions for kicks; moreover there
 * `libertybans.admin.addon` - /libertybans addon
 * `libertybans.admin.import` - /libertybans import
 * `libertybans.admin.viewips` - Allows staff to view IP addresses if *censor-ip-addresses* is turned on in the configuration.
+
+### Scopes
+
+If scope permissions are enabled, additional permissions are required to punish and list punishments. See the [Scoped Punishments](Scoped-Punishments.md) page.
 
 ## Addons
 

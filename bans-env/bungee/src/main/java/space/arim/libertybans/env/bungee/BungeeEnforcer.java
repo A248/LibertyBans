@@ -31,10 +31,12 @@ import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.Interlocutor;
+import space.arim.libertybans.core.env.message.PluginMessage;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.net.InetAddress;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -43,19 +45,21 @@ public class BungeeEnforcer extends AbstractEnvEnforcer<ProxiedPlayer> {
 
 	private final ProxyServer server;
 	private final AddressReporter addressReporter;
+	private final BungeeMessageChannel messageChannel;
 
 	@Inject
 	public BungeeEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter,
 						  Interlocutor interlocutor, AudienceRepresenter<CommandSender> audienceRepresenter,
-						  ProxyServer server, AddressReporter addressReporter) {
+						  ProxyServer server, AddressReporter addressReporter, BungeeMessageChannel messageChannel) {
 		super(futuresFactory, formatter, interlocutor, audienceRepresenter);
 		this.server = server;
 		this.addressReporter = addressReporter;
+		this.messageChannel = messageChannel;
 	}
 
 	@Override
-	protected CentralisedFuture<Void> doForAllPlayers(Consumer<ProxiedPlayer> callback) {
-		server.getPlayers().forEach(callback);
+	public CentralisedFuture<Void> doForAllPlayers(Consumer<Collection<? extends ProxiedPlayer>> callback) {
+		callback.accept(server.getPlayers());
 		return completedVoid();
 	}
 
@@ -75,6 +79,12 @@ public class BungeeEnforcer extends AbstractEnvEnforcer<ProxiedPlayer> {
 	}
 
 	@Override
+	public <D> boolean sendPluginMessageIfListening(ProxiedPlayer player, PluginMessage<D, ?> pluginMessage, D data) {
+		messageChannel.sendPluginMessage(player, pluginMessage, data);
+		return true;
+	}
+
+	@Override
 	public UUID getUniqueIdFor(ProxiedPlayer player) {
 		return player.getUniqueId();
 	}
@@ -82,6 +92,11 @@ public class BungeeEnforcer extends AbstractEnvEnforcer<ProxiedPlayer> {
 	@Override
 	public InetAddress getAddressFor(ProxiedPlayer player) {
 		return addressReporter.getAddress(player);
+	}
+
+	@Override
+	public String getNameFor(ProxiedPlayer player) {
+		return player.getName();
 	}
 
 	@Override

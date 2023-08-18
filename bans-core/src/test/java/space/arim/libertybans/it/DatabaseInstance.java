@@ -92,14 +92,13 @@ public enum DatabaseInstance {
 	}
 
 	private void createDatabase(String database) {
-		switch (this) {
-		case MARIADB_RETRO, MARIADB_LEGACY, MARIADB_MODERN, MYSQL -> {
-			createDatabaseUsing("jdbc:mariadb", database, " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-		}
-		case POSTGRES_LEGACY, POSTGRES_MODERN, COCKROACHDB -> {
-			createDatabaseUsing("jdbc:postgresql", database, "");
-		}
-		default -> throw new IllegalStateException("No database creation exists");
+		switch (vendor) {
+		case MARIADB, MYSQL ->
+				createDatabaseUsing("jdbc:mariadb", database, " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+		case POSTGRES, COCKROACH ->
+				createDatabaseUsing("jdbc:postgresql", database, "");
+		default ->
+				throw new IllegalStateException("No database creation exists for " + this);
 		}
 	}
 

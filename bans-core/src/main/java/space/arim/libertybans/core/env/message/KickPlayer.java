@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,41 +17,31 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.database.jooq;
+package space.arim.libertybans.core.env.message;
 
-import org.jetbrains.annotations.NotNull;
-import org.jooq.Converter;
-import space.arim.libertybans.api.scope.ServerScope;
-import space.arim.libertybans.core.scope.ScopeImpl;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
-public final class ServerScopeConverter implements Converter<String, ServerScope> {
+import java.io.IOException;
+
+public final class KickPlayer implements PluginMessage<KickPlayer.Data, Void> {
 
 	@Override
-	public ServerScope from(String server) {
-		if (server == null) {
-			return null;
-		}
-		if (server.isEmpty()) {
-			return ScopeImpl.GLOBAL;
-		}
-		return ScopeImpl.specificServer(server);
+	public String subchannelName() {
+		return "KickPlayer";
 	}
 
 	@Override
-	public String to(ServerScope scope) {
-		if (scope == null) {
-			return null;
-		}
-		return ScopeImpl.getServer(scope, "");
+	public void writeData(Data data, PluginMessageOutput output) throws IOException {
+		output.writeUTF(data.playerName);
+		output.writeUTF(LegacyComponentSerializer.legacySection().serialize(data.message));
 	}
 
 	@Override
-	public @NotNull Class<String> fromType() {
-		return String.class;
+	public Void readResponse(PluginMessageInput input) throws IOException {
+		return null;
 	}
 
-	@Override
-	public @NotNull Class<ServerScope> toType() {
-		return ServerScope.class;
-	}
+	public record Data(String playerName, Component message) {}
+
 }

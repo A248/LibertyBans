@@ -20,6 +20,7 @@
 package space.arim.libertybans.core.env;
 
 import java.net.InetAddress;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -27,6 +28,7 @@ import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import space.arim.api.env.annote.PlatformPlayer;
+import space.arim.libertybans.core.env.message.PluginMessage;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 /**
@@ -45,6 +47,7 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	 * 
 	 * @param permission the permission
 	 * @param message the message
+	 * @return a future completed when the operation is done
 	 */
 	CentralisedFuture<Void> sendToThoseWithPermission(String permission, ComponentLike message);
 
@@ -53,8 +56,17 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	 * 
 	 * @param uuid the uuid
 	 * @param callback the callback
+	 * @return a future completed when the operation is done
 	 */
 	CentralisedFuture<Void> doForPlayerIfOnline(UUID uuid, Consumer<P> callback);
+
+	/**
+	 * Completes an action for all players online
+	 *
+	 * @param action the action
+	 * @return a future completed when the operation is done
+	 */
+	CentralisedFuture<Void> doForAllPlayers(Consumer<Collection<? extends P>> action);
 
 	/**
 	 * Kicks the given player. <br>
@@ -65,6 +77,14 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	 * @param message the kick message
 	 */
 	void kickPlayer(P player, Component message);
+
+	/**
+	 * Sends a plugin message to the given player. Must be used only for proxies.
+	 *
+	 * @param player the player to whom to send the message
+	 * @param pluginMessage the plugin message
+	 */
+	<D> void sendPluginMessage(P player, PluginMessage<D, ?> pluginMessage, D data);
 
 	/**
 	 * Sends a message to the given player. Does not include a prefix. <br>
@@ -102,6 +122,16 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	 * @return the address
 	 */
 	InetAddress getAddressFor(P player);
+
+	/**
+	 * Gets the name of a player. <br>
+	 * <br>
+	 * <b>Must be used within a callback.</b>
+	 *
+	 * @param player the player
+	 * @return the name
+	 */
+	String getNameFor(P player);
 
 	/**
 	 * Determines whether the player has a permission

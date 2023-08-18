@@ -25,7 +25,9 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.event.BasePunishEvent;
 import space.arim.libertybans.api.punish.DraftPunishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.commands.extra.DurationParser;
+import space.arim.libertybans.core.commands.extra.ParseScope;
 import space.arim.libertybans.core.commands.extra.ReasonsConfig;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.AdditionAssistant;
@@ -111,6 +113,13 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 
 			@Override
 			public @Nullable DraftPunishment buildDraftSanction(Victim victim, Duration duration, String targetArg) {
+
+				ServerScope serverScope = argumentParser().parseScope(
+						sender, command, ParseScope.fallbackToDefaultPunishingScope()
+				);
+				if (serverScope == null) {
+					return null;
+				}
 				String reason;
 				if (command.hasNext()) {
 					reason = command.allRemaining();
@@ -132,6 +141,7 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 						.operator(sender.getOperator())
 						.reason(reason)
 						.duration(duration)
+						.scope(serverScope)
 						.build();
 			}
 

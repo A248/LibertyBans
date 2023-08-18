@@ -33,6 +33,7 @@ import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.scope.ScopeManager;
+import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
 import space.arim.libertybans.api.select.SelectionPredicate;
@@ -57,6 +58,7 @@ import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static space.arim.libertybans.api.select.SelectionPredicate.matchingNone;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
 @ExtendWith({RandomPunishmentTypeResolver.class, RandomOperatorResolver.class, RandomVictimResolver.class})
@@ -247,7 +249,7 @@ public class SelectionIT {
 		assertEquals(
 				List.of(banAddress1, muteAddress2),
 				getPunishments(selector.selectionBuilder().victimTypes(
-						SelectionPredicate.matchingNone(Victim.VictimType.PLAYER)
+						matchingNone(Victim.VictimType.PLAYER)
 				)),
 				"Should be identical to previous assertion");
 		assertEquals(
@@ -261,7 +263,7 @@ public class SelectionIT {
 				getPunishments(selector.selectionBuilder().victims(SelectionPredicate.matchingAnyOf(uuid2, address1))));
 		assertEquals(
 				List.of(warnUuid2, banAddress1),
-				getPunishments(selector.selectionBuilder().victims(SelectionPredicate.matchingNone(uuid1, address2))),
+				getPunishments(selector.selectionBuilder().victims(matchingNone(uuid1, address2))),
 				"Should be identical to previous assertion (in context)");
 	}
 
@@ -328,6 +330,73 @@ public class SelectionIT {
 				getPunishments(selector.selectionBuilder().selectAll().escalationTracks(
 						SelectionPredicate.matchingAnyOf(Optional.of(track1), Optional.empty())
 				)));
+	}
+
+	@TestTemplate
+	public void selectScopes(@DontInject Victim victim1, @DontInject Victim victim2, @DontInject Victim victim3) {
+		ServerScope globalScope = scopeManager.globalScope();
+		ServerScope kitpvpScope = scopeManager.specificScope("kitpvp");
+		ServerScope tntpvpScope = scopeManager.specificScope("tntpvp");
+		ServerScope pvpScope = scopeManager.category("pvp");
+		ServerScope creativeServerScope = scopeManager.specificScope("creative");
+		ServerScope creativeCategoryScope = scopeManager.category("creative");
+
+		Punishment banGlobal = getPunishment(
+				draftBuilder(PunishmentType.BAN, victim1, "global ban"));
+
+		Punishment muteKitpvp = getPunishment(
+				draftBuilder(PunishmentType.MUTE, victim1, "mute on kitpvp").scope(kitpvpScope));
+		Punishment warnKitpvp = getPunishment(
+				draftBuilder(PunishmentType.WARN, victim2, "warn on kitpvp").scope(kitpvpScope));
+		Punishment warnTntpvp = getPunishment(
+				draftBuilder(PunishmentType.WARN, victim2, "warn on tntpvp").scope(tntpvpScope));
+		Punishment banPvp = getPunishment(
+				draftBuilder(PunishmentType.BAN, victim2, "banned on pvp servers").scope(pvpScope));
+
+		Punishment muteCreativeServer = getPunishment(
+				draftBuilder(PunishmentType.MUTE, victim2, "mute on creative server").scope(creativeServerScope));
+		Punishment muteCreativeCategory = getPunishment(
+				draftBuilder(PunishmentType.MUTE, victim3, "mute on creative category").scope(creativeCategoryScope));
+
+		assertEmpty(selector.selectionBuilder().selectAll().scope(scopeManager.specificScope("nonexistent")));
+		assertEmpty(selector.selectionBuilder().selectAll().scope(scopeManager.category("nonexistent")));
+
+		assertEquals(
+				List.of(banGlobal, muteKitpvp, warnKitpvp, warnTntpvp, banPvp, muteCreativeServer, muteCreativeCategory),
+				getPunishments(selector.selectionBuilder())
+		);
+		assertEquals(
+				List.of(banGlobal, muteKitpvp),
+				getPunishments(selector.selectionBuilder().victim(victim1))
+		);
+		assertEquals(
+				List.of(muteKitpvp, warnKitpvp, warnTntpvp, banPvp, muteCreativeServer, muteCreativeCategory),
+				getPunishments(selector.selectionBuilder().scopes(matchingNone(globalScope)))
+		);
+		assertEquals(
+				List.of(banGlobal),
+				getPunishments(selector.selectionBuilder().scope(globalScope))
+		);
+		assertEquals(
+				List.of(muteKitpvp, warnKitpvp),
+				getPunishments(selector.selectionBuilder().scope(kitpvpScope))
+		);
+		assertEquals(
+				List.of(warnTntpvp),
+				getPunishments(selector.selectionBuilder().scope(tntpvpScope))
+		);
+		assertEquals(
+				List.of(banPvp),
+				getPunishments(selector.selectionBuilder().scope(pvpScope))
+		);
+		assertEquals(
+				List.of(muteCreativeServer),
+				getPunishments(selector.selectionBuilder().scope(creativeServerScope))
+		);
+		assertEquals(
+				List.of(muteCreativeCategory),
+				getPunishments(selector.selectionBuilder().scope(creativeCategoryScope))
+		);
 	}
 
 }

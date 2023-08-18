@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -156,7 +156,7 @@ public final class SelfImportProcess {
 						}
 						return batch.bind(bindValues);
 					}
-			).transferData(maxBatchSize);
+			).execute(maxBatchSize);
 		}
 
 		private void updateSequences() {
@@ -165,13 +165,13 @@ public final class SelfImportProcess {
 					.select(DSL.max(PUNISHMENTS.ID).plus(1))
 					.from(PUNISHMENTS)
 					.fetchSingle().value1();
-			new SequenceValue<>(LIBERTYBANS_PUNISHMENT_IDS).setValue(target, nextPunishmentId);
+			new SequenceValue<>(target, LIBERTYBANS_PUNISHMENT_IDS).setValue(nextPunishmentId);
 
 			int nextVictimId = target
 					.select(DSL.max(VICTIMS.ID).plus(1))
 					.from(VICTIMS)
 					.fetchSingle().value1();
-			new SequenceValue<>(LIBERTYBANS_VICTIM_IDS).setValue(target, nextVictimId);
+			new SequenceValue<>(target, LIBERTYBANS_VICTIM_IDS).setValue(nextVictimId);
 		}
 	}
 }

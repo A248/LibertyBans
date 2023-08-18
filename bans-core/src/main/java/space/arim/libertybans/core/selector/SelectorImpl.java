@@ -26,6 +26,7 @@ import net.kyori.adventure.text.Component;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
 import space.arim.libertybans.core.config.Configs;
@@ -35,6 +36,7 @@ import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Singleton
@@ -105,8 +107,9 @@ public class SelectorImpl implements InternalSelector {
 	 */
 
 	@Override
-	public CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address) {
-		return gatekeeper.executeAndCheckConnection(uuid, name, address, this);
+	public CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address,
+																  Set<ServerScope> scopes) {
+		return gatekeeper.executeAndCheckConnection(uuid, name, address, scopes, this);
 	}
 
 	@Override

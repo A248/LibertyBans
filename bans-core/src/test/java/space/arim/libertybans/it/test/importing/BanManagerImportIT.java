@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -33,13 +33,10 @@ import space.arim.libertybans.core.importing.ImportSource;
 import space.arim.libertybans.core.importing.ImportStatistics;
 import space.arim.libertybans.core.importing.LocalDatabaseSetup;
 import space.arim.libertybans.core.importing.PluginDatabaseSetup;
-import space.arim.libertybans.core.scope.ScopeImpl;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static space.arim.libertybans.core.schema.tables.Addresses.ADDRESSES;
 import static space.arim.libertybans.core.schema.tables.Names.NAMES;
 import static space.arim.libertybans.core.schema.tables.SimpleActive.SIMPLE_ACTIVE;
@@ -65,12 +62,6 @@ public class BanManagerImportIT {
 		this.pluginDatabaseSetup = new PluginDatabaseSetup(connectionSource);
 	}
 
-	private ScopeManager createScopeManager() {
-		ScopeManager scopeManager = mock(ScopeManager.class);
-		when(scopeManager.globalScope()).thenReturn(ScopeImpl.GLOBAL);
-		return scopeManager;
-	}
-
 	private int selectCount(Table<?> table) {
 		return queryExecutor.get().query((context) -> {
 			return context.selectCount().from(table).fetchSingle().value1();
@@ -78,8 +69,7 @@ public class BanManagerImportIT {
 	}
 
 	@TestTemplate
-	public void fabricatedData() {
-		ScopeManager scopeManager = createScopeManager();
+	public void fabricatedData(ScopeManager scopeManager) {
 		pluginDatabaseSetup.initBanManagerSchema();
 		pluginDatabaseSetup.runSqlFromResource("import-data/banmanager/fabricated-data.sql");
 		ImportSource importSource = pluginDatabaseSetup.createBanManagerImportSource(scopeManager);

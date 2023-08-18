@@ -31,16 +31,19 @@ public final class SpigotEnv implements Environment {
 
 	private final Provider<ConnectionListener> connectionListener;
 	private final Provider<ChatListener> chatListener;
+	private final Provider<ServerNameListener> serverNameListener;
+	private final Provider<SpigotMessageChannel> pluginMessageChannel;
 	private final CommandHandler.CommandHelper commandHelper;
-	private final ChannelRegistration channelRegistration;
 
 	@Inject
 	public SpigotEnv(Provider<ConnectionListener> connectionListener, Provider<ChatListener> chatListener,
-					 CommandHandler.CommandHelper commandHelper, ChannelRegistration channelRegistration) {
+					 Provider<ServerNameListener> serverNameListener, Provider<SpigotMessageChannel> pluginMessageChannel,
+					 CommandHandler.CommandHelper commandHelper) {
 		this.connectionListener = connectionListener;
 		this.chatListener = chatListener;
+		this.serverNameListener = serverNameListener;
+		this.pluginMessageChannel = pluginMessageChannel;
 		this.commandHelper = commandHelper;
-		this.channelRegistration = channelRegistration;
 	}
 
 	@Override
@@ -48,8 +51,9 @@ public final class SpigotEnv implements Environment {
 		return Set.of(
 				connectionListener.get(),
 				chatListener.get(),
-				new CommandHandler(commandHelper, Commands.BASE_COMMAND_NAME, false),
-				channelRegistration
+				serverNameListener.get(),
+				pluginMessageChannel.get(),
+				new CommandHandler(commandHelper, Commands.BASE_COMMAND_NAME, false)
 		);
 	}
 
@@ -57,5 +61,5 @@ public final class SpigotEnv implements Environment {
 	public PlatformListener createAliasCommand(String command) {
 		return new CommandHandler(commandHelper, command, true);
 	}
-	
+
 }

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -38,7 +38,7 @@ import space.arim.dazzleconf.error.BadValueException;
 import space.arim.dazzleconf.serialiser.Decomposer;
 import space.arim.dazzleconf.serialiser.FlexibleType;
 import space.arim.dazzleconf.serialiser.ValueSerialiser;
-import space.arim.libertybans.core.scope.ScopeSerializer;
+import space.arim.libertybans.core.scope.ConfiguredScope;
 
 final class ConfigSerialisers {
 
@@ -51,7 +51,7 @@ final class ConfigSerialisers {
 				new ParsedDuration.Serializer(),
 				new DateTimeFormatterSerialiser(),
 				new ZoneIdSerialiser(),
-				new ScopeSerializer()
+				new ConfiguredScope.Serializer()
 		);
 	}
 
@@ -71,7 +71,7 @@ final class ConfigSerialisers {
 		@Override
 		public Component deserialise(FlexibleType flexibleType) throws BadValueException {
 			List<String> lines = flexibleType.getList(FlexibleType::getString);
-			List<Component> components = new ArrayList<>(lines.size());
+			List<Component> components = new ArrayList<>(2 * lines.size());
 			for (String line : lines) {
 				if (!components.isEmpty()) {
 					components.add(Component.newline());

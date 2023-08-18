@@ -127,7 +127,26 @@ public interface MessagesConfig {
 		
 		@DefaultString("&cUnknown sub command. Displaying usage:")
 		Component usage();
-		
+
+		@SubSection
+		Scopes scopes();
+
+		@ConfHeader("This section is only relevant if using the server scopes feature")
+		interface Scopes {
+
+			@DefaultString("&cInvalid scope specified: &e%SCOPE_ARG%&c.")
+			ComponentText invalid();
+
+			@ConfKey("no-permission")
+			@DefaultString("&cYou may not use scope &e%SCOPE%&c.")
+			ComponentText noPermission();
+
+			@ConfKey("no-permission-for-default")
+			@DefaultString("&cYou may not use this command without specifying a scope.")
+			Component noPermissionForDefault();
+
+		}
+
 	}
 	
 	@SubSection

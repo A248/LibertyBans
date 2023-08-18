@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,6 +32,7 @@ import space.arim.libertybans.core.ApiBindModule;
 import space.arim.libertybans.core.CommandsModule;
 import space.arim.libertybans.core.PillarOneBindModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
+import space.arim.libertybans.core.env.InstanceType;
 import space.arim.libertybans.env.sponge.listener.RegisterListeners;
 import space.arim.libertybans.env.sponge.listener.RegisterListenersByMethodScan;
 import space.arim.libertybans.env.sponge.listener.RegisterListenersStandard;
@@ -86,6 +87,7 @@ public final class SpongeLauncher implements PlatformLauncher {
 				.bindInstance(PluginContainer.class, plugin)
 				.bindInstance(Game.class, game)
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(InstanceType.class, InstanceType.GAME_SERVER)
 				.bindInstance(Omnibus.class, omnibus)
 				.addBindModules(
 						new ApiBindModule(),

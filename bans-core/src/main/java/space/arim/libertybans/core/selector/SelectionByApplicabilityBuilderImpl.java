@@ -21,9 +21,11 @@ package space.arim.libertybans.core.selector;
 
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.api.select.SelectionByApplicability;
 import space.arim.libertybans.api.select.SelectionByApplicabilityBuilder;
+import space.arim.libertybans.api.select.SelectionPredicate;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -75,6 +77,11 @@ public final class SelectionByApplicabilityBuilderImpl
 	@Override
 	public SelectionByApplicabilityBuilderImpl type(PunishmentType type) {
 		return (SelectionByApplicabilityBuilderImpl) super.type(type);
+	}
+
+	@Override
+	public SelectionByApplicabilityBuilderImpl scopes(SelectionPredicate<ServerScope> scopes) {
+		return (SelectionByApplicabilityBuilderImpl) super.scopes(scopes);
 	}
 
 	@Override

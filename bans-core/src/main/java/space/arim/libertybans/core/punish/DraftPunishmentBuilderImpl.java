@@ -63,8 +63,7 @@ class DraftPunishmentBuilderImpl extends DraftSanctionBuilderImpl<DraftPunishmen
 
 	@Override
 	public DraftPunishmentBuilder scope(ServerScope scope) {
-		enactor.scopeManager().checkScope(scope);
-		this.scope = scope;
+		this.scope = enactor.scopeManager().checkScope(scope);
 		return this;
 	}
 

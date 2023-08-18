@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -185,14 +185,13 @@ public class DatabaseSettings {
 
 	private void setConfiguredDriver() {
 		String jdbcUrl = getBaseUrl() + getUrlProperties();
-		JdbcDriver jdbcDriver = vendor.driver();
 
 		if (config.useTraditionalJdbcUrl()) {
-			setDriverClassName(jdbcDriver.driverClassName());
+			setDriverClassName(vendor.driver.driverClassName());
 			hikariConf.setJdbcUrl(jdbcUrl);
 
 		} else {
-			hikariConf.setDataSourceClassName(jdbcDriver.dataSourceClassName());
+			hikariConf.setDataSourceClassName(vendor.driver.dataSourceClassName());
 			hikariConf.addDataSourceProperty("url", jdbcUrl);
 		}
 	}
@@ -288,7 +287,7 @@ public class DatabaseSettings {
 			}
 		};
 		logger.trace("Using connection properties {}", properties);
-		return vendor.driver().formatConnectionProperties(properties);
+		return vendor.driver.formatConnectionProperties(properties);
 	}
 	
 	/**

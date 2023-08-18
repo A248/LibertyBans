@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,6 +25,8 @@ import net.kyori.adventure.text.Component;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.api.select.SelectionPredicate;
 import space.arim.libertybans.api.select.SortPunishments;
 import space.arim.libertybans.core.alts.AltDetection;
 import space.arim.libertybans.core.alts.AltNotification;
@@ -40,6 +42,7 @@ import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public final class Gatekeeper {
@@ -68,7 +71,7 @@ public final class Gatekeeper {
 	}
 
 	CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address,
-														   SelectorImpl selector) {
+														   Set<ServerScope> scopes, SelectorImpl selector) {
 		return queryExecutor.get().queryWithRetry((context, transaction) -> {
 			Instant currentTime = time.currentTimestamp();
 
@@ -78,6 +81,7 @@ public final class Gatekeeper {
 
 			Punishment ban = selector.selectionByApplicabilityBuilder(uuid, address)
 					.type(PunishmentType.BAN)
+					.scopes(SelectionPredicate.matchingAnyOf(scopes))
 					.build()
 					.findFirstSpecificPunishment(context, () -> currentTime, SortPunishments.LATEST_END_DATE_FIRST);
 			if (ban != null) {

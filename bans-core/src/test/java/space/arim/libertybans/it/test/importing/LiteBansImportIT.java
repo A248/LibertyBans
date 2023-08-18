@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -31,7 +31,6 @@ import space.arim.libertybans.core.importing.ImportSource;
 import space.arim.libertybans.core.importing.ImportStatistics;
 import space.arim.libertybans.core.importing.LocalDatabaseSetup;
 import space.arim.libertybans.core.importing.PluginDatabaseSetup;
-import space.arim.libertybans.core.scope.ScopeImpl;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetTime;
@@ -40,8 +39,6 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
 @ExtendWith(MockitoExtension.class)
@@ -50,11 +47,13 @@ import static org.mockito.Mockito.when;
 public class LiteBansImportIT {
 
 	private final ImportExecutor importExecutor;
+	private final ScopeManager scopeManager;
 	private PluginDatabaseSetup pluginDatabaseSetup;
 
 	@Inject
-	public LiteBansImportIT(ImportExecutor importExecutor) {
+	public LiteBansImportIT(ImportExecutor importExecutor, ScopeManager scopeManager) {
 		this.importExecutor = importExecutor;
+		this.scopeManager = scopeManager;
 	}
 
 	@BeforeEach
@@ -62,16 +61,8 @@ public class LiteBansImportIT {
 		this.pluginDatabaseSetup = new PluginDatabaseSetup(connectionSource);
 	}
 
-	private ScopeManager createScopeManager() {
-		ScopeManager scopeManager = mock(ScopeManager.class);
-		// Specific server scopes not covered by this IT
-		when(scopeManager.globalScope()).thenReturn(ScopeImpl.GLOBAL);
-		return scopeManager;
-	}
-
 	private void importFrom(String dataFile, ImportStatistics expectedStatistics) {
 		pluginDatabaseSetup.runSqlFromResource("import-data/litebans/" + dataFile + ".sql");
-		ScopeManager scopeManager = createScopeManager();
 		ImportSource importSource = pluginDatabaseSetup.createLiteBansImportSource(scopeManager);
 		CompletableFuture<ImportStatistics> futureImport = importExecutor.performImport(importSource);
 		assertDoesNotThrow(futureImport::join, "Import failed: error");

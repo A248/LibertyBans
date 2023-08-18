@@ -21,8 +21,6 @@ package space.arim.libertybans.core.selector;
 
 import org.jooq.Condition;
 import org.jooq.Field;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.select.SelectionPredicate;
 
 import java.util.AbstractSet;
@@ -35,13 +33,68 @@ import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.impl.DSL.val;
 
-record Criteria<F>(Set<F> acceptedValues, Set<F> rejectedValues) {
+record SingleFieldCriterion<F>(Field<F> field) {
 
-	Criteria(SelectionPredicate<F> selection) {
-		this(selection.acceptedValues(), selection.rejectedValues());
+	private Field<F> inlineIfNeeded(F value) {
+		// Automatically inline enum comparisons (e.g. PunishmentType, VictimType, and ScopeType)
+		Class<F> fieldType = field.getType();
+		boolean shouldInline = fieldType.isEnum();
+		return shouldInline ? inline(value) : val(value);
 	}
 
-	static <F, G> Criteria<F> createViaTransform(SelectionPredicate<G> selection, Function<G, F> converter) {
+	private static boolean containsNull(Set<?> set) {
+		// Some sets throw NPE on contains(null)
+		for (Object o : set) {
+			if (o == null) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private Condition matches(Set<F> acceptedValues, Set<F> rejectedValues) {
+		Condition acceptedCondition = switch (acceptedValues.size()) {
+			case 0 -> noCondition();
+			case 1 -> {
+				var singleAcceptedValue = acceptedValues.iterator().next();
+				if (singleAcceptedValue == null) {
+					yield field.isNull();
+				}
+				yield field.eq(inlineIfNeeded(singleAcceptedValue));
+			}
+			default -> {
+				if (containsNull(acceptedValues)) {
+					yield field.in(acceptedValues).or(field.isNull());
+				} else {
+					yield field.in(acceptedValues);
+				}
+			}
+		};
+		Condition notRejectedCondition = switch (rejectedValues.size()) {
+			case 0 -> noCondition();
+			case 1 -> {
+				var singleRejectedValue = rejectedValues.iterator().next();
+				if (singleRejectedValue == null) {
+					yield field.isNotNull();
+				}
+				yield field.notEqual(inlineIfNeeded(singleRejectedValue));
+			}
+			default -> {
+				if (containsNull(rejectedValues)) {
+					yield field.notIn(rejectedValues).and(field.isNotNull());
+				} else {
+					yield field.notIn(rejectedValues);
+				}
+			}
+		};
+		return acceptedCondition.and(notRejectedCondition);
+	}
+
+	Condition matches(SelectionPredicate<F> selection) {
+		return matches(selection.acceptedValues(), selection.rejectedValues());
+	}
+
+	<G> Condition matches(SelectionPredicate<G> selection, Function<G, F> converter) {
 		class SetView extends AbstractSet<F> {
 
 			private final Set<G> original;
@@ -78,62 +131,9 @@ record Criteria<F>(Set<F> acceptedValues, Set<F> rejectedValues) {
 				return original.size();
 			}
 		}
-		return new Criteria<>(new SetView(selection.acceptedValues()), new SetView(selection.rejectedValues()));
-	}
-
-	private static <U> Field<U> inlineIfNeeded(Field<U> field, U value) {
-		// Automatically inline PunishmentType and VictimType comparisons
-		Class<U> fieldType = field.getType();
-		boolean shouldInline = fieldType.equals(PunishmentType.class) || fieldType.equals(Victim.VictimType.class);
-		return shouldInline ? inline(value) : val(value);
-	}
-
-	private static boolean containsNull(Set<?> set) {
-		// Some sets throw NPE on contains(null)
-		for (Object o : set) {
-			if (o == null) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	Condition matchesField(Field<F> field) {
-		Condition acceptedCondition = switch (acceptedValues.size()) {
-			case 0 -> noCondition();
-			case 1 -> {
-				var singleAcceptedValue = acceptedValues.iterator().next();
-				if (singleAcceptedValue == null) {
-					yield field.isNull();
-				}
-				yield field.eq(inlineIfNeeded(field, singleAcceptedValue));
-			}
-			default -> {
-				if (containsNull(acceptedValues)) {
-					yield field.in(acceptedValues).or(field.isNull());
-				} else {
-					yield field.in(acceptedValues);
-				}
-			}
-		};
-		Condition notRejectedCondition = switch (rejectedValues.size()) {
-			case 0 -> noCondition();
-			case 1 -> {
-				var singleRejectedValue = rejectedValues.iterator().next();
-				if (singleRejectedValue == null) {
-					yield field.isNotNull();
-				}
-				yield field.notEqual(inlineIfNeeded(field, singleRejectedValue));
-			}
-			default -> {
-				if (containsNull(rejectedValues)) {
-					yield field.notIn(rejectedValues).and(field.isNotNull());
-				} else {
-					yield field.notIn(rejectedValues);
-				}
-			}
-		};
-		return acceptedCondition.and(notRejectedCondition);
+		return matches(
+				new SetView(selection.acceptedValues()), new SetView(selection.rejectedValues())
+		);
 	}
 
 }

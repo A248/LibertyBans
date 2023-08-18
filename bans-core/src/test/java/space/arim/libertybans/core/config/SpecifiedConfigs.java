@@ -153,6 +153,11 @@ public class SpecifiedConfigs implements Configs {
 	}
 
 	@Override
+	public ScopeConfig getScopeConfig() {
+		return delegate.getScopeConfig();
+	}
+
+	@Override
 	public CompletableFuture<Boolean> reloadConfigs() {
 		return delegate.reloadConfigs();
 	}

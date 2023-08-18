@@ -25,10 +25,12 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.TargetMatcher;
+import space.arim.libertybans.core.env.message.PluginMessage;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.net.InetAddress;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -54,7 +56,17 @@ final class StandaloneEnforcer implements EnvEnforcer<Void> {
 	}
 
 	@Override
+	public CentralisedFuture<Void> doForAllPlayers(Consumer<Collection<? extends Void>> action) {
+		return completedVoid();
+	}
+
+	@Override
 	public void kickPlayer(Void player, Component message) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <D> void sendPluginMessage(Void player, PluginMessage<D, ?> pluginMessage, D data) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -75,6 +87,11 @@ final class StandaloneEnforcer implements EnvEnforcer<Void> {
 
 	@Override
 	public InetAddress getAddressFor(Void player) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String getNameFor(Void player) {
 		throw new UnsupportedOperationException();
 	}
 

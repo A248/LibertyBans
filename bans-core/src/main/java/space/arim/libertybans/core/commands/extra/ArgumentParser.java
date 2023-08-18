@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,8 +19,10 @@
 
 package space.arim.libertybans.core.commands.extra;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.UUIDAndAddress;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -29,12 +31,14 @@ import java.util.UUID;
 
 public interface ArgumentParser {
 
-	CentralisedFuture<UUID> parseOrLookupUUID(CmdSender sender, String targetArg);
+	CentralisedFuture<@Nullable UUID> parseOrLookupUUID(CmdSender sender, String targetArg);
 
-	CentralisedFuture<Victim> parseVictim(CmdSender sender, String targetArg, ParseVictim how);
+	CentralisedFuture<@Nullable Victim> parseVictim(CmdSender sender, String targetArg, ParseVictim how);
 
-	CentralisedFuture<UUIDAndAddress> parsePlayer(CmdSender sender, String targetArg);
+	CentralisedFuture<@Nullable UUIDAndAddress> parsePlayer(CmdSender sender, String targetArg);
 
-	CentralisedFuture<Operator> parseOperator(CmdSender sender, String operatorArg);
-	
+	CentralisedFuture<@Nullable Operator> parseOperator(CmdSender sender, String operatorArg);
+
+	<R> @Nullable R parseScope(CmdSender sender, CommandPackage command, ParseScope<R> how);
+
 }

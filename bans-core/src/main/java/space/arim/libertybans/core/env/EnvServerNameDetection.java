@@ -17,31 +17,15 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.env.spigot;
+package space.arim.libertybans.core.env;
 
-import jakarta.inject.Inject;
-import org.bukkit.plugin.Plugin;
-import space.arim.libertybans.core.env.PlatformListener;
+import space.arim.libertybans.core.scope.InternalScopeManager;
 
-public final class ChannelRegistration implements PlatformListener {
+public interface EnvServerNameDetection {
 
-	private final Plugin plugin;
-
-	static final String BUNGEE_CHANNEL = "BungeeCord";
-
-	@Inject
-	public ChannelRegistration(Plugin plugin) {
-		this.plugin = plugin;
-	}
-
-	@Override
-	public void register() {
-		plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, BUNGEE_CHANNEL);
-	}
-
-	@Override
-	public void unregister() {
-		plugin.getServer().getMessenger().unregisterOutgoingPluginChannel(plugin, BUNGEE_CHANNEL);
-	}
+	/**
+	 * Detects the server name, if immediately known, for use with the scopes feature
+	 */
+	void detectName(InternalScopeManager scopeManager);
 
 }

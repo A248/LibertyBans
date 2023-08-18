@@ -21,7 +21,6 @@ package space.arim.libertybans.env.spigot;
 
 import org.junit.jupiter.api.Test;
 import space.arim.api.util.testing.InjectableConstructor;
-import space.arim.libertybans.core.env.ParallelisedListener;
 import space.arim.libertybans.core.env.PlatformListener;
 
 public class SpigotEnvTest {
@@ -31,8 +30,9 @@ public class SpigotEnvTest {
 		new InjectableConstructor(SpigotEnv.class)
 				.verifyParametersContainSubclassesOf(PlatformListener.class, (clazz) -> {
 					// Exclude CommandHandler since it is constructed directly
-					// Exclude ParallelisedListener, which would never be injected
-					return !clazz.equals(CommandHandler.class) && !clazz.equals(ParallelisedListener.class);
+					// Use only classes in our package or subpackages
+					return !clazz.equals(CommandHandler.class)
+							&& clazz.getPackageName().startsWith(getClass().getPackageName());
 				});
 	}
 }

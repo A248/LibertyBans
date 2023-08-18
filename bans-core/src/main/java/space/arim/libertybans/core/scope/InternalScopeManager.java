@@ -22,17 +22,47 @@ package space.arim.libertybans.core.scope;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.scope.ServerScope;
 
+import java.util.Optional;
+import java.util.function.BiFunction;
+
 public interface InternalScopeManager extends ScopeManager {
 
-	String getServer(ServerScope scope, String defaultIfGlobal);
-	
+	ServerScope deserialize(ScopeType scopeType, String value);
+
+	<R> R deconstruct(ServerScope scope, BiFunction<ScopeType, String, R> computeResult);
+
+	String display(ServerScope scope, String defaultIfGlobal);
+
+	Optional<ServerScope> parseFrom(String userInput);
+
 	/**
 	 * Checks that a server scope is nonnull and of the right implementation class
 	 * 
 	 * @param scope the server scope
 	 * @throws NullPointerException if {@code scope} is null
 	 * @throws IllegalArgumentException if {@code scope} is a foreign implementation
+	 * @return the same scope
 	 */
-	void checkScope(ServerScope scope);
-	
+	ServerScope checkScope(ServerScope scope);
+
+	/**
+	 * Whether to automatically detect the name of this server instance
+	 *
+	 * @return whether to detect the server name
+	 */
+	boolean serverNameUndetected();
+
+	/**
+	 * Sets the automatically detected name of this server instance
+	 *
+	 * @param serverName the server name
+	 */
+	void detectServerName(String serverName);
+
+	/**
+	 * Clears the automatically detected server name
+	 *
+	 */
+	void clearDetectedServerName();
+
 }

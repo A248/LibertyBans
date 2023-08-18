@@ -27,11 +27,14 @@ import space.arim.dazzleconf.annote.ConfHeader;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.dazzleconf.annote.SubSection;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.addon.AddonConfig;
 import space.arim.libertybans.core.commands.extra.DurationParser;
 import space.arim.libertybans.core.config.ParsedDuration;
 import space.arim.libertybans.core.config.PunishmentAdditionSection;
 import space.arim.libertybans.core.config.VictimPermissionSection;
+import space.arim.libertybans.core.scope.ConfiguredScope;
+import space.arim.libertybans.core.scope.GlobalScope;
 
 import java.util.Map;
 
@@ -130,11 +133,15 @@ public interface LayoutsConfig extends AddonConfig, PunishmentAdditionSection {
 		record SimpleLadder(boolean countActive,
 							Map<Integer, Track.Ladder.Progression> progressions) implements Track.Ladder {}
 
-		record SimpleProgression(PunishmentType type, String reason, ParsedDuration duration, String scope)
+		record SimpleProgression(PunishmentType type, String reason, ParsedDuration duration, ConfiguredScope scope)
 				implements Track.Ladder.Progression {
 
 			SimpleProgression(PunishmentType type, String reason, String duration) {
-				this(type, reason, new ParsedDuration(duration, new DurationParser().parse(duration)), "");
+				this(
+						type, reason,
+						new ParsedDuration(duration, new DurationParser().parse(duration)),
+						ConfiguredScope.defaultPunishingScope()
+				);
 			}
 		}
 		return Map.of(

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -36,6 +36,7 @@ import space.arim.injector.InjectorBuilder;
 import org.bukkit.Server;
 import org.bukkit.plugin.java.JavaPlugin;
 import space.arim.libertybans.core.addon.AddonLoader;
+import space.arim.libertybans.core.env.InstanceType;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
@@ -62,6 +63,7 @@ public final class SpigotLauncher implements PlatformLauncher {
 				.bindInstance(Plugin.class, plugin)
 				.bindInstance(Server.class, plugin.getServer())
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(InstanceType.class, InstanceType.GAME_SERVER)
 				.bindInstance(Omnibus.class, omnibus)
 				.addBindModules(
 						new ApiBindModule(),

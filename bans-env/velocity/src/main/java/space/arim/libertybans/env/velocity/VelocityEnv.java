@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -31,15 +31,13 @@ public final class VelocityEnv implements Environment {
 
 	private final Provider<ConnectionListener> connectionListener;
 	private final Provider<ChatListener> chatListener;
-	private final Provider<CommandListener> commandListener;
 	private final CommandHandler.CommandHelper commandHelper;
 
 	@Inject
 	public VelocityEnv(Provider<ConnectionListener> connectionListener, Provider<ChatListener> chatListener,
-					   Provider<CommandListener> commandListener, CommandHandler.CommandHelper commandHelper) {
+					   CommandHandler.CommandHelper commandHelper) {
 		this.connectionListener = connectionListener;
 		this.chatListener = chatListener;
-		this.commandListener = commandListener;
 		this.commandHelper = commandHelper;
 	}
 
@@ -48,7 +46,6 @@ public final class VelocityEnv implements Environment {
 		return Set.of(
 				connectionListener.get(),
 				chatListener.get(),
-				commandListener.get(),
 				new CommandHandler(commandHelper, Commands.BASE_COMMAND_NAME, false)
 		);
 	}

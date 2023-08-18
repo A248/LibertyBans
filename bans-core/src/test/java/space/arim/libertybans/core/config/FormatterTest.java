@@ -1,7 +1,7 @@
 
 /*
  * LibertyBans
- * Copyright © 2020 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -99,7 +99,7 @@ public class FormatterTest {
 		when(configs.getMessagesConfig()).thenReturn(messagesConfig);
 
 		lenient().when(scopeManager.globalScope()).thenReturn(globalScope);
-		lenient().when(scopeManager.getServer(same(globalScope), any())).thenAnswer(
+		lenient().when(scopeManager.display(same(globalScope), any())).thenAnswer(
 				invocationOnMock -> invocationOnMock.getArgument(1, String.class));
 	}
 
@@ -333,7 +333,7 @@ public class FormatterTest {
 
 	private ServerScope specificScope(String server) {
 		ServerScope scope = mock(ServerScope.class);
-		when(scopeManager.getServer(same(scope), any())).thenReturn(server);
+		when(scopeManager.display(same(scope), any())).thenReturn(server);
 		return scope;
 	}
 

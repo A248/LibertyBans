@@ -465,7 +465,7 @@ public class Formatter implements InternalFormatter {
 	public String formatScope(ServerScope scope) {
 		Objects.requireNonNull(scope, "scope");
 		String globalScopeDisplay = messages().formatting().globalScopeDisplay();
-		return scopeManager.getServer(scope, globalScopeDisplay);
+		return scopeManager.display(scope, globalScopeDisplay);
 	}
 	
 }

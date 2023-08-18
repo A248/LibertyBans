@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -29,12 +29,12 @@ import space.arim.libertybans.core.ApiBindModule;
 import space.arim.libertybans.core.CommandsModule;
 import space.arim.libertybans.core.PillarOneReplacementModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
+import space.arim.libertybans.core.env.InstanceType;
 import space.arim.libertybans.it.env.QuackBindModule;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
@@ -79,11 +79,9 @@ class ResourceCreator {
 
 			Injector injector = new InjectorBuilder()
 					.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), tempDirectory)
+					.bindInstance(InstanceType.class, InstanceType.PROXY)
 					.bindInstance(ConfigSpec.class, configSpec)
 					.bindInstance(DatabaseInfo.class, databaseInfo)
-					// The next two bindings are for ITs only
-					.bindInstance(DatabaseInstance.class, database)
-					.bindInstance(Identifier.ofTypeAndNamed(Instant.class, "testStartTime"), configSpec.unixTime())
 					.addBindModules(
 							new ApiBindModule(),
 							new PillarOneReplacementModule(),

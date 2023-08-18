@@ -17,19 +17,12 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.addon.layouts;
+package space.arim.libertybans.core.env.message;
 
-import space.arim.dazzleconf.error.BadValueException;
-import space.arim.dazzleconf.validator.ValueValidator;
+import java.io.IOException;
 
-public class ForcedEmptyScopeValidator implements ValueValidator {
-	@Override
-	public void validate(String key, Object value) throws BadValueException {
-		if (!((String) value).isEmpty()) {
-			throw new BadValueException.Builder()
-					.key(key)
-					.message("At the moment, scopes are not supported in punishment layouts")
-					.build();
-		}
-	}
+public interface PluginMessageOutput {
+
+	void writeUTF(String utf) throws IOException;
+
 }

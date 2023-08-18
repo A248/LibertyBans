@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,10 +25,12 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public final class SettableTimeImpl implements SettableTime {
 
+	private final Instant original;
 	/** Milliseconds from the epoch */
 	private final AtomicLong timestamp;
 
 	public SettableTimeImpl(Instant timestamp) {
+		original = timestamp;
 		this.timestamp = new AtomicLong(timestamp.toEpochMilli());
 	}
 
@@ -51,4 +53,10 @@ public final class SettableTimeImpl implements SettableTime {
 	public long arbitraryNanoTime() {
 		return timestamp.get() * 1_000_000L; // nanoseconds
 	}
+
+	@Override
+	public void reset() {
+		setTimestamp(original);
+	}
+
 }

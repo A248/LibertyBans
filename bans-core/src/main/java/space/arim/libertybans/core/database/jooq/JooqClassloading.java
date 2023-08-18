@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,7 +26,6 @@ import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.core.scope.ScopeImpl;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -58,12 +57,11 @@ public final class JooqClassloading {
 		} catch (RuntimeException ex) {
 			// Purposefully hide the exception stacktrace to avoid unnecessary noise
 			logger.warn("Failed to pre-initialize classes: {}", ex.getMessage());
+			return;
 		}
 		long elapsedMillis = (System.nanoTime() - startNanos) / 1_000_000L;
-		if (elapsedMillis >= 250) {
-			String elapsedSeconds = String.format("%.2f", ((double) elapsedMillis) / 1000D);
-			logger.info("Finished pre-initializing classes in {} seconds", elapsedSeconds);
-		}
+		String elapsedSeconds = String.format("%.2f", ((double) elapsedMillis) / 1000D);
+		logger.info("Finished pre-initializing classes in {} seconds", elapsedSeconds);
 	}
 
 	private void renderDummyQueries() {
@@ -78,11 +76,12 @@ public final class JooqClassloading {
 				.columns(
 						PUNISHMENTS.ID, PUNISHMENTS.TYPE,
 						PUNISHMENTS.OPERATOR, PUNISHMENTS.REASON,
-						PUNISHMENTS.SCOPE, PUNISHMENTS.START, PUNISHMENTS.END)
+						PUNISHMENTS.START, PUNISHMENTS.END
+				)
 				.values(
 						0L, PunishmentType.BAN,
 						ConsoleOperator.INSTANCE, "",
-						ScopeImpl.GLOBAL, Instant.EPOCH, Instant.MAX
+						Instant.EPOCH, Instant.MAX
 				)
 				.getSQL();
 		context

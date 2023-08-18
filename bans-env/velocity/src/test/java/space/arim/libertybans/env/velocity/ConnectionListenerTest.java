@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,8 @@
 
 package space.arim.libertybans.env.velocity;
 
+import com.velocitypowered.api.event.Continuation;
+import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
@@ -40,6 +42,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -97,13 +100,32 @@ public class ConnectionListenerTest {
 		fixedResult(Component.text(text));
 	}
 
+	private void fireAndAwait(LoginEvent event) {
+		EventTask task = listener.onConnect(event);
+		if (task != null) {
+			var future = new CompletableFuture<>();
+			task.execute(new Continuation() {
+				@Override
+				public void resume() {
+					future.complete(null);
+				}
+
+				@Override
+				public void resumeWithException(Throwable exception) {
+					future.completeExceptionally(exception);
+				}
+			});
+			future.join();
+		}
+	}
+
 	@Test
 	public void allowed() {
 		allowedResult();
 		Player player = mockPlayer();
 		LoginEvent event = new LoginEvent(player);
 		var originalResult = event.getResult();
-		listener.handler.executeAndWait(event);
+		fireAndAwait(event);
 		assertEquals(originalResult.getReasonComponent(), event.getResult().getReasonComponent());
 	}
 
@@ -112,11 +134,12 @@ public class ConnectionListenerTest {
 		deniedResult("denied");
 		Player player = mockPlayer();
 		LoginEvent event = new LoginEvent(player);
-		listener.handler.executeAndWait(event);
+		fireAndAwait(event);
 		assertEquals(
 				"denied",
 				event.getResult().getReasonComponent()
-						.map(PlainComponentSerializer.plain()::serialize).orElse(null));
+						.map(PlainComponentSerializer.plain()::serialize).orElse(null)
+		);
 	}
 
 	@Test
@@ -126,9 +149,11 @@ public class ConnectionListenerTest {
 		LoginEvent event = new LoginEvent(player);
 		var denial = ResultedEvent.ComponentResult.denied(Component.text("denial"));
 		event.setResult(denial);
-		listener.handler.executeAndWait(event);
+		fireAndAwait(event);
 		assertEquals(
 				denial.getReasonComponent(),
-				event.getResult().getReasonComponent());
+				event.getResult().getReasonComponent()
+		);
 	}
+
 }

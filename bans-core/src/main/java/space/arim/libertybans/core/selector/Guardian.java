@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,6 +20,7 @@
 package space.arim.libertybans.core.selector;
 
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
@@ -39,7 +40,7 @@ public interface Guardian {
 	 * @param address the player's network address
 	 * @return a future which yields the punishment message if denied, else null if allowed
 	 */
-	CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address);
+	CentralisedFuture<@Nullable Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address);
 
 	/**
 	 * Enforces an incoming connection, returning a punishment message if denied, null if allowed. <br>
@@ -52,9 +53,21 @@ public interface Guardian {
 	 * @param address the player's network address
 	 * @return a future which yields the punishment message if denied, else null if allowed
 	 */
-	default CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, InetAddress address) {
+	default CentralisedFuture<@Nullable Component> executeAndCheckConnection(UUID uuid, String name, InetAddress address) {
 		return executeAndCheckConnection(uuid, name, NetworkAddress.of(address));
 	}
+
+	/**
+	 * Enforces a server switch, returning a punishment message if denied, null if allowed. <br>
+	 * <br>
+	 * Queries for an applicable ban, and formats the ban reason as the punishment message.
+	 *
+	 * @param uuid the player's uuid
+	 * @param address the player's network address
+	 * @param destinationServer the player's destination server
+	 * @return a future which yields the punishment message if denied, else null if allowed
+	 */
+	CentralisedFuture<@Nullable Component> checkServerSwitch(UUID uuid, InetAddress address, String destinationServer);
 
 	/**
 	 * Enforces a chat message or executed command, returning a punishment message if denied, null if allowed. <br>

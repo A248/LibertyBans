@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -29,12 +29,14 @@ import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.api.select.SelectionBase;
 import space.arim.libertybans.api.select.SelectionBuilderBase;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
 import space.arim.libertybans.api.select.SelectionPredicate;
 import space.arim.libertybans.core.commands.extra.AsCompositeWildcard;
+import space.arim.libertybans.core.commands.extra.ParseScope;
 import space.arim.libertybans.core.commands.extra.ParseVictim;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
@@ -187,8 +189,15 @@ public class ListCommands extends AbstractSubCommandGroup {
 				sender().sendMessage(section.usage());
 				return completedFuture(null);
 			}
+			SelectionPredicate<ServerScope> scopeSelection = argumentParser().parseScope(
+					sender(), command(), ParseScope.selectionPredicate()
+			);
+			if (scopeSelection == null) {
+				return completedFuture(null);
+			}
 			int perPage = section.perPage();
 			SelectionBase selection = selectionBuilder
+					.scopes(scopeSelection)
 					.skipFirstRetrieved(perPage * (selectedPage - 1))
 					.limitToRetrieve(perPage)
 					.build();

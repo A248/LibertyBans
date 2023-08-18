@@ -24,7 +24,6 @@ import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.api.PunishmentType;
@@ -32,6 +31,7 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.ExpunctionOrder;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.RevocationOrder;
+import space.arim.libertybans.api.select.SelectionPredicate;
 import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.database.sql.EndTimeCondition;
 import space.arim.libertybans.core.database.sql.TableForType;
@@ -43,7 +43,9 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.time.Instant;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import static space.arim.libertybans.core.schema.tables.Punishments.PUNISHMENTS;
 import static space.arim.libertybans.core.schema.tables.SimpleActive.SIMPLE_ACTIVE;
@@ -151,8 +153,8 @@ public class Revoker implements InternalRevoker {
 		Punishment result = context
 				.select(
 						SIMPLE_HISTORY.VICTIM_TYPE, SIMPLE_HISTORY.VICTIM_UUID, SIMPLE_HISTORY.VICTIM_ADDRESS,
-						SIMPLE_HISTORY.OPERATOR, SIMPLE_HISTORY.REASON,
-						SIMPLE_HISTORY.SCOPE, SIMPLE_HISTORY.START, SIMPLE_HISTORY.END, SIMPLE_HISTORY.TRACK
+						SIMPLE_HISTORY.OPERATOR, SIMPLE_HISTORY.REASON, SIMPLE_HISTORY.SCOPE,
+						SIMPLE_HISTORY.START, SIMPLE_HISTORY.END, SIMPLE_HISTORY.TRACK, SIMPLE_HISTORY.SCOPE_TYPE
 				)
 				.from(SIMPLE_HISTORY)
 				.where(SIMPLE_HISTORY.ID.eq(id))
@@ -214,14 +216,19 @@ public class Revoker implements InternalRevoker {
 	}
 
 	private static Condition matchesAnyVictim(VictimFields victimFields, List<Victim> victims) {
-		Condition matchesAnyVictim = DSL.noCondition();
-		VictimCondition victimCondition = new VictimCondition(victimFields);
-		for (Victim victim : victims) {
-			matchesAnyVictim = matchesAnyVictim.or(
-					victimCondition.matchesVictim(victim)
-			);
-		}
-		return matchesAnyVictim;
+		LinkedHashSet<Victim> victimSet = new LinkedHashSet<>(victims);
+		// Implement it ourself because preserving order is important
+		return new VictimCondition(victimFields).buildCondition(new SelectionPredicate<>() {
+			@Override
+			public Set<Victim> acceptedValues() {
+				return victimSet;
+			}
+
+			@Override
+			public Set<Victim> rejectedValues() {
+				return Set.of();
+			}
+		});
 	}
 
 	CentralisedFuture<Long> undoPunishmentByTypeAndPossibleVictims(final PunishmentType type, 

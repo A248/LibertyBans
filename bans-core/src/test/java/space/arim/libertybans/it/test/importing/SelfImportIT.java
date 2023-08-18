@@ -35,10 +35,10 @@ import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
+import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.importing.SelfImportProcess;
 import space.arim.libertybans.core.punish.PunishmentCreator;
-import space.arim.libertybans.core.scope.ScopeImpl;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 
@@ -66,13 +66,16 @@ public class SelfImportIT {
 
 	private final SelfImportProcess selfImportProcess;
 	private final Provider<QueryExecutor> queryExecutor;
+	private final ScopeManager scopeManager;
 
 	private SelfImportData selfImportData;
 
 	@Inject
-	public SelfImportIT(SelfImportProcess selfImportProcess, Provider<QueryExecutor> queryExecutor) {
+	public SelfImportIT(SelfImportProcess selfImportProcess, Provider<QueryExecutor> queryExecutor, 
+						ScopeManager scopeManager) {
 		this.selfImportProcess = selfImportProcess;
 		this.queryExecutor = queryExecutor;
+		this.scopeManager = scopeManager;
 	}
 
 	@BeforeEach
@@ -132,7 +135,7 @@ public class SelfImportIT {
 					creator.createPunishment(
 							17L, PunishmentType.BAN, AddressVictim.of(addressUnchecked("80.100.23.146")),
 							PlayerOperator.of(UUID.fromString("f360da52-6304-3af4-8b30-b7d9c5e6e162")), "swearing",
-							ScopeImpl.GLOBAL, Instant.ofEpochSecond(1636139831L), Instant.MAX, null
+							scopeManager.globalScope(), Instant.ofEpochSecond(1636139831L), Instant.MAX, null
 					),
 					context
 							.selectFrom(SIMPLE_ACTIVE)
@@ -143,7 +146,7 @@ public class SelfImportIT {
 					creator.createPunishment(
 							44L, PunishmentType.WARN, PlayerVictim.of(UUID.fromString("ef1275f7-5c3a-36ed-92f6-6b3716c72896")),
 							PlayerOperator.of(UUID.fromString("f360da52-6304-3af4-8b30-b7d9c5e6e162")), "abusing and getting items from creative",
-							ScopeImpl.GLOBAL, Instant.ofEpochSecond(1636916014L), Instant.MAX, null
+							scopeManager.globalScope(), Instant.ofEpochSecond(1636916014L), Instant.MAX, null
 					),
 					context
 							.selectFrom(SIMPLE_ACTIVE)
@@ -154,7 +157,7 @@ public class SelfImportIT {
 					creator.createPunishment(
 							135L, PunishmentType.BAN, PlayerVictim.of(UUID.fromString("47df0fc2-3213-3401-af68-58cafb0e99f5")),
 							ConsoleOperator.INSTANCE, "Everyone wants you banned, nerd",
-							ScopeImpl.GLOBAL, Instant.ofEpochSecond(1638635845L), Instant.ofEpochSecond(1639240645L), null
+							scopeManager.globalScope(), Instant.ofEpochSecond(1638635845L), Instant.ofEpochSecond(1639240645L), null
 					),
 					context
 							.selectFrom(SIMPLE_HISTORY)

@@ -21,8 +21,8 @@ package space.arim.libertybans.core.punish;
 
 import org.jooq.Record10;
 import org.jooq.Record11;
-import org.jooq.Record5;
-import org.jooq.Record9;
+import org.jooq.Record12;
+import org.jooq.Record6;
 import org.jooq.RecordMapper;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
@@ -31,6 +31,7 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.scope.ScopeType;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -41,20 +42,20 @@ public interface PunishmentCreator {
 								Operator operator, String reason,
 								ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack);
 
-	RecordMapper<Record11<
-				Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, ServerScope, Instant, Instant, EscalationTrack>,
+	RecordMapper<Record12<
+			Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,
 			Punishment> punishmentMapper();
 
-	RecordMapper<Record10<
-			PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, ServerScope, Instant, Instant, EscalationTrack>,
+	RecordMapper<Record11<
+			PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,
 			Punishment> punishmentMapper(long id);
 
-	RecordMapper<Record9<
-			Victim.VictimType, UUID, NetworkAddress, Operator, String, ServerScope, Instant, Instant, EscalationTrack>,
+	RecordMapper<Record10<
+			Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,
 			Punishment> punishmentMapper(long id, PunishmentType type);
 
-	RecordMapper<Record5<
-			String, ServerScope, Instant, String, String>,
+	RecordMapper<Record6<
+			String, Instant, String, String, ScopeType, String>,
 			Punishment> punishmentMapperForModifications(Punishment oldPunishment);
 
 }

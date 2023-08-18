@@ -38,8 +38,9 @@ import space.arim.libertybans.api.punish.DraftSanctionBuilder;
 import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.PunishmentDetailsCalculator;
 import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.scope.GlobalScope;
 import space.arim.libertybans.core.scope.InternalScopeManager;
-import space.arim.libertybans.core.scope.ScopeImpl;
+import space.arim.libertybans.core.scope.SpecificServerScope;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -49,6 +50,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -71,7 +74,8 @@ public class PunishmentBuilderTest {
     @BeforeEach
     public void setup() {
         when(enactor.scopeManager()).thenReturn(scopeManager);
-        when(scopeManager.globalScope()).thenReturn(ScopeImpl.GLOBAL);
+        when(scopeManager.globalScope()).thenReturn(GlobalScope.INSTANCE);
+        lenient().when(scopeManager.checkScope(any())).thenAnswer((i) -> i.getArgument(0));
 
         addBuilderParam(Victim.class, PlayerVictim.of(UUID.randomUUID()));
         addBuilderParam(Operator.class, PlayerOperator.of(UUID.randomUUID()));
@@ -120,7 +124,7 @@ public class PunishmentBuilderTest {
 
         addBuilderParam(PunishmentType.class, PunishmentType.BAN);
         addBuilderParam(String.class, "Test");
-        addBuilderParam(ServerScope.class, ScopeImpl.specificServer("serveme!"));
+        addBuilderParam(ServerScope.class, new SpecificServerScope("serveme!"));
         addBuilderParam(Duration.class, Duration.ofHours(3L));
 
         testBuilder(

@@ -35,7 +35,7 @@ public enum Vendor {
 	;
 
 	private final String displayName;
-	private final JdbcDriver driver;
+	final JdbcDriver driver;
 
 	Vendor(String displayName, JdbcDriver driver) {
 		this.displayName = displayName;
@@ -45,14 +45,6 @@ public enum Vendor {
 	@Override
 	public String toString() {
 		return displayName;
-	}
-
-	JdbcDriver driver() {
-		return driver;
-	}
-
-	public boolean hasDeleteFromJoin() {
-		return isMySQLLike();
 	}
 
 	public boolean isRemote() {
@@ -151,8 +143,25 @@ public enum Vendor {
 
 	public String alterViewStatement() {
 		return switch (this) {
-			case HSQLDB, MYSQL, MARIADB -> "ALTER VIEW";
+			case HSQLDB, MARIADB, MYSQL -> "ALTER VIEW";
 			case POSTGRES, COCKROACH -> "CREATE OR REPLACE VIEW";
+		};
+	}
+
+	public String zeroSmallintLiteral() {
+		return switch (this) {
+			case HSQLDB, POSTGRES, COCKROACH -> "CAST(0 AS SMALLINT)";
+			case MARIADB, MYSQL -> "0";
+		};
+	}
+
+	public String[] migrateScope() {
+		return switch (this) {
+			case MARIADB, MYSQL -> new String[] {"", ""};
+			case HSQLDB, POSTGRES, COCKROACH -> new String[] {
+					"CAST(",
+					" AS CHARACTER VARYING(32))"
+			};
 		};
 	}
 

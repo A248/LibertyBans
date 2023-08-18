@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.it.jpmscompat;
 
+import space.arim.libertybans.core.env.EnvMessageChannel;
 import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.libertybans.core.selector.cache.OnDemandMuteCache;
 import space.arim.libertybans.core.importing.PlatformImportSource;
@@ -27,6 +28,10 @@ public class JpmsBindModule {
 
 	public MuteCache muteCache(OnDemandMuteCache muteCache) {
 		return muteCache;
+	}
+
+	public EnvMessageChannel<?> messageChannel(EnvMessageChannel.NoOp messageChannel) {
+		return messageChannel;
 	}
 
 	public PlatformImportSource platformImportSource() {

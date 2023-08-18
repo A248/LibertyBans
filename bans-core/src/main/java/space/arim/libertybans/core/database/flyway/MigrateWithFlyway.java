@@ -43,6 +43,9 @@ public final class MigrateWithFlyway {
 	public void migrate(JooqContext jooqContext) throws MigrationFailedException {
 		Flyway flyway = createFlyway(new MigrationState(jooqContext));
 		try {
+			if (Boolean.getBoolean("libertybans.database.flywayrepair")) {
+				flyway.repair();
+			}
 			flyway.migrate();
 		} catch (FlywayException ex) {
 			throw new MigrationFailedException(ex);
@@ -52,7 +55,8 @@ public final class MigrateWithFlyway {
 	private Flyway createFlyway(MigrationState migrationState) {
 		var classProvider = migrationState.asClassProvider(List.of(
 				V1__Principle.class, V16__Complete_migration_from_08x.class,
-				V31__Track_identifier_sequence.class, R__Set_Revision.class
+				V31__Track_identifier_sequence.class, V34__Scope_identifier_sequence.class, V38__Scope_migration.class,
+				R__Set_Revision.class
 		));
 		return Flyway
 				.configure(getClass().getClassLoader())
@@ -66,7 +70,10 @@ public final class MigrateWithFlyway {
 						"uuidtype", vendor.uuidType(),
 						"inettype", vendor.inetType(),
 						"arbitrarybinarytype", vendor.arbitraryBinaryType(),
-						"alterviewstatement", vendor.alterViewStatement()
+						"alterviewstatement", vendor.alterViewStatement(),
+						"zerosmallintliteral", vendor.zeroSmallintLiteral(),
+						"migratescopestart", vendor.migrateScope()[0],
+						"migratescopeend", vendor.migrateScope()[1]
 				))
 				.locations("classpath:database-migrations")
 				// Override classpath scanning

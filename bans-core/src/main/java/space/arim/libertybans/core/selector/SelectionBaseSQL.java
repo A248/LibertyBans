@@ -41,8 +41,10 @@ import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.database.sql.ApplicableViewFields;
 import space.arim.libertybans.core.database.sql.EndTimeCondition;
 import space.arim.libertybans.core.database.sql.PunishmentFields;
+import space.arim.libertybans.core.database.sql.ScopeCondition;
 import space.arim.libertybans.core.database.sql.SimpleViewFields;
 import space.arim.libertybans.core.database.sql.TableForType;
+import space.arim.libertybans.core.scope.ScopeType;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.time.Instant;
@@ -142,6 +144,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			}
 			columns.add(fields.reason());
 			if (getScopes().isNotSimpleEquality()) {
+				columns.add(fields.scopeType());
 				columns.add(fields.scope());
 			}
 			columns.add(fields.start());
@@ -164,14 +167,12 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 				// Type is ensured by selected table
 			} else {
 				condition = condition
-						.and(new Criteria<>(getTypes()).matchesField(fields.type()));
+						.and(new SingleFieldCriterion<>(fields.type()).matches(getTypes()));
 			}
 			condition = condition
-					.and(new Criteria<>(getOperators()).matchesField(fields.operator()))
-					.and(new Criteria<>(getScopes()).matchesField(fields.scope()))
-					.and(Criteria.createViaTransform(getEscalationTracks(), (optTrack) -> optTrack.orElse(null))
-							.matchesField(fields.track())
-					);
+					.and(new SingleFieldCriterion<>(fields.operator()).matches(getOperators()))
+					.and(new SingleFieldCriterion<>(fields.track()).matches(getEscalationTracks(), (optTrack) -> optTrack.orElse(null)))
+					.and(new ScopeCondition(fields, resources.scopeManager()).buildCondition(getScopes()));
 			if (active) {
 				condition = condition
 						.and(new EndTimeCondition(fields).isNotExpired(timeSupplier.get()));
@@ -236,9 +237,14 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			Operator operator = retrieveValueFromRecordOrSelection(
 					getOperators(), record, fields.operator()
 			);
-			ServerScope scope = retrieveValueFromRecordOrSelection(
-					getScopes(), record, fields.scope()
-			);
+			ServerScope scope;
+			if (getScopes().isSimpleEquality()) {
+				scope = getScopes().acceptedValues().iterator().next();
+			} else {
+				ScopeType scopeType = record.get(aggregateIfNeeded(fields.scopeType()));
+				String scopeValue = record.get(aggregateIfNeeded(fields.scope()));
+				scope = resources.scopeManager().deserialize(scopeType, scopeValue);
+			}
 			EscalationTrack escalationTrack = retrieveValueFromRecordOrSelection(
 					getEscalationTracks(), record, fields.track(),
 					(optTrack) -> optTrack.orElse(null)

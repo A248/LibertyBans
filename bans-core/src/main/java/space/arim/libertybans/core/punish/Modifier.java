@@ -21,12 +21,14 @@ package space.arim.libertybans.core.punish;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jooq.Field;
 import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentEditor;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.database.sql.ScopeIdSequenceValue;
 import space.arim.libertybans.core.database.sql.TrackIdSequenceValue;
 import space.arim.libertybans.core.scope.InternalScopeManager;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -43,6 +45,7 @@ import static org.jooq.impl.DSL.greatest;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.when;
 import static space.arim.libertybans.core.schema.tables.Punishments.PUNISHMENTS;
+import static space.arim.libertybans.core.schema.tables.Scopes.SCOPES;
 import static space.arim.libertybans.core.schema.tables.Tracks.TRACKS;
 
 public final class Modifier {
@@ -64,16 +67,17 @@ public final class Modifier {
 	}
 
 	/** Holder for nullable escalation track */
-	record EscalationTrackBox(EscalationTrack track) {}
+	record EscalationTrackBox(@Nullable EscalationTrack track) {}
 
 	class Editor implements PunishmentEditor {
 
 		private final Punishment oldInstance;
-		private String reason;
-		private ServerScope scope;
-		private Instant endDate;
-		private Duration endDateDelta;
-		private EscalationTrackBox escalationTrackBox;
+		// Null indicates unchanged; nonnull requires an update
+		private @Nullable String reason;
+		private @Nullable ServerScope scope;
+		private @Nullable Instant endDate;
+		private @Nullable Duration endDateDelta;
+		private @Nullable EscalationTrackBox escalationTrackBox;
 
 		Editor(Punishment oldInstance) {
 			this.oldInstance = oldInstance;
@@ -86,8 +90,7 @@ public final class Modifier {
 
 		@Override
 		public void setScope(ServerScope scope) {
-			scopeManager.checkScope(scope);
-			this.scope = scope;
+			this.scope = scopeManager.checkScope(scope);
 		}
 
 		@Override
@@ -121,17 +124,17 @@ public final class Modifier {
 				if (reason != null) {
 					record.setReason(reason);
 				}
-				if (scope != null) {
-					record.setScope(scope);
-				}
 				if (endDate != null) {
 					record.setEnd(endDate);
 				}
-				Map<Field<?>, Field<?>> furtherModifications = new HashMap<>(3, 0.99f);
+				Map<Field<?>, Field<?>> furtherModifications = new HashMap<>(4, 0.99f);
 				if (escalationTrackBox != null) {
-					Field<Integer> newTrack = new TrackIdSequenceValue()
-							.retrieveTrackIdField(context, escalationTrackBox.track);
+					Field<Integer> newTrack = new TrackIdSequenceValue(context).retrieveTrackId(escalationTrackBox.track);
 					furtherModifications.put(PUNISHMENTS.TRACK, newTrack);
+				}
+				if (scope != null) {
+					Field<Integer> newScope = new ScopeIdSequenceValue(context).retrieveScopeId(scope);
+					furtherModifications.put(PUNISHMENTS.SCOPE, newScope);
 				}
 				if (endDateDelta != null) {
 					Field<Instant> newEndDate = when(
@@ -152,12 +155,15 @@ public final class Modifier {
 						.execute();
 				return context
 						.select(
-								PUNISHMENTS.REASON, PUNISHMENTS.SCOPE, PUNISHMENTS.END,
-								TRACKS.NAMESPACE, TRACKS.VALUE
+								PUNISHMENTS.REASON, PUNISHMENTS.END,
+								TRACKS.NAMESPACE, TRACKS.VALUE,
+								SCOPES.TYPE, SCOPES.VALUE
 						)
 						.from(PUNISHMENTS)
 						.leftJoin(TRACKS)
 						.on(PUNISHMENTS.TRACK.eq(TRACKS.ID))
+						.leftJoin(SCOPES)
+						.on(PUNISHMENTS.SCOPE_ID.eq(SCOPES.ID))
 						.where(PUNISHMENTS.ID.eq(id))
 						// Can return null if punishment was expunged
 						.fetchOne(creator.punishmentMapperForModifications(oldInstance));

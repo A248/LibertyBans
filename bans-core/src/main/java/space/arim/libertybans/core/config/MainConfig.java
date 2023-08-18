@@ -154,26 +154,9 @@ public interface MainConfig {
 	interface Platforms {
 
 		@SubSection
-		Bukkit bukkit();
-
-		interface Bukkit {
-
-			@ConfKey("kick-via-plugin-messaging")
-			@ConfComments({
-					"This option is relevant for backend servers running within a network (BungeeCord or Velocity).",
-					"It instructs the proxy to kick the player from the network via plugin messaging.",
-					"",
-					"If enabled, the player will NOT be kicked by the backend server, so you MUST use a proxy",
-					"otherwise players will not be kicked at all."
-			})
-			@DefaultBoolean(false)
-			boolean kickViaPluginMessaging();
-
-		}
-
-		@SubSection
 		Sponge sponge();
 
+		@ConfHeader("Related to the Sponge platform")
 		interface Sponge {
 
 			@ConfKey("register-ban-service")
@@ -200,6 +183,59 @@ public interface MainConfig {
 			})
 			@DefaultBoolean(true)
 			boolean registerBanService();
+
+		}
+
+		@ConfKey("game-servers")
+		@SubSection
+		GameServers gameServers();
+
+		@ConfHeader("Related to game servers such as Spigot, Paper, and Sponge")
+		interface GameServers {
+
+			@ConfKey("use-plugin-messaging")
+			@ConfComments({
+					"This option is relevant for backend servers running within a network (BungeeCord or Velocity).",
+					"It enables the use of plugin messaging, such as for:",
+					" - Kicking the player from the entire network",
+					" - Detecting the name of the backend server for use with server scopes",
+					" - Synchronizing punishments across instances, depending on the mode in the sql.yml",
+					"",
+					"DO NOT enable this option if you do not run a network. Otherwise, you create a security vulnerability",
+					"whereby players can pretend to be coming from a proxy, evading kicks and sending sync messages.",
+					"After changing this option, please perform a restart (/libertybans restart)."
+			})
+			@DefaultBoolean(false)
+			boolean usePluginMessaging();
+
+		}
+
+		@SubSection
+		Proxies proxies();
+
+		@ConfHeader("Related to proxies such as BungeeCord and Velocity")
+		interface Proxies {
+
+			@ConfKey("multiple-proxy-instances")
+			@ConfComments({
+					"Set this to true to indicate that you are running multiple proxy instances.",
+					"",
+					"It will instruct LibertyBans to perform additional synchronization measures, where applicable."
+			})
+			@DefaultBoolean(false)
+			// Currently unused, but may be utilized later
+			boolean multipleProxyInstances();
+
+			@ConfKey("enforce-server-switch")
+			@ConfComments({
+					"Server-scoped punishments will be enforced by preventing server switches for players connecting ",
+					"to servers on which they are banned. The server name is obtained from the proxy API",
+					"",
+					"This option is enabled by default for full functionality. However, it increases performance usage,",
+					"so you may want to disable it if you do not use the scopes feature."
+			})
+			@DefaultBoolean(true)
+			boolean enforceServerSwitch();
 
 		}
 	}
