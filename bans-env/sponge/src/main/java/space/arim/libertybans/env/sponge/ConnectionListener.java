@@ -33,7 +33,7 @@ import java.net.InetAddress;
 import java.util.UUID;
 
 @Singleton
-public final class ConnectionListener extends ParallelisedListener<ServerSideConnectionEvent.Auth, Component> {
+public final class ConnectionListener extends ParallelisedListener<ServerSideConnectionEvent.Handshake, Component> {
 
 	private final RegisterListeners registerListeners;
 	private final Guardian guardian;
@@ -55,11 +55,7 @@ public final class ConnectionListener extends ParallelisedListener<ServerSideCon
 	}
 
 	@Listener(order = Order.EARLY)
-	public void onConnectEarly(ServerSideConnectionEvent.Auth event) {
-		if (event.isCancelled()) {
-			debugPrematurelyDenied(event);
-			return;
-		}
+	public void onConnectEarly(ServerSideConnectionEvent.Handshake event) {
 		UUID uuid = event.profile().uniqueId();
 		String name = event.profile().name().orElseThrow(() -> new IllegalStateException("No name found"));
 		InetAddress address = event.connection().address().getAddress();
@@ -67,19 +63,19 @@ public final class ConnectionListener extends ParallelisedListener<ServerSideCon
 	}
 
 	@Override
-	protected boolean isAllowed(ServerSideConnectionEvent.Auth event) {
-		return !event.isCancelled();
+	protected boolean isAllowed(ServerSideConnectionEvent.Handshake event) {
+		// No way to check if the connection has been closed by someone else
+		return true;
 	}
 
 	@Listener(order = Order.LATE)
-	public void onConnectLate(ServerSideConnectionEvent.Auth event) {
+	public void onConnectLate(ServerSideConnectionEvent.Handshake event) {
 		Component message = withdraw(event);
 		if (message == null) {
 			debugResultPermitted(event);
 			return;
 		}
-		event.setCancelled(true);
-		event.setMessage(message);
+		event.connection().close(message);
 	}
 
 }

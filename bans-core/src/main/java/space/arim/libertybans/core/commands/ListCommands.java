@@ -23,6 +23,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.PunishmentType;
@@ -47,6 +48,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
@@ -121,34 +123,25 @@ public class ListCommands extends AbstractSubCommandGroup {
 				target = command().next();
 
 				if (config().commands().showApplicableForHistory()) {
-					yield argumentParser().parsePlayer(sender(), target).thenCompose((uuidAndAddress) -> {
-						if (uuidAndAddress == null) {
-							return completedFuture(null);
-						}
-						return parsePageThenExecute(
-								selector.selectionByApplicabilityBuilder(
-										uuidAndAddress.uuid(), uuidAndAddress.address()
-								).selectAll()
-						);
-					});
-				}
-				SelectionOrderBuilder selectionOrderBuilder = selector.selectionBuilder();
-				if (listType == ListType.HISTORY) {
-					selectionOrderBuilder.selectAll();
+					yield historyOrWarns(
+							argumentParser().parsePlayer(sender(), target),
+							(uuidAndAddress) -> selector.selectionByApplicabilityBuilder(
+									uuidAndAddress.uuid(), uuidAndAddress.address()
+							)
+					);
 				} else {
-					selectionOrderBuilder.type(PunishmentType.WARN);
+					yield historyOrWarns(
+							argumentParser().parseVictim(
+									sender(), target, ParseVictim.ofPreferredType(Victim.VictimType.PLAYER)
+							),
+							(victim) -> {
+								// Select punishments made against this user OR against the composite user
+								CompositeVictim compositeWildcard = new AsCompositeWildcard().apply(victim);
+								SelectionPredicate<Victim> victimSelection = matchingAnyOf(victim, compositeWildcard);
+								return selector.selectionBuilder().victims(victimSelection);
+							}
+					);
 				}
-				yield argumentParser().parseVictim(
-						sender(), target, ParseVictim.ofPreferredType(Victim.VictimType.PLAYER)
-				).thenCompose((victim) -> {
-					if (victim == null) {
-						return completedFuture(null);
-					}
-					// Select punishments made against this user OR against the composite user
-					CompositeVictim compositeWildcard = new AsCompositeWildcard().apply(victim);
-					SelectionPredicate<Victim> victimSelection = matchingAnyOf(victim, compositeWildcard);
-					return parsePageThenExecute(selectionOrderBuilder.victims(victimSelection));
-				});
 			}
 			case BLAME -> {
 				if (!command().hasNext()) {
@@ -169,6 +162,23 @@ public class ListCommands extends AbstractSubCommandGroup {
 				});
 			}
 			};
+		}
+
+		private <V> ReactionStage<Void> historyOrWarns(CentralisedFuture<V> parseVictim,
+													   Function<@NonNull V, SelectionBuilderBase<?, ?>> createSelection) {
+			return parseVictim.thenCompose((victim) -> {
+				if (victim == null) {
+					return completedFuture(null);
+				}
+				SelectionBuilderBase<?, ?> selectionBuilder = createSelection.apply(victim);
+				if (listType == ListType.HISTORY) {
+					selectionBuilder.selectAll();
+				} else {
+					assert listType == ListType.WARNS;
+					selectionBuilder.type(PunishmentType.WARN);
+				}
+				return parsePageThenExecute(selectionBuilder);
+			});
 		}
 
 		private ReactionStage<Void> parsePageThenExecute(SelectionBuilderBase<?, ?> selectionBuilder) {

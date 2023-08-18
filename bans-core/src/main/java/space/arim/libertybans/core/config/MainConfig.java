@@ -138,8 +138,8 @@ public interface MainConfig {
 
 		@ConfKey("show-applicable-for-history")
 		@ConfComments({
-				"By default, /history shows all active punishments for the player requested.",
-				"Enabling this option will make /history scan all punishments which would apply to the player",
+				"By default, /history and /warns show punishments specifically for the player requested.",
+				"Enabling this option will make /history and /warn scan punishments which would apply to the player",
 				"",
 				"For example, an IP ban may apply to a player, but it will not be in the player's /history unless this is enabled"
 		})

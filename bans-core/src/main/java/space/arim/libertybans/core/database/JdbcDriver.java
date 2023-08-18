@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,19 +24,22 @@ import java.util.List;
 import java.util.Map;
 
 public enum JdbcDriver {
-	HSQLDB("org.hsqldb.jdbc.JDBCDriver", "org.hsqldb.jdbc.JDBCDataSource", ';', ';'),
-	MARIADB_CONNECTOR("org.mariadb.jdbc.Driver", "org.mariadb.jdbc.MariaDbDataSource", '?', '&'),
-	PG_JDBC("org.postgresql.Driver", "org.postgresql.ds.PGSimpleDataSource", '?', '&'),
+	H2("org.h2.Driver", "org.h2.jdbcx.JdbcDataSource", "h2", ';', ';'),
+	HSQLDB("org.hsqldb.jdbc.JDBCDriver", "org.hsqldb.jdbc.JDBCDataSource", "hsqldb", ';', ';'),
+	MARIADB_CONNECTOR("org.mariadb.jdbc.Driver", "org.mariadb.jdbc.MariaDbDataSource", "mariadb", '?', '&'),
+	PG_JDBC("org.postgresql.Driver", "org.postgresql.ds.PGSimpleDataSource", "postgresql", '?', '&'),
 	;
 
 	private final String driverClassName;
 	private final String dataSourceClassName;
 
+	private final String urlPrefix;
 	private final char urlPropertyPrefix;
 	private final char urlPropertySeparator;
 
-	private JdbcDriver(String driverClassName, String dataSourceClassName,
-					   char urlPropertyPrefix, char urlPropertySeparator) {
+	JdbcDriver(String driverClassName, String dataSourceClassName,
+			   String urlPrefix, char urlPropertyPrefix, char urlPropertySeparator) {
+		this.urlPrefix = urlPrefix;
 		this.driverClassName = driverClassName;
 		this.dataSourceClassName = dataSourceClassName;
 
@@ -44,12 +47,16 @@ public enum JdbcDriver {
 		this.urlPropertySeparator = urlPropertySeparator;
 	}
 
-	public String driverClassName() {
+	String driverClassName() {
 		return driverClassName;
 	}
 
-	String dataSourceClassName() {
+	public String dataSourceClassName() {
 		return dataSourceClassName;
+	}
+
+	public boolean ownsUrl(String jdbcUrl) {
+		return jdbcUrl.startsWith("jdbc:" + urlPrefix);
 	}
 
 	String formatConnectionProperties(Map<String, Object> properties) {
@@ -57,7 +64,7 @@ public enum JdbcDriver {
 			return "";
 		}
 		List<String> connectProps = new ArrayList<>(properties.size());
-		properties.forEach((key, value) -> connectProps.add(key + "=" + value));
+		properties.forEach((key, value) -> connectProps.add(key + '=' + value));
 
 		return urlPropertyPrefix + String.join(Character.toString(urlPropertySeparator), connectProps);
 	}

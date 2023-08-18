@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2020 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,6 +21,7 @@ package space.arim.libertybans.core.importing;
 
 import space.arim.libertybans.core.database.JdbcDriver;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -40,25 +41,35 @@ public final class JdbcDetails implements ConnectionSource {
 
 	@Override
 	public Connection openConnection() throws SQLException {
-		// Workaround DriverManager not supporting drivers not loaded through system ClassLoader
-		if (jdbcUrl.startsWith("jdbc:hsqldb")) {
-			initDriver(JdbcDriver.HSQLDB);
+		// Connect manually if possible, for two reasons
+		// 1. Workaround DriverManager not supporting drivers not loaded through system ClassLoader
+		// 2. Avoid polluting the driver registry if we don't have to. Helps the ecosystem
+		for (JdbcDriver driver : JdbcDriver.values()) {
+			if (driver.ownsUrl(jdbcUrl)) {
+				try {
+					return manualConnect(driver);
+				} catch (ReflectiveOperationException ex) {
+					throw new ImportException("Failed to initialize JDBC data source for " + driver, ex);
+				}
+			}
 		}
-		if (jdbcUrl.startsWith("jdbc:mariadb")) {
-			initDriver(JdbcDriver.MARIADB_CONNECTOR);
-		}
-		if (jdbcUrl.startsWith("jdbc:postgresql")) {
-			initDriver(JdbcDriver.PG_JDBC);
-		}
+		// Scan the global driver registry. This is potentially susceptible to classloading chaos,
+		// however, this url was requested for importing purposes, so we must serve the request
 		return DriverManager.getConnection(jdbcUrl, username, password);
 	}
 
-	private void initDriver(JdbcDriver driver) {
-		try {
-			Class.forName(driver.driverClassName());
-		} catch (ClassNotFoundException ex) {
-			throw new ImportException("Failed to initialize JDBC driver " + driver, ex);
-		}
+	private Connection manualConnect(JdbcDriver driver) throws SQLException, ReflectiveOperationException {
+		// Instantiate data source
+		DataSource dataSource = Class.forName(driver.dataSourceClassName())
+				.asSubclass(DataSource.class)
+				.getDeclaredConstructor()
+				.newInstance();
+		// Set url. All implementations have this method
+		dataSource.getClass()
+				.getMethod("setUrl", String.class)
+				.invoke(dataSource, jdbcUrl);
+		// Retrieve connection
+		return dataSource.getConnection(username, password);
 	}
 
 	@Override
