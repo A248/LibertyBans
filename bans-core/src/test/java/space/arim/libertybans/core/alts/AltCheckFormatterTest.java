@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -74,10 +74,9 @@ public class AltCheckFormatterTest {
 		UUID userId = UUID.randomUUID();
 		String username = "AltUser";
 		Instant date = Instant.parse("2021-07-23T02:15:23.000000Z");
-		DetectedAlt alt = new DetectedAlt(DetectionKind.NORMAL,
-				null, NetworkAddress.of(InetAddress.getByName(address)),
-				userId, username, date);
-
+		DetectedAlt alt = new DetectedAlt(
+				userId, username, NetworkAddress.of(InetAddress.getByName(address)), date, DetectionKind.NORMAL
+		);
 		{
 			when(conf.layout()).thenReturn(ComponentText.create(Component.text(
 					"detection_kind: %DETECTION_KIND%, address: %ADDRESS%, username: %RELEVANT_USER%, " +
@@ -113,22 +112,26 @@ public class AltCheckFormatterTest {
 			when(conf.nameDisplay()).thenReturn(nameDisplay);
 		}
 		List<DetectedAlt> alts = List.of(
-				new DetectedAlt(DetectionKind.NORMAL,
-						PunishmentType.BAN, RandomUtil.randomAddress(),
-						UUID.randomUUID(), "BadUser", date),
-				new DetectedAlt(DetectionKind.STRICT,
-						PunishmentType.MUTE, RandomUtil.randomAddress(),
-						UUID.randomUUID(), "Misbehaver", date),
-				new DetectedAlt(DetectionKind.NORMAL,
-						null, RandomUtil.randomAddress(),
-						UUID.randomUUID(), "Saint", date)
+				new DetectedAlt(
+						UUID.randomUUID(), "BadUser", RandomUtil.randomAddress(), date,
+						DetectionKind.NORMAL, PunishmentType.BAN
+				),
+				new DetectedAlt(
+						UUID.randomUUID(), "Misbehaver", RandomUtil.randomAddress(), date,
+						DetectionKind.STRICT, PunishmentType.MUTE
+				),
+				new DetectedAlt(
+						UUID.randomUUID(), "Saint", RandomUtil.randomAddress(), date,
+						DetectionKind.NORMAL
+				)
 		);
 		Component formattedMessage = altCheckFormatter.formatMessage(
 				ComponentText.create(Component.text("Header")), "MainUser", alts);
-		assertEquals("Header\n" +
-						"kind: NORMAL, username: Banned(BadUser)\n" +
-						"kind: STRICT, username: Muted(Misbehaver)\n" +
-						"kind: NORMAL, username: None(Saint)",
+		assertEquals("""
+						Header
+						kind: NORMAL, username: Banned(BadUser)
+						kind: STRICT, username: Muted(Misbehaver)
+						kind: NORMAL, username: None(Saint)""",
 				PlainComponentSerializer.plain().serialize(formattedMessage));
 	}
 }

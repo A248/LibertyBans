@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -38,7 +38,7 @@ class ListFormat<T> {
 		this.elementFormat = elementFormat;
 	}
 
-	Component formatMessage(ComponentText header, String target, List<T> data) {
+	Component formatMessage(ComponentText header, String target, List<? extends T> data) {
 		List<ComponentLike> messages = new ArrayList<>(data.size() + 1);
 		messages.add(formatter.prefix(header.replaceText("%TARGET%", target)));
 		for (T datum : data) {

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,6 +23,7 @@ import jakarta.inject.Inject;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
+import space.arim.libertybans.api.user.KnownAccount;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 
@@ -40,27 +41,22 @@ public class AccountHistoryFormatter {
 		listFormat = new ListFormat<>(formatter, new KnownAccountFormat(configs, formatter));
 	}
 
-	public Component formatMessage(String target, List<KnownAccount> knownAccounts) {
+	public Component formatMessage(String target, List<? extends KnownAccount> knownAccounts) {
 		ComponentText header = configs.getMessagesConfig().accountHistory().listing().header();
 		return listFormat.formatMessage(header, target, knownAccounts);
 	}
 
-	private static final class KnownAccountFormat implements ListFormat.ElementFormat<KnownAccount> {
-
-		private final Configs configs;
-		private final InternalFormatter formatter;
-
-		private KnownAccountFormat(Configs configs, InternalFormatter formatter) {
-			this.configs = configs;
-			this.formatter = formatter;
-		}
+	private record KnownAccountFormat(Configs configs, InternalFormatter formatter)
+			implements ListFormat.ElementFormat<KnownAccount> {
 
 		@Override
 		public ComponentLike format(String target, KnownAccount knownAccount) {
-			Instant recorded = knownAccount.updated();
+			Instant recorded = knownAccount.recorded();
 			return configs.getMessagesConfig().accountHistory().listing().layout()
 					.replaceText("%TARGET%", target)
-					.replaceText("%USERNAME%", knownAccount.username())
+					.replaceText("%USERNAME%", knownAccount.latestUsername().orElseGet(
+							() -> configs.getMessagesConfig().formatting().victimDisplay().playerNameUnknown()
+					))
 					.replaceText("%ADDRESS%", knownAccount.address().toString())
 					.replaceText("%DATE_RECORDED%", formatter.formatAbsoluteDate(recorded))
 					.replaceText("%DATE_RECORDED_RAW%", Long.toString(recorded.getEpochSecond()));

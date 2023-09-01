@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -42,60 +42,48 @@ public class AltCheckFormatter {
 		return listFormat.formatMessage(header, target, detectedAlts);
 	}
 
-	private static final class DetectedAltFormat implements ListFormat.ElementFormat<DetectedAlt> {
-
-		private final Configs configs;
-		private final InternalFormatter formatter;
-
-		private DetectedAltFormat(Configs configs, InternalFormatter formatter) {
-			this.configs = configs;
-			this.formatter = formatter;
-		}
-
-		private AltsSection.Formatting formatting() {
-			return configs.getMessagesConfig().alts().formatting();
-		}
-
-		private ComponentLike getKind(DetectionKind detectionKind) {
-			switch (detectionKind) {
-			case NORMAL:
-				return formatting().normal();
-			case STRICT:
-				return formatting().strict();
-			default:
-				throw new IllegalArgumentException("Unknown kind " + detectionKind);
-			}
-		}
-
-		private ComponentText getUsernameFormat(PunishmentType type) {
-			var nameDisplay = formatting().nameDisplay();
-			if (type == null) {
-				return nameDisplay.notPunished();
-			}
-			switch (type) {
-			case BAN:
-				return nameDisplay.banned();
-			case MUTE:
-				return nameDisplay.muted();
-			default:
-				throw new IllegalArgumentException("Punishment type " + type + " not found");
-			}
-		}
+	private record DetectedAltFormat(Configs configs, InternalFormatter formatter)
+			implements ListFormat.ElementFormat<DetectedAlt> {
 
 		private ComponentLike formatUsername(DetectedAlt detectedAlt) {
-			return getUsernameFormat(detectedAlt.punishmentType().orElse(null))
-					.replaceText("%USERNAME%", detectedAlt.relevantUserName());
+			PunishmentType type;
+			if (detectedAlt.hasActivePunishment(PunishmentType.BAN)) {
+				type = PunishmentType.BAN;
+			} else if (detectedAlt.hasActivePunishment(PunishmentType.MUTE)) {
+				type = PunishmentType.MUTE;
+			} else {
+				type = null;
+			}
+			ComponentText usernameFormat;
+			var nameDisplay = configs.getMessagesConfig().alts().formatting().nameDisplay();
+			if (type == null) {
+				usernameFormat = nameDisplay.notPunished();
+			} else {
+				usernameFormat = switch (type) {
+					case BAN -> nameDisplay.banned();
+					case MUTE -> nameDisplay.muted();
+					default -> throw new IllegalArgumentException("Punishment type " + type + " not available");
+				};
+			}
+			return usernameFormat.replaceText("%USERNAME%", detectedAlt.latestUsername().orElseGet(
+					() -> configs.getMessagesConfig().formatting().victimDisplay().playerNameUnknown()
+			));
 		}
 
 		@Override
 		public ComponentLike format(String target, DetectedAlt detectedAlt) {
-			return formatting().layout()
-					.replaceText("%ADDRESS%", detectedAlt.relevantAddress().toString())
-					.replaceText("%RELEVANT_USERID%", detectedAlt.relevantUserId().toString())
-					.replaceText("%DATE_RECORDED%", formatter.formatAbsoluteDate(detectedAlt.dateAccountRecorded()))
+			var formatting = configs.getMessagesConfig().alts().formatting();
+			return formatting.layout()
+					.replaceText("%ADDRESS%", detectedAlt.address().toString())
+					.replaceText("%RELEVANT_USERID%", detectedAlt.uuid().toString())
+					.replaceText("%DATE_RECORDED%", formatter.formatAbsoluteDate(detectedAlt.recorded()))
 					.asComponent()
 					.replaceText((config) -> {
-						config.matchLiteral("%DETECTION_KIND%").replacement(getKind(detectedAlt.detectionKind()));
+						Component detectionKind = switch (detectedAlt.detectionKind()) {
+							case NORMAL -> formatting.normal();
+							case STRICT -> formatting.strict();
+						};
+						config.matchLiteral("%DETECTION_KIND%").replacement(detectionKind);
 					})
 					.replaceText((config) -> {
 						config.matchLiteral("%RELEVANT_USER%").replacement(formatUsername(detectedAlt));

@@ -1,30 +1,26 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2023 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
+
 package space.arim.libertybans.core;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
-import jakarta.inject.Singleton;
-
-import space.arim.omnibus.Omnibus;
-import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
-
 import space.arim.libertybans.api.LibertyBans;
 import space.arim.libertybans.api.database.PunishmentDatabase;
 import space.arim.libertybans.api.formatter.PunishmentFormatter;
@@ -32,9 +28,11 @@ import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.punish.PunishmentRevoker;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.select.PunishmentSelector;
+import space.arim.libertybans.api.user.AccountSupervisor;
 import space.arim.libertybans.api.user.UserResolver;
+import space.arim.omnibus.Omnibus;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
-@Singleton
 public class LibertyBansApi implements LibertyBans {
 
 	private final Omnibus omnibus;
@@ -42,24 +40,27 @@ public class LibertyBansApi implements LibertyBans {
 	private final PunishmentDrafter drafter;
 	private final PunishmentRevoker revoker;
 	private final PunishmentSelector selector;
-	private final Provider<PunishmentDatabase> databaseProvider;
+	private final Provider<PunishmentDatabase> dbProvider;
 	private final PunishmentFormatter formatter;
 	private final ScopeManager scopeManager;
 	private final UserResolver userResolver;
+	private final AccountSupervisor accountSupervisor;
 
 	@Inject
-	public LibertyBansApi(Omnibus omnibus, FactoryOfTheFuture futuresFactory, PunishmentDrafter drafter,
-			PunishmentRevoker revoker, PunishmentSelector selector, Provider<PunishmentDatabase> databaseProvider,
-			PunishmentFormatter formatter, ScopeManager scopeManager, UserResolver userResolver) {
+	public LibertyBansApi(Omnibus omnibus, FactoryOfTheFuture futuresFactory, Provider<PunishmentDatabase> dbProvider,
+						  PunishmentDrafter drafter, PunishmentRevoker revoker, PunishmentSelector selector,
+						  PunishmentFormatter formatter, ScopeManager scopeManager,
+						  UserResolver userResolver, AccountSupervisor accountSupervisor) {
 		this.omnibus = omnibus;
 		this.futuresFactory = futuresFactory;
 		this.drafter = drafter;
 		this.revoker = revoker;
 		this.selector = selector;
-		this.databaseProvider = databaseProvider;
+		this.dbProvider = dbProvider;
 		this.formatter = formatter;
 		this.scopeManager = scopeManager;
 		this.userResolver = userResolver;
+		this.accountSupervisor = accountSupervisor;
 	}
 
 	@Override
@@ -89,7 +90,7 @@ public class LibertyBansApi implements LibertyBans {
 
 	@Override
 	public PunishmentDatabase getDatabase() {
-		return databaseProvider.get();
+		return dbProvider.get();
 	}
 
 	@Override
@@ -105,6 +106,11 @@ public class LibertyBansApi implements LibertyBans {
 	@Override
 	public UserResolver getUserResolver() {
 		return userResolver;
+	}
+
+	@Override
+	public AccountSupervisor getAccountSupervisor() {
+		return accountSupervisor;
 	}
 
 }

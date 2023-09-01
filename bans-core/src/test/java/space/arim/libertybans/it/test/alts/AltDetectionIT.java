@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -87,8 +87,8 @@ public class AltDetectionIT {
 	private static final Instant DATE_NOW = Instant.ofEpochSecond(TIME_NOW);
 
 	private void testNormalAlt(WhichAlts whichAltsForFirstAltCheck,
-							   PunishmentType expectedPunishmentTypeForFirstAltCheck,
-							   Consumer<UUID> operationOnAltBeforeAltCheck) {
+							   Consumer<UUID> operationOnAltBeforeAltCheck,
+							   PunishmentType...expectedPunishmentsForFirstCheck) {
 		NetworkAddress commonAddress = randomAddress();
 		UUID uuid = UUID.randomUUID();
 		String name = randomName();
@@ -100,20 +100,24 @@ public class AltDetectionIT {
 
 		operationOnAltBeforeAltCheck.accept(uuidTwo);
 
-		assertEquals(List.of(new DetectedAlt(
-				DetectionKind.NORMAL, expectedPunishmentTypeForFirstAltCheck, commonAddress,
-				uuidTwo, nameTwo, DATE_NOW)
-		), altDetection.detectAlts(uuid, commonAddress, whichAltsForFirstAltCheck).join());
-		assertEquals(List.of(new DetectedAlt(
-				DetectionKind.NORMAL, null, commonAddress,
-				uuid, name, DATE_NOW)
-		), altDetection.detectAlts(uuidTwo, commonAddress, ALL_ALTS).join());
+		assertEquals(
+				List.of(new DetectedAlt(
+						uuidTwo, nameTwo, commonAddress, DATE_NOW, DetectionKind.NORMAL, expectedPunishmentsForFirstCheck
+				)),
+				altDetection.detectAlts(uuid, commonAddress, whichAltsForFirstAltCheck).join()
+		);
+		assertEquals(
+				List.of(new DetectedAlt(
+					uuid, name, commonAddress, DATE_NOW, DetectionKind.NORMAL
+				)),
+				altDetection.detectAlts(uuidTwo, commonAddress, ALL_ALTS).join()
+		);
 	}
 
 	@TestTemplate
 	@SetTime(unixTime = TIME_NOW)
 	public void normalAlt() {
-		testNormalAlt(ALL_ALTS, null, (uuid) -> {});
+		testNormalAlt(ALL_ALTS, (uuid) -> {});
 	}
 
 	private void addPunishment(UUID uuid, PunishmentType type) {
@@ -133,9 +137,9 @@ public class AltDetectionIT {
 		Consumer<UUID> punishment = (uuid) -> {
 			addPunishment(uuid, PunishmentType.BAN);
 		};
-		testNormalAlt(ALL_ALTS, PunishmentType.BAN, punishment);
-		testNormalAlt(BANNED_OR_MUTED_ALTS, PunishmentType.BAN, punishment);
-		testNormalAlt(BANNED_ALTS, PunishmentType.BAN, punishment);
+		testNormalAlt(ALL_ALTS, punishment, PunishmentType.BAN);
+		testNormalAlt(BANNED_OR_MUTED_ALTS, punishment, PunishmentType.BAN);
+		testNormalAlt(BANNED_ALTS, punishment, PunishmentType.BAN);
 	}
 
 	@TestTemplate
@@ -144,8 +148,8 @@ public class AltDetectionIT {
 		Consumer<UUID> punishment = (uuid) -> {
 			addPunishment(uuid, PunishmentType.MUTE);
 		};
-		testNormalAlt(ALL_ALTS, PunishmentType.MUTE, punishment);
-		testNormalAlt(BANNED_OR_MUTED_ALTS, PunishmentType.MUTE, punishment);
+		testNormalAlt(ALL_ALTS, punishment, PunishmentType.MUTE);
+		testNormalAlt(BANNED_OR_MUTED_ALTS, punishment, PunishmentType.MUTE);
 	}
 
 	@TestTemplate
@@ -155,11 +159,9 @@ public class AltDetectionIT {
 			addPunishment(uuid, PunishmentType.BAN);
 			addPunishment(uuid, PunishmentType.MUTE);
 		};
-		// When both banned and muted, ban should take precedence
-		PunishmentType expectedPunishment = PunishmentType.BAN;
-		testNormalAlt(ALL_ALTS, expectedPunishment, punishment);
-		testNormalAlt(BANNED_OR_MUTED_ALTS, expectedPunishment, punishment);
-		testNormalAlt(BANNED_ALTS, expectedPunishment, punishment);
+		testNormalAlt(ALL_ALTS, punishment, PunishmentType.BAN, PunishmentType.MUTE);
+		testNormalAlt(BANNED_OR_MUTED_ALTS, punishment, PunishmentType.BAN, PunishmentType.MUTE);
+		testNormalAlt(BANNED_ALTS, punishment, PunishmentType.BAN, PunishmentType.MUTE);
 	}
 
 	@TestTemplate
@@ -180,13 +182,17 @@ public class AltDetectionIT {
 		assumeTrue(null == guardian.executeAndCheckConnection(uuid, name, newAddress).join());
 		assumeTrue(null == guardian.executeAndCheckConnection(uuidTwo, nameTwo, newAddressTwo).join());
 
-		assertEquals(List.of(new DetectedAlt(
-				DetectionKind.STRICT, null, commonPastAddress,
-				uuidTwo, nameTwo, DATE_NOW)
-		), altDetection.detectAlts(uuid, newAddress, ALL_ALTS).join());
-		assertEquals(List.of(new DetectedAlt(
-				DetectionKind.STRICT, null, commonPastAddress,
-				uuid, name, DATE_NOW)
-		), altDetection.detectAlts(uuidTwo, newAddressTwo, ALL_ALTS).join());
+		assertEquals(
+				List.of(new DetectedAlt(
+						uuidTwo, nameTwo, commonPastAddress, DATE_NOW, DetectionKind.STRICT
+				)),
+				altDetection.detectAlts(uuid, newAddress, ALL_ALTS).join()
+		);
+		assertEquals(
+				List.of(new DetectedAlt(
+						uuid, name, commonPastAddress, DATE_NOW, DetectionKind.STRICT
+				)),
+				altDetection.detectAlts(uuidTwo, newAddressTwo, ALL_ALTS).join()
+		);
 	}
 }

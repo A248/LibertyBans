@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,8 +25,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
+import space.arim.libertybans.api.user.KnownAccount;
 import space.arim.libertybans.core.alts.AccountHistory;
-import space.arim.libertybans.core.alts.KnownAccount;
 import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
@@ -87,22 +87,22 @@ public class AccountHistoryIT {
 		guardian.executeAndCheckConnection(playerTwo, playerTwoName, sharedAddress).join();
 
 		assertEquals(
-				List.of(new KnownAccount(playerOne, playerOneName, playerOneAddress, startTime),
-						new KnownAccount(playerOne, playerOneName, sharedAddress, twoDaysLater)),
+				List.of(accountHistory.newAccount(playerOne, playerOneName, playerOneAddress, startTime),
+						accountHistory.newAccount(playerOne, playerOneName, sharedAddress, twoDaysLater)),
 				accountHistory.knownAccounts(PlayerVictim.of(playerOne)).join());
 		assertEquals(
-				List.of(new KnownAccount(playerTwo, playerTwoName, playerTwoAddress, oneDayLater),
-						new KnownAccount(playerTwo, playerTwoName, sharedAddress, threeDaysLater)),
+				List.of(accountHistory.newAccount(playerTwo, playerTwoName, playerTwoAddress, oneDayLater),
+						accountHistory.newAccount(playerTwo, playerTwoName, sharedAddress, threeDaysLater)),
 				accountHistory.knownAccounts(PlayerVictim.of(playerTwo)).join());
 		assertEquals(
-				List.of(new KnownAccount(playerOne, playerOneName, playerOneAddress, startTime)),
+				List.of(accountHistory.newAccount(playerOne, playerOneName, playerOneAddress, startTime)),
 				accountHistory.knownAccounts(AddressVictim.of(playerOneAddress)).join());
 		assertEquals(
-				List.of(new KnownAccount(playerTwo, playerTwoName, playerTwoAddress, oneDayLater)),
+				List.of(accountHistory.newAccount(playerTwo, playerTwoName, playerTwoAddress, oneDayLater)),
 				accountHistory.knownAccounts(AddressVictim.of(playerTwoAddress)).join());
 		assertEquals(
-				List.of(new KnownAccount(playerOne, playerOneName, sharedAddress, twoDaysLater),
-						new KnownAccount(playerTwo, playerTwoName, sharedAddress, threeDaysLater)),
+				List.of(accountHistory.newAccount(playerOne, playerOneName, sharedAddress, twoDaysLater),
+						accountHistory.newAccount(playerTwo, playerTwoName, sharedAddress, threeDaysLater)),
 				accountHistory.knownAccounts(AddressVictim.of(sharedAddress)).join());
 	}
 
@@ -110,6 +110,7 @@ public class AccountHistoryIT {
 	@SetTime(unixTime = 1636233200)
 	public void deleteAccount(Guardian guardian, SettableTime time) {
 		final Instant startTime = Instant.ofEpochSecond(1636233200);
+		final Instant oneDayLater = startTime.plus(ONE_DAY);
 
 		UUID player = UUID.randomUUID();
 		String username = "Player1";
@@ -124,17 +125,52 @@ public class AccountHistoryIT {
 				accountHistory.deleteAccount(player, startTime.minus(ONE_DAY)).join(),
 				"No account exists before startTime");
 
+		KnownAccount firstAccount = accountHistory.newAccount(player, username, firstAddress, startTime);
+		KnownAccount secondAccount = accountHistory.newAccount(player, username, secondAddress, oneDayLater);
 		assertEquals(
-				List.of(new KnownAccount(player, username, firstAddress, startTime),
-						new KnownAccount(player, username, secondAddress, startTime.plus(ONE_DAY))),
+				List.of(firstAccount, secondAccount),
 				accountHistory.knownAccounts(PlayerVictim.of(player)).join());
 
-		assertTrue(
-				accountHistory.deleteAccount(player, startTime).join(),
-				"Delete account at startTime");
-
+		assertTrue(accountHistory.deleteAccount(player, startTime).join(), "Delete account at startTime");
 		assertEquals(
-				List.of(new KnownAccount(player, username, secondAddress, startTime.plus(ONE_DAY))),
+				List.of(secondAccount),
+				accountHistory.knownAccounts(PlayerVictim.of(player)).join());
+
+		assertTrue(accountHistory.deleteAccount(player, oneDayLater).join(), "Delete account at oneDayLater");
+		assertEquals(
+				List.of(),
 				accountHistory.knownAccounts(PlayerVictim.of(player)).join());
 	}
+
+	@TestTemplate
+	@SetTime(unixTime = 1636233200)
+	public void deleteAccountThroughApi(Guardian guardian, SettableTime time) {
+		final Instant startTime = Instant.ofEpochSecond(1636233200);
+
+		UUID player = UUID.randomUUID();
+		String username = "Player1";
+		NetworkAddress firstAddress = randomAddress();
+		NetworkAddress secondAddress = randomAddress();
+
+		guardian.executeAndCheckConnection(player, username, firstAddress).join();
+		time.advanceBy(ONE_DAY);
+		guardian.executeAndCheckConnection(player, username, secondAddress).join();
+
+		KnownAccount firstAccount = accountHistory.newAccount(player, username, firstAddress, startTime);
+		KnownAccount secondAccount = accountHistory.newAccount(player, username, secondAddress, startTime.plus(ONE_DAY));
+		assertEquals(
+				List.of(firstAccount, secondAccount),
+				accountHistory.knownAccounts(PlayerVictim.of(player)).join());
+
+		assertTrue(firstAccount.deleteFromHistory().join(), "Delete first account");
+		assertEquals(
+				List.of(secondAccount),
+				accountHistory.knownAccounts(PlayerVictim.of(player)).join());
+
+		assertTrue(secondAccount.deleteFromHistory().join(), "Delete second account");
+		assertEquals(
+				List.of(),
+				accountHistory.knownAccounts(PlayerVictim.of(player)).join());
+	}
+
 }

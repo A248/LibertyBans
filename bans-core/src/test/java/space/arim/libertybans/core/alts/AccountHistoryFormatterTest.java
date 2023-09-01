@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,9 +28,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.api.user.KnownAccount;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.MessagesConfig;
+import space.arim.libertybans.core.database.execute.QueryExecutor;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -70,7 +72,9 @@ public class AccountHistoryFormatterTest {
 		String username = "TargetUser";
 		String address = "207.144.101.102";
 		Instant date = Instant.parse("2021-07-23T02:15:23.000000Z");
-		KnownAccount knownAccount = new KnownAccount(
+
+		AccountHistory accountHistory = new AccountHistory(() -> mock(QueryExecutor.class));
+		KnownAccount knownAccount = accountHistory.newAccount(
 				userId, username, NetworkAddress.of(InetAddress.getByName(address)), date);
 
 		{

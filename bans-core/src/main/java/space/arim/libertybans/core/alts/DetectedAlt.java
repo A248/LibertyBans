@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,86 +21,39 @@ package space.arim.libertybans.core.alts;
 
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.user.AltAccount;
 
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
-public final class DetectedAlt {
+public record DetectedAlt(UUID uuid, String username, NetworkAddress address, Instant recorded,
+						  DetectionKind detectionKind, Set<PunishmentType> scannedTypes)
+		implements AltAccount {
 
-	private final DetectionKind detectionKind;
-	private final PunishmentType punishmentType;
-	private final NetworkAddress relevantAddress;
-	private final UUID relevantUserId;
-	private final String relevantUserName;
-	private final Instant dateAccountRecorded;
-
-	public DetectedAlt(DetectionKind detectionKind, PunishmentType punishmentType,
-					   NetworkAddress relevantAddress, UUID relevantUserId, String relevantUserName,
-					   Instant dateAccountRecorded) {
-		this.detectionKind = Objects.requireNonNull(detectionKind, "detectionKind");
-		this.punishmentType = punishmentType;
-		this.relevantAddress = Objects.requireNonNull(relevantAddress, "relevantAddress");
-		this.relevantUserId = Objects.requireNonNull(relevantUserId, "relevantUserId");
-		this.relevantUserName = Objects.requireNonNull(relevantUserName, "relevantUserName");
-		this.dateAccountRecorded = Objects.requireNonNull(dateAccountRecorded, "dateAccountRecorded");
+	public DetectedAlt {
+		Objects.requireNonNull(uuid, "uuid");
+		Objects.requireNonNull(address, "address");
+		Objects.requireNonNull(recorded, "recorded");
+		Objects.requireNonNull(detectionKind, "detectionKind");
+		scannedTypes = Set.copyOf(scannedTypes);
 	}
 
-	public DetectionKind detectionKind() {
-		return detectionKind;
-	}
-
-	public Optional<PunishmentType> punishmentType() {
-		return Optional.ofNullable(punishmentType);
-	}
-
-	public NetworkAddress relevantAddress() {
-		return relevantAddress;
-	}
-
-	public UUID relevantUserId() {
-		return relevantUserId;
-	}
-
-	public String relevantUserName() {
-		return relevantUserName;
-	}
-
-	public Instant dateAccountRecorded() {
-		return dateAccountRecorded;
+	public DetectedAlt(UUID uuid, String username, NetworkAddress address, Instant lastObserved,
+					   DetectionKind detectionKind, PunishmentType...scannedTypes) {
+		this(uuid, username, address, lastObserved, detectionKind, Set.of(scannedTypes));
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		DetectedAlt that = (DetectedAlt) o;
-		return detectionKind == that.detectionKind && Objects.equals(punishmentType, that.punishmentType)
-				&& relevantAddress.equals(that.relevantAddress) && relevantUserId.equals(that.relevantUserId) && relevantUserName.equals(that.relevantUserName)
-				&& dateAccountRecorded.equals(that.dateAccountRecorded);
+	public Optional<String> latestUsername() {
+		return Optional.ofNullable(username);
 	}
 
 	@Override
-	public int hashCode() {
-		int result = detectionKind.hashCode();
-		result = 31 * result + Objects.hashCode(punishmentType);
-		result = 31 * result + relevantAddress.hashCode();
-		result = 31 * result + relevantUserId.hashCode();
-		result = 31 * result + relevantUserName.hashCode();
-		result = 31 * result + dateAccountRecorded.hashCode();
-		return result;
+	public boolean hasActivePunishment(PunishmentType type) {
+		return scannedTypes.contains(type);
 	}
 
-	@Override
-	public String toString() {
-		return "DetectedAlt{" +
-				"detectionKind=" + detectionKind +
-				", punishmentType=" + punishmentType +
-				", relevantAddress=" + relevantAddress +
-				", relevantUserId=" + relevantUserId +
-				", relevantUserName='" + relevantUserName + '\'' +
-				", dateAccountRecorded=" + dateAccountRecorded +
-				'}';
-	}
 }
