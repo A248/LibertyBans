@@ -38,7 +38,8 @@ public enum DatabaseInstance {
 	MARIADB_RETRO(Vendor.MARIADB, "libertybans.it.mariadb.retro.port"),
 	MARIADB_LEGACY(Vendor.MARIADB, "libertybans.it.mariadb.legacy.port"),
 	MARIADB_MODERN(Vendor.MARIADB, "libertybans.it.mariadb.modern.port"),
-	MYSQL(Vendor.MYSQL, "libertybans.it.mysql.port"),
+	MYSQL_ORACLE(Vendor.MYSQL, "libertybans.it.mysql.oracle.port"),
+	MYSQL_PERCONA(Vendor.MYSQL, "libertybans.it.mysql.percona.port"),
 	POSTGRES_LEGACY(Vendor.POSTGRES, "libertybans.it.postgres.legacy.port"),
 	POSTGRES_MODERN(Vendor.POSTGRES, "libertybans.it.postgres.modern.port"),
 	COCKROACHDB(Vendor.COCKROACH, "libertybans.it.cockroachdb.port"),
@@ -93,7 +94,7 @@ public enum DatabaseInstance {
 
 	private void createDatabase(String database) {
 		switch (this) {
-		case MARIADB_RETRO, MARIADB_LEGACY, MARIADB_MODERN, MYSQL -> {
+		case MARIADB_RETRO, MARIADB_LEGACY, MARIADB_MODERN, MYSQL_ORACLE, MYSQL_PERCONA -> {
 			createDatabaseUsing("jdbc:mariadb", database, " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 		}
 		case POSTGRES_LEGACY, POSTGRES_MODERN, COCKROACHDB -> {
