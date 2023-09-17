@@ -58,7 +58,7 @@ As a further consequence, it is impossible for us to fully audit LiteBans. We ca
 
 There are other reasons not to use LiteBans. Evidence suggests LiteBans does not employ automated testing much, increasing the prevalence of bugs in releases. Moreover, its database schema does not utilize integrity constraints, which can lead to data corruption. Yet because accessing the database is recommended over API use, LiteBans has to keep backwards compatibility with its backwards database, hindering development.
 
-Features that languish on the LiteBans issue tracker will stay incomplete until the author decides to add them. No one else can contribute them or prioritize them. Even if a feature is heavily demanded, only the LiteBans author decides. As of 18 August 2023, the following LiteBans feature requests are fully implemented by LibertyBans:
+Features that languish on the LiteBans issue tracker will stay incomplete until the author decides to add them. No one else can contribute them or prioritize them. Even if a feature is heavily demanded, only the LiteBans author decides. As of 11 September 2023, the following LiteBans feature requests are fully implemented by LibertyBans:
 * [Define scopes in punishment templates](https://gitlab.com/ruany/LiteBans/-/issues/502)
 * [Extend punishment duration](https://gitlab.com/ruany/LiteBans/-/issues/494)
 * [Purge a punishment completely](https://gitlab.com/ruany/LiteBans/-/issues/494) (same link)

@@ -120,6 +120,8 @@ For offline players, LiteBans's permission checking depends on Vault on single s
 
 LibertyBans' exemption feature will never break silently. However, it requires the installation of a supported exemption provider - currently LuckPerms or Vault. Without an exemption provider, the feature is entirely unavailable.
 
+Moreover, LiteBans' exemption does not provide arbitrary levels.<sup id="note5ret">[5](#note5)</sup>
+
 ### Importing From Other Plugins
 
 LibertyBans supports importing from AdvancedBan, BanManager, LiteBans, and vanilla.
@@ -130,7 +132,7 @@ LiteBans supports importing from AdvancedBan, BanManager, BungeeAdminTools, MaxB
 
 Both plugins enable punishments scoped to certain servers.
 
-However, LiteBans lacks scope categories, or the ability to group servers into a single scope.<sup id="note5ret">[5](#note5)</sup>
+However, LiteBans lacks scope categories, or the ability to group servers into a single scope.<sup id="note6ret">[6](#note6)</sup>
 
 ### Multi-Proxy / Multi-Instance Synchronization
 
@@ -142,11 +144,13 @@ Both LibertyBans and LiteBans provide synchronization across multiple instances,
 
 <a id="note2">2</a>: Ruan. "LiteBans 2.5.4 - 2.5.9." SpigotMC Resource Update. https://www.spigotmc.org/resources/litebans.3715/update?update=341296 [↩](#note2ret)
 
-<a id="note3">3</a>: Ruan. "[Feature] Spongepowered?". LiteBans Gitlab Issue comment. https://gitlab.com/ruany/LiteBans/-/issues/41#note_324182783 [↩](#note3ret)
+<a id="note3">3</a>: Ruan. "[Feature] Spongepowered?". LiteBans Gitlab Issue Comment. https://gitlab.com/ruany/LiteBans/-/issues/41#note_324182783 [↩](#note3ret)
 
-<a id="note4">4</a>: Ruan. "LiteBans 2.7.5 (Connection error fix)". SpigotMC Resource Update. https://www.spigotmc.org/resources/litebans.3715/update?update=414133
+<a id="note4">4</a>: Ruan. "LiteBans 2.7.5 (Connection error fix)". SpigotMC Resource Update. https://www.spigotmc.org/resources/litebans.3715/update?update=414133 [↩](#note4ret)
 
-<a id="note5">5</a>: lewisakura. "Server scope groups". LiteBans Gitlab Issue. https://gitlab.com/ruany/LiteBans/-/issues/452
+<a id="note5">5</a>: Ruan. "LiteBans Exempt". LiteBans Gitlab Issue Comment. https://gitlab.com/ruany/LiteBans/-/issues/223 [↩](#note5ret)
+
+<a id="note6">6</a>: lewisakura. "Server scope groups". LiteBans Gitlab Issue. https://gitlab.com/ruany/LiteBans/-/issues/452 [↩](#note6ret)
 
 ### Disclaimer
 

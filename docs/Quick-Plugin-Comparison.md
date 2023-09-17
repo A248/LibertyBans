@@ -16,13 +16,13 @@ comparisons. You can find these on the sidebar at the right. For each plugin her
 [GPL]:https://www.gnu.org/graphics/gplv3-127x51.png
 [CC-BY-NC]:http://mirrors.creativecommons.org/presskit/buttons/88x31/png/by-nc.png
 
-| Plugin      | Supported Platforms                                                                                                                                                                                                                                                                                                                                                      | Java Req. | Free (Gratis) | Open License    | Debuggable, Modifiable | Databases Available                        | Thread-Safe Design | Stable API | Geyser Support | Multi-Instance Support | Connection Pool | Exemption | Server Scopes | Uses UUIDs | Schema Integrity | Switch Storage Backends | Import From                                                                                                                    |
-|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|---------------|-----------------|------------------------|--------------------------------------------|--------------------|------------|----------------|------------------------|-----------------|-----------|---------------|------------|------------------|-------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| LibertyBans | ![Bukkit]Bukkit<br/> <img src="https://avatars.githubusercontent.com/u/1007849?v=4" width=16>Bungee<br/> <img src="https://www.spongepowered.org/assets/img/icons/spongie-mark.svg" width=16>Sponge <img src="https://raw.githubusercontent.com/PaperMC/velocitypowered.com/5878ae0941e3adff3a238fe9020250c5f01c2899/src/assets/img/velocity-blue.png" width=16>Velocity | 17+       | ✔️            | ✔️ ![AGPL]      | ✔️                     | HSQLDB (local), MariaDB, MySQL, PostgreSQL | ✔️                 | ✔️         | ✔️             | ✔️                     | ✔️              | ✔️        | ✔️            | ✔️         | ✔️               | ✔️                      | AdvancedBan<br/>BanManager<br/>LiteBans<br/>vanilla                                                                            |
-| AdvancedBan | ![Bukkit]Bukkit<br/> <img src="https://avatars.githubusercontent.com/u/1007849?v=4" width=16>Bungee                                                                                                                                                                                                                                                                      | 8+        | ✔️            | ✔️ ![GPL]       | ✔️                     | HSQLDB (local), MariaDB, MySQL             | ❌                  | ❌          | ❓              | ❌                      | ❌               | ✔️        | ❌             | ➖️         | ❌                | ❌                       |                                                                                                                                |
-| BanManager  | ![Bukkit]Bukkit<br/> <img src="https://avatars.githubusercontent.com/u/1007849?v=4" width=16>Bungee<br/> <img src="https://www.spongepowered.org/assets/img/icons/spongie-mark.svg" width=16>Sponge                                                                                                                                                                      | 8+        | ✔️            | ➖️️ ![CC-BY-NC] | ✔️                     | H2 (local), MariaDB, MySQL                 | ❌️                 | ❌          | ➖️️            | ✔️                     | ✔️              | ❌         | ➖️            | ✔️         | ✔️               | ➖️                      | AdvancedBan<br/>vanilla                                                                                                        |
-| LiteBans    | ![Bukkit]Bukkit<br/> <img src="https://avatars.githubusercontent.com/u/1007849?v=4" width=16>Bungee<br/> <img src="https://raw.githubusercontent.com/PaperMC/velocitypowered.com/5878ae0941e3adff3a238fe9020250c5f01c2899/src/assets/img/velocity-blue.png" width=16>Velocity                                                                                            | 8+        | ❌             | ❌ Proprietary   | ❌ Obfuscated           | H2 (local), MariaDB, MySQL, PostgreSQL     | ❓                  | ➖️         | ➖️️            | ✔️                     | ❓               | ✔️        | ➖️            | ✔️         | ❌                | ✔️                      | AdvancedBan<br/>BanHammer**<br/>BanManager<br/>BungeeAdminTools**<br/>LibertyBans ➖️<br/>MaxBans**<br/>UltraBans**<br/>vanilla |
-| vanilla     | ![Bukkit]Bukkit<br/> <img src="https://www.spongepowered.org/assets/img/icons/spongie-mark.svg" width=16>Sponge                                                                                                                                                                                                                                                          | 8+        | ✔️            | ❌ Proprietary   | NA                     | Flatfile                                   | ✔️                 | ✔️         | ✔️             | ❌                      | NA              | ❌         | ❌             | ✔️         | ❌                | NA                      |                                                                                                                                |
+| Plugin      | Supported Platforms                                                                                                                                                                                                                                                                                                                                                      | Java Req. | Free (Gratis) | Open License               | Databases Available                        | Thread-Safe Design | Stable API | Geyser Support | Multi-Instance Support | Connection Pool | Exemption | Server Scopes | Layouts / Templates | Uses UUIDs | Schema Integrity | Switch Storage Backends | Import From                                                                                                                                        |
+|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|---------------|----------------------------|--------------------------------------------|--------------------|------------|----------------|------------------------|-----------------|-----------|---------------|---------------------|------------|------------------|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| LibertyBans | ![Bukkit]Bukkit<br/> <img src="https://avatars.githubusercontent.com/u/1007849?v=4" width=16>Bungee<br/> <img src="https://www.spongepowered.org/assets/img/icons/spongie-mark.svg" width=16>Sponge <img src="https://raw.githubusercontent.com/PaperMC/velocitypowered.com/5878ae0941e3adff3a238fe9020250c5f01c2899/src/assets/img/velocity-blue.png" width=16>Velocity | 17+       | ✔️            | ✔️ ![AGPL]                 | HSQLDB (local), MariaDB, MySQL, PostgreSQL | ✔️                 | ✔️         | ✔️             | ✔️                     | ✔️              | ✔️        | ✔️            | ✔️                  | ✔️         | ✔️               | ✔️                      | AdvancedBan<br/>BanManager<br/>LiteBans<br/>vanilla                                                                                                |
+| AdvancedBan | ![Bukkit]Bukkit<br/> <img src="https://avatars.githubusercontent.com/u/1007849?v=4" width=16>Bungee                                                                                                                                                                                                                                                                      | 8+        | ✔️            | ✔️ ![GPL]                  | HSQLDB (local), MariaDB, MySQL             | ❌️                 | ❌️         | ❓              | ❌️                     | ❌️              | ✔️        | ❌️            | ✔️                  | ➖️         | ❌️               | ❌️                      |                                                                                                                                                    |
+| BanManager  | ![Bukkit]Bukkit<br/> <img src="https://avatars.githubusercontent.com/u/1007849?v=4" width=16>Bungee<br/> <img src="https://www.spongepowered.org/assets/img/icons/spongie-mark.svg" width=16>Sponge                                                                                                                                                                      | 8+        | ✔️            | ➖️️ ![CC-BY-NC]            | H2 (local), MariaDB, MySQL                 | ❌️️                | ❌️         | ➖️️            | ✔️                     | ✔️              | ❌️        | ➖️            | ➖️                  | ✔️         | ✔️               | ➖️                      | AdvancedBan<br/>vanilla                                                                                                                            |
+| LiteBans    | ![Bukkit]Bukkit<br/> <img src="https://avatars.githubusercontent.com/u/1007849?v=4" width=16>Bungee<br/> <img src="https://raw.githubusercontent.com/PaperMC/velocitypowered.com/5878ae0941e3adff3a238fe9020250c5f01c2899/src/assets/img/velocity-blue.png" width=16>Velocity                                                                                            | 8+        | ❌️            | ❌️ Proprietary, Obfuscated | H2 (local), MariaDB, MySQL, PostgreSQL     | ❓                  | ➖️         | ➖️️            | ✔️                     | ❓               | ➖️        | ➖️            | ✔️                  | ✔️         | ❌️               | ✔️                      | AdvancedBan<br/>BanManager<br/>LibertyBans➖️<br/>vanilla<br/>*+4 abandoned*<img src="https://clipart-library.com/data_images/508362.png" width=20> |
+| vanilla     | ![Bukkit]Bukkit<br/> <img src="https://www.spongepowered.org/assets/img/icons/spongie-mark.svg" width=16>Sponge                                                                                                                                                                                                                                                          | NA        | ✔️            | ❌️ Proprietary             | Flatfile                                   | ✔️                 | ✔️         | ✔️             | ❌️                     | NA              | ❌️        | ❌️            | ❌️️                 | ✔️         | ❌️               | NA                      |                                                                                                                                                    |
 
 Legend:
 
@@ -30,17 +30,15 @@ Legend:
 
 ➖️ – Partially
 
-❌ – No
+❌️ – No
 
 ❓ - Unknown, either because the plugin is closed-source, or the feature has not been tested.
 
 NA - Not applicable
 
-** - This plugin has been abandoned for at least 3 years.
-
 ### Why does LibertyBans check all the boxes?
 
-It didn't used to. This chart was created when LibertyBans didn't have multi-instance support, exemption, server scopes, or switching storage backends. With this exception of switching storage, all these features were listed in the table, but they were unimplemented and unrequested -- with no plans to add them! Back then, LibertyBans used to receive ❌ or ➖️ in many areas.
+It didn't used to. This chart was created when LibertyBans didn't have multi-instance support, exemption, server scopes, layouts, or switching storage backends. With this exception of layouts and switching storage, all these features were listed in the table, but they were unimplemented and unrequested -- with no plans to add them! Back then, LibertyBans used to receive ❌️ or ➖️ in many areas.
 
 Over time, features were requested and implemented, so LibertyBans fulfills these categories now and receives ✔️. Competitor plugins still have capabilities not found in LibertyBans, but they aren't deemed sufficiently important or central to the purpose of punishment to have a place on the table.
 
@@ -68,15 +66,9 @@ Whether the software is under a free software license. Requirements:
 
 BanManager's license prohibits commercial use. This makes it **illegal** to use BanManager for monetary profit. However, it is open-source; hence the "partial" ranking.
 
+LiteBans is obfuscated, meaning its plugin jar is intentionally scrambled to prevent anyone from inspecting its operations, debugging issues, or making any sort of modification.
+
 Disclaimer: This is not legal advice and the writer is not a lawyer.
-
-### Debuggable, Modifiable
-
-Whether the plugin can be debugged by users and modified by developers.
-* Debugging is a critical tool because it allows administrators to fix problems deep in the software stack. This remains true regardless of whether a plugin is at fault for the bug.
-* Modifying a plugin safeguards user and developer freedom. It provides an escape hatch if the original author is unwilling to implement a feature or a workaround.
-
-LiteBans is obfuscated, meaning its plugin jar is intentionally scrambled to prevent anyone from inspecting its operations or making any sort of modification.
 
 ### Thread-Safe Design
 
@@ -110,11 +102,25 @@ Includes whether the plugin has a connection pool *and* takes advantage of it.
 
 AdvancedBan has a connection pool, but in practice, can only use 1 connection at a time, which is effectively the same as not using a connection pool.
 
+### Exemption
+
+Whether the plugin can prevent lower-ranked staff from banning higher-ups through a system of exemption levels.
+
+BanManager's *no* ranking: While BanManager has a basic exemption feature without levels, it requires every exempted player to be written out in the BanManager configuration. This is far too inconvenient in many cases, since it requires reconfiguring and reloading BanManager every time staff are promoted.
+
+LiteBans' *partial* ranking: The plugin does not support arbitrary levels of exemption.
+
 ### Server Scopes
 
 This feature is relevant for proxies. Whether the plugin has the ability to define "scopes" and create punishments applying to certain scopes. This allows server administrators to create punishments applying to a specific backend server or a group of backend servers.
 
 BanManager's and LiteBan's *partial* ranking: BanManager has the ability to create a "local" punishment, meaning it applies to one backend server. However, it does not have the ability to define punishments applying to a group of backend servers; further, local punishments cannot be created from separate servers. LiteBans has server scopes, but similarly, it cannot create scopes applying to a group of servers.
+
+### Layouts / Templates
+
+Whether the plugin can automatically fill in details such as the reason and time, including based on the past history of the punished player.
+
+BanManager's *partial* ranking: Reason shortcuts are provided; however, automatic time calculation based on past history is not implemented.
 
 ### Uses UUIDs
 
@@ -142,6 +148,8 @@ BanManager's *partial* ranking: BanManager only supports converting from H2 to M
 The other punishment suites this plugin can import from.
 
 LiteBans' *partial* ranking with respect to LibertyBans: LiteBans does not import server scopes, although scopes are a common feature between them.
+
+Moreover, LiteBans can import from 4 abandoned plugins: BanHammer, BungeeAdminTools, MaxBans, and UltraBans. These plugins have received no codebase updates for at least 3 years.
 
 --------------------------------------------------------------------------
 
