@@ -56,7 +56,12 @@ public final class SpongeMessageChannel implements EnvMessageChannel<RawPlayData
 	<D> boolean sendPluginMessage(ServerPlayer player, PluginMessage<D, ?> pluginMessage, D data) {
 		var channel = channel();
 		boolean supported = channel.isSupportedBy(player.connection());
-		if (supported) {
+		//
+		// 1. The backend server must NOT be in online mode
+		// 2. The channel must be supported
+		//
+		boolean canSend = !game.server().isOnlineModeEnabled() && supported;
+		if (canSend) {
 			channel.sendTo(player, (buffer) -> {
 				pluginMessage.writeTo(data, new ChannelBufAsOutput(buffer));
 			}).exceptionally((ex) -> {
@@ -64,7 +69,7 @@ public final class SpongeMessageChannel implements EnvMessageChannel<RawPlayData
 				return null;
 			});
 		}
-		return supported;
+		return canSend;
 	}
 
 	@Override

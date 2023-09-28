@@ -98,10 +98,10 @@ public abstract class AbstractEnvEnforcer<P> implements EnvEnforcer<P> {
 	public final <D> void sendPluginMessage(P player, PluginMessage<D, ?> pluginMessage, D data) {
 		if (!sendPluginMessageIfListening(player, pluginMessage, data)) {
 			logger.error(
-					"Attempted to send plugin message to {}, but the appropriate channel is not accepted. " +
-							"This suggests you enabled use-plugin-messaging in the config.yml, but the player " +
-							"is not connected to a network. Please address this critical security flaw immediately. " +
-							"It leaves your server vulnerable to clients spoofing the plugin messaging channel",
+					"Attempted to send plugin message to {}, but it could not be sent. " +
+							"This suggests you enabled 'use-plugin-messaging' but are not using a network. " +
+							"Please address this critical security flaw immediately. " +
+							"It leaves your server vulnerable to clients spoofing the plugin messaging channel.",
 					player
 			);
 		}
