@@ -27,6 +27,13 @@ package space.arim.libertybans.core.database.execute;
 public interface Transaction {
 
 	/**
+	 * Sets the isolation level on this transaction
+	 *
+	 * @param isolationLevel the isolation level
+	 */
+	void setIsolation(int isolationLevel);
+
+	/**
 	 * Rolls back the enclosing scope
 	 *
 	 */
