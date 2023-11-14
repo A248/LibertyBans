@@ -26,7 +26,6 @@ import org.jooq.DSLContext;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.SelectionPredicate;
 import space.arim.libertybans.api.select.SortPunishments;
@@ -57,12 +56,11 @@ public final class Gatekeeper {
 	private final AltDetection altDetection;
 	private final AltNotification altNotification;
 	private final Time time;
-	private final ScopeManager scopeManager;
 
 	@Inject
 	public Gatekeeper(Configs configs, FactoryOfTheFuture futuresFactory, Provider<QueryExecutor> queryExecutor,
 					  InternalFormatter formatter, ConnectionLimiter connectionLimiter, AltDetection altDetection,
-					  AltNotification altNotification, Time time, ScopeManager scopeManager) {
+					  AltNotification altNotification, Time time) {
 		this.configs = configs;
 		this.futuresFactory = futuresFactory;
 		this.queryExecutor = queryExecutor;
@@ -71,7 +69,6 @@ public final class Gatekeeper {
 		this.altDetection = altDetection;
 		this.altNotification = altNotification;
 		this.time = time;
-		this.scopeManager = scopeManager;
 	}
 
 	CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address,
