@@ -77,7 +77,6 @@ public final class Gatekeeper {
 			Instant currentTime = time.currentTimestamp();
 
 			EnforcementConfig config = configs.getMainConfig().enforcement();
-
 			if (config.altsRegistry().enableAll()) {
 				doAssociation(uuid, name, address, currentTime, context);
 
