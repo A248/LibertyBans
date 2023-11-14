@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.selector;
 
+import java.util.List;
 import java.util.Set;
 
 import space.arim.dazzleconf.annote.ConfComments;
@@ -137,5 +138,31 @@ public interface EnforcementConfig {
 		@NumericRange(min = 1)
 		long expirationTimeDays();
 
+	}
+
+	@SubSection
+	AltsRegistry altsRegistry();
+
+	@ConfHeader({"Controls if all servers should register the IP address of the player connecting."})
+	interface AltsRegistry {
+
+		@ConfComments("If true, all servers will register alts.")
+		@ConfKey("enable-all")
+		@ConfDefault.DefaultBoolean(true)
+		boolean enableAll();
+
+		@ConfComments({"If enableAll is false, this list will be used ",
+				"to determine which servers will register alts.",
+				"Please note that the server's name of the list should be the same as the ones in your proxy config",
+				"This is intended to be used by LibertyBans proxy installations.",
+				"If this is a backend server, please skip this option."})
+		@ConfKey("servers")
+		@DefaultStrings("")
+		List<String> servers();
+
+		@ConfComments({"If true, this backend server will register alts"})
+		@ConfKey("should-register")
+		@ConfDefault.DefaultBoolean(true)
+		boolean shouldRegister();
 	}
 }
