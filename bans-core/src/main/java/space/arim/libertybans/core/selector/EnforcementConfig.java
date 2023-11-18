@@ -148,7 +148,8 @@ public interface EnforcementConfig {
 
 		@ConfComments({"The server names in this list will be excluded from associating the IP address of the player connecting.",
 				"Please note that the server's name of the list should be the same as the ones in your proxy config",
-				"This is intended to be used by LibertyBans proxy installations."
+				"This is intended to be used by LibertyBans proxy installations.",
+				"If you are planning to use this feature, make sure to have enabled 'enforce-server-switch' option."
 				})
 		@ConfKey("servers-without-ip-registration")
 		@DefaultStrings("")
