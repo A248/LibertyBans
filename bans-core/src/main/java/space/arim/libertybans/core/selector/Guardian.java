@@ -35,9 +35,9 @@ public interface Guardian {
 	 * Adds the uuid and name to the local fast cache, queries for an applicable ban, and formats the
 	 * ban reason as the punishment message.
 	 *
-	 * @param uuid the player's uuid
-	 * @param name the player's name
-	 * @param address the player's network address
+	 * @param uuid       the player's uuid
+	 * @param name       the player's name
+	 * @param address    the player's network address
 	 * @return a future which yields the punishment message if denied, else null if allowed
 	 */
 	CentralisedFuture<@Nullable Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address);
@@ -63,11 +63,27 @@ public interface Guardian {
 	 * Queries for an applicable ban, and formats the ban reason as the punishment message.
 	 *
 	 * @param uuid the player's uuid
+	 * @param name the player's name
 	 * @param address the player's network address
 	 * @param destinationServer the player's destination server
 	 * @return a future which yields the punishment message if denied, else null if allowed
 	 */
-	CentralisedFuture<@Nullable Component> checkServerSwitch(UUID uuid, InetAddress address, String destinationServer);
+	CentralisedFuture<@Nullable Component> checkServerSwitch(UUID uuid, String name, NetworkAddress address, String destinationServer);
+
+	/**
+	 * Enforces a server switch, returning a punishment message if denied, null if allowed. <br>
+	 * <br>
+	 * Queries for an applicable ban, and formats the ban reason as the punishment message.
+	 *
+	 * @param uuid the player's uuid
+	 * @param name the player's name
+	 * @param address the player's network address
+	 * @param destinationServer the player's destination server
+	 * @return a future which yields the punishment message if denied, else null if allowed
+	 */
+	default CentralisedFuture<@Nullable Component> checkServerSwitch(UUID uuid, String name, InetAddress address, String destinationServer) {
+		return checkServerSwitch(uuid, name, NetworkAddress.of(address), destinationServer);
+	}
 
 	/**
 	 * Enforces a chat message or executed command, returning a punishment message if denied, null if allowed. <br>

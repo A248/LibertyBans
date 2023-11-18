@@ -113,6 +113,12 @@ public class SelectorImpl implements InternalSelector {
 	}
 
 	@Override
+	public CentralisedFuture<Component> executeAndCheckServerSwitch(UUID uuid, String name, NetworkAddress address,
+																	ServerScope scope, String destinationServer) {
+		return gatekeeper.checkServerSwitch(uuid, name, address, destinationServer, scope, this);
+	}
+
+	@Override
 	public ReactionStage<Optional<Punishment>> getCachedMute(UUID uuid, NetworkAddress address) {
 		Objects.requireNonNull(uuid, "uuid");
 		Objects.requireNonNull(address, "address");

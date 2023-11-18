@@ -108,7 +108,7 @@ public final class ConnectionListener implements Listener, PlatformListener {
 		InetAddress address = addressReporter.getAddress(player);
 
 		Component message = guardian.checkServerSwitch(
-				player.getUniqueId(), address, event.getTarget().getName()
+				player.getUniqueId(), player.getName(), address, event.getTarget().getName()
 		).join();
 		if (message != null) {
 			event.setCancelled(true);
