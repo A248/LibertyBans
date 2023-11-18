@@ -22,6 +22,7 @@ package space.arim.libertybans.core.selector;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jooq.DSLContext;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
@@ -75,20 +76,10 @@ public final class Gatekeeper {
 														   Set<ServerScope> scopes, SelectorImpl selector) {
 		return queryExecutor.get().queryWithRetry((context, transaction) -> {
 			Instant currentTime = time.currentTimestamp();
-
 			EnforcementConfig config = configs.getMainConfig().enforcement();
-			if (config.altsRegistry().enableAll()) {
-				doAssociation(uuid, name, address, currentTime, context);
 
-			} else if (config.altsRegistry().shouldRegister()) {
+			if (config.altsRegistry().shouldRegisterOnConnection()) {
 				doAssociation(uuid, name, address, currentTime, context);
-
-			} else {
-				List<String> servers = config.altsRegistry().servers();
-				String serverName = configs.getScopeConfig().serverName().overrideValue();
-				if (!servers.isEmpty() && servers.contains(serverName)) {
-					doAssociation(uuid, name, address, currentTime, context);
-				}
 			}
 
 			Punishment ban = selector.selectionByApplicabilityBuilder(uuid, address)
@@ -123,6 +114,36 @@ public final class Gatekeeper {
 				altNotification.notifyFoundAlts(uuid, name, address, detectedAlts);
 			}
 			return futuresFactory.completedFuture(null);
+		});
+	}
+
+	public CentralisedFuture<@Nullable Component> checkServerSwitch(UUID uuid, String name, NetworkAddress address,
+																	String destinationServer, ServerScope scope, SelectorImpl selector) {
+
+		return queryExecutor.get().queryWithRetry((context, transaction) -> {
+			boolean shouldRegister = configs.getMainConfig().enforcement().altsRegistry().shouldRegisterOnConnection();
+			List<String> servers = configs.getMainConfig().enforcement().altsRegistry().servers();
+
+			if (shouldRegister || !servers.contains(destinationServer)) {
+				doAssociation(uuid, name, address, time.currentTimestamp(), context);
+			}
+
+			if (!configs.getMainConfig().platforms().proxies().enforceServerSwitch()) {
+				return null;
+			}
+
+			return selector.selectionByApplicabilityBuilder(uuid, address)
+					.type(PunishmentType.BAN)
+					.scope(scope)
+					.build()
+					.getFirstSpecificPunishment(SortPunishments.LATEST_END_DATE_FIRST);
+
+		}).thenCompose((punishment) -> {
+			if (punishment instanceof Punishment) {
+				return formatter.getPunishmentMessage((Punishment) punishment);
+			} else {
+				return futuresFactory.completedFuture(null);
+			}
 		});
 	}
 

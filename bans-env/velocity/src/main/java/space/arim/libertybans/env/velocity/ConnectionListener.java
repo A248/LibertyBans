@@ -68,6 +68,7 @@ public final class ConnectionListener implements PlatformListener {
 			return null;
 		}
 		Player player = event.getPlayer();
+
 		return EventTask.resumeWhenComplete(guardian.executeAndCheckConnection(
 				player.getUniqueId(), player.getUsername(), player.getRemoteAddress().getAddress()
 		).thenAccept((message) -> {
@@ -91,7 +92,8 @@ public final class ConnectionListener implements PlatformListener {
 		}
 		Player player = event.getPlayer();
 		return EventTask.resumeWhenComplete(guardian.checkServerSwitch(
-				player.getUniqueId(), player.getRemoteAddress().getAddress(), destination.getServerInfo().getName()
+				player.getUniqueId(), player.getUsername(), player.getRemoteAddress().getAddress(),
+				destination.getServerInfo().getName()
 		).thenAccept((message) -> {
 			if (message != null) {
 				event.setResult(ServerPreConnectEvent.ServerResult.denied());
