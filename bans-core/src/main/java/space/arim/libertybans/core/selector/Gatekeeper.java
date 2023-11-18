@@ -119,17 +119,16 @@ public final class Gatekeeper {
 
 	public CentralisedFuture<@Nullable Component> checkServerSwitch(UUID uuid, String name, NetworkAddress address,
 																	String destinationServer, ServerScope scope, SelectorImpl selector) {
+		if (!configs.getMainConfig().platforms().proxies().enforceServerSwitch()) {
+			return null;
+		}
 
 		return queryExecutor.get().queryWithRetry((context, transaction) -> {
 			boolean shouldRegister = configs.getMainConfig().enforcement().altsRegistry().shouldRegisterOnConnection();
 			List<String> servers = configs.getMainConfig().enforcement().altsRegistry().servers();
 
-			if (shouldRegister || !servers.contains(destinationServer)) {
+			if (!shouldRegister && !servers.contains(destinationServer)) {
 				doAssociation(uuid, name, address, time.currentTimestamp(), context);
-			}
-
-			if (!configs.getMainConfig().platforms().proxies().enforceServerSwitch()) {
-				return null;
 			}
 
 			return selector.selectionByApplicabilityBuilder(uuid, address)
