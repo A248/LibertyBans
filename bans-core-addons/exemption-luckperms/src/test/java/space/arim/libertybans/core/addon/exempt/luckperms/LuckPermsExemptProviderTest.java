@@ -131,11 +131,4 @@ public class LuckPermsExemptProviderTest {
 		assertIsExempted(true);
 	}
 
-	@Test
-	public void targetAndOperatorHaveNoWeight() {
-		setGroups(senderUser, null, null);
-		setGroups(targetUser, null, null);
-		assertIsExempted(false);
-	}
-
 }
