@@ -79,7 +79,7 @@ public final class LuckPermsExemptProvider implements ExemptProvider {
 	}
 
 	private int calculateUserMaxWeight(User user) {
-		int maxWeight = 0;
+		int maxWeight = -1;
 		for (Group group : user.getInheritedGroups(user.getQueryOptions())) {
 			int weight = group.getWeight().orElse(-1);
 			if (weight > maxWeight) {
