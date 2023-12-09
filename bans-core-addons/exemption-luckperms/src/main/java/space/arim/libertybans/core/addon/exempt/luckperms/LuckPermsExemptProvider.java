@@ -73,7 +73,7 @@ public final class LuckPermsExemptProvider implements ExemptProvider {
 		return userManager.loadUser(senderUuid).thenCombine(userManager.loadUser(targetUuid), (senderUser, targetUser) -> {
 			int senderWeight = calculateUserMaxWeight(senderUser);
 			int targetWeight = calculateUserMaxWeight(targetUser);
-			return targetWeight > senderWeight;
+			return targetWeight >= senderWeight;
 		});
 	}
 
