@@ -74,7 +74,7 @@ public final class LuckPermsExemptProvider implements ExemptProvider {
 			int senderWeight = calculateUserMaxWeight(senderUser);
 			int targetWeight = calculateUserMaxWeight(targetUser);
 			if (senderWeight == -1 && targetWeight == -1) return false;
-			return targetWeight >= senderWeight;
+			return addon.config().exempt_same() ? targetWeight >= senderWeight : targetWeight > senderWeight;
 		});
 	}
 
