@@ -21,11 +21,12 @@ package space.arim.libertybans.core.addon.exempt.luckperms;
 
 import space.arim.dazzleconf.annote.ConfComments;
 import space.arim.dazzleconf.annote.ConfDefault;
+import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.libertybans.core.addon.AddonConfig;
 
 public interface ExemptionLuckPermsConfig extends AddonConfig {
-
-    @ConfComments("Whether to exempt punishment if operator & target have the same weight.")
+    @ConfKey("exempt-same")
+    @ConfComments("Whether to exempt victims with the same weight as the operator.")
     @ConfDefault.DefaultBoolean(false)
-    boolean exempt_same();
+    boolean exemptSame();
 }

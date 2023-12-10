@@ -136,7 +136,7 @@ public class LuckPermsExemptProviderTest {
 	public void targetHasExemptWeightSameAsOperatorWeightOptionEnabled() {
 		setGroups(senderUser, null, null, 4, null, null, 5, 20);
 		setGroups(targetUser, 3, null, 10, null, 20, 9);
-		when(config.exempt_same()).thenReturn(true);
+		when(config.exemptSame()).thenReturn(true);
 		assertIsExempted(true);
 	}
 
