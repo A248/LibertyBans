@@ -24,8 +24,7 @@ import net.luckperms.api.model.group.Group;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.model.user.UserManager;
 import net.luckperms.api.query.QueryOptions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -53,6 +52,7 @@ public class LuckPermsExemptProviderTest {
 	private UUID targetUuid;
 	private User senderUser;
 	private User targetUser;
+	private ExemptionLuckPermsConfig config;
 	private LuckPermsExemptProvider exemptProvider;
 
 	public LuckPermsExemptProviderTest(@Mock ExemptionLuckPermsAddon addon) {
@@ -68,6 +68,7 @@ public class LuckPermsExemptProviderTest {
 		this.senderUser = senderUser;
 		this.targetUser = targetUser;
 		when(config.enable()).thenReturn(true);
+		this.config = config;
 		when(addon.config()).thenReturn(config);
 		when(addon.luckPerms()).thenReturn(luckPerms);
 		when(luckPerms.getUserManager()).thenReturn(userManager);
@@ -122,6 +123,21 @@ public class LuckPermsExemptProviderTest {
 		setGroups(senderUser, null, null, 4, null, null, 5, 20);
 		setGroups(targetUser, 3, null, 10, null, 0);
 		assertIsExempted(false);
+	}
+
+	@Test
+	public void targetHasExemptWeightSameAsOperatorWeight() {
+		setGroups(senderUser, null, null, 4, null, null, 5, 20);
+		setGroups(targetUser, 3, null, 10, null, 20, 9);
+		assertIsExempted(false);
+	}
+
+	@Test
+	public void targetHasExemptWeightSameAsOperatorWeightOptionEnabled() {
+		setGroups(senderUser, null, null, 4, null, null, 5, 20);
+		setGroups(targetUser, 3, null, 10, null, 20, 9);
+		when(config.exemptSame()).thenReturn(true);
+		assertIsExempted(true);
 	}
 
 }

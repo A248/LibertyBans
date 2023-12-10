@@ -73,14 +73,15 @@ public final class LuckPermsExemptProvider implements ExemptProvider {
 		return userManager.loadUser(senderUuid).thenCombine(userManager.loadUser(targetUuid), (senderUser, targetUser) -> {
 			int senderWeight = calculateUserMaxWeight(senderUser);
 			int targetWeight = calculateUserMaxWeight(targetUser);
-			return targetWeight > senderWeight;
+			if (senderWeight == -1 && targetWeight == -1) return false;
+			return addon.config().exemptSame() ? targetWeight >= senderWeight : targetWeight > senderWeight;
 		});
 	}
 
 	private int calculateUserMaxWeight(User user) {
-		int maxWeight = 0;
+		int maxWeight = -1;
 		for (Group group : user.getInheritedGroups(user.getQueryOptions())) {
-			int weight = group.getWeight().orElse(0);
+			int weight = group.getWeight().orElse(-1);
 			if (weight > maxWeight) {
 				maxWeight = weight;
 			}
