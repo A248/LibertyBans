@@ -186,6 +186,9 @@
 							</goals>
 						</execution>
 					</executions>
+					<configuration>
+						<createDependencyReducedPom>false</createDependencyReducedPom>
+					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
