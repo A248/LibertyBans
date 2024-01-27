@@ -64,4 +64,9 @@ final class StandaloneResolver extends SimpleEnvUserResolver {
 		return Optional.empty();
 	}
 
+	@Override
+	public Optional<InetAddress> lookupCurrentAddress0(UUID uuid) {
+		return Optional.empty();
+	}
+
 }

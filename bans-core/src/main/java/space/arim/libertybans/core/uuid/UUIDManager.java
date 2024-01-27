@@ -58,5 +58,13 @@ public interface UUIDManager extends UserResolver, Part {
 	 * @return a future yielding the user details or an empty optional if not found
 	 */
 	CentralisedFuture<Optional<UUIDAndAddress>> lookupPlayer(String name);
-	
+
+	/**
+	 * Looks up player details from a UUID
+	 *
+	 * @param uuid the uuid of the player
+	 * @return a future yielding the latest address or an empty optional if not found
+	 */
+	CentralisedFuture<Optional<NetworkAddress>> lookupLastAddress(UUID uuid);
+
 }

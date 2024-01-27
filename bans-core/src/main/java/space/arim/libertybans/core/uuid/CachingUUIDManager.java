@@ -242,4 +242,14 @@ public final class CachingUUIDManager implements UUIDManager {
 		});
 	}
 
+	@Override
+	public CentralisedFuture<Optional<NetworkAddress>> lookupLastAddress(UUID uuid) {
+		return envResolver.lookupCurrentAddress(uuid).thenCompose((envResolve) -> {
+			if (envResolve.isPresent()) {
+				return completedFuture(envResolve.map(NetworkAddress::of));
+			}
+			return queryingImpl.resolveLastAddress(uuid).thenApply(Optional::ofNullable);
+		});
+	}
+
 }

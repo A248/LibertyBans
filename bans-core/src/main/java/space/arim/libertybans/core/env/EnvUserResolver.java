@@ -39,4 +39,6 @@ public interface EnvUserResolver {
 
 	CentralisedFuture<Optional<UUIDAndAddress>> lookupPlayer(String name);
 
+	CentralisedFuture<Optional<InetAddress>> lookupCurrentAddress(UUID uuid);
+
 }

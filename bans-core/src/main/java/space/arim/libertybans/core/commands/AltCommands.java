@@ -27,7 +27,6 @@ import space.arim.libertybans.core.alts.AltsSection;
 import space.arim.libertybans.core.alts.WhichAlts;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.env.CmdSender;
-import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.util.stream.Stream;
@@ -35,15 +34,13 @@ import java.util.stream.Stream;
 @Singleton
 public final class AltCommands extends AbstractSubCommandGroup {
 
-	private final UUIDManager uuidManager;
 	private final AltDetection altDetection;
 	private final AltCheckFormatter altCheckFormatter;
 	private final TabCompletion tabCompletion;
 
 	@Inject
-	public AltCommands(Dependencies dependencies, UUIDManager uuidManager, AltDetection altDetection, AltCheckFormatter altCheckFormatter, TabCompletion tabCompletion) {
+	public AltCommands(Dependencies dependencies, AltDetection altDetection, AltCheckFormatter altCheckFormatter, TabCompletion tabCompletion) {
 		super(dependencies, "alts");
-		this.uuidManager = uuidManager;
 		this.altDetection = altDetection;
 		this.altCheckFormatter = altCheckFormatter;
 		this.tabCompletion = tabCompletion;
@@ -92,12 +89,11 @@ public final class AltCommands extends AbstractSubCommandGroup {
 				return null;
 			}
 			String target = command().next();
-			return uuidManager.lookupPlayer(target).thenCompose((userDetails) -> {
-				if (userDetails.isEmpty()) {
-					sender().sendMessage(messages().all().notFound().player().replaceText("%TARGET%", target));
+			return argumentParser().parsePlayer(sender(), target).thenCompose((userDetails) -> {
+				if (userDetails == null) {
 					return completedFuture(null);
 				}
-				return altDetection.detectAlts(userDetails.get(), WhichAlts.ALL_ALTS).thenAccept((detectedAlts) -> {
+				return altDetection.detectAlts(userDetails, WhichAlts.ALL_ALTS).thenAccept((detectedAlts) -> {
 					if (detectedAlts.isEmpty()) {
 						sender().sendMessage(altsConfig().command().noneFound());
 						return;

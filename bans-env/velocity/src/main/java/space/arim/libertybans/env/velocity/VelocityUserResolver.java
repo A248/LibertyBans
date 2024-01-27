@@ -69,4 +69,9 @@ public final class VelocityUserResolver extends SimpleEnvUserResolver {
 				.map((player) -> new UUIDAndAddress(player.getUniqueId(), player.getRemoteAddress().getAddress()));
 	}
 
+	@Override
+	public Optional<InetAddress> lookupCurrentAddress0(UUID uuid) {
+		return server.getPlayer(uuid).map((player) -> player.getRemoteAddress().getAddress());
+	}
+
 }

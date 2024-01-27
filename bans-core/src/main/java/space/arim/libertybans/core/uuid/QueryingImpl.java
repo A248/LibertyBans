@@ -107,4 +107,16 @@ class QueryingImpl {
 		}));
 	}
 
+	CentralisedFuture<NetworkAddress> resolveLastAddress(UUID uuid) {
+		return dbProvider.get().query(SQLFunction.readOnly((context) -> {
+			return context
+					.select(ADDRESSES.ADDRESS)
+					.from(ADDRESSES)
+					.where(ADDRESSES.UUID.eq(uuid))
+					.orderBy(ADDRESSES.UPDATED.desc())
+					.limit(1)
+					.fetchOne(ADDRESSES.ADDRESS);
+		}));
+	}
+
 }

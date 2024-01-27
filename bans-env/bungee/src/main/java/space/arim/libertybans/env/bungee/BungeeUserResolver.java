@@ -71,4 +71,9 @@ public final class BungeeUserResolver extends SimpleEnvUserResolver {
 				.map((player) -> new UUIDAndAddress(player.getUniqueId(), addressReporter.getAddress(player)));
 	}
 
+	@Override
+	public Optional<InetAddress> lookupCurrentAddress0(UUID uuid) {
+		return Optional.ofNullable(server.getPlayer(uuid)).map(addressReporter::getAddress);
+	}
+
 }

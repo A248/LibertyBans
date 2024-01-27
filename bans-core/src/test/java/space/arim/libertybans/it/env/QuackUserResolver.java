@@ -69,4 +69,9 @@ public final class QuackUserResolver extends SimpleEnvUserResolver {
 				.map((player) -> new UUIDAndAddress(player.getUniqueId(), player.getAddress()));
 	}
 
+	@Override
+	public Optional<InetAddress> lookupCurrentAddress0(UUID uuid) {
+		return platform.getPlayer(uuid).map(QuackPlayer::getAddress);
+	}
+
 }

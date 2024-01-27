@@ -75,4 +75,9 @@ public final class SpigotUserResolver extends SimpleEnvUserResolver {
 				.map((player) -> new UUIDAndAddress(player.getUniqueId(), player.getAddress().getAddress()));
 	}
 
+	@Override
+	public Optional<InetAddress> lookupCurrentAddress0(UUID uuid) {
+		return Optional.ofNullable(server.getPlayer(uuid)).map((player) -> player.getAddress().getAddress());
+	}
+
 }

@@ -105,15 +105,18 @@ public class CommandsCore implements Commands {
 	 */
 
 	private List<String> subCommandCompletions(CmdSender sender, Predicate<String> filter) {
-		return subCommandGroups.stream()
-				.flatMap((subCommandGroup) -> {
+		Stream<String> combined = Stream.concat(
+				subCommandGroups.stream().flatMap((subCommandGroup) -> {
 					return subCommandGroup.matches()
 							.stream()
 							.filter((subCmd) -> subCommandGroup.hasTabCompletePermission(sender, subCmd));
-				})
+				}),
+				Stream.of("version", "about", "usage", "help")
+		);
+		return combined
 				.filter(filter)
 				.sorted()
-				.collect(Collectors.toUnmodifiableList());
+				.toList();
 	}
 
 	@Override
@@ -149,7 +152,7 @@ public class CommandsCore implements Commands {
 		if (!lastArg.isEmpty()) {
 			completions = completions.filter((completion) -> completion.toLowerCase(Locale.ROOT).startsWith(lastArg));
 		}
-		return completions.sorted().collect(Collectors.toUnmodifiableList());
+		return completions.sorted().toList();
 	}
 
 	@Override

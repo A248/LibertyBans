@@ -43,6 +43,8 @@ import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class StandardArgumentParser implements ArgumentParser {
 
@@ -74,39 +76,46 @@ public class StandardArgumentParser implements ArgumentParser {
 		return all().notFound();
 	}
 
+	private <R> CentralisedFuture<@Nullable R> parseUUIDIfPossible(CmdSender sender, String targetArg,
+																   Function<UUID, CentralisedFuture<R>> ifUuid,
+																   Supplier<CentralisedFuture<R>> otherwise) {
+		return switch (targetArg.length()) {
+			case 36 -> {
+				UUID uuid;
+				try {
+					uuid = UUID.fromString(targetArg);
+				} catch (IllegalArgumentException ex) {
+					sender.sendMessage(notFound().uuid().replaceText("%TARGET%", targetArg));
+					yield completedFuture(null);
+				}
+				yield ifUuid.apply(uuid);
+			}
+			case 32 -> {
+				long mostSigBits;
+				long leastSigBits;
+				try {
+					mostSigBits = Long.parseUnsignedLong(targetArg.substring(0, 16), 16);
+					leastSigBits = Long.parseUnsignedLong(targetArg.substring(16, 32), 16);
+				} catch (NumberFormatException ex) {
+					sender.sendMessage(notFound().uuid().replaceText("%TARGET%", targetArg));
+					yield completedFuture(null);
+				}
+				yield ifUuid.apply(new UUID(mostSigBits, leastSigBits));
+			}
+			default -> otherwise.get();
+		};
+	}
+
 	@Override
 	public CentralisedFuture<@Nullable UUID> parseOrLookupUUID(CmdSender sender, String targetArg) {
-		return switch (targetArg.length()) {
-		case 36 -> {
-			UUID uuid;
-			try {
-				uuid = UUID.fromString(targetArg);
-			} catch (IllegalArgumentException ex) {
-				sender.sendMessage(notFound().uuid().replaceText("%TARGET%", targetArg));
-				yield completedFuture(null);
-			}
-			yield completedFuture(uuid);
-		}
-		case 32 -> {
-			long mostSigBits;
-			long leastSigBits;
-			try {
-				mostSigBits = Long.parseUnsignedLong(targetArg.substring(0, 16), 16);
-				leastSigBits = Long.parseUnsignedLong(targetArg.substring(16, 32), 16);
-			} catch (NumberFormatException ex) {
-				sender.sendMessage(notFound().uuid().replaceText("%TARGET%", targetArg));
-				yield completedFuture(null);
-			}
-			yield completedFuture(new UUID(mostSigBits, leastSigBits));
-		}
-		default -> uuidManager.lookupUUID(targetArg).thenApply((uuid) -> {
-			if (uuid.isEmpty()) {
-				sender.sendMessage(notFound().player().replaceText("%TARGET%", targetArg));
-				return null;
-			}
-			return uuid.get();
-		});
-		};
+		return parseUUIDIfPossible(sender, targetArg, this::completedFuture,
+				() -> uuidManager.lookupUUID(targetArg).thenApply((uuid) -> {
+					if (uuid.isEmpty()) {
+						sender.sendMessage(notFound().player().replaceText("%TARGET%", targetArg));
+						return null;
+					}
+					return uuid.get();
+				}));
 	}
 
 	@Override
@@ -148,13 +157,21 @@ public class StandardArgumentParser implements ArgumentParser {
 
 	@Override
 	public CentralisedFuture<@Nullable UUIDAndAddress> parsePlayer(CmdSender sender, String targetArg) {
-		return  uuidManager.lookupPlayer(targetArg).thenApply((optUuidAndAddress) -> {
+		return parseUUIDIfPossible(sender, targetArg, (uuid) -> {
+			return uuidManager.lookupLastAddress(uuid).thenApply((optAddress) -> {
+				if (optAddress.isEmpty()) {
+					sender.sendMessage(notFound().player().replaceText("%TARGET%", targetArg));
+					return null;
+				}
+				return new UUIDAndAddress(uuid, optAddress.get());
+			});
+		}, () -> uuidManager.lookupPlayer(targetArg).thenApply((optUuidAndAddress) -> {
 			if (optUuidAndAddress.isEmpty()) {
 				sender.sendMessage(notFound().player().replaceText("%TARGET%", targetArg));
 				return null;
 			}
 			return optUuidAndAddress.get();
-		});
+		}));
 	}
 
 	@Override

@@ -69,4 +69,9 @@ public final class SpongeUserResolver extends SimpleEnvUserResolver {
 				.map((player) -> new UUIDAndAddress(player.uniqueId(), player.connection().address().getAddress()));
 	}
 
+	@Override
+	public Optional<InetAddress> lookupCurrentAddress0(UUID uuid) {
+		return game.server().player(uuid).map((player) -> player.connection().address().getAddress());
+	}
+
 }

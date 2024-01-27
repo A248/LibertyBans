@@ -62,6 +62,11 @@ public abstract class SimpleEnvUserResolver implements EnvUserResolver {
 		return performLookup(() -> lookupPlayer0(name));
 	}
 
+	@Override
+	public final CentralisedFuture<Optional<InetAddress>> lookupCurrentAddress(UUID uuid) {
+		return performLookup(() -> lookupCurrentAddress0(uuid));
+	}
+
 	protected abstract Optional<UUID> lookupUUID0(String name);
 
 	protected abstract Optional<String> lookupName0(UUID uuid);
@@ -69,5 +74,7 @@ public abstract class SimpleEnvUserResolver implements EnvUserResolver {
 	protected abstract Optional<InetAddress> lookupAddress0(String name);
 
 	protected abstract Optional<UUIDAndAddress> lookupPlayer0(String name);
+
+	protected abstract Optional<InetAddress> lookupCurrentAddress0(UUID uuid);
 
 }
