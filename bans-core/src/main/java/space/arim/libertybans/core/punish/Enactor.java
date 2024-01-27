@@ -106,6 +106,9 @@ public class Enactor implements PunishmentDrafter {
 				creator);
 
 		return database.queryWithRetry((context, transaction) -> {
+			// Make sure concurrent executions do not conflict
+			transaction.setIsolation(Connection.TRANSACTION_SERIALIZABLE);
+
 			if (type != PunishmentType.KICK) {
 				database.clearExpiredPunishments(context, type, start);
 			}
@@ -124,6 +127,8 @@ public class Enactor implements PunishmentDrafter {
 
 		InternalDatabase database = dbProvider.get();
 		return database.queryWithRetry((context, transaction) -> {
+			// Make sure concurrent executions do not conflict
+			transaction.setIsolation(Connection.TRANSACTION_SERIALIZABLE);
 
 			var calculationResult = calculablePunishment.getCalculator().compute(
 					escalationTrack, victim,

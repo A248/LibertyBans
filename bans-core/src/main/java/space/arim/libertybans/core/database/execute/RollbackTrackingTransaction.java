@@ -44,6 +44,15 @@ final class RollbackTrackingTransaction implements Transaction {
 	}
 
 	@Override
+	public void setIsolation(int level) {
+		try {
+			connection.setTransactionIsolation(level);
+		} catch (SQLException ex) {
+			throw new DataAccessException("Failed to set isolation", ex);
+		}
+	}
+
+	@Override
 	public void rollback() {
 		try {
 			connection.rollback();
@@ -86,6 +95,11 @@ final class RollbackTrackingTransaction implements Transaction {
 
 		private NestedTransaction(Savepoint savepoint) {
 			this.savepoint = Objects.requireNonNull(savepoint, "savepoint");
+		}
+
+		@Override
+		public void setIsolation(int level) {
+			throw new UnsupportedOperationException("Cannot set isolation levels in nested transactions");
 		}
 
 		@Override

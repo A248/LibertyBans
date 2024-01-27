@@ -21,8 +21,11 @@ package space.arim.libertybans.core.database.execute;
 
 import org.jooq.DSLContext;
 import org.jooq.exception.DataAccessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import space.arim.libertybans.core.database.jooq.JooqContext;
 import space.arim.omnibus.util.ArraysUtil;
+import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -39,6 +42,8 @@ public final class JooqQueryExecutor implements QueryExecutor {
 	private final DataSource dataSource;
 	private final FactoryOfTheFuture futuresFactory;
 	private final Executor threadPool;
+
+	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
 	public JooqQueryExecutor(JooqContext jooqContext, DataSource dataSource,
 							 FactoryOfTheFuture futuresFactory, Executor threadPool) {
@@ -57,6 +62,11 @@ public final class JooqQueryExecutor implements QueryExecutor {
 		throw reason;
 	}
 
+	private static DataAccessException unableToCommit(Connection connection, SQLException cause) {
+		throw rollbackBeforeThrow(connection,
+				new DataAccessException("Unable to commit (" + cause.getSQLState() + ')', cause));
+	}
+
 	private <R> R obtainUnfailing(SQLFunction<R> command) {
 		try (Connection connection = dataSource.getConnection()) {
 			if (command.isReadOnly()) {
@@ -70,11 +80,15 @@ public final class JooqQueryExecutor implements QueryExecutor {
 			} catch (RuntimeException ex) {
 				throw rollbackBeforeThrow(connection, ex);
 			}
-			connection.commit();
+			try {
+				connection.commit();
+			} catch (SQLException ex) {
+				throw unableToCommit(connection, ex);
+			}
 			return value;
 
 		} catch (SQLException ex) {
-			throw new DataAccessException("Miscellaneous failure", ex);
+			throw new DataAccessException("Miscellaneous failure (" + ex.getSQLState() + ')', ex);
 		}
 	}
 
@@ -90,7 +104,7 @@ public final class JooqQueryExecutor implements QueryExecutor {
 		MariaDB and MySQL - ER_LOCK_DEADLOCK
 		PostgreSQL and CockroachDB - serialization_failure
 		 */
-		return ex.getErrorCode() == 40001;
+		return "40001".equals(ex.getSQLState());
 	}
 
 	private static void exponentialBackoff(int retry) {
@@ -140,7 +154,13 @@ public final class JooqQueryExecutor implements QueryExecutor {
 							serializationFailures = ArraysUtil.expandAndInsert(serializationFailures, ex, 0);
 							continue;
 						}
-						throw rollbackBeforeThrow(connection, new DataAccessException("Unable to commit", ex));
+						throw unableToCommit(connection, ex);
+					}
+				}
+				if (retry != 0) {
+					logger.trace("Database operation succeeded after {} tries", retry);
+					if (retry > retryCount / 2) {
+						logger.info("Heavy contention detected on the database. Consider upping the retry count.");
 					}
 				}
 				return value;
@@ -172,7 +192,7 @@ public final class JooqQueryExecutor implements QueryExecutor {
 			try {
 				connection.commit();
 			} catch (SQLException ex) {
-				throw rollbackBeforeThrow(connection, new DataAccessException("Unable to commit", ex));
+				throw unableToCommit(connection, ex);
 			}
 		}
 	}
