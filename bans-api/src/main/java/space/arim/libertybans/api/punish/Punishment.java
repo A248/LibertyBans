@@ -147,6 +147,14 @@ public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 	}
 
 	/**
+	 * Gets undo information about this punishment.
+	 * <br>
+	 *
+	 * @return If the punishment is active or expired, is empty
+	 */
+	Optional<UndoAttachment> undoAttachment();
+
+	/**
 	 * Enforces this punishment. <br>
 	 * <br>
 	 * For bans and mutes, this will kick players matching the punishment's victim.

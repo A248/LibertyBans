@@ -162,7 +162,7 @@ public class SelfImportIT {
 					context
 							.selectFrom(SIMPLE_HISTORY)
 							.where(SIMPLE_HISTORY.ID.eq(135L))
-							.fetchSingle(creator.punishmentMapper())
+							.fetchSingle(creator.punishmentMapperUndone())
 			);
 		}).join();
 	}

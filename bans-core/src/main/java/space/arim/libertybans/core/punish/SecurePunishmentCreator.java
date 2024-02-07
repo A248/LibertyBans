@@ -22,17 +22,14 @@ package space.arim.libertybans.core.punish;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
-import org.jooq.Record10;
-import org.jooq.Record11;
-import org.jooq.Record12;
-import org.jooq.Record6;
-import org.jooq.RecordMapper;
+import org.jooq.*;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.punish.UndoAttachment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.database.sql.DeserializedVictim;
 import space.arim.libertybans.core.scope.InternalScopeManager;
@@ -49,14 +46,17 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 	private final Provider<InternalRevoker> revoker;
 	private final Provider<GlobalEnforcement> enforcement;
 	private final Provider<Modifier> modifier;
+	private final SecureUndoAttachmentCreator undoAttachmentCreator;
 
 	@Inject
 	public SecurePunishmentCreator(InternalScopeManager scopeManager, Provider<InternalRevoker> revoker,
-								   Provider<GlobalEnforcement> enforcement, Provider<Modifier> modifier) {
+								   Provider<GlobalEnforcement> enforcement, Provider<Modifier> modifier,
+								   SecureUndoAttachmentCreator undoAttachmentCreator) {
 		this.scopeManager = scopeManager;
 		this.revoker = revoker;
 		this.enforcement = enforcement;
 		this.modifier = modifier;
+		this.undoAttachmentCreator = undoAttachmentCreator;
 	}
 
 	InternalRevoker revoker() {
@@ -72,9 +72,34 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 	}
 
 	@Override
+	public Punishment createPunishment(long id, PunishmentType type, Victim victim, Operator operator, String reason, ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack, UndoAttachment undoAttachment) {
+		return new SecurePunishment(this, id, type, victim, operator, reason, scope, start, end, escalationTrack, undoAttachment);
+	}
+
+	//TODO: Should probably call the above method
+	@Override
 	public Punishment createPunishment(long id, PunishmentType type, Victim victim, Operator operator, String reason,
 									   ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack) {
-		return new SecurePunishment(this, id, type, victim, operator, reason, scope, start, end, escalationTrack);
+		return new SecurePunishment(this, id, type, victim, operator, reason, scope, start, end, escalationTrack, null);
+	}
+
+	@Override
+	public RecordMapper<Record15<Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType, Operator, String, Instant>, Punishment> punishmentMapperUndone() {
+		return (record) -> {
+			Victim victim = new DeserializedVictim(
+					record.value4(), record.value5()
+			).victim(record.value3());
+			ServerScope scope = scopeManager.deserialize(
+					record.value12(), record.value8()
+			);
+			return new SecurePunishment(
+					SecurePunishmentCreator.this,
+					record.value1(), record.value2(), // id, type
+					victim, record.value6(), record.value7(), // victim, operator, reason
+					scope, record.value9(), record.value10(), record.value11(), // scope, start, end, track
+					undoAttachmentCreator.createUndoAttachment(record.value13(), record.value14(), record.value15()) // undo attachment
+			);
+		};
 	}
 
 	@Override
@@ -92,7 +117,8 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					SecurePunishmentCreator.this,
 					record.value1(), record.value2(), // id, type
 					victim, record.value6(), record.value7(), // victim, operator, reason
-					scope, record.value9(), record.value10(), record.value11() // scope, start, end, track
+					scope, record.value9(), record.value10(), record.value11(), // scope, start, end, track
+					null // undo attachment
 			);
 		};
 	}
@@ -112,7 +138,8 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					SecurePunishmentCreator.this,
 					id, /* type */ record.value1(), victim,
 					record.value5(), record.value6(), // operator, reason
-					scope, record.value8(), record.value9(), record.value10() // scope, start, end, track
+					scope, record.value8(), record.value9(), record.value10(), // scope, start, end, track
+					null // undo attachment
 			);
 		};
 	}
@@ -132,7 +159,8 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					SecurePunishmentCreator.this,
 					id, type, victim,
 					record.value4(), record.value5(), // operator, reason
-					scope, record.value7(), record.value8(), record.value9() // scope, start, end, track
+					scope, record.value7(), record.value8(), record.value9(), // scope, start, end, track
+					null // undo attachment
 			);
 		};
 	}
@@ -161,7 +189,7 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					oldPunishment.getIdentifier(), oldPunishment.getType(),
 					oldPunishment.getVictim(), oldPunishment.getOperator(), record.value1(),
 					scope, oldPunishment.getStartDate(), record.value2(),
-					escalationTrack
+					escalationTrack, null
 			);
 		};
 	}

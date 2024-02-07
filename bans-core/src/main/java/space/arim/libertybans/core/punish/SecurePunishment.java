@@ -25,16 +25,13 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-import space.arim.libertybans.api.punish.EnforcementOptions;
-import space.arim.libertybans.api.punish.EscalationTrack;
-import space.arim.libertybans.api.punish.PunishmentEditor;
+import space.arim.libertybans.api.punish.*;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 
 class SecurePunishment extends AbstractPunishmentBase implements Punishment, EnforcementOpts.Factory {
@@ -43,15 +40,18 @@ class SecurePunishment extends AbstractPunishmentBase implements Punishment, Enf
 	private final long id;
 	private final Instant startDate;
 	private final Instant endDate;
+	private final UndoAttachment undoAttachment;
 
 	SecurePunishment(SecurePunishmentCreator creator,
 					 long id, PunishmentType type, Victim victim, Operator operator, String reason,
-					 ServerScope scope, Instant startDate, Instant endDate, EscalationTrack escalationTrack) {
+					 ServerScope scope, Instant startDate, Instant endDate, EscalationTrack escalationTrack,
+					 UndoAttachment undoAttachment) {
 		super(type, victim, operator, reason, scope, escalationTrack);
 		this.creator = Objects.requireNonNull(creator, "creator");
 		this.id = id;
 		this.startDate = Objects.requireNonNull(startDate, "startDate");
 		this.endDate = Objects.requireNonNull(endDate, "endDate");
+		this.undoAttachment = undoAttachment;
 	}
 
 	@Override
@@ -67,6 +67,11 @@ class SecurePunishment extends AbstractPunishmentBase implements Punishment, Enf
 	@Override
 	public Instant getEndDate() {
 		return endDate;
+	}
+
+	@Override
+	public Optional<UndoAttachment> undoAttachment() {
+		return Optional.ofNullable(undoAttachment);
 	}
 
 	@Override

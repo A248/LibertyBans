@@ -19,17 +19,14 @@
 
 package space.arim.libertybans.core.punish;
 
-import org.jooq.Record10;
-import org.jooq.Record11;
-import org.jooq.Record12;
-import org.jooq.Record6;
-import org.jooq.RecordMapper;
+import org.jooq.*;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.punish.UndoAttachment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.scope.ScopeType;
 
@@ -40,7 +37,16 @@ public interface PunishmentCreator {
 
 	Punishment createPunishment(long id, PunishmentType type, Victim victim,
 								Operator operator, String reason,
+								ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack,
+								UndoAttachment undoAttachment);
+
+	Punishment createPunishment(long id, PunishmentType type, Victim victim,
+								Operator operator, String reason,
 								ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack);
+
+	RecordMapper<Record15<
+			Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType, Operator, String, Instant>,
+			Punishment> punishmentMapperUndone();
 
 	RecordMapper<Record12<
 			Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,
