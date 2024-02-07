@@ -40,12 +40,14 @@ public final class EnforcementOpts implements EnforcementOptions {
 	private final Broadcasting broadcasting;
 	private final String targetArgument;
 	private final Operator unOperator;
+	private final String reason;
 
-	private EnforcementOpts(Enforcement enforcement, Broadcasting broadcasting, String targetArgument, Operator unOperator) {
+	private EnforcementOpts(Enforcement enforcement, Broadcasting broadcasting, String targetArgument, Operator unOperator, String reason) {
 		this.enforcement = Objects.requireNonNull(enforcement, "enforcement");
 		this.broadcasting = Objects.requireNonNull(broadcasting, "broadcast");
 		this.targetArgument = targetArgument;
-		this.unOperator = unOperator;
+		this.unOperator = Objects.requireNonNull(unOperator, "unOperator");
+		this.reason = Objects.requireNonNull(reason, "reason");
 	}
 
 	@Override
@@ -85,8 +87,17 @@ public final class EnforcementOpts implements EnforcementOptions {
 	 *
 	 * @return the undoing operator
 	 */
-	public Optional<Operator> unOperator() {
-		return Optional.ofNullable(unOperator);
+	public Operator unOperator() {
+		return unOperator;
+	}
+
+	/**
+	 * Non-API extension
+	 *
+	 * @return the undo reason
+	 */
+	public String reason() {
+		return reason;
 	}
 
 	interface Factory extends EnforcementOptionsFactory {
@@ -107,6 +118,7 @@ public final class EnforcementOpts implements EnforcementOptions {
 		private Broadcasting broadcasting = Broadcasting.NONE;
 		private String targetArgument;
 		private Operator unOperator;
+		private String reason;
 
 		private Builder() {}
 
@@ -136,7 +148,7 @@ public final class EnforcementOpts implements EnforcementOptions {
 		/**
 		 * Non-API extension
 		 *
-		 * @param unOperator the undoing operator. May be null for none
+		 * @param unOperator the undoing operator
 		 * @return this builder
 		 */
 		public Builder unOperator(Operator unOperator) {
@@ -144,9 +156,21 @@ public final class EnforcementOpts implements EnforcementOptions {
 			return this;
 		}
 
+		/**
+		 * Non-API extension
+		 *
+		 * @param reason the undo reason
+		 * @return this builder
+		 */
+
+		public Builder reason(String reason) {
+			this.reason = reason;
+			return this;
+		}
+
 		@Override
 		public EnforcementOpts build() {
-			return new EnforcementOpts(enforcement, broadcasting, targetArgument, unOperator);
+			return new EnforcementOpts(enforcement, broadcasting, targetArgument, unOperator, reason);
 		}
 
 		@Override

@@ -22,6 +22,7 @@ package space.arim.libertybans.core.commands;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import space.arim.libertybans.api.CompositeVictim;
+import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EnforcementOptions;
@@ -30,6 +31,7 @@ import space.arim.libertybans.api.punish.PunishmentRevoker;
 import space.arim.libertybans.api.punish.RevocationOrder;
 import space.arim.libertybans.core.commands.extra.AsCompositeWildcard;
 import space.arim.libertybans.core.commands.extra.NotificationMessage;
+import space.arim.libertybans.core.commands.extra.ReasonsConfig;
 import space.arim.libertybans.core.punish.permission.VictimPermissionCheck;
 import space.arim.libertybans.core.punish.permission.VictimTypeCheck;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
@@ -123,6 +125,21 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 				return null;
 			}
 			String targetArg = command().next();
+			String reason;
+			if (command().hasNext()) {
+				reason = command().allRemaining();
+			} else {
+				ReasonsConfig reasonsConfig = config().reasons();
+				reason = switch (reasonsConfig.effectiveUnspecifiedReasonBehavior()) {
+					case USE_EMPTY_REASON -> "";
+					case REQUIRE_REASON -> null; // Exit below
+					case SUBSTITUTE_DEFAULT -> reasonsConfig.defaultReason();
+				};
+				if (reason == null) {
+					sender().sendMessage(section.usage());
+					return null;
+				}
+			}
 			return parseVictim(sender(), command(), targetArg, type()).thenCompose((victim) -> {
 				if (victim == null) {
 					return completedFuture(null);
@@ -130,7 +147,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 				if (!permissionCheck.checkPermission(victim, section)) {
 					return completedFuture(null);
 				}
-				return performUndo(victim, targetArg);
+				return performUndo(sender().getOperator(), reason, victim, targetArg);
 
 			}).thenCompose((punishment) -> {
 				if (punishment == null) {
@@ -140,7 +157,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 			});
 		}
 
-		private CompletionStage<Punishment> performUndo(Victim victim, String targetArg) {
+		private CompletionStage<Punishment> performUndo(Operator operator, String reason, Victim victim, String targetArg) {
 			final PunishmentType type = type();
 
 			RevocationOrder revocationOrder;
@@ -158,15 +175,15 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 					sender().sendMessage(((WarnRemoval) section).notANumber().replaceText("%ID_ARG%", idArg));
 					return completedFuture(null);
 				}
-				revocationOrder = revoker.revokeByIdAndType(id, type);
+				revocationOrder = revoker.revokeByIdAndType(id, type, operator, reason);
 			} else {
 				assert type.isSingular() : type;
 				// Try to revoke this punishment for either the simple victim or composite wildcard victim
 				CompositeVictim compositeWildcard = new AsCompositeWildcard().apply(victim);
-				revocationOrder = revoker.revokeByTypeAndPossibleVictims(type, List.of(victim, compositeWildcard));
+				revocationOrder = revoker.revokeByTypeAndPossibleVictims(type, List.of(victim, compositeWildcard), operator, reason);
 				id = -1;
 			}
-			return fireWithTimeout(new PardonEventImpl(sender().getOperator(), victim, type)).thenCompose((event) -> {
+			return fireWithTimeout(new PardonEventImpl(operator, victim, type)).thenCompose((event) -> {
 				if (event.isCancelled()) {
 					return completedFuture(null);
 				}

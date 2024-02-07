@@ -25,6 +25,7 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.event.PardonEvent;
 
+//TODO: Add reason
 public class PardonEventImpl extends AbstractCancellable implements PardonEvent {
 
 	private final Operator operator;
