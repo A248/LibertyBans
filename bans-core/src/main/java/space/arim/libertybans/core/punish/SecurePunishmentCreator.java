@@ -47,16 +47,18 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 	private final Provider<GlobalEnforcement> enforcement;
 	private final Provider<Modifier> modifier;
 	private final SecureUndoAttachmentCreator undoAttachmentCreator;
+	private final UndoDraftCreator undoDraftCreator;
 
 	@Inject
 	public SecurePunishmentCreator(InternalScopeManager scopeManager, Provider<InternalRevoker> revoker,
 								   Provider<GlobalEnforcement> enforcement, Provider<Modifier> modifier,
-								   SecureUndoAttachmentCreator undoAttachmentCreator) {
+								   SecureUndoAttachmentCreator undoAttachmentCreator, UndoDraftCreator undoDraftCreator) {
 		this.scopeManager = scopeManager;
 		this.revoker = revoker;
 		this.enforcement = enforcement;
 		this.modifier = modifier;
 		this.undoAttachmentCreator = undoAttachmentCreator;
+		this.undoDraftCreator = undoDraftCreator;
 	}
 
 	InternalRevoker revoker() {
@@ -69,6 +71,10 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 
 	Modifier modifer() {
 		return modifier.get();
+	}
+
+	public UndoDraftCreator undoDraftCreator() {
+		return undoDraftCreator;
 	}
 
 	@Override

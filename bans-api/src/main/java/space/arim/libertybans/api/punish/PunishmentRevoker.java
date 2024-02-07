@@ -20,6 +20,7 @@
 package space.arim.libertybans.api.punish;
 
 import space.arim.libertybans.api.CompositeVictim;
+import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 
@@ -40,6 +41,7 @@ import java.util.List;
  * @author A248
  *
  */
+//TODO: Adjust Javadoc
 public interface PunishmentRevoker {
 
 	/**
@@ -49,18 +51,18 @@ public interface PunishmentRevoker {
 	 * @param type the type of the punishment to undo
 	 * @return a revocation order using the ID and type
 	 */
-	RevocationOrder revokeByIdAndType(long id, PunishmentType type);
+	RevocationOrder revokeByIdAndType(long id, PunishmentType type, Operator operator, String reason);
 
 	/**
 	 * Gets a {@link RevocationOrder} to undo a punishment according to its ID. <br>
 	 * <br>
 	 * When the punishment type is known,
-	 * {@link #revokeByIdAndType(long, PunishmentType)} should be used.
+	 * {@link #revokeByIdAndType(long, PunishmentType, Operator, String)} should be used.
 	 * 
 	 * @param id the id of the punishment to undo
 	 * @return a revocation order using the ID
 	 */
-	RevocationOrder revokeById(long id);
+	RevocationOrder revokeById(long id, Operator operator, String reason);
 
 	/**
 	 * Gets a {@link RevocationOrder} to undo a punishment by its type and victim.
@@ -76,14 +78,14 @@ public interface PunishmentRevoker {
 	 * @param victim the victim whose punishment to undo
 	 * @return a revocation order using the type and victim
 	 */
-	RevocationOrder revokeByTypeAndVictim(PunishmentType type, Victim victim);
+	RevocationOrder revokeByTypeAndVictim(PunishmentType type, Victim victim, Operator operator, String reason);
 
 	/**
 	 * Gets a {@link RevocationOrder} to undo a punishment by its type and victim,
 	 * trying multiple victims until one of them is found to be punished. <br>
 	 * <br>
 	 * The process for undoing the punishment is identical to
-	 * {@link #revokeByTypeAndVictim(PunishmentType, Victim)}, except that multiple
+	 * {@link #revokeByTypeAndVictim(PunishmentType, Victim, Operator, String)}, except that multiple
 	 * victims are tried: if the first victim is punished, that punishment is undone,
 	 * if second victim is punished, <i>that</i> punishment is undone, et cetera.
 	 *
@@ -92,7 +94,7 @@ public interface PunishmentRevoker {
 	 * @return a revocation order using the type and victim
 	 * @throws IllegalArgumentException if the list of victims is empty
 	 */
-	RevocationOrder revokeByTypeAndPossibleVictims(PunishmentType type, List<Victim> victims);
+	RevocationOrder revokeByTypeAndPossibleVictims(PunishmentType type, List<Victim> victims, Operator operator, String reason);
 
 	/**
 	 * Totally expunges a punishment according to its ID. This uses the most efficient means to completely

@@ -38,19 +38,21 @@ public final class PacketEnforceUnenforce implements SynchronizationPacket {
 	final EnforcementOptions.Broadcasting broadcasting;
 	final String targetArgument;
 	final Operator unOperator;
+	final String reason;
 
 	static final byte PACKET_ID = (byte) 1;
 	private static final OperatorBinding operatorBinding = new OperatorBinding();
 
 	PacketEnforceUnenforce(long id, PunishmentType type,
 								  Mode mode, EnforcementOptions.Broadcasting broadcasting,
-								  String targetArgument, Operator unOperator) {
+								  String targetArgument, Operator unOperator, String reason) {
 		this.id = id;
 		this.type = Objects.requireNonNull(type, "type");
 		this.mode = Objects.requireNonNull(mode, "mode");
 		this.broadcasting = Objects.requireNonNull(broadcasting, "broadcasting");
 		this.targetArgument = targetArgument;
 		this.unOperator = unOperator;
+		this.reason = reason;
 	}
 
 	public PacketEnforceUnenforce(long id, PunishmentType type, Mode mode, EnforcementOpts enforcementOptions) {
@@ -60,7 +62,8 @@ public final class PacketEnforceUnenforce implements SynchronizationPacket {
 				mode,
 				enforcementOptions.broadcasting(),
 				enforcementOptions.targetArgument().orElse(null),
-				enforcementOptions.unOperator().orElse(null)
+				enforcementOptions.unOperator(),
+				enforcementOptions.reason()
 		);
 	}
 
@@ -71,7 +74,8 @@ public final class PacketEnforceUnenforce implements SynchronizationPacket {
 				mode,
 				enforcementOptions.broadcasting(),
 				enforcementOptions.targetArgument().orElse(null),
-				enforcementOptions.unOperator().orElse(null)
+				enforcementOptions.unOperator(),
+				enforcementOptions.reason()
 		);
 	}
 
@@ -87,12 +91,9 @@ public final class PacketEnforceUnenforce implements SynchronizationPacket {
 		output.writeBoolean(mode.toBoolean());
 		output.writeByte(broadcasting.ordinal());
 		output.writeNullableNonEmptyString(targetArgument);
-		if (unOperator == null) {
-			output.writeBoolean(false);
-		} else {
-			output.writeBoolean(true);
-			output.writeUUID(operatorBinding.operatorToUuid(unOperator));
-		}
+		output.writeBoolean(true);
+		output.writeUUID(operatorBinding.operatorToUuid(unOperator));
+		output.writeNullableNonEmptyString(reason);
 	}
 
 	static PacketEnforceUnenforce readFrom(ProtocolInputStream input) throws IOException {
@@ -101,13 +102,9 @@ public final class PacketEnforceUnenforce implements SynchronizationPacket {
 		Mode mode = Mode.fromBoolean(input.readBoolean());
 		EnforcementOpts.Broadcasting broadcasting = EnforcementOpts.Broadcasting.values()[input.readByte()];
 		String targetArgument = input.readNullableNonEmptyString();
-		Operator unOperator;
-		if (input.readBoolean()) {
-			unOperator = operatorBinding.uuidToOperator(input.readUUID());
-		} else {
-			unOperator = null;
-		}
-		return new PacketEnforceUnenforce(id, type, mode, broadcasting, targetArgument, unOperator);
+		Operator unOperator = operatorBinding.uuidToOperator(input.readUUID());
+		String reason = input.readNullableNonEmptyString();
+		return new PacketEnforceUnenforce(id, type, mode, broadcasting, targetArgument, unOperator, reason);
 	}
 
 	@Override
@@ -120,7 +117,8 @@ public final class PacketEnforceUnenforce implements SynchronizationPacket {
 				&& mode == message.mode
 				&& broadcasting == message.broadcasting
 				&& Objects.equals(targetArgument, message.targetArgument)
-				&& Objects.equals(unOperator, message.unOperator);
+				&& Objects.equals(unOperator, message.unOperator)
+				&& Objects.equals(reason, message.reason);
 	}
 
 	@Override
@@ -131,6 +129,7 @@ public final class PacketEnforceUnenforce implements SynchronizationPacket {
 		result = 31 * result + broadcasting.hashCode();
 		result = 31 * result + (targetArgument != null ? targetArgument.hashCode() : 0);
 		result = 31 * result + (unOperator != null ? unOperator.hashCode() : 0);
+		result = 31 * result + reason.hashCode();
 		return result;
 	}
 
@@ -143,6 +142,7 @@ public final class PacketEnforceUnenforce implements SynchronizationPacket {
 				", broadcasting=" + broadcasting +
 				", targetArgument='" + targetArgument + '\'' +
 				", unOperator=" + unOperator +
+				", reason=" + reason +
 				'}';
 	}
 }

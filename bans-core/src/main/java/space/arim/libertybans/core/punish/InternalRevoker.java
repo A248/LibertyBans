@@ -25,6 +25,6 @@ import space.arim.libertybans.api.punish.PunishmentRevoker;
 
 public interface InternalRevoker extends PunishmentRevoker {
 
-	CentralisedFuture<Boolean> undoPunishment(Punishment punishment);
+	CentralisedFuture<Boolean> undoPunishment(Punishment punishment, UndoDraft undoDraft);
 
 }

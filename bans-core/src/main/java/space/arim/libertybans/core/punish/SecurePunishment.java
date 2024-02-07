@@ -81,7 +81,8 @@ class SecurePunishment extends AbstractPunishmentBase implements Punishment, Enf
 
 	@Override
 	public ReactionStage<Boolean> undoPunishment(EnforcementOptions enforcementOptions) {
-		return creator.revoker().undoPunishment(this).thenCompose((undone) -> {
+		UndoDraft undoDraft = creator.undoDraftCreator().fromEnforcementOptions((EnforcementOpts) enforcementOptions);
+		return creator.revoker().undoPunishment(this, undoDraft).thenCompose((undone) -> {
 			if (!undone) {
 				return CompletableFuture.completedFuture(false);
 			}
