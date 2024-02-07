@@ -42,12 +42,12 @@ public final class EnforcementOpts implements EnforcementOptions {
 	private final Operator unOperator;
 	private final String reason;
 
-	private EnforcementOpts(Enforcement enforcement, Broadcasting broadcasting, String targetArgument, Operator unOperator, String reason) {
+	private EnforcementOpts(Enforcement enforcement, Broadcasting broadcasting, String targetArgument, Operator operator, String reason)	{
 		this.enforcement = Objects.requireNonNull(enforcement, "enforcement");
 		this.broadcasting = Objects.requireNonNull(broadcasting, "broadcast");
 		this.targetArgument = targetArgument;
-		this.unOperator = Objects.requireNonNull(unOperator, "unOperator");
-		this.reason = Objects.requireNonNull(reason, "reason");
+		this.unOperator = operator;
+		this.reason = reason;
 	}
 
 	@Override
