@@ -51,11 +51,12 @@ public class SynchronizationProtocolTest {
 		id = ThreadLocalRandom.current().nextLong();
 	}
 
+	//TODO: This test should fail now
 	@ParameterizedTest
 	@EnumSource(PunishmentType.class)
 	public void enactPunishment(PunishmentType type) {
 		communicateMessageSuccessfully(new PacketEnforceUnenforce(
-				id, type, Mode.DO, EnforcementOptions.Broadcasting.NORMAL, "user1", null
+				id, type, Mode.DO, EnforcementOptions.Broadcasting.NORMAL, "user1", ConsoleOperator.INSTANCE, "example"
 		));
 	}
 
@@ -63,14 +64,14 @@ public class SynchronizationProtocolTest {
 	@EnumSource(PunishmentType.class)
 	public void undoPunishment(PunishmentType type) {
 		communicateMessageSuccessfully(new PacketEnforceUnenforce(
-				id, type, Mode.UNDO, EnforcementOptions.Broadcasting.NORMAL, "user2", PlayerOperator.of(UUID.randomUUID())
+				id, type, Mode.UNDO, EnforcementOptions.Broadcasting.NORMAL, "user2", PlayerOperator.of(UUID.randomUUID()), "example"
 		));
 	}
 
 	@Test
 	public void consoleOperator() {
 		communicateMessageSuccessfully(new PacketEnforceUnenforce(
-				id, PunishmentType.BAN, Mode.UNDO, EnforcementOptions.Broadcasting.NORMAL, "user3", ConsoleOperator.INSTANCE
+				id, PunishmentType.BAN, Mode.UNDO, EnforcementOptions.Broadcasting.NORMAL, "user3", ConsoleOperator.INSTANCE, "test"
 		));
 	}
 
@@ -78,7 +79,7 @@ public class SynchronizationProtocolTest {
 	@EnumSource(EnforcementOptions.Broadcasting.class)
 	public void broadcasting(EnforcementOptions.Broadcasting broadcasting) {
 		communicateMessageSuccessfully(new PacketEnforceUnenforce(
-				id, PunishmentType.KICK, Mode.DO, broadcasting, "user4", PlayerOperator.of(UUID.randomUUID())
+				id, PunishmentType.KICK, Mode.DO, broadcasting, "user4", PlayerOperator.of(UUID.randomUUID()), "test"
 		));
 	}
 

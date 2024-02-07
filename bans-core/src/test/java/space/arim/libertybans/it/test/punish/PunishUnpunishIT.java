@@ -22,6 +22,7 @@ package space.arim.libertybans.it.test.punish;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
+import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
@@ -161,7 +162,7 @@ public class PunishUnpunishIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
-		RevocationOrder revocationOrder = revoker.revokeById(punishment.getIdentifier());
+		RevocationOrder revocationOrder = revoker.revokeById(punishment.getIdentifier(), ConsoleOperator.INSTANCE, "TEST");
 		assertTrue(revocationOrder.undoPunishment().toCompletableFuture().join());
 	}
 
@@ -172,7 +173,7 @@ public class PunishUnpunishIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
-		RevocationOrder revocationOrder = revoker.revokeById(punishment.getIdentifier());
+		RevocationOrder revocationOrder = revoker.revokeById(punishment.getIdentifier(), ConsoleOperator.INSTANCE, "TEST");
 		assertTrue(revocationOrder.undoPunishment(noEnforcement()).toCompletableFuture().join());
 	}
 
@@ -183,7 +184,7 @@ public class PunishUnpunishIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
-		RevocationOrder revocationOrder = revoker.revokeById(punishment.getIdentifier());
+		RevocationOrder revocationOrder = revoker.revokeById(punishment.getIdentifier(), ConsoleOperator.INSTANCE, "TEST");
 		Punishment revoked = revocationOrder
 				.undoAndGetPunishment()
 				.toCompletableFuture().join()
@@ -198,7 +199,7 @@ public class PunishUnpunishIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
-		RevocationOrder revocationOrder = revoker.revokeById(punishment.getIdentifier());
+		RevocationOrder revocationOrder = revoker.revokeById(punishment.getIdentifier(), ConsoleOperator.INSTANCE, "TEST");
 		Punishment revoked = revocationOrder
 				.undoAndGetPunishment(noEnforcement())
 				.toCompletableFuture().join()
@@ -215,7 +216,7 @@ public class PunishUnpunishIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
-		RevocationOrder revocationOrder = revoker.revokeByIdAndType(punishment.getIdentifier(), punishment.getType());
+		RevocationOrder revocationOrder = revoker.revokeByIdAndType(punishment.getIdentifier(), punishment.getType(), ConsoleOperator.INSTANCE, "TEST");
 		assertTrue(revocationOrder.undoPunishment().toCompletableFuture().join());
 	}
 
@@ -226,7 +227,7 @@ public class PunishUnpunishIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
-		RevocationOrder revocationOrder = revoker.revokeByIdAndType(punishment.getIdentifier(), punishment.getType());
+		RevocationOrder revocationOrder = revoker.revokeByIdAndType(punishment.getIdentifier(), punishment.getType(), ConsoleOperator.INSTANCE, "TEST");
 		assertTrue(revocationOrder
 				.undoPunishment(noEnforcement()
 				).toCompletableFuture().join());
@@ -239,7 +240,7 @@ public class PunishUnpunishIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
-		RevocationOrder revocationOrder = revoker.revokeByIdAndType(punishment.getIdentifier(), punishment.getType());
+		RevocationOrder revocationOrder = revoker.revokeByIdAndType(punishment.getIdentifier(), punishment.getType(), ConsoleOperator.INSTANCE, "TEST");
 		Punishment revoked = revocationOrder
 				.undoAndGetPunishment()
 				.toCompletableFuture().join()
@@ -254,7 +255,7 @@ public class PunishUnpunishIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
-		RevocationOrder revocationOrder = revoker.revokeByIdAndType(punishment.getIdentifier(), punishment.getType());
+		RevocationOrder revocationOrder = revoker.revokeByIdAndType(punishment.getIdentifier(), punishment.getType(), ConsoleOperator.INSTANCE, "TEST");
 		Punishment revoked = revocationOrder
 				.undoAndGetPunishment(noEnforcement())
 				.toCompletableFuture().join()
@@ -272,7 +273,7 @@ public class PunishUnpunishIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
-		RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(punishment.getType(), punishment.getVictim());
+		RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(punishment.getType(), punishment.getVictim(), ConsoleOperator.INSTANCE, "TEST");
 		assertTrue(revocationOrder.undoPunishment().toCompletableFuture().join());
 	}
 
@@ -284,7 +285,7 @@ public class PunishUnpunishIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
-		RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(punishment.getType(), punishment.getVictim());
+		RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(punishment.getType(), punishment.getVictim(), ConsoleOperator.INSTANCE, "TEST");
 		assertTrue(revocationOrder.undoPunishment(noEnforcement()).toCompletableFuture().join());
 	}
 
@@ -296,7 +297,7 @@ public class PunishUnpunishIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
-		RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(punishment.getType(), punishment.getVictim());
+		RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(punishment.getType(), punishment.getVictim(), ConsoleOperator.INSTANCE, "TEST");
 		Punishment revoked = revocationOrder
 				.undoAndGetPunishment()
 				.toCompletableFuture().join()
@@ -312,7 +313,7 @@ public class PunishUnpunishIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new);
-		RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(punishment.getType(), punishment.getVictim());
+		RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(punishment.getType(), punishment.getVictim(), ConsoleOperator.INSTANCE, "TEST");
 		Punishment revoked = revocationOrder
 				.undoAndGetPunishment(noEnforcement())
 				.toCompletableFuture().join()

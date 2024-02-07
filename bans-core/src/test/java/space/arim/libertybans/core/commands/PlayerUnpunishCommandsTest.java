@@ -100,12 +100,14 @@ public class PlayerUnpunishCommandsTest {
 			when(messagesConfig.removals()).thenReturn(removalsSection);
 		}
 
-		when(revoker.revokeByTypeAndPossibleVictims(any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory));
+		String reason = "TEST";
 
-		commands.execute(sender, ArrayCommandPackage.create(address), "unban").executeNow();
+		when(revoker.revokeByTypeAndPossibleVictims(any(), any(), any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory, sender.getOperator(), reason));
+
+		commands.execute(sender, ArrayCommandPackage.create(address, reason), "unban").executeNow();
 
 		verify(revoker).revokeByTypeAndPossibleVictims(
-				eq(PunishmentType.BAN), argThat(argument -> argument.contains(victim))
+				eq(PunishmentType.BAN), argThat(argument -> argument.contains(victim)), sender.getOperator(), eq(reason)
 		);
 		verify(sender).sendMessage(argThat(new ComponentMatcher<>(notFoundMsg)));
 	}
@@ -134,9 +136,10 @@ public class PlayerUnpunishCommandsTest {
 			when(removalsSection.forType(PunishmentType.BAN)).thenReturn(punishmentRemoval);
 			when(messagesConfig.removals()).thenReturn(removalsSection);
 		}
-		lenient().when(revoker.revokeByTypeAndPossibleVictims(any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory));
+		String reason = "TEST";
+		lenient().when(revoker.revokeByTypeAndPossibleVictims(any(), any(), any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory, sender.getOperator(), reason));
 
-		commands.execute(sender, ArrayCommandPackage.create(address), "unban").executeNow();
+		commands.execute(sender, ArrayCommandPackage.create(address, reason), "unban").executeNow();
 
 		verify(sender).sendMessage(argThat(new ComponentMatcher<>(noPermission)));
 		verifyNoMoreInteractions(revoker);
