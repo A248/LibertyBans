@@ -25,15 +25,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.junit.jupiter.MockitoExtension;
-import space.arim.libertybans.api.ConsoleOperator;
-import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.core.punish.Mode;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -51,7 +48,6 @@ public class SynchronizationProtocolTest {
 		id = ThreadLocalRandom.current().nextLong();
 	}
 
-	//TODO: This test should fail now
 	@ParameterizedTest
 	@EnumSource(PunishmentType.class)
 	public void enactPunishment(PunishmentType type) {

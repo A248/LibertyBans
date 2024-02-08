@@ -183,7 +183,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 				revocationOrder = revoker.revokeByTypeAndPossibleVictims(type, List.of(victim, compositeWildcard), operator, reason);
 				id = -1;
 			}
-			return fireWithTimeout(new PardonEventImpl(operator, victim, type)).thenCompose((event) -> {
+			return fireWithTimeout(new PardonEventImpl(operator, victim, type, reason)).thenCompose((event) -> {
 				if (event.isCancelled()) {
 					return completedFuture(null);
 				}

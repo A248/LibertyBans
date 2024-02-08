@@ -41,7 +41,6 @@ import java.util.List;
  * @author A248
  *
  */
-//TODO: Adjust Javadoc
 public interface PunishmentRevoker {
 
 	/**
