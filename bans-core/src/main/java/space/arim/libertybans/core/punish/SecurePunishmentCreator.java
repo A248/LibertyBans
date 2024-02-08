@@ -78,19 +78,20 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 	}
 
 	@Override
-	public Punishment createPunishment(long id, PunishmentType type, Victim victim, Operator operator, String reason, ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack, UndoAttachment undoAttachment) {
-		return new SecurePunishment(this, id, type, victim, operator, reason, scope, start, end, escalationTrack, undoAttachment);
-	}
-
-	//TODO: Should probably call the above method
-	@Override
 	public Punishment createPunishment(long id, PunishmentType type, Victim victim, Operator operator, String reason,
 									   ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack) {
 		return new SecurePunishment(this, id, type, victim, operator, reason, scope, start, end, escalationTrack, null);
 	}
 
 	@Override
-	public RecordMapper<Record15<Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType, Operator, String, Instant>, Punishment> punishmentMapperUndone() {
+	public Punishment createPunishment(long id, PunishmentType type, Victim victim, Operator operator, String reason, ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack, Operator undoOperator, String undoReason, Instant undoDate) {
+		return new SecurePunishment(this, id, type, victim, operator, reason, scope, start, end, escalationTrack, undoAttachmentCreator.createUndoAttachment(undoOperator, undoReason, undoDate));
+	}
+
+	@Override
+	public RecordMapper<Record15<
+			Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType, Operator, String, Instant>,
+			Punishment> punishmentMapperUndone() {
 		return (record) -> {
 			Victim victim = new DeserializedVictim(
 					record.value4(), record.value5()
@@ -109,9 +110,7 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 	}
 
 	@Override
-	public RecordMapper<Record12<
-			Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,
-			Punishment> punishmentMapper() {
+	public RecordMapper<Record12<Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>, Punishment> punishmentMapper() {
 		return (record) -> {
 			Victim victim = new DeserializedVictim(
 					record.value4(), record.value5()
@@ -124,7 +123,28 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					record.value1(), record.value2(), // id, type
 					victim, record.value6(), record.value7(), // victim, operator, reason
 					scope, record.value9(), record.value10(), record.value11(), // scope, start, end, track
-					null // undo attachment
+					undoAttachmentCreator.createEmptyAttachment()
+			);
+		};
+	}
+
+	@Override
+	public RecordMapper<Record14<
+			PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType, Operator, String, Instant>,
+			Punishment> punishmentMapperUndone(long id) {
+		return (record) -> {
+			Victim victim = new DeserializedVictim(
+					record.value3(), record.value4()
+			).victim(record.value2());
+			ServerScope scope = scopeManager.deserialize(
+					record.value11(), record.value7()
+			);
+			return new SecurePunishment(
+					SecurePunishmentCreator.this,
+					id, /* type */ record.value1(), victim,
+					record.value5(), record.value6(), // operator, reason
+					scope, record.value8(), record.value9(), record.value10(), // scope, start, end, track
+					undoAttachmentCreator.createUndoAttachment(record.value12(), record.value13(), record.value14()) // undo attachment
 			);
 		};
 	}
@@ -145,7 +165,28 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					id, /* type */ record.value1(), victim,
 					record.value5(), record.value6(), // operator, reason
 					scope, record.value8(), record.value9(), record.value10(), // scope, start, end, track
-					null // undo attachment
+					undoAttachmentCreator.createEmptyAttachment() // undo attachment
+			);
+		};
+	}
+
+	@Override
+	public RecordMapper<Record13<
+			Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType, Operator, String, Instant>,
+			Punishment> punishmentMapperUndone(long id, PunishmentType type) {
+		return (record) -> {
+			Victim victim = new DeserializedVictim(
+					record.value2(), record.value3()
+			).victim(record.value1());
+			ServerScope scope = scopeManager.deserialize(
+					record.value10(), record.value6()
+			);
+			return new SecurePunishment(
+					SecurePunishmentCreator.this,
+					id, type, victim,
+					record.value4(), record.value5(), // operator, reason
+					scope, record.value7(), record.value8(), record.value9(), // scope, start, end, track
+					undoAttachmentCreator.createUndoAttachment(record.value11(), record.value12(), record.value13()) // undo attachment
 			);
 		};
 	}
@@ -166,7 +207,7 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					id, type, victim,
 					record.value4(), record.value5(), // operator, reason
 					scope, record.value7(), record.value8(), record.value9(), // scope, start, end, track
-					null // undo attachment
+					undoAttachmentCreator.createEmptyAttachment() // undo attachment
 			);
 		};
 	}

@@ -10,6 +10,10 @@ import java.time.Instant;
 @Singleton
 public class SecureUndoAttachmentCreator {
 
+    public UndoAttachment createEmptyAttachment()   {
+        return null;
+    }
+
     public UndoAttachment createUndoAttachment(Operator operator, String reason, Instant time)  {
         return new SecureUndoAttachment(operator, reason, time);
     }

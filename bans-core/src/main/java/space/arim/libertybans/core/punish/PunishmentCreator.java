@@ -37,24 +37,35 @@ public interface PunishmentCreator {
 
 	Punishment createPunishment(long id, PunishmentType type, Victim victim,
 								Operator operator, String reason,
-								ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack,
-								UndoAttachment undoAttachment);
+								ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack);
 
 	Punishment createPunishment(long id, PunishmentType type, Victim victim,
 								Operator operator, String reason,
-								ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack);
+								ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack,
+								Operator undoOperator, String undoReason, Instant undoTime);
 
 	RecordMapper<Record15<
-			Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType, Operator, String, Instant>,
+			Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType,
+			Operator, String, Instant>,
 			Punishment> punishmentMapperUndone();
 
 	RecordMapper<Record12<
 			Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,
 			Punishment> punishmentMapper();
 
+	RecordMapper<Record14<
+			PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType,
+			Operator, String, Instant>,
+			Punishment> punishmentMapperUndone(long id);
+
 	RecordMapper<Record11<
 			PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,
 			Punishment> punishmentMapper(long id);
+
+	RecordMapper<Record13<
+			Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType,
+			Operator, String, Instant>,
+			Punishment> punishmentMapperUndone(long id, PunishmentType type);
 
 	RecordMapper<Record10<
 			Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,

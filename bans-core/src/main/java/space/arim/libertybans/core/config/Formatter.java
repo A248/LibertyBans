@@ -108,6 +108,8 @@ public class Formatter implements InternalFormatter {
 	public CentralisedFuture<Component> formatWithPunishment(ComponentText componentText,
 															  Punishment punishment) {
 		UndoAttachment undoAttachment = punishment.undoAttachment().orElse(null);
+		System.out.println("punishment = " + punishment);
+		System.out.println("undoAttachment = " + undoAttachment);
 		Map<FutureReplaceable, CentralisedFuture<String>> futureReplacements = new EnumMap<>(FutureReplaceable.class);
 		for (FutureReplaceable futureReplaceable : FutureReplaceable.values()) {
 

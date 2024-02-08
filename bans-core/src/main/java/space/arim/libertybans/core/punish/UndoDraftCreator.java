@@ -3,6 +3,8 @@ package space.arim.libertybans.core.punish;
 import jakarta.inject.Singleton;
 import space.arim.libertybans.api.Operator;
 
+import java.time.Instant;
+
 @Singleton
 public class UndoDraftCreator {
 

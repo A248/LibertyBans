@@ -151,6 +151,11 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 				columns.replaceAll(this::aggregate);
 			}
 			columns.add(fields.id());
+			if(fields instanceof SimpleHistoryViewFields<?> simpleHistoryViewFields) {
+				columns.add(simpleHistoryViewFields.undoOperator());
+				columns.add(simpleHistoryViewFields.undoReason());
+				columns.add(simpleHistoryViewFields.undoInstant());
+			}
 			return columns;
 		}
 
@@ -244,6 +249,22 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 					getEscalationTracks(), record, fields.track(),
 					(optTrack) -> optTrack.orElse(null)
 			);
+			if(fields instanceof SimpleHistoryViewFields<?> simpleHistoryViewFields) {
+				return resources.creator().createPunishment(
+						record.get(fields.id()),
+						type,
+						victim,
+						operator,
+						record.get(aggregateIfNeeded(fields.reason())),
+						scope,
+						record.get(aggregateIfNeeded(fields.start())),
+						record.get(aggregateIfNeeded(fields.end())),
+						escalationTrack,
+						record.get(aggregateIfNeeded(simpleHistoryViewFields.undoOperator())),
+						record.get(aggregateIfNeeded(simpleHistoryViewFields.undoReason())),
+						record.get(aggregateIfNeeded(simpleHistoryViewFields.undoInstant()))
+				);
+			}
 			return resources.creator().createPunishment(
 					record.get(fields.id()),
 					type,

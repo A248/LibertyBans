@@ -170,13 +170,14 @@ public class Revoker implements InternalRevoker {
 				.select(
 						SIMPLE_HISTORY.VICTIM_TYPE, SIMPLE_HISTORY.VICTIM_UUID, SIMPLE_HISTORY.VICTIM_ADDRESS,
 						SIMPLE_HISTORY.OPERATOR, SIMPLE_HISTORY.REASON, SIMPLE_HISTORY.SCOPE,
-						SIMPLE_HISTORY.START, SIMPLE_HISTORY.END, SIMPLE_HISTORY.TRACK, SIMPLE_HISTORY.SCOPE_TYPE
+						SIMPLE_HISTORY.START, SIMPLE_HISTORY.END, SIMPLE_HISTORY.TRACK, SIMPLE_HISTORY.SCOPE_TYPE,
+						SIMPLE_HISTORY.UNDO_OPERATOR, SIMPLE_HISTORY.UNDO_REASON, SIMPLE_HISTORY.UNDO_TIME
 				)
 				.from(SIMPLE_HISTORY)
 				.where(SIMPLE_HISTORY.ID.eq(id))
 				// If the punishment was expired, return null
 				.and(new EndTimeCondition(SIMPLE_HISTORY.END).isNotExpired(currentTime))
-				.fetchOne(creator.punishmentMapper(id, type));
+				.fetchOne(creator.punishmentMapperUndone(id, type));
 		logger.trace("result={} in deleteAndGetActivePunishmentByIdAndType", result);
 		return result;
 	}
