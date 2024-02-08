@@ -108,8 +108,6 @@ public class Formatter implements InternalFormatter {
 	public CentralisedFuture<Component> formatWithPunishment(ComponentText componentText,
 															  Punishment punishment) {
 		UndoAttachment undoAttachment = punishment.undoAttachment().orElse(null);
-		System.out.println("punishment = " + punishment);
-		System.out.println("undoAttachment = " + undoAttachment);
 		Map<FutureReplaceable, CentralisedFuture<String>> futureReplacements = new EnumMap<>(FutureReplaceable.class);
 		for (FutureReplaceable futureReplaceable : FutureReplaceable.values()) {
 
@@ -181,6 +179,10 @@ public class Formatter implements InternalFormatter {
 			simpleReplacements.put(SimpleReplaceable.UNOPERATOR_ID, formatOperatorId(undoAttachment.operator()));
 			simpleReplacements.put(SimpleReplaceable.UNDO_REASON, undoAttachment.reason());
 			simpleReplacements.put(SimpleReplaceable.UNDO_DATE, formatAbsoluteDate(undoAttachment.time()));
+		}	else {
+			simpleReplacements.put(SimpleReplaceable.UNOPERATOR_ID, formatting.noUnoperatorDisplay());
+			simpleReplacements.put(SimpleReplaceable.UNDO_REASON, formatting.noUndoReasonDisplay());
+			simpleReplacements.put(SimpleReplaceable.UNDO_DATE, formatting.noUndoDateDisplay());
 		}
 		simpleReplacements.put(SimpleReplaceable.REASON, punishment.getReason());
 		simpleReplacements.put(SimpleReplaceable.SCOPE, formatScope(punishment.getScope()));

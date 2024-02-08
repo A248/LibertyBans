@@ -15,6 +15,7 @@ public class SecureUndoAttachmentCreator {
     }
 
     public UndoAttachment createUndoAttachment(Operator operator, String reason, Instant time)  {
+        if(operator == null && reason == null && time == null) return null;
         return new SecureUndoAttachment(operator, reason, time);
     }
 

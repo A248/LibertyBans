@@ -29,7 +29,6 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.punish.UndoAttachment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.database.sql.DeserializedVictim;
 import space.arim.libertybans.core.scope.InternalScopeManager;
@@ -80,7 +79,7 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 	@Override
 	public Punishment createPunishment(long id, PunishmentType type, Victim victim, Operator operator, String reason,
 									   ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack) {
-		return new SecurePunishment(this, id, type, victim, operator, reason, scope, start, end, escalationTrack, null);
+		return new SecurePunishment(this, id, type, victim, operator, reason, scope, start, end, escalationTrack, undoAttachmentCreator.createEmptyAttachment());
 	}
 
 	@Override
