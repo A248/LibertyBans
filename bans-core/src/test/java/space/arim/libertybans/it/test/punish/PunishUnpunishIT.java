@@ -112,7 +112,7 @@ public class PunishUnpunishIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new)
-				.undoPunishment()
+				.undoPunishment(ConsoleOperator.INSTANCE, "TEST")
 				.toCompletableFuture()
 				.join());
 	}
@@ -124,7 +124,7 @@ public class PunishUnpunishIT {
 				.enactPunishment(noEnforcement())
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new)
-				.undoPunishment()
+				.undoPunishment(ConsoleOperator.INSTANCE, "TEST")
 				.toCompletableFuture()
 				.join());
 	}
@@ -136,7 +136,7 @@ public class PunishUnpunishIT {
 				.enactPunishment()
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new)
-				.undoPunishment(noEnforcement())
+				.undoPunishment(ConsoleOperator.INSTANCE, "TEST", noEnforcement())
 				.toCompletableFuture()
 				.join());
 	}
@@ -148,7 +148,7 @@ public class PunishUnpunishIT {
 				.enactPunishment(noEnforcement())
 				.toCompletableFuture().join()
 				.orElseThrow(AssertionError::new)
-				.undoPunishment(noEnforcement())
+				.undoPunishment(ConsoleOperator.INSTANCE, "TEST", noEnforcement())
 				.toCompletableFuture()
 				.join());
 	}

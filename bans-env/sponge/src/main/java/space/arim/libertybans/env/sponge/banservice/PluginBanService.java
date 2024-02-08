@@ -167,7 +167,7 @@ public final class PluginBanService implements BanService {
 	public CompletableFuture<Boolean> remove(Ban ban) {
 		if (ban instanceof PunishmentAsBan punishmentAsBan) {
 			return punishmentAsBan.underlyingPunishment()
-					.undoPunishment()
+					.undoPunishment(ConsoleOperator.INSTANCE, "Pardon")
 					.toCompletableFuture();
 		}
 		return selector.selectionBuilder()
@@ -185,7 +185,7 @@ public final class PluginBanService implements BanService {
 					}
 					// For our purposes, this must be the same punishment
 					// Note that punishment reason and end time might reasonably change
-					return punishment.undoPunishment();
+					return punishment.undoPunishment(ConsoleOperator.INSTANCE, "Pardon");
 				})
 				.toCompletableFuture();
 	}

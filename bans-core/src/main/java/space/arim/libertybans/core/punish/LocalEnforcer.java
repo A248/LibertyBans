@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.punish;
 
+import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;

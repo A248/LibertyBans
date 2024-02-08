@@ -114,8 +114,6 @@ public class StandardGlobalEnforcementTest {
 		EnforcementOpts enforcementOpts = EnforcementOpts
 				.builder()
 				.enforcement(EnforcementOptions.Enforcement.NONE)
-				.unOperator(ConsoleOperator.INSTANCE)
-				.reason("TEST")
 				.build();
 		globalEnforcement.enforce(punishment, enforcementOpts).join();
 		globalEnforcement.unenforce(punishment, enforcementOpts).join();
@@ -132,8 +130,6 @@ public class StandardGlobalEnforcementTest {
 		EnforcementOpts enforcementOpts = EnforcementOpts
 				.builder()
 				.enforcement(EnforcementOptions.Enforcement.SINGLE_SERVER_ONLY)
-				.unOperator(ConsoleOperator.INSTANCE)
-				.reason("TEST")
 				.build();
 		globalEnforcement.enforce(punishment, enforcementOpts).join();
 		verify(enforcer).enforceWithoutSynchronization(punishment, enforcementOpts);
@@ -147,8 +143,6 @@ public class StandardGlobalEnforcementTest {
 		EnforcementOpts enforcementOpts = EnforcementOpts
 				.builder()
 				.enforcement(EnforcementOptions.Enforcement.SINGLE_SERVER_ONLY)
-				.unOperator(ConsoleOperator.INSTANCE)
-				.reason("TEST")
 				.build();
 		globalEnforcement.unenforce(punishment, enforcementOpts).join();
 		verify(enforcer).unenforceWithoutSynchronization(punishment, enforcementOpts);
@@ -163,8 +157,6 @@ public class StandardGlobalEnforcementTest {
 		EnforcementOpts enforcementOpts = EnforcementOpts
 				.builder()
 				.enforcement(EnforcementOptions.Enforcement.SINGLE_SERVER_ONLY)
-				.unOperator(ConsoleOperator.INSTANCE)
-				.reason("TEST")
 				.build();
 		globalEnforcement.unenforce(punishment.getIdentifier(), type, enforcementOpts).join();
 		verify(enforcer).unenforceWithoutSynchronization(punishment.getIdentifier(), type, enforcementOpts);
@@ -180,8 +172,6 @@ public class StandardGlobalEnforcementTest {
 		EnforcementOpts enforcementOpts = EnforcementOpts
 				.builder()
 				.enforcement(EnforcementOptions.Enforcement.GLOBAL)
-				.unOperator(ConsoleOperator.INSTANCE)
-				.reason("TEST")
 				.build();
 		globalEnforcement.enforce(punishment, enforcementOpts).join();
 		verify(enforcer).enforceWithoutSynchronization(punishment, enforcementOpts);
@@ -209,8 +199,6 @@ public class StandardGlobalEnforcementTest {
 		EnforcementOpts enforcementOpts = EnforcementOpts
 				.builder()
 				.enforcement(EnforcementOptions.Enforcement.GLOBAL)
-				.unOperator(ConsoleOperator.INSTANCE)
-				.reason("TEST")
 				.build();
 		globalEnforcement.unenforce(punishment.getIdentifier(), type, enforcementOpts).join();
 		verify(enforcer).unenforceWithoutSynchronization(punishment.getIdentifier(), type, enforcementOpts);
@@ -228,8 +216,6 @@ public class StandardGlobalEnforcementTest {
 		EnforcementOpts enforcementOpts = EnforcementOpts
 				.builder()
 				.enforcement(EnforcementOptions.Enforcement.GLOBAL)
-				.unOperator(ConsoleOperator.INSTANCE)
-				.reason("TEST")
 				.build();
 		globalEnforcement.enforce(punishment, enforcementOpts).join();
 		verify(enforcer).enforceWithoutSynchronization(punishment, enforcementOpts);
@@ -245,8 +231,6 @@ public class StandardGlobalEnforcementTest {
 		EnforcementOpts enforcementOpts = EnforcementOpts
 				.builder()
 				.enforcement(EnforcementOptions.Enforcement.GLOBAL)
-				.unOperator(ConsoleOperator.INSTANCE)
-				.reason("TEST")
 				.build();
 		globalEnforcement.unenforce(punishment, enforcementOpts).join();
 		verify(enforcer).unenforceWithoutSynchronization(punishment, enforcementOpts);
@@ -263,8 +247,6 @@ public class StandardGlobalEnforcementTest {
 		EnforcementOpts enforcementOpts = EnforcementOpts
 				.builder()
 				.enforcement(EnforcementOptions.Enforcement.GLOBAL)
-				.unOperator(ConsoleOperator.INSTANCE)
-				.reason("TEST")
 				.build();
 		globalEnforcement.unenforce(punishment.getIdentifier(), type, enforcementOpts).join();
 		verify(enforcer).unenforceWithoutSynchronization(punishment.getIdentifier(), type, enforcementOpts);

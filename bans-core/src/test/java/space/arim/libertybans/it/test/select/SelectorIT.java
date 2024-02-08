@@ -22,11 +22,7 @@ package space.arim.libertybans.it.test.select;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
-import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.*;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.select.PunishmentSelector;
@@ -100,7 +96,7 @@ public class SelectorIT {
 				"Different type requested"
 		);
 		// Undo punishment and check historical
-		assumeTrue(punishment.undoPunishment().toCompletableFuture().join());
+		assumeTrue(punishment.undoPunishment(ConsoleOperator.INSTANCE, "TEST").toCompletableFuture().join());
 		assertNull(
 				selector.getActivePunishmentById(id).toCompletableFuture().join().orElse(null),
 				"Punishment no longer active"

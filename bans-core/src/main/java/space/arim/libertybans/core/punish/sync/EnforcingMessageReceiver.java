@@ -67,7 +67,6 @@ public final class EnforcingMessageReceiver implements MessageReceiver {
 				.enforcement(EnforcementOptions.Enforcement.SINGLE_SERVER_ONLY)
 				.broadcasting(message.broadcasting)
 				.targetArgument(message.targetArgument)
-				.unOperator(message.unOperator)
 				.build();
 		if (message.broadcasting == EnforcementOptions.Broadcasting.NONE && message.mode == Mode.UNDO) {
 			// Optimization: We do not need the full punishment details to simply undo a punishment

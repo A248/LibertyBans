@@ -56,7 +56,7 @@ public class SynchronizationProtocolTest {
 	@EnumSource(PunishmentType.class)
 	public void enactPunishment(PunishmentType type) {
 		communicateMessageSuccessfully(new PacketEnforceUnenforce(
-				id, type, Mode.DO, EnforcementOptions.Broadcasting.NORMAL, "user1", ConsoleOperator.INSTANCE, "example"
+				id, type, Mode.DO, EnforcementOptions.Broadcasting.NORMAL, "user1"
 		));
 	}
 
@@ -64,14 +64,14 @@ public class SynchronizationProtocolTest {
 	@EnumSource(PunishmentType.class)
 	public void undoPunishment(PunishmentType type) {
 		communicateMessageSuccessfully(new PacketEnforceUnenforce(
-				id, type, Mode.UNDO, EnforcementOptions.Broadcasting.NORMAL, "user2", PlayerOperator.of(UUID.randomUUID()), "example"
+				id, type, Mode.UNDO, EnforcementOptions.Broadcasting.NORMAL, "user2"
 		));
 	}
 
 	@Test
 	public void consoleOperator() {
 		communicateMessageSuccessfully(new PacketEnforceUnenforce(
-				id, PunishmentType.BAN, Mode.UNDO, EnforcementOptions.Broadcasting.NORMAL, "user3", ConsoleOperator.INSTANCE, "test"
+				id, PunishmentType.BAN, Mode.UNDO, EnforcementOptions.Broadcasting.NORMAL, "user3"
 		));
 	}
 
@@ -79,7 +79,7 @@ public class SynchronizationProtocolTest {
 	@EnumSource(EnforcementOptions.Broadcasting.class)
 	public void broadcasting(EnforcementOptions.Broadcasting broadcasting) {
 		communicateMessageSuccessfully(new PacketEnforceUnenforce(
-				id, PunishmentType.KICK, Mode.DO, broadcasting, "user4", PlayerOperator.of(UUID.randomUUID()), "test"
+				id, PunishmentType.KICK, Mode.DO, broadcasting, "user4"
 		));
 	}
 

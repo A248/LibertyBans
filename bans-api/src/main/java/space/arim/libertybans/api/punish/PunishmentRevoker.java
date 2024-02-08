@@ -35,7 +35,7 @@ import java.util.List;
  * removed. See {@link space.arim.libertybans.api.punish} for a description of
  * active and historical punishments. <br>
  * <br>
- * Note that {@link Punishment#undoPunishment()} should be used instead of a
+ * Note that {@link Punishment#undoPunishment(Operator, String)} should be used instead of a
  * revocation order if a punishment instance is already obtained.
  * 
  * @author A248
@@ -76,6 +76,8 @@ public interface PunishmentRevoker {
 	 * 
 	 * @param type   the punishment type
 	 * @param victim the victim whose punishment to undo
+	 * @param operator The undoing operator
+	 * @param reason The undo reason
 	 * @return a revocation order using the type and victim
 	 */
 	RevocationOrder revokeByTypeAndVictim(PunishmentType type, Victim victim, Operator operator, String reason);

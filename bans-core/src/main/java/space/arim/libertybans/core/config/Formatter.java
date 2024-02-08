@@ -35,6 +35,7 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.punish.UndoAttachment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.service.Time;
 import space.arim.libertybans.core.punish.MiscUtil;
@@ -49,13 +50,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.StringJoiner;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.UnaryOperator;
 
 public class Formatter implements InternalFormatter {
@@ -108,33 +103,24 @@ public class Formatter implements InternalFormatter {
 	public CentralisedFuture<Component> getPunishmentMessage(Punishment punishment) {
 		return formatWithPunishment(messages().additions().forType(punishment.getType()).layout(), punishment);
 	}
-	
+
 	@Override
 	public CentralisedFuture<Component> formatWithPunishment(ComponentText componentText,
-															 Punishment punishment) {
-		return formatWithPunishment(componentText, punishment, null);
-	}
-	
-	@Override
-	public CentralisedFuture<Component> formatWithPunishmentAndUnoperator(ComponentText componentText,
-																		  Punishment punishment, Operator unOperator) {
-		return formatWithPunishment(componentText, punishment, Objects.requireNonNull(unOperator, "unOperator"));
-	}
-
-	private CentralisedFuture<Component> formatWithPunishment(ComponentText componentText,
-															  Punishment punishment, Operator unOperator) {
+															  Punishment punishment) {
+		UndoAttachment undoAttachment = punishment.undoAttachment().orElse(null);
 		Map<FutureReplaceable, CentralisedFuture<String>> futureReplacements = new EnumMap<>(FutureReplaceable.class);
 		for (FutureReplaceable futureReplaceable : FutureReplaceable.values()) {
 
-			if (unOperator == null && futureReplaceable == FutureReplaceable.UNOPERATOR) {
+			if (undoAttachment == null && futureReplaceable == FutureReplaceable.UNOPERATOR) {
 				continue;
 			}
+
 			if (componentText.contains(futureReplaceable.getVariable())) {
-				CentralisedFuture<String> replacement = getFutureReplacement(futureReplaceable, punishment, unOperator);
+				CentralisedFuture<String> replacement = getFutureReplacement(futureReplaceable, punishment, undoAttachment);
 				futureReplacements.put(futureReplaceable, replacement);
 			}
 		}
-		return futuresFactory.supplyAsync(() -> getSimpleReplacements(punishment, unOperator))
+		return futuresFactory.supplyAsync(() -> getSimpleReplacements(punishment, undoAttachment))
 				.thenCompose((simpleReplacements) -> {
 			return formatWithPunishment0(componentText, simpleReplacements, futureReplacements);
 		});
@@ -147,6 +133,8 @@ public class Formatter implements InternalFormatter {
 		VICTIM_ID,
 		OPERATOR_ID,
 		UNOPERATOR_ID,
+		UNDO_REASON,
+		UNDO_DATE,
 		REASON,
 		SCOPE,
 		DURATION,
@@ -178,7 +166,7 @@ public class Formatter implements InternalFormatter {
 		}
 	}
 	
-	private Map<SimpleReplaceable, String> getSimpleReplacements(Punishment punishment, Operator unOperator) {
+	private Map<SimpleReplaceable, String> getSimpleReplacements(Punishment punishment, UndoAttachment undoAttachment) {
 		MessagesConfig.Formatting formatting = messages().formatting();
 
 		Map<SimpleReplaceable, String> simpleReplacements = new EnumMap<>(SimpleReplaceable.class);
@@ -187,8 +175,11 @@ public class Formatter implements InternalFormatter {
 		simpleReplacements.put(SimpleReplaceable.TYPE_VERB, formatPunishmentTypeVerb(punishment.getType()));
 		simpleReplacements.put(SimpleReplaceable.VICTIM_ID, formatVictimId(punishment.getVictim()));
 		simpleReplacements.put(SimpleReplaceable.OPERATOR_ID, formatOperatorId(punishment.getOperator()));
-		if (unOperator != null)
-			simpleReplacements.put(SimpleReplaceable.UNOPERATOR_ID, formatOperatorId(unOperator));
+		if (undoAttachment != null) {
+			simpleReplacements.put(SimpleReplaceable.UNOPERATOR_ID, formatOperatorId(undoAttachment.operator()));
+			simpleReplacements.put(SimpleReplaceable.UNDO_REASON, undoAttachment.reason());
+			simpleReplacements.put(SimpleReplaceable.UNDO_DATE, formatAbsoluteDate(undoAttachment.time()));
+		}
 		simpleReplacements.put(SimpleReplaceable.REASON, punishment.getReason());
 		simpleReplacements.put(SimpleReplaceable.SCOPE, formatScope(punishment.getScope()));
 		{
@@ -290,12 +281,11 @@ public class Formatter implements InternalFormatter {
 		});
 	}
 	
-	private CentralisedFuture<String> getFutureReplacement(FutureReplaceable futureReplaceable, Punishment punishment,
-			Operator unOperator) {
+	private CentralisedFuture<String> getFutureReplacement(FutureReplaceable futureReplaceable, Punishment punishment, UndoAttachment undoAttachment) {
 		return switch (futureReplaceable) {
 			case VICTIM -> formatVictim(punishment.getVictim());
 			case OPERATOR -> formatOperator(punishment.getOperator());
-			case UNOPERATOR -> formatOperator(unOperator);
+			case UNOPERATOR -> formatOperator(undoAttachment.operator());
 		};
 	}
 

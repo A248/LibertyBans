@@ -62,6 +62,7 @@ public final class OperatorBinding extends BaseBinding<UUID, Operator> {
 	}
 
 	public Operator uuidToOperator(UUID uuid) {
+		if (uuid == null) return null;
 		if (uuid.equals(EmptyData.UUID)) {
 			return ConsoleOperator.INSTANCE;
 		}
@@ -69,6 +70,7 @@ public final class OperatorBinding extends BaseBinding<UUID, Operator> {
 	}
 
 	public UUID operatorToUuid(Operator operator) {
+		if(operator == null) return null;
 		return switch (operator.getType()) {
 			case PLAYER -> ((PlayerOperator) operator).getUUID();
 			case CONSOLE -> EmptyData.UUID;

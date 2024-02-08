@@ -153,7 +153,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 				if (punishment == null) {
 					return completedFuture(null);
 				}
-				return sendSuccess(punishment, targetArg, reason);
+				return sendSuccess(punishment, targetArg);
 			});
 		}
 
@@ -217,7 +217,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 			sender().sendMessage(notFound);
 		}
 
-		private CentralisedFuture<Void> sendSuccess(Punishment punishment, String targetArg, String reason) {
+		private CentralisedFuture<Void> sendSuccess(Punishment punishment, String targetArg) {
 
 			notificationMessage.evaluate(command()); // Evaluate -s
 
@@ -228,8 +228,6 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 							EnforcementOptions.Broadcasting.SILENT : EnforcementOptions.Broadcasting.NORMAL
 					)
 					.targetArgument(targetArg)
-					.unOperator(sender().getOperator())
-					.reason(reason)
 					.build();
 			CentralisedFuture<?> unenforcement = punishment
 					.unenforcePunishment(enforcementOptions)

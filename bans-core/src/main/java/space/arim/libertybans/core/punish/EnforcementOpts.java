@@ -39,15 +39,11 @@ public final class EnforcementOpts implements EnforcementOptions {
 	private final Enforcement enforcement;
 	private final Broadcasting broadcasting;
 	private final String targetArgument;
-	private final Operator unOperator;
-	private final String reason;
 
-	private EnforcementOpts(Enforcement enforcement, Broadcasting broadcasting, String targetArgument, Operator operator, String reason)	{
+	private EnforcementOpts(Enforcement enforcement, Broadcasting broadcasting, String targetArgument)	{
 		this.enforcement = Objects.requireNonNull(enforcement, "enforcement");
 		this.broadcasting = Objects.requireNonNull(broadcasting, "broadcast");
 		this.targetArgument = targetArgument;
-		this.unOperator = operator;
-		this.reason = reason;
 	}
 
 	@Override
@@ -82,24 +78,6 @@ public final class EnforcementOpts implements EnforcementOptions {
 		return Optional.ofNullable(targetArgument);
 	}
 
-	/**
-	 * Non-API extension
-	 *
-	 * @return the undoing operator
-	 */
-	public Operator unOperator() {
-		return unOperator;
-	}
-
-	/**
-	 * Non-API extension
-	 *
-	 * @return the undo reason
-	 */
-	public String reason() {
-		return reason;
-	}
-
 	interface Factory extends EnforcementOptionsFactory {
 
 		@Override
@@ -117,8 +95,6 @@ public final class EnforcementOpts implements EnforcementOptions {
 		private Enforcement enforcement = Enforcement.GLOBAL;
 		private Broadcasting broadcasting = Broadcasting.NONE;
 		private String targetArgument;
-		private Operator unOperator;
-		private String reason;
 
 		private Builder() {}
 
@@ -145,32 +121,9 @@ public final class EnforcementOpts implements EnforcementOptions {
 			return this;
 		}
 
-		/**
-		 * Non-API extension
-		 *
-		 * @param unOperator the undoing operator
-		 * @return this builder
-		 */
-		public Builder unOperator(Operator unOperator) {
-			this.unOperator = unOperator;
-			return this;
-		}
-
-		/**
-		 * Non-API extension
-		 *
-		 * @param reason the undo reason
-		 * @return this builder
-		 */
-
-		public Builder reason(String reason) {
-			this.reason = reason;
-			return this;
-		}
-
 		@Override
 		public EnforcementOpts build() {
-			return new EnforcementOpts(enforcement, broadcasting, targetArgument, unOperator, reason);
+			return new EnforcementOpts(enforcement, broadcasting, targetArgument);
 		}
 
 		@Override

@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.api.punish;
 
+import space.arim.libertybans.api.Operator;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.time.Clock;
@@ -195,8 +196,8 @@ public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 	 * @return a future which yields {@code true} if this punishment existed and was
 	 *         removed and unenforced, {@code false} otherwise
 	 */
-	default ReactionStage<Boolean> undoPunishment() {
-		return undoPunishment(enforcementOptionsBuilder().build());
+	default ReactionStage<Boolean> undoPunishment(Operator operator, String reason) {
+		return undoPunishment(operator, reason, enforcementOptionsBuilder().build());
 	}
 
 	/**
@@ -212,7 +213,7 @@ public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 	 * @return a future which yields {@code true} if this punishment existed and was
 	 *         removed and unenforced, {@code false} otherwise
 	 */
-	ReactionStage<Boolean> undoPunishment(EnforcementOptions enforcementOptions);
+	ReactionStage<Boolean> undoPunishment(Operator operator, String reason, EnforcementOptions enforcementOptions);
 
 	/**
 	 * "Unenforces" this punishment. <br>
