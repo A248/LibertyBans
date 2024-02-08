@@ -110,13 +110,8 @@ public class Formatter implements InternalFormatter {
 		UndoAttachment undoAttachment = punishment.undoAttachment().orElse(null);
 		Map<FutureReplaceable, CentralisedFuture<String>> futureReplacements = new EnumMap<>(FutureReplaceable.class);
 		for (FutureReplaceable futureReplaceable : FutureReplaceable.values()) {
-
-			if (undoAttachment == null && futureReplaceable == FutureReplaceable.UNOPERATOR) {
-				continue;
-			}
-
 			if (componentText.contains(futureReplaceable.getVariable())) {
-				CentralisedFuture<String> replacement = getFutureReplacement(futureReplaceable, punishment, undoAttachment);
+				CentralisedFuture<String> replacement = getFutureReplacement(futureReplaceable, punishment);
 				futureReplacements.put(futureReplaceable, replacement);
 			}
 		}
@@ -285,11 +280,11 @@ public class Formatter implements InternalFormatter {
 		});
 	}
 	
-	private CentralisedFuture<String> getFutureReplacement(FutureReplaceable futureReplaceable, Punishment punishment, UndoAttachment undoAttachment) {
+	private CentralisedFuture<String> getFutureReplacement(FutureReplaceable futureReplaceable, Punishment punishment) {
 		return switch (futureReplaceable) {
 			case VICTIM -> formatVictim(punishment.getVictim());
 			case OPERATOR -> formatOperator(punishment.getOperator());
-			case UNOPERATOR -> formatOperator(undoAttachment.operator());
+			case UNOPERATOR -> formatOperator(punishment.undoAttachment().map(UndoAttachment::operator).orElse(null));
 		};
 	}
 
@@ -338,6 +333,9 @@ public class Formatter implements InternalFormatter {
 
 	@Override
 	public CentralisedFuture<String> formatOperator(Operator operator) {
+		if(operator == null)	{
+			return futuresFactory.completedFuture(messages().formatting().noUnoperatorDisplay());
+		}
 		if (operator instanceof PlayerOperator playerOperator) {
 			/*
 			 * Similarly in #formatVictim, this should be a complete future every time we call this ourselves,
