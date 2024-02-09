@@ -19,10 +19,7 @@
 
 package space.arim.libertybans.api.punish;
 
-import space.arim.libertybans.api.CompositeVictim;
-import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.*;
 
 import java.util.List;
 
@@ -96,6 +93,77 @@ public interface PunishmentRevoker {
 	 * @throws IllegalArgumentException if the list of victims is empty
 	 */
 	RevocationOrder revokeByTypeAndPossibleVictims(PunishmentType type, List<Victim> victims, Operator operator, String reason);
+
+	/**
+	 * Gets a {@link RevocationOrder} to undo a punishment by its ID and type.
+	 *
+	 * @param id   the id of the punishment to undo
+	 * @param type the type of the punishment to undo
+	 * @return a revocation order using the ID and type
+	 *
+	 * @deprecated Use {@link PunishmentRevoker#revokeByIdAndType(long, PunishmentType, Operator, String)} instead.
+	 */
+	@Deprecated
+	default RevocationOrder revokeByIdAndType(long id, PunishmentType type) {
+		return revokeByIdAndType(id, type, ConsoleOperator.INSTANCE, "No information");
+	}
+
+	/**
+	 * Gets a {@link RevocationOrder} to undo a punishment according to its ID. <br>
+	 * <br>
+	 * When the punishment type is known,
+	 *
+	 * @param id the id of the punishment to undo
+	 * @return a revocation order using the ID
+	 *
+	 * @deprecated Use {@link PunishmentRevoker#revokeById(long, Operator, String)} instead.
+	 */
+	@Deprecated
+	default RevocationOrder revokeById(long id) {
+		return revokeById(id, ConsoleOperator.INSTANCE, "No information");
+	}
+
+	/**
+	 * Gets a {@link RevocationOrder} to undo a punishment by its type and victim.
+	 * This is commonly be used for singular punishments (bans and mutes), relying on
+	 * the fact that a single victim cannot have more than 1 such punishment. <br>
+	 * <br>
+	 * For non-singular punishments, or for a {@code CompositeVictim} with wildcards
+	 * ({@link CompositeVictim#WILDCARD_UUID} or {@link CompositeVictim#WILDCARD_ADDRESS})
+	 * multiple punishments may match the given criteria. In this case, it is explicitly
+	 * unspecified which punishment is revoked.
+	 *
+	 * @param type   the punishment type
+	 * @param victim the victim whose punishment to undo
+	 * @return a revocation order using the type and victim
+	 *
+	 * @deprecated Use {@link PunishmentRevoker#revokeByTypeAndVictim(PunishmentType, Victim, Operator, String)} instead.
+	 */
+	@Deprecated
+	default RevocationOrder revokeByTypeAndVictim(PunishmentType type, Victim victim) {
+		return revokeByTypeAndVictim(type, victim, ConsoleOperator.INSTANCE, "No information");
+	}
+
+	/**
+	 * Gets a {@link RevocationOrder} to undo a punishment by its type and victim,
+	 * trying multiple victims until one of them is found to be punished. <br>
+	 * <br>
+	 * The process for undoing the punishment is identical to
+	 * {@link #revokeByTypeAndVictim(PunishmentType, Victim)}, except that multiple
+	 * victims are tried: if the first victim is punished, that punishment is undone,
+	 * if second victim is punished, <i>that</i> punishment is undone, et cetera.
+	 *
+	 * @param type   the punishment type
+	 * @param victims the victims, one of whose punishments will be undone
+	 * @return a revocation order using the type and victim
+	 * @throws IllegalArgumentException if the list of victims is empty
+	 *
+	 * @deprecated Use {@link PunishmentRevoker#revokeByTypeAndPossibleVictims(PunishmentType, List, Operator, String)} instead.
+	 */
+	@Deprecated
+	default RevocationOrder revokeByTypeAndPossibleVictims(PunishmentType type, List<Victim> victims) {
+		return revokeByTypeAndPossibleVictims(type, victims, ConsoleOperator.INSTANCE, "No information");
+	}
 
 	/**
 	 * Totally expunges a punishment according to its ID. This uses the most efficient means to completely

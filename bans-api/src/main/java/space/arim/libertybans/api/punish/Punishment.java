@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.api.punish;
 
+import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
@@ -214,6 +215,45 @@ public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 	 *         removed and unenforced, {@code false} otherwise
 	 */
 	ReactionStage<Boolean> undoPunishment(Operator operator, String reason, EnforcementOptions enforcementOptions);
+
+	/**
+	 * Undoes and "unenforces" this punishment assuming it active and in the
+	 * database. <br>
+	 * If the punishment was active then was removed, the future yields
+	 * {@code true}, else {@code false}. <br>
+	 * <br>
+	 * Unenforcement implies purging of this punishment from any local caches.
+	 * Additionally, any relevant broadcast messages will be sent to players.
+	 *
+	 * @return a future which yields {@code true} if this punishment existed and was
+	 *         removed and unenforced, {@code false} otherwise
+	 *
+	 * @deprecated Use {@link Punishment#undoPunishment(Operator, String)} instead.
+	 */
+	@Deprecated
+	default ReactionStage<Boolean> undoPunishment()	{
+		return undoPunishment(ConsoleOperator.INSTANCE, "No information");
+	}
+
+	/**
+	 * Undoes and "unenforces" this punishment assuming it active and in the
+	 * database. <br>
+	 * If the punishment was active then was removed, the future yields
+	 * {@code true}, else {@code false}. <br>
+	 * <br>
+	 * Unenforcement implies purging of this punishment from any local caches.
+	 * Additionally, any relevant broadcast messages will be sent to players.
+	 *
+	 * @param enforcementOptions the enforcement options. Can be used to disable unenforcement entirely
+	 * @return a future which yields {@code true} if this punishment existed and was
+	 *         removed and unenforced, {@code false} otherwise
+	 *
+	 * @deprecated Use {@link Punishment#undoPunishment(Operator, String, EnforcementOptions)} instead.
+	 */
+	@Deprecated
+	default ReactionStage<Boolean> undoPunishment(EnforcementOptions enforcementOptions)	{
+		return undoPunishment(ConsoleOperator.INSTANCE, "No information", enforcementOptions);
+	}
 
 	/**
 	 * "Unenforces" this punishment. <br>
