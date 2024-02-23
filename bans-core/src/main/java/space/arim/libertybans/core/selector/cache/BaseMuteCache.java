@@ -31,6 +31,7 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 abstract class BaseMuteCache implements MuteCache {
@@ -45,8 +46,7 @@ abstract class BaseMuteCache implements MuteCache {
 
 	// Setup
 
-	@Override
-	public final void startup() {
+	void installCache(BiConsumer<Duration, ExpirationSemantic> settingsConsumer) {
 		SqlConfig sqlConfig = configs.getSqlConfig();
 		SqlConfig.MuteCaching muteCaching = sqlConfig.muteCaching();
 
@@ -58,23 +58,8 @@ abstract class BaseMuteCache implements MuteCache {
 		} else {
 			expirationSemantic = muteCaching.expirationSemantic();
 		}
-		installCache(expirationTime, expirationSemantic);
+		settingsConsumer.accept(expirationTime, expirationSemantic);
 	}
-
-	@Override
-	public final void restart() {
-		shutdown();
-		startup();
-	}
-
-	@Override
-	public final void shutdown() {
-		uninstallCache();
-	}
-
-	abstract void installCache(Duration expirationTime, ExpirationSemantic expirationSemantic);
-
-	abstract void uninstallCache();
 
 	// Retrieval
 

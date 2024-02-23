@@ -28,7 +28,6 @@ import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
-import space.arim.libertybans.core.config.SqlConfig;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -83,15 +82,28 @@ public final class AlwaysAvailableMuteCache extends BaseMuteCache {
 	}
 
 	@Override
-	void installCache(Duration expirationTime, SqlConfig.MuteCaching.ExpirationSemantic expirationSemantic) {
-		ConcurrentHashMap<MuteCacheKey, Entry> map = new ConcurrentHashMap<>();
-		Cache cache = new Cache(map, expirationTime);
-		cache.startPurgeTask();
-		this.cache = cache;
+	public void startup() {
+		installCache((expirationTime, expirationSemantic) -> {
+			ConcurrentHashMap<MuteCacheKey, Entry> map = new ConcurrentHashMap<>();
+			Cache cache = new Cache(map, expirationTime);
+			cache.startPurgeTask();
+			this.cache = cache;
+		});
 	}
 
 	@Override
-	void uninstallCache() {
+	public void restart() {
+		installCache((expirationTime, expirationSemantic) -> {
+			Cache oldCache = this.cache;
+			oldCache.stopPurgeTask();
+			Cache newCache = new Cache(oldCache.map, expirationTime);
+			newCache.startPurgeTask();
+			this.cache = newCache;
+		});
+	}
+
+	@Override
+	public void shutdown() {
 		cache.stopPurgeTask();
 	}
 

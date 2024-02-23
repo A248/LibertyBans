@@ -31,12 +31,10 @@ import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
-import space.arim.libertybans.core.config.SqlConfig;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
-import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -65,28 +63,36 @@ public final class OnDemandMuteCache extends BaseMuteCache {
 	}
 
 	@Override
-	void installCache(Duration expirationTime, SqlConfig.MuteCaching.ExpirationSemantic expirationSemantic) {
-
-		Caffeine<Object, Object> builder = Caffeine.newBuilder();
-		builder = switch (expirationSemantic) {
-			case EXPIRE_AFTER_ACCESS -> builder.expireAfterAccess(expirationTime);
-			case EXPIRE_AFTER_WRITE -> builder.expireAfterWrite(expirationTime);
-		};
-		cache = builder
-				.scheduler(Scheduler.disabledScheduler())
-				.ticker(time.toCaffeineTicker())
-				.buildAsync((key, executor) -> {
-					return queryPunishment(key).exceptionally((ex) -> {
-						// If we don't catch these exceptions, Caffeine will
-						LoggerFactory.getLogger(OnDemandMuteCache.class)
-								.warn("Exception while computing cached mute", ex);
-						return Optional.empty();
+	public void startup() {
+		installCache((expirationTime, expirationSemantic) -> {
+			Caffeine<Object, Object> builder = Caffeine.newBuilder();
+			builder = switch (expirationSemantic) {
+				case EXPIRE_AFTER_ACCESS -> builder.expireAfterAccess(expirationTime);
+				case EXPIRE_AFTER_WRITE -> builder.expireAfterWrite(expirationTime);
+			};
+			cache = builder
+					.scheduler(Scheduler.disabledScheduler())
+					.ticker(time.toCaffeineTicker())
+					.buildAsync((key, executor) -> {
+						return queryPunishment(key).exceptionally((ex) -> {
+							// If we don't catch these exceptions, Caffeine will
+							LoggerFactory.getLogger(OnDemandMuteCache.class)
+									.warn("Exception while computing cached mute", ex);
+							return Optional.empty();
+						});
 					});
-				});
+		});
 	}
 
 	@Override
-	void uninstallCache() {}
+	public void restart() {
+		cache.synchronous().invalidateAll();
+	}
+
+	@Override
+	public void shutdown() {
+
+	}
 
 	@Override
 	public CentralisedFuture<Optional<Punishment>> getCachedMute(UUID uuid, NetworkAddress address) {
