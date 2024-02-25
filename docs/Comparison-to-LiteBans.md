@@ -61,6 +61,12 @@ LiteBans is also behind a pay-wall, meaning that users have to pay in order to u
 
 Users of LiteBans must carefully consider whether they are willing to rely entirely on the author of LiteBans for features and improvements.
 
+### Support
+
+Support for LibertyBans is provided GitHub and a text channel on a Discord Server.
+
+LiteBans primarely offers support through Discord, however, only does so for users who verified their purchase of the plugin. This also includes requesting support for their API, meaning if you're not a customer of their plugin, chances are low you will gain access to their support server, or receive help with their API at all.
+
 ### Versioning
 
 LiteBans does not follow semantic versioning, leading to potential instability for developers using its API. It has introduced new API without issuing a minor release.<sup id="note2ret">[2](#note2)</sup>
