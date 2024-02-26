@@ -65,7 +65,7 @@ Users of LiteBans must carefully consider whether they are willing to rely entir
 
 Support for LibertyBans is provided through GitHub Issues and a dedicated text channel on a Discord Server.
 
-LiteBans primarely offers support through Discord, however, only does so for users who verified their purchase of the plugin. This also includes requesting support for their API, meaning if you're not a customer of their plugin, chances are low you will gain access to their support server, or receive help with their API at all.
+LiteBans primarily offers support through Discord; however, it only does so for users who verified their purchase of the plugin. This also includes requesting support for their API, meaning if you're not a customer of their plugin, chances are low you will gain access to their support server, or receive help with their API at all.
 
 ### Versioning
 
