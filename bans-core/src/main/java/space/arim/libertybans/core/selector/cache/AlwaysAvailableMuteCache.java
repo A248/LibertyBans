@@ -44,7 +44,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -84,8 +83,7 @@ public final class AlwaysAvailableMuteCache extends BaseMuteCache {
 	@Override
 	public void startup() {
 		installCache((expirationTime, expirationSemantic) -> {
-			ConcurrentHashMap<MuteCacheKey, Entry> map = new ConcurrentHashMap<>();
-			Cache cache = new Cache(map, expirationTime);
+			Cache cache = new Cache(new ConcurrentHashMap<>(), expirationTime);
 			cache.startPurgeTask();
 			this.cache = cache;
 		});
@@ -127,18 +125,14 @@ public final class AlwaysAvailableMuteCache extends BaseMuteCache {
 
 	@Override
 	public CentralisedFuture<Optional<Punishment>> getCachedMute(UUID uuid, NetworkAddress address) {
-		return cacheRequestTo(uuid, address, MuteAndMessage::mute);
+		return cacheRequest(new MuteCacheKey(uuid, address))
+				.thenApply((opt) -> opt.map(MuteAndMessage::mute));
 	}
 
 	@Override
 	public CentralisedFuture<Optional<Component>> getCachedMuteMessage(UUID uuid, NetworkAddress address) {
-		return cacheRequestTo(uuid, address, MuteAndMessage::message);
-	}
-
-	private <T> CentralisedFuture<Optional<T>> cacheRequestTo(UUID uuid, NetworkAddress address,
-															  Function<MuteAndMessage, T> toWhich) {
 		return cacheRequest(new MuteCacheKey(uuid, address))
-				.thenApply((muteAndMessage) -> muteAndMessage.map(toWhich));
+				.thenApply((opt) -> opt.map(MuteAndMessage::message));
 	}
 
 	private CentralisedFuture<Optional<MuteAndMessage>> cacheRequest(MuteCacheKey cacheKey) {

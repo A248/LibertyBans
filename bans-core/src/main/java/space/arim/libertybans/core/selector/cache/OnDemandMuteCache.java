@@ -86,7 +86,7 @@ public final class OnDemandMuteCache extends BaseMuteCache {
 
 	@Override
 	public void restart() {
-		cache.synchronous().invalidateAll();
+		startup();
 	}
 
 	@Override
