@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2024 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -78,13 +78,15 @@ public final class Gatekeeper {
 			Instant currentTime = time.currentTimestamp();
 			EnforcementConfig config = configs.getMainConfig().enforcement();
 
-			if (config.altsRegistry().shouldRegisterOnConnection()) {
+			boolean recordUserAssociation = config.altsRegistry().shouldRegisterOnConnection();
+			if (recordUserAssociation) {
 				doAssociation(uuid, name, address, currentTime, context);
 			}
 
 			Punishment ban = selector.selectionByApplicabilityBuilder(uuid, address)
 					.type(PunishmentType.BAN)
 					.scopes(SelectionPredicate.matchingAnyOf(scopes))
+					.canAssumeUserRecorded(recordUserAssociation)
 					.build()
 					.findFirstSpecificPunishment(context, () -> currentTime, SortPunishments.LATEST_END_DATE_FIRST);
 			if (ban != null) {
@@ -124,10 +126,11 @@ public final class Gatekeeper {
 		}
 
 		return queryExecutor.get().queryWithRetry((context, transaction) -> {
-			boolean shouldRegister = configs.getMainConfig().enforcement().altsRegistry().shouldRegisterOnConnection();
-			List<String> servers = configs.getMainConfig().enforcement().altsRegistry().servers();
+			var altsRegistry = configs.getMainConfig().enforcement().altsRegistry();
+			boolean registerOnConnection = altsRegistry.shouldRegisterOnConnection();
+			List<String> serversWithoutAssociation = altsRegistry.serversWithoutRegistration();
 
-			if (!shouldRegister && !servers.contains(destinationServer)) {
+			if (!registerOnConnection && !serversWithoutAssociation.contains(destinationServer)) {
 				doAssociation(uuid, name, address, time.currentTimestamp(), context);
 			}
 

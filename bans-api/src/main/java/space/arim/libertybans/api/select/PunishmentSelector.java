@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2024 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -76,6 +76,9 @@ public interface PunishmentSelector {
 	 * For example, if a ban would prevent a player from joining the server, the ban is said to be applicable to
 	 * the player's UUID and IP. It may be, the player's IP is banned, the player's UUID is banned,
 	 * or the player has played on a banned IP and that IP is banned  while strict address enforcement is enabled. <br>
+	 * <br>
+	 * For maximum accuracy, the UUID and IP address pair should be taken from an actual user who has logged on before.
+	 * Due to specifics in terms of how applicability is computed, some punishments
 	 * <br>
 	 * By default, the server's configured address strictness is used, but this may be changed if desired.
 	 *

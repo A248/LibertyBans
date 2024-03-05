@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2024 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -152,8 +152,8 @@ public interface EnforcementConfig {
 				"If you are planning to use this feature, make sure to have enabled 'enforce-server-switch' option."
 				})
 		@ConfKey("servers-without-ip-registration")
-		@DefaultStrings("")
-		List<String> servers();
+		@DefaultStrings({"auth"})
+		List<String> serversWithoutRegistration();
 
 		@ConfComments({"If you want to register the IP address of the player connecting, set this to true.",
 				"If you are running a Proxy and don't want to register the IP when players connect, ",

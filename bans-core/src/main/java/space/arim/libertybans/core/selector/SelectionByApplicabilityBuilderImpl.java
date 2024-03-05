@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2024 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -39,6 +39,7 @@ public final class SelectionByApplicabilityBuilderImpl
 	private final NetworkAddress address;
 	private AddressStrictness strictness;
 	private final AddressStrictness defaultStrictness;
+	private boolean potentialNewEntrant;
 
 	SelectionByApplicabilityBuilderImpl(SelectionResources resources,
 										UUID uuid, NetworkAddress address, AddressStrictness defaultStrictness) {
@@ -68,7 +69,7 @@ public final class SelectionByApplicabilityBuilderImpl
 	@Override
 	SelectionByApplicability buildWith(SelectionBaseImpl.Details details) {
 		return new SelectionByApplicabilityImpl(
-				details, resources, uuid, address, strictness
+				details, resources, uuid, address, strictness, potentialNewEntrant
 		);
 	}
 
@@ -87,6 +88,19 @@ public final class SelectionByApplicabilityBuilderImpl
 	@Override
 	public SelectionByApplicabilityImpl build() {
 		return (SelectionByApplicabilityImpl) super.build();
+	}
+
+	/**
+	 * For internal use, to accomodate a new user whose UUID and IP address combination
+	 * has not yet been entered to the database. Sets whether this scenario is potential.
+	 *
+	 * @param canAssumeUserRecorded if the user is definitely registered, set to true. True by default.
+	 * @return this builder
+	 */
+	public SelectionByApplicabilityBuilderImpl canAssumeUserRecorded(boolean canAssumeUserRecorded) {
+		// A user is a potential new entrant if we can't assume they're recorded
+		this.potentialNewEntrant = !canAssumeUserRecorded;
+		return this;
 	}
 
 }
