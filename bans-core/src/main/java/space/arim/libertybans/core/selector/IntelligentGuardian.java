@@ -32,7 +32,6 @@ import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
-import java.net.InetAddress;
 import java.util.UUID;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
