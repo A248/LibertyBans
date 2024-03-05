@@ -100,8 +100,7 @@ public final class IntelligentGuardian implements Guardian {
 																	String destinationServer) {
 		return selector
 				.executeAndCheckServerSwitch(
-						uuid, name, address,
-						scopeManager.specificScope(destinationServer), destinationServer
+						uuid, name, address, destinationServer
 				)
 				.toCompletableFuture()
 				.orTimeout(12, TimeUnit.SECONDS)

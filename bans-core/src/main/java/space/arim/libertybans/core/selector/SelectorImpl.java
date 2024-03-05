@@ -26,6 +26,7 @@ import net.kyori.adventure.text.Component;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
@@ -47,15 +48,18 @@ public class SelectorImpl implements InternalSelector {
 	private final Gatekeeper gatekeeper;
 	private final Provider<MuteCache> muteCache;
 	private final SelectionResources resources;
+	private final ScopeManager scopeManager;
 
 	@Inject
 	public SelectorImpl(Configs configs, IDImpl idImpl, Gatekeeper gatekeeper,
-						Provider<MuteCache> muteCache, SelectionResources resources) {
+						Provider<MuteCache> muteCache, SelectionResources resources,
+						ScopeManager scopeManager) {
 		this.configs = configs;
 		this.idImpl = idImpl;
 		this.gatekeeper = gatekeeper;
 		this.muteCache = muteCache;
 		this.resources = resources;
+		this.scopeManager = scopeManager;
 	}
 
 	@Override
@@ -114,8 +118,9 @@ public class SelectorImpl implements InternalSelector {
 
 	@Override
 	public CentralisedFuture<Component> executeAndCheckServerSwitch(UUID uuid, String name, NetworkAddress address,
-																	ServerScope scope, String destinationServer) {
-		return gatekeeper.checkServerSwitch(uuid, name, address, destinationServer, scope, this);
+																	String destinationServer) {
+		return gatekeeper.checkServerSwitch(uuid, name, address, destinationServer,
+				scopeManager.specificScope(destinationServer), this);
 	}
 
 	@Override

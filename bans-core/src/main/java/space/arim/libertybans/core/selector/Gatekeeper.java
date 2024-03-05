@@ -120,29 +120,30 @@ public final class Gatekeeper {
 	}
 
 	public CentralisedFuture<@Nullable Component> checkServerSwitch(UUID uuid, String name, NetworkAddress address,
-																	String destinationServer, ServerScope scope, SelectorImpl selector) {
+																	String destinationServer, ServerScope serverScope,
+																	SelectorImpl selector) {
 		if (!configs.getMainConfig().platforms().proxies().enforceServerSwitch()) {
 			return null;
 		}
 
 		return queryExecutor.get().queryWithRetry((context, transaction) -> {
+			Instant currentTime = time.currentTimestamp();
 			var altsRegistry = configs.getMainConfig().enforcement().altsRegistry();
 			boolean registerOnConnection = altsRegistry.shouldRegisterOnConnection();
 			List<String> serversWithoutAssociation = altsRegistry.serversWithoutRegistration();
 
 			if (!registerOnConnection && !serversWithoutAssociation.contains(destinationServer)) {
-				doAssociation(uuid, name, address, time.currentTimestamp(), context);
+				doAssociation(uuid, name, address, currentTime, context);
 			}
 
 			return selector.selectionByApplicabilityBuilder(uuid, address)
 					.type(PunishmentType.BAN)
-					.scope(scope)
+					.scopes(SelectionPredicate.matchingOnly(serverScope))
 					.build()
-					.getFirstSpecificPunishment(SortPunishments.LATEST_END_DATE_FIRST);
-
+					.findFirstSpecificPunishment(context, () -> currentTime, SortPunishments.LATEST_END_DATE_FIRST);
 		}).thenCompose((punishment) -> {
-			if (punishment instanceof Punishment) {
-				return formatter.getPunishmentMessage((Punishment) punishment);
+			if (punishment != null) {
+				return formatter.getPunishmentMessage(punishment);
 			} else {
 				return futuresFactory.completedFuture(null);
 			}

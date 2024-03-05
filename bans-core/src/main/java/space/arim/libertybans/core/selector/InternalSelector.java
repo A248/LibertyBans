@@ -59,10 +59,9 @@ public interface InternalSelector extends PunishmentSelector {
 	 * @param uuid		the player uuid
 	 * @param name		the player name
 	 * @param address	the player address
-	 * @param scope		the server scope to include in the selection query
 	 * @param destinationServer the server the player is switching to
 	 * @return a future which yields the denial message, or null if there is none
 	 */
 	CentralisedFuture<Component> executeAndCheckServerSwitch(UUID uuid, String name, NetworkAddress address,
-															 ServerScope scope, String destinationServer);
+															 String destinationServer);
 }
