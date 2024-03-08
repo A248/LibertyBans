@@ -66,7 +66,7 @@ final class StandaloneEnforcer implements EnvEnforcer<Void> {
 	}
 
 	@Override
-	public <D> void sendPluginMessage(Void player, PluginMessage<D, ?> pluginMessage, D data) {
+	public <D> boolean sendPluginMessageIfListening(Void player, PluginMessage<D, ?> pluginMessage, D data) {
 		throw new UnsupportedOperationException();
 	}
 

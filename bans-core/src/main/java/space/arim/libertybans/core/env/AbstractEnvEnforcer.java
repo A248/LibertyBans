@@ -21,12 +21,8 @@ package space.arim.libertybans.core.env;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
-import space.arim.libertybans.core.env.message.PluginMessage;
-import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -41,8 +37,6 @@ public abstract class AbstractEnvEnforcer<P> implements EnvEnforcer<P> {
 	private final InternalFormatter formatter;
 	private final Interlocutor interlocutor;
 	private final AudienceRepresenter<? super P> audienceRepresenter;
-
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
 	protected AbstractEnvEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter,
 								  Interlocutor interlocutor, AudienceRepresenter<? super P> audienceRepresenter) {
@@ -93,28 +87,6 @@ public abstract class AbstractEnvEnforcer<P> implements EnvEnforcer<P> {
 		}
 		return doForAllPlayers((players) -> players.forEach(callback));
 	}
-
-	@Override
-	public final <D> void sendPluginMessage(P player, PluginMessage<D, ?> pluginMessage, D data) {
-		if (!sendPluginMessageIfListening(player, pluginMessage, data)) {
-			logger.error(
-					"Attempted to send plugin message to {}, but it could not be sent. " +
-							"This suggests you enabled 'use-plugin-messaging' but are not using a network. " +
-							"Please address this critical security flaw immediately. " +
-							"It leaves your server vulnerable to clients spoofing the plugin messaging channel.",
-					player
-			);
-		}
-	}
-
-	/**
-	 * Sends a plugin message to the given player if it is accepted by their client
-	 *
-	 * @param player the player to whom to send the message
-	 * @param pluginMessage the plugin message
-	 * @return true if sent, false if unsupported
-	 */
-	public abstract <D> boolean sendPluginMessageIfListening(P player, PluginMessage<D, ?> pluginMessage, D data);
 
 	@Override
 	public final void sendMessageNoPrefix(P player, ComponentLike message) {

@@ -246,12 +246,20 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 			case BAN, KICK -> (player) -> {
 				if (instanceType == InstanceType.GAME_SERVER
 						&& configs.getMainConfig().platforms().gameServers().usePluginMessaging()) {
-					envEnforcer.sendPluginMessage(
+					// Try to kick by plugin message
+					if (envEnforcer.sendPluginMessageIfListening(
 							player, new KickPlayer(), new KickPlayer.Data(envEnforcer.getNameFor(player), message)
-					);
-				} else {
-					envEnforcer.kickPlayer(player, message);
+					)) {
+						// Kicked by plugin message
+						return;
+					}
+					// This scenario is a remote possibility if the player joins and is very quickly kicked.
+					// That is, the plugin messaging channel is activated a small period after the join event.
+					// Using the existing APIs on Bukkit and Sponge, there is no solution to this problem without
+					// sacrificing the following important warning message for misconfigured setups.
+					logger.warn("Attempted to send plugin message to {}, but it could not be sent.", player);
 				}
+				envEnforcer.kickPlayer(player, message);
 			};
 			case MUTE -> (player) -> {
 				/*

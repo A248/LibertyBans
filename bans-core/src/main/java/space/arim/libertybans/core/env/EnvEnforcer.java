@@ -79,12 +79,14 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	void kickPlayer(P player, Component message);
 
 	/**
-	 * Sends a plugin message to the given player. Must be used only for proxies.
+	 * Sends a plugin message to the given player if it is accepted by their client. Only to be used for backend
+	 * servers connected by a network.
 	 *
 	 * @param player the player to whom to send the message
 	 * @param pluginMessage the plugin message
+	 * @return true if sent, false if unsupported
 	 */
-	<D> void sendPluginMessage(P player, PluginMessage<D, ?> pluginMessage, D data);
+	<D> boolean sendPluginMessageIfListening(P player, PluginMessage<D, ?> pluginMessage, D data);
 
 	/**
 	 * Sends a message to the given player. Does not include a prefix. <br>

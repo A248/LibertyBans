@@ -55,12 +55,9 @@ public final class SpigotMessageChannel implements PlatformListener, EnvMessageC
 		boolean listened = player.getListeningPluginChannels().contains(BUNGEE_CHANNEL);
 		//
 		// 1. The backend server must NOT be in online mode
-		// 2. The channel must NOT be listened on, strangely enough
-		// Explanation: getListeningPluginChannels() should never return BungeeCord, because it is a special channel
-		// Therefore, if this channel IS listened on, that suggests the client is trying to spoof it.
-		// The anti-spoof check is used for pre-1.13 clients which may register legacy channel names.
+		// 2. The channel must be listened on
 		//
-		boolean canSend = !plugin.getServer().getOnlineMode() && !listened;
+		boolean canSend = !plugin.getServer().getOnlineMode() && listened;
 		if (canSend) {
 			player.sendPluginMessage(
 					plugin, BUNGEE_CHANNEL,
