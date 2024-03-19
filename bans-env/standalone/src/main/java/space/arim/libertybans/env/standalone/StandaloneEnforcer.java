@@ -51,6 +51,11 @@ final class StandaloneEnforcer implements EnvEnforcer<Void> {
 	}
 
 	@Override
+	public CentralisedFuture<Void> sendToThoseWithPermissionNoPrefix(String permission, ComponentLike message) {
+		return completedVoid();
+	}
+
+	@Override
 	public CentralisedFuture<Void> doForPlayerIfOnline(UUID uuid, Consumer<Void> callback) {
 		return completedVoid();
 	}

@@ -55,6 +55,6 @@ public class AltNotification {
 		}
 		Component notification = altCheckFormatter.formatMessage(
 				configs.getMessagesConfig().alts().autoShow().header(), name, alts);
-		envEnforcer.sendToThoseWithPermission("libertybans.alts.autoshow", notification);
+		envEnforcer.sendToThoseWithPermissionNoPrefix("libertybans.alts.autoshow", notification);
 	}
 }

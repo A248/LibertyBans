@@ -52,6 +52,15 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	CentralisedFuture<Void> sendToThoseWithPermission(String permission, ComponentLike message);
 
 	/**
+	 * For all players with the specified permission, sends the message.
+	 *
+	 * @param permission the permission
+	 * @param message the message
+	 * @return a future completed when the operation is done
+	 */
+	CentralisedFuture<Void> sendToThoseWithPermissionNoPrefix(String permission, ComponentLike message);
+
+	/**
 	 * Searches for a player with the given uuid, if found, invokes the callback
 	 * 
 	 * @param uuid the uuid

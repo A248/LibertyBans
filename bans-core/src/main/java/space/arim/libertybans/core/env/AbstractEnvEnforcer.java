@@ -60,10 +60,15 @@ public abstract class AbstractEnvEnforcer<P> implements EnvEnforcer<P> {
 
 	@Override
 	public final CentralisedFuture<Void> sendToThoseWithPermission(String permission, ComponentLike message) {
-		return sendToThoseWithPermissionNoPrefix(permission, formatter.prefix(message).asComponent());
+		return sendToThoseWithPermissionNoPrefix(permission, formatter.prefix(message));
 	}
 
-	private CentralisedFuture<Void> sendToThoseWithPermissionNoPrefix(String permission, Component message) {
+	@Override
+	public final CentralisedFuture<Void> sendToThoseWithPermissionNoPrefix(String permission, ComponentLike message) {
+		return sendToThoseWithPermissionNoPrefixComponent(permission, message.asComponent());
+	}
+
+	private CentralisedFuture<Void> sendToThoseWithPermissionNoPrefixComponent(String permission, Component message) {
 		Consumer<P> callback;
 		if (interlocutor.shouldFilterIpAddresses()) {
 			Component stripped = interlocutor.stripIpAddresses(message);
