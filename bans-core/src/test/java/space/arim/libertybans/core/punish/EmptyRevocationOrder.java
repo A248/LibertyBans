@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.punish;
 
+import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EnforcementOptions;
@@ -33,9 +34,23 @@ import java.util.Optional;
 public final class EmptyRevocationOrder implements RevocationOrder, EnforcementOpts.Factory {
 
 	private final FactoryOfTheFuture futuresFactory;
+	private final Operator operator;
+	private final String reason;
 
-	public EmptyRevocationOrder(FactoryOfTheFuture futuresFactory) {
+	public EmptyRevocationOrder(FactoryOfTheFuture futuresFactory, Operator operator, String  reason) {
 		this.futuresFactory = futuresFactory;
+		this.operator = operator;
+		this.reason = reason;
+	}
+
+	@Override
+	public Operator getOperator() {
+		return operator;
+	}
+
+	@Override
+	public String getReason() {
+		return reason;
 	}
 
 	@Override

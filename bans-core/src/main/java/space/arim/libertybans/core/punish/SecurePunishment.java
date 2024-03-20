@@ -25,97 +25,103 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-import space.arim.libertybans.api.punish.EnforcementOptions;
-import space.arim.libertybans.api.punish.EscalationTrack;
-import space.arim.libertybans.api.punish.PunishmentEditor;
+import space.arim.libertybans.api.punish.*;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
-import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 
 class SecurePunishment extends AbstractPunishmentBase implements Punishment, EnforcementOpts.Factory {
 
-	private final SecurePunishmentCreator creator;
-	private final long id;
-	private final Instant startDate;
-	private final Instant endDate;
+    private final SecurePunishmentCreator creator;
+    private final long id;
+    private final Instant startDate;
+    private final Instant endDate;
+    private final UndoAttachment undoAttachment;
 
-	SecurePunishment(SecurePunishmentCreator creator,
-					 long id, PunishmentType type, Victim victim, Operator operator, String reason,
-					 ServerScope scope, Instant startDate, Instant endDate, EscalationTrack escalationTrack) {
-		super(type, victim, operator, reason, scope, escalationTrack);
-		this.creator = Objects.requireNonNull(creator, "creator");
-		this.id = id;
-		this.startDate = Objects.requireNonNull(startDate, "startDate");
-		this.endDate = Objects.requireNonNull(endDate, "endDate");
-	}
+    SecurePunishment(SecurePunishmentCreator creator,
+                     long id, PunishmentType type, Victim victim, Operator operator, String reason,
+                     ServerScope scope, Instant startDate, Instant endDate, EscalationTrack escalationTrack,
+                     UndoAttachment undoAttachment) {
+        super(type, victim, operator, reason, scope, escalationTrack);
+        this.creator = Objects.requireNonNull(creator, "creator");
+        this.id = id;
+        this.startDate = Objects.requireNonNull(startDate, "startDate");
+        this.endDate = Objects.requireNonNull(endDate, "endDate");
+        this.undoAttachment = undoAttachment;
+    }
 
-	@Override
-	public long getIdentifier() {
-		return id;
-	}
+    @Override
+    public long getIdentifier() {
+        return id;
+    }
 
-	@Override
-	public Instant getStartDate() {
-		return startDate;
-	}
-	
-	@Override
-	public Instant getEndDate() {
-		return endDate;
-	}
+    @Override
+    public Instant getStartDate() {
+        return startDate;
+    }
 
-	@Override
-	public CentralisedFuture<Void> enforcePunishment(EnforcementOptions enforcementOptions) {
-		return creator.enforcement().enforce(this, (EnforcementOpts) enforcementOptions);
-	}
+    @Override
+    public Instant getEndDate() {
+        return endDate;
+    }
 
-	@Override
-	public ReactionStage<Boolean> undoPunishment(EnforcementOptions enforcementOptions) {
-		return creator.revoker().undoPunishment(this).thenCompose((undone) -> {
-			if (!undone) {
-				return CompletableFuture.completedFuture(false);
-			}
-			return unenforcePunishment(enforcementOptions).thenApply((ignore) -> true);
-		});
-	}
+    @Override
+    public Optional<UndoAttachment> undoAttachment() {
+        return Optional.ofNullable(undoAttachment);
+    }
 
-	@Override
-	public ReactionStage<?> unenforcePunishment(EnforcementOptions enforcementOptions) {
-		return creator.enforcement().unenforce(this, (EnforcementOpts) enforcementOptions);
-	}
+    @Override
+    public CentralisedFuture<Void> enforcePunishment(EnforcementOptions enforcementOptions) {
+        return creator.enforcement().enforce(this, (EnforcementOpts) enforcementOptions);
+    }
 
-	@Override
-	public ReactionStage<Optional<Punishment>> modifyPunishment(Consumer<PunishmentEditor> editorConsumer) {
-		Modifier.Editor editor = creator.modifer().new Editor(this);
-		editorConsumer.accept(editor);
-		return editor.modify();
-	}
+    @Override
+    public ReactionStage<Boolean> undoPunishment(Operator operator, String reason, EnforcementOptions enforcementOptions) {
+        return creator.revoker().undoPunishment(this, creator.undoDraftCreator().create(operator, reason)).
+                thenCompose((undone) -> {
+                    if (!undone) {
+                        return CompletableFuture.completedFuture(false);
+                    }
+                    return unenforcePunishment(enforcementOptions).thenApply((ignore) -> true);
+                });
+    }
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		SecurePunishment that = (SecurePunishment) o;
-		return id == that.id;
-	}
+    @Override
+    public ReactionStage<?> unenforcePunishment(EnforcementOptions enforcementOptions) {
+        return creator.enforcement().unenforce(this, (EnforcementOpts) enforcementOptions);
+    }
 
-	@Override
-	public int hashCode() {
-		return (int) (31 + id);
-	}
+    @Override
+    public ReactionStage<Optional<Punishment>> modifyPunishment(Consumer<PunishmentEditor> editorConsumer) {
+        Modifier.Editor editor = creator.modifer().new Editor(this);
+        editorConsumer.accept(editor);
+        return editor.modify();
+    }
 
-	@Override
-	public String toString() {
-		return "SecurePunishment [id=" + id + ", getType()=" + getType() + ", getVictim()=" + getVictim()
-				+ ", getOperator()=" + getOperator() + ", getReason()=" + getReason() + ", getScope()=" + getScope()
-				+ ", getStartDateSeconds()=" + getStartDateSeconds() + ", getEndDateSeconds()=" + getEndDateSeconds()
-				+ ", getEscalationTrack()=" + getEscalationTrack()
-				+ "]";
-	}
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SecurePunishment that = (SecurePunishment) o;
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (31 + id);
+    }
+
+    @Override
+    public String toString() {
+        return "SecurePunishment [id=" + id + ", getType()=" + getType() + ", getVictim()=" + getVictim()
+                + ", getOperator()=" + getOperator() + ", getReason()=" + getReason() + ", getScope()=" + getScope()
+                + ", getStartDateSeconds()=" + getStartDateSeconds() + ", getEndDateSeconds()=" + getEndDateSeconds()
+                + ", getEscalationTrack()=" + getEscalationTrack()
+                + "]";
+    }
 
 }
