@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2024 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -31,7 +31,6 @@ import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.core.scope.ScopeType;
 
 import java.time.Instant;
-import java.util.Objects;
 import java.util.UUID;
 
 public record ApplicableViewFields<R extends Record14<
@@ -111,7 +110,11 @@ public record ApplicableViewFields<R extends Record14<
 	}
 
 	public Field<UUID> uuid() {
-		return Objects.requireNonNull(fieldSupplier.field11(), "uuid field does not exist");
+		return fieldSupplier.field11();
+	}
+
+	public Field<NetworkAddress> address() {
+		return fieldSupplier.field12();
 	}
 
 }
