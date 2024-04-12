@@ -228,7 +228,7 @@ public class ListCommands extends AbstractSubCommandGroup {
 		}
 
 		private void noPunishmentsOnThisPage(int page) {
-			if (page == 0) { // No pages whatsoever
+			if (page == 1) { // No pages whatsoever
 				ComponentText noPages = section.noPages();
 				ComponentLike message = (target == null) ? noPages : noPages.replaceText("%TARGET%", target);
 				sender().sendMessage(message);
