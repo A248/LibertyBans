@@ -78,17 +78,26 @@ public final class SelfImportProcess {
 	public CentralisedFuture<Void> transferAllData(Path folder) {
 		logger.info("Beginning self-import process");
 
-		return queryExecutor.get().execute((target) -> {
+		return queryExecutor.get().execute((currentDbCtx) -> {
 			ImportConfig importConfig = configs.getImportConfig();
-			DatabaseResult dbResult = new DatabaseSettings(folder, databaseManager).create(importConfig.self());
+			ImportConfig.SelfSettings selfSettings = importConfig.self();
+			DatabaseResult dbResult = new DatabaseSettings(folder, databaseManager).create(selfSettings);
 
-			try (StandardDatabase database = dbResult.database()) {
+			try (StandardDatabase peerDb = dbResult.database()) {
 
 				if (!dbResult.success()) {
 					logger.warn("Failed to connect to import source");
 					return;
 				}
-				database.execute((source) -> {
+				peerDb.execute((peerDbCtx) -> {
+					DSLContext source, target;
+					if (selfSettings.reverseDirection()) {
+						source = currentDbCtx;
+						target = peerDbCtx;
+					} else {
+						source = peerDbCtx;
+						target = currentDbCtx;
+					}
 					var selfImport = new SelfImport(source, target, importConfig.retrievalSize());
 					selfImport.runTransfer();
 					selfImport.updateSequences();
@@ -98,17 +107,7 @@ public final class SelfImportProcess {
 		});
 	}
 
-	private static final class SelfImport {
-
-		private final DSLContext source;
-		private final DSLContext target;
-		private final int maxBatchSize;
-
-		private SelfImport(DSLContext source, DSLContext target, int maxBatchSize) {
-			this.source = source;
-			this.target = target;
-			this.maxBatchSize = maxBatchSize;
-		}
+	private record SelfImport(DSLContext source, DSLContext target, int maxBatchSize) {
 
 		private void runTransfer() {
 			for (Table<?> table : DatabaseConstants.allTables(DatabaseConstants.TableOrder.REFERENTS_FIRST)) {

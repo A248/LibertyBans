@@ -186,6 +186,17 @@ public interface ImportConfig {
 			"The settings here are used exactly as in sql.yml - in fact, they are the same settings."})
 	interface SelfSettings extends DatabaseSettingsConfig {
 
+		@ConfKey("reverse-direction")
+		@ConfComments({
+				"Whether to reverse the direction of the self-import. If enabled, this will import TO the database",
+				"configured here, rather than FROM it.",
+				"",
+				"Normally, LibertyBans will import from this database, to the current database defined in sql.yml.",
+				"If this option is enabled, LibertyBans will import to the current database in sql.yml, from this database."
+		})
+		@ConfDefault.DefaultBoolean(false)
+		boolean reverseDirection();
+
 	}
 
 	@ConfKey("ban-manager")
