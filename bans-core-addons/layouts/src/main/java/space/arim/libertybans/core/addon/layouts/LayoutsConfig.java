@@ -51,11 +51,11 @@ public interface LayoutsConfig extends AddonConfig, PunishmentAdditionSection {
 	@ConfHeader({
 			"To use layouts, a staff member needs multiple permissions: ",
 			"- libertybans.addon.layout.command",
-			"- libertybans.addon.layout.track.<id>.target.uuid -- punish players",
-			"- libertybans.addon.layout.track.<id>.target.ip -- punish IP addresses",
-			"- libertybans.addon.layout.track.<id>.target.both -- punish player and IP address in the same punishment",
+			"- libertybans.addon.layout.use.<track>.target.uuid -- punish players",
+			"- libertybans.addon.layout.use.<track>.target.ip -- punish IP addresses",
+			"- libertybans.addon.layout.use.<track>.target.both -- punish player and IP address in the same punishment",
 			"",
-			"For simplicity, you may use wildcard permissions, e.g. 'libertybans.addon.layout.track.hacking.target.*'",
+			"For simplicity, you may use wildcard permissions, e.g. 'libertybans.addon.layout.use.hacking.target.*'",
 			"will allow punishing using the 'hacking' track no matter whether a player or IP address is punished"
 	})
 	interface LayoutsPermissionSection extends VictimPermissionSection {
