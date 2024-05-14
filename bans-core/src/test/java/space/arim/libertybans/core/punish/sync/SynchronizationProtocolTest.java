@@ -25,15 +25,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.junit.jupiter.MockitoExtension;
-import space.arim.libertybans.api.ConsoleOperator;
-import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.core.punish.Mode;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,7 +52,7 @@ public class SynchronizationProtocolTest {
 	@EnumSource(PunishmentType.class)
 	public void enactPunishment(PunishmentType type) {
 		communicateMessageSuccessfully(new PacketEnforceUnenforce(
-				id, type, Mode.DO, EnforcementOptions.Broadcasting.NORMAL, "user1", null
+				id, type, Mode.DO, EnforcementOptions.Broadcasting.NORMAL, "user1"
 		));
 	}
 
@@ -63,14 +60,14 @@ public class SynchronizationProtocolTest {
 	@EnumSource(PunishmentType.class)
 	public void undoPunishment(PunishmentType type) {
 		communicateMessageSuccessfully(new PacketEnforceUnenforce(
-				id, type, Mode.UNDO, EnforcementOptions.Broadcasting.NORMAL, "user2", PlayerOperator.of(UUID.randomUUID())
+				id, type, Mode.UNDO, EnforcementOptions.Broadcasting.NORMAL, "user2"
 		));
 	}
 
 	@Test
 	public void consoleOperator() {
 		communicateMessageSuccessfully(new PacketEnforceUnenforce(
-				id, PunishmentType.BAN, Mode.UNDO, EnforcementOptions.Broadcasting.NORMAL, "user3", ConsoleOperator.INSTANCE
+				id, PunishmentType.BAN, Mode.UNDO, EnforcementOptions.Broadcasting.NORMAL, "user3"
 		));
 	}
 
@@ -78,7 +75,7 @@ public class SynchronizationProtocolTest {
 	@EnumSource(EnforcementOptions.Broadcasting.class)
 	public void broadcasting(EnforcementOptions.Broadcasting broadcasting) {
 		communicateMessageSuccessfully(new PacketEnforceUnenforce(
-				id, PunishmentType.KICK, Mode.DO, broadcasting, "user4", PlayerOperator.of(UUID.randomUUID())
+				id, PunishmentType.KICK, Mode.DO, broadcasting, "user4"
 		));
 	}
 

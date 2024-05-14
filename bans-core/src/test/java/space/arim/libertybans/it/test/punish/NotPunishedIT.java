@@ -22,11 +22,7 @@ package space.arim.libertybans.it.test.punish;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
-import space.arim.libertybans.api.AddressVictim;
-import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.*;
 import space.arim.libertybans.api.punish.PunishmentRevoker;
 import space.arim.libertybans.api.punish.RevocationOrder;
 import space.arim.libertybans.api.select.PunishmentSelector;
@@ -75,7 +71,7 @@ public class NotPunishedIT {
 
 		if (type.isSingular()) {
 			for (Victim victim : new Victim[] {PlayerVictim.of(uuid), AddressVictim.of(address)}) {
-				RevocationOrder order = revoker.revokeByTypeAndVictim(type, victim);
+				RevocationOrder order = revoker.revokeByTypeAndVictim(type, victim, ConsoleOperator.INSTANCE, "TEST");
 				assertFalse(order.undoPunishment().toCompletableFuture().join());
 				assertNull(order.undoAndGetPunishment().toCompletableFuture().join().orElse(null));
 			}

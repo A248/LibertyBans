@@ -48,6 +48,7 @@ public final class OperatorBinding extends BaseBinding<UUID, Operator> {
 	private final UUIDBinding uuidBinding = new UUIDBinding();
 
 	private static Operator binaryToOperator(byte[] operatorBytes) {
+		if(operatorBytes == null) return null;
 		if (Arrays.equals(operatorBytes, EmptyData.UUID_BYTES)) {
 			return ConsoleOperator.INSTANCE;
 		}
@@ -55,6 +56,7 @@ public final class OperatorBinding extends BaseBinding<UUID, Operator> {
 	}
 
 	private static byte[] operatorToBinary(Operator operator) {
+		if(operator == null) return null;
 		return switch (operator.getType()) {
 			case PLAYER -> UUIDUtil.toByteArray(((PlayerOperator) operator).getUUID());
 			case CONSOLE -> EmptyData.UUID_BYTES;
@@ -62,6 +64,7 @@ public final class OperatorBinding extends BaseBinding<UUID, Operator> {
 	}
 
 	public Operator uuidToOperator(UUID uuid) {
+		if (uuid == null) return null;
 		if (uuid.equals(EmptyData.UUID)) {
 			return ConsoleOperator.INSTANCE;
 		}
@@ -69,6 +72,7 @@ public final class OperatorBinding extends BaseBinding<UUID, Operator> {
 	}
 
 	public UUID operatorToUuid(Operator operator) {
+		if(operator == null) return null;
 		return switch (operator.getType()) {
 			case PLAYER -> ((PlayerOperator) operator).getUUID();
 			case CONSOLE -> EmptyData.UUID;

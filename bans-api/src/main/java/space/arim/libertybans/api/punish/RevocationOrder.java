@@ -21,6 +21,7 @@ package space.arim.libertybans.api.punish;
 import java.util.List;
 import java.util.Optional;
 
+import space.arim.libertybans.api.Operator;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import space.arim.libertybans.api.PunishmentType;
@@ -37,6 +38,20 @@ import space.arim.libertybans.api.Victim;
  *
  */
 public interface RevocationOrder extends EnforcementOptionsFactory {
+
+	/**
+	 * Gets the operator who is revoking the punishment
+	 *
+	 * @return the operator responsible for the revocation
+	 */
+	Operator getOperator();
+
+	/**
+	 * Gets the reason for the revocation
+	 *
+	 * @return the reason for the revocation
+	 */
+	String getReason();
 
 	/**
 	 * Gets the ID of the punishment which will be revoked, or none if no ID is
