@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2024 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.selector;
 
+import java.util.List;
 import java.util.Set;
 
 import space.arim.dazzleconf.annote.ConfComments;
@@ -137,5 +138,30 @@ public interface EnforcementConfig {
 		@NumericRange(min = 1)
 		long expirationTimeDays();
 
+	}
+
+	@ConfKey("alts-registry")
+	@SubSection
+	AltsRegistry altsRegistry();
+
+	@ConfHeader({"Controls if all servers should register the IP address of the player connecting."})
+	interface AltsRegistry {
+
+		@ConfComments({"The server names in this list will be excluded from associating the IP address of the player connecting.",
+				"Please note that the server's name in the list should be the same as the ones in your proxy configuration.",
+				"This is intended to be used by LibertyBans proxy installations.",
+				"If you are planning to use this feature, you MUST enable the 'enforce-server-switch' option."
+				})
+		@ConfKey("servers-without-ip-registration")
+		@DefaultStrings({"auth"})
+		List<String> serversWithoutRegistration();
+
+		@ConfComments({"If you want to register the IP address of the player connecting, set this to true.",
+				"If you are running a proxy and don't want to register the IP when players connect, ",
+				"set this to false and add the authentication servers' names in the list above.",
+				"If this is a backend server, set it to false; if it's an authentication server, set to true."})
+		@ConfKey("should-register-on-connection)")
+		@ConfDefault.DefaultBoolean(true)
+		boolean shouldRegisterOnConnection();
 	}
 }
