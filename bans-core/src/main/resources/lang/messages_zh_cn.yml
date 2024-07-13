@@ -344,11 +344,11 @@ formatting:
    # How should 'permanent' be displayed as a length of time?
   permanent-display:
      # What do you call a permanent duration?
-    duration: '永久'
+    duration: '无限'
      # When does a permanent punishment end?
     absolute: '永不'
      # How do you describe the time remaining in a permanent punishment?
-    relative: '临时'
+    relative: '永久'
 
 
 misc:
