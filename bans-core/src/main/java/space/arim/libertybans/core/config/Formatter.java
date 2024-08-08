@@ -35,7 +35,7 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.punish.UndoAttachment;
+import space.arim.libertybans.api.punish.UndoBuilder;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.service.Time;
 import space.arim.libertybans.core.punish.MiscUtil;
@@ -107,7 +107,7 @@ public class Formatter implements InternalFormatter {
 	@Override
 	public CentralisedFuture<Component> formatWithPunishment(ComponentText componentText,
 															  Punishment punishment) {
-		UndoAttachment undoAttachment = punishment.undoAttachment().orElse(null);
+		UndoBuilder undoAttachment = punishment.undoAttachment().orElse(null);
 		Map<FutureReplaceable, CentralisedFuture<String>> futureReplacements = new EnumMap<>(FutureReplaceable.class);
 		for (FutureReplaceable futureReplaceable : FutureReplaceable.values()) {
 			if (componentText.contains(futureReplaceable.getVariable())) {
@@ -161,7 +161,7 @@ public class Formatter implements InternalFormatter {
 		}
 	}
 	
-	private Map<SimpleReplaceable, String> getSimpleReplacements(Punishment punishment, UndoAttachment undoAttachment) {
+	private Map<SimpleReplaceable, String> getSimpleReplacements(Punishment punishment, UndoBuilder undoAttachment) {
 		MessagesConfig.Formatting formatting = messages().formatting();
 
 		Map<SimpleReplaceable, String> simpleReplacements = new EnumMap<>(SimpleReplaceable.class);
@@ -284,7 +284,7 @@ public class Formatter implements InternalFormatter {
 		return switch (futureReplaceable) {
 			case VICTIM -> formatVictim(punishment.getVictim());
 			case OPERATOR -> formatOperator(punishment.getOperator());
-			case UNOPERATOR -> formatOperator(punishment.undoAttachment().map(UndoAttachment::operator).orElse(null));
+			case UNOPERATOR -> formatOperator(punishment.undoAttachment().map(UndoBuilder::operator).orElse(null));
 		};
 	}
 

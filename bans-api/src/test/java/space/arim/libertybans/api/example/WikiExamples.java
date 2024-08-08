@@ -98,7 +98,7 @@ public class WikiExamples {
 		PunishmentRevoker revoker = libertyBans.getRevoker();
 
 		// Relies on the fact a player victim can only have 1 active ban
-		RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(PunishmentType.BAN, PlayerVictim.of(bannedPlayer), undoOperator, reason);
+		RevocationOrder revocationOrder = revoker.revokeByTypeAndVictim(PunishmentType.BAN, PlayerVictim.of(bannedPlayer));
 		return revocationOrder.undoPunishment().thenAccept((undone) -> {
 			if (undone) {
 				// ban existed and was undone

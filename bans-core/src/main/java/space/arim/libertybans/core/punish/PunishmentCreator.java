@@ -26,7 +26,6 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.punish.UndoAttachment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.core.scope.ScopeType;
 

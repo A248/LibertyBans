@@ -45,19 +45,14 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 	private final Provider<InternalRevoker> revoker;
 	private final Provider<GlobalEnforcement> enforcement;
 	private final Provider<Modifier> modifier;
-	private final SecureUndoAttachmentCreator undoAttachmentCreator;
-	private final UndoDraftCreator undoDraftCreator;
 
 	@Inject
 	public SecurePunishmentCreator(InternalScopeManager scopeManager, Provider<InternalRevoker> revoker,
-								   Provider<GlobalEnforcement> enforcement, Provider<Modifier> modifier,
-								   SecureUndoAttachmentCreator undoAttachmentCreator, UndoDraftCreator undoDraftCreator) {
+								   Provider<GlobalEnforcement> enforcement, Provider<Modifier> modifier) {
 		this.scopeManager = scopeManager;
 		this.revoker = revoker;
 		this.enforcement = enforcement;
 		this.modifier = modifier;
-		this.undoAttachmentCreator = undoAttachmentCreator;
-		this.undoDraftCreator = undoDraftCreator;
 	}
 
 	InternalRevoker revoker() {
@@ -72,19 +67,15 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 		return modifier.get();
 	}
 
-	public UndoDraftCreator undoDraftCreator() {
-		return undoDraftCreator;
-	}
-
 	@Override
 	public Punishment createPunishment(long id, PunishmentType type, Victim victim, Operator operator, String reason,
 									   ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack) {
-		return new SecurePunishment(this, id, type, victim, operator, reason, scope, start, end, escalationTrack, undoAttachmentCreator.createEmptyAttachment());
+		return new SecurePunishment(this, id, type, victim, operator, reason, scope, start, end, escalationTrack, null, null, null);
 	}
 
 	@Override
 	public Punishment createPunishment(long id, PunishmentType type, Victim victim, Operator operator, String reason, ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack, Operator undoOperator, String undoReason, Instant undoDate) {
-		return new SecurePunishment(this, id, type, victim, operator, reason, scope, start, end, escalationTrack, undoAttachmentCreator.createUndoAttachment(undoOperator, undoReason, undoDate));
+		return new SecurePunishment(this, id, type, victim, operator, reason, scope, start, end, escalationTrack, undoOperator, undoReason, undoDate);
 	}
 
 	@Override
@@ -103,7 +94,7 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					record.value1(), record.value2(), // id, type
 					victim, record.value6(), record.value7(), // victim, operator, reason
 					scope, record.value9(), record.value10(), record.value11(), // scope, start, end, track
-					undoAttachmentCreator.createUndoAttachment(record.value13(), record.value14(), record.value15()) // undo attachment
+					record.value13(), record.value14(), record.value15() // undo information
 			);
 		};
 	}
@@ -122,7 +113,7 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					record.value1(), record.value2(), // id, type
 					victim, record.value6(), record.value7(), // victim, operator, reason
 					scope, record.value9(), record.value10(), record.value11(), // scope, start, end, track
-					undoAttachmentCreator.createEmptyAttachment()
+					null, null, null
 			);
 		};
 	}
@@ -143,7 +134,7 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					id, /* type */ record.value1(), victim,
 					record.value5(), record.value6(), // operator, reason
 					scope, record.value8(), record.value9(), record.value10(), // scope, start, end, track
-					undoAttachmentCreator.createUndoAttachment(record.value12(), record.value13(), record.value14()) // undo attachment
+					record.value12(), record.value13(), record.value14() // undo attachment
 			);
 		};
 	}
@@ -164,7 +155,7 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					id, /* type */ record.value1(), victim,
 					record.value5(), record.value6(), // operator, reason
 					scope, record.value8(), record.value9(), record.value10(), // scope, start, end, track
-					undoAttachmentCreator.createEmptyAttachment() // undo attachment
+					null, null, null // undo attachment
 			);
 		};
 	}
@@ -185,7 +176,7 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					id, type, victim,
 					record.value4(), record.value5(), // operator, reason
 					scope, record.value7(), record.value8(), record.value9(), // scope, start, end, track
-					undoAttachmentCreator.createUndoAttachment(record.value11(), record.value12(), record.value13()) // undo attachment
+					record.value11(), record.value12(), record.value13() // undo attachment
 			);
 		};
 	}
@@ -206,7 +197,7 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					id, type, victim,
 					record.value4(), record.value5(), // operator, reason
 					scope, record.value7(), record.value8(), record.value9(), // scope, start, end, track
-					undoAttachmentCreator.createEmptyAttachment() // undo attachment
+					null, null, null // undo attachment
 			);
 		};
 	}
@@ -235,7 +226,7 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 					oldPunishment.getIdentifier(), oldPunishment.getType(),
 					oldPunishment.getVictim(), oldPunishment.getOperator(), record.value1(),
 					scope, oldPunishment.getStartDate(), record.value2(),
-					escalationTrack, null
+					escalationTrack, null, null, null
 			);
 		};
 	}

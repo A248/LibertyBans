@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.core.punish;
 
+import space.arim.libertybans.api.Operator;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import space.arim.libertybans.api.punish.Punishment;
@@ -25,6 +26,10 @@ import space.arim.libertybans.api.punish.PunishmentRevoker;
 
 public interface InternalRevoker extends PunishmentRevoker {
 
-	CentralisedFuture<Boolean> undoPunishment(Punishment punishment, UndoDraft undoDraft);
+	default CentralisedFuture<Boolean> undoPunishment(Punishment punishment) {
+		return undoPunishment(punishment, null, null);
+	}
+
+	CentralisedFuture<Boolean> undoPunishment(Punishment punishment, Operator operator, String reason);
 
 }

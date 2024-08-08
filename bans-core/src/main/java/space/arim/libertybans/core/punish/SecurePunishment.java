@@ -22,7 +22,6 @@ package space.arim.libertybans.core.punish;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import space.arim.libertybans.api.punish.*;
@@ -40,18 +39,22 @@ class SecurePunishment extends AbstractPunishmentBase implements Punishment, Enf
     private final long id;
     private final Instant startDate;
     private final Instant endDate;
-    private final UndoAttachment undoAttachment;
+    private final Operator undoOperator;
+    private final String undoReason;
+    private final Instant undoDate;
 
     SecurePunishment(SecurePunishmentCreator creator,
                      long id, PunishmentType type, Victim victim, Operator operator, String reason,
                      ServerScope scope, Instant startDate, Instant endDate, EscalationTrack escalationTrack,
-                     UndoAttachment undoAttachment) {
+                     Operator undoOperator, String undoReason, Instant undoDate) {
         super(type, victim, operator, reason, scope, escalationTrack);
         this.creator = Objects.requireNonNull(creator, "creator");
         this.id = id;
         this.startDate = Objects.requireNonNull(startDate, "startDate");
         this.endDate = Objects.requireNonNull(endDate, "endDate");
-        this.undoAttachment = undoAttachment;
+        this.undoOperator = undoOperator;
+        this.undoReason = undoReason;
+        this.undoDate = undoDate;
     }
 
     @Override
@@ -70,24 +73,28 @@ class SecurePunishment extends AbstractPunishmentBase implements Punishment, Enf
     }
 
     @Override
-    public Optional<UndoAttachment> undoAttachment() {
-        return Optional.ofNullable(undoAttachment);
+    public Optional<Operator> getUndoOperator() {
+        return Optional.ofNullable(undoOperator);
+    }
+
+    @Override
+    public Optional<String> getUndoReason() {
+        return Optional.ofNullable(undoReason);
+    }
+
+    @Override
+    public Optional<Instant> getUndoDate() {
+        return Optional.ofNullable(undoDate);
+    }
+
+    @Override
+    public UndoBuilder undo() {
+        return new SecureUndoBuilder(creator, this, undoOperator, undoReason, enforcementOptionsBuilder().build());
     }
 
     @Override
     public CentralisedFuture<Void> enforcePunishment(EnforcementOptions enforcementOptions) {
         return creator.enforcement().enforce(this, (EnforcementOpts) enforcementOptions);
-    }
-
-    @Override
-    public ReactionStage<Boolean> undoPunishment(Operator operator, String reason, EnforcementOptions enforcementOptions) {
-        return creator.revoker().undoPunishment(this, creator.undoDraftCreator().create(operator, reason)).
-                thenCompose((undone) -> {
-                    if (!undone) {
-                        return CompletableFuture.completedFuture(false);
-                    }
-                    return unenforcePunishment(enforcementOptions).thenApply((ignore) -> true);
-                });
     }
 
     @Override

@@ -34,23 +34,9 @@ import java.util.Optional;
 public final class EmptyRevocationOrder implements RevocationOrder, EnforcementOpts.Factory {
 
 	private final FactoryOfTheFuture futuresFactory;
-	private final Operator operator;
-	private final String reason;
 
-	public EmptyRevocationOrder(FactoryOfTheFuture futuresFactory, Operator operator, String  reason) {
+	public EmptyRevocationOrder(FactoryOfTheFuture futuresFactory) {
 		this.futuresFactory = futuresFactory;
-		this.operator = operator;
-		this.reason = reason;
-	}
-
-	@Override
-	public Operator getOperator() {
-		return operator;
-	}
-
-	@Override
-	public String getReason() {
-		return reason;
 	}
 
 	@Override
@@ -65,6 +51,31 @@ public final class EmptyRevocationOrder implements RevocationOrder, EnforcementO
 
 	@Override
 	public Optional<List<Victim>> getVictims() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Optional<Operator> getOperator() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Optional<String> getReason() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public RevocationOrder operator(Operator operator) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public RevocationOrder operatorAndReason(Operator operator, String reason) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public RevocationOrder clearOperatorAndReason() {
 		throw new UnsupportedOperationException();
 	}
 

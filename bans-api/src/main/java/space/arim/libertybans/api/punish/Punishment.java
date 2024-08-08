@@ -19,7 +19,6 @@
 
 package space.arim.libertybans.api.punish;
 
-import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
@@ -148,13 +147,11 @@ public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 		return clock.instant().compareTo(getEndDate()) > 0;
 	}
 
-	/**
-	 * Gets undo information about this punishment.
-	 * <br>
-	 *
-	 * @return If the punishment is active or expired, is empty
-	 */
-	Optional<UndoAttachment> undoAttachment();
+	Optional<Operator> getUndoOperator();
+
+	Optional<String> getUndoReason();
+
+	Optional<Instant> getUndoDate();
 
 	/**
 	 * Enforces this punishment. <br>
@@ -185,6 +182,9 @@ public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 	 */
 	ReactionStage<?> enforcePunishment(EnforcementOptions enforcementOptions);
 
+	//TODO: Write Javadoc
+	UndoBuilder undo();
+
 	/**
 	 * Undoes and "unenforces" this punishment assuming it active and in the
 	 * database. <br>
@@ -197,8 +197,8 @@ public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 	 * @return a future which yields {@code true} if this punishment existed and was
 	 *         removed and unenforced, {@code false} otherwise
 	 */
-	default ReactionStage<Boolean> undoPunishment(Operator operator, String reason) {
-		return undoPunishment(operator, reason, enforcementOptionsBuilder().build());
+	default ReactionStage<Boolean> undoPunishment() {
+		return undo().enforcementOptions(enforcementOptionsBuilder().build()).undoPunishment();
 	}
 
 	/**
@@ -214,45 +214,8 @@ public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 	 * @return a future which yields {@code true} if this punishment existed and was
 	 *         removed and unenforced, {@code false} otherwise
 	 */
-	ReactionStage<Boolean> undoPunishment(Operator operator, String reason, EnforcementOptions enforcementOptions);
-
-	/**
-	 * Undoes and "unenforces" this punishment assuming it active and in the
-	 * database. <br>
-	 * If the punishment was active then was removed, the future yields
-	 * {@code true}, else {@code false}. <br>
-	 * <br>
-	 * Unenforcement implies purging of this punishment from any local caches.
-	 * Additionally, any relevant broadcast messages will be sent to players.
-	 *
-	 * @return a future which yields {@code true} if this punishment existed and was
-	 *         removed and unenforced, {@code false} otherwise
-	 *
-	 * @deprecated Use {@link Punishment#undoPunishment(Operator, String)} instead.
-	 */
-	@Deprecated
-	default ReactionStage<Boolean> undoPunishment()	{
-		return undoPunishment(ConsoleOperator.INSTANCE, "No information");
-	}
-
-	/**
-	 * Undoes and "unenforces" this punishment assuming it active and in the
-	 * database. <br>
-	 * If the punishment was active then was removed, the future yields
-	 * {@code true}, else {@code false}. <br>
-	 * <br>
-	 * Unenforcement implies purging of this punishment from any local caches.
-	 * Additionally, any relevant broadcast messages will be sent to players.
-	 *
-	 * @param enforcementOptions the enforcement options. Can be used to disable unenforcement entirely
-	 * @return a future which yields {@code true} if this punishment existed and was
-	 *         removed and unenforced, {@code false} otherwise
-	 *
-	 * @deprecated Use {@link Punishment#undoPunishment(Operator, String, EnforcementOptions)} instead.
-	 */
-	@Deprecated
-	default ReactionStage<Boolean> undoPunishment(EnforcementOptions enforcementOptions)	{
-		return undoPunishment(ConsoleOperator.INSTANCE, "No information", enforcementOptions);
+	default ReactionStage<Boolean> undoPunishment(EnforcementOptions enforcementOptions) {
+		return undo().enforcementOptions(enforcementOptions).undoPunishment();
 	}
 
 	/**

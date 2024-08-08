@@ -175,12 +175,13 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 					sender().sendMessage(((WarnRemoval) section).notANumber().replaceText("%ID_ARG%", idArg));
 					return completedFuture(null);
 				}
-				revocationOrder = revoker.revokeByIdAndType(id, type, operator, reason);
+				revocationOrder = revoker.revokeByIdAndType(id, type)
+						.operatorAndReason(operator, reason);
 			} else {
 				assert type.isSingular() : type;
 				// Try to revoke this punishment for either the simple victim or composite wildcard victim
 				CompositeVictim compositeWildcard = new AsCompositeWildcard().apply(victim);
-				revocationOrder = revoker.revokeByTypeAndPossibleVictims(type, List.of(victim, compositeWildcard), operator, reason);
+				revocationOrder = revoker.revokeByTypeAndPossibleVictims(type, List.of(victim, compositeWildcard)).operatorAndReason(operator, reason);
 				id = -1;
 			}
 			return fireWithTimeout(new PardonEventImpl(operator, victim, type, reason)).thenCompose((event) -> {
