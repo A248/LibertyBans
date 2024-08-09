@@ -81,7 +81,7 @@
         <dependency>
             <groupId>com.destroystokyo.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.16.5-R0.1-20210616.205716-355</version>
+            <version>1.16.5-R0.1-20210721.014705-360</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -107,7 +107,7 @@
     <repositories>
         <repository>
             <id>papermc</id>
-            <url>https://papermc.io/repo/repository/maven-public/</url>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
     </repositories>
 </project>
