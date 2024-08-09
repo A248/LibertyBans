@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.core.punish;
 
+import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EnforcementOptions;
@@ -37,26 +38,45 @@ class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
 	private final long id;
 	private final PunishmentType type;
 	private final List<Victim> victims;
+	private final Operator operator;
+	private final String reason;
 
-	private RevocationOrderImpl(Revoker revoker, long id, PunishmentType type, List<Victim> victims) {
+	private RevocationOrderImpl(Revoker revoker, long id, PunishmentType type, List<Victim> victims, Operator operator, String reason) {
 		this.revoker = revoker;
 		this.id = id;
 		this.type = type;
 		this.victims = victims;
-	}
+        this.operator = operator;
+        this.reason = reason;
+    }
 
 	RevocationOrderImpl(Revoker revoker, long id) {
-		this(revoker, id, null, null);
+		this(revoker, id, null, null, null, null);
+		assert getApproach() == Approach.ID;
+	}
+
+	RevocationOrderImpl(Revoker revoker, long id, Operator operator, String reason) {
+		this(revoker, id, null, null, operator, reason);
 		assert getApproach() == Approach.ID;
 	}
 
 	RevocationOrderImpl(Revoker revoker, long id, PunishmentType type) {
-		this(revoker, id, Objects.requireNonNull(type, "type"), null);
+		this(revoker, id, Objects.requireNonNull(type, "type"), null, null, null);
+		assert getApproach() == Approach.ID_TYPE;
+	}
+
+	RevocationOrderImpl(Revoker revoker, long id, PunishmentType type, Operator operator, String reason) {
+		this(revoker, id, Objects.requireNonNull(type, "type"), null, operator, reason);
 		assert getApproach() == Approach.ID_TYPE;
 	}
 
 	RevocationOrderImpl(Revoker revoker, PunishmentType type, List<Victim> victims) {
-		this(revoker, -1, type, List.copyOf(victims));
+		this(revoker, -1, type, List.copyOf(victims), null, null);
+		assert getApproach() == Approach.TYPE_VICTIM;
+	}
+
+	RevocationOrderImpl(Revoker revoker, PunishmentType type, List<Victim> victims, Operator operator, String reason) {
+		this(revoker, -1, type, List.copyOf(victims), operator, reason);
 		assert getApproach() == Approach.TYPE_VICTIM;
 	}
 
@@ -95,22 +115,47 @@ class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
 	}
 
 	@Override
+	public Optional<Operator> getOperator() {
+		return Optional.ofNullable(operator);
+	}
+
+	@Override
+	public Optional<String> getReason() {
+		return Optional.ofNullable(reason);
+	}
+
+	@Override
+	public RevocationOrder operator(Operator operator) {
+		return new RevocationOrderImpl(revoker, id, type, victims, operator, reason);
+	}
+
+	@Override
+	public RevocationOrder operatorAndReason(Operator operator, String reason) {
+		return new RevocationOrderImpl(revoker, id, type, victims, operator, reason);
+	}
+
+	@Override
+	public RevocationOrder clearOperatorAndReason() {
+		return new RevocationOrderImpl(revoker, id, type, victims, null, null);
+	}
+
+	@Override
 	public ReactionStage<Boolean> undoPunishment(EnforcementOptions enforcementOptions) {
 		// Unenforcement needs both an ID and a type
 		return switch (getApproach()) {
-			case ID -> revoker.undoPunishmentById(id).thenCompose((type) -> {
+			case ID -> revoker.undoPunishmentById(id, operator, reason).thenCompose((type) -> {
 				if (type == null) {
 					return revoker.futuresFactory().completedFuture(false);
 				}
 				return unenforceAndReturnTrue(id, type, enforcementOptions);
 			});
-			case ID_TYPE -> revoker.undoPunishmentByIdAndType(id, type).thenCompose((revoked) -> {
+			case ID_TYPE -> revoker.undoPunishmentByIdAndType(id, type, operator, reason).thenCompose((revoked) -> {
 				if (!revoked) {
 					return revoker.futuresFactory().completedFuture(false);
 				}
 				return unenforceAndReturnTrue(id, type, enforcementOptions);
 			});
-			case TYPE_VICTIM -> revoker.undoPunishmentByTypeAndPossibleVictims(type, victims).thenCompose((id) -> {
+			case TYPE_VICTIM -> revoker.undoPunishmentByTypeAndPossibleVictims(type, victims, operator, reason).thenCompose((id) -> {
 				if (id == null) {
 					return revoker.futuresFactory().completedFuture(false);
 				}
@@ -138,9 +183,9 @@ class RevocationOrderImpl implements RevocationOrder, EnforcementOpts.Factory {
 
 	private ReactionStage<Punishment> undoAndGetPunishmentWithoutUnenforcement() {
 		return switch (getApproach()) {
-			case ID -> revoker.undoAndGetPunishmentById(id);
-			case ID_TYPE -> revoker.undoAndGetPunishmentByIdAndType(id, type);
-			case TYPE_VICTIM -> revoker.undoAndGetPunishmentByTypeAndPossibleVictims(type, victims);
+			case ID -> revoker.undoAndGetPunishmentById(id, operator, reason);
+			case ID_TYPE -> revoker.undoAndGetPunishmentByIdAndType(id, type, operator, reason);
+			case TYPE_VICTIM -> revoker.undoAndGetPunishmentByTypeAndPossibleVictims(type, victims, operator, reason);
 		};
 	}
 

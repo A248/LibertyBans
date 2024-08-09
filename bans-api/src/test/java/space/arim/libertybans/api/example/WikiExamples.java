@@ -21,10 +21,7 @@ package space.arim.libertybans.api.example;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import space.arim.libertybans.api.LibertyBans;
-import space.arim.libertybans.api.PlayerOperator;
-import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.*;
 import space.arim.libertybans.api.event.PunishEvent;
 import space.arim.libertybans.api.punish.DraftPunishment;
 import space.arim.libertybans.api.punish.Punishment;
@@ -97,7 +94,7 @@ public class WikiExamples {
 				.getFirstSpecificPunishment();
 	}
 
-	public ReactionStage<?> revokeBanFor(UUID bannedPlayer) {
+	public ReactionStage<?> revokeBanFor(UUID bannedPlayer, Operator undoOperator, String reason) {
 		PunishmentRevoker revoker = libertyBans.getRevoker();
 
 		// Relies on the fact a player victim can only have 1 active ban
