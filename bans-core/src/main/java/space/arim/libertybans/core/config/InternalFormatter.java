@@ -64,18 +64,6 @@ public interface InternalFormatter extends PunishmentFormatter {
 	 */
 	CentralisedFuture<Component> formatWithPunishment(ComponentText componentText,
 													  Punishment punishment);
-	
-	/**
-	 * Parses and formats a message with a punishment and an undoing operator. Used when punishments are revoked.
-	 * 
-	 * @param componentText the message
-	 * @param punishment the punishment
-	 * @param unOperator the operator undoing the punishment
-	 * @return a future of the resulting formatted sendable message
-	 */
-	CentralisedFuture<Component> formatWithPunishmentAndUnoperator(ComponentText componentText,
-																   Punishment punishment,
-																   Operator unOperator);
 
 	/**
 	 * Formats the value of a victim variable

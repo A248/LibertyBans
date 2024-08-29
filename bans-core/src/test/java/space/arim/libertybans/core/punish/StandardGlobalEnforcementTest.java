@@ -26,6 +26,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.api.punish.Punishment;

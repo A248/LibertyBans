@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.api.punish;
 
+import space.arim.libertybans.api.Operator;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.time.Clock;
@@ -146,6 +147,12 @@ public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 		return clock.instant().compareTo(getEndDate()) > 0;
 	}
 
+	Optional<Operator> getUndoOperator();
+
+	Optional<String> getUndoReason();
+
+	Optional<Instant> getUndoDate();
+
 	/**
 	 * Enforces this punishment. <br>
 	 * <br>
@@ -175,6 +182,9 @@ public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 	 */
 	ReactionStage<?> enforcePunishment(EnforcementOptions enforcementOptions);
 
+	//TODO: Write Javadoc
+	UndoBuilder undo();
+
 	/**
 	 * Undoes and "unenforces" this punishment assuming it active and in the
 	 * database. <br>
@@ -188,7 +198,7 @@ public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 	 *         removed and unenforced, {@code false} otherwise
 	 */
 	default ReactionStage<Boolean> undoPunishment() {
-		return undoPunishment(enforcementOptionsBuilder().build());
+		return undo().enforcementOptions(enforcementOptionsBuilder().build()).undoPunishment();
 	}
 
 	/**
@@ -204,7 +214,9 @@ public interface Punishment extends PunishmentBase, EnforcementOptionsFactory {
 	 * @return a future which yields {@code true} if this punishment existed and was
 	 *         removed and unenforced, {@code false} otherwise
 	 */
-	ReactionStage<Boolean> undoPunishment(EnforcementOptions enforcementOptions);
+	default ReactionStage<Boolean> undoPunishment(EnforcementOptions enforcementOptions) {
+		return undo().enforcementOptions(enforcementOptions).undoPunishment();
+	}
 
 	/**
 	 * "Unenforces" this punishment. <br>
