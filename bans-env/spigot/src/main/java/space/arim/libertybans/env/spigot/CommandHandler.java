@@ -23,6 +23,7 @@ import jakarta.inject.Inject;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginIdentifiableCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import space.arim.api.env.AudienceRepresenter;
@@ -39,7 +40,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public final class CommandHandler extends BukkitCommandSkeleton implements PlatformListener {
+public final class CommandHandler extends BukkitCommandSkeleton implements PlatformListener, PluginIdentifiableCommand {
 
 	private final CommandHelper commandHelper;
 	private final boolean alias;
@@ -79,9 +80,13 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 			return new SpigotCmdSender.ConsoleSender(formatter, interlocutor, audienceRepresenter,
 					platformSender, plugin);
 		}
-
 	}
-	
+
+	@Override
+	public Plugin getPlugin() {
+		return commandHelper.plugin;
+	}
+
 	@Override
 	public void register() {
 		CommandMapHelper commandMapHelper = commandHelper.commandMapHelper;
