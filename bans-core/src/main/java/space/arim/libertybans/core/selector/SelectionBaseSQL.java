@@ -38,12 +38,7 @@ import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.SelectionPredicate;
 import space.arim.libertybans.api.select.SortPunishments;
 import space.arim.libertybans.core.database.execute.SQLFunction;
-import space.arim.libertybans.core.database.sql.ApplicableViewFields;
-import space.arim.libertybans.core.database.sql.EndTimeCondition;
-import space.arim.libertybans.core.database.sql.PunishmentFields;
-import space.arim.libertybans.core.database.sql.ScopeCondition;
-import space.arim.libertybans.core.database.sql.SimpleViewFields;
-import space.arim.libertybans.core.database.sql.TableForType;
+import space.arim.libertybans.core.database.sql.*;
 import space.arim.libertybans.core.scope.ScopeType;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
@@ -86,10 +81,10 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 		}
 	}
 
-	SimpleViewFields<?> requestSimpleView() {
+	PunishmentFields requestSimpleView() {
 		return determineFields(
 				TableForType::simpleView,
-				(active) -> active ? new SimpleViewFields<>(SIMPLE_ACTIVE) : new SimpleViewFields<>(SIMPLE_HISTORY)
+				(active) -> active ? new SimpleViewFields<>(SIMPLE_ACTIVE) : new SimpleHistoryViewFields<>(SIMPLE_HISTORY)
 		);
 	}
 
@@ -156,6 +151,11 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 				columns.replaceAll(this::aggregate);
 			}
 			columns.add(fields.id());
+			if(fields instanceof SimpleHistoryViewFields<?> simpleHistoryViewFields) {
+				columns.add(simpleHistoryViewFields.undoOperator());
+				columns.add(simpleHistoryViewFields.undoReason());
+				columns.add(simpleHistoryViewFields.undoInstant());
+			}
 			return columns;
 		}
 
@@ -249,6 +249,22 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 					getEscalationTracks(), record, fields.track(),
 					(optTrack) -> optTrack.orElse(null)
 			);
+			if(fields instanceof SimpleHistoryViewFields<?> simpleHistoryViewFields) {
+				return resources.creator().createPunishment(
+						record.get(fields.id()),
+						type,
+						victim,
+						operator,
+						record.get(aggregateIfNeeded(fields.reason())),
+						scope,
+						record.get(aggregateIfNeeded(fields.start())),
+						record.get(aggregateIfNeeded(fields.end())),
+						escalationTrack,
+						record.get(aggregateIfNeeded(simpleHistoryViewFields.undoOperator())),
+						record.get(aggregateIfNeeded(simpleHistoryViewFields.undoReason())),
+						record.get(aggregateIfNeeded(simpleHistoryViewFields.undoInstant()))
+				);
+			}
 			return resources.creator().createPunishment(
 					record.get(fields.id()),
 					type,

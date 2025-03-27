@@ -26,11 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
-import space.arim.libertybans.api.AddressVictim;
-import space.arim.libertybans.api.ConsoleOperator;
-import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.*;
 import space.arim.libertybans.api.punish.PunishmentRevoker;
 import space.arim.libertybans.core.commands.extra.ArgumentParser;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
@@ -100,12 +96,13 @@ public class PlayerUnpunishCommandsTest {
 			when(messagesConfig.removals()).thenReturn(removalsSection);
 		}
 
-		when(revoker.revokeByTypeAndPossibleVictims(any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory));
+		String reason = "TEST";
+		when(revoker.revokeByTypeAndPossibleVictims(any(), any(), any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory, ConsoleOperator.INSTANCE, reason));
 
-		commands.execute(sender, ArrayCommandPackage.create(address), "unban").executeNow();
+		commands.execute(sender, ArrayCommandPackage.create(address, reason), "unban").executeNow();
 
 		verify(revoker).revokeByTypeAndPossibleVictims(
-				eq(PunishmentType.BAN), argThat(argument -> argument.contains(victim))
+				eq(PunishmentType.BAN), argThat(argument -> argument.contains(victim)), eq(ConsoleOperator.INSTANCE), eq(reason)
 		);
 		verify(sender).sendMessage(argThat(new ComponentMatcher<>(notFoundMsg)));
 	}
@@ -118,7 +115,7 @@ public class PlayerUnpunishCommandsTest {
 		String address = "167.65.44.109";
 		Victim victim = AddressVictim.of(NetworkAddress.of(InetAddress.getByName(address)));
 
-		lenient().when(sender.getOperator()).thenReturn(ConsoleOperator.INSTANCE);
+		Operator operator = ConsoleOperator.INSTANCE;
 		// User has permission for uuid bans, but not IP bans
 		lenient().when(sender.hasPermission("libertybans.ban.do.target.uuid")).thenReturn(true);
 		when(argParser.parseVictim(eq(sender), eq(address), any())).thenAnswer((i) -> futuresFactory.completedFuture(victim));
@@ -134,9 +131,10 @@ public class PlayerUnpunishCommandsTest {
 			when(removalsSection.forType(PunishmentType.BAN)).thenReturn(punishmentRemoval);
 			when(messagesConfig.removals()).thenReturn(removalsSection);
 		}
-		lenient().when(revoker.revokeByTypeAndPossibleVictims(any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory));
+		String reason = "TEST";
+		lenient().when(revoker.revokeByTypeAndPossibleVictims(any(), any(), any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory, operator, reason));
 
-		commands.execute(sender, ArrayCommandPackage.create(address), "unban").executeNow();
+		commands.execute(sender, ArrayCommandPackage.create(address, reason), "unban").executeNow();
 
 		verify(sender).sendMessage(argThat(new ComponentMatcher<>(noPermission)));
 		verifyNoMoreInteractions(revoker);
