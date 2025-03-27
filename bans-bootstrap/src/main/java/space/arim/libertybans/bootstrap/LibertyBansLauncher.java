@@ -77,6 +77,10 @@ public final class LibertyBansLauncher {
 			if (platform.hasHiddenHikariCP() && library == ProtectedLibrary.HIKARICP) {
 				continue;
 			}
+			if (library == ProtectedLibrary.JAKARTA_INJECT) {
+				logger.info("Library " + library.libraryName() + " already provided by another plugin");
+				continue;
+			}
 			String pluginName = culpritFinder.findCulprit(libClass)
 					.map((name) -> "Plugin '" + name + '\'')
 					.orElse("<Unknown plugin>");

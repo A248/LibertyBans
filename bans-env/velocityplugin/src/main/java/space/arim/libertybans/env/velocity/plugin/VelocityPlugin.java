@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.env.velocity.plugin;
 
+import com.google.inject.Inject;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -35,7 +36,6 @@ import space.arim.libertybans.bootstrap.LibertyBansLauncher;
 import space.arim.libertybans.bootstrap.Platforms;
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 
-import javax.inject.Inject;
 import java.nio.file.Path;
 
 @Plugin(id = PluginInfo.ID,
