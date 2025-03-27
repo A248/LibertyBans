@@ -126,7 +126,7 @@ public final class DatabaseRequirements {
 					"SELECT", "SHOW VIEW", "TRIGGER", "UPDATE");
 			for (String requiredGrant : requiredGrants) {
 				if (actualGrants.contains(requiredGrant + ",") // not the last privilege listed
-						|| actualGrants.contains(", " + requiredGrant + " ON") /* last privilege listed */) {
+						|| actualGrants.contains(requiredGrant + " ON") /* last privilege listed */) {
 					continue;
 				}
 				LoggerFactory.getLogger(getClass()).debug("Full set of privileges detected: {}", actualGrants);
