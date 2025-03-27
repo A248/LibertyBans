@@ -352,7 +352,8 @@
 								<libertybans.it.mariadb.retro.port>${it.mariadb.retro.port}</libertybans.it.mariadb.retro.port>
 								<libertybans.it.mariadb.legacy.port>${it.mariadb.legacy.port}</libertybans.it.mariadb.legacy.port>
 								<libertybans.it.mariadb.modern.port>${it.mariadb.modern.port}</libertybans.it.mariadb.modern.port>
-								<libertybans.it.mysql.port>${it.mysql.port}</libertybans.it.mysql.port>
+								<libertybans.it.mysql.legacy.port>${it.mysql.legacy.port}</libertybans.it.mysql.legacy.port>
+								<libertybans.it.mysql.modern.port>${it.mysql.modern.port}</libertybans.it.mysql.modern.port>
 								<libertybans.it.postgres.legacy.port>${it.postgres.legacy.port}</libertybans.it.postgres.legacy.port>
 								<libertybans.it.postgres.modern.port>${it.postgres.modern.port}</libertybans.it.postgres.modern.port>
 								<libertybans.it.cockroachdb.port>${it.cockroachdb.port}</libertybans.it.cockroachdb.port>
@@ -440,7 +441,7 @@
 									</run>
 								</image>
 								<image>
-									<name>mariadb:10.10</name>
+									<name>mariadb:11.4</name>
 									<alias>mariadb-modern</alias>
 									<run>
 										<env>
@@ -506,7 +507,8 @@
 								<id>find-available-ports</id>
 								<configuration>
 									<portNames combine.children="append">
-										<portName>it.mysql.port</portName>
+										<portName>it.mysql.legacy.port</portName>
+										<portName>it.mysql.modern.port</portName>
 									</portNames>
 								</configuration>
 							</execution>
@@ -519,13 +521,13 @@
 							<images combine.children="append">
 								<image>
 									<name>mysql:8.0</name>
-									<alias>mysql</alias>
+									<alias>mysql-legacy</alias>
 									<run>
 										<env>
 											<MYSQL_ALLOW_EMPTY_PASSWORD>true</MYSQL_ALLOW_EMPTY_PASSWORD>
 										</env>
 										<ports>
-											<port>127.0.0.1:${it.mysql.port}:3306</port>
+											<port>127.0.0.1:${it.mysql.legacy.port}:3306</port>
 										</ports>
 										<wait>
 											<time>60000</time>
@@ -533,7 +535,28 @@
 										</wait>
 										<volumes>
 											<bind>
-												<volume>libertybans-build-mysql:/var/lib/mysql</volume>
+												<volume>libertybans-build-mysql-legacy:/var/lib/mysql</volume>
+											</bind>
+										</volumes>
+									</run>
+								</image>
+								<image>
+									<name>mysql:8.4</name>
+									<alias>mysql-modern</alias>
+									<run>
+										<env>
+											<MYSQL_ALLOW_EMPTY_PASSWORD>true</MYSQL_ALLOW_EMPTY_PASSWORD>
+										</env>
+										<ports>
+											<port>127.0.0.1:${it.mysql.modern.port}:3306</port>
+										</ports>
+										<wait>
+											<time>60000</time>
+											<log>/usr/sbin/mysqld: ready for connections. Version: '8.4</log>
+										</wait>
+										<volumes>
+											<bind>
+												<volume>libertybans-build-mysql-modern:/var/lib/mysql</volume>
 											</bind>
 										</volumes>
 									</run>
@@ -541,7 +564,14 @@
 							</images>
 							<volumes combine.children="append">
 								<volume>
-									<name>libertybans-build-mysql</name>
+									<name>libertybans-build-mysql-legacy</name>
+									<opts>
+										<type>tmpfs</type>
+										<device>tmpfs</device>
+									</opts>
+								</volume>
+								<volume>
+									<name>libertybans-build-mysql-modern</name>
 									<opts>
 										<type>tmpfs</type>
 										<device>tmpfs</device>
@@ -604,7 +634,7 @@
 									</run>
 								</image>
 								<image>
-									<name>postgres:15</name>
+									<name>postgres:17</name>
 									<alias>postgresql-modern</alias>
 									<run>
 										<env>

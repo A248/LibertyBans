@@ -75,12 +75,12 @@ Free software and high quality, LibertyBans is the best-designed punishment plug
 
 Supported platforms:
 
-* Spigot / Paper (+Folia)
+* Spigot / Paper / Purpur (+Folia)
 * BungeeCord / Waterfall
 * Sponge
 * Velocity
 
-Compatibility with Geyser/Floodgate usernames.
+Compatibility with Geyser/Floodgate usernames. Platform forks supported where reasonable.
 
 ### Installation
 
