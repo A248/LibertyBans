@@ -78,7 +78,7 @@ public interface AltsSection {
 
 		@Override
 		@ConfComments("The separator between list entries")
-		@ConfDefault.DefaultString("\n")
+		@ConfDefault.DefaultString("")
 		Component separator();
 
 		@Override

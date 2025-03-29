@@ -24,6 +24,7 @@ import jakarta.inject.Provider;
 import org.jooq.*;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.user.AltAccount;
 import space.arim.libertybans.api.user.AltDetectionQuery;
 import space.arim.libertybans.core.config.Configs;
@@ -64,8 +65,21 @@ public class AltDetection {
 	 * @return the response
 	 */
 	private KeysetPage<DetectedAlt, Instant> detectAlts(DSLContext context, AltQuery query) {
-		// This implementation relies on strict detection including normal detection
-		// The detection kind is inferred while processing the results
+ 		/*
+
+ 		Alt detection
+
+ 		This implementation includes multiple components. We need to detect non-expired alts, fetch their names,
+ 		and order them by time, UUID pair. We also need to fetch punishment information (bans, mutes, warns) and in
+ 		some cases, remove alts which don't have any punishments directly on them.
+
+ 		Pagination is handled for us. However, to make the keyset/seek method work, we can't perform post-processing.
+ 		Thus filtering for "has_ban" and "has_mute" must happen in the join, and we decide between LEFT or INNER join
+ 		to make that distinction.
+
+ 		The implementation fetches both strictly detected and normally detected alts. We know if an alt was only
+ 		strictly detected if the alt address is different from the input address.
+ 		 */
 		final Instant currentTime = time.currentTimestamp();
 		var detectedAlt = ADDRESSES.as("detected_alt");
 
@@ -78,11 +92,13 @@ public class AltDetection {
 				.innerJoin(detectedAlt)
 				.on(ADDRESSES.ADDRESS.eq(detectedAlt.ADDRESS))
 				.and(ADDRESSES.UUID.notEqual(detectedAlt.UUID))
+				// Filter non-expired alts
+				.and(new AccountExpirationCondition(detectedAlt.UPDATED).isNotExpired(configs, currentTime))
 				// Pair with latest names
 				.leftJoin(LATEST_NAMES)
 				.on(LATEST_NAMES.UUID.eq(detectedAlt.UUID));
 
-		Map<PunishmentType, Field<Boolean>> hasTypeFields = new EnumMap<>(PunishmentType.class);
+		Map<PunishmentType, Field<Victim.VictimType>> typeMatches = new EnumMap<>(PunishmentType.class);
 		for (PunishmentType type : query.punishmentTypes()) {
 			// Pair with that particular type
 			var simpleView = new TableForType(type).simpleView();
@@ -90,9 +106,9 @@ public class AltDetection {
 					.leftJoin(simpleView.table())
 					.on(new VictimCondition(simpleView).matchesUUID(detectedAlt.UUID))
 					.and(new EndTimeCondition(simpleView).isNotExpired(currentTime));
-			Field<Boolean> hasTypeField = field(simpleView.victimType().isNotNull().as("has_" + type.toString().toLowerCase(Locale.ROOT)));
-			hasTypeFields.put(type, hasTypeField);
-			selectFields.add(hasTypeField);
+			var victimTypeField = simpleView.victimType();
+			typeMatches.put(type, victimTypeField);
+			selectFields.add(victimTypeField);
 		}
 		AltInfoRequest request = query.request;
 		Pagination<Instant> pagination = new Pagination<>(
@@ -103,17 +119,13 @@ public class AltDetection {
 				.from(joinedTables)
 				// Select alts for the player in question
 				.where(ADDRESSES.UUID.eq(query.uuid()))
-				.and(noCondition())
-				// Filter non-expired alts
-				.and(new AccountExpirationCondition(detectedAlt.UPDATED).isNotExpired(configs, currentTime))
-				// Filter based on punishments applying
+				// Filter based on punishments matched
 				.and(switch (request.filter()) {
-					case ALL_ALTS -> noCondition();
-					case BANNED_OR_MUTED_ALTS ->
-							condition(hasTypeFields.get(PunishmentType.BAN))
-							.or(hasTypeFields.get(PunishmentType.MUTE));
-					case BANNED_ALTS -> condition(hasTypeFields.get(PunishmentType.BAN));
-				})
+                    case ALL_ALTS -> noCondition();
+                    case BANNED_OR_MUTED_ALTS -> typeMatches.get(PunishmentType.BAN).isNotNull()
+							.or(typeMatches.get(PunishmentType.MUTE).isNotNull());
+                    case BANNED_ALTS -> typeMatches.get(PunishmentType.BAN).isNotNull();
+                })
 				// Sorting and pagination
 				.and(pagination.seeking())
 				.orderBy(pagination.order())
@@ -123,11 +135,10 @@ public class AltDetection {
 					NetworkAddress detectedAddress = record.get(detectedAlt.ADDRESS);
 					// If this alt can be detected 'normally', then the address will be the same
 					DetectionKind detectionKind = (query.address().equals(detectedAddress)) ? DetectionKind.NORMAL : DetectionKind.STRICT;
-					// Determine scanned scannedTypes
+					// Determine scanned punishment types
 					Set<PunishmentType> scannedTypes = EnumSet.noneOf(PunishmentType.class);
 					for (PunishmentType scanFor : query.punishmentTypes()) {
-						var hasType = hasTypeFields.get(scanFor).get(record);
-						Objects.requireNonNull(hasType);
+						var hasType = typeMatches.get(scanFor).get(record) != null;
 						if (hasType) {
 							scannedTypes.add(scanFor);
 						}
