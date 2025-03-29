@@ -49,7 +49,12 @@ record FormatAccounts<A extends AccountBase>(AccountListFormatting config, Keyse
             }
             for (int n = 0; n < data.size(); n++) {
                 if (n != 0) {
-                    messages.add(config.separator());
+                    Component separator = config.separator();
+                    if (separator.equals(Component.empty())) {
+                        messages.add(Component.newline());
+                    } else {
+                        messages.add(separator);
+                    }
                 }
                 messages.add(elementFormat.format(target, data.get(n)));
             }

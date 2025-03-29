@@ -58,9 +58,8 @@ public final class Pagination<F> {
     }
 
     public OrderField<?>[] order() {
-        if (anchor.borderValue() == null) {
-            return sortAscending ? orderable.ascending() : orderable.descending();
-        }
+        // If there is no border value, we're necessarily listing forward
+        boolean forwardScroll = anchor.fromForwardScroll() || anchor.borderValue() == null;
         //
         // Sort | Scrolling | What we need to show up first
         //
@@ -68,7 +67,7 @@ public final class Pagination<F> {
         // Asc  | Backward  | Greatest + reverse order of results
         // Desc | Forward   | Greatest
         // Desc | Backward  | Least + reverse order of results
-        return sortAscending == anchor.fromForwardScroll() ?
+        return sortAscending == forwardScroll ?
                 orderable.ascending() : orderable.descending();
     }
 
