@@ -17,41 +17,78 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.punish;
+package space.arim.libertybans.core.database.sql;
 
-import org.jooq.Record10;
-import org.jooq.Record11;
-import org.jooq.Record12;
-import org.jooq.Record6;
-import org.jooq.RecordMapper;
+import org.jooq.Field;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EscalationTrack;
-import space.arim.libertybans.api.punish.Punishment;
-import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.schema.tables.SimpleWarns;
 import space.arim.libertybans.core.scope.ScopeType;
 
 import java.time.Instant;
 import java.util.UUID;
 
-public interface PunishmentCreator {
+record SimpleWarnsFields(SimpleWarns table) implements SimpleViewFields {
+	@Override
+	public Field<Long> id() {
+		return table.ID;
+	}
 
-	Punishment createPunishment(long id, PunishmentType type, Victim victim,
-								Operator operator, String reason,
-								ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack);
+	@Override
+	public Field<PunishmentType> type() {
+		return table.TYPE;
+	}
 
-	RecordMapper<Record11<
-			PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,
-			Punishment> punishmentMapper(long id);
+	@Override
+	public Field<Operator> operator() {
+		return table.OPERATOR;
+	}
 
-	RecordMapper<Record10<
-			Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,
-			Punishment> punishmentMapper(long id, PunishmentType type);
+	@Override
+	public Field<String> reason() {
+		return table.REASON;
+	}
 
-	RecordMapper<Record6<
-			String, Instant, String, String, ScopeType, String>,
-			Punishment> punishmentMapperForModifications(Punishment oldPunishment);
+	@Override
+	public Field<Instant> start() {
+		return table.START;
+	}
 
+	@Override
+	public Field<Instant> end() {
+		return table.END;
+	}
+
+	@Override
+	public Field<EscalationTrack> track() {
+		return table.TRACK;
+	}
+
+	@Override
+	public Field<String> scope() {
+		return table.SCOPE;
+	}
+
+	@Override
+	public Field<ScopeType> scopeType() {
+		return table.SCOPE_TYPE;
+	}
+
+	@Override
+	public Field<Victim.VictimType> victimType() {
+		return table.VICTIM_TYPE;
+	}
+
+	@Override
+	public Field<UUID> victimUuid() {
+		return table.VICTIM_UUID;
+	}
+
+	@Override
+	public Field<NetworkAddress> victimAddress() {
+		return table.VICTIM_ADDRESS;
+	}
 }

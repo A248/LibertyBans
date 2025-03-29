@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,6 +32,8 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.Formatter;
 import space.arim.libertybans.core.config.MessagesConfig;
+import space.arim.libertybans.core.database.pagination.KeysetAnchor;
+import space.arim.libertybans.core.database.pagination.KeysetPage;
 import space.arim.libertybans.it.util.RandomUtil;
 
 import java.net.InetAddress;
@@ -67,6 +69,25 @@ public class AltCheckFormatterTest {
 		altCheckFormatter = new AltCheckFormatter(configs, formatter);
 	}
 
+	private AccountListFormatting formattingConfig(ComponentText header) {
+		return new AccountListFormatting() {
+			@Override
+			public ComponentText header() {
+				return header;
+			}
+
+			@Override
+			public Component separator() {
+				return Component.newline();
+			}
+
+			@Override
+			public ComponentText footer() {
+				return ComponentText.create(Component.empty());
+			}
+		};
+	}
+
 	@Test
 	public void formatMessage() throws UnknownHostException {
 		ComponentText header = ComponentText.create(Component.text("Alt report for %TARGET%"));
@@ -88,14 +109,20 @@ public class AltCheckFormatterTest {
 			when(formatter.prefix(any())).thenAnswer((invocation) -> invocation.getArgument(0));
 			when(formatter.formatAbsoluteDate(date)).thenReturn(date.toString());
 		}
-		assertEquals("Alt report for MainUser\n" +
+		assertEquals(
+				"Alt report for MainUser\n" +
 						"detection_kind: " + alt.detectionKind() + ", address: " + address + ", username: " + username +
 						", " + "user_id: " + userId + ", date_recorded: " + date,
-				PlainComponentSerializer.plain().serialize(altCheckFormatter.formatMessage(header, "MainUser", List.of(alt))));
+				PlainComponentSerializer.plain().serialize(altCheckFormatter.formatMessage(
+						formattingConfig(header),
+						new KeysetPage<>(List.of(alt), KeysetAnchor.unset(), KeysetAnchor.unset()),
+						"MainUser", -1)
+				)
+		);
 	}
 
 	@Test
-	public void formatPunishedAltsWithDetectionKind() throws UnknownHostException {
+	public void formatPunishedAltsWithDetectionKind() {
 		Instant date = Instant.parse("2021-07-23T02:15:23.000000Z");
 		{
 			when(conf.layout()).thenReturn(ComponentText.create(Component.text(
@@ -126,7 +153,14 @@ public class AltCheckFormatterTest {
 				)
 		);
 		Component formattedMessage = altCheckFormatter.formatMessage(
-				ComponentText.create(Component.text("Header")), "MainUser", alts);
+				formattingConfig(ComponentText.create(Component.text("Header"))),
+				new KeysetPage<>(
+						alts,
+						new KeysetAnchor<>(0, alts.get(0).recorded(), false),
+						new KeysetAnchor<>( 2, alts.get(2).recorded(), true)
+				),
+				"MainUser", 1
+		);
 		assertEquals("""
 						Header
 						kind: NORMAL, username: Banned(BadUser)

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,24 +26,31 @@ import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.database.pagination.KeysetPage;
 
-import java.util.List;
+import java.time.Instant;
 
 public class AltCheckFormatter {
 
-	private final ListFormat<DetectedAlt> listFormat;
+	private final Configs configs;
+	private final InternalFormatter formatter;
 
 	@Inject
 	public AltCheckFormatter(Configs configs, InternalFormatter formatter) {
-		listFormat = new ListFormat<>(formatter, new DetectedAltFormat(configs, formatter));
+		this.configs = configs;
+		this.formatter = formatter;
 	}
 
-	public Component formatMessage(ComponentText header, String target, List<DetectedAlt> detectedAlts) {
-		return listFormat.formatMessage(header, target, detectedAlts);
+	public Component formatMessage(AccountListFormatting formatting,
+								   KeysetPage<DetectedAlt, Instant> response,
+								   String target, int page) {
+		return new FormatAccounts<>(formatting, response).format(
+				formatter, target, page, new DetectedAltFormat(configs, formatter)
+		);
 	}
 
 	private record DetectedAltFormat(Configs configs, InternalFormatter formatter)
-			implements ListFormat.ElementFormat<DetectedAlt> {
+			implements FormatAccounts.ElementFormat<DetectedAlt> {
 
 		private ComponentLike formatUsername(DetectedAlt detectedAlt) {
 			PunishmentType type;

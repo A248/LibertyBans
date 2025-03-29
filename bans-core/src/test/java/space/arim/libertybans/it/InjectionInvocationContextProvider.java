@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -44,17 +44,24 @@ public class InjectionInvocationContextProvider implements TestTemplateInvocatio
 	public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
 
 		boolean throwaway = context.getRequiredTestClass().isAnnotationPresent(ThrowawayInstance.class);
-		boolean irrelevantData = context.getRequiredTestMethod().isAnnotationPresent(IrrelevantData.class);
-
+		SampleData.Source sampleDataSource;
+		{
+			SampleData sampleData = context.getRequiredTestMethod().getAnnotation(SampleData.class);
+			if (sampleData == null) {
+				sampleDataSource = null;
+			} else {
+				sampleDataSource = sampleData.source();
+			}
+		}
 		ResourceCreator creator = new ResourceCreator(context.getRoot().getStore(NAMESPACE));
 		return new ConfigSpecPossiblities(context.getElement().orElseThrow())
 				.getAll()
 				.flatMap((throwaway) ? creator::createIsolated : creator::create)
-				.map((injector) -> new InjectorInvocationContext(injector, throwaway, irrelevantData));
+				.map((injector) -> new InjectorInvocationContext(injector, throwaway, sampleDataSource));
 	}
 
-	private record InjectorInvocationContext(Injector injector, boolean throwaway,
-											 boolean irrelevantData) implements TestTemplateInvocationContext {
+	private record InjectorInvocationContext(Injector injector, boolean throwaway, SampleData.Source sampleDataSource)
+			implements TestTemplateInvocationContext {
 
 		@Override
 			public List<Extension> getAdditionalExtensions() {
@@ -63,8 +70,8 @@ public class InjectionInvocationContextProvider implements TestTemplateInvocatio
 				if (!throwaway) {
 					extensions.add(new InjectorCleanupCallback(injector));
 				}
-				if (irrelevantData) {
-					extensions.add(new IrrelevantDataCallback(injector));
+				if (sampleDataSource != null) {
+					extensions.add(new SampleDataCallback(injector, sampleDataSource));
 				}
 				return extensions;
 			}

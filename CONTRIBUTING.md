@@ -133,20 +133,56 @@ Unit tests are run as part of the Maven build. `mvn test` will execute them.
 
 ### Integration tests
 
-Using `mvn clean verify` will build and run all tests, including integration tests. This is the same command used by the Jenkins CI.
+Using `mvn clean verify` will build and run all tests, including integration tests.
 
-The integration tests optionally rely on docker to start a temporary MariaDB database. Points of note:
- * If you do not have docker installed, and you do not want to install it, that is entirely fine. The build will gracefully skip the tests which require docker. This does not mean no tests will run; some tests contact in-memory databases (like HSQLDB) which do not require docker.
- * The presence of docker is automatically detected on UNIX.
-   * If you want to run the tests on Windows, you will need to enable the `docker-enabled` build profile. For example, `mvn clean verify -Pdocker-enabled`.
-   * If you want to disable this automatic detection, you can disable the `docker-enabled` build profile. For example, `mvn clean verify -P-docker-enabled`.
- * Random ports are selected for use in the range 40,000-50,000. You may need to tweak your firewall settings accordingly; in some cases you may need to enable outgoing connections on ports `3306` for MySQL and MariaDB, `5432` for PostgreSQL, and `26257` for CockroachDB as well (oddly enough).
+If you prefer not to run the integration tests yourself, that's fine. Simply let the CI take care of it.
 
-If you would prefer not to run the integration tests yourself, that's fine. Simply let the CI take care of it.
+**Guide**
+
+Many integration tests rely on docker and can be heavy, so consider disabling the docker detection:
+```bash
+mvn clean verify -P-docker-enabled
+```
+
+Other integration tests use Maven Invoker, which takes a while because it sets up isolated environments. So disable it:
+```bash
+mvn clean verify -Dinvoker.skip=true -P-docker-enabled
+```
+
+To run a specific integration test (e.g. PaginationIT), you can select it:
+```bash
+mvn clean verify -Dinvoker.skip=true -Dit.test=PaginationIT -P-docker-enabled
+```
+
+**Notes on Docker Usage**
+
+If you turn off docker detection, this does not mean no tests will run. Some tests contact in-memory databases (like HSQLDB) which do not require docker.
+
+If you don't turn off docker detection, please keep in mind:
+ * Heavy containers will start up. There will be 3 MariaDB containers, 2 MySQL containers, 2 PostgreSQL containers, and 1 CockroachDB container all running on your machine.
+ * The presence of docker is automatically detected on UNIX (Mac/Linux). On Windows, you may need to enable the `docker-enabled` profile explicitly. For example, `mvn clean verify -Pdocker-enabled`.
+ * Random ports are selected for use in the range 40,000-50,000. Still, you may need to tweak your firewall settings accordingly; in some cases you may need to enable outgoing connections on ports `3306` for MySQL and MariaDB, `5432` for PostgreSQL, and `26257` for CockroachDB as well (oddly enough).
+
+### Logging and debugging
+
+You can configure log levels in `bans-core/src/main/resources/simplelogger.properties` on a per-package basis. Changing the org.jooq logger to 'debug' will enable statement logging.
+
+Using a debugger is possible. You will need to add your debugger's command line arguments to the maven-failsafe plugin configuration. For example:
+
+```xml
+<!-- You'll need to merge this section with existing configuration, of course -->
+<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-failsafe-plugin</artifactId>
+  <configuration>
+    <argLine>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005</argLine>
+  </configuration>
+</plugin>
+```
 
 ### Manual testing
 
-See the section "Compiling and running the current source"
+See the section "Cloning and building" for how to obtain a plugin jar.
 
 ## Making a release
 

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,14 +21,16 @@ package space.arim.libertybans.core.commands;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import space.arim.libertybans.core.alts.AltCheckFormatter;
-import space.arim.libertybans.core.alts.AltDetection;
-import space.arim.libertybans.core.alts.AltsSection;
-import space.arim.libertybans.core.alts.WhichAlts;
+import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.core.alts.*;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
+import space.arim.libertybans.core.database.pagination.InstantBorderValue;
+import space.arim.libertybans.core.database.pagination.KeysetAnchor;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
+import java.time.Instant;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 @Singleton
@@ -93,13 +95,32 @@ public final class AltCommands extends AbstractSubCommandGroup {
 				if (userDetails == null) {
 					return completedFuture(null);
 				}
-				return altDetection.detectAlts(userDetails, WhichAlts.ALL_ALTS).thenAccept((detectedAlts) -> {
-					if (detectedAlts.isEmpty()) {
-						sender().sendMessage(altsConfig().command().noneFound());
+				int page;
+				AltInfoRequest request;
+				{
+					KeysetAnchor<Instant> anchor = new KeysetAnchor.Build<>(InstantBorderValue.GET).fromCommand(command());
+					UUID uuid = userDetails.uuid();
+					NetworkAddress address = userDetails.address();
+					boolean oldestFirst = altsConfig().command().oldestFirst();
+
+					page = anchor.page();
+					int pageSize = altsConfig().command().perPage();
+					int skipCount = 0;
+					if (anchor.borderValue() == null) {
+						// Traditional pagination
+						skipCount = (page - 1) * pageSize;
+					}
+					request = new AltInfoRequest(uuid, address, WhichAlts.ALL_ALTS, oldestFirst, pageSize, anchor, skipCount);
+				}
+				return altDetection.detectAlts(request).thenAccept((response) -> {
+					if (response.data().isEmpty()) {
+						sender().sendMessage(altsConfig().command().noneFound().replaceText(
+								"%PAGE%", Integer.toString(page)));
 						return;
 					}
-					sender().sendMessageNoPrefix(
-							altCheckFormatter.formatMessage(altsConfig().command().header(), target, detectedAlts));
+					sender().sendMessageNoPrefix(altCheckFormatter.formatMessage(
+							altsConfig().command(), response, target, page
+					));
 				});
 			});
 		}

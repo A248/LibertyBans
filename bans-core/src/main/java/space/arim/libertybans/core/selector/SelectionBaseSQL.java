@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -38,12 +38,7 @@ import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.SelectionPredicate;
 import space.arim.libertybans.api.select.SortPunishments;
 import space.arim.libertybans.core.database.execute.SQLFunction;
-import space.arim.libertybans.core.database.sql.ApplicableViewFields;
-import space.arim.libertybans.core.database.sql.EndTimeCondition;
-import space.arim.libertybans.core.database.sql.PunishmentFields;
-import space.arim.libertybans.core.database.sql.ScopeCondition;
-import space.arim.libertybans.core.database.sql.SimpleViewFields;
-import space.arim.libertybans.core.database.sql.TableForType;
+import space.arim.libertybans.core.database.sql.*;
 import space.arim.libertybans.core.scope.ScopeType;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
@@ -76,28 +71,28 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	 */
 
 	private <F extends PunishmentFields> F determineFields(Function<TableForType, F> forType,
-														   Function<Boolean, F> forActiveOrHistorical) {
+														   F allActive, F allHistorical) {
 		boolean active = selectActiveOnly();
 		if (active && getTypes().isSimpleEquality()) {
 			PunishmentType type = getTypes().acceptedValues().iterator().next();
 			return forType.apply(new TableForType(type));
-		} else {
-			return forActiveOrHistorical.apply(active);
+		} else if (active) {
+			return allActive;
 		}
+		return allHistorical;
 	}
 
-	SimpleViewFields<?> requestSimpleView() {
+	SimpleViewFields requestSimpleView() {
 		return determineFields(
 				TableForType::simpleView,
-				(active) -> active ? new SimpleViewFields<>(SIMPLE_ACTIVE) : new SimpleViewFields<>(SIMPLE_HISTORY)
+				new SimpleActiveFields(SIMPLE_ACTIVE), new SimpleHistoryFields(SIMPLE_HISTORY)
 		);
 	}
 
-	ApplicableViewFields<?> requestApplicableView() {
+	ApplicableViewFields requestApplicableView() {
 		return determineFields(
 				TableForType::applicableView,
-				(active) -> active ?
-						new ApplicableViewFields<>(APPLICABLE_ACTIVE) : new ApplicableViewFields<>(APPLICABLE_HISTORY)
+				new ApplicableActiveFields(APPLICABLE_ACTIVE), new ApplicableHistoryFields(APPLICABLE_HISTORY)
 		);
 	}
 

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,10 +28,7 @@ import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.EnforcementOptions;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
-import space.arim.libertybans.core.alts.AltDetection;
-import space.arim.libertybans.core.alts.DetectedAlt;
-import space.arim.libertybans.core.alts.DetectionKind;
-import space.arim.libertybans.core.alts.WhichAlts;
+import space.arim.libertybans.core.alts.*;
 import space.arim.libertybans.core.punish.EnforcementOpts;
 import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.core.service.SettableTime;
@@ -67,13 +64,19 @@ public class AltDetectionIT {
 		this.drafter = drafter;
 	}
 
+	private List<DetectedAlt> detectAlts(UUID uuid, NetworkAddress address, WhichAlts whichAlts) {
+		return altDetection.detectAlts(new AltInfoRequest(
+				uuid, address, whichAlts, true, Short.MAX_VALUE
+		)).join().data();
+	}
+
 	private void testNoAlts(WhichAlts whichAlts) {
 		UUID uuid = UUID.randomUUID();
 		String name = randomName();
 		NetworkAddress address = randomAddress();
 
 		assumeTrue(null == guardian.executeAndCheckConnection(uuid, name, address).join());
-		assertEquals(List.of(), altDetection.detectAlts(uuid, address, whichAlts).join());
+		assertEquals(List.of(), detectAlts(uuid, address, whichAlts));
 	}
 
 	@TestTemplate
@@ -104,13 +107,13 @@ public class AltDetectionIT {
 				List.of(new DetectedAlt(
 						uuidTwo, nameTwo, commonAddress, DATE_NOW, DetectionKind.NORMAL, expectedPunishmentsForFirstCheck
 				)),
-				altDetection.detectAlts(uuid, commonAddress, whichAltsForFirstAltCheck).join()
+				detectAlts(uuid, commonAddress, whichAltsForFirstAltCheck)
 		);
 		assertEquals(
 				List.of(new DetectedAlt(
 					uuid, name, commonAddress, DATE_NOW, DetectionKind.NORMAL
 				)),
-				altDetection.detectAlts(uuidTwo, commonAddress, ALL_ALTS).join()
+				detectAlts(uuidTwo, commonAddress, ALL_ALTS)
 		);
 	}
 
@@ -186,13 +189,13 @@ public class AltDetectionIT {
 				List.of(new DetectedAlt(
 						uuidTwo, nameTwo, commonPastAddress, DATE_NOW, DetectionKind.STRICT
 				)),
-				altDetection.detectAlts(uuid, newAddress, ALL_ALTS).join()
+				detectAlts(uuid, newAddress, ALL_ALTS)
 		);
 		assertEquals(
 				List.of(new DetectedAlt(
 						uuid, name, commonPastAddress, DATE_NOW, DetectionKind.STRICT
 				)),
-				altDetection.detectAlts(uuidTwo, newAddressTwo, ALL_ALTS).join()
+				detectAlts(uuidTwo, newAddressTwo, ALL_ALTS)
 		);
 	}
 }

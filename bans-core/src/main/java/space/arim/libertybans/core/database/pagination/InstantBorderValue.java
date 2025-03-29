@@ -17,29 +17,22 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.database.sql;
-
-import org.jooq.Field;
-import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.punish.EscalationTrack;
+package space.arim.libertybans.core.database.pagination;
 
 import java.time.Instant;
+import java.util.Optional;
 
-public interface PunishmentFields extends VictimFields, ScopeFields {
+public record InstantBorderValue(LongBorderValue longBorderValue) implements BorderValueHandle<Instant> {
 
-	Field<Long> id();
+    public static final InstantBorderValue GET = new InstantBorderValue(new LongBorderValue());
 
-	Field<PunishmentType> type();
+    @Override
+    public String[] chatCode(Instant value) {
+        return longBorderValue.chatCode(value.getEpochSecond());
+    }
 
-	Field<Operator> operator();
-
-	Field<String> reason();
-
-	Field<Instant> start();
-
-	Field<Instant> end();
-
-	Field<EscalationTrack> track();
-
+    @Override
+    public Optional<Instant> fromCode(int startIndex, String[] code) {
+        return longBorderValue.fromCode(startIndex, code).map(Instant::ofEpochSecond);
+    }
 }

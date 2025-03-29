@@ -17,29 +17,17 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.database.sql;
+package space.arim.libertybans.core.alts;
 
-import org.jooq.Field;
-import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.punish.EscalationTrack;
+import net.kyori.adventure.text.Component;
+import space.arim.api.jsonchat.adventure.util.ComponentText;
 
-import java.time.Instant;
+public interface AccountListFormatting {
 
-public interface PunishmentFields extends VictimFields, ScopeFields {
+    ComponentText header();
 
-	Field<Long> id();
+    Component separator();
 
-	Field<PunishmentType> type();
-
-	Field<Operator> operator();
-
-	Field<String> reason();
-
-	Field<Instant> start();
-
-	Field<Instant> end();
-
-	Field<EscalationTrack> track();
+    ComponentText footer();
 
 }

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,14 +20,12 @@
 package space.arim.libertybans.core.alts;
 
 import jakarta.inject.Inject;
-import space.arim.libertybans.api.AddressVictim;
-import space.arim.libertybans.api.CompositeVictim;
-import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.*;
 import space.arim.libertybans.api.user.AccountSupervisor;
 import space.arim.libertybans.api.user.AltDetectionQuery;
 import space.arim.libertybans.api.user.KnownAccount;
+import space.arim.libertybans.core.database.pagination.KeysetAnchor;
+import space.arim.libertybans.core.database.pagination.KeysetPage;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.util.List;
@@ -59,25 +57,31 @@ public final class Supervisor implements AccountSupervisor {
 
 			@Override
 			public AltDetectionQuery build() {
-				return new AltDetection.AltQuery(uuid, address, types, altDetection);
+				return new AltDetection.AltQuery(new AltInfoRequest(uuid, address, WhichAlts.ALL_ALTS, true, Short.MAX_VALUE), types, altDetection);
 			}
 		}
 		return new Builder();
 	}
 
+	public CentralisedFuture<List<? extends KnownAccount>> knownAccounts(Victim victim) {
+		return accountHistory.knownAccounts(
+				victim, new AccountHistory.Request(Short.MAX_VALUE, KeysetAnchor.unset(), 0)
+		).thenApply(KeysetPage::data);
+	}
+
 	@Override
 	public CentralisedFuture<List<? extends KnownAccount>> findAccountsMatching(UUID uuid) {
-		return accountHistory.knownAccounts(PlayerVictim.of(uuid));
+		return knownAccounts(PlayerVictim.of(uuid));
 	}
 
 	@Override
 	public CentralisedFuture<List<? extends KnownAccount>> findAccountsMatching(NetworkAddress address) {
-		return accountHistory.knownAccounts(AddressVictim.of(address));
+		return knownAccounts(AddressVictim.of(address));
 	}
 
 	@Override
 	public CentralisedFuture<List<? extends KnownAccount>> findAccountsMatching(UUID uuid, NetworkAddress address) {
-		return accountHistory.knownAccounts(CompositeVictim.of(uuid, address));
+		return knownAccounts(CompositeVictim.of(uuid, address));
 	}
 
 }
