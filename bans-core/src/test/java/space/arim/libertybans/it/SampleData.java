@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2023 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,29 +17,29 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.database.sql;
+package space.arim.libertybans.it;
 
-import org.jooq.Field;
-import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.punish.EscalationTrack;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.time.Instant;
+/**
+ * Inserts irrelevant punishments, UUIDs, and addresses into the database before running the test
+ *
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface SampleData {
 
-public interface PunishmentFields extends VictimFields, ScopeFields {
+    /**
+     * The source of the sample data. Currently only blue tree's is available
+     *
+     * @return the data source
+     */
+    Source source() default Source.BlueTree;
 
-	Field<Long> id();
-
-	Field<PunishmentType> type();
-
-	Field<Operator> operator();
-
-	Field<String> reason();
-
-	Field<Instant> start();
-
-	Field<Instant> end();
-
-	Field<EscalationTrack> track();
-
+    enum Source {
+        BlueTree
+    }
 }

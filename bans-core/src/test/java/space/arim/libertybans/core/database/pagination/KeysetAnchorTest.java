@@ -17,29 +17,23 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.database.sql;
+package space.arim.libertybans.core.database.pagination;
 
-import org.jooq.Field;
-import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.punish.EscalationTrack;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ArgumentsSource;
+import space.arim.libertybans.core.database.RandomAnchorProvider;
 
-import java.time.Instant;
+import java.util.Optional;
 
-public interface PunishmentFields extends VictimFields, ScopeFields {
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-	Field<Long> id();
+public class KeysetAnchorTest {
 
-	Field<PunishmentType> type();
-
-	Field<Operator> operator();
-
-	Field<String> reason();
-
-	Field<Instant> start();
-
-	Field<Instant> end();
-
-	Field<EscalationTrack> track();
-
+    @ParameterizedTest
+    @ArgumentsSource(RandomAnchorProvider.class)
+    public void toAndFromCode(KeysetAnchor<Long> anchor) {
+        String toCode = anchor.chatCode(new LongBorderValue());
+        var reconstituted = new KeysetAnchor.Build<>(new LongBorderValue()).fromCode(toCode);
+        assertEquals(Optional.of(anchor), reconstituted, "Got code " + toCode);
+    }
 }

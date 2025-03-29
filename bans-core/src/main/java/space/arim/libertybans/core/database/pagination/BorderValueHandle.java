@@ -17,29 +17,30 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.database.sql;
+package space.arim.libertybans.core.database.pagination;
 
-import org.jooq.Field;
-import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.punish.EscalationTrack;
+import java.util.Optional;
 
-import java.time.Instant;
+/**
+ * Interface for dealing with border values
+ *
+ */
+public interface BorderValueHandle<V> {
 
-public interface PunishmentFields extends VictimFields, ScopeFields {
+    /**
+     * Converts into a chat code
+     *
+     * @param value the value
+     * @return the chat code
+     */
+    String[] chatCode(V value);
 
-	Field<Long> id();
-
-	Field<PunishmentType> type();
-
-	Field<Operator> operator();
-
-	Field<String> reason();
-
-	Field<Instant> start();
-
-	Field<Instant> end();
-
-	Field<EscalationTrack> track();
+    /**
+     * Converts from a chat code
+     * @param startIndex the index at which to start reading
+     * @param code the input string
+     * @return the value
+     */
+    Optional<V> fromCode(int startIndex, String[] code);
 
 }

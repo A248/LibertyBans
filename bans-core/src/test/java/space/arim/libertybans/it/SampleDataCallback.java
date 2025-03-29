@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,21 +28,26 @@ import space.arim.libertybans.it.test.importing.SelfImportData;
 
 import java.nio.file.Path;
 
-final class IrrelevantDataCallback implements BeforeEachCallback {
+final class SampleDataCallback implements BeforeEachCallback {
 
 	private final Injector injector;
+	private final SampleData.Source source;
 
-	IrrelevantDataCallback(Injector injector) {
+	SampleDataCallback(Injector injector, SampleData.Source source) {
 		this.injector = injector;
-	}
+        this.source = source;
+    }
 
 	@Override
 	public void beforeEach(ExtensionContext context) throws Exception {
 		Path folder = injector.request(Identifier.ofTypeAndNamed(Path.class, "folder"));
 		SelfImportProcess selfImportProcess = injector.request(SelfImportProcess.class);
-		// Currently, we simply import BlueTree's existing database
-		Path blueTreeFolder = new SelfImportData(folder).copyBlueTree242();
-		selfImportProcess.transferAllData(blueTreeFolder).join();
+		SelfImportData selfImportData = new SelfImportData(folder);
+
+		Path dataSource = switch (source) {
+            case BlueTree -> selfImportData.copyBlueTree242();
+        };
+		selfImportProcess.transferAllData(dataSource).join();
 	}
 
 }

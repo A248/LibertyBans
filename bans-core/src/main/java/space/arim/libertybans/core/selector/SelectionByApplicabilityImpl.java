@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -80,13 +80,13 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 				yield new VictimCondition(fields).simplyMatches(uuid, address);
 			}
 			case NORMAL -> {
-				ApplicableViewFields<?> applView = requestApplicableView();
+				ApplicableViewFields applView = requestApplicableView();
 				fields = applView;
 				table = fields.table();
 				yield applView.uuid().eq(uuid); // appl.uuid = uuid
 			}
 			case STERN -> {
-				ApplicableViewFields<?> applView = requestApplicableView();
+				ApplicableViewFields applView = requestApplicableView();
 				fields = applView;
 				table = fields
 						.table()
@@ -98,7 +98,7 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 						STRICT_LINKS.UUID2.eq(uuid).and(applView.victimType().notEqual(inline(VictimType.PLAYER))));
 			}
 			case STRICT -> {
-				ApplicableViewFields<?> applView = requestApplicableView();
+				ApplicableViewFields applView = requestApplicableView();
 				fields = applView;
 				table = fields
 						.table()

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,38 +21,25 @@ package space.arim.libertybans.core.alts;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
-import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.SelectField;
-import org.jooq.Table;
+import org.jooq.*;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.user.AltAccount;
 import space.arim.libertybans.api.user.AltDetectionQuery;
 import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.database.pagination.KeysetPage;
+import space.arim.libertybans.core.database.pagination.Orderable;
+import space.arim.libertybans.core.database.pagination.Pagination;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.execute.SQLFunction;
-import space.arim.libertybans.core.database.sql.AccountExpirationCondition;
-import space.arim.libertybans.core.database.sql.EndTimeCondition;
-import space.arim.libertybans.core.database.sql.TableForType;
-import space.arim.libertybans.core.database.sql.VictimCondition;
-import space.arim.libertybans.core.env.UUIDAndAddress;
+import space.arim.libertybans.core.database.sql.*;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Predicate;
+import java.util.*;
 
-import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.*;
 import static space.arim.libertybans.core.schema.tables.Addresses.ADDRESSES;
 import static space.arim.libertybans.core.schema.tables.LatestNames.LATEST_NAMES;
 
@@ -70,21 +57,13 @@ public class AltDetection {
 	}
 
 	/**
-	 * Detects alts for the given account. <br>
-	 * <br>
-	 * The returned alts are sorted with the oldest first. This sort order contrasts with that of
-	 * selecting punishments such as on the banlist, where punishments are sorted by newest first;
-	 * this done because the banlist and similar displays are paginated, whereas alt detection
-	 * and account history are not paginated. In the case of pagination we want the new punishments
-	 * to be readily visible rather than re-showing punishments from the dawn of time, whereas in
-	 * the lack of pagination we want to show a short and linear progression from old to new.
+	 * Detects alts for the given account.
 	 *
 	 * @param context the query source with which to contact the database
 	 * @param query the detection query
-	 * @param whichAlts which alts to remove from the resulting list
-	 * @return the detected alts, sorted in order of oldest first
+	 * @return the response
 	 */
-	private List<DetectedAlt> detectAlts(DSLContext context, AltDetectionQuery query, WhichAlts whichAlts) {
+	private KeysetPage<DetectedAlt, Instant> detectAlts(DSLContext context, AltQuery query) {
 		// This implementation relies on strict detection including normal detection
 		// The detection kind is inferred while processing the results
 		final Instant currentTime = time.currentTimestamp();
@@ -115,15 +94,31 @@ public class AltDetection {
 			hasTypeFields.put(type, hasTypeField);
 			selectFields.add(hasTypeField);
 		}
+		AltInfoRequest request = query.request;
+		Pagination<Instant> pagination = new Pagination<>(
+				request.pageAnchor(), request.oldestFirst(), new Orderable.SimpleField<>(detectedAlt.UPDATED)
+		);
 		List<DetectedAlt> detectedAlts = context
 				.select(selectFields)
 				.from(joinedTables)
 				// Select alts for the player in question
 				.where(ADDRESSES.UUID.eq(query.uuid()))
+				.and(noCondition())
 				// Filter non-expired alts
 				.and(new AccountExpirationCondition(detectedAlt.UPDATED).isNotExpired(configs, currentTime))
-				// Order with oldest first
-				.orderBy(detectedAlt.UPDATED.asc())
+				// Filter based on punishments applying
+				.and(switch (request.filter()) {
+					case ALL_ALTS -> noCondition();
+					case BANNED_OR_MUTED_ALTS ->
+							condition(hasTypeFields.get(PunishmentType.BAN))
+							.or(hasTypeFields.get(PunishmentType.MUTE));
+					case BANNED_ALTS -> condition(hasTypeFields.get(PunishmentType.BAN));
+				})
+				// Sorting and pagination
+				.and(pagination.seeking())
+				.orderBy(pagination.order())
+				.limit(request.pageSize())
+				.offset(request.skipCount())
 				.fetch((record) -> {
 					NetworkAddress detectedAddress = record.get(detectedAlt.ADDRESS);
 					// If this alt can be detected 'normally', then the address will be the same
@@ -146,43 +141,40 @@ public class AltDetection {
 							scannedTypes
 					);
 				});
-		Predicate<DetectedAlt> removeIf = switch (whichAlts) {
-			case ALL_ALTS -> (alt) -> false;
-			case BANNED_OR_MUTED_ALTS -> (alt) -> alt.scannedTypes().isEmpty();
-			case BANNED_ALTS -> (alt) -> !alt.scannedTypes().contains(PunishmentType.BAN);
-		};
-		detectedAlts.removeIf(removeIf);
-		return detectedAlts;
+		return pagination.buildPage(detectedAlts, DetectedAlt::recorded);
 	}
 
-	record AltQuery(UUID uuid, NetworkAddress address,
+	record AltQuery(AltInfoRequest request,
 					Set<PunishmentType> punishmentTypes, AltDetection impl) implements AltDetectionQuery {
 
 		@Override
+		public UUID uuid() {
+			return request.uuid();
+		}
+
+		@Override
+		public NetworkAddress address() {
+			return request.address();
+		}
+
+		@Override
 		public CentralisedFuture<List<? extends AltAccount>> detect() {
-			return impl.queryExecutor.get().query(SQLFunction.readOnly((context) -> {
-				return impl.detectAlts(context, this, WhichAlts.ALL_ALTS);
-			}));
+			return impl.queryExecutor.get().query(SQLFunction.readOnly(
+					(context) -> impl.detectAlts(context, request)
+			)).thenApply(KeysetPage::data);
 		}
 
 	}
 
-	public List<DetectedAlt> detectAlts(DSLContext context, UUID uuid, NetworkAddress address, WhichAlts whichAlts) {
+	public KeysetPage<DetectedAlt, Instant> detectAlts(DSLContext context, AltInfoRequest retrieval) {
 		return detectAlts(
 				context,
-				new AltQuery(uuid, address, Set.of(PunishmentType.BAN, PunishmentType.MUTE), this),
-				whichAlts
+				new AltQuery(retrieval, Set.of(PunishmentType.BAN, PunishmentType.MUTE), this)
 		);
 	}
 
-	public CentralisedFuture<List<DetectedAlt>> detectAlts(UUID uuid, NetworkAddress address, WhichAlts whichAlts) {
-		return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
-			return detectAlts(context, uuid, address, whichAlts);
-		}));
-	}
-
-	public CentralisedFuture<List<DetectedAlt>> detectAlts(UUIDAndAddress userDetails, WhichAlts whichAlts) {
-		return detectAlts(userDetails.uuid(), userDetails.address(), whichAlts);
+	public CentralisedFuture<KeysetPage<DetectedAlt, Instant>> detectAlts(AltInfoRequest retrieval) {
+		return queryExecutor.get().query(SQLFunction.readOnly((context) -> detectAlts(context, retrieval)));
 	}
 
 }

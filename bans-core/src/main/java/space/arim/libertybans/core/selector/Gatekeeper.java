@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,12 +28,10 @@ import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.SelectionPredicate;
 import space.arim.libertybans.api.select.SortPunishments;
-import space.arim.libertybans.core.alts.AltDetection;
-import space.arim.libertybans.core.alts.AltNotification;
-import space.arim.libertybans.core.alts.ConnectionLimiter;
-import space.arim.libertybans.core.alts.DetectedAlt;
+import space.arim.libertybans.core.alts.*;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.database.pagination.KeysetPage;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.punish.Association;
 import space.arim.libertybans.core.service.Time;
@@ -41,7 +39,6 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -93,22 +90,24 @@ public final class Gatekeeper {
 			}
 			// The player may join, but should be checked for alts
 			EnforcementConfig.AltsAutoShow altsAutoShow = configs.getMainConfig().enforcement().altsAutoShow();
-			if (altsAutoShow.enable()) {
-				List<DetectedAlt> detectedAlts = altDetection.detectAlts(context, uuid, address, altsAutoShow.showWhichAlts());
-				return detectedAlts;
+			if (altsAutoShow.enable() && !altsAutoShow.bypassPermission()) {
+				var formatting = configs.getMessagesConfig().alts().autoShow();
+                return altDetection.detectAlts(context, new AltInfoRequest(
+						uuid, address, altsAutoShow.showWhichAlts(), formatting.oldestFirst(), formatting.limit()
+				));
 			}
 			return null;
 		}).thenCompose((banOrLimitMessageOrDetectedAltsOrNull) -> {
-			if (banOrLimitMessageOrDetectedAltsOrNull instanceof Punishment) {
-				return formatter.getPunishmentMessage((Punishment) banOrLimitMessageOrDetectedAltsOrNull);
+			if (banOrLimitMessageOrDetectedAltsOrNull instanceof Punishment punishment) {
+				return formatter.getPunishmentMessage(punishment);
 			}
-			if (banOrLimitMessageOrDetectedAltsOrNull instanceof Component) {
-				return futuresFactory.completedFuture((Component) banOrLimitMessageOrDetectedAltsOrNull);
+			if (banOrLimitMessageOrDetectedAltsOrNull instanceof Component limitMsg) {
+				return futuresFactory.completedFuture(limitMsg);
 			}
-			if (banOrLimitMessageOrDetectedAltsOrNull instanceof List) {
+			if (banOrLimitMessageOrDetectedAltsOrNull instanceof KeysetPage<?, ?> altResponse) {
 				@SuppressWarnings("unchecked")
-				List<DetectedAlt> detectedAlts = (List<DetectedAlt>) banOrLimitMessageOrDetectedAltsOrNull;
-				altNotification.notifyFoundAlts(uuid, name, address, detectedAlts);
+                KeysetPage<DetectedAlt, Instant> detectedAlts = (KeysetPage<DetectedAlt, Instant>) altResponse;
+				altNotification.notifyFoundAlts(detectedAlts, name);
 			}
 			return futuresFactory.completedFuture(null);
 		});

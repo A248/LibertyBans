@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,18 +17,29 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.it;
+package space.arim.libertybans.core.database.pagination;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.util.List;
+import java.util.Objects;
 
-/**
- * Inserts irrelevant punishments, UUIDs, and addresses into the database before running the test
- *
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface IrrelevantData {
+public record KeysetPage<R, F>(List<R> data,
+                               KeysetAnchor<F> lastPageAnchor,
+                               KeysetAnchor<F> nextPageAnchor) {
+
+    public KeysetPage {
+        Objects.requireNonNull(data);
+        Objects.requireNonNull(lastPageAnchor);
+        Objects.requireNonNull(nextPageAnchor);
+    }
+
+    public interface ExtractAnchor<R, F> {
+
+        /**
+         * Gets the page anchor from this data point
+         * @param datum the data point
+         * @return the page anchor border value
+         */
+        F getAnchor(R datum);
+    }
+
 }

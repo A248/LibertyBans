@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -31,7 +31,7 @@ import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
-import space.arim.libertybans.it.IrrelevantData;
+import space.arim.libertybans.it.SampleData;
 import space.arim.libertybans.it.resolver.NonNullTrack;
 import space.arim.libertybans.it.resolver.RandomEscalationTrackResolver;
 import space.arim.libertybans.it.resolver.RandomOperatorResolver;
@@ -116,7 +116,7 @@ public class EscalationIT {
 	}
 
 	@TestTemplate
-	@IrrelevantData
+	@SampleData
 	public void escalateWithExtraData(@DontInject Operator operator1, @DontInject Operator operator2) {
 		PunishmentDetailsCalculator calculator = (track, victim, selectionOrderBuilder) -> {
 			Integer existingPunishments = selectionOrderBuilder

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -87,6 +87,14 @@ public interface EnforcementConfig {
 		})
 		@DefaultString("ALL_ALTS")
 		WhichAlts showWhichAlts();
+
+		@ConfKey("enable-bypass-permission")
+		@ConfComments({
+				"Whether to enable the bypass permission.",
+				"If enabled, players with the libertybans.alts.autoshow.bypass permission won't trigger the check."
+		})
+		@ConfDefault.DefaultBoolean(false)
+		boolean bypassPermission();
 
 	}
 

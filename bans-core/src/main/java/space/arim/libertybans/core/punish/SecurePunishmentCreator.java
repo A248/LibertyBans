@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,7 +24,6 @@ import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import org.jooq.Record10;
 import org.jooq.Record11;
-import org.jooq.Record12;
 import org.jooq.Record6;
 import org.jooq.RecordMapper;
 import space.arim.libertybans.api.NetworkAddress;
@@ -75,26 +74,6 @@ public class SecurePunishmentCreator implements PunishmentCreator {
 	public Punishment createPunishment(long id, PunishmentType type, Victim victim, Operator operator, String reason,
 									   ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack) {
 		return new SecurePunishment(this, id, type, victim, operator, reason, scope, start, end, escalationTrack);
-	}
-
-	@Override
-	public RecordMapper<Record12<
-			Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,
-			Punishment> punishmentMapper() {
-		return (record) -> {
-			Victim victim = new DeserializedVictim(
-					record.value4(), record.value5()
-			).victim(record.value3());
-			ServerScope scope = scopeManager.deserialize(
-					record.value12(), record.value8()
-			);
-			return new SecurePunishment(
-					SecurePunishmentCreator.this,
-					record.value1(), record.value2(), // id, type
-					victim, record.value6(), record.value7(), // victim, operator, reason
-					scope, record.value9(), record.value10(), record.value11() // scope, start, end, track
-			);
-		};
 	}
 
 	@Override

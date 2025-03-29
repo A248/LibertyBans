@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,11 +19,7 @@
 
 package space.arim.libertybans.core.database.jooq;
 
-import org.jooq.ConnectionProvider;
-import org.jooq.DSLContext;
-import org.jooq.ExecuteListenerProvider;
-import org.jooq.Log;
-import org.jooq.SQLDialect;
+import org.jooq.*;
 import org.jooq.conf.BackslashEscaping;
 import org.jooq.conf.MappedSchema;
 import org.jooq.conf.MappedTable;
@@ -32,7 +28,6 @@ import org.jooq.conf.Settings;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DefaultConfiguration;
 import org.jooq.impl.NoConnectionProvider;
-import org.jooq.tools.JooqLogger;
 
 import java.sql.Connection;
 import java.util.Objects;
@@ -42,7 +37,10 @@ public final class JooqContext {
 
 	static {
 		// Silence JOOQ warnings about our database version
-		JooqLogger.globalThreshold(Log.Level.ERROR);
+		System.setProperty(
+				"org.jooq.log.org.jooq.impl.DefaultExecuteContext.logVersionSupport",
+				Log.Level.ERROR.name()
+		);
 	}
 
 	private final SQLDialect dialect;
@@ -103,7 +101,13 @@ public final class JooqContext {
 										.withOutput(REPLACEMENT)
 								)
 						)
-				);
+				)
+				.withTransformPatternsUnnecessaryDistinct(false)
+				.withTransformPatternsUnnecessaryExistsSubqueryClauses(false)
+				.withTransformPatternsUnnecessaryGroupByExpressions(false)
+				.withTransformPatternsUnnecessaryInnerJoin(false)
+				.withTransformPatternsUnnecessaryOrderByExpressions(false)
+				.withTransformPatternsUnnecessaryScalarSubquery(false);
 	}
 
 	@Override
