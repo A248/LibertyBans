@@ -40,8 +40,8 @@ Assuming no external programs are connected to the database, single installation
 | Version                | Support Provided                                           |
 |------------------------|------------------------------------------------------------|
 | Latest released        | Always                                                     |
-| Previous minor version | At least 1 month after the next minor version is released  |
-| Previous major version | At least 4 months after the next major version is released |
+| Previous minor version | At least 3 months after the next minor version is released |
+| Previous major version | At least 1 year after the next major version is released   |
 
 There is no timeline for responding to support requests, but an effort will be made to respond within 3 business days *at maximum*, ideally within 1 day.
 
