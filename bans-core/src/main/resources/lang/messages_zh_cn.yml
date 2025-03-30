@@ -1,5 +1,5 @@
  # 
- # 信息配置文件
+ # 消息配置文件
  # 
  # 
  # 在大多数情况下，默认消息中的变量是可用的
@@ -263,7 +263,7 @@ alts:
 
 admin:
   restarted: '&a已重启插件'
-  no-permission: '&c抱歉，您没有权限怎么做。'
+  no-permission: '&c抱歉，您没有权限这么做。'
   reloaded: '&a已重载插件'
   ellipses: '&a...'
   importing:
