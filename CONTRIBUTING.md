@@ -7,7 +7,7 @@ You will need:
 
 1. Git
 2. Maven
-3. JDK 17 or greater
+3. JDK 21 or greater
 
 These can be installed through your package manager of choice.
 

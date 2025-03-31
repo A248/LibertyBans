@@ -71,7 +71,7 @@
 		<!-- Platform dependencies -->
 		<bungeecord.version>1.16-R0.4</bungeecord.version>
 		<spigot.version>1.8.8-R0.1-20160221.082514-43</spigot.version>
-		<sponge.version>9.1.0-SNAPSHOT</sponge.version>
+		<sponge.version>12.0.0</sponge.version>
 		<velocity.version>3.1.0</velocity.version>
 
 		<!-- Internal hash -->
@@ -278,14 +278,14 @@
 						<artifactId>maven-enforcer-plugin</artifactId>
 						<executions>
 							<execution>
-								<id>enforce-jdk-17</id>
+								<id>enforce-jdk-21</id>
 								<goals>
 									<goal>enforce</goal>
 								</goals>
 								<configuration>
 									<rules>
 										<requireJavaVersion>
-											<version>[17,18)</version>
+											<version>[21,22)</version>
 										</requireJavaVersion>
 									</rules>
 								</configuration>

@@ -24,8 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
-import org.spongepowered.api.network.EngineConnectionSide;
-import org.spongepowered.api.network.ServerSideConnection;
+import org.spongepowered.api.network.EngineConnectionState;
 import org.spongepowered.api.network.channel.ChannelBuf;
 import org.spongepowered.api.network.channel.raw.RawDataChannel;
 import org.spongepowered.api.network.channel.raw.play.RawPlayDataChannel;
@@ -38,7 +37,7 @@ import space.arim.libertybans.core.env.message.PluginMessageOutput;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-public final class SpongeMessageChannel implements EnvMessageChannel<RawPlayDataHandler<ServerSideConnection>> {
+public final class SpongeMessageChannel implements EnvMessageChannel<RawPlayDataHandler<EngineConnectionState.Game>> {
 
 	private final Game game;
 
@@ -73,6 +72,36 @@ public final class SpongeMessageChannel implements EnvMessageChannel<RawPlayData
 	}
 
 	@Override
+	public void installHandler(RawPlayDataHandler<EngineConnectionState.Game> handler) {
+		channel().addHandler(EngineConnectionState.Game.class, handler);
+	}
+
+	@Override
+	public void uninstallHandler(RawPlayDataHandler<EngineConnectionState.Game> handler) {
+		channel().removeHandler(handler);
+	}
+
+	@Override
+	public <R> RawPlayDataHandler<EngineConnectionState.Game> createHandler(Consumer<R> acceptor,
+																			PluginMessage<?, R> pluginMessage) {
+		return new Handler<>(acceptor, pluginMessage);
+	}
+
+	record Handler<R>(Consumer<R> handler, PluginMessage<?, R> pluginMessage)
+			implements RawPlayDataHandler<EngineConnectionState.Game> {
+
+		@Override
+		public void handlePayload(ChannelBuf data, EngineConnectionState.Game state) {
+			pluginMessage.readFrom(new ChannelBufAsInput(data)).ifPresent(handler);
+		}
+	}
+
+	/*
+
+	TODO
+	Readd this Sponge API 8/9 code where possible
+
+	@Override
 	public void installHandler(RawPlayDataHandler<ServerSideConnection> handler) {
 		channel().addHandler(EngineConnectionSide.SERVER, handler);
 	}
@@ -97,6 +126,7 @@ public final class SpongeMessageChannel implements EnvMessageChannel<RawPlayData
 		}
 
 	}
+	 */
 
 	private record ChannelBufAsOutput(ChannelBuf buffer) implements PluginMessageOutput {
 		@Override
