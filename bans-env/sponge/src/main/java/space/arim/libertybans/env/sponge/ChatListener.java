@@ -22,6 +22,7 @@ package space.arim.libertybans.env.sponge;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.event.Cancellable;
@@ -57,11 +58,13 @@ public final class ChatListener {
 	 */
 
 	PlatformListener provide() {
+		Logger logger = LoggerFactory.getLogger(getClass());
 		try {
-			Class.forName("org.spongepowered.api.event.message.PlayerChatEvent.Submit");
+			Class.forName("org.spongepowered.api.event.message.PlayerChatEvent$Submit");
+			logger.info("Running Sponge API 12/13 successfully");
 			return new SpongeApiThirteen();
 		} catch (ClassNotFoundException lowerVersion) {
-			LoggerFactory.getLogger(getClass()).warn(
+			logger.warn(
 					"You're running an older Sponge API version. We recommend updating if possible, since it is hard" +
 							"to us to keep up with Sponge's frequent API changes and still support multiple versions."
 			);
