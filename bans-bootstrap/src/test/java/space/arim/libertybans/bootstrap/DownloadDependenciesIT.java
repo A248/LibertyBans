@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,6 +26,8 @@ import org.junit.jupiter.api.io.TempDir;
 import space.arim.libertybans.bootstrap.logger.JulBootstrapLogger;
 
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
@@ -41,12 +43,29 @@ public class DownloadDependenciesIT {
 
 	@TestFactory
 	public Stream<DynamicNode> downloadDependencies() {
-		return Platforms.allPossiblePlatforms("download test").map((platform) -> {
+		return allPossiblePlatforms().map((platform) -> {
 			return DynamicTest.dynamicTest("For platform " + platform, () -> runDownloadDependencies(platform));
 		});
 	}
 
-	private void runDownloadDependencies(Platform platform) {
+	private static Stream<Platform.Builder> allPossiblePlatforms() {
+		Set<Platform.Builder> platforms = new HashSet<>();
+		for (Platform.Category category : Platform.Category.values()) {
+			// Count from 0000 to 1111 in binary
+			for (int setting = 0; setting < 0b10000; setting++) {
+				final int flags = setting;
+				platforms.add(Platform.builder(category)
+						.nameAndVersion("download test", "0.0")
+						.kyoriAdventureSupport((l) -> (flags & 0b0001) != 0)
+						.slf4jSupport((l) -> (flags & 0b0010) != 0)
+						.caffeineProvided((l) -> (flags & 0b0100) != 0)
+						.jakartaProvided((l) -> (flags & 0b1000) != 0));
+			}
+		}
+		return platforms.stream();
+	}
+
+	private void runDownloadDependencies(Platform.Builder platform) {
 		Path subFolder = folder.resolve("" + folderUniqueifier.getAndIncrement());
 		LibertyBansLauncher launcher = new LibertyBansLauncher.Builder()
 				.folder(subFolder)

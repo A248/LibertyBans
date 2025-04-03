@@ -22,7 +22,6 @@ package space.arim.libertybans.it.executableunpack;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
-import space.arim.libertybans.bootstrap.Platforms;
 
 import java.util.stream.Stream;
 

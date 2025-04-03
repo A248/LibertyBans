@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,22 +19,24 @@
 
 package space.arim.libertybans.bootstrap;
 
+import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
+
 import java.util.Objects;
 
 public interface LibraryDetection {
 
-	boolean evaluatePresence();
+	boolean evaluatePresence(BootstrapLogger logger);
 
 	static LibraryDetection enabled() {
-		return () -> true;
+		return (l) -> true;
 	}
 
 	static LibraryDetection eitherOf(LibraryDetection first, LibraryDetection other) {
 		class EitherOf implements LibraryDetection {
 
 			@Override
-			public boolean evaluatePresence() {
-				return first.evaluatePresence() || other.evaluatePresence();
+			public boolean evaluatePresence(BootstrapLogger logger) {
+				return first.evaluatePresence(logger) || other.evaluatePresence(logger);
 			}
 		}
 		return new EitherOf();
@@ -53,7 +55,7 @@ public interface LibraryDetection {
 		}
 
 		@Override
-		public boolean evaluatePresence() {
+		public boolean evaluatePresence(BootstrapLogger logger) {
 			Class<?> pluginClass = plugin.getClass();
 			try {
 				pluginClass.getMethod("getLogger");
@@ -85,8 +87,8 @@ public interface LibraryDetection {
 		}
 
 		@Override
-		public boolean evaluatePresence() {
-			return protectedLibrary.detect(platformClassLoader);
+		public boolean evaluatePresence(BootstrapLogger logger) {
+			return protectedLibrary.detect(platformClassLoader, logger);
 		}
 	}
 

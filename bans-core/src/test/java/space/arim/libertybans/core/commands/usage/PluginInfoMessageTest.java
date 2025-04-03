@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import space.arim.libertybans.bootstrap.PlatformId;
 import space.arim.libertybans.core.env.CmdSender;
 
 import java.io.IOException;
@@ -51,7 +52,7 @@ public class PluginInfoMessageTest {
 				List.of("Maintainer1", "Maintainer2"),
 				List.of("Collaborator1", "Collaborator2"),
 				List.of("Commended User1", "Commended User2")),
-				PluginInfoMessage.fromReader(new StringReader(text)));
+				PluginInfoMessage.fromReader(PlatformId.STUB, new StringReader(text)));
 	}
 
 	@Test

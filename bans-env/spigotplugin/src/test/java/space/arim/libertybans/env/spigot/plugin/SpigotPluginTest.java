@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,7 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.junit.jupiter.MockitoExtension;
+import space.arim.libertybans.bootstrap.DependencyBundle;
 import space.arim.libertybans.bootstrap.Platform;
+import space.arim.libertybans.bootstrap.logger.NoOpBootstrapLogger;
 import space.arim.libertybans.env.spigot.MockJavaPlugin;
 
 import java.nio.file.Path;
@@ -43,8 +45,8 @@ public class SpigotPluginTest {
 		JavaPlugin plugin = MockJavaPlugin.create(dataFolder, (server) -> {
 			when(server.getVersion()).thenReturn("version");
 		});
-		Platform platform = SpigotPlugin.detectPlatform(plugin);
-		assertFalse(platform.hasSlf4jSupport());
-		assertFalse(platform.hasKyoriAdventureSupport());
+		Platform platform = SpigotPlugin.detectPlatform(plugin).build(new NoOpBootstrapLogger());
+		assertFalse(platform.isBundleProvided(DependencyBundle.SLF4J));
+		assertFalse(platform.isBundleProvided(DependencyBundle.KYORI));
 	}
 }

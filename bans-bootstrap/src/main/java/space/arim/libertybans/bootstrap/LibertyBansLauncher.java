@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -61,6 +61,10 @@ public final class LibertyBansLauncher {
 		this.parentLoader = Objects.requireNonNull(parentLoader, "parentLoader");
 	}
 
+	public <P> Payload<P> getPayload(P plugin) {
+		return new Payload<>(plugin, platform.platformId, folder);
+	}
+
 	private void filterLibrariesAndWarnRelocation(Set<ProtectedLibrary> librariesRequiringProtection) {
 
 		StringJoiner collectedDetails = new StringJoiner("\n");
@@ -100,44 +104,25 @@ public final class LibertyBansLauncher {
 				+ "We have detected bugs on your server which threaten your server's stability.\n"
 				+ "LibertyBans will continue to operate unaffected, but we strongly suggest you fix these bugs."
 				+ "\n\n"
-				+ "These bugs are (most likely) due to other plugins' mistakes. "
-				+ "Each of the following plugins has shaded a library but did not relocate it. "
-				+ "You should report each bug to the plugin author."
+				+ "We detected the following plugins with unrelocated library classes."
 				+ "\n\n"
 				+ "Plugin Name | Library Name | Class Detected\n"
 				+ "----------------------------------------------\n"
 				+ collectedDetails
 				+ "\n\n"
-				+ "Note for advanced users: Understanding the consequences, you can minimize this warning by setting "
-				+ "the system property libertybans.relocationbug.disablecheck to 'true'"
+				+ "For advanced users, you can minimize this warning by setting the system property libertybans.relocationbug.disablecheck to 'true'"
 				+ '\n' + line);
 	}
 
 	private Set<DependencyBundle> determineNeededDependencies(Set<ProtectedLibrary> librariesRequiringProtection) {
 		Set<DependencyBundle> bundles = EnumSet.noneOf(DependencyBundle.class);
-		if (platform.isCaffeineProvided()) {
-			librariesRequiringProtection.remove(ProtectedLibrary.CAFFEINE);
-		} else {
-			bundles.add(DependencyBundle.CAFFEINE);
+		for (DependencyBundle bundle: DependencyBundle.values()) {
+			if (platform.isBundleProvided(bundle)) {
+				librariesRequiringProtection.removeAll(bundle.protectedLibraries());
+			} else {
+				bundles.add(bundle);
+			}
 		}
-		if (platform.isJakartaProvided()) {
-			librariesRequiringProtection.remove(ProtectedLibrary.JAKARTA_INJECT);
-		} else {
-			bundles.add(DependencyBundle.JAKARTA);
-		}
-		if (platform.hasKyoriAdventureSupport()) {
-			librariesRequiringProtection.remove(ProtectedLibrary.KYORI_ADVENTURE);
-			librariesRequiringProtection.remove(ProtectedLibrary.KYORI_EXAMINATION);
-		} else {
-			bundles.add(DependencyBundle.KYORI);
-		}
-		if (platform.hasSlf4jSupport()) {
-			librariesRequiringProtection.remove(ProtectedLibrary.SLF4J_API);
-			librariesRequiringProtection.remove(ProtectedLibrary.SLF4J_SIMPLE);
-		} else {
-			bundles.add(DependencyBundle.SLF4J);
-		}
-		bundles.add(DependencyBundle.SELF_IMPLEMENTATION);
 		return bundles;
 	}
 
@@ -259,7 +244,7 @@ public final class LibertyBansLauncher {
 			this.logger = logger;
 		}
 
-		public Step2 platform(Platform platform) {
+		public Step2 platform(Platform.Builder platform) {
 			return new Step2(this, platform);
 		}
 	}
@@ -267,9 +252,9 @@ public final class LibertyBansLauncher {
 	public static final class Step2 {
 
 		private final Step1 step1;
-		private final Platform platform;
+		private final Platform.Builder platform;
 
-		private Step2(Step1 step1, Platform platform) {
+		private Step2(Step1 step1, Platform.Builder platform) {
 			this.step1 = step1;
 			this.platform = platform;
 		}
@@ -321,7 +306,7 @@ public final class LibertyBansLauncher {
 			return new LibertyBansLauncher(
 					step1.folder,
 					step1.logger,
-					step2.platform,
+					step2.platform.build(step1.logger),
 					executor,
 					culpritFinder,
 					distributionMode,

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,29 +25,20 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.spongepowered.api.Game;
-import org.spongepowered.api.MinecraftVersion;
-import org.spongepowered.api.Platform;
-import org.spongepowered.api.scheduler.Scheduler;
 import org.spongepowered.plugin.PluginContainer;
+import space.arim.libertybans.bootstrap.Payload;
+import space.arim.libertybans.bootstrap.PlatformId;
 
 import java.nio.file.Path;
-import java.util.OptionalInt;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class SpongeLauncherTest {
 
 	@Test
-	public void allBindings(@Mock PluginContainer plugin, @Mock Game game, @TempDir Path folder,
-							@Mock Platform platform, @Mock MinecraftVersion minecraftVersion) {
-		when(game.asyncScheduler()).thenReturn(mock(Scheduler.class));
-		when(game.platform()).thenReturn(platform);
-		when(platform.minecraftVersion()).thenReturn(minecraftVersion);
-		when(minecraftVersion.dataVersion()).thenReturn(OptionalInt.of(3120));
-		assertNotNull(new SpongeLauncher(plugin, game, folder).launch());
+	public void allBindings(@Mock PluginContainer plugin, @Mock Game game, @TempDir Path folder) {
+		assertNotNull(new SpongeLauncher(new Payload<>(plugin, PlatformId.STUB, folder), game).launch());
 	}
 
 }

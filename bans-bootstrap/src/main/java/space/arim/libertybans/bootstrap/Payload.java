@@ -19,21 +19,14 @@
 
 package space.arim.libertybans.bootstrap;
 
-public interface BaseFoundation {
+import java.nio.file.Path;
+import java.util.Objects;
 
-	RunState getRunState();
+public record Payload<P>(P plugin, PlatformId platformId, Path pluginFolder) {
 
-	void startup();
-
-	boolean fullRestart();
-
-	void shutdown();
-
-	/**
-	 * Used for Sponge and standalone only. Sponge requires early command registration and service provision
-	 *
-	 * @return the platform accessors
-	 */
-	Object platformAccess();
-
+    public Payload {
+        Objects.requireNonNull(plugin, "plugin");
+        Objects.requireNonNull(platformId, "platformId");
+        Objects.requireNonNull(pluginFolder, "pluginFolder");
+    }
 }

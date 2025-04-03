@@ -24,7 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.junit.jupiter.MockitoExtension;
+import space.arim.libertybans.bootstrap.DependencyBundle;
 import space.arim.libertybans.bootstrap.Platform;
+import space.arim.libertybans.bootstrap.logger.NoOpBootstrapLogger;
 import space.arim.libertybans.env.spigot.MockJavaPlugin;
 
 import java.nio.file.Path;
@@ -44,8 +46,8 @@ public class PaperAdventureTest {
 		JavaPlugin plugin = MockJavaPlugin.create(dataFolder, (server) -> {
 			when(server.getVersion()).thenReturn("version");
 		});
-		Platform platform = SpigotPlugin.detectPlatform(plugin);
-		assertTrue(platform.hasSlf4jSupport());
-		assertTrue(platform.hasKyoriAdventureSupport());
+		Platform platform = SpigotPlugin.detectPlatform(plugin).build(new NoOpBootstrapLogger());
+		assertTrue(platform.isBundleProvided(DependencyBundle.SLF4J));
+		assertTrue(platform.isBundleProvided(DependencyBundle.KYORI));
 	}
 }

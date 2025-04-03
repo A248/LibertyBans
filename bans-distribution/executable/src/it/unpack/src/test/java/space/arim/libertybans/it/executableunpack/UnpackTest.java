@@ -29,7 +29,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 import space.arim.libertybans.bootstrap.DistributionMode;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
 import space.arim.libertybans.bootstrap.Platform;
-import space.arim.libertybans.bootstrap.Platforms;
 import space.arim.libertybans.bootstrap.logger.JulBootstrapLogger;
 
 import java.net.URLClassLoader;
