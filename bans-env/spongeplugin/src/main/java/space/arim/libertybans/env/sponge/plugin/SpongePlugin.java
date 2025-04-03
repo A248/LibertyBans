@@ -38,6 +38,7 @@ import space.arim.libertybans.bootstrap.*;
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Plugin(PluginInfo.ID)
@@ -150,7 +151,7 @@ public final class SpongePlugin {
 				.executor(game.asyncScheduler().executor(plugin))
 				.culpritFinder(new SpongeCulpritFinder(game))
 				.build();
-		Payload<PluginContainer> payload = launcher.getPayload(plugin);
+		Payload<PluginContainer> payload = launcher.getPayloadWith(plugin, List.of(spongeVersion));
 		return launcher.attemptLaunch().thenApply((launchLoader) -> {
 			BaseFoundation base;
 			try {

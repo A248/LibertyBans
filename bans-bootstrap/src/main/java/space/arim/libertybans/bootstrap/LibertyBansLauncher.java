@@ -28,13 +28,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
@@ -63,6 +57,10 @@ public final class LibertyBansLauncher {
 
 	public <P> Payload<P> getPayload(P plugin) {
 		return new Payload<>(plugin, platform.platformId, folder);
+	}
+
+	public <P> Payload<P> getPayloadWith(P plugin, List<Object> attachments) {
+		return new Payload<>(plugin, platform.platformId, folder, attachments);
 	}
 
 	private void filterLibrariesAndWarnRelocation(Set<ProtectedLibrary> librariesRequiringProtection) {

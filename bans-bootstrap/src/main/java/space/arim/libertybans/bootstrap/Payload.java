@@ -20,13 +20,32 @@
 package space.arim.libertybans.bootstrap;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 
-public record Payload<P>(P plugin, PlatformId platformId, Path pluginFolder) {
+public record Payload<P>(P plugin, PlatformId platformId, Path pluginFolder, List<Object> attachments) {
 
     public Payload {
         Objects.requireNonNull(plugin, "plugin");
         Objects.requireNonNull(platformId, "platformId");
         Objects.requireNonNull(pluginFolder, "pluginFolder");
+        attachments = List.copyOf(attachments);
     }
+
+    public Payload(P plugin, PlatformId platformId, Path pluginFolder) {
+        this(plugin, platformId, pluginFolder, List.of());
+    }
+
+    public <A> A getAttachment(int index, Class<A> attachmentType) {
+        if (index > attachments.size()) {
+            throw new IllegalArgumentException("Attachment requested does not exist: " + index);
+        }
+        Object attachment = attachments.get(index);
+        if (!attachmentType.isInstance(attachment)) {
+            throw new IllegalArgumentException(
+                    "Attachment " + index + " is not ot type " + attachmentType + "; received " + attachment);
+        }
+        return attachmentType.cast(attachments.get(index));
+    }
+
 }

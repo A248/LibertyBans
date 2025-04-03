@@ -55,6 +55,10 @@ public enum SpongeVersion {
         return name().replace('_', ' ');
     }
 
+    public boolean isAtLeast(SpongeVersion other) {
+        return ordinal() >= other.ordinal();
+    }
+
     boolean hasSnakeYaml() {
         return this == API_8 || this == API_9;
     }

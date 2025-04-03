@@ -36,6 +36,9 @@ import space.arim.libertybans.core.env.InstanceType;
 import space.arim.libertybans.env.sponge.listener.RegisterListeners;
 import space.arim.libertybans.env.sponge.listener.RegisterListenersRegular;
 import space.arim.libertybans.env.sponge.listener.RegisterListenersWithLookup;
+import space.arim.libertybans.env.sponge.plugin.ChannelFacade;
+import space.arim.libertybans.env.sponge.plugin.ChannelFacadeApi8;
+import space.arim.libertybans.env.sponge.plugin.SpongeVersion;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
@@ -59,12 +62,20 @@ public final class SpongeLauncher implements PlatformLauncher {
 
 	@Override
 	public BaseFoundation launch() {
+		SpongeVersion spongeVersion = payload.getAttachment(0, SpongeVersion.class);
+
 		Class<? extends RegisterListeners> registerListenersBinding;
-		if (RegisterListenersWithLookup.detectIfUsable()) {
+		if (spongeVersion.isAtLeast(SpongeVersion.API_12) || RegisterListenersWithLookup.detectIfUsable()) {
 			registerListenersBinding = RegisterListenersWithLookup.class;
 		} else {
 			// Fallback to regular method (Sponge API 8)
 			registerListenersBinding = RegisterListenersRegular.class;
+		}
+		Class<? extends ChannelFacade> channelFacadeBinding;
+		if (spongeVersion.isAtLeast(SpongeVersion.API_12)) {
+			channelFacadeBinding = ChannelFacadeApi12.class;
+		} else {
+			channelFacadeBinding = ChannelFacadeApi8.class;
 		}
 		return new InjectorBuilder()
 				.bindInstance(PluginContainer.class, payload.plugin())
@@ -81,6 +92,7 @@ public final class SpongeLauncher implements PlatformLauncher {
 						new SpongeBindModule()
 				)
 				.bindIdentifier(RegisterListeners.class, registerListenersBinding)
+				.bindIdentifier(ChannelFacade.class, channelFacadeBinding)
 				.specification(SpecificationSupport.JAKARTA)
 				.multiBindings(true)
 				.build()

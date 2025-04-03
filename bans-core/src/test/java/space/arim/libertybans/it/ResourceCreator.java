@@ -25,6 +25,7 @@ import space.arim.injector.Injector;
 import space.arim.injector.InjectorBuilder;
 import space.arim.injector.SpecificationSupport;
 import space.arim.libertybans.bootstrap.BaseFoundation;
+import space.arim.libertybans.bootstrap.PlatformId;
 import space.arim.libertybans.core.ApiBindModule;
 import space.arim.libertybans.core.CommandsModule;
 import space.arim.libertybans.core.PillarOneReplacementModule;
@@ -79,6 +80,7 @@ class ResourceCreator {
 
 			Injector injector = new InjectorBuilder()
 					.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), tempDirectory)
+					.bindInstance(PlatformId.class, new PlatformId("IT", "0.0"))
 					.bindInstance(InstanceType.class, InstanceType.PROXY)
 					.bindInstance(ConfigSpec.class, configSpec)
 					.bindInstance(DatabaseInfo.class, databaseInfo)
