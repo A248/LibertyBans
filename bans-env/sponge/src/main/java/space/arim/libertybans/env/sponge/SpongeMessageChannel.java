@@ -44,8 +44,8 @@ public final class SpongeMessageChannel implements EnvMessageChannel<ChannelFaca
 	@Inject
 	public SpongeMessageChannel(Game game, ChannelFacade channelFacade) {
 		this.game = game;
-        this.channelFacade = channelFacade;
-    }
+		this.channelFacade = channelFacade;
+	}
 
 	private RawPlayDataChannel channel() {
 		return game.channelManager()

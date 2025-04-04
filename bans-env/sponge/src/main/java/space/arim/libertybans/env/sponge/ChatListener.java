@@ -96,7 +96,7 @@ public abstract class ChatListener implements PlatformListener {
 		@Listener(order = Order.LATE)
 		public void onChat(PlayerChatEvent event) {
 			// This is a fully safe cast on Sponge API 8 and 9
-            combinedChatEvent((Cancellable & Event) event, null);
+			combinedChatEvent((Cancellable & Event) event, null);
 		}
 
 		@Listener(order = Order.LATE)

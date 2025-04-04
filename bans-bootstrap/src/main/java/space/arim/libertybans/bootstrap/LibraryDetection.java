@@ -99,9 +99,9 @@ public interface LibraryDetection {
 
 		private final ProtectedLibrary protectedLibrary;
 
-        public ByClassResolution(ProtectedLibrary protectedLibrary) {
-            this.protectedLibrary = Objects.requireNonNull(protectedLibrary, "protectedLibrary");
-        }
+		public ByClassResolution(ProtectedLibrary protectedLibrary) {
+			this.protectedLibrary = Objects.requireNonNull(protectedLibrary, "protectedLibrary");
+		}
 
 		@Override
 		public boolean evaluatePresence(BootstrapLogger logger) {

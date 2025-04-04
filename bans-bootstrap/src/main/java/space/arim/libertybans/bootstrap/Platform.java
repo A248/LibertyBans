@@ -22,6 +22,7 @@ package space.arim.libertybans.bootstrap;
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 
 import java.util.EnumMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -137,11 +138,8 @@ public final class Platform {
 		STANDALONE;
 
 		String display() {
-			if (this == BUNGEECORD) {
-				return "BungeeCord";
-			}
 			String categoryName = name();
-			return Character.toUpperCase(categoryName.charAt(0)) + categoryName.substring(1);
+			return categoryName.charAt(0) + categoryName.substring(1).toLowerCase(Locale.ROOT);
 		}
 	}
 
