@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,6 +23,7 @@ import space.arim.api.env.PlatformHandle;
 import space.arim.injector.Identifier;
 import space.arim.injector.InjectorBuilder;
 import space.arim.libertybans.bootstrap.BaseFoundation;
+import space.arim.libertybans.bootstrap.PlatformId;
 import space.arim.libertybans.bootstrap.PlatformLauncher;
 import space.arim.libertybans.core.ApiBindModule;
 import space.arim.libertybans.core.PillarOneBindModule;
@@ -58,6 +59,7 @@ public class JpmsLauncher implements PlatformLauncher {
 	public BaseFoundation launch() {
 		return new InjectorBuilder()
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(PlatformId.class, new PlatformId("JPMS-IT", "0.0"))
 				.bindInstance(InstanceType.class, InstanceType.STANDALONE)
 				.bindInstance(Omnibus.class, new DefaultOmnibus())
 				.bindInstance(PlatformHandle.class, handle)
