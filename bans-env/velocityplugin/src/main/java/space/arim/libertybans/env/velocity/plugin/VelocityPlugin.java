@@ -90,10 +90,7 @@ public final class VelocityPlugin {
 				.logger(new Slf4jBootstrapLogger(logger))
 				.platform(Platform
 						.builder(Platform.Category.VELOCITY)
-						.nameAndVersion(
-								velocityVersion.getName() + " / " + velocityVersion.getVendor(),
-								velocityVersion.getVersion()
-						)
+						.nameAndVersion(velocityVersion.getName(), velocityVersion.getVersion())
 						.slf4jSupport(LibraryDetection.enabled())
 						.kyoriAdventureSupport(LibraryDetection.enabled())
 						.snakeYamlProvided(LibraryDetection.enabled())
