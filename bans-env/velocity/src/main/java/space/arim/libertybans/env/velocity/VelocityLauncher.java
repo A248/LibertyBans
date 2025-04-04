@@ -61,7 +61,7 @@ public final class VelocityLauncher implements PlatformLauncher {
 				.bindInstance(PluginContainer.class, payload.plugin())
 				.bindInstance(ProxyServer.class, server)
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), payload.pluginFolder())
-				.bindInstance(PlatformId.class,)
+				.bindInstance(PlatformId.class, payload.platformId())
 				.bindInstance(InstanceType.class, InstanceType.PROXY)
 				.bindInstance(Omnibus.class, omnibus)
 				.addBindModules(
