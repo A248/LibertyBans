@@ -22,7 +22,6 @@ package space.arim.libertybans.env.standalone.launcher;
 import space.arim.libertybans.bootstrap.*;
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 import space.arim.libertybans.bootstrap.logger.JulBootstrapLogger;
-import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 
 import java.io.Console;
 import java.nio.file.Path;
@@ -73,10 +72,10 @@ public final class StandaloneApplication {
 				.logger(logger)
 				.platform(Platform
 						.builder(Platform.Category.STANDALONE)
-						.nameAndVersion("Standalone", PluginInfo.VERSION))
+						.nameAndVersion("JVM", Runtime.version().toString()))
 				.executor(ForkJoinPool.commonPool())
 				.build();
-		Payload<Void> payload = launcher.getPayload(null);
+		Payload<Object> payload = launcher.getPayload(Payload.NO_PLUGIN);
 		ClassLoader launchLoader = launcher.attemptLaunch().join();
 		BaseFoundation base;
 		try {

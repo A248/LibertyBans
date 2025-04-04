@@ -61,8 +61,8 @@ public final class BungeeLauncher implements PlatformLauncher {
 		return new InjectorBuilder()
 				.bindInstance(Plugin.class, plugin)
 				.bindInstance(ProxyServer.class, plugin.getProxy())
-				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), payload.pluginFolder())
 				.bindInstance(PlatformId.class, payload.platformId())
+				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), payload.pluginFolder())
 				.bindInstance(InstanceType.class, InstanceType.PROXY)
 				.bindInstance(Omnibus.class, omnibus)
 				.addBindModules(

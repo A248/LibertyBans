@@ -63,8 +63,8 @@ public final class SpigotLauncher implements PlatformLauncher {
 				.bindInstance(JavaPlugin.class, plugin)
 				.bindInstance(Plugin.class, plugin)
 				.bindInstance(Server.class, plugin.getServer())
-				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), payload.pluginFolder())
 				.bindInstance(PlatformId.class, payload.platformId())
+				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), payload.pluginFolder())
 				.bindInstance(InstanceType.class, InstanceType.GAME_SERVER)
 				.bindInstance(Omnibus.class, omnibus)
 				.addBindModules(

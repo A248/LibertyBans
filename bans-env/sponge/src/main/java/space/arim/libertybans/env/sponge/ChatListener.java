@@ -20,10 +20,7 @@
 package space.arim.libertybans.env.sponge;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.event.Cancellable;
 import org.spongepowered.api.event.Event;
@@ -36,8 +33,7 @@ import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.env.sponge.listener.RegisterListeners;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-@Singleton
-public final class ChatListener {
+public abstract class ChatListener implements PlatformListener {
 
 	private final RegisterListeners registerListeners;
 	private final Guardian guardian;
@@ -46,6 +42,39 @@ public final class ChatListener {
 	public ChatListener(RegisterListeners registerListeners, Guardian guardian) {
 		this.registerListeners = registerListeners;
 		this.guardian = guardian;
+	}
+
+	@Override
+	public void register() {
+		registerListeners.register(this);
+	}
+
+	@Override
+	public void unregister() {
+		registerListeners.unregister(this);
+	}
+
+	<E extends Cancellable & Event> void combinedChatEvent(E event, String command) {
+		if (!(event.cause().root() instanceof ServerPlayer player)) {
+			return;
+		}
+		if (event.isCancelled()) {
+			return;
+		}
+		CentralisedFuture<Component> futureMessage = guardian.checkChat(
+				player.uniqueId(), player.connection().address().getAddress(), command
+		);
+		Component message;
+		if (futureMessage.isDone()) {
+			message = futureMessage.join();
+		} else {
+			throw new IllegalStateException("Cached mute unavailable for synchronous chat/command event");
+		}
+		if (message == null) {
+			return;
+		}
+		event.setCancelled(true);
+		player.sendMessage(message);
 	}
 
 	/*
@@ -57,62 +86,16 @@ public final class ChatListener {
 	So we split the implementation based on runtime API detection
 	 */
 
-	PlatformListener provide() {
-		Logger logger = LoggerFactory.getLogger(getClass());
-		try {
-			Class.forName("org.spongepowered.api.event.message.PlayerChatEvent$Submit");
-			logger.info("Running Sponge API 12/13 successfully");
-			return new SpongeApiThirteen();
-		} catch (ClassNotFoundException lowerVersion) {
-			logger.warn(
-					"You're running an older Sponge API version. We recommend updating if possible, since it is hard" +
-							"to us to keep up with Sponge's frequent API changes and still support multiple versions."
-			);
-			return new SpongeApiEightOrNine();
+	public static final class ChatApi8 extends ChatListener {
+
+		@Inject
+		public ChatApi8(RegisterListeners registerListeners, Guardian guardian) {
+			super(registerListeners, guardian);
 		}
-	}
-
-	abstract class Common implements PlatformListener {
-
-		@Override
-		public void register() {
-			registerListeners.register(this);
-		}
-
-		@Override
-		public void unregister() {
-			registerListeners.unregister(this);
-		}
-
-		<E extends Cancellable & Event> void combinedChatEvent(E event, String command) {
-			if (!(event.cause().root() instanceof ServerPlayer player)) {
-				return;
-			}
-			if (event.isCancelled()) {
-				return;
-			}
-			CentralisedFuture<Component> futureMessage = guardian.checkChat(
-					player.uniqueId(), player.connection().address().getAddress(), command
-			);
-			Component message;
-			if (futureMessage.isDone()) {
-				message = futureMessage.join();
-			} else {
-				throw new IllegalStateException("Cached mute unavailable for synchronous chat/command event");
-			}
-			if (message == null) {
-				return;
-			}
-			event.setCancelled(true);
-			player.sendMessage(message);
-		}
-
-	}
-
-	public final class SpongeApiEightOrNine extends Common {
 
 		@Listener(order = Order.LATE)
 		public void onChat(PlayerChatEvent event) {
+			// This is a fully safe cast on Sponge API 8 and 9
             combinedChatEvent((Cancellable & Event) event, null);
 		}
 
@@ -122,7 +105,12 @@ public final class ChatListener {
 		}
 	}
 
-	public final class SpongeApiThirteen extends Common {
+	public static final class ChatApi12 extends ChatListener {
+
+		@Inject
+		public ChatApi12(RegisterListeners registerListeners, Guardian guardian) {
+			super(registerListeners, guardian);
+		}
 
 		@Listener(order = Order.LATE)
 		public void onChat(PlayerChatEvent.Submit event) {
@@ -134,4 +122,5 @@ public final class ChatListener {
 			combinedChatEvent(event, event.command());
 		}
 	}
+
 }

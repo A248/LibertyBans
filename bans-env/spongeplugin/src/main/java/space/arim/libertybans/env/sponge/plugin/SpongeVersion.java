@@ -50,7 +50,6 @@ public enum SpongeVersion {
         this.dataVersion = dataVersion;
     }
 
-
     public String display() {
         return name().replace('_', ' ');
     }

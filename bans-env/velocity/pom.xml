@@ -10,22 +10,7 @@
 	</parent>
 	
 	<artifactId>bans-env-velocity</artifactId>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<argLine>--add-opens space.arim.libertybans.env.velocity/space.arim.libertybans.env.velocity=ALL-UNNAMED</argLine>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>com.velocitypowered</groupId>

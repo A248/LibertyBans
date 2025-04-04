@@ -41,22 +41,22 @@ import java.nio.file.Path;
 
 public final class StandaloneLauncher implements PlatformLauncher {
 
-	private final Payload<Void> payload;
+	private final Payload<Object> payload;
 	private final Omnibus omnibus;
 
-	public StandaloneLauncher(Payload<Void> payload) {
+	public StandaloneLauncher(Payload<Object> payload) {
 		this(payload, OmnibusProvider.getOmnibus());
 	}
 
-	public StandaloneLauncher(Payload<Void> payload, Omnibus omnibus) {
+	public StandaloneLauncher(Payload<Object> payload, Omnibus omnibus) {
 		this.payload = payload;
 		this.omnibus = omnibus;
 	}
 
 	public Injector createInjector(ConsoleAudience consoleAudience) {
 		return new InjectorBuilder()
-				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), payload.pluginFolder())
 				.bindInstance(PlatformId.class, payload.platformId())
+				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), payload.pluginFolder())
 				.bindInstance(InstanceType.class, InstanceType.STANDALONE)
 				.bindInstance(Omnibus.class, omnibus)
 				.bindInstance(ConsoleAudience.class, consoleAudience)

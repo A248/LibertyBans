@@ -52,7 +52,7 @@ public final class BungeePlugin extends Plugin {
 	static Platform.Builder detectPlatform(Plugin plugin) {
 		ProxyServer server = plugin.getProxy();
 		return Platform
-				.builder(Platform.Category.BUNGEE)
+				.builder(Platform.Category.BUNGEECORD)
 				.nameAndVersion(server.getName(), server.getVersion())
 				// On BungeeCord slf4j is an internal dependency, on Waterfall it is API
 				.slf4jSupport(LibraryDetection.eitherOf(

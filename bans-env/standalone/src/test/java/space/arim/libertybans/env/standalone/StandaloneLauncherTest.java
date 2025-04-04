@@ -50,7 +50,7 @@ public class StandaloneLauncherTest {
 	@Test
 	public void allBindings() {
 		Injector injector = new StandaloneLauncher(
-				new Payload<>(null, PlatformId.STUB, dataFolder), new DefaultOmnibus()
+				new Payload<>(Payload.NO_PLUGIN, PlatformId.STUB, dataFolder), new DefaultOmnibus()
 		).createInjector(mock(ConsoleAudience.class));
 		assertDoesNotThrow(() -> injector.request(LibertyBans.class));
 		assertDoesNotThrow(() -> injector.request(BaseFoundation.class));
@@ -60,7 +60,7 @@ public class StandaloneLauncherTest {
 	public void startup() {
 		ConsoleReceiver consoleReceiver = new ConsoleReceiver();
 		Injector injector = new StandaloneLauncher(
-				new Payload<>(null, PlatformId.STUB, dataFolder), new DefaultOmnibus()
+				new Payload<>(Payload.NO_PLUGIN, PlatformId.STUB, dataFolder), new DefaultOmnibus()
 		).createInjector(consoleReceiver);
 
 		// Startup

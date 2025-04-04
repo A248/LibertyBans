@@ -1,6 +1,6 @@
 <!--
   ~ LibertyBans
-  ~ Copyright © 2023 Anand Beh
+  ~ Copyright © 2025 Anand Beh
   ~
   ~ LibertyBans is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as
@@ -59,7 +59,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<useModulePath>false</useModulePath>
-					<argLine>@{jacoco.argLine}</argLine>
+					<argLine>@{jacoco.argLine} -XX:TieredStopAtLevel=1 -XX:-TieredCompilation -javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
 					<systemPropertyVariables>
 						<hsqldb.reconfig_logging>false</hsqldb.reconfig_logging>
 						<org.jooq.no-logo>true</org.jooq.no-logo>
@@ -72,7 +72,7 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<configuration>
 					<useModulePath>false</useModulePath>
-					<argLine>@{jacoco.argLine}</argLine>
+					<argLine>@{jacoco.argLine} -javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
 				</configuration>
 			</plugin>
 			<plugin>

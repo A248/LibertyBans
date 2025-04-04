@@ -92,4 +92,25 @@ public interface LibraryDetection {
 		}
 	}
 
+	/**
+	 * Detects a library based on simple class existence.
+	 */
+	class ByClassResolution implements LibraryDetection {
+
+		private final ProtectedLibrary protectedLibrary;
+
+        public ByClassResolution(ProtectedLibrary protectedLibrary) {
+            this.protectedLibrary = Objects.requireNonNull(protectedLibrary, "protectedLibrary");
+        }
+
+		@Override
+		public boolean evaluatePresence(BootstrapLogger logger) {
+			try {
+				Class.forName(protectedLibrary.sampleClass());
+				return true;
+			} catch (ClassNotFoundException ex) {
+				return false;
+			}
+		}
+	}
 }

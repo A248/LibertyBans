@@ -25,20 +25,28 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.spongepowered.api.Game;
+import org.spongepowered.api.scheduler.Scheduler;
 import org.spongepowered.plugin.PluginContainer;
 import space.arim.libertybans.bootstrap.Payload;
 import space.arim.libertybans.bootstrap.PlatformId;
+import space.arim.libertybans.env.sponge.plugin.SpongeVersion;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class SpongeLauncherTest {
 
 	@Test
-	public void allBindings(@Mock PluginContainer plugin, @Mock Game game, @TempDir Path folder) {
-		assertNotNull(new SpongeLauncher(new Payload<>(plugin, PlatformId.STUB, folder), game).launch());
+	public void allBindings(@Mock PluginContainer plugin, @Mock Game game, @TempDir Path folder,
+							@Mock Scheduler scheduler) {
+		when(game.asyncScheduler()).thenReturn(scheduler);
+		assertNotNull(new SpongeLauncher(
+				new Payload<>(plugin, PlatformId.STUB, folder, List.of(SpongeVersion.API_8)), game
+		).launch());
 	}
 
 }

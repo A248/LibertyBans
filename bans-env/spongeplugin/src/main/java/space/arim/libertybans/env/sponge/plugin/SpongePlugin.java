@@ -141,10 +141,10 @@ public final class SpongePlugin {
 						.builder(Platform.Category.SPONGE)
 						.nameAndVersion("Sponge", spongeVersion.display())
 						// Slf4j is an internal dependency
-						.slf4jSupport(new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.SLF4J_API, platformClassLoader))
+						.slf4jSupport(new LibraryDetection.ByClassResolution(ProtectedLibrary.SLF4J_API))
 						.kyoriAdventureSupport(LibraryDetection.enabled())
 						.caffeineProvided(LibraryDetection.enabled())
-						.snakeYamlProvided(spongeVersion.hasSnakeYaml() ? LibraryDetection.enabled() : null)
+						.snakeYamlProvided(new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.SNAKEYAML, platformClassLoader))
 						// HikariCP is an internal dependency
 						.hiddenHikariCP(new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.HIKARICP, platformClassLoader))
 				)

@@ -1,6 +1,6 @@
 <!--
   ~ LibertyBans
-  ~ Copyright © 2023 Anand Beh
+  ~ Copyright © 2025 Anand Beh
   ~
   ~ LibertyBans is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as
@@ -40,6 +40,8 @@
                 <exclude>net.kyori:*</exclude>
                 <!-- slf4j.xml -->
                 <exclude>org.slf4j:*</exclude>
+                <!-- snakeyaml.xml -->
+                <exclude>org.yaml:snakeyaml</exclude>
                 <!-- bootstrap-related -->
                 <exclude>space.arim.libertybans:bans-api</exclude>
                 <exclude>space.arim.omnibus:omnibus</exclude>
@@ -51,7 +53,6 @@
                 <exclude>space.arim.libertybans:bans-env-standalonelauncher</exclude>
                 <exclude>space.arim.licenser:licenser-agpl3</exclude>
                 <!-- platform-provided -->
-                <exclude>org.yaml:snakeyaml</exclude>
                 <exclude>com.google.code.gson:gson</exclude>
                 <!-- useless annotations -->
                 <exclude>org.checkerframework:checker-qual</exclude>

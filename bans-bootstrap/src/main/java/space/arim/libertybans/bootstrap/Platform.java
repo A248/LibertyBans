@@ -42,7 +42,11 @@ public final class Platform {
 
 	public boolean isBundleProvided(DependencyBundle bundle) {
 		LibraryDetection detection = libraryDetectionMap.get(bundle);
-		return detection != null && detection.evaluatePresence(logger);
+		boolean provided = detection != null && detection.evaluatePresence(logger);
+		if (provided) {
+			logger.debug("Found dependency bundle provided: " + bundle);
+		}
+		return provided;
 	}
 
 	boolean hasHiddenHikariCP() {
@@ -113,17 +117,13 @@ public final class Platform {
 		public Platform build(BootstrapLogger logger) {
 			/*
 			We want to distinguish between platform category (e.g. Bukkit) and specific brand (e.g., Paper)
-			To do that, we'll check both pieces of information, and if they're different, include both of them.
+			To do that, check both pieces of information, and if they're different, include both of them.
 			 */
-			String categoryName = category.name();
-
 			PlatformId platformId;
-			if (categoryName.equalsIgnoreCase(platformName)) {
+			if (category.name().equalsIgnoreCase(platformName)) {
 				platformId = new PlatformId(platformName, platformVersion);
 			} else {
-				// Capitalize only the first letter, lowercase the rest
-				categoryName = Character.toUpperCase(categoryName.charAt(0)) + categoryName.substring(1);
-				platformId = new PlatformId(platformName + " (" + categoryName + ')', platformVersion);
+				platformId = new PlatformId(platformName + " (" + category.display() + ')', platformVersion);
 			}
 			return new Platform(platformId, logger, libraryDetectionMap, hikariCP);
 		}
@@ -131,10 +131,18 @@ public final class Platform {
 
 	public enum Category {
 		BUKKIT,
-		BUNGEE,
+		BUNGEECORD,
 		SPONGE,
 		VELOCITY,
-		STANDALONE
+		STANDALONE;
+
+		String display() {
+			if (this == BUNGEECORD) {
+				return "BungeeCord";
+			}
+			String categoryName = name();
+			return Character.toUpperCase(categoryName.charAt(0)) + categoryName.substring(1);
+		}
 	}
 
 	@Override

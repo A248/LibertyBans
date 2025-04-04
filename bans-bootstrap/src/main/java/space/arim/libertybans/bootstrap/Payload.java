@@ -25,6 +25,8 @@ import java.util.Objects;
 
 public record Payload<P>(P plugin, PlatformId platformId, Path pluginFolder, List<Object> attachments) {
 
+    public static final Object NO_PLUGIN = new Object();
+
     public Payload {
         Objects.requireNonNull(plugin, "plugin");
         Objects.requireNonNull(platformId, "platformId");

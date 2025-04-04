@@ -72,16 +72,20 @@ public final class SpongeLauncher implements PlatformLauncher {
 			registerListenersBinding = RegisterListenersRegular.class;
 		}
 		Class<? extends ChannelFacade> channelFacadeBinding;
+		Class<? extends ChatListener> chatListenerBinding;
 		if (spongeVersion.isAtLeast(SpongeVersion.API_12)) {
 			channelFacadeBinding = ChannelFacadeApi12.class;
+			chatListenerBinding = ChatListener.ChatApi12.class;
 		} else {
 			channelFacadeBinding = ChannelFacadeApi8.class;
+			chatListenerBinding = ChatListener.ChatApi8.class;
 		}
 		return new InjectorBuilder()
 				.bindInstance(PluginContainer.class, payload.plugin())
 				.bindInstance(Game.class, game)
 				.bindInstance(PlatformId.class, payload.platformId())
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), payload.pluginFolder())
+				.bindInstance(SpongeVersion.class,  spongeVersion)
 				.bindInstance(InstanceType.class, InstanceType.GAME_SERVER)
 				.bindInstance(Omnibus.class, omnibus)
 				.addBindModules(
@@ -93,6 +97,7 @@ public final class SpongeLauncher implements PlatformLauncher {
 				)
 				.bindIdentifier(RegisterListeners.class, registerListenersBinding)
 				.bindIdentifier(ChannelFacade.class, channelFacadeBinding)
+				.bindIdentifier(ChatListener.class, chatListenerBinding)
 				.specification(SpecificationSupport.JAKARTA)
 				.multiBindings(true)
 				.build()
