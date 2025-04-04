@@ -21,10 +21,8 @@ package space.arim.libertybans.bootstrap;
 
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 
-import java.util.EnumMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Stream;
 
 public final class Platform {
 
@@ -51,7 +49,7 @@ public final class Platform {
 	}
 
 	boolean hasHiddenHikariCP() {
-		return hikariCP.evaluatePresence(logger);
+		return hikariCP != null && hikariCP.evaluatePresence(logger);
 	}
 
 	public static PreBuilder builder(Category category) {
@@ -147,4 +145,23 @@ public final class Platform {
 	public String toString() {
 		return "Platform{" + platformId + '}';
 	}
+
+	public static Stream<Builder> allPossiblePlatforms(String platformName) {
+		Set<Builder> platforms = new HashSet<>();
+		for (Platform.Category category : Platform.Category.values()) {
+			// Count from 00000 to 11111 in binary
+			for (int setting = 0; setting < 0b100000; setting++) {
+				final int flags = setting;
+				platforms.add(Platform.builder(category)
+						.nameAndVersion(platformName, "0.0")
+						.kyoriAdventureSupport((l) -> (flags & 0b0001) != 0)
+						.slf4jSupport((l) -> (flags & 0b0010) != 0)
+						.caffeineProvided((l) -> (flags & 0b0100) != 0)
+						.jakartaProvided((l) -> (flags & 0b1000) != 0)
+						.snakeYamlProvided((l) -> (flags & 0b10000) != 0));
+			}
+		}
+		return platforms.stream();
+	}
+
 }
