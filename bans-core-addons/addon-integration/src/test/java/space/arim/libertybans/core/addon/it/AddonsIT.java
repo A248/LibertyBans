@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -34,6 +34,7 @@ import space.arim.injector.Injector;
 import space.arim.injector.InjectorBuilder;
 import space.arim.injector.SpecificationSupport;
 import space.arim.libertybans.bootstrap.BaseFoundation;
+import space.arim.libertybans.bootstrap.PlatformId;
 import space.arim.libertybans.core.ApiBindModule;
 import space.arim.libertybans.core.CommandsModule;
 import space.arim.libertybans.core.PillarOneBindModule;
@@ -88,6 +89,7 @@ public class AddonsIT {
 		this.injector = new InjectorBuilder()
 				.bindInstance(Server.class, server)
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(PlatformId.class, new PlatformId("Addons-IT", "0.0"))
 				.bindInstance(InstanceType.class, InstanceType.STANDALONE)
 				.bindInstance(PlatformHandle.class, handle)
 				.bindInstance(Environment.class, environment)

@@ -45,7 +45,7 @@ public final class Platform {
 		LibraryDetection detection = libraryDetectionMap.get(bundle);
 		boolean provided = detection != null && detection.evaluatePresence(logger);
 		if (provided) {
-			logger.debug("Found dependency bundle provided: " + bundle);
+			logger.debug("Found provided dependency bundle: " + bundle);
 		}
 		return provided;
 	}
