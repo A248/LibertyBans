@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -48,10 +48,6 @@ public interface EnvMessageChannel<H> {
 	 * @param <R> the type of the handler
 	 */
 	<R> H createHandler(Consumer<R> acceptor, PluginMessage<?, R> pluginMessage);
-
-	static <H> void parameterize(EnvMessageChannel<H> messageChannel, Consumer<EnvMessageChannel<H>> action) {
-		action.accept(messageChannel);
-	}
 
 	final class NoOp implements EnvMessageChannel<Void> {
 

@@ -19,21 +19,14 @@
 
 package space.arim.libertybans.bootstrap;
 
-public interface BaseFoundation {
+import java.util.Objects;
 
-	RunState getRunState();
+public record PlatformId(String name, String version) {
 
-	void startup();
+    public static final PlatformId STUB = new PlatformId("Stub", "0.0");
 
-	boolean fullRestart();
-
-	void shutdown();
-
-	/**
-	 * Used for Sponge and standalone only. Sponge requires early command registration and service provision
-	 *
-	 * @return the platform accessors
-	 */
-	Object platformAccess();
-
+    public PlatformId {
+        name = Objects.requireNonNullElse(name, "unnamed");
+        version = Objects.requireNonNullElse(version, "0.0");
+    }
 }

@@ -17,23 +17,31 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.bootstrap;
+package space.arim.libertybans.bootstrap.logger;
 
-public interface BaseFoundation {
+public class NoOpBootstrapLogger implements BootstrapLogger {
+    @Override
+    public void debug(String message) {
 
-	RunState getRunState();
+    }
 
-	void startup();
+    @Override
+    public void info(String message) {
 
-	boolean fullRestart();
+    }
 
-	void shutdown();
+    @Override
+    public void warn(String message) {
+        throw new RuntimeException("WARN will not be swallowed. Message: " + message);
+    }
 
-	/**
-	 * Used for Sponge and standalone only. Sponge requires early command registration and service provision
-	 *
-	 * @return the platform accessors
-	 */
-	Object platformAccess();
+    @Override
+    public void warn(String message, Throwable ex) {
+        throw new RuntimeException("WARN with exception will not be swallowed. Message: " + message, ex);
+    }
 
+    @Override
+    public void error(String message) {
+        throw new RuntimeException("ERROR will not be swallowed. Message: " + message);
+    }
 }

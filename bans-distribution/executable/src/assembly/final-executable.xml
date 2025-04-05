@@ -1,6 +1,6 @@
 <!--
   ~ LibertyBans
-  ~ Copyright © 2023 Anand Beh
+  ~ Copyright © 2025 Anand Beh
   ~
   ~ LibertyBans is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as
@@ -57,6 +57,11 @@
             <outputDirectory>/dependencies/jars/</outputDirectory>
             <source>${project.build.directory}/bundles/${project.build.finalName}-slf4j-bundle.jar</source>
             <destName>slf4j-bundle.jar</destName>
+        </file>
+        <file>
+            <outputDirectory>/dependencies/jars/</outputDirectory>
+            <source>${project.build.directory}/bundles/${project.build.finalName}-snakeyaml-bundle.jar</source>
+            <destName>snakeyaml-bundle.jar</destName>
         </file>
     </files>
     <dependencySets>

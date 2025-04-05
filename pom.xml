@@ -1,6 +1,6 @@
 <!--
   ~ LibertyBans
-  ~ Copyright © 2023 Anand Beh
+  ~ Copyright © 2025 Anand Beh
   ~
   ~ LibertyBans is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as
@@ -44,7 +44,7 @@
 
 		<!-- Testing dependencies -->
 		<junit.version>5.9.1</junit.version>
-		<mockito.version>4.9.0</mockito.version>
+		<mockito.version>5.16.1</mockito.version>
 		<h2.version>2.1.210</h2.version>
 
 		<!-- API dependencies -->
@@ -71,7 +71,7 @@
 		<!-- Platform dependencies -->
 		<bungeecord.version>1.16-R0.4</bungeecord.version>
 		<spigot.version>1.8.8-R0.1-20160221.082514-43</spigot.version>
-		<sponge.version>9.1.0-SNAPSHOT</sponge.version>
+		<sponge.version>12.0.0</sponge.version>
 		<velocity.version>3.1.0</velocity.version>
 
 		<!-- Internal hash -->
@@ -125,6 +125,17 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>properties</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
@@ -195,7 +206,7 @@
 					<artifactId>maven-surefire-plugin</artifactId>
 					<configuration>
 						<trimStackTrace>false</trimStackTrace>
-						<argLine>-XX:TieredStopAtLevel=1 -XX:-TieredCompilation</argLine>
+						<argLine>-XX:TieredStopAtLevel=1 -XX:-TieredCompilation -javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
 					</configuration>
 					<dependencies>
 						<dependency>
@@ -209,6 +220,9 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-failsafe-plugin</artifactId>
+					<configuration>
+						<argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
+					</configuration>
 					<dependencies>
 						<dependency>
 							<groupId>org.junit.jupiter</groupId>
@@ -278,14 +292,14 @@
 						<artifactId>maven-enforcer-plugin</artifactId>
 						<executions>
 							<execution>
-								<id>enforce-jdk-17</id>
+								<id>enforce-jdk-21</id>
 								<goals>
 									<goal>enforce</goal>
 								</goals>
 								<configuration>
 									<rules>
 										<requireJavaVersion>
-											<version>[17,18)</version>
+											<version>[21,22)</version>
 										</requireJavaVersion>
 									</rules>
 								</configuration>
@@ -397,12 +411,6 @@
 			<dependency>
 				<groupId>org.mockito</groupId>
 				<artifactId>mockito-junit-jupiter</artifactId>
-				<version>${mockito.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.mockito</groupId>
-				<artifactId>mockito-inline</artifactId>
 				<version>${mockito.version}</version>
 				<scope>test</scope>
 			</dependency>
@@ -560,6 +568,15 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
 	<repositories>
 		<repository>

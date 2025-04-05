@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -34,13 +34,11 @@ import org.spongepowered.api.event.lifecycle.StoppingEngineEvent;
 import org.spongepowered.api.service.ban.BanService;
 import org.spongepowered.plugin.PluginContainer;
 import org.spongepowered.plugin.builtin.jvm.Plugin;
-import space.arim.libertybans.bootstrap.BaseFoundation;
-import space.arim.libertybans.bootstrap.Instantiator;
-import space.arim.libertybans.bootstrap.LibertyBansLauncher;
-import space.arim.libertybans.bootstrap.Platforms;
+import space.arim.libertybans.bootstrap.*;
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Plugin(PluginInfo.ID)
@@ -131,18 +129,35 @@ public final class SpongePlugin {
 
 	private CompletableFuture<BaseFoundation> initialize() {
 
+		SpongeVersion spongeVersion = SpongeVersion
+				.detectVersion(game.platform().minecraftVersion().dataVersion().orElse(0))
+				.orElseGet(SpongeVersion::latestSupported);
+		ClassLoader platformClassLoader = Game.class.getClassLoader();
+
 		LibertyBansLauncher launcher = new LibertyBansLauncher.Builder()
 				.folder(folder)
 				.logger(new Log4jBootstrapLogger(logger))
-				.platform(Platforms.sponge(Game.class.getClassLoader()))
+				.platform(Platform
+						.builder(Platform.Category.SPONGE)
+						.nameAndVersion("Sponge", spongeVersion.display())
+						// Slf4j is an internal dependency
+						.slf4jSupport(new LibraryDetection.ByClassResolution(ProtectedLibrary.SLF4J_API))
+						.kyoriAdventureSupport(LibraryDetection.enabled())
+						.caffeineProvided(LibraryDetection.enabled())
+						.snakeYamlProvided(new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.SNAKEYAML, platformClassLoader))
+						// HikariCP is an internal dependency
+						.hiddenHikariCP(new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.HIKARICP, platformClassLoader))
+				)
 				.executor(game.asyncScheduler().executor(plugin))
 				.culpritFinder(new SpongeCulpritFinder(game))
 				.build();
+		Payload<PluginContainer> payload = launcher.getPayloadWith(plugin, List.of(spongeVersion));
 		return launcher.attemptLaunch().thenApply((launchLoader) -> {
 			BaseFoundation base;
 			try {
-				base = new Instantiator("space.arim.libertybans.env.sponge.SpongeLauncher", launchLoader)
-						.invoke(PluginContainer.class, plugin, Game.class, game, folder);
+				base = new Instantiator(
+						"space.arim.libertybans.env.sponge.SpongeLauncher", launchLoader
+				).invoke(payload, Game.class, game);
 			} catch (IllegalArgumentException | SecurityException | ReflectiveOperationException ex) {
 				logger.warn("Failed to launch LibertyBans", ex);
 				return null;

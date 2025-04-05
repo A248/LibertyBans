@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -29,7 +29,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 import space.arim.libertybans.bootstrap.DistributionMode;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
 import space.arim.libertybans.bootstrap.Platform;
-import space.arim.libertybans.bootstrap.Platforms;
+import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 import space.arim.libertybans.bootstrap.logger.JulBootstrapLogger;
 
 import java.net.URLClassLoader;
@@ -55,7 +55,7 @@ public class UnpackTest {
 		this.folder = folder;
 	}
 
-	private ClassLoader unpack(Platform platform, ClassLoader parentClassLoader) {
+	private ClassLoader unpack(Platform.Builder platform, ClassLoader parentClassLoader) {
 		LibertyBansLauncher launcher = new LibertyBansLauncher.Builder()
 				.folder(folder)
 				.logger(new JulBootstrapLogger(Logger.getLogger(getClass().getName())))
@@ -72,16 +72,19 @@ public class UnpackTest {
 
 	@ParameterizedTest
 	@ArgumentsSource(PlatformProvider.class)
-	public void unpack(Platform platform) {
+	public void unpack(Platform.Builder platform) {
 		assertDoesNotThrow(() -> unpack(platform, getClass().getClassLoader()));
 	}
 
 	@Test
 	public void unpackAndLink() {
-		ClassLoader isolatedParentClassLoader = new ClassLoader("EmptyCL", ClassLoader.getSystemClassLoader()) {};
-		Platform platform = Platforms.bukkit().build("it-unpack-and-link");
-		ClassLoader classLoader = unpack(platform, isolatedParentClassLoader);
-
+		ClassLoader classLoader = unpack(
+				Platform
+						.builder(Platform.Category.STANDALONE)
+						.nameAndVersion("Unpack-Link-IT", "0.0"),
+				// Isolated parent classloader
+				new ClassLoader("EmptyCL", ClassLoader.getSystemClassLoader()) {}
+		);
 		List<String> classNames;
 		try (ScanResult scanResult = new ClassGraph()
 				.overrideClassLoaders(classLoader)

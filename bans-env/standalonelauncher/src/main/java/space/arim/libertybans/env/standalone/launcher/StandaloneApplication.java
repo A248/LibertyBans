@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,10 +19,7 @@
 
 package space.arim.libertybans.env.standalone.launcher;
 
-import space.arim.libertybans.bootstrap.BaseFoundation;
-import space.arim.libertybans.bootstrap.Instantiator;
-import space.arim.libertybans.bootstrap.LibertyBansLauncher;
-import space.arim.libertybans.bootstrap.Platforms;
+import space.arim.libertybans.bootstrap.*;
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 import space.arim.libertybans.bootstrap.logger.JulBootstrapLogger;
 
@@ -43,16 +40,9 @@ public final class StandaloneApplication {
 	}
 
 	public static void main(String[] args) {
-		var logger = Logger.getLogger(StandaloneApplication.class.getName());
-		try {
-			Class.forName("com.google.gson.Gson");
-			Class.forName("org.yaml.snakeyaml.Yaml");
-		} catch (ClassNotFoundException ignored) {
-			logger.warning("The Gson and SnakeYaml dependencies must be present");
-			return;
-		}
 		new StandaloneApplication(
-				Path.of("libertybans"), new JulBootstrapLogger(logger)
+				Path.of("libertybans"),
+				new JulBootstrapLogger(Logger.getLogger(StandaloneApplication.class.getName()))
 		).appStart();
 	}
 
@@ -80,14 +70,18 @@ public final class StandaloneApplication {
 		LibertyBansLauncher launcher = new LibertyBansLauncher.Builder()
 				.folder(folder)
 				.logger(logger)
-				.platform(Platforms.standalone())
+				.platform(Platform
+						.builder(Platform.Category.STANDALONE)
+						.nameAndVersion("JVM", Runtime.version().toString()))
 				.executor(ForkJoinPool.commonPool())
 				.build();
+		Payload<Object> payload = launcher.getPayload(Payload.NO_PLUGIN);
 		ClassLoader launchLoader = launcher.attemptLaunch().join();
 		BaseFoundation base;
 		try {
-			base = new Instantiator("space.arim.libertybans.env.standalone.StandaloneLauncher", launchLoader)
-					.invoke(Void.class, null, folder);
+			base = new Instantiator(
+					"space.arim.libertybans.env.standalone.StandaloneLauncher", launchLoader
+			).invoke(payload);
 		} catch (IllegalArgumentException | SecurityException | ReflectiveOperationException ex) {
 			logger.warn("Failed to launch LibertyBans", ex);
 			return null;

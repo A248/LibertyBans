@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,12 +28,9 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.api.scheduler.Scheduler;
+import com.velocitypowered.api.util.ProxyVersion;
 import org.slf4j.Logger;
-import space.arim.libertybans.bootstrap.BaseFoundation;
-import space.arim.libertybans.bootstrap.Instantiator;
-import space.arim.libertybans.bootstrap.LibertyBansLauncher;
-import space.arim.libertybans.bootstrap.Platforms;
+import space.arim.libertybans.bootstrap.*;
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 
 import java.nio.file.Path;
@@ -84,20 +81,32 @@ public final class VelocityPlugin {
 	}
 
 	private BaseFoundation initialize() {
-		Scheduler scheduler = server.getScheduler();
+
+		ProxyVersion velocityVersion = server.getVersion();
+		ClassLoader platformClassLoader = PluginContainer.class.getClassLoader();
 
 		LibertyBansLauncher launcher = new LibertyBansLauncher.Builder()
 				.folder(folder)
 				.logger(new Slf4jBootstrapLogger(logger))
-				.platform(Platforms.velocity(PluginContainer.class.getClassLoader()))
-				.executor((cmd) -> scheduler.buildTask(plugin, cmd).schedule())
+				.platform(Platform
+						.builder(Platform.Category.VELOCITY)
+						.nameAndVersion(velocityVersion.getName(), velocityVersion.getVersion())
+						.slf4jSupport(LibraryDetection.enabled())
+						.kyoriAdventureSupport(LibraryDetection.enabled())
+						.snakeYamlProvided(LibraryDetection.enabled())
+						// Caffeine is an internal dependency; possibly Jakarta too
+						.caffeineProvided(new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.CAFFEINE, platformClassLoader))
+						.jakartaProvided(new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.JAKARTA_INJECT, platformClassLoader)))
+				.executor((cmd) -> server.getScheduler().buildTask(plugin, cmd).schedule())
 				.culpritFinder(new VelocityCulpritFinder(server))
 				.build();
+		Payload<PluginContainer> payload = launcher.getPayload(plugin);
 		ClassLoader launchLoader = launcher.attemptLaunch().join();
 		BaseFoundation base;
 		try {
-			base = new Instantiator("space.arim.libertybans.env.velocity.VelocityLauncher", launchLoader)
-					.invoke(PluginContainer.class, plugin, ProxyServer.class, server, folder);
+			base = new Instantiator(
+					"space.arim.libertybans.env.velocity.VelocityLauncher", launchLoader
+			).invoke(payload, ProxyServer.class, server);
 		} catch (IllegalArgumentException | SecurityException | ReflectiveOperationException ex) {
 			logger.warn("Failed to launch LibertyBans", ex);
 			return null;

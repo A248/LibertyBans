@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,7 +22,7 @@ package space.arim.libertybans.it.executableunpack;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
-import space.arim.libertybans.bootstrap.Platforms;
+import space.arim.libertybans.bootstrap.Platform;
 
 import java.util.stream.Stream;
 
@@ -30,6 +30,6 @@ public final class PlatformProvider implements ArgumentsProvider {
 
 	@Override
 	public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
-		return Platforms.allPossiblePlatforms("it-unpack").map(Arguments::of);
+		return Platform.allPossiblePlatforms("it-unpack").map(Arguments::of);
 	}
 }

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,6 +24,8 @@ import java.nio.file.Path;
 import org.bukkit.plugin.Plugin;
 import space.arim.injector.SpecificationSupport;
 import space.arim.libertybans.bootstrap.BaseFoundation;
+import space.arim.libertybans.bootstrap.Payload;
+import space.arim.libertybans.bootstrap.PlatformId;
 import space.arim.libertybans.bootstrap.PlatformLauncher;
 import space.arim.libertybans.core.ApiBindModule;
 import space.arim.libertybans.core.CommandsModule;
@@ -42,27 +44,27 @@ import space.arim.omnibus.OmnibusProvider;
 
 public final class SpigotLauncher implements PlatformLauncher {
 
-	private final JavaPlugin plugin;
-	private final Path folder;
+	private final Payload<JavaPlugin> payload;
 	private final Omnibus omnibus;
 
-	public SpigotLauncher(JavaPlugin plugin, Path folder) {
-		this(plugin, folder, OmnibusProvider.getOmnibus());
+	public SpigotLauncher(Payload<JavaPlugin> payload) {
+		this(payload, OmnibusProvider.getOmnibus());
 	}
 
-	public SpigotLauncher(JavaPlugin plugin, Path folder, Omnibus omnibus) {
-		this.plugin = plugin;
-		this.folder = folder;
+	public SpigotLauncher(Payload<JavaPlugin> payload, Omnibus omnibus) {
+		this.payload = payload;
 		this.omnibus = omnibus;
 	}
 
 	@Override
 	public BaseFoundation launch() {
+		JavaPlugin plugin = payload.plugin();
 		return new InjectorBuilder()
 				.bindInstance(JavaPlugin.class, plugin)
 				.bindInstance(Plugin.class, plugin)
 				.bindInstance(Server.class, plugin.getServer())
-				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(PlatformId.class, payload.platformId())
+				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), payload.pluginFolder())
 				.bindInstance(InstanceType.class, InstanceType.GAME_SERVER)
 				.bindInstance(Omnibus.class, omnibus)
 				.addBindModules(

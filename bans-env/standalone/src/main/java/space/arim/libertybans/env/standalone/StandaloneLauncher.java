@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,6 +25,8 @@ import space.arim.injector.Injector;
 import space.arim.injector.InjectorBuilder;
 import space.arim.injector.SpecificationSupport;
 import space.arim.libertybans.bootstrap.BaseFoundation;
+import space.arim.libertybans.bootstrap.Payload;
+import space.arim.libertybans.bootstrap.PlatformId;
 import space.arim.libertybans.bootstrap.PlatformLauncher;
 import space.arim.libertybans.core.ApiBindModule;
 import space.arim.libertybans.core.CommandsModule;
@@ -39,21 +41,22 @@ import java.nio.file.Path;
 
 public final class StandaloneLauncher implements PlatformLauncher {
 
-	private final Path folder;
+	private final Payload<Object> payload;
 	private final Omnibus omnibus;
 
-	public StandaloneLauncher(/* Useless */ Void plugin, Path folder) {
-		this(folder, OmnibusProvider.getOmnibus());
+	public StandaloneLauncher(Payload<Object> payload) {
+		this(payload, OmnibusProvider.getOmnibus());
 	}
 
-	public StandaloneLauncher(Path folder, Omnibus omnibus) {
-		this.folder = folder;
+	public StandaloneLauncher(Payload<Object> payload, Omnibus omnibus) {
+		this.payload = payload;
 		this.omnibus = omnibus;
 	}
 
 	public Injector createInjector(ConsoleAudience consoleAudience) {
 		return new InjectorBuilder()
-				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(PlatformId.class, payload.platformId())
+				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), payload.pluginFolder())
 				.bindInstance(InstanceType.class, InstanceType.STANDALONE)
 				.bindInstance(Omnibus.class, omnibus)
 				.bindInstance(ConsoleAudience.class, consoleAudience)

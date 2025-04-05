@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,13 +26,13 @@ import org.spongepowered.plugin.PluginContainer;
 import space.arim.libertybans.core.env.PlatformListener;
 
 @Singleton
-public final class RegisterListenersStandard implements RegisterListeners {
+public final class RegisterListenersRegular implements RegisterListeners {
 
 	private final PluginContainer plugin;
 	private final Game game;
 
 	@Inject
-	public RegisterListenersStandard(PluginContainer plugin, Game game) {
+	public RegisterListenersRegular(PluginContainer plugin, Game game) {
 		this.plugin = plugin;
 		this.game = game;
 	}

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,6 +27,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.injector.Injector;
 import space.arim.libertybans.api.LibertyBans;
 import space.arim.libertybans.bootstrap.BaseFoundation;
+import space.arim.libertybans.bootstrap.Payload;
+import space.arim.libertybans.bootstrap.PlatformId;
 import space.arim.omnibus.DefaultOmnibus;
 
 import java.nio.file.Path;
@@ -48,7 +50,7 @@ public class StandaloneLauncherTest {
 	@Test
 	public void allBindings() {
 		Injector injector = new StandaloneLauncher(
-				dataFolder, new DefaultOmnibus()
+				new Payload<>(Payload.NO_PLUGIN, PlatformId.STUB, dataFolder), new DefaultOmnibus()
 		).createInjector(mock(ConsoleAudience.class));
 		assertDoesNotThrow(() -> injector.request(LibertyBans.class));
 		assertDoesNotThrow(() -> injector.request(BaseFoundation.class));
@@ -58,7 +60,7 @@ public class StandaloneLauncherTest {
 	public void startup() {
 		ConsoleReceiver consoleReceiver = new ConsoleReceiver();
 		Injector injector = new StandaloneLauncher(
-				dataFolder, new DefaultOmnibus()
+				new Payload<>(Payload.NO_PLUGIN, PlatformId.STUB, dataFolder), new DefaultOmnibus()
 		).createInjector(consoleReceiver);
 
 		// Startup

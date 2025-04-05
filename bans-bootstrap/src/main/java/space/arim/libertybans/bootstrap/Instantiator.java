@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -18,8 +18,6 @@
  */
 
 package space.arim.libertybans.bootstrap;
-
-import java.nio.file.Path;
 
 public final class Instantiator {
 
@@ -41,14 +39,14 @@ public final class Instantiator {
 		this.clazz = clazz.asSubclass(PlatformLauncher.class);
 	}
 
-	public <P> BaseFoundation invoke(Class<P> pluginType, P plugin, Path folder)
+	public <P> BaseFoundation invoke(Payload<P> payload)
 			throws ReflectiveOperationException, IllegalArgumentException, SecurityException {
-		return clazz.getDeclaredConstructor(pluginType, Path.class).newInstance(plugin, folder).launch();
+		return clazz.getDeclaredConstructor(Payload.class).newInstance(payload).launch();
 	}
 
-	public <P, S> BaseFoundation invoke(Class<P> pluginType, P plugin, Class<S> serverType, S server, Path folder)
+	public <P, S> BaseFoundation invoke(Payload<P> payload, Class<S> serverType, S server)
 			throws ReflectiveOperationException, IllegalArgumentException, SecurityException {
-		return clazz.getDeclaredConstructor(pluginType, serverType, Path.class).newInstance(plugin, server, folder).launch();
+		return clazz.getDeclaredConstructor(Payload.class, serverType).newInstance(payload, server).launch();
 	}
 
 }

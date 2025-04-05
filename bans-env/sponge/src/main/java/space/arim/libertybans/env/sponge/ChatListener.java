@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,7 +20,6 @@
 package space.arim.libertybans.env.sponge;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.event.Cancellable;
@@ -34,8 +33,7 @@ import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.env.sponge.listener.RegisterListeners;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-@Singleton
-public final class ChatListener implements PlatformListener {
+public abstract class ChatListener implements PlatformListener {
 
 	private final RegisterListeners registerListeners;
 	private final Guardian guardian;
@@ -56,17 +54,7 @@ public final class ChatListener implements PlatformListener {
 		registerListeners.unregister(this);
 	}
 
-	@Listener(order = Order.LATE)
-	public void onChat(PlayerChatEvent event) {
-		combinedChatEvent(event, null);
-	}
-
-	@Listener(order = Order.LATE)
-	public void onCommand(ExecuteCommandEvent.Pre event) {
-		combinedChatEvent(event, event.command());
-	}
-
-	private <E extends Cancellable & Event> void combinedChatEvent(E event, String command) {
+	<E extends Cancellable & Event> void combinedChatEvent(E event, String command) {
 		if (!(event.cause().root() instanceof ServerPlayer player)) {
 			return;
 		}
@@ -88,4 +76,51 @@ public final class ChatListener implements PlatformListener {
 		event.setCancelled(true);
 		player.sendMessage(message);
 	}
+
+	/*
+	API differences require us to support everyone
+
+	In Sponge API 8 and 9, PlayerChatEvent is Cancellable and handled by us
+	In Sponge API 13, PlayerChatEvent.Submit becomes the event we need to listen to
+
+	So we split the implementation based on runtime API detection
+	 */
+
+	public static final class ChatApi8 extends ChatListener {
+
+		@Inject
+		public ChatApi8(RegisterListeners registerListeners, Guardian guardian) {
+			super(registerListeners, guardian);
+		}
+
+		@Listener(order = Order.LATE)
+		public void onChat(PlayerChatEvent event) {
+			// This is a fully safe cast on Sponge API 8 and 9
+			combinedChatEvent((Cancellable & Event) event, null);
+		}
+
+		@Listener(order = Order.LATE)
+		public void onCommand(ExecuteCommandEvent.Pre event) {
+			combinedChatEvent(event, event.command());
+		}
+	}
+
+	public static final class ChatApi12 extends ChatListener {
+
+		@Inject
+		public ChatApi12(RegisterListeners registerListeners, Guardian guardian) {
+			super(registerListeners, guardian);
+		}
+
+		@Listener(order = Order.LATE)
+		public void onChat(PlayerChatEvent.Submit event) {
+			combinedChatEvent(event, null);
+		}
+
+		@Listener(order = Order.LATE)
+		public void onCommand(ExecuteCommandEvent.Pre event) {
+			combinedChatEvent(event, event.command());
+		}
+	}
+
 }

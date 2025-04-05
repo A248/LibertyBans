@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,6 +23,8 @@ import java.nio.file.Path;
 
 import space.arim.injector.SpecificationSupport;
 import space.arim.libertybans.bootstrap.BaseFoundation;
+import space.arim.libertybans.bootstrap.Payload;
+import space.arim.libertybans.bootstrap.PlatformId;
 import space.arim.libertybans.bootstrap.PlatformLauncher;
 import space.arim.libertybans.core.ApiBindModule;
 import space.arim.libertybans.core.CommandsModule;
@@ -41,26 +43,26 @@ import space.arim.omnibus.OmnibusProvider;
 
 public final class BungeeLauncher implements PlatformLauncher {
 
-	private final Plugin plugin;
-	private final Path folder;
+	private final Payload<Plugin> payload;
 	private final Omnibus omnibus;
 
-	public BungeeLauncher(Plugin plugin, Path folder) {
-		this(plugin, folder, OmnibusProvider.getOmnibus());
+	public BungeeLauncher(Payload<Plugin> payload) {
+		this(payload, OmnibusProvider.getOmnibus());
 	}
 
-	public BungeeLauncher(Plugin plugin, Path folder, Omnibus omnibus) {
-		this.plugin = plugin;
-		this.folder = folder;
+	public BungeeLauncher(Payload<Plugin> payload, Omnibus omnibus) {
+		this.payload = payload;
 		this.omnibus = omnibus;
 	}
 
 	@Override
 	public BaseFoundation launch() {
+		Plugin plugin = payload.plugin();
 		return new InjectorBuilder()
 				.bindInstance(Plugin.class, plugin)
 				.bindInstance(ProxyServer.class, plugin.getProxy())
-				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(PlatformId.class, payload.platformId())
+				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), payload.pluginFolder())
 				.bindInstance(InstanceType.class, InstanceType.PROXY)
 				.bindInstance(Omnibus.class, omnibus)
 				.addBindModules(
