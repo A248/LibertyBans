@@ -136,12 +136,7 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 			RemovalsSection.PunishmentRemoval section = configs.getMessagesConfig().removals().forType(punishment.getType());
 			ComponentText successNotification = enforcementOptions.replaceTargetArgument(section.successNotification());
 
-			Optional<Operator> unOperator = enforcementOptions.unOperator();
-			if (unOperator.isEmpty()) {
-				futureNotify = formatter.formatWithPunishment(successNotification, punishment);
-			} else {
-				futureNotify = formatter.formatWithPunishmentAndUnoperator(successNotification, punishment, unOperator.get());
-			}
+			futureNotify = formatter.formatWithPunishment(successNotification, punishment);
 		}
 		return futureNotify.thenCompose((notification) -> {
 			boolean silent = enforcementOptions.broadcasting() == EnforcementOptions.Broadcasting.SILENT;

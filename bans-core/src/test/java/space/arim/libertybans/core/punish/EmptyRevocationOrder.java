@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.punish;
 
+import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EnforcementOptions;
@@ -50,6 +51,31 @@ public final class EmptyRevocationOrder implements RevocationOrder, EnforcementO
 
 	@Override
 	public Optional<List<Victim>> getVictims() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Optional<Operator> getOperator() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Optional<String> getReason() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public RevocationOrder operator(Operator operator) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public RevocationOrder operatorAndReason(Operator operator, String reason) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public RevocationOrder clearOperatorAndReason() {
 		throw new UnsupportedOperationException();
 	}
 

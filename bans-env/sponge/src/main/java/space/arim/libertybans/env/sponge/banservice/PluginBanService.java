@@ -24,11 +24,7 @@ import jakarta.inject.Singleton;
 import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.service.ban.Ban;
 import org.spongepowered.api.service.ban.BanService;
-import space.arim.libertybans.api.AddressVictim;
-import space.arim.libertybans.api.CompositeVictim;
-import space.arim.libertybans.api.PlayerVictim;
-import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.api.Victim;
+import space.arim.libertybans.api.*;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentRevoker;
 import space.arim.libertybans.api.select.PunishmentSelector;
@@ -151,7 +147,7 @@ public final class PluginBanService implements BanService {
 	@Override
 	public CompletableFuture<Boolean> pardon(GameProfile profile) {
 		return revoker
-				.revokeByTypeAndVictim(PunishmentType.BAN, PlayerVictim.of(profile.uniqueId()))
+				.revokeByTypeAndVictim(PunishmentType.BAN, PlayerVictim.of(profile.uniqueId()), ConsoleOperator.INSTANCE, "Pardon")
 				.undoPunishment()
 				.toCompletableFuture();
 	}
@@ -162,7 +158,7 @@ public final class PluginBanService implements BanService {
 				AddressVictim.of(address), CompositeVictim.of(CompositeVictim.WILDCARD_UUID, address)
 		);
 		return revoker
-				.revokeByTypeAndPossibleVictims(PunishmentType.BAN, victims)
+				.revokeByTypeAndPossibleVictims(PunishmentType.BAN, victims, ConsoleOperator.INSTANCE, "Pardon")
 				.undoPunishment()
 				.toCompletableFuture();
 	}
@@ -171,7 +167,7 @@ public final class PluginBanService implements BanService {
 	public CompletableFuture<Boolean> remove(Ban ban) {
 		if (ban instanceof PunishmentAsBan punishmentAsBan) {
 			return punishmentAsBan.underlyingPunishment()
-					.undoPunishment()
+					.undoPunishment(ConsoleOperator.INSTANCE, "Pardon")
 					.toCompletableFuture();
 		}
 		return selector.selectionBuilder()
@@ -189,7 +185,7 @@ public final class PluginBanService implements BanService {
 					}
 					// For our purposes, this must be the same punishment
 					// Note that punishment reason and end time might reasonably change
-					return punishment.undoPunishment();
+					return punishment.undoPunishment(ConsoleOperator.INSTANCE, "Pardon");
 				})
 				.toCompletableFuture();
 	}

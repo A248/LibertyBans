@@ -173,13 +173,14 @@ public interface ListSection {
 		@ConfKey("layout.header")
 		@DefaultStrings({"&7[&eID&7] &r&8/ &7Punishment Type",
 				"&7Operator &8/ &7Reason &8/ &7Date Enacted",
-				"&7"})
+				"&8/ &7Unoperator &8/ &7Undo Reason &8/ &7Date Revoked"})
 		ComponentText layoutHeader();
 		
 		@Override
 		@ConfKey("layout.body")
 		@DefaultStrings({"&7[&e%ID%&7] &r&7/ &7%TYPE%",
 				"&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%",
+				"&7%UNOPERATOR% &8/ &7%UNDO_REASON% &8/ &7%UNDO_DATE%",
 				"&7"})
 		ComponentText layoutBody();
 		

@@ -258,6 +258,19 @@ public interface MessagesConfig {
 		@SubSection
 		PermanentDisplay permanentDisplay();
 
+		@ConfKey("no-unoperator-display")
+		@DefaultString("N/A")
+        String noUnoperatorDisplay();
+
+		@ConfKey("no-undo-reason-display")
+		@DefaultString("N/A")
+		String noUndoReasonDisplay();
+
+		@ConfKey("no-undo-date-display")
+		@DefaultString("N/A")
+		String noUndoDateDisplay();
+
+
 		interface PermanentDisplay {
 
 			@ConfComments("What do you call a permanent duration?")

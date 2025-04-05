@@ -19,11 +19,7 @@
 
 package space.arim.libertybans.core.punish;
 
-import org.jooq.Record10;
-import org.jooq.Record11;
-import org.jooq.Record12;
-import org.jooq.Record6;
-import org.jooq.RecordMapper;
+import org.jooq.*;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
@@ -42,13 +38,33 @@ public interface PunishmentCreator {
 								Operator operator, String reason,
 								ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack);
 
+	Punishment createPunishment(long id, PunishmentType type, Victim victim,
+								Operator operator, String reason,
+								ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack,
+								Operator undoOperator, String undoReason, Instant undoTime);
+
+	RecordMapper<Record15<
+			Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType,
+			Operator, String, Instant>,
+			Punishment> punishmentMapperUndone();
+
 	RecordMapper<Record12<
 			Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,
 			Punishment> punishmentMapper();
 
+	RecordMapper<Record14<
+			PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType,
+			Operator, String, Instant>,
+			Punishment> punishmentMapperUndone(long id);
+
 	RecordMapper<Record11<
 			PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,
 			Punishment> punishmentMapper(long id);
+
+	RecordMapper<Record13<
+			Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType,
+			Operator, String, Instant>,
+			Punishment> punishmentMapperUndone(long id, PunishmentType type);
 
 	RecordMapper<Record10<
 			Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,

@@ -59,12 +59,12 @@ public interface RemovalsSection {
 		
 		@Override
 		@ConfKey("success.message")
-		@DefaultString("&7Unbanned &c&o%VICTIM%&r&7.")
+		@DefaultString("&7Unbanned &c&o%VICTIM%&r&7 because of &e&o%UNDO_REASON%&r&a.")
 		ComponentText successMessage();
 		
 		@Override
 		@ConfKey("success.notification")
-		@DefaultString("&c&o%UNOPERATOR%&r&7 unbanned &c&o%VICTIM%&r&7.")
+		@DefaultString("&c&o%UNOPERATOR%&r&7 unbanned &c&o%VICTIM%&r&7 because of &e&o%UNDO_REASON%&r&a.")
 		ComponentText successNotification();
 		
 	}
@@ -82,12 +82,12 @@ public interface RemovalsSection {
 		
 		@Override
 		@ConfKey("success.message")
-		@DefaultString("&7Unmuted &c&o%VICTIM%&r&7.")
+		@DefaultString("&7Unmuted &c&o%VICTIM%&r&7 because of &e&o%UNDO_REASON%&r&a.")
 		ComponentText successMessage();
 		
 		@Override
 		@ConfKey("success.notification")
-		@DefaultString("&c&o%UNOPERATOR%&r&7 unmuted &c&o%VICTIM%&r&7.")
+		@DefaultString("&c&o%UNOPERATOR%&r&7 unmuted &c&o%VICTIM%&r&7 because of &e&o%UNDO_REASON%&r&a.")
 		ComponentText successNotification();
 		
 	}
@@ -109,12 +109,12 @@ public interface RemovalsSection {
 		
 		@Override
 		@ConfKey("success.message")
-		@DefaultString("&7Unwarned &c&o%VICTIM%&r&7.")
+		@DefaultString("&7Unwarned &c&o%VICTIM%&r&7 because of &e&o%UNDO_REASON%&r&a.")
 		ComponentText successMessage();
 		
 		@Override
 		@ConfKey("success.notification")
-		@DefaultString("&c&o%UNOPERATOR%&r&7 unwarned &c&o%VICTIM%&r&7.")
+		@DefaultString("&c&o%UNOPERATOR%&r&7 unwarned &c&o%VICTIM%&r&7 because of &e&o%UNDO_REASON%&r&a.")
 		ComponentText successNotification();
 		
 	}

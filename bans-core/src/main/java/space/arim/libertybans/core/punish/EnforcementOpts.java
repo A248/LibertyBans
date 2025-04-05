@@ -39,13 +39,11 @@ public final class EnforcementOpts implements EnforcementOptions {
 	private final Enforcement enforcement;
 	private final Broadcasting broadcasting;
 	private final String targetArgument;
-	private final Operator unOperator;
 
-	private EnforcementOpts(Enforcement enforcement, Broadcasting broadcasting, String targetArgument, Operator unOperator) {
+	private EnforcementOpts(Enforcement enforcement, Broadcasting broadcasting, String targetArgument)	{
 		this.enforcement = Objects.requireNonNull(enforcement, "enforcement");
 		this.broadcasting = Objects.requireNonNull(broadcasting, "broadcast");
 		this.targetArgument = targetArgument;
-		this.unOperator = unOperator;
 	}
 
 	@Override
@@ -80,15 +78,6 @@ public final class EnforcementOpts implements EnforcementOptions {
 		return Optional.ofNullable(targetArgument);
 	}
 
-	/**
-	 * Non-API extension
-	 *
-	 * @return the undoing operator
-	 */
-	public Optional<Operator> unOperator() {
-		return Optional.ofNullable(unOperator);
-	}
-
 	interface Factory extends EnforcementOptionsFactory {
 
 		@Override
@@ -106,7 +95,6 @@ public final class EnforcementOpts implements EnforcementOptions {
 		private Enforcement enforcement = Enforcement.GLOBAL;
 		private Broadcasting broadcasting = Broadcasting.NONE;
 		private String targetArgument;
-		private Operator unOperator;
 
 		private Builder() {}
 
@@ -133,20 +121,9 @@ public final class EnforcementOpts implements EnforcementOptions {
 			return this;
 		}
 
-		/**
-		 * Non-API extension
-		 *
-		 * @param unOperator the undoing operator. May be null for none
-		 * @return this builder
-		 */
-		public Builder unOperator(Operator unOperator) {
-			this.unOperator = unOperator;
-			return this;
-		}
-
 		@Override
 		public EnforcementOpts build() {
-			return new EnforcementOpts(enforcement, broadcasting, targetArgument, unOperator);
+			return new EnforcementOpts(enforcement, broadcasting, targetArgument);
 		}
 
 		@Override

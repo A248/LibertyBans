@@ -55,4 +55,11 @@ public interface PardonEvent extends Cancellable, AsyncEvent {
 	 */
 	PunishmentType getPunishmentType();
 
+	/**
+	 * Gets the reason for the pardon
+	 *
+	 * @return the reason
+	 */
+	String getReason();
+
 }
