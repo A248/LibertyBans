@@ -21,7 +21,6 @@ package space.arim.libertybans.env.spigot.plugin;
 
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import space.arim.libertybans.bootstrap.*;
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
@@ -84,7 +83,7 @@ public final class SpigotPlugin extends JavaPlugin {
 	private BaseFoundation initialize() {
 		ExecutorService executor = Executors.newCachedThreadPool();
 
-		Payload<Plugin> payload;
+		Payload<JavaPlugin> payload;
 		ClassLoader launchLoader;
 		try {
 			LibertyBansLauncher launcher = new LibertyBansLauncher.Builder()

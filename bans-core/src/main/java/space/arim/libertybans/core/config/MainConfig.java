@@ -97,8 +97,13 @@ public interface MainConfig {
 		@SubSection
 		TabCompletionConfig tabCompletion();
 
-		@ConfComments({"What commands should be registered as aliases for libertybans commands?",
-			"For each command listed here, '/<command>' will be equal to '/libertybans <command>'"})
+		@ConfComments({
+				"What commands should be registered as aliases for libertybans commands?",
+				"For each command listed here, '/<command>' will be equal to '/libertybans <command>'",
+				"",
+				"This basic system is for convenience; please use a dedicated alias plugin if you need more control.",
+				"Also, please note that command aliases are disabled on Sponge, due to command API differences."
+		})
 		@DefaultStrings({
 			"ban", "ipban",
 		    "mute", "ipmute",

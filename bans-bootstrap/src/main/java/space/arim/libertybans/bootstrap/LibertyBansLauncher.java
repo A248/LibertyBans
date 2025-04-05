@@ -76,7 +76,7 @@ public final class LibertyBansLauncher {
 				iterator.remove();
 				continue;
 			}
-			if (platform.hasHiddenHikariCP() && library == ProtectedLibrary.HIKARICP) {
+			if (library == ProtectedLibrary.HIKARICP && platform.hasHiddenHikariCP()) {
 				continue;
 			}
 			if (library == ProtectedLibrary.JAKARTA_INJECT) {
@@ -85,7 +85,7 @@ public final class LibertyBansLauncher {
 			}
 			String pluginName = culpritFinder.findCulprit(libClass)
 					.map((name) -> "Plugin '" + name + '\'')
-					.orElse("<Unknown plugin>");
+					.orElse("<Unknown>");
 			collectedDetails.add(
 					pluginName + " | " + library.libraryName() + " | " + libClass.getName()
 			);
@@ -99,7 +99,7 @@ public final class LibertyBansLauncher {
 		}
 		String line = "*******************************************";
 		logger.warn(line + '\n'
-				+ "We have detected bugs on your server which threaten your server's stability.\n"
+				+ "We detected bugs on your server which threaten its stability.\n"
 				+ "LibertyBans will continue to operate unaffected, but we strongly suggest you fix these bugs."
 				+ "\n\n"
 				+ "We detected the following plugins with unrelocated library classes."
