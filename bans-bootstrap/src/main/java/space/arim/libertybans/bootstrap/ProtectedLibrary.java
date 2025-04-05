@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,8 @@
 
 package space.arim.libertybans.bootstrap;
 
+import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
+
 public enum ProtectedLibrary {
 
 	HSQLDB("HSQLDB", "org.hsqldb", "jdbc.JDBCDriver"),
@@ -32,6 +34,7 @@ public enum ProtectedLibrary {
 	DAZZLECONF_CORE("DazzleConf-Core", "space.arim.dazzleconf", "ConfigurationFactory"),
 	DAZZLECONF_EXT_SNAKEYAML("DazzleConf-SnakeYaml",
 			"space.arim.dazzleconf.ext.snakeyaml", "SnakeYamlConfigurationFactory"),
+	SNAKEYAML("SnakeYaml", "org.yaml.snakeyaml", "Yaml"),
 
 	JAKARTA_INJECT("Jakarta-Inject", "jakarta.inject", "Provider"),
 	SOLID_INJECTOR("SolidInjector", "space.arim.injector", "Injector"),
@@ -81,16 +84,21 @@ public enum ProtectedLibrary {
 	 * parent classloaders
 	 *
 	 * @param expectedClassLoader the classloader to check in
+	 * @param logger			  the logger
 	 * @return true if the library is present in the classloader or any of its parents
 	 */
-	boolean detect(ClassLoader expectedClassLoader) {
+	boolean detect(ClassLoader expectedClassLoader, BootstrapLogger logger) {
 		Class<?> sampleClass;
 		try {
 			sampleClass = Class.forName(sampleClass());
 		} catch (ClassNotFoundException ex) {
 			return false;
 		}
-		return findClassLoaderInHierarchy(sampleClass.getClassLoader(), expectedClassLoader);
+		boolean foundInHierarchy = findClassLoaderInHierarchy(sampleClass.getClassLoader(), expectedClassLoader);
+		if (!foundInHierarchy) {
+			logger.debug("Class " + sampleClass() + " found, but not in classloader hierarchy.");
+		}
+		return foundInHierarchy;
 	}
 
 	private static boolean findClassLoaderInHierarchy(ClassLoader subjectToLookFor, ClassLoader hierarchy) {

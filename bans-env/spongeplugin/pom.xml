@@ -64,6 +64,7 @@
         <dependency>
             <groupId>org.spongepowered</groupId>
             <artifactId>spongeapi</artifactId>
+            <version>9.0.0</version>
         </dependency>
         <dependency>
             <groupId>space.arim.libertybans</groupId>

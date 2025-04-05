@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.commands.usage;
 
+import space.arim.libertybans.bootstrap.PlatformId;
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 import space.arim.libertybans.core.config.ReadFromResource;
 import space.arim.libertybans.core.env.CmdSender;
@@ -33,21 +34,28 @@ import java.util.List;
 
 public final class PluginInfoMessage {
 
+	private final PlatformId platformId;
 	private final List<String> maintainers;
 	private final List<String> collaborators;
 	private final List<String> commendedUsers;
 
-	PluginInfoMessage(List<String> maintainers, List<String> collaborators, List<String> commendedUsers) {
+	PluginInfoMessage(PlatformId platformId,
+					  List<String> maintainers, List<String> collaborators, List<String> commendedUsers) {
+		this.platformId = platformId;
 		this.maintainers = List.copyOf(maintainers);
 		this.collaborators = List.copyOf(collaborators);
 		this.commendedUsers = List.copyOf(commendedUsers);
+	}
+
+	PluginInfoMessage(List<String> maintainers, List<String> collaborators, List<String> commendedUsers) {
+		this(PlatformId.STUB, maintainers, collaborators, commendedUsers);
 	}
 
 	public PluginInfoMessage() {
 		this(List.of(), List.of(), List.of());
 	}
 
-	public static PluginInfoMessage fromReader(Reader reader) throws IOException {
+	public static PluginInfoMessage fromReader(PlatformId platformId, Reader reader) throws IOException {
 		List<String> maintainers = new ArrayList<>();
 		List<String> collaborators = new ArrayList<>();
 		List<String> commendedUsers = new ArrayList<>();
@@ -64,17 +72,18 @@ public final class PluginInfoMessage {
 				}
 			}
 		}
-		return new PluginInfoMessage(maintainers, collaborators, commendedUsers);
+		return new PluginInfoMessage(platformId, maintainers, collaborators, commendedUsers);
 	}
 
-	public static PluginInfoMessage fromResource(String resourceName) {
-		return new ReadFromResource(resourceName).read(PluginInfoMessage::fromReader);
+	public static PluginInfoMessage fromResource(PlatformId platformId, String resourceName) {
+		return new ReadFromResource(resourceName).read((reader) -> PluginInfoMessage.fromReader(platformId, reader));
 	}
 
 	public void send(CmdSender sender) {
 		String message =
 				"&9----------------------------------------------------------\n" +
-				"&d&l" + PluginInfo.NAME + " &r&e&l" +  PluginInfo.VERSION + "&r\n" +
+				"&d&l" + PluginInfo.NAME + " &r&e&l" +  PluginInfo.VERSION +
+				" &7on " + platformId.name() + ' ' + platformId.version() + "&r\n" +
 				"&7" + PluginInfo.DESCRIPTION + "\n" +
 				"&7" + PluginInfo.URL + "\n" +
 				"&9-- Contributors --\n" +

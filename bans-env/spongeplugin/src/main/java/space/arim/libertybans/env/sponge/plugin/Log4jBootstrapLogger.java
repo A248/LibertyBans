@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,6 +28,11 @@ final class Log4jBootstrapLogger implements BootstrapLogger {
 
 	Log4jBootstrapLogger(Logger logger) {
 		this.logger = logger;
+	}
+
+	@Override
+	public void debug(String message) {
+		logger.debug(message);
 	}
 
 	@Override

@@ -17,23 +17,24 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.bootstrap;
+package space.arim.libertybans.env.sponge.plugin;
 
-public interface BaseFoundation {
+import org.spongepowered.api.network.channel.ChannelBuf;
+import org.spongepowered.api.network.channel.raw.play.RawPlayDataChannel;
 
-	RunState getRunState();
+public interface ChannelFacade {
 
-	void startup();
+    Handler makeHandler(Adapter adapter);
 
-	boolean fullRestart();
+    interface Adapter {
 
-	void shutdown();
+        void handlePayload(ChannelBuf data);
+    }
 
-	/**
-	 * Used for Sponge and standalone only. Sponge requires early command registration and service provision
-	 *
-	 * @return the platform accessors
-	 */
-	Object platformAccess();
+    interface Handler {
 
+        void install(RawPlayDataChannel channel);
+
+        void uninstall(RawPlayDataChannel channel);
+    }
 }

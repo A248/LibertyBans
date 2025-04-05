@@ -1,19 +1,19 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2025 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 package space.arim.libertybans.core.service;
@@ -53,7 +53,7 @@ public class StandardAsynchronicityManager implements AsynchronicityManager {
 	private ExecutorService universalJoiner;
 	private FactoryOfTheFuture futuresFactory;
 
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+	private static final Logger LOGGER = LoggerFactory.getLogger(ThisClass.get());
 
 	@Inject
 	public StandardAsynchronicityManager(Omnibus omnibus, PlatformHandle envHandle) {
@@ -77,7 +77,10 @@ public class StandardAsynchronicityManager implements AsynchronicityManager {
 			try {
 				future.toCompletableFuture().join();
 			} catch (CompletionException | CancellationException ex) {
-				logger.error("Exception during miscellaneous asynchronous computation", ex);
+				LOGGER.error(
+						"Error during asynchronous computation. Please report this bug either on Discord or Github.",
+						ex
+				);
 			}
 		});
 	}
@@ -114,17 +117,17 @@ public class StandardAsynchronicityManager implements AsynchronicityManager {
 				return universalJoiner.awaitTermination(6L, TimeUnit.SECONDS);
 			} catch (InterruptedException ex) {
 				Thread.currentThread().interrupt();
-				logger.warn("Failed to shutdown all chains of asynchronous execution (Interrupted)", ex);
+				LOGGER.warn("Failed to shutdown all chains of asynchronous execution (Interrupted)", ex);
 				return true;
 			}
 		}).join();
 
 		if (!termination) {
-			logger.warn("Failed to shutdown all chains of asynchronous execution");
+			LOGGER.warn("Failed to shutdown all chains of asynchronous execution");
 		}
-		if (futuresFactory instanceof AutoCloseable) {
+		if (futuresFactory instanceof AutoCloseable autoCloseable) {
 			try {
-				((AutoCloseable) futuresFactory).close();
+				autoCloseable.close();
 			} catch (Exception ex) {
 				throw new ShutdownException("Cannot shutdown factory of the future", ex);
 			}

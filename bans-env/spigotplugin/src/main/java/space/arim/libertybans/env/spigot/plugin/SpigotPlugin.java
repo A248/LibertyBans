@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,16 +22,10 @@ package space.arim.libertybans.env.spigot.plugin;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import space.arim.libertybans.bootstrap.BaseFoundation;
-import space.arim.libertybans.bootstrap.Instantiator;
-import space.arim.libertybans.bootstrap.LibertyBansLauncher;
-import space.arim.libertybans.bootstrap.LibraryDetection;
-import space.arim.libertybans.bootstrap.Platform;
-import space.arim.libertybans.bootstrap.Platforms;
-import space.arim.libertybans.bootstrap.ProtectedLibrary;
+import space.arim.libertybans.bootstrap.*;
+import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 import space.arim.libertybans.bootstrap.logger.JulBootstrapLogger;
 
-import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -59,11 +53,12 @@ public final class SpigotPlugin extends JavaPlugin {
 		base.shutdown();
 	}
 
-	static Platform detectPlatform(JavaPlugin plugin) {
+	static Platform.Builder detectPlatform(JavaPlugin plugin) {
+		// Dynamically detect adventure based on whether it's implemented
 		class AdventureLibraryDetection implements LibraryDetection {
 
 			@Override
-			public boolean evaluatePresence() {
+			public boolean evaluatePresence(BootstrapLogger logger) {
 				try {
 					Class<?> audienceClass = Class.forName("net.kyori.adventure.audience.Audience");
 					return audienceClass.isAssignableFrom(Player.class);
@@ -73,29 +68,32 @@ public final class SpigotPlugin extends JavaPlugin {
 			}
 		}
 		Server server = plugin.getServer();
-		return Platforms.bukkit()
+		return Platform
+				.builder(Platform.Category.BUKKIT)
+				.nameAndVersion(server.getName(), server.getVersion())
 				// On Spigot slf4j is an internal dependency
 				.slf4jSupport(LibraryDetection.eitherOf(
 						new LibraryDetection.Slf4jPluginLoggerMethod(plugin),
 						new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.SLF4J_API, JavaPlugin.class.getClassLoader())
 				))
 				.kyoriAdventureSupport(new AdventureLibraryDetection())
-				.build(server.getName() + " " + server.getVersion());
+				.snakeYamlProvided(LibraryDetection.enabled());
 	}
 
 	private BaseFoundation initialize() {
-		Path folder = getDataFolder().toPath();
 		ExecutorService executor = Executors.newCachedThreadPool();
 
+		Payload<JavaPlugin> payload;
 		ClassLoader launchLoader;
 		try {
 			LibertyBansLauncher launcher = new LibertyBansLauncher.Builder()
-					.folder(folder)
+					.folder(getDataFolder().toPath())
 					.logger(new JulBootstrapLogger(getLogger()))
 					.platform(detectPlatform(this))
 					.executor(executor)
 					.culpritFinder(new SpigotCulpritFinder())
 					.build();
+			payload = launcher.getPayload(this);
 			launchLoader = launcher.attemptLaunch().join();
 		} finally {
 			executor.shutdown();
@@ -103,8 +101,9 @@ public final class SpigotPlugin extends JavaPlugin {
 		}
 		BaseFoundation base;
 		try {
-			base = new Instantiator("space.arim.libertybans.env.spigot.SpigotLauncher", launchLoader)
-					.invoke(JavaPlugin.class, this, folder);
+			base = new Instantiator(
+					"space.arim.libertybans.env.spigot.SpigotLauncher", launchLoader
+			).invoke(payload);
 		} catch (IllegalArgumentException | SecurityException | ReflectiveOperationException ex) {
 			getLogger().log(Level.WARNING, "Failed to launch LibertyBans", ex);
 			return null;

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,6 +21,7 @@ package space.arim.libertybans.core;
 
 import jakarta.inject.Singleton;
 
+import space.arim.libertybans.bootstrap.PlatformId;
 import space.arim.libertybans.core.commands.extra.StandardTabCompletion;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.commands.usage.PluginInfoMessage;
@@ -102,8 +103,8 @@ public class PillarTwoBindModule {
 		return usage;
 	}
 
-	public PluginInfoMessage pluginInfoMessage() {
-		return PluginInfoMessage.fromResource("contributors");
+	public PluginInfoMessage pluginInfoMessage(PlatformId platformId) {
+		return PluginInfoMessage.fromResource(platformId, "contributors");
 	}
 
 	public TabCompletion tabCompletion(StandardTabCompletion tabCompletion) {

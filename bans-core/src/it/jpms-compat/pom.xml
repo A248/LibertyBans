@@ -34,6 +34,18 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
@@ -46,6 +58,7 @@
                 <version>3.0.0-M5</version>
                 <configuration>
                     <trimStackTrace>false</trimStackTrace>
+                    <argLine>-XX:TieredStopAtLevel=1 -XX:-TieredCompilation -javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
                 </configuration>
                 <dependencies>
                     <dependency>

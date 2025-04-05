@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,7 +20,9 @@
 package space.arim.libertybans.env.bungee.plugin;
 
 import org.junit.jupiter.api.Test;
+import space.arim.libertybans.bootstrap.DependencyBundle;
 import space.arim.libertybans.bootstrap.Platform;
+import space.arim.libertybans.bootstrap.logger.NoOpBootstrapLogger;
 import space.arim.libertybans.env.bungee.MockPlugin;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -30,9 +32,9 @@ public class BungeePluginTest {
 
 	@Test
 	public void detectPlatform() {
-		Platform platform = BungeePlugin.detectPlatform(MockPlugin.create());
-		assertTrue(platform.hasSlf4jSupport());
-		assertFalse(platform.hasKyoriAdventureSupport());
+		Platform platform = BungeePlugin.detectPlatform(MockPlugin.create()).build(new NoOpBootstrapLogger());
+		assertTrue(platform.isBundleProvided(DependencyBundle.SLF4J));
+		assertFalse(platform.isBundleProvided(DependencyBundle.KYORI));
 	}
 
 }

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,9 +21,12 @@ package space.arim.libertybans.env.sponge;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.libertybans.env.sponge.plugin.PlatformAccess;
+import space.arim.omnibus.util.ThisClass;
 
 import java.util.Set;
 
@@ -33,6 +36,8 @@ public final class SpongeEnv implements Environment {
 	private final Provider<ChatListener> chatListener;
 	private final Provider<ServerNameListener> serverNameListener;
 	private final PlatformAccess platformAccess;
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ThisClass.get());
 
 	@Inject
 	public SpongeEnv(Provider<ConnectionListener> connectionListener, Provider<ChatListener> chatListener,
@@ -54,10 +59,7 @@ public final class SpongeEnv implements Environment {
 
 	@Override
 	public PlatformListener createAliasCommand(String command) {
-		/*
-		Do nothing. Command unregistration is not supported by Sponge API 9.
-		Therefore, we register no aliases since they may never be unregistered.
-		 */
+		LOGGER.debug("Skipping alias {} since the Sponge API does not support command unregistration.", command);
 		class DummyListener implements PlatformListener {
 
 			@Override

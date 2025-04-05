@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,27 +24,27 @@ import org.slf4j.LoggerFactory;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
-import org.spongepowered.api.network.EngineConnectionSide;
-import org.spongepowered.api.network.ServerSideConnection;
 import org.spongepowered.api.network.channel.ChannelBuf;
 import org.spongepowered.api.network.channel.raw.RawDataChannel;
 import org.spongepowered.api.network.channel.raw.play.RawPlayDataChannel;
-import org.spongepowered.api.network.channel.raw.play.RawPlayDataHandler;
 import space.arim.libertybans.core.env.EnvMessageChannel;
 import space.arim.libertybans.core.env.message.PluginMessage;
 import space.arim.libertybans.core.env.message.PluginMessageInput;
 import space.arim.libertybans.core.env.message.PluginMessageOutput;
+import space.arim.libertybans.env.sponge.plugin.ChannelFacade;
 
 import java.io.IOException;
 import java.util.function.Consumer;
 
-public final class SpongeMessageChannel implements EnvMessageChannel<RawPlayDataHandler<ServerSideConnection>> {
+public final class SpongeMessageChannel implements EnvMessageChannel<ChannelFacade.Handler> {
 
 	private final Game game;
+	private final ChannelFacade channelFacade;
 
 	@Inject
-	public SpongeMessageChannel(Game game) {
+	public SpongeMessageChannel(Game game, ChannelFacade channelFacade) {
 		this.game = game;
+		this.channelFacade = channelFacade;
 	}
 
 	private RawPlayDataChannel channel() {
@@ -73,29 +73,26 @@ public final class SpongeMessageChannel implements EnvMessageChannel<RawPlayData
 	}
 
 	@Override
-	public void installHandler(RawPlayDataHandler<ServerSideConnection> handler) {
-		channel().addHandler(EngineConnectionSide.SERVER, handler);
+	public void installHandler(ChannelFacade.Handler handler) {
+		handler.install(channel());
 	}
 
 	@Override
-	public void uninstallHandler(RawPlayDataHandler<ServerSideConnection> handler) {
-		channel().removeHandler(handler);
+	public void uninstallHandler(ChannelFacade.Handler handler) {
+		handler.uninstall(channel());
 	}
 
 	@Override
-	public <R> RawPlayDataHandler<ServerSideConnection> createHandler(Consumer<R> acceptor,
-																	  PluginMessage<?, R> pluginMessage) {
-		return new Handler<>(acceptor, pluginMessage);
+	public <R> ChannelFacade.Handler createHandler(Consumer<R> acceptor, PluginMessage<?, R> pluginMessage) {
+		return channelFacade.makeHandler(new Adapter<>(acceptor, pluginMessage));
 	}
 
-	record Handler<R>(Consumer<R> handler, PluginMessage<?, R> pluginMessage)
-			implements RawPlayDataHandler<ServerSideConnection> {
+	record Adapter<R>(Consumer<R> acceptor, PluginMessage<?, R> pluginMessage) implements ChannelFacade.Adapter {
 
 		@Override
-		public void handlePayload(ChannelBuf data, ServerSideConnection connection) {
-			pluginMessage.readFrom(new ChannelBufAsInput(data)).ifPresent(handler);
+		public void handlePayload(ChannelBuf data) {
+			pluginMessage.readFrom(new ChannelBufAsInput(data)).ifPresent(acceptor);
 		}
-
 	}
 
 	private record ChannelBufAsOutput(ChannelBuf buffer) implements PluginMessageOutput {

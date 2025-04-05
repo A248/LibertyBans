@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,25 +32,30 @@ import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-enum DependencyBundle {
+public enum DependencyBundle {
 
-	CAFFEINE(Repositories.CENTRAL_REPO),
-	JAKARTA(Repositories.CENTRAL_REPO),
-	KYORI(Repositories.CENTRAL_REPO),
+	CAFFEINE(Repositories.CENTRAL_REPO, ProtectedLibrary.CAFFEINE),
+	JAKARTA(Repositories.CENTRAL_REPO, ProtectedLibrary.JAKARTA_INJECT),
+	KYORI(Repositories.CENTRAL_REPO, ProtectedLibrary.KYORI_ADVENTURE, ProtectedLibrary.KYORI_EXAMINATION),
 	SELF_IMPLEMENTATION(Repositories.ARIM_AFFERO_GPL3),
-	SLF4J(Repositories.CENTRAL_REPO);
+	SLF4J(Repositories.CENTRAL_REPO, ProtectedLibrary.SLF4J_API, ProtectedLibrary.SLF4J_SIMPLE),
+	SNAKEYAML(Repositories.CENTRAL_REPO, ProtectedLibrary.SNAKEYAML)
+	;
 
 	private final Repository repository;
+	private final ProtectedLibrary[] protectedLibraries;
 
-	DependencyBundle(Repository repository) {
+	DependencyBundle(Repository repository, ProtectedLibrary...protectedLibraries) {
 		this.repository = repository;
+        this.protectedLibraries = protectedLibraries;
+    }
+
+	Collection<ProtectedLibrary> protectedLibraries() {
+		return List.of(protectedLibraries);
 	}
 
 	@Override

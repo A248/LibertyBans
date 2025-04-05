@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -41,12 +41,12 @@ public class DownloadDependenciesIT {
 
 	@TestFactory
 	public Stream<DynamicNode> downloadDependencies() {
-		return Platforms.allPossiblePlatforms("download test").map((platform) -> {
+		return Platform.allPossiblePlatforms("download test").map((platform) -> {
 			return DynamicTest.dynamicTest("For platform " + platform, () -> runDownloadDependencies(platform));
 		});
 	}
 
-	private void runDownloadDependencies(Platform platform) {
+	private void runDownloadDependencies(Platform.Builder platform) {
 		Path subFolder = folder.resolve("" + folderUniqueifier.getAndIncrement());
 		LibertyBansLauncher launcher = new LibertyBansLauncher.Builder()
 				.folder(subFolder)

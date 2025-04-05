@@ -24,6 +24,8 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.api.LibertyBans;
+import space.arim.libertybans.bootstrap.PlatformId;
+import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 import space.arim.libertybans.core.addon.AddonCenter;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.Configs;
@@ -39,6 +41,7 @@ import space.arim.omnibus.util.ThisClass;
 @Singleton
 public class LifecycleGodfather extends AbstractBaseFoundation {
 
+	private final PlatformId platformId;
 	private final AsynchronicityManager asyncManager;
 	private final Configs configs;
 	private final DatabaseManager databaseManager;
@@ -54,11 +57,12 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ThisClass.get());
 
 	@Inject
-	public LifecycleGodfather(AsynchronicityManager asyncManager, Configs configs, DatabaseManager databaseManager,
-							  UUIDManager uuidManager, MuteCache muteCache, TabCompletion tabCompletion,
-							  EnvironmentManager envManager, AddonCenter addonCenter,
-							  LibertyBans api) {
-		this.asyncManager = asyncManager;
+	public LifecycleGodfather(PlatformId platformId, AsynchronicityManager asyncManager, Configs configs, DatabaseManager databaseManager,
+                              UUIDManager uuidManager, MuteCache muteCache, TabCompletion tabCompletion,
+                              EnvironmentManager envManager, AddonCenter addonCenter,
+                              LibertyBans api) {
+        this.platformId = platformId;
+        this.asyncManager = asyncManager;
 		this.configs = configs;
 		this.databaseManager = databaseManager;
 		this.uuidManager = uuidManager;
@@ -72,6 +76,9 @@ public class LifecycleGodfather extends AbstractBaseFoundation {
 
 	@Override
 	void startup0() {
+		LOGGER.info(
+				"Starting {} {} on {} {}", PluginInfo.NAME, PluginInfo.VERSION, platformId.name(), platformId.version()
+		);
 		asyncManager.startup();
 		configs.startup();
 		databaseManager.startup();

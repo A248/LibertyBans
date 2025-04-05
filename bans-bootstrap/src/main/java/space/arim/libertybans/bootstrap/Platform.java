@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,146 +19,149 @@
 
 package space.arim.libertybans.bootstrap;
 
-import java.util.Objects;
+import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
+
+import java.util.*;
+import java.util.stream.Stream;
 
 public final class Platform {
 
-	private final Category category;
-	private final String platformName;
-	private final boolean slf4j;
-	private final boolean kyoriAdventure;
-	private final boolean caffeine;
-	private final boolean jakarta;
-	private final boolean hikariCP;
+	final PlatformId platformId;
+	private final BootstrapLogger logger;
+	private final Map<DependencyBundle, LibraryDetection> libraryDetectionMap;
+	private final LibraryDetection hikariCP;
 
-	Platform(Category category, String platformName,
-			 boolean slf4j, boolean kyoriAdventure, boolean caffeine, boolean jakarta, boolean hikariCP) {
-		this.category = Objects.requireNonNull(category, "category");
-		this.platformName = Objects.requireNonNull(platformName, "platformName");
-		this.slf4j = slf4j;
-		this.kyoriAdventure = kyoriAdventure;
-		this.caffeine = caffeine;
-		this.jakarta = jakarta;
-		this.hikariCP = hikariCP;
+	Platform(PlatformId platformId, BootstrapLogger logger,
+			 Map<DependencyBundle, LibraryDetection> libraryDetectionMap, LibraryDetection hikariCP) {
+		this.platformId = Objects.requireNonNull(platformId, "platformId");
+		this.logger = logger;
+        this.libraryDetectionMap = libraryDetectionMap;
+        this.hikariCP = hikariCP;
 	}
 
-	public Category category() {
-		return category;
+	public boolean isBundleProvided(DependencyBundle bundle) {
+		LibraryDetection detection = libraryDetectionMap.get(bundle);
+		boolean provided = detection != null && detection.evaluatePresence(logger);
+		if (provided) {
+			logger.debug("Found provided dependency bundle: " + bundle);
+		}
+		return provided;
 	}
 
-	public String platformName() {
-		return platformName;
+	boolean hasHiddenHikariCP() {
+		return hikariCP != null && hikariCP.evaluatePresence(logger);
 	}
 
-	public boolean hasSlf4jSupport() {
-		return slf4j;
+	public static PreBuilder builder(Category category) {
+		return new PreBuilder(category);
 	}
 
-	public boolean hasKyoriAdventureSupport() {
-		return kyoriAdventure;
-	}
+	public static final class PreBuilder {
 
-	public boolean isCaffeineProvided() {
-		return caffeine;
-	}
+		private final Category category;
 
-	public boolean isJakartaProvided() {
-		return jakarta;
-	}
+        public PreBuilder(Category category) {
+            this.category = Objects.requireNonNull(category, "category");
+        }
 
-	public boolean hasHiddenHikariCP() {
-		return hikariCP;
-	}
-
-	static Builder builderForCategory(Category category) {
-		return new Builder(category);
+        public Builder nameAndVersion(String platformName, String platformVersion) {
+			return new Builder(category, platformName, platformVersion);
+		}
 	}
 
 	public static final class Builder {
 
 		private final Category category;
-		private boolean slf4j;
-		private boolean kyoriAdventure;
-		private boolean caffeine;
-		private boolean jakarta;
-		private boolean hikariCP;
+		private final String platformName;
+		private final String platformVersion;
+		private final Map<DependencyBundle, LibraryDetection> libraryDetectionMap = new EnumMap<>(DependencyBundle.class);
+		private LibraryDetection hikariCP;
 
-		private Builder(Category category) {
-			this.category = Objects.requireNonNull(category, "category");
-		}
+		private Builder(Category category, String platformName, String platformVersion) {
+			this.category = category;
+            this.platformName = platformName;
+            this.platformVersion = platformVersion;
+        }
 
 		public Builder slf4jSupport(LibraryDetection slf4j) {
-			this.slf4j = slf4j.evaluatePresence();
+			libraryDetectionMap.put(DependencyBundle.SLF4J, slf4j);
 			return this;
 		}
 
 		public Builder kyoriAdventureSupport(LibraryDetection kyoriAdventure) {
-			this.kyoriAdventure = kyoriAdventure.evaluatePresence();
+			libraryDetectionMap.put(DependencyBundle.KYORI, kyoriAdventure);
 			return this;
 		}
 
 		public Builder caffeineProvided(LibraryDetection caffeine) {
-			this.caffeine = caffeine.evaluatePresence();
+			libraryDetectionMap.put(DependencyBundle.CAFFEINE, caffeine);
 			return this;
 		}
 
 		public Builder jakartaProvided(LibraryDetection jakarta) {
-			this.jakarta = jakarta.evaluatePresence();
+			libraryDetectionMap.put(DependencyBundle.JAKARTA, jakarta);
+			return this;
+		}
+
+		public Builder snakeYamlProvided(LibraryDetection snakeYaml) {
+			libraryDetectionMap.put(DependencyBundle.SNAKEYAML, snakeYaml);
 			return this;
 		}
 
 		public Builder hiddenHikariCP(LibraryDetection hikariCP) {
-			this.hikariCP = hikariCP.evaluatePresence();
+			this.hikariCP = hikariCP;
 			return this;
 		}
 
-		public Platform build(String platformName) {
-			return new Platform(category, platformName, slf4j, kyoriAdventure, caffeine, jakarta, hikariCP);
+		public Platform build(BootstrapLogger logger) {
+			/*
+			We want to distinguish between platform category (e.g. Bukkit) and specific brand (e.g., Paper)
+			To do that, check both pieces of information, and if they're different, include both of them.
+			 */
+			PlatformId platformId;
+			if (category.name().equalsIgnoreCase(platformName)) {
+				platformId = new PlatformId(platformName, platformVersion);
+			} else {
+				platformId = new PlatformId(platformName + " (" + category.display() + ')', platformVersion);
+			}
+			return new Platform(platformId, logger, libraryDetectionMap, hikariCP);
 		}
 	}
 
 	public enum Category {
 		BUKKIT,
-		BUNGEE,
+		BUNGEECORD,
 		SPONGE,
 		VELOCITY,
-		STANDALONE
-	}
+		STANDALONE;
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		Platform platform = (Platform) o;
-		return slf4j == platform.slf4j && kyoriAdventure == platform.kyoriAdventure && caffeine == platform.caffeine
-				&& hikariCP == platform.hikariCP && category == platform.category
-				&& platformName.equals(platform.platformName);
-	}
-
-	@Override
-	public int hashCode() {
-		int result = category.hashCode();
-		result = 31 * result + platformName.hashCode();
-		result = 31 * result + (slf4j ? 1 : 0);
-		result = 31 * result + (kyoriAdventure ? 1 : 0);
-		result = 31 * result + (caffeine ? 1 : 0);
-		result = 31 * result + (hikariCP ? 1 : 0);
-		return result;
+		String display() {
+			String categoryName = name();
+			return categoryName.charAt(0) + categoryName.substring(1).toLowerCase(Locale.ROOT);
+		}
 	}
 
 	@Override
 	public String toString() {
-		return "Platform{" +
-				"category=" + category +
-				", platformName='" + platformName + '\'' +
-				", slf4j=" + slf4j +
-				", kyoriAdventure=" + kyoriAdventure +
-				", caffeine=" + caffeine +
-				", hikariCP=" + hikariCP +
-				", hasSlf4jSupport=" + hasSlf4jSupport() +
-				", hasKyoriAdventureSupport=" + hasKyoriAdventureSupport() +
-				", caffeineProvided=" + isCaffeineProvided() +
-				", hasHiddenHikariCP=" + hasHiddenHikariCP() +
-				'}';
+		return "Platform{" + platformId + '}';
 	}
+
+	public static Stream<Builder> allPossiblePlatforms(String platformName) {
+		Set<Builder> platforms = new HashSet<>();
+		for (Platform.Category category : Platform.Category.values()) {
+			// Count from 00000 to 11111 in binary
+			for (int setting = 0; setting < 0b100000; setting++) {
+				final int flags = setting;
+				platforms.add(Platform.builder(category)
+						.nameAndVersion(platformName, "0.0")
+						.kyoriAdventureSupport((l) -> (flags & 0b0001) != 0)
+						.slf4jSupport((l) -> (flags & 0b0010) != 0)
+						.caffeineProvided((l) -> (flags & 0b0100) != 0)
+						.jakartaProvided((l) -> (flags & 0b1000) != 0)
+						.snakeYamlProvided((l) -> (flags & 0b10000) != 0));
+			}
+		}
+		return platforms.stream();
+	}
+
 }

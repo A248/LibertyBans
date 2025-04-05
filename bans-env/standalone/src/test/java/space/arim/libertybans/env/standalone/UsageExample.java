@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,6 +23,8 @@ import space.arim.injector.Injector;
 import space.arim.libertybans.api.LibertyBans;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.bootstrap.BaseFoundation;
+import space.arim.libertybans.bootstrap.Payload;
+import space.arim.libertybans.bootstrap.PlatformId;
 import space.arim.omnibus.DefaultOmnibus;
 
 import java.nio.file.Path;
@@ -30,7 +32,9 @@ import java.util.List;
 
 public class UsageExample {
 
-	// Prerequisites: snakeyaml and Gson dependencies on the classpath
+	// Prerequisites:
+	// 	  None technically, though you probably want to use a remote database.
+	//
 	// Two items needed to implement:
 	// 1. output for receiving messages (ConsoleAudience)
 	// 2. input for dispatching commands (calls to CommandDispatch)
@@ -43,7 +47,8 @@ public class UsageExample {
 
 		// Launch the punishment suite
 		Injector injector = new StandaloneLauncher(
-				dataFolder, new DefaultOmnibus()
+				new Payload<>(null, new PlatformId("Java", Runtime.version().toString()), dataFolder),
+				new DefaultOmnibus()
 		).createInjector(consoleAudience);
 		// Retrieve the API
 		LibertyBans api = injector.request(LibertyBans.class);

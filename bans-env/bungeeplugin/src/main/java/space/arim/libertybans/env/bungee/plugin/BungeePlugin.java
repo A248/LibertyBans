@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,17 +21,9 @@ package space.arim.libertybans.env.bungee.plugin;
 
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
-import net.md_5.bungee.api.scheduler.TaskScheduler;
-import space.arim.libertybans.bootstrap.BaseFoundation;
-import space.arim.libertybans.bootstrap.Instantiator;
-import space.arim.libertybans.bootstrap.LibertyBansLauncher;
-import space.arim.libertybans.bootstrap.LibraryDetection;
-import space.arim.libertybans.bootstrap.Platform;
-import space.arim.libertybans.bootstrap.Platforms;
-import space.arim.libertybans.bootstrap.ProtectedLibrary;
+import space.arim.libertybans.bootstrap.*;
 import space.arim.libertybans.bootstrap.logger.JulBootstrapLogger;
 
-import java.nio.file.Path;
 import java.util.logging.Level;
 
 public final class BungeePlugin extends Plugin {
@@ -57,33 +49,34 @@ public final class BungeePlugin extends Plugin {
 		base.shutdown();
 	}
 
-	static Platform detectPlatform(Plugin plugin) {
+	static Platform.Builder detectPlatform(Plugin plugin) {
 		ProxyServer server = plugin.getProxy();
-		return Platforms.bungeecord()
-				// On BungeeCord slf4j is an internal dependency
+		return Platform
+				.builder(Platform.Category.BUNGEECORD)
+				.nameAndVersion(server.getName(), server.getVersion())
+				// On BungeeCord slf4j is an internal dependency, on Waterfall it is API
 				.slf4jSupport(LibraryDetection.eitherOf(
 						new LibraryDetection.Slf4jPluginLoggerMethod(plugin),
 						new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.SLF4J_API, Plugin.class.getClassLoader())
 				))
-				.build(server.getName() + " " + server.getVersion());
+				.snakeYamlProvided(LibraryDetection.enabled());
 	}
 
 	private BaseFoundation initialize() {
-		Path folder = getDataFolder().toPath();
-		TaskScheduler scheduler = getProxy().getScheduler();
-
 		LibertyBansLauncher launcher = new LibertyBansLauncher.Builder()
-				.folder(folder)
+				.folder(getDataFolder().toPath())
 				.logger(new JulBootstrapLogger(getLogger()))
 				.platform(detectPlatform(this))
-				.executor((cmd) -> scheduler.runAsync(this, cmd))
+				.executor((cmd) -> getProxy().getScheduler().runAsync(this, cmd))
 				.culpritFinder(new BungeeCulpritFinder(getLogger()))
 				.build();
+		Payload<Plugin> payload = launcher.getPayload(this);
 		ClassLoader launchLoader = launcher.attemptLaunch().join();
 		BaseFoundation base;
 		try {
-			base = new Instantiator("space.arim.libertybans.env.bungee.BungeeLauncher", launchLoader)
-					.invoke(Plugin.class, this, folder);
+			base = new Instantiator(
+					"space.arim.libertybans.env.bungee.BungeeLauncher", launchLoader
+			).invoke(payload);
 		} catch (IllegalArgumentException | SecurityException | ReflectiveOperationException ex) {
 			getLogger().log(Level.WARNING, "Failed to launch LibertyBans", ex);
 			return null;

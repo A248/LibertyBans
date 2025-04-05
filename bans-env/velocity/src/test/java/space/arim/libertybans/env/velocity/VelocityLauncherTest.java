@@ -31,6 +31,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.ProxyServer;
+import space.arim.libertybans.bootstrap.Payload;
+import space.arim.libertybans.bootstrap.PlatformId;
 
 @ExtendWith(MockitoExtension.class)
 public class VelocityLauncherTest {
@@ -43,7 +45,9 @@ public class VelocityLauncherTest {
 		ProxyServer proxyServer = mock(ProxyServer.class);
 		PluginContainer pluginContainer = mock(PluginContainer.class);
 
-		assertNotNull(new VelocityLauncher(pluginContainer, proxyServer, tempDir).launch());
+		assertNotNull(new VelocityLauncher(
+				new Payload<>(pluginContainer, PlatformId.STUB, tempDir), proxyServer
+		).launch());
 	}
 
 }

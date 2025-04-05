@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,6 +25,8 @@ import space.arim.injector.Identifier;
 import space.arim.injector.InjectorBuilder;
 import space.arim.injector.SpecificationSupport;
 import space.arim.libertybans.bootstrap.BaseFoundation;
+import space.arim.libertybans.bootstrap.Payload;
+import space.arim.libertybans.bootstrap.PlatformId;
 import space.arim.libertybans.bootstrap.PlatformLauncher;
 import space.arim.libertybans.core.ApiBindModule;
 import space.arim.libertybans.core.CommandsModule;
@@ -39,28 +41,27 @@ import java.nio.file.Path;
 
 public final class VelocityLauncher implements PlatformLauncher {
 
-	private final PluginContainer plugin;
+	private final Payload<PluginContainer> payload;
 	private final ProxyServer server;
-	private final Path folder;
 	private final Omnibus omnibus;
 
-	public VelocityLauncher(PluginContainer plugin, ProxyServer server, Path folder) {
-		this(plugin, server, folder, OmnibusProvider.getOmnibus());
+	public VelocityLauncher(Payload<PluginContainer> payload, ProxyServer server) {
+		this(payload, server, OmnibusProvider.getOmnibus());
 	}
 
-	public VelocityLauncher(PluginContainer plugin, ProxyServer server, Path folder, Omnibus omnibus) {
-		this.plugin = plugin;
+	public VelocityLauncher(Payload<PluginContainer> payload, ProxyServer server, Omnibus omnibus) {
+		this.payload = payload;
 		this.server = server;
-		this.folder = folder;
 		this.omnibus = omnibus;
 	}
 
 	@Override
 	public BaseFoundation launch() {
 		return new InjectorBuilder()
-				.bindInstance(PluginContainer.class, plugin)
+				.bindInstance(PluginContainer.class, payload.plugin())
 				.bindInstance(ProxyServer.class, server)
-				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), folder)
+				.bindInstance(PlatformId.class, payload.platformId())
+				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), payload.pluginFolder())
 				.bindInstance(InstanceType.class, InstanceType.PROXY)
 				.bindInstance(Omnibus.class, omnibus)
 				.addBindModules(
