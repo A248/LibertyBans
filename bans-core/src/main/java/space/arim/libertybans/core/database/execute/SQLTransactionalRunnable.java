@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,4 +24,16 @@ import org.jooq.DSLContext;
 public interface SQLTransactionalRunnable {
 
 	void run(DSLContext context, Transaction transaction) throws RuntimeException;
+
+	default SQLTransactionalFunction<Void> runnableAsFunction() {
+		class RunnableAsFunction implements SQLTransactionalFunction<Void> {
+
+			@Override
+			public Void obtain(DSLContext context, Transaction transaction) throws RuntimeException {
+				run(context, transaction);
+				return null;
+			}
+		}
+		return new RunnableAsFunction();
+	}
 }

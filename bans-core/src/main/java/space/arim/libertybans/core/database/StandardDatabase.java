@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -142,6 +142,11 @@ public final class StandardDatabase implements InternalDatabase, AutoCloseable {
 	}
 
 	@Override
+	public <R> R queryWithExistingConnection(Connection connection, SQLTransactionalFunction<R> command) throws SQLException {
+		return queryExecutor.queryWithExistingConnection(connection, command);
+	}
+
+	@Override
 	public CentralisedFuture<Void> execute(SQLRunnable command) {
 		return queryExecutor.execute(command);
 	}
@@ -162,17 +167,18 @@ public final class StandardDatabase implements InternalDatabase, AutoCloseable {
 	}
 
 	@Override
-	public void clearExpiredPunishments(DSLContext context, PunishmentType type, Instant currentTime) {
+	public int clearExpiredPunishments(DSLContext context, PunishmentType type, Instant currentTime) {
 		assert type != PunishmentType.KICK;
 		var dataTable = new TableForType(type).dataTable();
-		context
+		return context
 				.deleteFrom(dataTable.table())
 				.where(dataTable.id().in(context
 						.select(PUNISHMENTS.ID)
 						.from(PUNISHMENTS)
 						.where(PUNISHMENTS.END.notEqual(Instant.MAX))
 						.and(PUNISHMENTS.END.lessThan(currentTime))
-				)).execute();
+				))
+				.execute();
 	}
 
 	@Override

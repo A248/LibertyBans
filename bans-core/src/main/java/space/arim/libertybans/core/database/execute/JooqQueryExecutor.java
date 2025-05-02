@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -178,13 +178,19 @@ public final class JooqQueryExecutor implements QueryExecutor {
 	}
 
 	@Override
-	public void executeWithExistingConnection(Connection connection,
-											  SQLTransactionalRunnable command) throws SQLException {
+	public void executeWithExistingConnection(Connection connection, SQLTransactionalRunnable command) throws SQLException {
+		queryWithExistingConnection(connection, command.runnableAsFunction());
+	}
+
+	@Override
+	public <R> R queryWithExistingConnection(Connection connection,
+											 SQLTransactionalFunction<R> command) throws SQLException {
 
 		DSLContext context = jooqContext.createContext(connection);
 		RollbackTrackingTransaction transaction = new RollbackTrackingTransaction(context, connection);
+		R value;
 		try {
-			command.run(context, transaction);
+			value = command.obtain(context, transaction);
 		} catch (RuntimeException ex) {
 			throw rollbackBeforeThrow(connection, ex);
 		}
@@ -195,24 +201,12 @@ public final class JooqQueryExecutor implements QueryExecutor {
 				throw unableToCommit(connection, ex);
 			}
 		}
+		return value;
 	}
 
 	@Override
 	public CentralisedFuture<Void> execute(SQLRunnable command) {
-		class RunnableAsFunction implements SQLFunction<Void> {
-
-			@Override
-			public boolean isReadOnly() {
-				return command.isReadOnly();
-			}
-
-			@Override
-			public Void obtain(DSLContext context) throws RuntimeException {
-				command.run(context);
-				return null;
-			}
-		}
-		return query(new RunnableAsFunction());
+		return query(command.runnableAsFunction());
 	}
 
 	@Override
@@ -222,15 +216,7 @@ public final class JooqQueryExecutor implements QueryExecutor {
 
 	@Override
 	public CentralisedFuture<Void> executeWithRetry(int retryCount, SQLTransactionalRunnable command) {
-		class RunnableAsFunction implements SQLTransactionalFunction<Void> {
-
-			@Override
-			public Void obtain(DSLContext context, Transaction transaction) throws RuntimeException {
-				command.run(context, transaction);
-				return null;
-			}
-		}
-		return queryWithRetry(retryCount, new RunnableAsFunction());
+		return queryWithRetry(retryCount, command.runnableAsFunction());
 	}
 
 	@Override

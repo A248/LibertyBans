@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -34,7 +34,7 @@ public interface InternalDatabase extends QueryExecutor {
 
 	Vendor getVendor();
 
-	void clearExpiredPunishments(DSLContext context, PunishmentType type, Instant currentTime);
+	int clearExpiredPunishments(DSLContext context, PunishmentType type, Instant currentTime);
 
 	/**
 	 * Designed to be used by testing, to clear all tables after one integration test

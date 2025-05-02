@@ -127,6 +127,11 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.3.0</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
 				<executions>
 					<execution>
@@ -166,6 +171,7 @@
 									<failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
 									<excludes>
 										<exclude>space.arim.libertybans:*</exclude>
+										<exclude>space.arim.libertybans.addon:*</exclude>
 										<exclude>org.spigotmc:spigot-api</exclude>
 										<exclude>org.spongepowered:spongeapi</exclude>
 									</excludes>
@@ -387,6 +393,17 @@
 				<groupId>space.arim.libertybans</groupId>
 				<artifactId>bans-env-standalonelauncher</artifactId>
 				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans.addon</groupId>
+				<artifactId>addon-integration</artifactId>
+				<version>${project.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>*</groupId>
+						<artifactId>*</artifactId>
+					</exclusion>
+				</exclusions>
 			</dependency>
 
 			<!-- Testing Dependencies -->

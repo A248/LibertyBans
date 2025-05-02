@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -54,5 +54,13 @@ final class FilteringClassLoader extends ClassLoader {
 	@Override
 	public Class<?> findClass(String className) throws ClassNotFoundException {
 		throw DOES_NOT_LOAD_CLASSES;
+	}
+
+	@Override
+	public String toString() {
+		return "FilteringClassLoader{" +
+				"protectedLibraries=" + protectedLibraries +
+				", parent=" + getParent() +
+				'}';
 	}
 }

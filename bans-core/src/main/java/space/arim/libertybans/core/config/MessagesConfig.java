@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -200,7 +200,7 @@ public interface MessagesConfig {
 
 		interface Addons {
 
-			@DefaultString("&cUsage: /libertybans addon <list|reload>")
+			@DefaultString("&cUsage: /libertybans addon <install|list|reload>")
 			Component usage();
 
 			@SubSection
@@ -213,6 +213,28 @@ public interface MessagesConfig {
 
 				@DefaultString("&7- %ADDON%")
 				ComponentText layout();
+			}
+
+			@SubSection
+			Install install();
+
+			interface Install {
+
+				@DefaultString("&cUsage: /libertybans addon install <addon>")
+				Component usage();
+
+				@ConfKey("already-installed")
+				@DefaultString("&aAddon &e%ADDON%&a is already installed or on the file system.")
+				ComponentText alreadyInstalled();
+
+				@ConfKey("does-not-exist")
+				@DefaultString("&cCannot find &e%ADDON%&c among the standard addon packages. &7If you want to use an " +
+						"external or custom addon, please install the jar directly to plugins/LibertyBans/addons.")
+				ComponentText doesNotExist();
+
+				@DefaultString("&aInstalled addon &e%ADDON%&a. It will be loaded after the next server restart.")
+				ComponentText installed();
+
 			}
 
 			@ConfKey("reload-addon")

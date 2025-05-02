@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -66,28 +66,35 @@ public final class RefreshTaskRunnable implements Runnable {
 			logger.warn("Refresh task continues after shutdown");
 			return;
 		}
+		// Track how many records were deleted
+		int deletedCount = 0;
 		try (Connection connection = database.getConnection()) {
 			// These DELETE queries may delete many rows. As such, they are run in single-query transactions
 			// Grouping them together in the same transaction would require unnecessary exertion from the RDMS
 			Instant currentTime = time.currentTimestamp();
 			for (PunishmentType type : MiscUtil.punishmentTypesExcludingKick()) {
-				database.executeWithExistingConnection(connection, (context, transaction) -> {
-					database.clearExpiredPunishments(context, type, currentTime);
-				});
+				deletedCount += database.queryWithExistingConnection(
+						connection,
+						(context, transaction) -> database
+								.clearExpiredPunishments(context, type, currentTime)
+				);
 			}
 			if (manager.configs().getSqlConfig().synchronization().enabled()) {
 				Instant deleteMessagesBefore = currentTime.minus(MESSAGE_EXPIRATION_TIME);
-				database.executeWithExistingConnection(connection, (context, transaction) -> {
-					context
-							.deleteFrom(MESSAGES)
-							.where(MESSAGES.TIME.lessOrEqual(deleteMessagesBefore))
-							.execute();
-				});
+				deletedCount += database.queryWithExistingConnection(
+						connection,
+						(context, transaction) -> context
+								.deleteFrom(MESSAGES)
+								.where(MESSAGES.TIME.lessOrEqual(deleteMessagesBefore))
+								.execute()
+				);
 			}
 		} catch (SQLException ex) {
 			// Note that we have no retry logic. This could be due to serialization failure.
 			// However, it is reasonable to expect the RDMS to retry single-query transactions
 			logger.warn("Failed to clear expired punishments or messages", ex);
+			return;
 		}
+		logger.info("Cleared {} expired punishments and/or messages", deletedCount);
 	}
 }

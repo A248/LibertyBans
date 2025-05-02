@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,28 +20,43 @@
 package space.arim.libertybans.core.commands;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Nullable;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
+import space.arim.libertybans.bootstrap.LibertyBansLauncher;
 import space.arim.libertybans.core.addon.Addon;
 import space.arim.libertybans.core.addon.AddonCenter;
 import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 import java.util.stream.Stream;
 
 @Singleton
 public final class AddonCommands extends AbstractSubCommandGroup {
 
+	private final Path folder;
 	private final AddonCenter addonCenter;
 
 	@Inject
-	public AddonCommands(Dependencies dependencies, AddonCenter addonCenter) {
+	public AddonCommands(Dependencies dependencies, @Named("folder") Path folder, AddonCenter addonCenter) {
 		super(dependencies, "addon");
+		this.folder = folder;
 		this.addonCenter = addonCenter;
+	}
+
+	private Path addonsFolder() {
+		return folder.resolve("addons");
 	}
 
 	private MessagesConfig.Admin.Addons addonConfig() {
@@ -55,17 +70,17 @@ public final class AddonCommands extends AbstractSubCommandGroup {
 
 	@Override
 	public Stream<String> suggest(CmdSender sender, String arg, int argIndex) {
-		switch (argIndex) {
-		case 0:
-			return Stream.of("list", "reload");
-		case 1:
-			// Assume this is the reload command
+		//
+		// TODO Delete the "reload" command after merging addon configs with DazzleConf 2.0
+		//
+		if (argIndex == 0) {
+			return Stream.of("install", "list", "reload");
+		}
+		if (argIndex == 1 && arg.equals("reload")) {
 			return addonCenter.allIdentifiers();
-		default:
-			break;
 		}
 		return Stream.empty();
-	}
+    }
 
 	@Override
 	public boolean hasTabCompletePermission(CmdSender sender, String arg) {
@@ -107,6 +122,8 @@ public final class AddonCommands extends AbstractSubCommandGroup {
 										.toArray(ComponentText[]::new)
 						)));
 				break;
+			case "install":
+				return installCmd();
 			case "reload":
 				return reloadCmd();
 			default:
@@ -116,7 +133,40 @@ public final class AddonCommands extends AbstractSubCommandGroup {
 			return null;
 		}
 
+		private ReactionStage<Void> installCmd() {
+			var installConfig = addonConfig().install();
+			if (!command().hasNext()) {
+				sender().sendMessage(installConfig.usage());
+				return completedFuture(null);
+			}
+			String identifier = command().next().toLowerCase(Locale.ROOT);
+			String jarFileName = "addon-" + identifier + ".jar";
+			Path addonJar = addonsFolder().resolve(jarFileName);
+			if (addonCenter.addonByIdentifier(identifier) != null || Files.exists(addonJar)) {
+				sender().sendMessage(installConfig.alreadyInstalled().replaceText("%ADDON%", identifier));
+				return completedFuture(null);
+			}
+			URL jarResource = LibertyBansLauncher.class.getResource("/dependencies/addon-jars/" + jarFileName);
+			if (jarResource == null) {
+				sender().sendMessage(installConfig.doesNotExist().replaceText("%ADDON%", identifier));
+				return completedFuture(null);
+			}
+			return futuresFactory().supplyAsync(() -> {
+				try (InputStream resourceInput = jarResource.openStream()) {
+					Files.copy(resourceInput, addonJar, StandardCopyOption.REPLACE_EXISTING);
+				} catch (IOException ex) {
+					throw new UncheckedIOException(ex);
+				}
+				sender().sendMessage(installConfig.installed().replaceText("%ADDON%", identifier));
+				return null;
+			});
+        }
+
 		private ReactionStage<Void> reloadCmd() {
+			sender().sendLiteralMessage(
+					"The '/libertybans addon reload' command is deprecated and will be removed in a " +
+							"future release. Please use '/libertybans reload' instead."
+			);
 			var reloadConfig = addonConfig().reloadAddon();
 			if (!command().hasNext()) {
 				sender().sendMessage(reloadConfig.usage());

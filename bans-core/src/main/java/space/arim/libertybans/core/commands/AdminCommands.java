@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,8 +22,8 @@ package space.arim.libertybans.core.commands;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
-import space.arim.api.env.PlatformHandle;
 import space.arim.libertybans.bootstrap.BaseFoundation;
+import space.arim.libertybans.bootstrap.PlatformId;
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 import space.arim.libertybans.core.addon.AddonCenter;
 import space.arim.libertybans.core.config.MessagesConfig;
@@ -41,19 +41,19 @@ import java.util.stream.Stream;
 public final class AdminCommands extends AbstractSubCommandGroup {
 
 	private final Provider<BaseFoundation> foundation;
+	private final PlatformId platformId;
 	private final Provider<Environment> environment;
 	private final AddonCenter addonCenter;
-	private final PlatformHandle envHandle;
 
 	@Inject
-	public AdminCommands(Dependencies dependencies, Provider<BaseFoundation> foundation,
-						 Provider<Environment> environment, AddonCenter addonCenter, PlatformHandle envHandle) {
+	public AdminCommands(Dependencies dependencies, Provider<BaseFoundation> foundation, PlatformId platformId,
+                         Provider<Environment> environment, AddonCenter addonCenter) {
 		super(dependencies, Arrays.stream(Type.values()).map(Type::toString));
 		this.foundation = foundation;
+		this.platformId = platformId;
 		this.environment = environment;
 		this.addonCenter = addonCenter;
-		this.envHandle = envHandle;
-	}
+    }
 
 	private MessagesConfig.Admin adminConfig() {
 		return messages().admin();
@@ -145,17 +145,26 @@ public final class AdminCommands extends AbstractSubCommandGroup {
 		}
 
 		private CentralisedFuture<Boolean> reloadAllConfiguration() {
+			//
+			// TODO Merge reloading for addons with DazzleConf 2.0
+			//
 			var reloadCoreConfigs = configs().reloadConfigs();
 			var reloadAddonConfigs = addonCenter.reloadAddons();
 			return reloadAddonConfigs.thenCombine(reloadCoreConfigs, (reload1, reload2) -> reload1 && reload2);
 		}
 
 		private void debugCmd() {
-			String environmentImplName = environment.get().getClass().getSimpleName();
 			List<String> debugInfo = List.of(
+					"Run state: " + foundation.get().getRunState(),
 					"Version: " + PluginInfo.VERSION,
-					"Platform Category: " + environmentImplName.substring(0, environmentImplName.length() - 3),
-					"Platform Version: " + envHandle.getPlatformVersion()); // TODO add more debug information
+					"Database: " + PluginInfo.DATABASE_REVISION_MAJOR + '.' + PluginInfo.DATABASE_REVISION_MINOR,
+					"Platform: " + platformId.name() + ' ' + platformId.version(),
+					"Addons: " + addonCenter.allIdentifiers().toList(),
+					"Implementation environment: " + environment.get().getClass().getSimpleName(),
+					"Class loader: " + getClass().getClassLoader(),
+					"Java: " + Runtime.version(),
+					"OS name: " + System.getProperty("os.name")
+			);
 			debugInfo.forEach(sender()::sendLiteralMessage);
 		}
 		

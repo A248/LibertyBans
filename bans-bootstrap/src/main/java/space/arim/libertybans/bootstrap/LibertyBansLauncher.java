@@ -23,11 +23,16 @@ import space.arim.libertybans.bootstrap.depend.BootstrapLauncher;
 import space.arim.libertybans.bootstrap.depend.DependencyLoaderBuilder;
 import space.arim.libertybans.bootstrap.depend.ExistingDependency;
 import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
+import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -182,9 +187,26 @@ public final class LibertyBansLauncher {
 				existingDependencies
 		);
 		CompletableFuture<AttachableClassLoader> futureClassLoader = launcher.load();
+
 		// Detect addons and attachments in the meantime
 		Set<Path> additionalLibraries;
 		try {
+			boolean versionChanged;
+			{
+				// Keep track of the version of the last LibertyBans instance
+				Path storeVersionAt = internalFolder.resolve("last_known_version");
+
+				String currentVersion = PluginInfo.VERSION;
+				String lastVersion = null;
+				if (Files.exists(storeVersionAt)) {
+					lastVersion = Files.readString(storeVersionAt, StandardCharsets.UTF_8);
+				}
+				versionChanged = !currentVersion.equals(lastVersion);
+				if (versionChanged) {
+					Files.writeString(storeVersionAt, currentVersion, StandardCharsets.UTF_8);
+					logger.info("Updated recorded version at " + storeVersionAt);
+				}
+			}
 			// Addons
 			Path addonsFolder = folder.resolve("addons");
 			Files.createDirectories(addonsFolder);
@@ -192,6 +214,18 @@ public final class LibertyBansLauncher {
 				Set<Path> addonJars = addonStream
 						.filter((library) -> library.getFileName().toString().endsWith(".jar"))
 						.collect(Collectors.toCollection(HashSet::new));
+				// Update addons
+				if (versionChanged || PluginInfo.VERSION.contains("SNAPSHOT")) {
+					for (Path addonJar : addonJars) {
+						String addonName = addonJar.getFileName().toString();
+						URL jarResource = getClass().getResource("/dependencies/addon-jars/" + addonName);
+						if (jarResource != null) {
+							try (InputStream resourceInput = jarResource.openStream()) {
+								Files.copy(resourceInput, addonJar, StandardCopyOption.REPLACE_EXISTING);
+							}
+						}
+					}
+				}
 				logger.info(addonJars.isEmpty() ?
 						"No addons detected" : "Detected " + addonJars.size() + " addon(s)"
 				);
@@ -312,5 +346,4 @@ public final class LibertyBansLauncher {
 			);
 		}
 	}
-
 }

@@ -1,6 +1,6 @@
 <!--
   ~ LibertyBans
-  ~ Copyright © 2023 Anand Beh
+  ~ Copyright © 2025 Anand Beh
   ~
   ~ LibertyBans is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as
@@ -122,6 +122,10 @@
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-env-standalonelauncher</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans.addon</groupId>
+			<artifactId>addon-integration</artifactId>
 		</dependency>
 	</dependencies>
 </project>

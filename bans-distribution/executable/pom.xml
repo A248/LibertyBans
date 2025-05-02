@@ -37,7 +37,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.3.0</version>
 				<executions>
 					<execution>
 						<id>assemble-bundles</id>
@@ -109,6 +108,11 @@
 			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-env-standalonelauncher</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans.addon</groupId>
+			<artifactId>addon-integration</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-env-bungee</artifactId>

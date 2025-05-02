@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -76,6 +76,10 @@ public final class StandardAddonCenter implements AddonCenter {
 			addon.startup();
 		}
 	}
+
+	//
+	// TODO Merge addon configurations with DazzleConf 2.0
+	//
 
 	// Visible for testing
 	<C extends AddonConfig> ConfigWrapper<C> configWrapperFor(Addon<C> addon) {

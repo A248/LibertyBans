@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,6 +28,23 @@ public interface SQLRunnable {
 	}
 
 	void run(DSLContext context) throws RuntimeException;
+
+	default SQLFunction<Void> runnableAsFunction() {
+		class RunnableAsFunction implements SQLFunction<Void> {
+
+			@Override
+			public boolean isReadOnly() {
+				return SQLRunnable.this.isReadOnly();
+			}
+
+			@Override
+			public Void obtain(DSLContext context) throws RuntimeException {
+				run(context);
+				return null;
+			}
+		}
+		return new RunnableAsFunction();
+	}
 
 	static SQLRunnable readOnly(SQLRunnable command) {
 		return new SQLRunnable() {

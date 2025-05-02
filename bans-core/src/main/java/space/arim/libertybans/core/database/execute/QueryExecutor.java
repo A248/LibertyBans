@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -35,6 +35,16 @@ public interface QueryExecutor {
 	 * @param command the operation to run
 	 */
 	void executeWithExistingConnection(Connection connection, SQLTransactionalRunnable command) throws SQLException;
+
+	/**
+	 * Executes a command using an existing connection. When the operation is complete,
+	 * the transaction will be committed
+	 *
+	 * @param command the operation to run
+	 * @param <R> the return type
+	 * @return the return value
+	 */
+	<R> R queryWithExistingConnection(Connection connection, SQLTransactionalFunction<R> command) throws SQLException;
 
 	/**
 	 * Executes a command. Because this will not retry on transaction

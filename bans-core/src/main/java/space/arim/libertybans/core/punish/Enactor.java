@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -49,7 +49,6 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
 
@@ -168,7 +167,12 @@ public class Enactor implements PunishmentDrafter {
 			}
 
 			@Override
-			public void executeWithExistingConnection(Connection connection, SQLTransactionalRunnable command) throws SQLException {
+			public void executeWithExistingConnection(Connection connection, SQLTransactionalRunnable command) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public <R> R queryWithExistingConnection(Connection connection, SQLTransactionalFunction<R> command) {
 				throw new UnsupportedOperationException();
 			}
 
