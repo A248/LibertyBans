@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -39,6 +39,7 @@ import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.MessagesConfig;
 import space.arim.libertybans.core.config.VictimPermissionSection;
 import space.arim.libertybans.core.config.RemovalsSection;
+import space.arim.libertybans.core.config.displayid.AbacusForIds;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.punish.EmptyRevocationOrder;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -62,21 +63,22 @@ public class PlayerUnpunishCommandsTest {
 
 	private PlayerUnpunishCommands commands;
 	private final PunishmentRevoker revoker;
+	private final AbacusForIds abacusForIds;
 	private final InternalFormatter formatter;
 	private final TabCompletion tabCompletion;
 	private final FactoryOfTheFuture futuresFactory = new IndifferentFactoryOfTheFuture();
 
-	public PlayerUnpunishCommandsTest(@Mock PunishmentRevoker revoker,
-									  @Mock InternalFormatter formatter,
-									  @Mock TabCompletion tabCompletion) {
+	public PlayerUnpunishCommandsTest(@Mock PunishmentRevoker revoker, @Mock AbacusForIds abacusForIds,
+                                      @Mock InternalFormatter formatter, @Mock TabCompletion tabCompletion) {
 		this.revoker = revoker;
-		this.formatter = formatter;
+        this.abacusForIds = abacusForIds;
+        this.formatter = formatter;
 		this.tabCompletion = tabCompletion;
 	}
 
 	@BeforeEach
 	public void setPlayerUnpunishCommands(AbstractSubCommandGroup.Dependencies dependencies) {
-		commands = new PlayerUnpunishCommands(dependencies, revoker, formatter, tabCompletion);
+		commands = new PlayerUnpunishCommands(dependencies, revoker, abacusForIds, formatter, tabCompletion);
 	}
 
 	@Test

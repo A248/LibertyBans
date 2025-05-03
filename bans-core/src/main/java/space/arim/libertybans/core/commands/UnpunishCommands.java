@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -30,6 +30,7 @@ import space.arim.libertybans.api.punish.PunishmentRevoker;
 import space.arim.libertybans.api.punish.RevocationOrder;
 import space.arim.libertybans.core.commands.extra.AsCompositeWildcard;
 import space.arim.libertybans.core.commands.extra.NotificationMessage;
+import space.arim.libertybans.core.config.displayid.AbacusForIds;
 import space.arim.libertybans.core.punish.permission.VictimPermissionCheck;
 import space.arim.libertybans.core.punish.permission.VictimTypeCheck;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
@@ -55,15 +56,17 @@ import java.util.stream.Stream;
 abstract class UnpunishCommands extends AbstractSubCommandGroup implements PunishUnpunishCommands.WithPreferredVictim {
 
 	private final PunishmentRevoker revoker;
+	private final AbacusForIds abacusForIds;
 	private final InternalFormatter formatter;
 	private final TabCompletion tabCompletion;
 
 	UnpunishCommands(Dependencies dependencies, Stream<String> subCommands,
-					 PunishmentRevoker revoker, InternalFormatter formatter,
-					 TabCompletion tabCompletion) {
+                     PunishmentRevoker revoker, AbacusForIds abacusForIds, InternalFormatter formatter,
+                     TabCompletion tabCompletion) {
 		super(dependencies, subCommands);
 		this.revoker = revoker;
-		this.formatter = formatter;
+        this.abacusForIds = abacusForIds;
+        this.formatter = formatter;
 		this.tabCompletion = tabCompletion;
 	}
 
@@ -144,18 +147,17 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 			final PunishmentType type = type();
 
 			RevocationOrder revocationOrder;
-			final int id;
+			String idString;
 			if (type == PunishmentType.WARN) {
 
 				if (!command().hasNext()) {
 					sender().sendMessage(section.usage());
 					return completedFuture(null);
 				}
-				String idArg = command().next();
-				try {
-					id = Integer.parseInt(idArg);
-				} catch (NumberFormatException ignored) {
-					sender().sendMessage(((WarnRemoval) section).notANumber().replaceText("%ID_ARG%", idArg));
+				idString = command().next();
+				Long id = abacusForIds.parseId(idString);
+				if (id == null) {
+					sender().sendMessage(((WarnRemoval) section).notANumber().replaceText("%ID_ARG%", idString));
 					return completedFuture(null);
 				}
 				revocationOrder = revoker.revokeByIdAndType(id, type);
@@ -164,7 +166,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 				// Try to revoke this punishment for either the simple victim or composite wildcard victim
 				CompositeVictim compositeWildcard = new AsCompositeWildcard().apply(victim);
 				revocationOrder = revoker.revokeByTypeAndPossibleVictims(type, List.of(victim, compositeWildcard));
-				id = -1;
+				idString = null;
 			}
 			return fireWithTimeout(new PardonEventImpl(sender().getOperator(), victim, type)).thenCompose((event) -> {
 				if (event.isCancelled()) {
@@ -178,7 +180,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 						.build();
 				return revocationOrder.undoAndGetPunishment(enforcementOptions).thenApply((optPunishment) -> {
 					if (optPunishment.isEmpty()) {
-						sendNotFound(targetArg, id);
+						sendNotFound(targetArg, idString);
 						return null;
 					}
 					return optPunishment.get();
@@ -188,11 +190,9 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 
 		// Outcomes
 
-		private void sendNotFound(String targetArg, int id) {
-			boolean isWarn = type() == PunishmentType.WARN;
-			String idString = (isWarn) ? Integer.toString(id) : null;
+		private void sendNotFound(String targetArg, String idString) {
 			ComponentLike notFound = section.notFound().replaceText((str) -> {
-				if (isWarn) {
+				if (idString != null) {
 					str = str.replace("%ID%", idString);
 				}
 				return str.replace("%TARGET%", targetArg);

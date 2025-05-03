@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -50,6 +50,7 @@ module space.arim.libertybans.core {
 	exports space.arim.libertybans.core.commands.extra;
 	exports space.arim.libertybans.core.commands.usage to space.arim.injector;
 	exports space.arim.libertybans.core.config;
+	exports space.arim.libertybans.core.config.displayid;
 	exports space.arim.libertybans.core.database to space.arim.dazzleconf, space.arim.injector;
 	exports space.arim.libertybans.core.database.execute to space.arim.injector;
 	exports space.arim.libertybans.core.database.flyway to org.flywaydb.core;
@@ -67,6 +68,7 @@ module space.arim.libertybans.core {
 	opens space.arim.libertybans.core.alts to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.commands.extra to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.config to space.arim.dazzleconf;
+	opens space.arim.libertybans.core.config.displayid to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.importing to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.selector to space.arim.dazzleconf;
 	opens space.arim.libertybans.core.uuid to space.arim.dazzleconf;

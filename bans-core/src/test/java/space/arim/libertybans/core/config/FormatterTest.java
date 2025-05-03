@@ -1,7 +1,7 @@
 
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -38,6 +38,8 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.config.displayid.AbacusForIds;
+import space.arim.libertybans.core.config.displayid.IdAlgorithm;
 import space.arim.libertybans.core.scope.InternalScopeManager;
 import space.arim.libertybans.core.service.FixedTime;
 import space.arim.libertybans.core.uuid.UUIDManager;
@@ -90,7 +92,7 @@ public class FormatterTest {
 		this.messagesConfig = messagesConfig;
 		this.globalScope = globalScope;
 
-		formatter = new Formatter(futuresFactory, configs, scopeManager, uuidManager,
+		formatter = new Formatter(futuresFactory, configs, new AbacusForIds(configs), scopeManager, uuidManager,
 				new FixedTime(INSTANT_2021_01_05));
 	}
 
@@ -170,6 +172,11 @@ public class FormatterTest {
 	private void setSimpleMessagesFormatting() {
 		MessagesConfig.Formatting formatting = mock(MessagesConfig.Formatting.class);
 		when(messagesConfig.formatting()).thenReturn(formatting);
+		MessagesConfig.Formatting.IdDisplay idDisplay = mock(MessagesConfig.Formatting.IdDisplay.class);
+		lenient().when(formatting.idDisplay()).thenReturn(idDisplay);
+		lenient().when(idDisplay.scramblingAlgorithm()).thenReturn(IdAlgorithm.NONE);
+		lenient().when(idDisplay.numberOfAlgorithmRuns()).thenReturn(2);
+		lenient().when(idDisplay.base()).thenReturn(10);
 		lenient().when(formatting.consoleDisplay()).thenReturn("Console");
 		lenient().when(formatting.globalScopeDisplay()).thenReturn("global");
 		lenient().when(formatting.punishmentTypeDisplay()).thenReturn(Map.of());

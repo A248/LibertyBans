@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,6 +26,7 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.PunishmentRevoker;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.config.displayid.AbacusForIds;
 import space.arim.libertybans.core.punish.MiscUtil;
 
 import java.util.Arrays;
@@ -34,10 +35,10 @@ import java.util.Arrays;
 public final class AddressUnpunishCommands extends UnpunishCommands {
 
 	@Inject
-	public AddressUnpunishCommands(Dependencies dependencies, PunishmentRevoker revoker,
+	public AddressUnpunishCommands(Dependencies dependencies, PunishmentRevoker revoker, AbacusForIds abacusForIds,
 								   InternalFormatter formatter, TabCompletion tabCompletion) {
 		super(dependencies, Arrays.stream(MiscUtil.punishmentTypesExcludingKick()).map((type) -> "un" + type + "ip"),
-				revoker, formatter, tabCompletion);
+				revoker, abacusForIds, formatter, tabCompletion);
 	}
 
 	@Override

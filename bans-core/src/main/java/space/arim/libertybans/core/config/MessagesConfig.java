@@ -26,18 +26,16 @@ import java.util.Set;
 import net.kyori.adventure.text.Component;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 
+import space.arim.dazzleconf.annote.*;
 import space.arim.libertybans.api.PunishmentType;
 
-import space.arim.dazzleconf.annote.ConfComments;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultBoolean;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultMap;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultString;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultStrings;
-import space.arim.dazzleconf.annote.ConfHeader;
-import space.arim.dazzleconf.annote.ConfKey;
-import space.arim.dazzleconf.annote.SubSection;
 import space.arim.libertybans.core.alts.AccountHistorySection;
 import space.arim.libertybans.core.alts.AltsSection;
+import space.arim.libertybans.core.config.displayid.IdAlgorithm;
 
 @ConfHeader({
 		"",
@@ -266,6 +264,56 @@ public interface MessagesConfig {
 	Formatting formatting();
 	
 	interface Formatting {
+
+		@ConfKey("id-display")
+		@ConfComments({
+				"Most users will not need this section. It's mainly a fancy.",
+				"If you want to change how IDs are displayed and parsed, modify that behavior here."
+		})
+		@SubSection
+		IdDisplay idDisplay();
+
+		interface IdDisplay {
+
+			@ConfKey("scrambling-algorithm")
+			@ConfComments({
+					"Some users want their IDs to be displayed 'randomly' or at least pseudorandomly.",
+					"Change this option to add pseudorandom ID scrambling. Available values:",
+					"- NONE : no change (default)",
+					"- BITFIDDLE : a pseudorandom approach that simply moves around bits (recommended to use with base 36)",
+					"- CIPHER : Uses block cipher encryption. Looks very random",
+					"",
+					"All of these algorithms are reversible. That means, no matter what you configure, these IDs can",
+					"be transparently used across the whole plugin. For example, using /unwarn <player> <ID> will work",
+					"but only if you enter a scrambled ID.",
+					"",
+					"Note that if you run multiple instances, you must configure both this setting and 'number-of-algorithm-runs'",
+					"to be the same value. If you don't, the plugin will still work, but using IDs will be a maddening hell.",
+			})
+			@DefaultString("NONE")
+			IdAlgorithm scramblingAlgorithm();
+
+			@ConfKey("number-of-algorithm-runs")
+			@ConfComments("The number of times to run the algorithm in 'scrambling-algorithm'.")
+			@IntegerRange(min = 1L)
+			@ConfDefault.DefaultInteger(2)
+			int numberOfAlgorithmRuns();
+
+			@ConfComments({
+					"What base of number system should be used? For example:",
+					"2 - binary, 10 - regular, 16, hexadecimal",
+					"Max value is 36, which will use all the letters of the alphabet plus 10 numerals (26 + 10 = 36)."
+			})
+			@IntegerRange(min = Character.MIN_RADIX, max = Character.MAX_RADIX)
+			@ConfDefault.DefaultInteger(10)
+			int base();
+
+			@ConfKey("capitalize-letters-in-display")
+			@ConfComments("If using a base greater than 10, this controls whether letters are capitalized.")
+			@DefaultBoolean(false)
+			boolean capitalizeLettersInDisplay();
+
+		}
 
 		@ConfKey("permanent-arguments")
 		@ConfComments({

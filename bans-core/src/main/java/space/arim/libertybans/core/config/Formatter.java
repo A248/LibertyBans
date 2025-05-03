@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -36,6 +36,7 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.core.config.displayid.AbacusForIds;
 import space.arim.libertybans.core.service.Time;
 import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.scope.InternalScopeManager;
@@ -62,6 +63,7 @@ public class Formatter implements InternalFormatter {
 
 	private final FactoryOfTheFuture futuresFactory;
 	private final Configs configs;
+	private final AbacusForIds abacusForIds;
 	private final InternalScopeManager scopeManager;
 	private final UUIDManager uuidManager;
 	private final Time time;
@@ -70,16 +72,17 @@ public class Formatter implements InternalFormatter {
 	private static final long MARGIN_OF_INITIATION = 10; // seconds
 	
 	@Inject
-	public Formatter(FactoryOfTheFuture futuresFactory, Configs configs, InternalScopeManager scopeManager,
-					 UUIDManager uuidManager, Time time) {
-		this(futuresFactory, configs, scopeManager, uuidManager, time, new ChatMessageComponentSerializer());
+	public Formatter(FactoryOfTheFuture futuresFactory, Configs configs, AbacusForIds abacusForIds,
+					 InternalScopeManager scopeManager, UUIDManager uuidManager, Time time) {
+		this(futuresFactory, configs, abacusForIds, scopeManager, uuidManager, time, new ChatMessageComponentSerializer());
 	}
 
-	Formatter(FactoryOfTheFuture futuresFactory, Configs configs, InternalScopeManager scopeManager,
-			  UUIDManager uuidManager, Time time, ComponentSerializer<Component, ? extends Component, String> messageParser) {
+	Formatter(FactoryOfTheFuture futuresFactory, Configs configs, AbacusForIds abacusForIds, InternalScopeManager scopeManager,
+              UUIDManager uuidManager, Time time, ComponentSerializer<Component, ? extends Component, String> messageParser) {
 		this.futuresFactory = futuresFactory;
 		this.configs = configs;
-		this.scopeManager = scopeManager;
+        this.abacusForIds = abacusForIds;
+        this.scopeManager = scopeManager;
 		this.uuidManager = uuidManager;
 		this.time = time;
 		this.messageParser = messageParser;
@@ -182,7 +185,7 @@ public class Formatter implements InternalFormatter {
 		MessagesConfig.Formatting formatting = messages().formatting();
 
 		Map<SimpleReplaceable, String> simpleReplacements = new EnumMap<>(SimpleReplaceable.class);
-		simpleReplacements.put(SimpleReplaceable.ID, Long.toString(punishment.getIdentifier()));
+		simpleReplacements.put(SimpleReplaceable.ID, abacusForIds.displayId(punishment.getIdentifier()));
 		simpleReplacements.put(SimpleReplaceable.TYPE, formatPunishmentType(punishment.getType()));
 		simpleReplacements.put(SimpleReplaceable.TYPE_VERB, formatPunishmentTypeVerb(punishment.getType()));
 		simpleReplacements.put(SimpleReplaceable.VICTIM_ID, formatVictimId(punishment.getVictim()));

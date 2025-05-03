@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,6 +27,7 @@ import space.arim.libertybans.core.commands.AbstractCommandExecution;
 import space.arim.libertybans.core.commands.AbstractSubCommandGroup;
 import space.arim.libertybans.core.commands.CommandExecution;
 import space.arim.libertybans.core.commands.CommandPackage;
+import space.arim.libertybans.core.config.displayid.AbacusForIds;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
@@ -36,13 +37,15 @@ public final class ExpungeCommand extends AbstractSubCommandGroup {
 
 	private final ExpungeAddon addon;
 	private final PunishmentRevoker revoker;
+	private final AbacusForIds abacusForIds;
 
 	@Inject
-	public ExpungeCommand(Dependencies dependencies, ExpungeAddon addon, PunishmentRevoker revoker) {
+	public ExpungeCommand(Dependencies dependencies, ExpungeAddon addon, PunishmentRevoker revoker, AbacusForIds abacusForIds) {
 		super(dependencies, "expunge");
 		this.addon = addon;
 		this.revoker = revoker;
-	}
+        this.abacusForIds = abacusForIds;
+    }
 
 	@Override
 	public CommandExecution execute(CmdSender sender, CommandPackage command, String arg) {
@@ -83,10 +86,8 @@ public final class ExpungeCommand extends AbstractSubCommandGroup {
 				return null;
 			}
 			String idString = command().next();
-			long id;
-			try {
-				id = Long.parseLong(idString);
-			} catch (NumberFormatException ignored) {
+			Long id = abacusForIds.parseId(idString);
+			if (id == null) {
 				sender().sendMessage(config.usage());
 				return null;
 			}
