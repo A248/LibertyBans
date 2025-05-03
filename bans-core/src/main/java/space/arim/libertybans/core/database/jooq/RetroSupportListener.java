@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,7 +19,7 @@
 
 package space.arim.libertybans.core.database.jooq;
 
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.ExecuteContext;
 import org.jooq.ExecuteListener;
 import org.jooq.ExecuteListenerProvider;
@@ -72,7 +72,7 @@ final class RetroSupportListener implements ExecuteListener {
 	class Provider implements ExecuteListenerProvider {
 
 		@Override
-		public @NotNull ExecuteListener provide() {
+		public @NonNull ExecuteListener provide() {
 			return RetroSupportListener.this;
 		}
 

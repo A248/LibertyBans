@@ -40,7 +40,7 @@ Requires the permission `libertybans.addon.checkuser.use`.
 
 ### Expunge [command-expunge]
 
-Provides the `/libertybans expunge <id>` command. Running this command will fully purge the specified punishment.
+Provides the `/libertybans expunge <id> command`. This allows to remove the specified punishment from the database record. Useful for removing invalid/unintentional punishments.
 
 **WARNING: Purged punishments are NOT recoverable.**
 
@@ -48,7 +48,7 @@ Requires the permission `libertybans.addon.expunge.use`
 
 ### Extend [command-extend]
 
-Adds the syntax `/libertybans extend <id> <time>`. This command will tack on additional time to an existing punishment.
+Provides the `/libertybans extend <id> <time>` command. Allows to extend a specified existing (active) punishment for a specified additional duration
 
 Requires the permission `libertybans.addon.extend.use`
 

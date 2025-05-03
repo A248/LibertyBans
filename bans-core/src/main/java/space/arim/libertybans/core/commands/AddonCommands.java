@@ -23,7 +23,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
-import org.jetbrains.annotations.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.bootstrap.LibertyBansLauncher;
 import space.arim.libertybans.core.addon.Addon;

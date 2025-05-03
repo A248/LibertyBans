@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,7 +19,7 @@
 
 package space.arim.libertybans.core.database.jooq;
 
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.BindingSQLContext;
 import org.jooq.Converter;
 import org.jooq.Field;
@@ -42,7 +42,7 @@ import java.util.function.Function;
 public final class UUIDBinding extends BaseBinding<UUID, UUID> {
 
 	@Override
-	public @NotNull Converter<UUID, UUID> converter() {
+	public @NonNull Converter<UUID, UUID> converter() {
 		return Converter.of(UUID.class, UUID.class, Function.identity(), Function.identity());
 	}
 

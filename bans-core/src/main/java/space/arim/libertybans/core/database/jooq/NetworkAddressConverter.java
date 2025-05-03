@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,7 +19,7 @@
 
 package space.arim.libertybans.core.database.jooq;
 
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.Converter;
 import space.arim.libertybans.api.NetworkAddress;
 
@@ -36,12 +36,12 @@ public final class NetworkAddressConverter implements Converter<byte[], NetworkA
 	}
 
 	@Override
-	public @NotNull Class<byte[]> fromType() {
+	public @NonNull Class<byte[]> fromType() {
 		return byte[].class;
 	}
 
 	@Override
-	public @NotNull Class<NetworkAddress> toType() {
+	public @NonNull Class<NetworkAddress> toType() {
 		return NetworkAddress.class;
 	}
 }

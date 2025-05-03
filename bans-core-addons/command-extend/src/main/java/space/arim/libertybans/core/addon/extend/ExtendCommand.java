@@ -20,7 +20,7 @@
 package space.arim.libertybans.core.addon.extend;
 
 import jakarta.inject.Inject;
-import org.jetbrains.annotations.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.select.PunishmentSelector;

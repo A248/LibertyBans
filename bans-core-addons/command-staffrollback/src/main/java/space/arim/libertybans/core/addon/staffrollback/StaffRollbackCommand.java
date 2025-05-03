@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,7 +20,7 @@
 package space.arim.libertybans.core.addon.staffrollback;
 
 import jakarta.inject.Inject;
-import org.jetbrains.annotations.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.core.addon.staffrollback.execute.PreparedRollback;
 import space.arim.libertybans.core.addon.staffrollback.execute.RollbackExecutor;
 import space.arim.libertybans.core.commands.AbstractCommandExecution;

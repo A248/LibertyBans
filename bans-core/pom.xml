@@ -833,6 +833,10 @@
 			<groupId>net.kyori</groupId>
 			<artifactId>adventure-text-serializer-legacy</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.checkerframework</groupId>
+			<artifactId>checker-qual</artifactId>
+		</dependency>
 		<!-- JDBC drivers -->
 		<dependency>
 			<groupId>org.hsqldb</groupId>

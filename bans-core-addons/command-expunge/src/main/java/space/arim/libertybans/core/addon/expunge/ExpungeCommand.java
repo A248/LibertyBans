@@ -20,7 +20,7 @@
 package space.arim.libertybans.core.addon.expunge;
 
 import jakarta.inject.Inject;
-import org.jetbrains.annotations.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.punish.PunishmentRevoker;
 import space.arim.libertybans.core.commands.AbstractCommandExecution;

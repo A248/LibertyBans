@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,7 +19,7 @@
 
 package space.arim.libertybans.core.database.jooq;
 
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jooq.Converter;
 import space.arim.libertybans.api.punish.EscalationTrack;
 
@@ -46,12 +46,12 @@ public final class EscalationTrackConverter implements Converter<String, Escalat
 	}
 
 	@Override
-	public @NotNull Class<String> fromType() {
+	public @NonNull Class<String> fromType() {
 		return String.class;
 	}
 
 	@Override
-	public @NotNull Class<EscalationTrack> toType() {
+	public @NonNull Class<EscalationTrack> toType() {
 		return EscalationTrack.class;
 	}
 

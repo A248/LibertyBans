@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,7 +20,7 @@
 package space.arim.libertybans.core.addon.checkpunish;
 
 import jakarta.inject.Inject;
-import org.jetbrains.annotations.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.core.commands.AbstractCommandExecution;
@@ -28,6 +28,7 @@ import space.arim.libertybans.core.commands.AbstractSubCommandGroup;
 import space.arim.libertybans.core.commands.CommandExecution;
 import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.config.displayid.AbacusForIds;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
@@ -36,15 +37,17 @@ import java.util.stream.Stream;
 public final class CheckPunishCommand extends AbstractSubCommandGroup {
 
 	private final PunishmentSelector selector;
+	private final AbacusForIds abacusForIds;
 	private final InternalFormatter formatter;
 	private final CheckPunishAddon addon;
 
 	@Inject
-	public CheckPunishCommand(Dependencies dependencies,
-							  PunishmentSelector selector, InternalFormatter formatter, CheckPunishAddon addon) {
+	public CheckPunishCommand(Dependencies dependencies, PunishmentSelector selector, AbacusForIds abacusForIds,
+							  InternalFormatter formatter, CheckPunishAddon addon) {
 		super(dependencies, "checkpunish");
 		this.selector = selector;
-		this.formatter = formatter;
+        this.abacusForIds = abacusForIds;
+        this.formatter = formatter;
 		this.addon = addon;
 	}
 
@@ -86,10 +89,8 @@ public final class CheckPunishCommand extends AbstractSubCommandGroup {
 				sender().sendMessage(config.usage());
 				return null;
 			}
-			long id;
-			try {
-				id = Long.parseLong(command().next());
-			} catch (NumberFormatException ex) {
+			Long id = abacusForIds.parseId(command().next());
+			if (id == null) {
 				sender().sendMessage(config.usage());
 				return null;
 			}

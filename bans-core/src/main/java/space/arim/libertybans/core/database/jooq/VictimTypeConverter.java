@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,13 +19,13 @@
 
 package space.arim.libertybans.core.database.jooq;
 
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import space.arim.libertybans.api.Victim;
 
 public final class VictimTypeConverter extends OrdinalEnumConverter<Victim.VictimType> {
 
 	@Override
-	public @NotNull Class<Victim.VictimType> toType() {
+	public @NonNull Class<Victim.VictimType> toType() {
 		return Victim.VictimType.class;
 	}
 }

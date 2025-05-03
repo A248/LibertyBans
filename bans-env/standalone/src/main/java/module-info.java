@@ -1,7 +1,7 @@
 module space.arim.libertybans.env.standalone {
 	requires jakarta.inject;
 	requires net.kyori.adventure.text.serializer.plain;
-	requires org.checkerframework.checker.qual;
+	requires static org.checkerframework.checker.qual;
 	requires org.slf4j;
 	requires space.arim.api.env;
 	requires space.arim.api.jsonchat;

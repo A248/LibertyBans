@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,7 +24,7 @@ module space.arim.libertybans.core.addon.layouts {
 	requires jakarta.inject;
 	requires net.kyori.adventure;
 	requires net.kyori.examination.api;
-	requires org.checkerframework.checker.qual;
+	requires static org.checkerframework.checker.qual;
 	requires org.slf4j;
 	requires space.arim.api.jsonchat;
 	requires space.arim.dazzleconf;

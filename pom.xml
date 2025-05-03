@@ -67,6 +67,7 @@
 		<arimapi.version>0.26.5</arimapi.version>
 		<managedwaits.version>0.1.3</managedwaits.version>
 		<morepaperlib.version>0.4.3</morepaperlib.version>
+		<checkerqual.version>3.49.2</checkerqual.version>
 
 		<!-- Platform dependencies -->
 		<bungeecord.version>1.16-R0.4</bungeecord.version>
@@ -582,6 +583,11 @@
 				<groupId>space.arim.licenser</groupId>
 				<artifactId>licenser-agpl3</artifactId>
 				<version>0.2.1</version>
+			</dependency>
+			<dependency>
+				<groupId>org.checkerframework</groupId>
+				<artifactId>checker-qual</artifactId>
+				<version>${checkerqual.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
