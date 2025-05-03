@@ -5,9 +5,9 @@ There is no performance cost or other overhead from installing addons -- they ho
 
 ## Installing Addons
 
-1. Download the addon jar: [All addons may be downloaded here](https://ci.hahota.net/job/LibertyBans/).
-2. Place the addon jar in the `addons` directory of the LibertyBans plugin folder.
-3. Restart the server.
+Using `/libertybans addon install <addon>` is a convenient way to install addons. Replace `<addon>` with the ID of the addon you want to use. When run, this command will extract the requested addon jar to the filesystem, making it ready for the next time you restart.
+
+You can also install addons by downloading the addon jar and placing it in `plugins/LibertyBans/addons`, then restart the server.
 
 The number of installed addons is displayed at startup:
 ```
@@ -20,27 +20,39 @@ Addon configuration is located in the same place as the installed addon jars -- 
 
 After configuring an addon, run `/libertybans reload`.
 
-Related commands:
-* `/libertybans addon list` - Lists installed addons.
-* `/libertybans addon reload <addon identifier` - Reloads the configuration of a single addon only.
-
 # Available Addons
+
+Each addon has its ID listed in [brackets].
 
 ## New Commands
 
-### CheckPunish
+### Check punishment [command-checkpunish]
 
-This addon provides the `/libertybans checkpunish <ID>` command. This command displays the details of a specific punishment given the punishment ID.
+This addon enables the `/libertybans checkpunish <id>` command. This command displays the details of a specific punishment given the punishment ID.
 
 Requires the permission `libertybans.addon.checkpunish.use`.
 
-### CheckUser
+### Check user [command-checkuser]
 
 Provides the `/libertybans checkuser <player>` command. This command displays if the given player is banned or muted.
 
 Requires the permission `libertybans.addon.checkuser.use`.
 
-### StaffRollback
+### Expunge [command-expunge]
+
+Provides the `/libertybans expunge <id>` command. Running this command will fully purge the specified punishment.
+
+**WARNING: Purged punishments are NOT recoverable.**
+
+Requires the permission `libertybans.addon.expunge.use`
+
+### Extend [command-extend]
+
+Adds the syntax `/libertybans extend <id> <time>`. This command will tack on additional time to an existing punishment.
+
+Requires the permission `libertybans.addon.extend.use`
+
+### Staff rollback [command-staffrollback]
 
 Provides the `/libertybans staffrollback <operator> [time]` command. Performing a rollback fully purges all punishments by a certain staff member, which is useful if a staff member becomes rogue or has their account hacked.
 
@@ -66,7 +78,7 @@ Notes:
 * IP-based punishments do not consider exemption. The exemption feature works best with user and composite punishments.
 * Granting exemption to a user after the fact will not automatically undo existing punishments.
 
-### Exemption (LuckPerms group weights)
+### Exemption with LuckPerms group weights [exemption-luckperms]
 
 This addon works only with LuckPerms, since it leverages LuckPerms' group weights feature.
 
@@ -74,7 +86,7 @@ Configuration is simple. Make sure to configure LuckPerms' group weights. Higher
 
 An operator can punish a player if the target player has a lower group weight than the operator. Note that LibertyBans considers every group for each user to determine the user's highest group weight.
 
-### Exemption (Vault permissions)
+### Exemption with Vault permissions [exemption-vault]
 
 This addon provides exemption functionality using tiered permissions. It requires a Vault-compatible permissions plugin and only supports Spigot/Paper servers.
 
@@ -85,7 +97,7 @@ Configuration:
 2. Set the `max-level-to-scan-for` to the value of the highest exemption level you granted.
 3. Change the `permission-check-thread-context` value to suit your permissions plugin.
 
-## Layouts
+## Layouts [layouts]
 
 The layouts addon provides the `/libertybans punish` command. It is a straightforward yet powerful means of defining punishment templates, ladders, tracks -- however you want to call them.
 
@@ -112,13 +124,13 @@ If you are using the Vault permissions exemption addon, then the `libertybans.la
 
 ## Other
 
-### Shortcut Reasons
+### Shortcut Reasons [shortcut-reasons]
 
 Allows substituting faster shortcuts for commonly-used punishment reasons. For example, `/ban A248 30d #hacking` becomes `/ban A248 30d You are banned for hacking`.
 
 Configuration is straight-forward otherwise. If a staff member specifies an invalid shortcut, the command is denied to prevent mistakes. Shortcuts are case-sensitive.
 
-### Warn Actions
+### Warn Actions [warn-actions]
 
 Allows executing actions, such as executing commands or inflicting additional punishments, when a certain amount of warns is reached.
 

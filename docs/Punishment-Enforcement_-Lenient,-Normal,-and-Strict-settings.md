@@ -7,7 +7,7 @@ Punishment enforcement depends on the `address-strictness` setting you configure
 
 The default address strictness is `NORMAL`. The behavior in other punishment plugins is similar to `LENIENT` in LibertyBans.
 
-For large servers, there are also [performance considerations](Database-Performance) to choosing the strictness.
+For large servers, there are also [performance considerations](Database-Performance.md) to choosing the strictness.
 
 ## User Ban
 

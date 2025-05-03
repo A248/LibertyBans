@@ -93,6 +93,9 @@ LibertyBans requires certain minimum versions for database servers. At least MyS
 * Sponge:
   * LibertyBans supports Sponge.
   * LiteBans declines to support Sponge on the author's reason that Sponge does not provide asynchronous chat events.<sup id="note3ret">[3](#note3)</sup>
+* Fabric:
+  * Only LiteBans supports Fabric.
+  * LibertyBans does not, and has had [an open feature request](https://github.com/A248/LibertyBans/issues/120) for 3 years.
 
 LiteBans' support for Velocity came after repeated user requests. It was suggested that LiteBans be made open-source so that someone could contribute a Velocity version. The reluctance of the LiteBans author to add Velocity support suggests that it may be unwise to rely on proprietary software for critical functionality.
 

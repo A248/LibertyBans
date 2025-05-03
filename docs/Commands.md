@@ -1,13 +1,15 @@
 
-This page describes how to change command aliases. This can be used to rename commands, for example.
+This page describes how to change and manage command aliases.
 
-## Layout
+## Basics
+
+### Layout
 
 Every command can be run with `/libertybans <cmd>`.
 
 For example, writing `/ban` is equivalent to `/libertybans ban` under the default installation.
 
-## Disabling Built-In Aliases
+### Changing built-in aliases
 
 By default, LibertyBans registers aliases for commonly-used commands, as defined in the config.yml:
 
@@ -20,26 +22,53 @@ commands:
     # etc.
 ```
 
-You can remove any aliases which you do not want.
+You can remove any aliases which you do not want, or add new ones. This system works with [addon commands](Addons.md), too.
 
-## Creating New Aliases
+## Deconflicting and managing commands, per platform
 
-LibertyBans is a punishment plugin, not an alias plugin. To define your own aliases, you should use another plugin which is made for the task.
+Some plugins (like Essentials, CMI) have hardcoded /ban and /kick commands that overlap with LibertyBans and create conflicts. The server doesn't automatically select LibertyBans commands when there is a conflict.
 
-### Bukkit
+### Bukkit commands.yml
 
-On Bukkit, you don't need to install another plugin.
+Every Bukkit server has a built-in file called the `commands.yml` which lets you control command aliases. This file is very powerful and can help deconflict banning commands.
 
-Every Bukkit server has a file called the `commands.yml` which allows you to control command aliases. This file is very powerful and will help you customize your server's vast array of commands.
+Open the commands.yml and modify the `aliases` section:
 
-### BungeeCord
+```yml
+aliases:
+  ban:
+  - libertybans ban $1-
+  alts:
+  - libertybans alts $1-
+  history:
+  - libertybans history $1-
+```
 
-On BungeeCord you should find a plugin which allows you to create command aliases.
+Repeat this pattern for all the commands you wish to overwrite. This file will take precedence, and it is supposed to override Essentials and vanilla.
 
-We know of multiple plugins in existence to do this.
+### Bukkit alias plugins
 
-### Velocity
+Alternatively, Bukkit / Spigot / Paper is an incredibly old platform, and many plugins exist that let you define custom aliases. An example is [MyCommand](https://dev.bukkit.org/projects/mycommand) and others also exist.
 
-We do not currently know of any command alias plugins for Velocity that are updated for Velocity 3.x
+### BungeeCord alias plugins
 
-The plugin [Aliasr](https://github.com/tobi406/aliasr) exists, but was made for Velocity 1.x and has not been updated. We suggest that you find a developer to update this plugin to Velocity 3.x -- it wouldn't  be very difficult considering Aliasr is a very small plugin and it would be trivial to update it to Velocity 3.x
+On BungeeCord you can like find a plugin to create command aliases.
+We know of multiple, like [TCAlias](https://www.spigotmc.org/resources/t2c-alias-alias-plugin-for-spigot-bungee-commands-1-8-x-1-21.96389/) and [BungeeCommands](https://www.spigotmc.org/resources/bungeecommands-custom-commands-aliases.20771/).
+
+### Velocity alias plugins
+
+[CustomCommands](https://modrinth.com/plugin/customcommandsvelocity) is a Velocity plugin that lets you define your own commands.
+ Also, the plugin [Aliasr](https://github.com/tobi406/aliasr) exists, but it was made for Velocity 1.x and just needs to be trivially updated to Velocity 3.x
+
+### Sponge
+
+Sponge provides very little API for managing commands, and commands cannot be unregistered. As a result, LibertyBans disables the alias system when running on Sponge.
+
+Thus, you need to write a custom plugin (with hardcoded commands) if you want aliases.
+
+### Extra Notes
+
+* Some plugins can have their commands disabled: for example, Essentials provides a `disabled-commands` setting. However, these options are sometimes half-baked and don't actually unregister the command.
+* If commands are not deconflicted, the server can choose which plugin to use. It is entirely arbitrary, therefore, whether LibertyBans' or Essentials' /ban command is chosen if both are installed. This can make commands appear to stop working "randomly," because the server can select a new command randomly (due to various technical factors).
+* If you're running a network and you [install LibertyBans on the proxy](Network-Installation.md), then LibertyBans will intercept commands before they reach the backend servers.
+
