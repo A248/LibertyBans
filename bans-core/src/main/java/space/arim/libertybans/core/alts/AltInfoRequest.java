@@ -20,15 +20,15 @@
 package space.arim.libertybans.core.alts;
 
 import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.core.database.pagination.InstantThenUUID;
 import space.arim.libertybans.core.database.pagination.KeysetAnchor;
 
-import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
 public record AltInfoRequest(UUID uuid, NetworkAddress address, WhichAlts filter,
                              boolean oldestFirst, int pageSize,
-                             KeysetAnchor<Instant> pageAnchor, int skipCount) {
+                             KeysetAnchor<InstantThenUUID> pageAnchor, int skipCount) {
 
     /**
      * Creates a retrieval request without a page anchor, meaning start at the first page.

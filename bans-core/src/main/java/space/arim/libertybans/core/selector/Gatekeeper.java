@@ -31,6 +31,7 @@ import space.arim.libertybans.api.select.SortPunishments;
 import space.arim.libertybans.core.alts.*;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.database.pagination.InstantThenUUID;
 import space.arim.libertybans.core.database.pagination.KeysetPage;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.punish.Association;
@@ -106,7 +107,7 @@ public final class Gatekeeper {
 			}
 			if (banOrLimitMessageOrDetectedAltsOrNull instanceof KeysetPage<?, ?> altResponse) {
 				@SuppressWarnings("unchecked")
-                KeysetPage<DetectedAlt, Instant> detectedAlts = (KeysetPage<DetectedAlt, Instant>) altResponse;
+                KeysetPage<DetectedAlt, InstantThenUUID> detectedAlts = (KeysetPage<DetectedAlt, InstantThenUUID>) altResponse;
 				altNotification.notifyFoundAlts(detectedAlts, name);
 			}
 			return futuresFactory.completedFuture(null);

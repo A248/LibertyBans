@@ -32,8 +32,7 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.Formatter;
 import space.arim.libertybans.core.config.MessagesConfig;
-import space.arim.libertybans.core.database.pagination.KeysetAnchor;
-import space.arim.libertybans.core.database.pagination.KeysetPage;
+import space.arim.libertybans.core.database.pagination.*;
 import space.arim.libertybans.it.util.RandomUtil;
 
 import java.net.InetAddress;
@@ -69,11 +68,11 @@ public class AltCheckFormatterTest {
 		altCheckFormatter = new AltCheckFormatter(configs, formatter);
 	}
 
-	private AccountListFormatting formattingConfig(ComponentText header) {
+	private AccountListFormatting formattingConfig(Component header, Component footer) {
 		return new AccountListFormatting() {
 			@Override
 			public ComponentText header() {
-				return header;
+				return ComponentText.create(header);
 			}
 
 			@Override
@@ -83,14 +82,14 @@ public class AltCheckFormatterTest {
 
 			@Override
 			public ComponentText footer() {
-				return ComponentText.create(Component.empty());
+				return ComponentText.create(footer);
 			}
 		};
 	}
 
 	@Test
 	public void formatMessage() throws UnknownHostException {
-		ComponentText header = ComponentText.create(Component.text("Alt report for %TARGET%"));
+		Component header = Component.text("Alt report for %TARGET%");
 		String address = "207.144.101.102";
 		UUID userId = UUID.randomUUID();
 		String username = "AltUser";
@@ -114,8 +113,11 @@ public class AltCheckFormatterTest {
 						"detection_kind: " + alt.detectionKind() + ", address: " + address + ", username: " + username +
 						", " + "user_id: " + userId + ", date_recorded: " + date,
 				PlainComponentSerializer.plain().serialize(altCheckFormatter.formatMessage(
-						formattingConfig(header),
-						new KeysetPage<>(List.of(alt), KeysetAnchor.unset(), KeysetAnchor.unset()),
+						formattingConfig(header, Component.empty()),
+						new KeysetPage<>(
+								List.of(alt), KeysetAnchor.unset(), KeysetAnchor.unset(),
+								new InstantThenUUIDCombine().borderValueHandle()
+						),
 						"MainUser", -1)
 				)
 		);
@@ -152,12 +154,15 @@ public class AltCheckFormatterTest {
 						DetectionKind.NORMAL
 				)
 		);
+		InstantThenUUID lastPageAnchor = new InstantThenUUID(alts.get(0).recorded(), alts.get(0).uuid());
+		InstantThenUUID nextPageAnchor = new InstantThenUUID(alts.get(2).recorded(), alts.get(2).uuid());
 		Component formattedMessage = altCheckFormatter.formatMessage(
-				formattingConfig(ComponentText.create(Component.text("Header"))),
+				formattingConfig(Component.text("Header"), Component.empty()),
 				new KeysetPage<>(
 						alts,
-						new KeysetAnchor<>(0, alts.get(0).recorded(), false),
-						new KeysetAnchor<>( 2, alts.get(2).recorded(), true)
+						new KeysetAnchor<>(0, lastPageAnchor, false),
+						new KeysetAnchor<>( 2, nextPageAnchor, true),
+						new InstantThenUUIDCombine().borderValueHandle()
 				),
 				"MainUser", 1
 		);

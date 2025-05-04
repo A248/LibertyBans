@@ -22,10 +22,9 @@ package space.arim.libertybans.core.alts;
 import jakarta.inject.Inject;
 import net.kyori.adventure.text.Component;
 import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.database.pagination.InstantThenUUID;
 import space.arim.libertybans.core.database.pagination.KeysetPage;
 import space.arim.libertybans.core.env.EnvEnforcer;
-
-import java.time.Instant;
 
 public class AltNotification {
 
@@ -46,7 +45,7 @@ public class AltNotification {
 	 * @param response the alt retrieval response
 	 * @param name the player name
 	 */
-	public void notifyFoundAlts(KeysetPage<DetectedAlt, Instant> response, String name) {
+	public void notifyFoundAlts(KeysetPage<DetectedAlt, InstantThenUUID> response, String name) {
 		if (response.data().isEmpty()) {
 			return;
 		}

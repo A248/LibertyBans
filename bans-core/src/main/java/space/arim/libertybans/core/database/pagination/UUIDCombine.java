@@ -19,26 +19,38 @@
 
 package space.arim.libertybans.core.database.pagination;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.util.UUID;
 
-public record LongBorderValue() implements BorderValueHandle<Long> {
+final class UUIDCombine implements CombineValues<Long, Long, UUID> {
+
     @Override
-    public int len() {
-        return 1;
+    public UUID combine(Long first, Long second) {
+        return new UUID(first, second);
     }
 
     @Override
-    public void writeChatCode(@NonNull Long value, @NonNull String @NonNull [] codeOutput, int writeIndex) {
-        codeOutput[writeIndex] = Long.toUnsignedString(value, Character.MAX_RADIX);
+    public Long first(UUID combined) {
+        return combined.getMostSignificantBits();
     }
 
     @Override
-    public @Nullable Long readChatCode(@NonNull String @NonNull [] code, int readIndex) {
-        try {
-            return Long.parseUnsignedLong(code[readIndex], Character.MAX_RADIX);
-        } catch (NumberFormatException ignored) {
-            return null;
+    public Long second(UUID combined) {
+        return combined.getLeastSignificantBits();
+    }
+
+    BorderValueHandle<UUID> borderValueHandle(BorderValueHandle<Long> bitHandle) {
+        class Handles implements CombinedBorderValue.CombineHandles<Long, Long> {
+
+            @Override
+            public BorderValueHandle<Long> handle1() {
+                return bitHandle;
+            }
+
+            @Override
+            public BorderValueHandle<Long> handle2() {
+                return bitHandle;
+            }
         }
+        return new CombinedBorderValue<>(new Handles(), this);
     }
 }

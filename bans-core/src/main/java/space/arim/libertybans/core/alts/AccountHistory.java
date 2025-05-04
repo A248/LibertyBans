@@ -28,12 +28,9 @@ import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.user.KnownAccount;
-import space.arim.libertybans.core.database.pagination.KeysetAnchor;
-import space.arim.libertybans.core.database.pagination.KeysetPage;
+import space.arim.libertybans.core.database.pagination.*;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.execute.SQLFunction;
-import space.arim.libertybans.core.database.pagination.Orderable;
-import space.arim.libertybans.core.database.pagination.Pagination;
 import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
@@ -81,7 +78,17 @@ public final class AccountHistory {
 							record.get(ADDRESSES.UPDATED),
 							this
 					));
-			return pagination.buildPage(accounts, KnownAccount::recorded);
+			return pagination.buildPage(accounts, new KeysetPage.AnchorLiaison<>() {
+                @Override
+                public BorderValueHandle<Instant> borderValueHandle() {
+                    return new InstantBorderValue(new LongBorderValue());
+                }
+
+                @Override
+                public Instant getAnchor(KnownAccount datum) {
+                    return datum.recorded();
+                }
+            });
 		}));
 	}
 

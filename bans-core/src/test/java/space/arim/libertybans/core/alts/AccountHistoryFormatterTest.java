@@ -32,9 +32,11 @@ import space.arim.libertybans.api.user.KnownAccount;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.MessagesConfig;
+import space.arim.libertybans.core.database.pagination.InstantBorderValue;
 import space.arim.libertybans.core.database.pagination.KeysetAnchor;
 import space.arim.libertybans.core.database.pagination.KeysetPage;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
+import space.arim.libertybans.core.database.pagination.LongBorderValue;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -90,7 +92,7 @@ public class AccountHistoryFormatterTest {
 			when(formatter.formatAbsoluteDate(date)).thenReturn(date.toString());
 		}
 		KeysetPage<KnownAccount, Instant> page = new KeysetPage<>(
-				List.of(knownAccount), KeysetAnchor.unset(), KeysetAnchor.unset()
+				List.of(knownAccount), KeysetAnchor.unset(), KeysetAnchor.unset(), new InstantBorderValue(new LongBorderValue())
 		);
 		assertEquals("Known accounts for TargetUser\n" +
 						"username: " + username + ", address: " + address + ", date_recorded: " + date,

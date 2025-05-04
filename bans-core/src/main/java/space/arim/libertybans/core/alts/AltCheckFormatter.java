@@ -26,9 +26,8 @@ import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.database.pagination.InstantThenUUID;
 import space.arim.libertybans.core.database.pagination.KeysetPage;
-
-import java.time.Instant;
 
 public class AltCheckFormatter {
 
@@ -42,7 +41,7 @@ public class AltCheckFormatter {
 	}
 
 	public Component formatMessage(AccountListFormatting formatting,
-								   KeysetPage<DetectedAlt, Instant> response,
+								   KeysetPage<DetectedAlt, InstantThenUUID> response,
 								   String target, int page) {
 		return new FormatAccounts<>(formatting, response).format(
 				formatter, target, page, new DetectedAltFormat(configs, formatter)

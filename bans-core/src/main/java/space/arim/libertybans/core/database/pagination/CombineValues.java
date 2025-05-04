@@ -19,26 +19,12 @@
 
 package space.arim.libertybans.core.database.pagination;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+public interface CombineValues<V1, V2, C> {
 
-public record LongBorderValue() implements BorderValueHandle<Long> {
-    @Override
-    public int len() {
-        return 1;
-    }
+    C combine(V1 first, V2 second);
 
-    @Override
-    public void writeChatCode(@NonNull Long value, @NonNull String @NonNull [] codeOutput, int writeIndex) {
-        codeOutput[writeIndex] = Long.toUnsignedString(value, Character.MAX_RADIX);
-    }
+    V1 first(C combined);
 
-    @Override
-    public @Nullable Long readChatCode(@NonNull String @NonNull [] code, int readIndex) {
-        try {
-            return Long.parseUnsignedLong(code[readIndex], Character.MAX_RADIX);
-        } catch (NumberFormatException ignored) {
-            return null;
-        }
-    }
+    V2 second(C combined);
+
 }

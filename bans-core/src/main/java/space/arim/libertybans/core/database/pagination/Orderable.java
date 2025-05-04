@@ -55,4 +55,33 @@ public interface Orderable<F> {
             return new OrderField[] {field.desc()};
         }
     }
+
+    record CombinedField<F1, F2, C>(Field<F1> field1, Field<F2> field2,
+                                    CombineValues<F1, F2, C> combinator)
+            implements Orderable<C> {
+
+        @Override
+        public Condition greaterThan(C borderValue) {
+            F1 first = combinator.first(borderValue);
+            F2 second = combinator.second(borderValue);
+            return field1.greaterThan(first).and(field2.greaterThan(second));
+        }
+
+        @Override
+        public Condition lessThan(C borderValue) {
+            F1 first = combinator.first(borderValue);
+            F2 second = combinator.second(borderValue);
+            return field1.lessThan(first).and(field2.lessThan(second));
+        }
+
+        @Override
+        public OrderField<?>[] ascending() {
+            return new OrderField[] {field1.asc(), field2.asc()};
+        }
+
+        @Override
+        public OrderField<?>[] descending() {
+            return new OrderField[] {field1.desc(), field2.desc()};
+        }
+    }
 }

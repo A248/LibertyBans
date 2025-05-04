@@ -21,9 +21,8 @@ package space.arim.libertybans.core.database.pagination;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
-import space.arim.libertybans.core.database.RandomAnchorProvider;
 
-import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -31,9 +30,27 @@ public class KeysetAnchorTest {
 
     @ParameterizedTest
     @ArgumentsSource(RandomAnchorProvider.class)
-    public void toAndFromCode(KeysetAnchor<Long> anchor) {
+    public void reconstituteLong(KeysetAnchor<Long> anchor) {
         String toCode = anchor.chatCode(new LongBorderValue());
         var reconstituted = new KeysetAnchor.Build<>(new LongBorderValue()).fromCode(toCode);
-        assertEquals(Optional.of(anchor), reconstituted, "Got code " + toCode);
+        assertEquals(anchor, reconstituted, "Got code " + toCode);
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(RandomAnchorProvider.class)
+    public void reconstituteUUID(KeysetAnchor<UUID> anchor) {
+        BorderValueHandle<UUID> borderValueHandle = new UUIDCombine().borderValueHandle(new LongBorderValue());
+        String toCode = anchor.chatCode(borderValueHandle);
+        var reconstituted = new KeysetAnchor.Build<>(borderValueHandle).fromCode(toCode);
+        assertEquals(anchor, reconstituted, "Got code " + toCode);
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(RandomAnchorProvider.class)
+    public void reconstituteInstantThenUUID(KeysetAnchor<InstantThenUUID> anchor) {
+        BorderValueHandle<InstantThenUUID> borderValueHandle = new InstantThenUUIDCombine().borderValueHandle();
+        String toCode = anchor.chatCode(borderValueHandle);
+        var reconstituted = new KeysetAnchor.Build<>(borderValueHandle).fromCode(toCode);
+        assertEquals(anchor, reconstituted, "Got code " + toCode);
     }
 }

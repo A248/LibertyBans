@@ -25,15 +25,12 @@ import net.kyori.adventure.text.TextComponent;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.user.AccountBase;
 import space.arim.libertybans.core.config.InternalFormatter;
-import space.arim.libertybans.core.database.pagination.InstantBorderValue;
-import space.arim.libertybans.core.database.pagination.KeysetAnchor;
 import space.arim.libertybans.core.database.pagination.KeysetPage;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-record FormatAccounts<A extends AccountBase>(AccountListFormatting config, KeysetPage<A, Instant> response) {
+record FormatAccounts<A extends AccountBase, F>(AccountListFormatting config, KeysetPage<A, F> response) {
 
     Component format(InternalFormatter formatter, String target, int page, ElementFormat<A> elementFormat) {
         // Construct the form of the message
@@ -69,13 +66,11 @@ record FormatAccounts<A extends AccountBase>(AccountListFormatting config, Keyse
         // Add in the variable content
         built = built.replaceText("%TARGET%", target);
         if (page != -1) {
-            KeysetAnchor<Instant> lastPageAnchor = response.lastPageAnchor();
-            KeysetAnchor<Instant> nextPageAnchor = response.nextPageAnchor();
             built = built.replaceText("%PAGE%", Integer.toString(page))
                     .replaceText("%NEXTPAGE%", Integer.toString(page + 1))
-                    .replaceText("%NEXTPAGE_KEY%", nextPageAnchor.chatCode(InstantBorderValue.GET))
+                    .replaceText("%NEXTPAGE_KEY%", response.nextPageCode())
                     .replaceText("%LASTPAGE%", Integer.toString(page - 1))
-                    .replaceText("%LASTPAGE_KEY%", lastPageAnchor.chatCode(InstantBorderValue.GET));
+                    .replaceText("%LASTPAGE_KEY%", response.lastPageCode());
         }
         return built.asComponent();
     }
