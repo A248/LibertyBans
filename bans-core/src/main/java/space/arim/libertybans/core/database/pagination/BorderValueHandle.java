@@ -19,28 +19,39 @@
 
 package space.arim.libertybans.core.database.pagination;
 
-import java.util.Optional;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Interface for dealing with border values
+ * Interface for dealing with border values.
+ * <p>
+ * The caller to this interface ensures that array arguments are properly sized according to <code>len()</code>
  *
  */
 public interface BorderValueHandle<V> {
 
     /**
-     * Converts into a chat code
+     * The number of elements that need to be stored in a string array
+     *
+     * @return the length
+     */
+    int len();
+
+    /**
+     * Converts into a chat code. Places it in the output array
      *
      * @param value the value
-     * @return the chat code
+     * @param codeOutput the output array
+     * @param writeIndex where to start writing in the output array
      */
-    String[] chatCode(V value);
+    void writeChatCode(@NonNull V value, @NonNull String @NonNull [] codeOutput, int writeIndex);
 
     /**
      * Converts from a chat code
-     * @param startIndex the index at which to start reading
+     * @param readIndex the index at which to start reading
      * @param code the input string
      * @return the value
      */
-    Optional<V> fromCode(int startIndex, String[] code);
+    @Nullable V readChatCode(@NonNull String @NonNull [] code, int readIndex);
 
 }

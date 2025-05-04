@@ -26,7 +26,6 @@ import space.arim.libertybans.core.alts.AccountHistoryFormatter;
 import space.arim.libertybans.core.alts.AccountHistorySection;
 import space.arim.libertybans.core.commands.extra.ParsePlayerVictimCompositeByCmdOnly;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
-import space.arim.libertybans.core.database.pagination.InstantBorderValue;
 import space.arim.libertybans.core.database.pagination.KeysetAnchor;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.omnibus.util.concurrent.ReactionStage;
@@ -178,7 +177,7 @@ public final class AccountHistoryCommands extends AbstractSubCommandGroup {
 				int page;
 				AccountHistory.Request request;
 				{
-					KeysetAnchor<Instant> anchor = new KeysetAnchor.Build<>(InstantBorderValue.GET).fromCommand(command());
+					KeysetAnchor<Instant> anchor = KeysetAnchor.instant(command());
 
 					page = anchor.page();
 					int pageSize = listing().perPage();

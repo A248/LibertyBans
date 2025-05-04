@@ -19,20 +19,26 @@
 
 package space.arim.libertybans.core.database.pagination;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.time.Instant;
-import java.util.Optional;
 
-public record InstantBorderValue(LongBorderValue longBorderValue) implements BorderValueHandle<Instant> {
-
-    public static final InstantBorderValue GET = new InstantBorderValue(new LongBorderValue());
+public record InstantBorderValue(BorderValueHandle<Long> longBorderValue) implements BorderValueHandle<Instant> {
 
     @Override
-    public String[] chatCode(Instant value) {
-        return longBorderValue.chatCode(value.getEpochSecond());
+    public int len() {
+        return longBorderValue.len();
     }
 
     @Override
-    public Optional<Instant> fromCode(int startIndex, String[] code) {
-        return longBorderValue.fromCode(startIndex, code).map(Instant::ofEpochSecond);
+    public void writeChatCode(@NonNull Instant value, @NonNull String @NonNull [] codeOutput, int writeIndex) {
+        longBorderValue.writeChatCode(value.getEpochSecond(), codeOutput, writeIndex);
+    }
+
+    @Override
+    public @Nullable Instant readChatCode(@NonNull String @NonNull [] code, int readIndex) {
+        Long seconds = longBorderValue.readChatCode(code, readIndex);
+        return seconds == null ? null : Instant.ofEpochSecond(seconds);
     }
 }

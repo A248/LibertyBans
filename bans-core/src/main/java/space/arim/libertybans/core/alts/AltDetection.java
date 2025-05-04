@@ -28,9 +28,7 @@ import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.user.AltAccount;
 import space.arim.libertybans.api.user.AltDetectionQuery;
 import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.database.pagination.KeysetPage;
-import space.arim.libertybans.core.database.pagination.Orderable;
-import space.arim.libertybans.core.database.pagination.Pagination;
+import space.arim.libertybans.core.database.pagination.*;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.database.sql.*;
@@ -64,7 +62,7 @@ public class AltDetection {
 	 * @param query the detection query
 	 * @return the response
 	 */
-	private KeysetPage<DetectedAlt, Instant> detectAlts(DSLContext context, AltQuery query) {
+	private KeysetPage<DetectedAlt, InstantThenUUID> detectAlts(DSLContext context, AltQuery query) {
  		/*
 
  		Alt detection
@@ -111,8 +109,10 @@ public class AltDetection {
 			selectFields.add(victimTypeField);
 		}
 		AltInfoRequest request = query.request;
-		Pagination<Instant> pagination = new Pagination<>(
-				request.pageAnchor(), request.oldestFirst(), new Orderable.SimpleField<>(detectedAlt.UPDATED)
+		InstantThenUUIDCombine instantThenUUIDCombine = new InstantThenUUIDCombine();
+		Pagination<InstantThenUUID> pagination = new Pagination<>(
+				request.pageAnchor(), request.oldestFirst(),
+				new Orderable.CombinedField<>(detectedAlt.UPDATED, detectedAlt.UUID, instantThenUUIDCombine)
 		);
 		List<DetectedAlt> detectedAlts = context
 				.select(selectFields)
@@ -152,7 +152,18 @@ public class AltDetection {
 							scannedTypes
 					);
 				});
-		return pagination.buildPage(detectedAlts, DetectedAlt::recorded);
+		return pagination.buildPage(detectedAlts, new KeysetPage.AnchorLiaison<>() {
+
+            @Override
+            public BorderValueHandle<InstantThenUUID> borderValueHandle() {
+                return instantThenUUIDCombine.borderValueHandle();
+            }
+
+            @Override
+            public InstantThenUUID getAnchor(DetectedAlt datum) {
+                return new InstantThenUUID(datum.recorded(), datum.uuid());
+            }
+        });
 	}
 
 	record AltQuery(AltInfoRequest request,
@@ -177,14 +188,14 @@ public class AltDetection {
 
 	}
 
-	public KeysetPage<DetectedAlt, Instant> detectAlts(DSLContext context, AltInfoRequest retrieval) {
+	public KeysetPage<DetectedAlt, InstantThenUUID> detectAlts(DSLContext context, AltInfoRequest retrieval) {
 		return detectAlts(
 				context,
 				new AltQuery(retrieval, Set.of(PunishmentType.BAN, PunishmentType.MUTE), this)
 		);
 	}
 
-	public CentralisedFuture<KeysetPage<DetectedAlt, Instant>> detectAlts(AltInfoRequest retrieval) {
+	public CentralisedFuture<KeysetPage<DetectedAlt, InstantThenUUID>> detectAlts(AltInfoRequest retrieval) {
 		return queryExecutor.get().query(SQLFunction.readOnly((context) -> detectAlts(context, retrieval)));
 	}
 

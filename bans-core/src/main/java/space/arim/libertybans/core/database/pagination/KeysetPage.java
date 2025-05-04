@@ -22,17 +22,50 @@ package space.arim.libertybans.core.database.pagination;
 import java.util.List;
 import java.util.Objects;
 
-public record KeysetPage<R, F>(List<R> data,
-                               KeysetAnchor<F> lastPageAnchor,
-                               KeysetAnchor<F> nextPageAnchor) {
+public final class KeysetPage<R, F> {
 
-    public KeysetPage {
-        Objects.requireNonNull(data);
-        Objects.requireNonNull(lastPageAnchor);
-        Objects.requireNonNull(nextPageAnchor);
+    private final List<R> data;
+    private final KeysetAnchor<F> lastPageAnchor;
+    private final KeysetAnchor<F> nextPageAnchor;
+
+    private transient final BorderValueHandle<F> borderValueHandle;
+
+    public KeysetPage(List<R> data, KeysetAnchor<F> lastPageAnchor, KeysetAnchor<F> nextPageAnchor,
+                      BorderValueHandle<F> borderValueHandle) {
+        this.data = List.copyOf(data);
+        this.lastPageAnchor = Objects.requireNonNull(lastPageAnchor);
+        this.nextPageAnchor = Objects.requireNonNull(nextPageAnchor);
+        this.borderValueHandle = borderValueHandle;
     }
 
-    public interface ExtractAnchor<R, F> {
+    public List<R> data() {
+        return data;
+    }
+
+    public KeysetAnchor<F> lastPageAnchor() {
+        return lastPageAnchor;
+    }
+
+    public KeysetAnchor<F> nextPageAnchor() {
+        return nextPageAnchor;
+    }
+
+    public String lastPageCode() {
+        return lastPageAnchor.chatCode(borderValueHandle);
+    }
+
+    public String nextPageCode() {
+        return nextPageAnchor.chatCode(borderValueHandle);
+    }
+
+    public interface AnchorLiaison<R, F> {
+
+        /**
+         * The border value handle for getting chat codes from {@code F}
+         *
+         * @return the border value handle
+         */
+        BorderValueHandle<F> borderValueHandle();
 
         /**
          * Gets the page anchor from this data point
@@ -42,4 +75,18 @@ public record KeysetPage<R, F>(List<R> data,
         F getAnchor(R datum);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof KeysetPage<?, ?> that)) return false;
+
+        return data.equals(that.data) && lastPageAnchor.equals(that.lastPageAnchor) && nextPageAnchor.equals(that.nextPageAnchor);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = data.hashCode();
+        result = 31 * result + lastPageAnchor.hashCode();
+        result = 31 * result + nextPageAnchor.hashCode();
+        return result;
+    }
 }

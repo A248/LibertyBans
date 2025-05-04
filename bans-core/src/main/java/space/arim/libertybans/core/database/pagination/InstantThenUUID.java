@@ -19,26 +19,15 @@
 
 package space.arim.libertybans.core.database.pagination;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.time.Instant;
+import java.util.Objects;
+import java.util.UUID;
 
-public record LongBorderValue() implements BorderValueHandle<Long> {
-    @Override
-    public int len() {
-        return 1;
+public record InstantThenUUID(Instant instant, UUID uuid) {
+
+    public InstantThenUUID {
+        Objects.requireNonNull(instant);
+        Objects.requireNonNull(uuid);
     }
 
-    @Override
-    public void writeChatCode(@NonNull Long value, @NonNull String @NonNull [] codeOutput, int writeIndex) {
-        codeOutput[writeIndex] = Long.toUnsignedString(value, Character.MAX_RADIX);
-    }
-
-    @Override
-    public @Nullable Long readChatCode(@NonNull String @NonNull [] code, int readIndex) {
-        try {
-            return Long.parseUnsignedLong(code[readIndex], Character.MAX_RADIX);
-        } catch (NumberFormatException ignored) {
-            return null;
-        }
-    }
 }

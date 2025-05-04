@@ -19,9 +19,10 @@
 
 package space.arim.libertybans.core.database.pagination;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.core.commands.CommandPackage;
 
-import java.util.Optional;
+import java.time.Instant;
 
 /**
  * An anchor for pagination purposes
@@ -35,6 +36,8 @@ public record KeysetAnchor<F>(int page, F borderValue, boolean fromForwardScroll
 
     private static final KeysetAnchor<?> UNSET = new KeysetAnchor<>(1, null, true);
 
+    private static final String CHAT_CODE_PREFIX = "k:";
+
     /**
      * Gets an unset anchor, that is, one starting on the first page
      *
@@ -46,44 +49,56 @@ public record KeysetAnchor<F>(int page, F borderValue, boolean fromForwardScroll
         return (KeysetAnchor<F>) UNSET;
     }
 
-    public String chatCode(BorderValueHandle<F> borderValueHandle) {
+    String chatCode(BorderValueHandle<F> borderValueHandle) {
         StringBuilder builder = new StringBuilder();
-        builder.append("k:");
+        builder.append(CHAT_CODE_PREFIX);
         builder.append(page);
         builder.append(';');
         builder.append(fromForwardScroll ? 1 : 0);
-        for (String borderValuePart : borderValueHandle.chatCode(borderValue)) {
+        String[] borderValueParts = new String[borderValueHandle.len()];
+        borderValueHandle.writeChatCode(borderValue, borderValueParts, 0);
+        for (String borderValuePart : borderValueParts) {
             builder.append(';');
             builder.append(borderValuePart);
         }
         return builder.toString();
     }
 
-    public record Build<F>(BorderValueHandle<F> borderValueHandle) {
+    public static KeysetAnchor<Instant> instant(CommandPackage command) {
+        return new Build<>(new InstantBorderValue(new LongBorderValue())).fromCommand(command);
+    }
 
-        Optional<KeysetAnchor<F>> fromCode(String input) {
-            if (input.startsWith("k:")) {
-                String[] split = input.substring(2).split(";");
-                if (split.length >= 2) {
+    public static KeysetAnchor<InstantThenUUID> instantThenUUID(CommandPackage command) {
+        return new Build<>(new InstantThenUUIDCombine().borderValueHandle()).fromCommand(command);
+    }
+
+    record Build<F>(BorderValueHandle<F> borderValueHandle) {
+
+        @Nullable
+        KeysetAnchor<F> fromCode(String input) {
+            if (input.startsWith(CHAT_CODE_PREFIX)) {
+                String[] split = input.substring(CHAT_CODE_PREFIX.length()).split(";");
+                if (split.length >= 2 + borderValueHandle.len()) {
                     int page;
                     try {
                         page = Integer.parseInt(split[0]);
                     } catch (NumberFormatException ignored) {
-                        return Optional.empty();
+                        return null;
                     }
                     boolean fromForwardScroll = split[1].equals("1");
-                    return borderValueHandle.fromCode(2, split).map(
-                            (borderValue) -> new KeysetAnchor<>(page, borderValue, fromForwardScroll)
-                    );
+                    F borderValue = borderValueHandle.readChatCode(split, 2);
+                    if (borderValue != null) {
+                        return new KeysetAnchor<>(page, borderValue, fromForwardScroll);
+                    }
                 }
             }
-            return Optional.empty();
+            return null;
         }
 
-        public KeysetAnchor<F> fromCommand(CommandPackage command) {
+        private KeysetAnchor<F> fromCommand(CommandPackage command) {
             if (command.hasNext()) {
                 String pageArg = command.next();
-                var fromCode = fromCode(pageArg).orElse(null);
+                var fromCode = fromCode(pageArg);
                 if (fromCode != null) {
                     return fromCode;
                 }

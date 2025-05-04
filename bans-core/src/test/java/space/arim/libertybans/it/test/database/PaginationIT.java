@@ -24,15 +24,11 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.slf4j.LoggerFactory;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.execute.SQLFunction;
-import space.arim.libertybans.core.database.pagination.KeysetAnchor;
-import space.arim.libertybans.core.database.pagination.KeysetPage;
-import space.arim.libertybans.core.database.pagination.Orderable;
-import space.arim.libertybans.core.database.pagination.Pagination;
+import space.arim.libertybans.core.database.pagination.*;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SampleData;
 
@@ -64,7 +60,17 @@ public class PaginationIT {
                     .fetch((record) ->
                             new Entry(record.getId(), record.getType(), record.getOperator(), record.getReason())
                     );
-            return pagination.buildPage(punishments, Entry::id);
+            return pagination.buildPage(punishments, new KeysetPage.AnchorLiaison<>() {
+                @Override
+                public BorderValueHandle<Long> borderValueHandle() {
+                    return new LongBorderValue();
+                }
+
+                @Override
+                public Long getAnchor(Entry datum) {
+                    return datum.id;
+                }
+            });
         })).join();
     }
 

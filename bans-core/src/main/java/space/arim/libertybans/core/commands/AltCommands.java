@@ -24,12 +24,11 @@ import jakarta.inject.Singleton;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.alts.*;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
-import space.arim.libertybans.core.database.pagination.InstantBorderValue;
+import space.arim.libertybans.core.database.pagination.InstantThenUUID;
 import space.arim.libertybans.core.database.pagination.KeysetAnchor;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
-import java.time.Instant;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -98,7 +97,7 @@ public final class AltCommands extends AbstractSubCommandGroup {
 				int page;
 				AltInfoRequest request;
 				{
-					KeysetAnchor<Instant> anchor = new KeysetAnchor.Build<>(InstantBorderValue.GET).fromCommand(command());
+					KeysetAnchor<InstantThenUUID> anchor = KeysetAnchor.instantThenUUID(command());
 					UUID uuid = userDetails.uuid();
 					NetworkAddress address = userDetails.address();
 					boolean oldestFirst = altsConfig().command().oldestFirst();
