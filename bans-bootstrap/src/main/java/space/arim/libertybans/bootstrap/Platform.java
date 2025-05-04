@@ -26,14 +26,16 @@ import java.util.stream.Stream;
 
 public final class Platform {
 
+	final Category category;
 	final PlatformId platformId;
 	private final BootstrapLogger logger;
 	private final Map<DependencyBundle, LibraryDetection> libraryDetectionMap;
 	private final LibraryDetection hikariCP;
 
-	Platform(PlatformId platformId, BootstrapLogger logger,
-			 Map<DependencyBundle, LibraryDetection> libraryDetectionMap, LibraryDetection hikariCP) {
-		this.platformId = Objects.requireNonNull(platformId, "platformId");
+	Platform(Category category, PlatformId platformId, BootstrapLogger logger,
+             Map<DependencyBundle, LibraryDetection> libraryDetectionMap, LibraryDetection hikariCP) {
+        this.category = category;
+        this.platformId = Objects.requireNonNull(platformId, "platformId");
 		this.logger = logger;
         this.libraryDetectionMap = libraryDetectionMap;
         this.hikariCP = hikariCP;
@@ -60,7 +62,7 @@ public final class Platform {
 
 		private final Category category;
 
-        public PreBuilder(Category category) {
+        PreBuilder(Category category) {
             this.category = Objects.requireNonNull(category, "category");
         }
 
@@ -124,7 +126,7 @@ public final class Platform {
 			} else {
 				platformId = new PlatformId(platformName + " (" + category.display() + ')', platformVersion);
 			}
-			return new Platform(platformId, logger, libraryDetectionMap, hikariCP);
+			return new Platform(category, platformId, logger, libraryDetectionMap, hikariCP);
 		}
 	}
 

@@ -85,12 +85,11 @@ LibertyBans requires certain minimum versions for database servers. At least MyS
 
 ### Platform Support
 
-Both BanManager and LibertyBans support Bukkit, BungeeCord, and Velocity. Their difference is with respect to Sponge:
+Both BanManager and LibertyBans support Bukkit, BungeeCord, and Velocity. They differ with respect to modding platforms:
 
-* LibertyBans supports Sponge 13, 12, 9, and 8
-* However, BanManager only supports Sponge 7.
-
-The Sponge platforms are *not* compatible with each other. A plugin for Sponge 7 cannot operate on Sponge 8, and vice-versa.
+* BanManager runs on Fabric.
+* LibertyBans runs on Sponge 13, 12, 9, and 8.
+* BanManager also supports Sponge 7, a legacy version.
 
 (As of 3 May 2025)
 

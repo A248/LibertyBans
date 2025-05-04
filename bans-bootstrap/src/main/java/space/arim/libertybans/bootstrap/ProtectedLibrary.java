@@ -67,7 +67,7 @@ public enum ProtectedLibrary {
 	 * The base package of classes from the library
 	 * @return the base package
 	 */
-	String basePackage() {
+    public String basePackage() {
 		return basePackage;
 	}
 

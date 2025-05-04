@@ -17,7 +17,7 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.bootstrap;
+package space.arim.libertybans.bootstrap.classload;
 
 import space.arim.libertybans.bootstrap.depend.BootstrapException;
 import space.arim.libertybans.bootstrap.depend.JarAttachment;
@@ -28,15 +28,15 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.Arrays;
 
-final class AttachableClassLoader extends URLClassLoader implements JarAttachment {
+public final class AttachableClassLoader extends URLClassLoader implements JarAttachment {
 
 	static {
 		ClassLoader.registerAsParallelCapable();
 	}
 
-	AttachableClassLoader(String classLoaderName, ClassLoader parent) {
+	public AttachableClassLoader(String classLoaderName, ClassLoader parent) {
 		super(classLoaderName, new URL[] {}, parent);
-	}
+    }
 
 	@Override
 	public void addJarPath(Path jarFile) {
@@ -51,7 +51,7 @@ final class AttachableClassLoader extends URLClassLoader implements JarAttachmen
 
 	@Override
 	public String toString() {
-		return "AttachableClassLoader{" +
+		return getClass().getName() + '{' +
 				"urls=" + Arrays.toString(getURLs()) +
 				", parent=" + getParent() +
 				'}';

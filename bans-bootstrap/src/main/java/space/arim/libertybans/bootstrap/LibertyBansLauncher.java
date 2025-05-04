@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.bootstrap;
 
+import space.arim.libertybans.bootstrap.classload.*;
 import space.arim.libertybans.bootstrap.depend.BootstrapLauncher;
 import space.arim.libertybans.bootstrap.depend.DependencyLoaderBuilder;
 import space.arim.libertybans.bootstrap.depend.ExistingDependency;
@@ -177,17 +178,26 @@ public final class LibertyBansLauncher {
 		}
 		filterLibrariesAndWarnRelocation(librariesRequiringProtection);
 		// Begin to download dependencies
-		BootstrapLauncher<AttachableClassLoader> launcher = new BootstrapLauncher<>(
-				new AttachableClassLoader(
-						"LibertyBans-ClassLoader",
-						(librariesRequiringProtection.isEmpty()) ?
-								parentLoader : new FilteringClassLoader(parentLoader, librariesRequiringProtection)
-				),
-				loader.build(),
-				existingDependencies
-		);
-		CompletableFuture<AttachableClassLoader> futureClassLoader = launcher.load();
+		CompletableFuture<AttachableClassLoader> futureClassLoader;
+		{
+			ClassLoadGuard guard = ClassLoadGuard.passThrough();
+			if (!librariesRequiringProtection.isEmpty()) {
 
+				guard = new LibraryProtection(librariesRequiringProtection, guard);
+			}
+			if (platform.category == Platform.Category.BUKKIT) {
+				guard = new RuntimeExceptionCatcher(logger, internalFolder, guard);
+			}
+			BootstrapLauncher<AttachableClassLoader> launcher = new BootstrapLauncher<>(
+					new AttachableClassLoader(
+							"LibertyBans-ClassLoader",
+							new GuardedClassLoader(parentLoader, guard)
+					),
+					loader.build(),
+					existingDependencies
+			);
+			futureClassLoader = launcher.load();
+		}
 		// Detect addons and attachments in the meantime
 		Set<Path> additionalLibraries;
 		try {
