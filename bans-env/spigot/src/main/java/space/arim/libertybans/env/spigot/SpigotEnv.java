@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -30,18 +30,19 @@ import java.util.Set;
 public final class SpigotEnv implements Environment {
 
 	private final Provider<ConnectionListener> connectionListener;
+	private final Provider<JoinListener> joinListener;
 	private final Provider<ChatListener> chatListener;
-	private final Provider<ServerNameListener> serverNameListener;
 	private final Provider<SpigotMessageChannel> pluginMessageChannel;
 	private final CommandHandler.CommandHelper commandHelper;
 
 	@Inject
-	public SpigotEnv(Provider<ConnectionListener> connectionListener, Provider<ChatListener> chatListener,
-					 Provider<ServerNameListener> serverNameListener, Provider<SpigotMessageChannel> pluginMessageChannel,
+	public SpigotEnv(Provider<ConnectionListener> connectionListener, Provider<JoinListener> joinListener,
+					 Provider<ChatListener> chatListener, Provider<SpigotMessageChannel> pluginMessageChannel,
 					 CommandHandler.CommandHelper commandHelper) {
 		this.connectionListener = connectionListener;
+
+		this.joinListener = joinListener;
 		this.chatListener = chatListener;
-		this.serverNameListener = serverNameListener;
 		this.pluginMessageChannel = pluginMessageChannel;
 		this.commandHelper = commandHelper;
 	}
@@ -49,10 +50,7 @@ public final class SpigotEnv implements Environment {
 	@Override
 	public Set<PlatformListener> createListeners() {
 		return Set.of(
-				connectionListener.get(),
-				chatListener.get(),
-				serverNameListener.get(),
-				pluginMessageChannel.get(),
+				connectionListener.get(), joinListener.get(), chatListener.get(), pluginMessageChannel.get(),
 				new CommandHandler(commandHelper, Commands.BASE_COMMAND_NAME, false)
 		);
 	}

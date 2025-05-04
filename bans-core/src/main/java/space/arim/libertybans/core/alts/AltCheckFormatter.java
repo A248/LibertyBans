@@ -44,7 +44,7 @@ public class AltCheckFormatter {
 								   KeysetPage<DetectedAlt, InstantThenUUID> response,
 								   String target, int page) {
 		return new FormatAccounts<>(formatting, response).format(
-				formatter, target, page, new DetectedAltFormat(configs, formatter)
+				target, page, new DetectedAltFormat(configs, formatter)
 		);
 	}
 

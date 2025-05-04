@@ -33,27 +33,25 @@ import java.util.Set;
 public final class SpongeEnv implements Environment {
 
 	private final Provider<ConnectionListener> connectionListener;
+	private final Provider<JoinListener> joinListener;
 	private final Provider<ChatListener> chatListener;
-	private final Provider<ServerNameListener> serverNameListener;
 	private final PlatformAccess platformAccess;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ThisClass.get());
 
 	@Inject
-	public SpongeEnv(Provider<ConnectionListener> connectionListener, Provider<ChatListener> chatListener,
-					 Provider<ServerNameListener> serverNameListener, PlatformAccess platformAccess) {
+	public SpongeEnv(Provider<ConnectionListener> connectionListener,Provider<JoinListener> joinListener,
+					 Provider<ChatListener> chatListener, PlatformAccess platformAccess) {
 		this.connectionListener = connectionListener;
+		this.joinListener = joinListener;
 		this.chatListener = chatListener;
-		this.serverNameListener = serverNameListener;
 		this.platformAccess = platformAccess;
 	}
 
 	@Override
 	public Set<PlatformListener> createListeners() {
 		return Set.of(
-				connectionListener.get(),
-				chatListener.get(),
-				serverNameListener.get()
+				connectionListener.get(), joinListener.get(), chatListener.get()
 		);
 	}
 

@@ -24,7 +24,6 @@ import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.TextComponent;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.user.AccountBase;
-import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.database.pagination.KeysetPage;
 
 import java.util.ArrayList;
@@ -32,7 +31,7 @@ import java.util.List;
 
 record FormatAccounts<A extends AccountBase, F>(AccountListFormatting config, KeysetPage<A, F> response) {
 
-    Component format(InternalFormatter formatter, String target, int page, ElementFormat<A> elementFormat) {
+    Component format(String target, int page, ElementFormat<A> elementFormat) {
         // Construct the form of the message
         ComponentText built;
         {
@@ -41,7 +40,7 @@ record FormatAccounts<A extends AccountBase, F>(AccountListFormatting config, Ke
 
             ComponentText header = config.header();
             if (!header.isEmpty()) {
-                messages.add(formatter.prefix(header.replaceText("%TARGET%", target)));
+                messages.add(header.replaceText("%TARGET%", target));
                 messages.add(Component.newline());
             }
             for (int n = 0; n < data.size(); n++) {
