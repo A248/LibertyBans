@@ -117,7 +117,7 @@ public final class AltCommands extends AbstractSubCommandGroup {
 								"%PAGE%", Integer.toString(page)));
 						return;
 					}
-					sender().sendMessageNoPrefix(altCheckFormatter.formatMessage(
+					sender().sendMessage(altCheckFormatter.formatMessage(
 							altsConfig().command(), response, target, page
 					));
 				});

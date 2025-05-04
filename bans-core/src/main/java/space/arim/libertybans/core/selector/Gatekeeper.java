@@ -22,6 +22,7 @@ package space.arim.libertybans.core.selector;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import net.kyori.adventure.text.Component;
+import space.arim.api.env.annote.PlatformPlayer;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
@@ -31,10 +32,13 @@ import space.arim.libertybans.api.select.SortPunishments;
 import space.arim.libertybans.core.alts.*;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.database.pagination.InstantThenUUID;
 import space.arim.libertybans.core.database.pagination.KeysetPage;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
+import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.punish.Association;
+import space.arim.libertybans.core.service.FuturePoster;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -46,6 +50,7 @@ import java.util.UUID;
 public final class Gatekeeper {
 
 	private final Configs configs;
+	private final FuturePoster futurePoster;
 	private final FactoryOfTheFuture futuresFactory;
 	private final Provider<QueryExecutor> queryExecutor;
 	private final InternalFormatter formatter;
@@ -55,11 +60,13 @@ public final class Gatekeeper {
 	private final Time time;
 
 	@Inject
-	public Gatekeeper(Configs configs, FactoryOfTheFuture futuresFactory, Provider<QueryExecutor> queryExecutor,
-					  InternalFormatter formatter, ConnectionLimiter connectionLimiter, AltDetection altDetection,
-					  AltNotification altNotification, Time time) {
+	public Gatekeeper(Configs configs, FuturePoster futurePoster, FactoryOfTheFuture futuresFactory,
+					  Provider<QueryExecutor> queryExecutor, InternalFormatter formatter,
+					  ConnectionLimiter connectionLimiter, AltDetection altDetection, AltNotification altNotification,
+					  Time time) {
 		this.configs = configs;
-		this.futuresFactory = futuresFactory;
+        this.futurePoster = futurePoster;
+        this.futuresFactory = futuresFactory;
 		this.queryExecutor = queryExecutor;
 		this.formatter = formatter;
 		this.connectionLimiter = connectionLimiter;
@@ -106,11 +113,39 @@ public final class Gatekeeper {
 				return futuresFactory.completedFuture(limitMsg);
 			}
 			if (banOrLimitMessageOrDetectedAltsOrNull instanceof KeysetPage<?, ?> altResponse) {
+				// Offload the alt notification so as not to block the incoming login
 				@SuppressWarnings("unchecked")
                 KeysetPage<DetectedAlt, InstantThenUUID> detectedAlts = (KeysetPage<DetectedAlt, InstantThenUUID>) altResponse;
-				altNotification.notifyFoundAlts(detectedAlts, name);
+				futurePoster.postFuture(altNotification.notifyFoundAlts(detectedAlts, name));
 			}
 			return futuresFactory.completedFuture(null);
 		});
+	}
+
+	<@PlatformPlayer P> CentralisedFuture<Void> onJoin(P player, EnvEnforcer<P> envEnforcer) {
+		EnforcementConfig.AltsAutoShow altsAutoShow = configs.getMainConfig().enforcement().altsAutoShow();
+		if (altsAutoShow.enable() && altsAutoShow.bypassPermission()) {
+			boolean hasPermission = envEnforcer.hasPermission(player, "libertybans.alts.autoshow.bypass");
+			if (!hasPermission) {
+				return notifyAlts(player, envEnforcer, altsAutoShow.showWhichAlts());
+			}
+		}
+		return futuresFactory.completedFuture(null);
+	}
+
+	private <P> CentralisedFuture<Void> notifyAlts(P player, EnvEnforcer<P> envEnforcer, WhichAlts whichAlts) {
+		UUID uuid = envEnforcer.getUniqueIdFor(player);
+		NetworkAddress address = NetworkAddress.of(envEnforcer.getAddressFor(player));
+		String name = envEnforcer.getNameFor(player);
+
+		var formatting = configs.getMessagesConfig().alts().autoShow();
+		AltInfoRequest request = new AltInfoRequest(
+				uuid, address, whichAlts, formatting.oldestFirst(), formatting.limit()
+		);
+		return queryExecutor.get().query(SQLFunction.readOnly(
+				(context) -> altDetection.detectAlts(context, request)
+		)).thenCompose(
+				(detectedAlts) -> altNotification.notifyFoundAlts(detectedAlts, name)
+		);
 	}
 }

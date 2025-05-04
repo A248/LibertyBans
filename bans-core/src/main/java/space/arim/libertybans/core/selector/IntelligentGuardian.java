@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,13 +23,16 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import space.arim.api.env.annote.PlatformPlayer;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.select.SortPunishments;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.selector.cache.MuteCache;
+import space.arim.libertybans.core.service.FuturePoster;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -45,6 +48,7 @@ import java.util.function.Function;
 public final class IntelligentGuardian implements Guardian {
 
 	private final Configs configs;
+	private final FuturePoster futurePoster;
 	private final FactoryOfTheFuture futuresFactory;
 	private final ScopeManager scopeManager;
 	private final InternalFormatter formatter;
@@ -53,10 +57,12 @@ public final class IntelligentGuardian implements Guardian {
 	private final MuteCache muteCache;
 
 	@Inject
-	public IntelligentGuardian(Configs configs, FactoryOfTheFuture futuresFactory, ScopeManager scopeManager,
-							   InternalFormatter formatter, InternalSelector selector, UUIDManager uuidManager, MuteCache muteCache) {
+	public IntelligentGuardian(Configs configs, FuturePoster futurePoster, FactoryOfTheFuture futuresFactory,
+							   ScopeManager scopeManager, InternalFormatter formatter, InternalSelector selector,
+							   UUIDManager uuidManager, MuteCache muteCache) {
 		this.configs = configs;
-		this.futuresFactory = futuresFactory;
+        this.futurePoster = futurePoster;
+        this.futuresFactory = futuresFactory;
 		this.scopeManager = scopeManager;
 		this.formatter = formatter;
 		this.selector = selector;
@@ -162,6 +168,14 @@ public final class IntelligentGuardian implements Guardian {
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public <@PlatformPlayer P> void onJoin(P player, EnvEnforcer<P> envEnforcer) {
+		var future = selector.onJoin(player, envEnforcer)
+				.orTimeout(20, TimeUnit.SECONDS)
+				.exceptionally(timeoutHandler("new join for " + envEnforcer.getNameFor(player)));
+		futurePoster.postFuture(future);
 	}
 
 }

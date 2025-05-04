@@ -26,36 +26,44 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.network.ServerSideConnectionEvent;
 import space.arim.libertybans.core.env.PlatformListener;
-import space.arim.libertybans.core.scope.ServerNameListenerBase;
+import space.arim.libertybans.core.scope.ServerNameListener;
+import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.env.sponge.listener.RegisterListeners;
 
 @Singleton
-public final class ServerNameListener implements PlatformListener {
+public final class JoinListener implements PlatformListener {
 
 	private final RegisterListeners registerListeners;
-	private final ServerNameListenerBase<ServerPlayer, ?> baseImpl;
+	private final Guardian guardian;
+	private final ServerNameListener<ServerPlayer, ?> serverNameListener;
+	private final SpongeEnforcer spongeEnforcer;
 
 	@Inject
-	public ServerNameListener(RegisterListeners registerListeners, ServerNameListenerBase<ServerPlayer, ?> baseImpl) {
+	public JoinListener(RegisterListeners registerListeners, Guardian guardian,
+						ServerNameListener<ServerPlayer, ?> serverNameListener, SpongeEnforcer spongeEnforcer) {
 		this.registerListeners = registerListeners;
-		this.baseImpl = baseImpl;
-	}
+        this.guardian = guardian;
+        this.serverNameListener = serverNameListener;
+        this.spongeEnforcer = spongeEnforcer;
+    }
 
 	@Override
 	public void register() {
-		baseImpl.register();
+		serverNameListener.register();
 		registerListeners.register(this);
 	}
 
 	@Override
 	public void unregister() {
 		registerListeners.unregister(this);
-		baseImpl.unregister();
+		serverNameListener.unregister();
 	}
 
 	@Listener(order = Order.EARLY)
 	public void onJoin(ServerSideConnectionEvent.Join event) {
-		baseImpl.onJoin(event.player());
+		ServerPlayer player = event.player();
+		guardian.onJoin(player, spongeEnforcer);
+		serverNameListener.onJoin(player, spongeEnforcer);
 	}
 
 }

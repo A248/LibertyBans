@@ -193,7 +193,7 @@ public final class AccountHistoryCommands extends AbstractSubCommandGroup {
 						sender().sendMessage(listing().noneFound().replaceText("%PAGE%", Integer.toString(page)));
 						return;
 					}
-					sender().sendMessageNoPrefix(accountHistoryFormatter.formatMessage(response, target, page));
+					sender().sendMessage(accountHistoryFormatter.formatMessage(response, target, page));
 				});
 			});
 		}

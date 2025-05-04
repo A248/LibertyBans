@@ -42,7 +42,7 @@ public class AccountHistoryFormatter {
 
 	public Component formatMessage(KeysetPage<KnownAccount, Instant> response, String target, int page) {
 		return new FormatAccounts<>(configs.getMessagesConfig().accountHistory().listing(), response).format(
-				formatter, target, page, new KnownAccountFormat(configs, formatter)
+				target, page, new KnownAccountFormat(configs, formatter)
 		);
 	}
 

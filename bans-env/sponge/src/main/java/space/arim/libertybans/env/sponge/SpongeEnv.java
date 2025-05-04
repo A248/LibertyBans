@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -30,25 +30,23 @@ import java.util.Set;
 public final class SpongeEnv implements Environment {
 
 	private final Provider<ConnectionListener> connectionListener;
+	private final Provider<JoinListener> joinListener;
 	private final Provider<ChatListener> chatListener;
-	private final Provider<ServerNameListener> serverNameListener;
 	private final PlatformAccess platformAccess;
 
 	@Inject
-	public SpongeEnv(Provider<ConnectionListener> connectionListener, Provider<ChatListener> chatListener,
-					 Provider<ServerNameListener> serverNameListener, PlatformAccess platformAccess) {
+	public SpongeEnv(Provider<ConnectionListener> connectionListener,Provider<JoinListener> joinListener,
+					 Provider<ChatListener> chatListener, PlatformAccess platformAccess) {
 		this.connectionListener = connectionListener;
+		this.joinListener = joinListener;
 		this.chatListener = chatListener;
-		this.serverNameListener = serverNameListener;
 		this.platformAccess = platformAccess;
 	}
 
 	@Override
 	public Set<PlatformListener> createListeners() {
 		return Set.of(
-				connectionListener.get(),
-				chatListener.get(),
-				serverNameListener.get()
+				connectionListener.get(), joinListener.get(), chatListener.get()
 		);
 	}
 
