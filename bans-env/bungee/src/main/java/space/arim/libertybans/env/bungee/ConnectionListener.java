@@ -107,13 +107,14 @@ public final class ConnectionListener implements Listener, PlatformListener {
 		ProxiedPlayer player = event.getPlayer();
 		InetAddress address = addressReporter.getAddress(player);
 
-		Component message = guardian.checkServerSwitch(
+		guardian.checkServerSwitch(
 				player.getUniqueId(), player.getName(), address, event.getTarget().getName()
-		).join();
-		if (message != null) {
-			event.setCancelled(true);
-			audienceRepresenter.toAudience(player).sendMessage(message);
-		}
+		).thenAccept(component -> {
+			if (component != null) {
+				event.setCancelled(true);
+				audienceRepresenter.toAudience(player).sendMessage(component);
+			}
+		});
 	}
 
 }
