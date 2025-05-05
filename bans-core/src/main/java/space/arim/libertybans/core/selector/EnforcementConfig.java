@@ -150,10 +150,11 @@ public interface EnforcementConfig {
 		@ConfComments({"The server names in this list will be excluded from associating the IP address of the player connecting.",
 				"Please note that the server's name in the list should be the same as the ones in your proxy configuration.",
 				"This is intended to be used by LibertyBans proxy installations.",
-				"If you are planning to use this feature, you MUST enable the 'enforce-server-switch' option."
+				"If you are planning to use this feature, you MUST enable the 'enforce-server-switch' option.",
+				"If you are not using LibertyBans in the proxy, you should leave this list empty."
 				})
 		@ConfKey("servers-without-ip-registration")
-		@DefaultStrings({"auth"})
+		@DefaultStrings({"server-name"})
 		List<String> serversWithoutRegistration();
 
 		@ConfComments({"If you want to register the IP address of the player connecting, set this to true.",

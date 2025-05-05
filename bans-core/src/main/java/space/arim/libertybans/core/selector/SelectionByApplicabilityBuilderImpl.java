@@ -91,7 +91,7 @@ public final class SelectionByApplicabilityBuilderImpl
 	}
 
 	/**
-	 * For internal use, to accomodate a new user whose UUID and IP address combination
+	 * For internal use, to accommodate a new user whose UUID and IP address combination
 	 * has not yet been entered to the database. Sets whether this scenario is potential.
 	 *
 	 * @param canAssumeUserRecorded if the user is definitely registered, set to true. True by default.
