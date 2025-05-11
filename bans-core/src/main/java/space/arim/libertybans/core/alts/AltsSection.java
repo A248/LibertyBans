@@ -100,7 +100,7 @@ public interface AltsSection {
 		@Override
 		@ConfComments("The message to display atop the alt check. Set to an empty string to disable")
 		@ConfDefault.DefaultStrings({
-				"&c&o%TARGET%&7 may be an alt account. Report follows.",
+				"&c&o%TARGET%&7 may be an alt account. Some of the accounts they're linked to are listed below.",
 				"&7Strong possibility - Same address as banned player.",
 				"&7Mere possibility - Linked to banned player by common past address"})
 		ComponentText header();

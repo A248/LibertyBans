@@ -91,10 +91,10 @@ public interface EnforcementConfig {
 		@ConfKey("enable-bypass-permission")
 		@ConfComments({
 				"Whether to enable the bypass permission.",
-				"If enabled, players with the libertybans.alts.autoshow.bypass permission won't trigger the check."
+				"If enabled, players with the libertybans.alts.bypass.autoshow permission won't trigger the check."
 		})
 		@ConfDefault.DefaultBoolean(false)
-		boolean bypassPermission();
+		boolean enableBypassPermission();
 
 	}
 
