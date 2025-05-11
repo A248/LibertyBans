@@ -174,7 +174,7 @@ public final class IntelligentGuardian implements Guardian {
 	public <@PlatformPlayer P> void onJoin(P player, EnvEnforcer<P> envEnforcer) {
 		var future = selector.onJoin(player, envEnforcer)
 				.orTimeout(20, TimeUnit.SECONDS)
-				.exceptionally(timeoutHandler("new join for " + envEnforcer.getNameFor(player)));
+				.exceptionally(timeoutHandler("join"));
 		futurePoster.postFuture(future);
 	}
 

@@ -88,7 +88,7 @@ public final class Gatekeeper {
 					.type(PunishmentType.BAN)
 					.scopes(SelectionPredicate.matchingAnyOf(scopes))
 					.build()
-					.findFirstSpecificPunishment(context, () -> currentTime, SortPunishments.LATEST_END_DATE_FIRST);
+					.findFirstSpecificPunishment(context, currentTime, SortPunishments.LATEST_END_DATE_FIRST);
 			if (ban != null) {
 				return ban;
 			}
@@ -98,7 +98,7 @@ public final class Gatekeeper {
 			}
 			// The player may join, but should be checked for alts
 			EnforcementConfig.AltsAutoShow altsAutoShow = configs.getMainConfig().enforcement().altsAutoShow();
-			if (altsAutoShow.enable() && !altsAutoShow.bypassPermission()) {
+			if (altsAutoShow.enable() && !altsAutoShow.enableBypassPermission()) {
 				var formatting = configs.getMessagesConfig().alts().autoShow();
                 return altDetection.detectAlts(context, new AltInfoRequest(
 						uuid, address, altsAutoShow.showWhichAlts(), formatting.oldestFirst(), formatting.limit()
@@ -124,9 +124,9 @@ public final class Gatekeeper {
 
 	<@PlatformPlayer P> CentralisedFuture<Void> onJoin(P player, EnvEnforcer<P> envEnforcer) {
 		EnforcementConfig.AltsAutoShow altsAutoShow = configs.getMainConfig().enforcement().altsAutoShow();
-		if (altsAutoShow.enable() && altsAutoShow.bypassPermission()) {
-			boolean hasPermission = envEnforcer.hasPermission(player, "libertybans.alts.autoshow.bypass");
-			if (!hasPermission) {
+		if (altsAutoShow.enable() && altsAutoShow.enableBypassPermission()) {
+			boolean bypass = envEnforcer.hasPermission(player, "libertybans.alts.bypass.autoshow");
+			if (!bypass) {
 				return notifyAlts(player, envEnforcer, altsAutoShow.showWhichAlts());
 			}
 		}

@@ -48,7 +48,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static org.jooq.impl.DSL.*;
 import static space.arim.libertybans.core.schema.tables.ApplicableActive.APPLICABLE_ACTIVE;
@@ -154,7 +153,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			return columns;
 		}
 
-		private Condition getPredication(Supplier<Instant> timeSupplier) {
+		private Condition getPredication() {
 			Condition condition = noCondition();
 			boolean active = selectActiveOnly();
 
@@ -170,7 +169,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 					.and(new ScopeCondition(fields, resources.scopeManager()).buildCondition(getScopes()));
 			if (active) {
 				condition = condition
-						.and(new EndTimeCondition(fields).isNotExpired(timeSupplier.get()));
+						.and(new EndTimeCondition(fields).isNotExpired(parameters.currentTime));
 			}
 			Instant seekAfterStartTime = seekAfterStartTime();
 			Instant seekBeforeStartTime = seekBeforeStartTime();
@@ -289,7 +288,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 					parameters.context
 							.select(getColumnsToRetrieve(additionalColumns))
 							.from(table)
-							.where(getPredication(parameters.timeSupplier).and(additionalPredication))
+							.where(getPredication().and(additionalPredication))
 							.groupBy(groupByIdForDeduplication() ? fields.id() : noField())
 							.orderBy(buildOrdering(parameters.ordering))
 							.offset((skipCount() == 0) ? noField(Integer.class) : val(skipCount()))
@@ -320,7 +319,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	}
 
 	record QueryParameters(DSLContext context, int limit,
-						   Supplier<Instant> timeSupplier, SortPunishments...ordering) {}
+						   Instant currentTime, SortPunishments...ordering) {}
 
 	abstract Query<?> requestQuery(QueryParameters parameters);
 
@@ -338,7 +337,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	 */
 	public String renderSingleApplicablePunishmentSQL(DSLContext context) {
 		return requestQuery(
-				new QueryParameters(context, 1, () -> Instant.EPOCH, SortPunishments.LATEST_END_DATE_FIRST)
+				new QueryParameters(context, 1, Instant.EPOCH, SortPunishments.LATEST_END_DATE_FIRST)
 		).renderSQL();
 	}
 
@@ -347,14 +346,14 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	 * during execution of incoming logins
 	 *
 	 * @param context the database access
-	 * @param timeSupplier the current time supplier
+	 * @param currentTime the current time snapshot
 	 * @param prioritization sorting prioritization
 	 * @return finds a single punishment from this selection
 	 */
-	public Punishment findFirstSpecificPunishment(DSLContext context, Supplier<Instant> timeSupplier,
+	public Punishment findFirstSpecificPunishment(DSLContext context, Instant currentTime,
 												  SortPunishments...prioritization) {
 		return requestQuery(
-				new QueryParameters(context, 1, timeSupplier, prioritization)
+				new QueryParameters(context, 1, currentTime, prioritization)
 		).fetchOne();
 	}
 
@@ -366,7 +365,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 		}
 		return resources.dbProvider().get()
 				.query(SQLFunction.readOnly((context) -> {
-					return findFirstSpecificPunishment(context, resources.time()::currentTimestamp, prioritization);
+					return findFirstSpecificPunishment(context, resources.time().currentTimestamp(), prioritization);
 				}))
 				.thenApply(Optional::ofNullable);
 	}
@@ -381,7 +380,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 				new QueryParameters(
 						context,
 						limitToRetrieve(),
-						resources.time()::currentTimestamp,
+						resources.time().currentTimestamp(),
 						ordering
 				)
 		).fetch()));
@@ -398,7 +397,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 					new QueryParameters(
 							context,
 							limitToRetrieve(),
-							resources.time()::currentTimestamp
+							resources.time().currentTimestamp()
 					)
 			);
 			return context
