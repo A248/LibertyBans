@@ -64,7 +64,7 @@ public interface AccountHistorySection {
 		Component permission();
 
 		@ConfKey("none-found")
-		@ConfDefault.DefaultString("&7Page &e%PAGE%&7 does not exist.")
+		@ConfDefault.DefaultString("&7Page does not exist.")
 		ComponentText noneFound();
 
 		@Override
@@ -108,7 +108,7 @@ public interface AccountHistorySection {
 				"How to format the footer. This is sent after every page.",
 				"Available variables are the same as for the header."
 		})
-		@ConfDefault.DefaultString("&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans accounthistory %TARGET% %NEXTPAGE_KEY%")
+		@ConfDefault.DefaultString("&7<Next Page>||ttp:Click for next page||cmd:/libertybans accounthistory %TARGET% %NEXTPAGE_KEY%")
 		ComponentText footer();
 
 	}

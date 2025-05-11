@@ -48,7 +48,7 @@ public class KeysetAnchorTest {
     @ParameterizedTest
     @ArgumentsSource(RandomAnchorProvider.class)
     public void reconstituteInstantThenUUID(KeysetAnchor<InstantThenUUID> anchor) {
-        BorderValueHandle<InstantThenUUID> borderValueHandle = new InstantThenUUIDCombine().borderValueHandle();
+        BorderValueHandle<InstantThenUUID> borderValueHandle = InstantThenUUID.borderValueHandle();
         String toCode = anchor.chatCode(borderValueHandle);
         var reconstituted = new KeysetAnchor.Build<>(borderValueHandle).fromCode(toCode);
         assertEquals(anchor, reconstituted, "Got code " + toCode);

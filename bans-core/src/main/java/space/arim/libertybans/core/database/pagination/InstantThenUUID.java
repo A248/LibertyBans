@@ -19,6 +19,8 @@
 
 package space.arim.libertybans.core.database.pagination;
 
+import org.jooq.Field;
+
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -30,4 +32,58 @@ public record InstantThenUUID(Instant instant, UUID uuid) {
         Objects.requireNonNull(uuid);
     }
 
+    public static DefineOrder<InstantThenUUID> defineOrder(Field<Instant> instantField, Field<UUID> uuidField) {
+        return new DefineOrder<>(
+                new DefineOrder.OrderedField<InstantThenUUID, Instant>() {
+                    @Override
+                    public Field<Instant> field() {
+                        return instantField;
+                    }
+
+                    @Override
+                    public Instant extractFrom(InstantThenUUID borderValue) {
+                        return borderValue.instant;
+                    }
+                },
+                new DefineOrder.OrderedField<InstantThenUUID, UUID>() {
+                    @Override
+                    public Field<UUID> field() {
+                        return uuidField;
+                    }
+
+                    @Override
+                    public UUID extractFrom(InstantThenUUID borderValue) {
+                        return borderValue.uuid;
+                    }
+                }
+        );
+    }
+
+    public static BorderValueHandle<InstantThenUUID> borderValueHandle() {
+        record Handles(BorderValueHandle<Instant> handle1, BorderValueHandle<UUID> handle2)
+                implements CombinedBorderValue.CombineHandles<Instant, UUID> {}
+
+        LongBorderValue longBorderValue = new LongBorderValue();
+        return new CombinedBorderValue<>(
+                new Handles(
+                        new InstantBorderValue(longBorderValue), new UUIDCombine().borderValueHandle(longBorderValue)
+                ),
+                new CombineValues<Instant, UUID, InstantThenUUID>() {
+                    @Override
+                    public InstantThenUUID combine(Instant first, UUID second) {
+                        return new InstantThenUUID(first, second);
+                    }
+
+                    @Override
+                    public Instant first(InstantThenUUID combined) {
+                        return combined.instant;
+                    }
+
+                    @Override
+                    public UUID second(InstantThenUUID combined) {
+                        return combined.uuid;
+                    }
+                }
+        );
+    }
 }

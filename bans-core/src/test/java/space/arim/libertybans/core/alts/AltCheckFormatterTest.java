@@ -116,7 +116,7 @@ public class AltCheckFormatterTest {
 						formattingConfig(header, Component.empty()),
 						new KeysetPage<>(
 								List.of(alt), KeysetAnchor.unset(), KeysetAnchor.unset(),
-								new InstantThenUUIDCombine().borderValueHandle()
+								InstantThenUUID.borderValueHandle()
 						),
 						"MainUser", -1)
 				)
@@ -162,7 +162,7 @@ public class AltCheckFormatterTest {
 						alts,
 						new KeysetAnchor<>(0, lastPageAnchor, false),
 						new KeysetAnchor<>( 2, nextPageAnchor, true),
-						new InstantThenUUIDCombine().borderValueHandle()
+						InstantThenUUID.borderValueHandle()
 				),
 				"MainUser", 1
 		);

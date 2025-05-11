@@ -109,10 +109,9 @@ public class AltDetection {
 			selectFields.add(victimTypeField);
 		}
 		AltInfoRequest request = query.request;
-		InstantThenUUIDCombine instantThenUUIDCombine = new InstantThenUUIDCombine();
 		Pagination<InstantThenUUID> pagination = new Pagination<>(
 				request.pageAnchor(), request.oldestFirst(),
-				new Orderable.CombinedField<>(detectedAlt.UPDATED, detectedAlt.UUID, instantThenUUIDCombine)
+				InstantThenUUID.defineOrder(detectedAlt.UPDATED, detectedAlt.UUID)
 		);
 		List<DetectedAlt> detectedAlts = context
 				.select(selectFields)
@@ -156,7 +155,7 @@ public class AltDetection {
 
             @Override
             public BorderValueHandle<InstantThenUUID> borderValueHandle() {
-                return instantThenUUIDCombine.borderValueHandle();
+                return InstantThenUUID.borderValueHandle();
             }
 
             @Override

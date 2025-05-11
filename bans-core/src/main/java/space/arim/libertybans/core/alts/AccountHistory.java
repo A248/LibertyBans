@@ -59,7 +59,7 @@ public final class AccountHistory {
 	private CentralisedFuture<KeysetPage<KnownAccount, Instant>> knownAccountsWhere(Condition condition, Request request) {
 		return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
 			Pagination<Instant> pagination = new Pagination<>(
-					request.pageAnchor, true, new Orderable.SimpleField<>(ADDRESSES.UPDATED)
+					request.pageAnchor, true, new DefineOrder<>(new DefineOrder.SimpleOrderedField<>(ADDRESSES.UPDATED))
 			);
 			List<KnownAccount> accounts = context
 					.select(ADDRESSES.UUID, ADDRESSES.ADDRESS, LATEST_NAMES.NAME, ADDRESSES.UPDATED)

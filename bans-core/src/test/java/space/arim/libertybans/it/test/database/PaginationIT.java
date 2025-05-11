@@ -88,7 +88,7 @@ public class PaginationIT {
     @SampleData(source = SampleData.Source.BlueTree)
     public void paginatePunishments() {
         Pagination<Long> pagination = new Pagination<>(
-                KeysetAnchor.unset(), true, new Orderable.SimpleField<>(PUNISHMENTS.ID)
+                KeysetAnchor.unset(), true, new DefineOrder<>(new DefineOrder.SimpleOrderedField<>(PUNISHMENTS.ID))
         );
         var firstPage = getPage(pagination);
         assertEquals(PER_PAGE, firstPage.data().size());
@@ -118,7 +118,7 @@ public class PaginationIT {
     @SampleData(source = SampleData.Source.BlueTree)
     public void paginatePunishmentsDescending() {
         Pagination<Long> pagination = new Pagination<>(
-                KeysetAnchor.unset(), false, new Orderable.SimpleField<>(PUNISHMENTS.ID)
+                KeysetAnchor.unset(), false, new DefineOrder<>(new DefineOrder.SimpleOrderedField<>(PUNISHMENTS.ID))
         );
         var firstPage = getPage(pagination);
         assertEquals(PER_PAGE, firstPage.data().size());

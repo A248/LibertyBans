@@ -69,7 +69,7 @@ public record KeysetAnchor<F>(int page, F borderValue, boolean fromForwardScroll
     }
 
     public static KeysetAnchor<InstantThenUUID> instantThenUUID(CommandPackage command) {
-        return new Build<>(new InstantThenUUIDCombine().borderValueHandle()).fromCommand(command);
+        return new Build<>(InstantThenUUID.borderValueHandle()).fromCommand(command);
     }
 
     record Build<F>(BorderValueHandle<F> borderValueHandle) {

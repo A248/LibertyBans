@@ -52,11 +52,11 @@ import space.arim.libertybans.core.config.displayid.IdAlgorithm;
 		"%TYPE% - punishment type, e.g. 'Ban'",
 		"%TYPE_VERB% - punishment type as a verb, e.g. 'Banned'",
 		"%VICTIM% - display name of the victim of the punishment",
-		"%VICTIM_ID% - internal identifier of victim",
+		"%VICTIM_ID% - identifier of victim, like the target player's UUID",
 		"%OPERATOR% - display name of the staff member who made the punishment",
-		"%OPERATOR_ID% - internal identifier of the operator",
+		"%OPERATOR_ID% - identifier of the operator, like the staff member's UUID",
 		"%UNOPERATOR% - staff member undoing the punishment. available only when the punishment is undone",
-		"%UNOPERATOR_ID% - internal identifier of staff member undoing the punishment",
+		"%UNOPERATOR_ID% - identifier of staff member undoing the punishment, like the staff members' UUID",
 		"%REASON% - reason for the punishment",
 		"%SCOPE% - scope of the punishment",
 		"%DURATION% - original duration (how long the punishment was made for)",
@@ -73,10 +73,19 @@ import space.arim.libertybans.core.config.displayid.IdAlgorithm;
 		"",
 		"The following variables have limited availability:",
 		"%TARGET% - the original target argument of a command. For example, in '/ipban Player1', %TARGET% is Player1",
-		"%NEXTPAGE% - the number of the next page of a list like history",
-		"%PREVIOUSPAGE% - the number of the previous page of a list like history",
+		"%PAGE% - the number of the current page in a list",
+		"%NEXTPAGE% - the number of the next page",
+		"%LASTPAGE% - the number of the last page",
+		"%NEXTPAGE_KEY% - a code which if used with the command, shows the next page",
+		"%LASTPAGE_KEY% - a code which if used with the command, shows the last page",
+		"(%PREVIOUSPAGE% - a deprecated equivalent for %LASTPAGE%)",
 		"",
-		""})
+		"Pagination can be absolute or relative depending on which variables you use. For example, the %NEXTPAGE_KEY%",
+		"and %LASTPAGE_KEY% variables provide special codes which, when used with the command, switch to the next page.",
+		"These are designed to be used with 'click events' so that staff can easily click to move between pages.",
+		"Please note that this feature is based on relative browsing of the page results, which means that a page represents",
+		"a \"place\" in the list and not really an absolute page number."
+})
 public interface MessagesConfig {
 	
 	@SubSection

@@ -30,16 +30,16 @@ public final class Pagination<F> {
 
     private final KeysetAnchor<F> anchor;
     private final boolean sortAscending;
-    private final Orderable<F> orderable;
+    private final DefineOrder<F> defineOrder;
 
-    public Pagination(KeysetAnchor<F> anchor, boolean sortAscending, Orderable<F> orderable) {
+    public Pagination(KeysetAnchor<F> anchor, boolean sortAscending, DefineOrder<F> defineOrder) {
         this.anchor = Objects.requireNonNull(anchor, "anchor");
         this.sortAscending = sortAscending;
-        this.orderable = Objects.requireNonNull(orderable, "field");
+        this.defineOrder = Objects.requireNonNull(defineOrder, "defineOrder");
     }
 
     public Pagination<F> changeAnchor(KeysetAnchor<F> newAnchor) {
-        return new Pagination<>(newAnchor, sortAscending, orderable);
+        return new Pagination<>(newAnchor, sortAscending, defineOrder);
     }
 
     public Condition seeking() {
@@ -54,7 +54,7 @@ public final class Pagination<F> {
         // Desc | Forward   | Less
         // Desc | Backward  | Greater
         return sortAscending == anchor.fromForwardScroll() ?
-                orderable.greaterThan(anchor.borderValue()) : orderable.lessThan(anchor.borderValue());
+                defineOrder.greaterThan(anchor.borderValue()) : defineOrder.lessThan(anchor.borderValue());
     }
 
     public OrderField<?>[] order() {
@@ -68,7 +68,7 @@ public final class Pagination<F> {
         // Desc | Forward   | Greatest
         // Desc | Backward  | Least + reverse order of results
         return sortAscending == forwardScroll ?
-                orderable.ascending() : orderable.descending();
+                defineOrder.ascending() : defineOrder.descending();
     }
 
     /**
