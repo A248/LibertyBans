@@ -1,6 +1,7 @@
 * Configuration
   * [Getting Started](Getting-Started.md)
   * [Configuration](Configuration.md)
+  * [Commands](Commands.md)
   * [Permissions](Permissions.md)
   * [JSON Messages](JSON-Messages.md)
   * [Hex Colors](Color-Codes.md)

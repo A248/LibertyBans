@@ -182,17 +182,13 @@ public final class LibertyBansLauncher {
 		{
 			ClassLoadGuard guard = ClassLoadGuard.passThrough();
 			if (!librariesRequiringProtection.isEmpty()) {
-
 				guard = new LibraryProtection(librariesRequiringProtection, guard);
 			}
 			if (platform.category == Platform.Category.BUKKIT) {
 				guard = new RuntimeExceptionCatcher(logger, internalFolder, guard);
 			}
 			BootstrapLauncher<AttachableClassLoader> launcher = new BootstrapLauncher<>(
-					new AttachableClassLoader(
-							"LibertyBans-ClassLoader",
-							new GuardedClassLoader(parentLoader, guard)
-					),
+					guard.makeClassLoader("LibertyBans-ClassLoader", parentLoader),
 					loader.build(),
 					existingDependencies
 			);

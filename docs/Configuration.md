@@ -1,10 +1,24 @@
+
 The configuration is mostly self-explanatory.
+
+### Files
+
+Open up the `plugins/LibertyBans` folder. You can find all the configuration files there.
+
+* `config.yml` - The main configuration file. Most behavior-related settings are here.
+* `lang/` - The directory containing the languages/messages configuration.
+  * The file `messages_en.yml` (English) is the default.
+  * Each language file is named after the language supported, e.g. `messages_fr.yml` for French or `messages_ru.yml` for Russian.
+  * You can switch the plugin language by looking in `config.yml` and do CTRL+F for "language."
+* `sql.yml` - If you want to change database settings, go here.
 
 ### Syntax
 
 LibertyBans uses familiar ".yml" files. Feel free to use [Online Yaml Parser](https://yaml-online-parser.appspot.com) to validate config files.
 
 ## Reloading Configuration
+
+### Reload command
 
 If you have the necessary [permissions](Permissions), you can reload most of the configuration with the reload command.
 

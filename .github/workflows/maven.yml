@@ -33,8 +33,14 @@ jobs:
         server-id: cloudsmith-deploy
         server-username: MAVEN_USERNAME
         server-password: MAVEN_PASSWORD
-    - name: Build with Maven
+    - name: Build and deploy with Maven
       run: mvn clean -B -U deploy -Pdeploy-snapshot,-docker-enabled -DskipTests -Dinvoker.skip=true
       env:
         MAVEN_USERNAME: ${{ secrets.MAVEN_CD_USER }}
         MAVEN_PASSWORD: ${{ secrets.MAVEN_CD_PASS }}
+    - name: Upload copy to Github
+      uses: actions/upload-artifact@v4
+      with:
+        name: Plugin jar
+        path: bans-distribution/executable/target/LibertyBans_*.jar
+        if-no-files-found: error

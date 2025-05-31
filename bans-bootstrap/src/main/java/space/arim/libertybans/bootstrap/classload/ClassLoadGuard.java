@@ -24,12 +24,21 @@ public interface ClassLoadGuard {
     Class<?> delegateLoadClass(String className, boolean resolve, Destination destination)
             throws ClassNotFoundException;
 
+    default AttachableClassLoader makeClassLoader(String classLoaderName, ClassLoader parentLoader) {
+        return new AttachableClassLoader(classLoaderName, new GuardedClassLoader(parentLoader, this));
+    }
+
     static ClassLoadGuard passThrough() {
         class PassThrough implements ClassLoadGuard {
 
             @Override
             public Class<?> delegateLoadClass(String className, boolean resolve, Destination destination) throws ClassNotFoundException {
                 return destination.load(className, resolve);
+            }
+
+            @Override
+            public AttachableClassLoader makeClassLoader(String classLoaderName, ClassLoader parentLoader) {
+                return new AttachableClassLoader(classLoaderName, parentLoader);
             }
         }
         return new PassThrough();
