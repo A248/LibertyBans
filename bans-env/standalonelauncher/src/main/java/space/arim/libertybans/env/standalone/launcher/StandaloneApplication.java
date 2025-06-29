@@ -57,7 +57,7 @@ public final class StandaloneApplication {
 
 		Console console = System.console();
 		String command;
-		while ((command = console.readLine()) != null) {
+		while ((command = console.readLine("> ")) != null) {
 			if (command.equalsIgnoreCase("stop")) {
 				break;
 			}
