@@ -68,7 +68,7 @@ public record InstantThenUUID(Instant instant, UUID uuid) {
                 new Handles(
                         new InstantBorderValue(longBorderValue), new UUIDCombine().borderValueHandle(longBorderValue)
                 ),
-                new CombineValues<Instant, UUID, InstantThenUUID>() {
+                new CombineValues<>() {
                     @Override
                     public InstantThenUUID combine(Instant first, UUID second) {
                         return new InstantThenUUID(first, second);

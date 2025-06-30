@@ -32,6 +32,7 @@ public final class DefineOrder<B> {
 
     private final OrderedField<B, ?>[] orderables;
 
+    @SafeVarargs
     public DefineOrder(OrderedField<B, ?>...orderables) {
         this.orderables = Objects.requireNonNull(orderables);
     }
