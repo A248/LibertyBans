@@ -27,6 +27,7 @@ import space.arim.libertybans.core.uuid.ServerType;
 import space.arim.libertybans.core.uuid.UUIDResolutionConfig;
 import space.arim.libertybans.it.ConfigSpec;
 import space.arim.libertybans.it.DatabaseInfo;
+import space.arim.libertybans.it.SetAltRegistry;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -100,6 +101,25 @@ public class SpecifiedConfigs implements Configs {
 					Object replacementFor(EnforcementConfig original, String methodName) {
 						if (methodName.equals("addressStrictness")) {
 							return spec.addressStrictness();
+						}
+						if (methodName.equals("altsRegistry")) {
+							SetAltRegistry.Option option = spec.altRegistryOption();
+							return new EnforcementConfig.AltsRegistry() {
+								@Override
+								public List<String> serversWithoutRegistration() {
+									return switch (option) {
+										case ON_CONNECTION -> List.of();
+										case ON_SERVER_SWITCH -> List.of(
+												SetAltRegistry.Option.NON_REGISTERING_SERVER_NAME
+										);
+									};
+								}
+
+								@Override
+								public boolean shouldRegisterOnConnection() {
+									return option == SetAltRegistry.Option.ON_CONNECTION;
+								}
+							};
 						}
 						return null;
 					}

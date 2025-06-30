@@ -60,7 +60,8 @@ public interface PunishmentSelector {
 	 * the player's UUID and IP. It may be, the player's IP is banned, the player's UUID is banned,
 	 * or the player has played on a banned IP and that IP is banned  while strict address enforcement is enabled. <br>
 	 * <br>
-	 * By default, the server's configured address strictness is used, but this may be changed if desired.
+	 * By default, the server's configured address strictness is used, but the caller can use
+	 * {@link SelectionByApplicabilityBuilder#addressStrictness(AddressStrictness)} to change the setting.
 	 *
 	 * @param uuid the uuid of the user for whom to select applicable punishments
 	 * @param address the current or most recent address of the same user
@@ -78,9 +79,11 @@ public interface PunishmentSelector {
 	 * or the player has played on a banned IP and that IP is banned  while strict address enforcement is enabled. <br>
 	 * <br>
 	 * For maximum accuracy, the UUID and IP address pair should be taken from an actual user who has logged on before.
-	 * Due to specifics in terms of how applicability is computed, some punishments
+	 * Due to the specifics of how applicability is computed, some punishments may not be considered if the UUID and
+	 * IP address have not been recorded in account history.
 	 * <br>
-	 * By default, the server's configured address strictness is used, but this may be changed if desired.
+	 * By default, the server's configured address strictness is used, but the caller can use
+	 * {@link SelectionByApplicabilityBuilder#addressStrictness(AddressStrictness)} to change the setting.
 	 *
 	 * @param uuid the uuid of the user for whom to select applicable punishments
 	 * @param address the current or most recent address of the same user

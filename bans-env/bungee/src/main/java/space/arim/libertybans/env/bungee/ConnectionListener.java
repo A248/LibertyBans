@@ -100,8 +100,13 @@ public final class ConnectionListener implements Listener, PlatformListener {
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onServerSwitch(ServerConnectEvent event) {
+		if (event.isCancelled()) {
+			logger.trace("Switch {} is already blocked", event);
+			return;
+		}
 		if (event.getReason() == ServerConnectEvent.Reason.LOBBY_FALLBACK) {
 			// Don't kick players if there is no alternative server for them
+			logger.trace("Allowing lobby fallback {}", event);
 			return;
 		}
 		ProxiedPlayer player = event.getPlayer();

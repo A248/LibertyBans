@@ -28,6 +28,7 @@ import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetAddressStrictness;
+import space.arim.libertybans.it.SetAltRegistry;
 import space.arim.libertybans.it.util.RandomUtil;
 
 import java.util.UUID;
@@ -44,6 +45,7 @@ public class LenientStrictnessIT {
 
 	@TestTemplate
 	@SetAddressStrictness(AddressStrictness.LENIENT)
+	@SetAltRegistry(all = true)
 	public void enforceAddressBan() {
 		NetworkAddress commonAddress = RandomUtil.randomAddress();
 
@@ -77,6 +79,7 @@ public class LenientStrictnessIT {
 
 	@TestTemplate
 	@SetAddressStrictness(AddressStrictness.LENIENT)
+	@SetAltRegistry(all = true)
 	public void enforceCompositeBan() {
 		NetworkAddress commonAddress = RandomUtil.randomAddress();
 

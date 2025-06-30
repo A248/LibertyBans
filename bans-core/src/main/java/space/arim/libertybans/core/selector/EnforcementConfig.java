@@ -142,7 +142,7 @@ public interface EnforcementConfig {
 
 	@ConfKey("alts-registry")
 	@SubSection
-	AltsRegistry altsRegistry();
+	AltsRegistry altsRegistry(); // Sensitive name used in integration testing
 
 	@ConfHeader({"Controls if all servers should register the IP address of the player connecting."})
 	interface AltsRegistry {
@@ -154,7 +154,7 @@ public interface EnforcementConfig {
 				"If you are not using LibertyBans in the proxy, you should leave this list empty."
 				})
 		@ConfKey("servers-without-ip-registration")
-		@DefaultStrings({"server-name"})
+		@DefaultStrings({"auth", "server-name"})
 		List<String> serversWithoutRegistration();
 
 		@ConfComments({"If you want to register the IP address of the player connecting, set this to true.",

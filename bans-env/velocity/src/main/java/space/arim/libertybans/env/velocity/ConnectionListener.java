@@ -83,11 +83,13 @@ public final class ConnectionListener implements PlatformListener {
 	@Subscribe(order = PostOrder.EARLY)
 	public EventTask onServerSwitch(ServerPreConnectEvent event) {
 		if (!event.getResult().isAllowed()) {
+			logger.trace("Switch {} is already blocked", event);
 			return null;
 		}
 		RegisteredServer destination = event.getResult().getServer().orElse(null);
 		if (destination == null) {
-			// Properly speaking, the API does not exclude this possibility
+			// Properly speaking, the API does not exclude this possibility. Javadocs do not document it
+			logger.trace("Null destination server {}", event);
 			return null;
 		}
 		Player player = event.getPlayer();
