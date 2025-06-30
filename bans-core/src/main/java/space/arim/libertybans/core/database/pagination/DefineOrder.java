@@ -37,39 +37,77 @@ public final class DefineOrder<B> {
         this.orderables = Objects.requireNonNull(orderables);
     }
 
-    private <F> Condition greaterThan(OrderedField<B, F> orderedField, B borderValue) {
-        return orderedField.field().greaterThan(orderedField.extractFrom(borderValue));
+    private interface Inequality {
+        <F> Condition comparison(Field<F> field, F compareValue);
+    }
+
+    private <F> Condition isGreaterOrLess(OrderedField<B, F> orderedField, B borderValue,
+                                          Inequality inequality) {
+        Field<F> field = orderedField.field();
+        F compareValue = orderedField.extractFrom(borderValue);
+        return inequality.comparison(field, compareValue);
+    }
+
+    private <F> Condition isEqual(OrderedField<B, F> orderedField, B borderValue) {
+        Field<F> field = orderedField.field();
+        F compareValue = orderedField.extractFrom(borderValue);
+        return field.eq(compareValue);
+    }
+
+    /**
+     * Builds a seeking predicate using all fields. Uses the order with which this {@code DefineOrder} was created.
+     * <p>
+     * Pagination allows some fields to be equal, in which case, other fields break ties. For example, for a two-field
+     * order based on fields <code>f1, f2</code> with border values <code>v1, v2</code>, compared in ascending order,
+     * the predicate would look like this this:
+     * <pre>
+     *     {@code
+     *       WHERE f1 > v1 OR f1 = v1 AND f2 > v2
+     *     }
+     * </pre>
+     * If we added a field <code>f3</code> and value <code>v3</code> to the mix, it would result in an elongation of
+     * the same predicate (parentheses added for clarity):
+     * <pre>
+     *     {@code
+     *       WHERE (f1 > v1) OR (f1 = v1 AND f2 > v2) OR (f1 = v1 AND f2 = v2 AND f3 > v3)
+     *     }
+     * </pre>
+     *
+     * @param borderValue the border values for each field, packed into a single object
+     * @param inequality the inequality (strictly greater or strictly less)
+     * @return the predicate
+     */
+    private Condition fieldByFieldPredicate(B borderValue, Inequality inequality) {
+        // A combination of fields from previous iterations
+        Condition previousFieldsEqual = noCondition();
+        Condition built = noCondition();
+        for (OrderedField<B, ?> orderedField : orderables) {
+            built = built.or(
+                    // The current condition. Only works if previous fields (if set) are tied
+                    previousFieldsEqual.and(isGreaterOrLess(orderedField, borderValue, inequality))
+            );
+            previousFieldsEqual = previousFieldsEqual.and(isEqual(orderedField, borderValue));
+        }
+        return built;
     }
 
     public Condition greaterThan(B borderValue) {
-        Condition built = noCondition();
-        for (OrderedField<B, ?> orderedField : orderables) {
-            built = built.and(greaterThan(orderedField, borderValue));
-        }
-        return built;
-    }
-
-    private <F> Condition lessThan(OrderedField<B, F> orderedField, B borderValue) {
-        return orderedField.field().lessThan(orderedField.extractFrom(borderValue));
+        return fieldByFieldPredicate(borderValue, Field::greaterThan);
     }
 
     public Condition lessThan(B borderValue) {
-        Condition built = noCondition();
-        for (OrderedField<B, ?> orderedField : orderables) {
-            built = built.and(lessThan(orderedField, borderValue));
-        }
-        return built;
+        return fieldByFieldPredicate(borderValue, Field::lessThan);
     }
 
     public OrderField<?>[] ascending() {
-        return inOrder(SortOrder.ASC);
+        return sortBy(SortOrder.ASC);
     }
 
     public OrderField<?>[] descending() {
-        return inOrder(SortOrder.DESC);
+        return sortBy(SortOrder.DESC);
     }
 
-    private OrderField<?>[] inOrder(SortOrder sortOrder) {
+    private OrderField<?>[] sortBy(SortOrder sortOrder) {
         int len = orderables.length;
         OrderField<?>[] fields = new OrderField[len];
         for (int n = 0; n < len; n++) {

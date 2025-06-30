@@ -55,12 +55,10 @@ public record KeysetAnchor<F>(int page, F borderValue, boolean fromForwardScroll
         builder.append(page);
         builder.append(';');
         builder.append(fromForwardScroll ? 1 : 0);
-        String[] borderValueParts = new String[borderValueHandle.len()];
-        borderValueHandle.writeChatCode(borderValue, borderValueParts, 0);
-        for (String borderValuePart : borderValueParts) {
+        borderValueHandle.writeChatCode(borderValue, borderValuePart -> {
             builder.append(';');
             builder.append(borderValuePart);
-        }
+        });
         return builder.toString();
     }
 
@@ -86,7 +84,7 @@ public record KeysetAnchor<F>(int page, F borderValue, boolean fromForwardScroll
                         return null;
                     }
                     boolean fromForwardScroll = split[1].equals("1");
-                    F borderValue = borderValueHandle.readChatCode(split, 2);
+                    F borderValue = borderValueHandle.readChatCode(new ArrayCursor(split, 2));
                     if (borderValue != null) {
                         return new KeysetAnchor<>(page, borderValue, fromForwardScroll);
                     }

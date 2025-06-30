@@ -24,34 +24,37 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Interface for dealing with border values.
- * <p>
- * The caller to this interface ensures that array arguments are properly sized according to <code>len()</code>
  *
  */
 public interface BorderValueHandle<V> {
 
     /**
-     * The number of elements that need to be stored in a string array
+     * The number of elements that need to be stored as parts
      *
      * @return the length
      */
     int len();
 
     /**
-     * Converts into a chat code. Places it in the output array
+     * Converts into a chat code. Places it in the output writer, sending exactly as many parts as {@code len()}
      *
      * @param value the value
-     * @param codeOutput the output array
-     * @param writeIndex where to start writing in the output array
+     * @param write the parts writer
      */
-    void writeChatCode(@NonNull V value, @NonNull String @NonNull [] codeOutput, int writeIndex);
+    void writeChatCode(@NonNull V value, @NonNull Write write);
 
     /**
-     * Converts from a chat code
-     * @param readIndex the index at which to start reading
-     * @param code the input string
-     * @return the value
+     * Converts from a chat code, or returns null upon failure. Should use exactly as many parts as {@code len()}
+     * @param read the parts reader
+     * @return the value, or null for failure
      */
-    @Nullable V readChatCode(@NonNull String @NonNull [] code, int readIndex);
+    @Nullable V readChatCode(@NonNull Read read);
 
+    interface Write {
+        void writePart(String part);
+    }
+
+    interface Read {
+        String readPart();
+    }
 }

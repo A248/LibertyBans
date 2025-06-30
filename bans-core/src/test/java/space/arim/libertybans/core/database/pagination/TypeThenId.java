@@ -59,22 +59,22 @@ public record TypeThenId(PunishmentType type, long id) {
 
         LongBorderValue longBorderValue = new LongBorderValue();
         return new CombinedBorderValue<>(
-                new Handles(new BorderValueHandle<PunishmentType>() {
+                new Handles(new BorderValueHandle<>() {
                     @Override
                     public int len() {
                         return 1;
                     }
 
                     @Override
-                    public void writeChatCode(@NonNull PunishmentType value, @NonNull String @NonNull [] codeOutput, int writeIndex) {
-                        codeOutput[writeIndex] = Integer.toString(value.ordinal());
+                    public void writeChatCode(@NonNull PunishmentType value, @NonNull Write write) {
+                        write.writePart(value.name());
                     }
 
                     @Override
-                    public @Nullable PunishmentType readChatCode(@NonNull String @NonNull [] code, int readIndex) {
+                    public @Nullable PunishmentType readChatCode(@NonNull Read read) {
                         try {
-                            return PunishmentType.values()[Integer.parseInt(code[readIndex])];
-                        } catch (NumberFormatException ignored) {
+                            return PunishmentType.valueOf(read.readPart());
+                        } catch (IllegalArgumentException ignored) {
                             return null;
                         }
                     }

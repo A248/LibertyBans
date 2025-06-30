@@ -39,16 +39,16 @@ record CombinedBorderValue<V1, V2, C>(CombineHandles<V1, V2> handles, CombineVal
     }
 
     @Override
-    public void writeChatCode(@NonNull C value, @NonNull String @NonNull [] codeOutput, int writeIndex) {
-        handle1().writeChatCode(combinator.first(value), codeOutput, writeIndex);
-        handle2().writeChatCode(combinator.second(value), codeOutput, writeIndex + handle1().len());
+    public void writeChatCode(@NonNull C value, @NonNull Write write) {
+        handle1().writeChatCode(combinator.first(value), write);
+        handle2().writeChatCode(combinator.second(value), write);
     }
 
     @Override
-    public @Nullable C readChatCode(@NonNull String @NonNull [] code, int readIndex) {
-        V1 first = handle1().readChatCode(code, readIndex);
+    public @Nullable C readChatCode(@NonNull Read read) {
+        V1 first = handle1().readChatCode(read);
         if (first != null) {
-            V2 second = handle2().readChatCode(code, readIndex + handle1().len());
+            V2 second = handle2().readChatCode(read);
             if (second != null) {
                 return combinator.combine(first, second);
             }

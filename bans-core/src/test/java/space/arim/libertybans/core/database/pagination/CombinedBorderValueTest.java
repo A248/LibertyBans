@@ -64,7 +64,7 @@ public class CombinedBorderValueTest {
     @Test
     public void writeChatCode() {
         String[] output = new String[2 + borderValue.len()];
-        borderValue.writeChatCode(1L, output, 1);
+        borderValue.writeChatCode(1L, new ArrayCursor(output, 1));
         assertNull(output[0]);
         assertNull(output[output.length - 1]);
     }
@@ -72,19 +72,19 @@ public class CombinedBorderValueTest {
     @Test
     public void readChatCode() {
         String[] output = new String[5 + borderValue.len()];
-        borderValue.writeChatCode(1L, output, 1);
-        assertEquals(1L, borderValue.readChatCode(output, 1));
+        borderValue.writeChatCode(1L, new ArrayCursor(output, 1));
+        assertEquals(1L, borderValue.readChatCode(new ArrayCursor(output, 1)));
     }
 
     @Test
     public void readChatCodeFail() {
-        String[] input = new String[2 + borderValue.len()];
-        assertNull(borderValue.readChatCode(input, 1));
+        String[] input = new String[1 + borderValue.len()];
+        assertNull(borderValue.readChatCode(new ArrayCursor(input, 1)));
     }
 
     private record TripartiteBorderValue() implements BorderValueHandle<Boolean> {
 
-        private static final String NATO = "NATO";
+        private static final String IMPERIALISTS = "imperialists";
         private static final String ARE = "are";
         private static final String CRIMINALS = "CRIMINALS";
 
@@ -94,16 +94,16 @@ public class CombinedBorderValueTest {
         }
 
         @Override
-        public void writeChatCode(@NonNull Boolean value, @NonNull String @NonNull [] codeOutput, int writeIndex) {
-            codeOutput[writeIndex] = NATO;
-            codeOutput[writeIndex + 1] = ARE;
-            codeOutput[writeIndex + 2] = CRIMINALS;
+        public void writeChatCode(@NonNull Boolean value, @NonNull Write write) {
+            write.writePart(IMPERIALISTS);
+            write.writePart(ARE);
+            write.writePart(CRIMINALS);
         }
 
         @Override
-        public @Nullable Boolean readChatCode(@NonNull String @NonNull [] code, int readIndex) {
-            return code[readIndex].equals(NATO) && code[readIndex + 1].equals(ARE) && code[readIndex].equals(CRIMINALS);
+        public @Nullable Boolean readChatCode(@NonNull Read read) {
+            boolean pass = read.readPart().equals(IMPERIALISTS) && read.readPart().equals(ARE) && read.readPart().equals(CRIMINALS);
+            return pass ? pass : null;
         }
     }
-
 }

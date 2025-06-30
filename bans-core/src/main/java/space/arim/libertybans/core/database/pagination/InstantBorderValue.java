@@ -32,13 +32,13 @@ public record InstantBorderValue(BorderValueHandle<Long> longBorderValue) implem
     }
 
     @Override
-    public void writeChatCode(@NonNull Instant value, @NonNull String @NonNull [] codeOutput, int writeIndex) {
-        longBorderValue.writeChatCode(value.getEpochSecond(), codeOutput, writeIndex);
+    public void writeChatCode(@NonNull Instant value, @NonNull Write write) {
+        longBorderValue.writeChatCode(value.getEpochSecond(), write);
     }
 
     @Override
-    public @Nullable Instant readChatCode(@NonNull String @NonNull [] code, int readIndex) {
-        Long seconds = longBorderValue.readChatCode(code, readIndex);
+    public @Nullable Instant readChatCode(@NonNull Read read) {
+        Long seconds = longBorderValue.readChatCode(read);
         return seconds == null ? null : Instant.ofEpochSecond(seconds);
     }
 }

@@ -34,37 +34,15 @@ public class LongBorderValueTest {
     public void run() {
         long subject = 4L;
         String[] output = new String[borderValue.len()];
-        borderValue.writeChatCode(subject, output, 0);
-        assertEquals(subject, borderValue.readChatCode(output, 0));
-    }
-
-    @Test
-    public void runWithOffset() {
-        long subject = 4L;
-        String[] output = new String[2 + borderValue.len()];
-        output[0] = "$junk1_";
-        output[1] = "$junk2_";
-        borderValue.writeChatCode(subject, output, 2);
-        assertEquals(subject, borderValue.readChatCode(output, 2));
-    }
-
-    @Test
-    public void dontModifyShared() {
-        long subject = 4L;
-        String[] output = new String[2 + borderValue.len()];
-        output[1] = "$junk1_";
-        output[2] = "$junk2_";
-        borderValue.writeChatCode(subject, output, 0);
-        assertEquals(subject, borderValue.readChatCode(output, 0));
-        assertEquals("$junk1_", output[1]);
-        assertEquals("$junk2_", output[2]);
+        borderValue.writeChatCode(subject, new ArrayCursor(output, 0));
+        assertEquals(subject, borderValue.readChatCode(new ArrayCursor(output, 0)));
     }
 
     @RepeatedTest(5)
     public void roundTrip() {
         long subject = ThreadLocalRandom.current().nextLong();
-        String[] output = new String[borderValue.len()];
-        borderValue.writeChatCode(subject, output, 0);
-        assertEquals(subject, borderValue.readChatCode(output, 0));
+        String[] buffer = new String[borderValue.len()];
+        borderValue.writeChatCode(subject, new ArrayCursor(buffer, 0));
+        assertEquals(subject, borderValue.readChatCode(new ArrayCursor(buffer, 0)));
     }
 }

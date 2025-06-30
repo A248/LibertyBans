@@ -23,14 +23,15 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
-import space.arim.libertybans.api.Operator;
+import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.database.pagination.*;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
-import space.arim.libertybans.it.SampleData;
 
+import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -40,7 +41,7 @@ import static space.arim.libertybans.core.schema.tables.Punishments.PUNISHMENTS;
 @ExtendWith(InjectionInvocationContextProvider.class)
 public class PaginationMultiKeyIT {
 
-    private static final int PER_PAGE = 4;
+    private static final int PER_PAGE = 3;
 
     private final Provider<QueryExecutor> queryExecutor;
 
@@ -49,8 +50,28 @@ public class PaginationMultiKeyIT {
         this.queryExecutor = queryExecutor;
     }
 
+    private void writeSampleData(Entry...entries) {
+        queryExecutor.get().execute(context -> {
+            Instant currentTime = Instant.now();
+            for (Entry entry : entries) {
+                context
+                        .insertInto(PUNISHMENTS)
+                        .columns(
+                                PUNISHMENTS.ID, PUNISHMENTS.TYPE, PUNISHMENTS.OPERATOR, PUNISHMENTS.REASON,
+                                PUNISHMENTS.SCOPE, PUNISHMENTS.START, PUNISHMENTS.END,
+                                PUNISHMENTS.TRACK, PUNISHMENTS.SCOPE_ID
+                        )
+                        .values(
+                                entry.id, entry.type, ConsoleOperator.INSTANCE, entry.reason,
+                                "", currentTime, Punishment.PERMANENT_END_DATE, null, null
+                        )
+                        .execute();
+            }
+        }).join();
+    }
+
     private KeysetPage<Entry, TypeThenId> getPage(Pagination<TypeThenId> pagination) {
-        return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
+        return queryExecutor.get().query(SQLFunction.readOnly(context -> {
             List<Entry> punishments = context
                     .selectFrom(PUNISHMENTS)
                     .where(pagination.seeking())
@@ -85,50 +106,79 @@ public class PaginationMultiKeyIT {
 
     @TestTemplate
     public void paginatePunishments() {
+        writeSampleData(
+                new Entry(1, PunishmentType.KICK, "k1"),
+                new Entry(4, PunishmentType.KICK, "k2"),
+                new Entry(3, PunishmentType.BAN, "second ban"),
+                new Entry(2, PunishmentType.BAN, "first ban"),
+                new Entry(5, PunishmentType.BAN, "third ban"),
+                new Entry(6, PunishmentType.BAN, "fourth ban"),
+                new Entry(7, PunishmentType.MUTE, "first mute"),
+                new Entry(8, PunishmentType.MUTE, "second mute"),
+                new Entry(9, PunishmentType.WARN, "warning"),
+                new Entry(10, PunishmentType.KICK, "k3")
+        );
         Pagination<TypeThenId> pagination = new Pagination<>(
                 KeysetAnchor.unset(), true, TypeThenId.defineOrder(PUNISHMENTS.TYPE, PUNISHMENTS.ID)
         );
         var firstPage = getPage(pagination);
         assertEquals(PER_PAGE, firstPage.data().size());
-        assertPageData(firstPage, 1, 2, 3, 4, 5);
+        assertPageData(firstPage, 2, 3, 5);
 
         var secondPage = getPage(pagination.changeAnchor(firstPage.nextPageAnchor()));
-        assertPageData(secondPage, 7, 8, 9, 10, 11);
+        assertPageData(secondPage, 6, 7, 8);
 
         var thirdPage = getPage(pagination.changeAnchor(secondPage.nextPageAnchor()));
-        assertPageData(thirdPage, 12, 13, 14, 15, 16);
+        assertPageData(thirdPage, 9, 1, 4);
+
+        var fourthPage = getPage(pagination.changeAnchor(thirdPage.nextPageAnchor()));
+        assertPageData(fourthPage, 10);
 
         // Now go backwards
+        var backToThirdPage = getPage(pagination.changeAnchor(fourthPage.lastPageAnchor()));
+        assertEquals(thirdPage, backToThirdPage, "3rd page from forward/backward navigation should be same");
+
         var backToSecondPage = getPage(pagination.changeAnchor(thirdPage.lastPageAnchor()));
         assertEquals(secondPage, backToSecondPage, "2nd page from forward/backward navigation should be same");
 
         var backToFirstPage = getPage(pagination.changeAnchor(secondPage.lastPageAnchor()));
         assertEquals(firstPage, backToFirstPage, "1st page from forward/backward navigation should be same");
-
-        KeysetPage<Entry, TypeThenId> fourPagesLater = thirdPage;
-        for (int n = 0; n < 4; n++) {
-            fourPagesLater = getPage(pagination.changeAnchor(fourPagesLater.nextPageAnchor()));
-        }
-        assertPageData(fourPagesLater, 32, 34, 35, 37, 38);
     }
 
     @TestTemplate
-    @SampleData(source = SampleData.Source.BlueTree)
     public void paginatePunishmentsDescending() {
+        writeSampleData(
+                new Entry(1, PunishmentType.KICK, "k1"),
+                new Entry(4, PunishmentType.KICK, "k2"),
+                new Entry(3, PunishmentType.BAN, "second ban"),
+                new Entry(2, PunishmentType.BAN, "first ban"),
+                new Entry(5, PunishmentType.BAN, "third ban"),
+                new Entry(6, PunishmentType.BAN, "fourth ban"),
+                new Entry(7, PunishmentType.MUTE, "first mute"),
+                new Entry(8, PunishmentType.MUTE, "second mute"),
+                new Entry(9, PunishmentType.WARN, "warning"),
+                new Entry(10, PunishmentType.KICK, "k3")
+        );
         Pagination<TypeThenId> pagination = new Pagination<>(
                 KeysetAnchor.unset(), false, TypeThenId.defineOrder(PUNISHMENTS.TYPE, PUNISHMENTS.ID)
         );
         var firstPage = getPage(pagination);
         assertEquals(PER_PAGE, firstPage.data().size());
-        assertPageData(firstPage, 262, 261, 260, 259, 258);
+        assertPageData(firstPage, 10, 4, 1);
 
         var secondPage = getPage(pagination.changeAnchor(firstPage.nextPageAnchor()));
-        assertPageData(secondPage, 257, 256, 255, 254, 253);
+        assertPageData(secondPage, 9, 8, 7);
 
         var thirdPage = getPage(pagination.changeAnchor(secondPage.nextPageAnchor()));
-        assertPageData(thirdPage, 252, 251, 250, 249, 248);
+        assertPageData(thirdPage, 6, 5, 3);
+
+        var fourthPage = getPage(pagination.changeAnchor(thirdPage.nextPageAnchor()));
+        assertPageData(fourthPage, 2);
 
         // Now go backwards
+        var backToThirdPage = getPage(pagination.changeAnchor(fourthPage.lastPageAnchor()));
+        assertEquals(thirdPage, backToThirdPage, "3rd page from forward/backward navigation should be same");
+
         var backToSecondPage = getPage(pagination.changeAnchor(thirdPage.lastPageAnchor()));
         assertEquals(secondPage, backToSecondPage, "2nd page from forward/backward navigation should be same");
 

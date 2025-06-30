@@ -19,26 +19,23 @@
 
 package space.arim.libertybans.core.database.pagination;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+public final class ArrayCursor implements BorderValueHandle.Write, BorderValueHandle.Read {
 
-public record LongBorderValue() implements BorderValueHandle<Long> {
-    @Override
-    public int len() {
-        return 1;
+    private final String[] data;
+    private int cursor;
+
+    public ArrayCursor(String[] data, int cursor) {
+        this.data = data;
+        this.cursor = cursor;
     }
 
     @Override
-    public void writeChatCode(@NonNull Long value, @NonNull Write write) {
-        write.writePart(Long.toUnsignedString(value, Character.MAX_RADIX));
+    public String readPart() {
+        return data[cursor++];
     }
 
     @Override
-    public @Nullable Long readChatCode(@NonNull Read read) {
-        try {
-            return Long.parseUnsignedLong(read.readPart(), Character.MAX_RADIX);
-        } catch (NumberFormatException ignored) {
-            return null;
-        }
+    public void writePart(String part) {
+        data[cursor++] = part;
     }
 }
