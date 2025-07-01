@@ -68,6 +68,7 @@ public final class ConnectionListener implements PlatformListener {
 			return null;
 		}
 		Player player = event.getPlayer();
+
 		return EventTask.resumeWhenComplete(guardian.executeAndCheckConnection(
 				player.getUniqueId(), player.getUsername(), player.getRemoteAddress().getAddress()
 		).thenAccept((message) -> {
@@ -82,16 +83,19 @@ public final class ConnectionListener implements PlatformListener {
 	@Subscribe(order = PostOrder.EARLY)
 	public EventTask onServerSwitch(ServerPreConnectEvent event) {
 		if (!event.getResult().isAllowed()) {
+			logger.trace("Switch {} is already blocked", event);
 			return null;
 		}
 		RegisteredServer destination = event.getResult().getServer().orElse(null);
 		if (destination == null) {
-			// Properly speaking, the API does not exclude this possibility
+			// Properly speaking, the API does not exclude this possibility. Javadocs do not document it
+			logger.trace("Null destination server {}", event);
 			return null;
 		}
 		Player player = event.getPlayer();
 		return EventTask.resumeWhenComplete(guardian.checkServerSwitch(
-				player.getUniqueId(), player.getRemoteAddress().getAddress(), destination.getServerInfo().getName()
+				player.getUniqueId(), player.getUsername(), player.getRemoteAddress().getAddress(),
+				destination.getServerInfo().getName()
 		).thenAccept((message) -> {
 			if (message != null) {
 				event.setResult(ServerPreConnectEvent.ServerResult.denied());

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2024 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,6 +22,8 @@ package space.arim.libertybans.core.selector;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jooq.DSLContext;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
@@ -74,14 +76,17 @@ public final class Gatekeeper {
 														   Set<ServerScope> scopes, SelectorImpl selector) {
 		return queryExecutor.get().queryWithRetry((context, transaction) -> {
 			Instant currentTime = time.currentTimestamp();
+			EnforcementConfig config = configs.getMainConfig().enforcement();
 
-			Association association = new Association(uuid, context);
-			association.associateCurrentName(name, currentTime);
-			association.associateCurrentAddress(address, currentTime);
+			boolean recordUserAssociation = config.altsRegistry().shouldRegisterOnConnection();
+			if (recordUserAssociation) {
+				doAssociation(uuid, name, address, currentTime, context);
+			}
 
 			Punishment ban = selector.selectionByApplicabilityBuilder(uuid, address)
 					.type(PunishmentType.BAN)
 					.scopes(SelectionPredicate.matchingAnyOf(scopes))
+					.canAssumeUserRecorded(recordUserAssociation)
 					.build()
 					.findFirstSpecificPunishment(context, () -> currentTime, SortPunishments.LATEST_END_DATE_FIRST);
 			if (ban != null) {
@@ -112,5 +117,43 @@ public final class Gatekeeper {
 			}
 			return futuresFactory.completedFuture(null);
 		});
+	}
+
+	public CentralisedFuture<@Nullable Component> checkServerSwitch(UUID uuid, String name, NetworkAddress address,
+																	String destinationServer, ServerScope serverScope,
+																	SelectorImpl selector) {
+		if (!configs.getMainConfig().platforms().proxies().enforceServerSwitch()) {
+			return null;
+		}
+
+		return queryExecutor.get().queryWithRetry((context, transaction) -> {
+			Instant currentTime = time.currentTimestamp();
+			var altsRegistry = configs.getMainConfig().enforcement().altsRegistry();
+			boolean registerOnConnection = altsRegistry.shouldRegisterOnConnection();
+			List<String> serversWithoutAssociation = altsRegistry.serversWithoutRegistration();
+
+			if (!registerOnConnection && !serversWithoutAssociation.contains(destinationServer)) {
+				doAssociation(uuid, name, address, currentTime, context);
+			}
+
+			return selector.selectionByApplicabilityBuilder(uuid, address)
+					.type(PunishmentType.BAN)
+					.scopes(SelectionPredicate.matchingOnly(serverScope))
+					.build()
+					.findFirstSpecificPunishment(context, () -> currentTime, SortPunishments.LATEST_END_DATE_FIRST);
+		}).thenCompose((punishment) -> {
+			if (punishment != null) {
+				return formatter.getPunishmentMessage(punishment);
+			} else {
+				return futuresFactory.completedFuture(null);
+			}
+		});
+	}
+
+	private void doAssociation(UUID uuid, String name, NetworkAddress address,
+							   Instant currentTime, DSLContext context) {
+		Association association = new Association(uuid, context);
+		association.associateCurrentName(name, currentTime);
+		association.associateCurrentAddress(address, currentTime);
 	}
 }

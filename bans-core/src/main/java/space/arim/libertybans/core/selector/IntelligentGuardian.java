@@ -24,9 +24,7 @@ import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.api.NetworkAddress;
-import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.scope.ScopeManager;
-import space.arim.libertybans.api.select.SortPunishments;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.selector.cache.MuteCache;
@@ -34,7 +32,6 @@ import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
-import java.net.InetAddress;
 import java.util.UUID;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
@@ -98,23 +95,12 @@ public final class IntelligentGuardian implements Guardian {
 	}
 
 	@Override
-	public CentralisedFuture<@Nullable Component> checkServerSwitch(UUID uuid, InetAddress address,
+	public CentralisedFuture<@Nullable Component> checkServerSwitch(UUID uuid, String name, NetworkAddress address,
 																	String destinationServer) {
-		if (!configs.getMainConfig().platforms().proxies().enforceServerSwitch()) {
-			return futuresFactory.completedFuture(null);
-		}
 		return selector
-				.selectionByApplicabilityBuilder(uuid, address)
-				.type(PunishmentType.BAN)
-				.scope(scopeManager.specificScope(destinationServer))
-				.build()
-				.getFirstSpecificPunishment(SortPunishments.LATEST_END_DATE_FIRST)
-				.thenCompose((punishment) -> {
-					if (punishment.isEmpty()) {
-						return futuresFactory.completedFuture(null);
-					}
-					return formatter.getPunishmentMessage(punishment.get());
-				})
+				.executeAndCheckServerSwitch(
+						uuid, name, address, destinationServer
+				)
 				.toCompletableFuture()
 				.orTimeout(12, TimeUnit.SECONDS)
 				.exceptionally(timeoutHandler("server switch"));

@@ -35,10 +35,7 @@ import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.api.select.SortPunishments;
 import space.arim.libertybans.core.service.SettableTime;
-import space.arim.libertybans.it.DontInject;
-import space.arim.libertybans.it.InjectionInvocationContextProvider;
-import space.arim.libertybans.it.IrrelevantData;
-import space.arim.libertybans.it.SetAddressStrictness;
+import space.arim.libertybans.it.*;
 import space.arim.libertybans.it.resolver.RandomOperatorResolver;
 import space.arim.libertybans.it.util.RandomUtil;
 
@@ -88,6 +85,7 @@ public class MultipleApplicableIT {
 
 	@TestTemplate
 	@SetAddressStrictness(AddressStrictness.NORMAL)
+	@SetAltRegistry(all = true)
 	@IrrelevantData
 	public void selectHistory() {
 		UUID uuid = UUID.randomUUID();
@@ -114,6 +112,7 @@ public class MultipleApplicableIT {
 
 	@TestTemplate
 	@SetAddressStrictness(AddressStrictness.STRICT)
+	@SetAltRegistry(all = true)
 	@IrrelevantData
 	public void avoidDuplicateApplicablePunishments() {
 		UUID uuid = UUID.randomUUID();

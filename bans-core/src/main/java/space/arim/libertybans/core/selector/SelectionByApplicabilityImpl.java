@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2024 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -38,6 +38,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static org.jooq.impl.DSL.inline;
+import static org.jooq.impl.DSL.or;
 import static space.arim.libertybans.core.schema.tables.StrictLinks.STRICT_LINKS;
 
 public final class SelectionByApplicabilityImpl extends SelectionBaseSQL implements SelectionByApplicability {
@@ -45,13 +46,16 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 	private final UUID uuid;
 	private final NetworkAddress address;
 	private final AddressStrictness strictness;
+	private final boolean potentialNewEntrant;
 
 	SelectionByApplicabilityImpl(Details details, SelectionResources resources,
-								 UUID uuid, NetworkAddress address, AddressStrictness strictness) {
+								 UUID uuid, NetworkAddress address, AddressStrictness strictness,
+								 boolean potentialNewEntrant) {
 		super(details, resources);
 		this.uuid = Objects.requireNonNull(uuid, "uuid");
 		this.address = Objects.requireNonNull(address, "address");
 		this.strictness = Objects.requireNonNull(strictness, "strictness");
+		this.potentialNewEntrant = potentialNewEntrant;
 	}
 
 	@Override
@@ -69,6 +73,16 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 		return strictness;
 	}
 
+	/*
+	If the potentialNewEntrant flag is set, our task becomes significantly more complicated.
+	We now have to account for the enforcement of non-lenient address strictness by acting as if
+	the user had their IP address recorded already. This means attaching additional predication
+	to scans for IP-based punishments and patching over the applicability links we are accustomed
+	to having the database account for.
+
+	Thanks to SnakeAmazing for providing this marvelous intellectual puzzle.
+	 */
+
 	@Override
 	Query<?> requestQuery(QueryParameters parameters) {
 		PunishmentFields fields = null;
@@ -83,21 +97,74 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 				ApplicableViewFields<?> applView = requestApplicableView();
 				fields = applView;
 				table = fields.table();
+				if (potentialNewEntrant) {
+					// appl.uuid = uuid
+					// OR victim_type != 'PLAYER' AND victim_address = address
+					//
+					// Note: It must be victim_address and not appl.address
+					// Exercise for understanding: Why?
+					//
+					yield or(
+							applView.uuid().eq(uuid),
+							applView.victimType().notEqual(inline(VictimType.PLAYER))
+									.and(applView.victimAddress().eq(address))
+					);
+				}
 				yield applView.uuid().eq(uuid); // appl.uuid = uuid
 			}
 			case STERN -> {
+				if (potentialNewEntrant) {
+					ApplicableViewFields<?> applView = requestApplicableView();
+					fields = applView;
+					table = fields
+							.table()
+							.leftJoin(STRICT_LINKS)
+							.on(applView.uuid().eq(STRICT_LINKS.UUID1));
+					// appl.uuid = uuid														# NORMAL
+					// OR victim_type != 'PLAYER' AND (
+					//   appl.address = address												# NORMAL + STERN
+					//   OR strict_links.uuid2 IS NOT NULL AND strict_links.uuid2 = uuid	# STERN
+					// )
+					//
+					// Note: The last predicate must use appl.address and not victim_address
+					// Exercise for understanding: Why?
+					//
+					yield or(
+							applView.uuid().eq(uuid),
+							applView.victimType().notEqual(inline(VictimType.PLAYER)).and(or(
+									STRICT_LINKS.UUID2.isNotNull().and(STRICT_LINKS.UUID2.eq(uuid)),
+									applView.address().eq(address)
+							))
+					);
+				}
 				ApplicableViewFields<?> applView = requestApplicableView();
 				fields = applView;
 				table = fields
 						.table()
 						.innerJoin(STRICT_LINKS)
 						.on(applView.uuid().eq(STRICT_LINKS.UUID1));
-				// appl.uuid = strict_links.uuid1 = uuid
-				// OR victim_type != 'PLAYER' AND strict_links.uuid2 = uuid
+				// appl.uuid = strict_links.uuid1 = uuid						# NORMAL
+				// OR victim_type != 'PLAYER' AND strict_links.uuid2 = uuid		# STERN
 				yield STRICT_LINKS.UUID1.eq(uuid).or(
 						STRICT_LINKS.UUID2.eq(uuid).and(applView.victimType().notEqual(inline(VictimType.PLAYER))));
 			}
 			case STRICT -> {
+				if (potentialNewEntrant) {
+					ApplicableViewFields<?> applView = requestApplicableView();
+					fields = applView;
+					table = fields
+							.table()
+							.leftJoin(STRICT_LINKS)
+							.on(applView.uuid().eq(STRICT_LINKS.UUID1));
+					// appl.uuid = uuid													# NORMAL
+					// OR appl.address = address										# NORMAL + STRICT
+					// OR strict_links.uuid2 IS NOT NULL AND strict_links.uuid2 = uuid	# STRICT
+					yield or(
+							applView.uuid().eq(uuid),
+							applView.address().eq(address),
+							STRICT_LINKS.UUID2.isNotNull().and(STRICT_LINKS.UUID2.eq(uuid))
+					);
+				}
 				ApplicableViewFields<?> applView = requestApplicableView();
 				fields = applView;
 				table = fields

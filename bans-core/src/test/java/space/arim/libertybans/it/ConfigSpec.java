@@ -27,12 +27,13 @@ import space.arim.libertybans.core.uuid.ServerType;
 import java.time.Instant;
 import java.util.Objects;
 
-public record ConfigSpec(Vendor vendor, AddressStrictness addressStrictness, ServerType serverType,
-						 InstanceType instanceType, boolean pluginMessaging, long unixTime) {
+public record ConfigSpec(Vendor vendor, AddressStrictness addressStrictness, SetAltRegistry.Option altRegistryOption,
+						 ServerType serverType, InstanceType instanceType, boolean pluginMessaging, long unixTime) {
 
 	public ConfigSpec {
 		Objects.requireNonNull(vendor, "vendor");
 		Objects.requireNonNull(addressStrictness, "addressStrictness");
+		Objects.requireNonNull(altRegistryOption, "altRegistryOption");
 		Objects.requireNonNull(serverType, "serverType");
 		Objects.requireNonNull(instanceType, "instanceType");
 	}

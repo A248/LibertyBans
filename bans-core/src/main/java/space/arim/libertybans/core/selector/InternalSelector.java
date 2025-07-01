@@ -42,14 +42,26 @@ public interface InternalSelector extends PunishmentSelector {
 	/**
 	 * Checks a player connection's in a single connection query, enforcing any applicable bans,
 	 * connection limits, and dealing out alt checks
-	 * 
-	 * @param uuid the player uuid
-	 * @param name the player name
-	 * @param address the player address
-	 * @param scopes the server scopes to include in the selection query
+	 *
+	 * @param uuid       the player uuid
+	 * @param name       the player name
+	 * @param address    the player address
+	 * @param scopes     the server scopes to include in the selection query
 	 * @return a future which yields the denial message, or null if there is none
 	 */
 	CentralisedFuture<Component> executeAndCheckConnection(UUID uuid, String name, NetworkAddress address,
 														   Set<ServerScope> scopes);
 
+	/**
+	 * Checks a player connection's in a single connection query, enforcing any applicable bans if
+	 * enforce server switch is enabled.
+	 *
+	 * @param uuid		the player uuid
+	 * @param name		the player name
+	 * @param address	the player address
+	 * @param destinationServer the server the player is switching to
+	 * @return a future which yields the denial message, or null if there is none
+	 */
+	CentralisedFuture<Component> executeAndCheckServerSwitch(UUID uuid, String name, NetworkAddress address,
+															 String destinationServer);
 }

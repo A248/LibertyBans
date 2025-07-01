@@ -41,10 +41,12 @@ class ConfigSpecPossiblities {
 		Set<ConfigSpec> possibilities = new HashSet<>();
 		for (Vendor vendor : Vendor.values()) {
 			for (AddressStrictness addressStrictness : AddressStrictness.values()) {
-				for (ServerType serverType : ServerType.values()) {
-					possibilities.add(new ConfigSpec(
-							vendor, addressStrictness, serverType, instanceType, pluginMessaging, time
-					));
+				for (SetAltRegistry.Option altRegistryOption : SetAltRegistry.Option.values()) {
+					for (ServerType serverType : ServerType.values()) {
+						possibilities.add(new ConfigSpec(
+								vendor, addressStrictness, altRegistryOption, serverType, instanceType, pluginMessaging, time
+						));
+					}
 				}
 			}
 		}
@@ -54,7 +56,18 @@ class ConfigSpecPossiblities {
 	private ConfigConstraints getConstraints(PlatformSpecs platformSpecs) {
 		if (element.getAnnotation(NoDbAccess.class) != null) {
 			return new ConfigConstraints(
-					Set.of(Vendor.HSQLDB), Set.of(AddressStrictness.NORMAL), Set.of(ServerType.ONLINE));
+					Set.of(Vendor.HSQLDB), Set.of(AddressStrictness.NORMAL),
+					Set.of(SetAltRegistry.Option.ON_CONNECTION), Set.of(ServerType.ONLINE)
+			);
+		}
+		Set<Vendor> vendors;
+		{
+			SetVendor vendorConstraint = element.getAnnotation(SetVendor.class);
+			if (vendorConstraint == null) {
+				vendors = Set.of(Vendor.values());
+			} else {
+				vendors = Set.of(vendorConstraint.value());
+			}
 		}
 		Set<AddressStrictness> addressStrictnesses;
 		{
@@ -67,6 +80,17 @@ class ConfigSpecPossiblities {
 				addressStrictnesses = Set.of(strictnessConstraint.value());
 			}
 		}
+		Set<SetAltRegistry.Option> altRegistryOptions;
+		{
+			SetAltRegistry setAltRegistryConstraint = element.getAnnotation(SetAltRegistry.class);
+			if (setAltRegistryConstraint == null) {
+				altRegistryOptions = Set.of(SetAltRegistry.Option.ON_CONNECTION);
+			} else if (setAltRegistryConstraint.all()) {
+				altRegistryOptions = Set.of(SetAltRegistry.Option.values());
+			} else {
+				altRegistryOptions = Set.of(setAltRegistryConstraint.value());
+			}
+		}
 		Set<ServerType> serverTypes;
 		PlatformSpecs.ServerTypes serverTypeConstraint;
 		if (platformSpecs == null) {
@@ -76,24 +100,16 @@ class ConfigSpecPossiblities {
 		} else {
 			serverTypes = Set.of(serverTypeConstraint.value());
 		}
-		Set<Vendor> vendors;
-		{
-			SetVendor vendorConstraint = element.getAnnotation(SetVendor.class);
-			if (vendorConstraint == null) {
-				vendors = Set.of(Vendor.values());
-			} else {
-				vendors = Set.of(vendorConstraint.value());
-			}
-		}
-		return new ConfigConstraints(vendors, addressStrictnesses, serverTypes);
+		return new ConfigConstraints(vendors, addressStrictnesses, altRegistryOptions, serverTypes);
 	}
 
 	private record ConfigConstraints(Set<Vendor> vendors, Set<AddressStrictness> strictnesses,
-									 Set<ServerType> serverTypes) {
+									 Set<SetAltRegistry.Option> altRegistryOptions, Set<ServerType> serverTypes) {
 
 		boolean allows(ConfigSpec configSpec) {
 				return vendors.contains(configSpec.vendor())
 						&& strictnesses.contains(configSpec.addressStrictness())
+						&& altRegistryOptions.contains(configSpec.altRegistryOption())
 						&& serverTypes.contains(configSpec.serverType());
 		}
 

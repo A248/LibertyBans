@@ -30,6 +30,7 @@ import space.arim.libertybans.core.alts.AccountHistory;
 import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
+import space.arim.libertybans.it.SetAltRegistry;
 import space.arim.libertybans.it.SetTime;
 
 import java.time.Duration;
@@ -60,6 +61,29 @@ public class AccountHistoryIT {
 				accountHistory.knownAccounts(PlayerVictim.of(UUID.randomUUID())).join());
 		assertEquals(List.of(),
 				accountHistory.knownAccounts(AddressVictim.of(randomAddress())).join());
+	}
+
+	@TestTemplate
+	@SetAltRegistry(SetAltRegistry.Option.ON_SERVER_SWITCH)
+	public void listNoAccountHistoryLateRegistration(Guardian guardian) {
+		UUID uuid = UUID.randomUUID();
+		NetworkAddress address = randomAddress();
+
+		guardian.executeAndCheckConnection(uuid, "Player", address).join();
+		assertEquals(List.of(),
+				accountHistory.knownAccounts(PlayerVictim.of(uuid)).join());
+		assertEquals(List.of(),
+				accountHistory.knownAccounts(AddressVictim.of(address)).join());
+
+		guardian.checkServerSwitch(uuid, "Player", address, SetAltRegistry.Option.NON_REGISTERING_SERVER_NAME).join();
+		assertEquals(List.of(),
+				accountHistory.knownAccounts(PlayerVictim.of(uuid)).join());
+		assertEquals(List.of(),
+				accountHistory.knownAccounts(AddressVictim.of(address)).join());
+
+		guardian.checkServerSwitch(uuid, "Player", address, "please_register").join();
+		assertFalse(accountHistory.knownAccounts(PlayerVictim.of(uuid)).join().isEmpty());
+		assertFalse(accountHistory.knownAccounts(AddressVictim.of(address)).join().isEmpty());
 	}
 
 	@TestTemplate
