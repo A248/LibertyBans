@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,7 +24,7 @@ import jakarta.inject.Provider;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import space.arim.libertybans.core.env.EnvEnforcer;
-import space.arim.libertybans.core.env.TargetMatcher;
+import space.arim.libertybans.core.env.Police;
 import space.arim.libertybans.core.env.message.PluginMessage;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -81,7 +81,7 @@ final class StandaloneEnforcer implements EnvEnforcer<Void> {
 	}
 
 	@Override
-	public CentralisedFuture<Void> enforceMatcher(TargetMatcher<Void> matcher) {
+	public CentralisedFuture<Void> dispatchPolice(Police<Void> police) {
 		return completedVoid();
 	}
 

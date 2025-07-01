@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -99,17 +99,17 @@ public abstract class AbstractEnvEnforcer<P> implements EnvEnforcer<P> {
 	}
 
 	@Override
-	public final CentralisedFuture<Void> enforceMatcher(TargetMatcher<P> matcher) {
+	public final CentralisedFuture<Void> dispatchPolice(Police<P> police) {
 		return doForAllPlayers((players) -> {
 			List<P> matchedPlayers = new ArrayList<>();
 			// Some platforms do not provide guarantees about concurrent iteration in presence of kicks
 			// Proxies effectively must, but game server APIs like Bukkit and Sponge need not
 			for (P player : players) {
-				if (matcher.matches(getUniqueIdFor(player), getAddressFor(player))) {
+				if (police.targetMatcher().matches(getUniqueIdFor(player), getAddressFor(player))) {
 					matchedPlayers.add(player);
 				}
 			}
-			matchedPlayers.forEach(matcher.callback());
+			matchedPlayers.forEach(police.arrest());
 		});
 	}
 

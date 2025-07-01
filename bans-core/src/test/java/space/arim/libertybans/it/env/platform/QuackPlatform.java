@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -56,7 +56,7 @@ public class QuackPlatform {
 		return players.values();
 	}
 
-	void addPlayer(QuackPlayer player) {
+	public void login(QuackPlayer player) {
 		players.put(player.getUniqueId(), player);
 	}
 

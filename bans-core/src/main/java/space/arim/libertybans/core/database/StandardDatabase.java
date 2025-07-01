@@ -40,6 +40,11 @@ import space.arim.omnibus.util.concurrent.DelayCalculators;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
 import space.arim.omnibus.util.concurrent.ScheduledTask;
 
+import java.io.IOException;
+import java.nio.BufferUnderflowException;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
@@ -52,6 +57,7 @@ import static space.arim.libertybans.core.schema.Tables.PUNISHMENTS;
 
 public final class StandardDatabase implements InternalDatabase, AutoCloseable {
 
+	private final Path folder;
 	private final DatabaseManager manager;
 	private final Vendor vendor;
 	private final HikariDataSource dataSource;
@@ -64,9 +70,10 @@ public final class StandardDatabase implements InternalDatabase, AutoCloseable {
 
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
-	StandardDatabase(DatabaseManager manager, Vendor vendor,
-					 HikariDataSource dataSource, QueryExecutor queryExecutor, ExecutorService threadPool) {
-		this.manager = manager;
+	StandardDatabase(Path folder, DatabaseManager manager, Vendor vendor,
+                     HikariDataSource dataSource, QueryExecutor queryExecutor, ExecutorService threadPool) {
+        this.folder = folder;
+        this.manager = manager;
 		this.vendor = vendor;
 		this.dataSource = dataSource;
 		this.queryExecutor = queryExecutor;
@@ -121,7 +128,33 @@ public final class StandardDatabase implements InternalDatabase, AutoCloseable {
 
 	void closeCompletely() {
 		if (getVendor() == Vendor.HSQLDB) {
-			execute((context) -> context.query("SHUTDOWN").execute()).join();
+			boolean needsCompact;
+			// Keep track of the date of the last compaction
+			Path storeCompactAt = folder.resolve("internal").resolve("last_database_compact");
+			try {
+				Instant currentTime = Instant.now();
+				Instant lastTime;
+				if (Files.exists(storeCompactAt)) {
+					lastTime = Instant.ofEpochSecond(ByteBuffer.wrap(Files.readAllBytes(storeCompactAt)).getLong());
+					needsCompact = Duration.between(lastTime, currentTime).toDays() >= 30L;
+				} else {
+					needsCompact = true;
+				}
+				if (needsCompact) {
+					Files.write(storeCompactAt, ByteBuffer.allocate(Long.BYTES).putLong(currentTime.getEpochSecond()).array());
+				}
+			} catch (IOException | BufferUnderflowException ex) {
+				logger.warn("Unable to update {}", storeCompactAt, ex);
+				needsCompact = false;
+			}
+			String command;
+			if (needsCompact) {
+				command = "SHUTDOWN COMPACT";
+				logger.info("Compacting the local database with '{}'", command);
+			} else {
+				command = "SHUTDOWN";
+			}
+			execute((context) -> context.query(command).execute()).join();
 		}
 		close();
 	}

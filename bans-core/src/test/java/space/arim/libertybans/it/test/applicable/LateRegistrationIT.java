@@ -27,25 +27,36 @@ import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.select.AddressStrictness;
+import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetAddressStrictness;
 import space.arim.libertybans.it.SetAltRegistry;
 import space.arim.libertybans.it.SetTime;
+import space.arim.libertybans.it.env.platform.QuackPlatform;
+import space.arim.libertybans.it.env.platform.QuackPlayer;
+import space.arim.libertybans.it.env.platform.QuackPlayerBuilder;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * This class is technically redundant, since the logic of late registration is covered through: <ul>
- *     <li>AccountHistoryIT, which checks for the late registration of account history</li>
- *     <li>The other ITs in this package, which use <code>@SetAltRegistry(all = true)</code> to ensure that punishments
- *     follow the same applicability rules, regardless of late registration</li>
- * </ul>
- *
- */
 @ExtendWith(InjectionInvocationContextProvider.class)
 public class LateRegistrationIT {
 
+    /**
+     * Covers the logic of late registration, preventing account history from being registered until server switch
+     * occurs.
+     * <p>
+     * This test is technically redundant, since the logic of late registration is covered through: <ul>
+     *     <li>AccountHistoryIT, which checks for the late registration of account history</li>
+     *     <li>The other ITs in this package, which use <code>@SetAltRegistry(all = true)</code> to ensure that punishments
+     *     follow the same applicability rules, regardless of late registration</li>
+     * </ul>
+     *
+     * @param drafter the drafter, injected
+     * @param guardian the guardian, injected
+     */
     @TestTemplate
     @SetAddressStrictness(AddressStrictness.NORMAL)
     @SetAltRegistry(SetAltRegistry.Option.ON_SERVER_SWITCH)
@@ -91,5 +102,34 @@ public class LateRegistrationIT {
         // However, the innocent player is still not banned
         assertNull(guardian.executeAndCheckConnection(innocentUser.uuid(), "NameChange", innocentUser.address()).join());
         assertNull(guardian.checkServerSwitch(innocentUser.uuid(), "NameChange", innocentUser.address(), "please_register").join());
+    }
+
+    @TestTemplate
+    @SetAddressStrictness({AddressStrictness.NORMAL, AddressStrictness.STERN, AddressStrictness.STRICT})
+    @SetAltRegistry(SetAltRegistry.Option.ON_SERVER_SWITCH)
+    public void banPlayerWhileInLimbo(PunishmentDrafter drafter, Guardian guardian, QuackPlatform platform,
+                                      EnvUserResolver envUserResolver) {
+
+        User user = User.randomUser();
+        QuackPlayer player = new QuackPlayerBuilder(platform).buildRandomName(user.uuid(), user.address());
+
+        // At first, the player joins the proxy - but is not registered yet
+        assertNull(guardian.executeAndCheckConnection(user.uuid(), player.getName(), user.address()).join());
+        platform.login(player);
+
+        // Next, they're banned by IP address
+        assertEquals(Optional.of(player.getAddress()), envUserResolver.lookupAddress(player.getName()).join());
+        drafter.draftBuilder()
+                .type(PunishmentType.BAN)
+                .victim(AddressVictim.of(user.address()))
+                .operator(ConsoleOperator.INSTANCE)
+                .reason("Banned for life")
+                .build()
+                .enactPunishment()
+                .toCompletableFuture()
+                .join();
+
+        // Now, they should have been ejected from the proxy
+        assertFalse(player.isStillOnline());
     }
 }

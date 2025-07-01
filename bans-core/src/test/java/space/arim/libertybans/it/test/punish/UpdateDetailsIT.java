@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -196,6 +196,8 @@ public class UpdateDetailsIT {
 	@Inject
 	public void updateEndDateReactivate(QuackPlatform platform) {
 		QuackPlayer player = new QuackPlayerBuilder(platform).buildFullyRandom();
+		platform.login(player);
+
 		Punishment original = createInitial(
 				PunishmentType.BAN,
 				PlayerVictim.of(player.getUniqueId()),
@@ -204,7 +206,7 @@ public class UpdateDetailsIT {
 		);
 		time.advanceBy(Duration.ofHours(2L));
 		// The punishment is now expired, and the banned player may re-join
-		player.readdToPlatform();
+		platform.login(player);
 		// Now, extend the ban and therefore re-activate it
 		original.modifyPunishment((editor) -> {
 			editor.extendEndDate((Duration.ofHours(3L)));

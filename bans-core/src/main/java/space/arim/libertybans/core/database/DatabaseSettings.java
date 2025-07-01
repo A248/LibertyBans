@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -108,7 +108,7 @@ public class DatabaseSettings {
 				SimpleThreadFactory.create("Database")
 		);
 		StandardDatabase database  = new StandardDatabase(
-				manager, vendor, hikariDataSource,
+				folder, manager, vendor, hikariDataSource,
 				new JooqQueryExecutor(jooqContext, hikariDataSource, manager.futuresFactory(), threadPool),
 				threadPool
 		);

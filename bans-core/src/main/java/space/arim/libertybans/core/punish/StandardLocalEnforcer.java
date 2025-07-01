@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,6 +23,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
+import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.api.env.annote.PlatformPlayer;
@@ -45,12 +46,10 @@ import space.arim.libertybans.core.config.PunishmentAdditionSection;
 import space.arim.libertybans.core.config.RemovalsSection;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.execute.SQLFunction;
-import space.arim.libertybans.core.env.AdditionalUUIDTargetMatcher;
 import space.arim.libertybans.core.env.EnvEnforcer;
-import space.arim.libertybans.core.env.ExactTargetMatcher;
 import space.arim.libertybans.core.env.InstanceType;
+import space.arim.libertybans.core.env.Police;
 import space.arim.libertybans.core.env.TargetMatcher;
-import space.arim.libertybans.core.env.UUIDTargetMatcher;
 import space.arim.libertybans.core.env.message.KickPlayer;
 import space.arim.libertybans.core.punish.permission.PunishmentPermission;
 import space.arim.libertybans.core.selector.cache.MuteCache;
@@ -58,7 +57,9 @@ import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -218,22 +219,41 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 			if (victim instanceof PlayerVictim playerVictim) {
 				UUID uuid = playerVictim.getUUID();
 				if (strictness == AddressStrictness.STRICT) {
-					return matchUserPunishmentStrict(uuid, enforcementCallback)
-							.thenCompose(envEnforcer::enforceMatcher);
+					return strict_matchDatabaseUsers(uuid)
+							.thenApply(uuids -> {
+								if (!uuids.contains(uuid)) {
+									// Rare, but possible in case of API shenanigans
+									if (!(uuids instanceof HashSet<UUID>)) {
+										uuids = new HashSet<>(uuids);
+									}
+									uuids.add(uuid);
+								}
+ 								return new Police<>(new TargetMatcher.UUIDs(uuids), enforcementCallback);
+							})
+							.thenCompose(envEnforcer::dispatchPolice);
 				}
 				return envEnforcer.doForPlayerIfOnline(uuid, enforcementCallback);
 
 			} else if (victim instanceof AddressVictim addressVictim) {
 				NetworkAddress address = addressVictim.getAddress();
-				return matchAddressPunishment(strictness, enforcementCallback, address)
-						.thenCompose(envEnforcer::enforceMatcher);
+				return matchAddressPunishment(strictness, address)
+						.thenApply(matcher -> new Police<>(matcher, enforcementCallback))
+						.thenCompose(envEnforcer::dispatchPolice);
 
 			} else if (victim instanceof CompositeVictim compositeVictim) {
 				UUID uuid = compositeVictim.getUUID();
 				NetworkAddress address = compositeVictim.getAddress();
-				return matchAddressPunishment(strictness, enforcementCallback, address)
-						.thenApply((addressMatcher) -> new AdditionalUUIDTargetMatcher<>(uuid, addressMatcher))
-						.thenCompose(envEnforcer::enforceMatcher);
+				return matchAddressPunishment(strictness, address)
+						.thenApply(matcher -> {
+							if (!matcher.matches(uuid, null)) {
+								// Rare condition, but possible in two situations
+								// 1) lenient strictness
+								// 2) API shenanigans, adding punishments for players never seen before
+								matcher = new TargetMatcher.Combined(matcher, new TargetMatcher.UUIDs(Set.of(uuid)));
+							}
+							return new Police<>(matcher, enforcementCallback);
+						})
+						.thenCompose(envEnforcer::dispatchPolice);
 
 			} else {
 				throw MiscUtil.unknownVictimType(victim.getType());
@@ -275,54 +295,48 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 		};
 	}
 
-	private CentralisedFuture<TargetMatcher<P>> matchAddressPunishment(
-			AddressStrictness strictness, Consumer<P> enforcementCallback, NetworkAddress address) {
+	private CentralisedFuture<TargetMatcher> matchAddressPunishment(AddressStrictness strictness,
+																	NetworkAddress address) {
 		return switch (strictness) {
-			case LENIENT -> completedFuture(new ExactTargetMatcher<>(address, enforcementCallback));
-			case NORMAL -> matchAddressPunishmentNormal(address, enforcementCallback);
-			case STERN, STRICT -> matchAddressPunishmentSternOrStrict(address, enforcementCallback);
+			// If lenient, we only need to match the address
+			case LENIENT -> completedFuture(new TargetMatcher.Address(address));
+			// Otherwise, we need to contact the database + find matching players
+			case NORMAL, STERN, STRICT -> queryExecutor.get().query(SQLFunction.readOnly(context -> {
+				return strictness == AddressStrictness.NORMAL ?
+						normal_matchDatabaseUsers(context, address) : stern_strict_matchDatabaseUsers(context, address);
+			})).thenApply(uuids -> {
+				return new TargetMatcher.Combined(
+						// Add the address, in case the user is not recorded yet (cracked network support)
+						new TargetMatcher.UUIDs(uuids), new TargetMatcher.Address(address)
+				);
+			});
 		};
 	}
 
-	private CentralisedFuture<TargetMatcher<P>> matchAddressPunishmentNormal(
-			NetworkAddress address, Consumer<P> enforcementCallback) {
-		return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
-			return context
-					.select(ADDRESSES.UUID)
-					.from(ADDRESSES)
-					.where(ADDRESSES.ADDRESS.eq(address))
-					.fetchSet(ADDRESSES.UUID);
-		})).thenApply((uuids) -> {
-			return new UUIDTargetMatcher<>(uuids, enforcementCallback);
-		});
+	private Set<UUID> normal_matchDatabaseUsers(DSLContext context, NetworkAddress address) {
+		return context
+                .select(ADDRESSES.UUID)
+                .from(ADDRESSES)
+                .where(ADDRESSES.ADDRESS.eq(address))
+                .fetchSet(ADDRESSES.UUID);
 	}
 
-	private CentralisedFuture<TargetMatcher<P>> matchAddressPunishmentSternOrStrict(
-			NetworkAddress address, Consumer<P> enforcementCallback) {
-		return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
-			return context
-					.select(STRICT_LINKS.UUID2)
-					.from(STRICT_LINKS)
-					.innerJoin(ADDRESSES)
-					.on(STRICT_LINKS.UUID1.eq(ADDRESSES.UUID))
-					.where(ADDRESSES.ADDRESS.eq(address))
-					.fetchSet(STRICT_LINKS.UUID2);
-		})).thenApply((uuids) -> {
-			return new UUIDTargetMatcher<>(uuids, enforcementCallback);
-		});
+	private Set<UUID> stern_strict_matchDatabaseUsers(DSLContext context, NetworkAddress address) {
+		return context
+                .select(STRICT_LINKS.UUID2)
+                .from(STRICT_LINKS)
+                .innerJoin(ADDRESSES)
+                .on(STRICT_LINKS.UUID1.eq(ADDRESSES.UUID))
+                .where(ADDRESSES.ADDRESS.eq(address))
+                .fetchSet(STRICT_LINKS.UUID2);
 	}
 
-	private CentralisedFuture<TargetMatcher<P>> matchUserPunishmentStrict(
-			UUID uuid, Consumer<P> enforcementCallback) {
-		return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
-			return context
-					.select(STRICT_LINKS.UUID2)
-					.from(STRICT_LINKS)
-					.where(STRICT_LINKS.UUID1.eq(uuid))
-					.fetchSet(STRICT_LINKS.UUID2);
-		})).thenApply((uuids) -> {
-			return new UUIDTargetMatcher<>(uuids, enforcementCallback);
-		});
+	private CentralisedFuture<Set<UUID>> strict_matchDatabaseUsers(UUID uuid) {
+		return queryExecutor.get().query(SQLFunction.readOnly(context -> context
+                .select(STRICT_LINKS.UUID2)
+                .from(STRICT_LINKS)
+                .where(STRICT_LINKS.UUID1.eq(uuid))
+                .fetchSet(STRICT_LINKS.UUID2)));
 	}
 
 	private <T> CentralisedFuture<T> completedFuture(T value) {

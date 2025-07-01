@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -108,11 +108,12 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	void sendMessageNoPrefix(P player, ComponentLike message);
 
 	/**
-	 * Enforces a target matcher, invoking its callback for players matching its uuid or address set
+	 * Enforces a punishment, using a callback which is invoked for players if their uuid or address matched according
+	 * to {@link Police#targetMatcher()}
 	 * 
-	 * @param matcher the target matcher
+	 * @param police the police to dispatch
 	 */
-	CentralisedFuture<Void> enforceMatcher(TargetMatcher<P> matcher);
+	CentralisedFuture<Void> dispatchPolice(Police<P> police);
 
 	/**
 	 * Gets the uuid of a player. <br>
