@@ -95,7 +95,7 @@ public interface ListSection {
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans banlist %NEXTPAGE%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans banlist %NEXTPAGE_KEY%"})
 		ComponentText layoutFooter();
 		
 	}
@@ -140,7 +140,7 @@ public interface ListSection {
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans mutelist %NEXTPAGE%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans mutelist %NEXTPAGE_KEY%"})
 		ComponentText layoutFooter();
 		
 	}
@@ -185,7 +185,7 @@ public interface ListSection {
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans history %TARGET% %NEXTPAGE%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans history %TARGET% %NEXTPAGE_KEY%"})
 		ComponentText layoutFooter();
 		
 	}
@@ -228,7 +228,7 @@ public interface ListSection {
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE_KEY%"})
 		ComponentText layoutFooter();
 		
 	}
@@ -273,7 +273,7 @@ public interface ListSection {
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE_KEY%"})
 		ComponentText layoutFooter();
 		
 	}

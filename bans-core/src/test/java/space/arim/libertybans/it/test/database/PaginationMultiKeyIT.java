@@ -80,7 +80,7 @@ public class PaginationMultiKeyIT {
                     .fetch((record) ->
                             new Entry(record.getId(), record.getType(), record.getReason())
                     );
-            return pagination.buildPage(punishments, new KeysetPage.AnchorLiaison<>() {
+            return pagination.anchor().buildPage(punishments, new KeysetPage.AnchorLiaison<>() {
                 @Override
                 public BorderValueHandle<TypeThenId> borderValueHandle() {
                     return TypeThenId.borderValueHandle();
@@ -125,23 +125,23 @@ public class PaginationMultiKeyIT {
         assertEquals(PER_PAGE, firstPage.data().size());
         assertPageData(firstPage, 2, 3, 5);
 
-        var secondPage = getPage(pagination.changeAnchor(firstPage.nextPageAnchor()));
+        var secondPage = getPage(pagination.withAnchor(firstPage.nextPageAnchor()));
         assertPageData(secondPage, 6, 7, 8);
 
-        var thirdPage = getPage(pagination.changeAnchor(secondPage.nextPageAnchor()));
+        var thirdPage = getPage(pagination.withAnchor(secondPage.nextPageAnchor()));
         assertPageData(thirdPage, 9, 1, 4);
 
-        var fourthPage = getPage(pagination.changeAnchor(thirdPage.nextPageAnchor()));
+        var fourthPage = getPage(pagination.withAnchor(thirdPage.nextPageAnchor()));
         assertPageData(fourthPage, 10);
 
         // Now go backwards
-        var backToThirdPage = getPage(pagination.changeAnchor(fourthPage.lastPageAnchor()));
+        var backToThirdPage = getPage(pagination.withAnchor(fourthPage.lastPageAnchor()));
         assertEquals(thirdPage, backToThirdPage, "3rd page from forward/backward navigation should be same");
 
-        var backToSecondPage = getPage(pagination.changeAnchor(thirdPage.lastPageAnchor()));
+        var backToSecondPage = getPage(pagination.withAnchor(thirdPage.lastPageAnchor()));
         assertEquals(secondPage, backToSecondPage, "2nd page from forward/backward navigation should be same");
 
-        var backToFirstPage = getPage(pagination.changeAnchor(secondPage.lastPageAnchor()));
+        var backToFirstPage = getPage(pagination.withAnchor(secondPage.lastPageAnchor()));
         assertEquals(firstPage, backToFirstPage, "1st page from forward/backward navigation should be same");
     }
 
@@ -166,23 +166,23 @@ public class PaginationMultiKeyIT {
         assertEquals(PER_PAGE, firstPage.data().size());
         assertPageData(firstPage, 10, 4, 1);
 
-        var secondPage = getPage(pagination.changeAnchor(firstPage.nextPageAnchor()));
+        var secondPage = getPage(pagination.withAnchor(firstPage.nextPageAnchor()));
         assertPageData(secondPage, 9, 8, 7);
 
-        var thirdPage = getPage(pagination.changeAnchor(secondPage.nextPageAnchor()));
+        var thirdPage = getPage(pagination.withAnchor(secondPage.nextPageAnchor()));
         assertPageData(thirdPage, 6, 5, 3);
 
-        var fourthPage = getPage(pagination.changeAnchor(thirdPage.nextPageAnchor()));
+        var fourthPage = getPage(pagination.withAnchor(thirdPage.nextPageAnchor()));
         assertPageData(fourthPage, 2);
 
         // Now go backwards
-        var backToThirdPage = getPage(pagination.changeAnchor(fourthPage.lastPageAnchor()));
+        var backToThirdPage = getPage(pagination.withAnchor(fourthPage.lastPageAnchor()));
         assertEquals(thirdPage, backToThirdPage, "3rd page from forward/backward navigation should be same");
 
-        var backToSecondPage = getPage(pagination.changeAnchor(thirdPage.lastPageAnchor()));
+        var backToSecondPage = getPage(pagination.withAnchor(thirdPage.lastPageAnchor()));
         assertEquals(secondPage, backToSecondPage, "2nd page from forward/backward navigation should be same");
 
-        var backToFirstPage = getPage(pagination.changeAnchor(secondPage.lastPageAnchor()));
+        var backToFirstPage = getPage(pagination.withAnchor(secondPage.lastPageAnchor()));
         assertEquals(firstPage, backToFirstPage, "1st page from forward/backward navigation should be same");
     }
 }

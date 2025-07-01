@@ -65,11 +65,7 @@ record FormatAccounts<A extends AccountBase, F>(AccountListFormatting config, Ke
         // Add in the variable content
         built = built.replaceText("%TARGET%", target);
         if (page != -1) {
-            built = built.replaceText("%PAGE%", Integer.toString(page))
-                    .replaceText("%NEXTPAGE%", Integer.toString(page + 1))
-                    .replaceText("%NEXTPAGE_KEY%", response.nextPageCode())
-                    .replaceText("%LASTPAGE%", Integer.toString(page - 1))
-                    .replaceText("%LASTPAGE_KEY%", response.lastPageCode());
+            built = built.replaceText(response.new VariableReplacer(page));
         }
         return built.asComponent();
     }

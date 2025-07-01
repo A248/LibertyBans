@@ -98,6 +98,10 @@ public final class AltCommands extends AbstractSubCommandGroup {
 				AltInfoRequest request;
 				{
 					KeysetAnchor<InstantThenUUID> anchor = KeysetAnchor.instantThenUUID(command());
+					if (anchor == null) {
+						sender().sendMessage(altsConfig().command().usage());
+						return completedFuture(null);
+					}
 					UUID uuid = userDetails.uuid();
 					NetworkAddress address = userDetails.address();
 					boolean oldestFirst = altsConfig().command().oldestFirst();

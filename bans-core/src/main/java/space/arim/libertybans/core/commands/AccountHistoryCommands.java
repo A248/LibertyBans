@@ -178,7 +178,10 @@ public final class AccountHistoryCommands extends AbstractSubCommandGroup {
 				AccountHistory.Request request;
 				{
 					KeysetAnchor<Instant> anchor = KeysetAnchor.instant(command());
-
+					if (anchor == null) {
+						sender().sendMessage(listing().usage());
+						return completedFuture(null);
+					}
 					page = anchor.page();
 					int pageSize = listing().perPage();
 					int skipCount = 0;

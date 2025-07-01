@@ -38,15 +38,15 @@ import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.SelectionPredicate;
 import space.arim.libertybans.api.select.SortPunishments;
 import space.arim.libertybans.core.database.execute.SQLFunction;
+import space.arim.libertybans.core.database.pagination.KeysetAnchor;
+import space.arim.libertybans.core.database.pagination.Pagination;
+import space.arim.libertybans.core.database.pagination.StartTimeThenId;
 import space.arim.libertybans.core.database.sql.*;
 import space.arim.libertybans.core.scope.ScopeType;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 
 import static org.jooq.impl.DSL.*;
@@ -172,7 +172,6 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 						.and(new EndTimeCondition(fields).isNotExpired(parameters.currentTime));
 			}
 			Instant seekAfterStartTime = seekAfterStartTime();
-			Instant seekBeforeStartTime = seekBeforeStartTime();
 			if (!seekAfterStartTime.equals(Instant.EPOCH)) {
 				long seekAfterId = seekAfterId();
 				if (seekAfterId == 0L) {
@@ -188,6 +187,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 					);
 				}
 			}
+			Instant seekBeforeStartTime = seekBeforeStartTime();
 			if (!seekBeforeStartTime.equals(Instant.MAX)) {
 				long seekBeforeId = seekBeforeId();
 				if (seekBeforeId == Long.MAX_VALUE) {
@@ -284,13 +284,24 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 		}
 
 		Query<?> constructSelect(List<Field<?>> additionalColumns, Condition additionalPredication) {
+			List<OrderField<?>> orderFields;
+			KeysetAnchor<StartTimeThenId> pageAnchor = pageAnchor();
+			if (pageAnchor == null) {
+				orderFields = buildOrdering(parameters.ordering);
+			} else {
+				Pagination<StartTimeThenId> pagination = new Pagination<>(
+						pageAnchor, false, StartTimeThenId.defineOrder(aggregateIfNeeded(fields.start()), fields.id())
+				);
+				additionalPredication = additionalPredication.and(pagination.seeking());
+				orderFields = Arrays.asList(pagination.order());
+			}
 			return new Query<>(
 					parameters.context
 							.select(getColumnsToRetrieve(additionalColumns))
 							.from(table)
 							.where(getPredication().and(additionalPredication))
 							.groupBy(groupByIdForDeduplication() ? fields.id() : noField())
-							.orderBy(buildOrdering(parameters.ordering))
+							.orderBy(orderFields)
 							.offset((skipCount() == 0) ? noField(Integer.class) : val(skipCount()))
 							.limit(switch (parameters.limit) {
 								case 0 -> noField(Integer.class);

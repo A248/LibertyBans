@@ -21,6 +21,7 @@ package space.arim.libertybans.core.database.pagination;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.UnaryOperator;
 
 public final class KeysetPage<R, F> {
 
@@ -50,12 +51,30 @@ public final class KeysetPage<R, F> {
         return nextPageAnchor;
     }
 
-    public String lastPageCode() {
-        return lastPageAnchor.chatCode(borderValueHandle);
-    }
+    public final class VariableReplacer implements UnaryOperator<String> {
 
-    public String nextPageCode() {
-        return nextPageAnchor.chatCode(borderValueHandle);
+        private final String page;
+        private final String nextPage;
+        private final String nextPageKey;
+        private final String lastPage;
+        private final String lastPageKey;
+
+        public VariableReplacer(int page) {
+            this.page = Integer.toString(page);
+            this.nextPage = Integer.toString(nextPageAnchor.page());
+            this.nextPageKey = nextPageAnchor.chatCode(borderValueHandle);
+            this.lastPage = Integer.toString(lastPageAnchor.page());
+            this.lastPageKey = lastPageAnchor.chatCode(borderValueHandle);
+        }
+
+        @Override
+        public String apply(String s) {
+            return s.replace("%PAGE%", page)
+                    .replace("%NEXTPAGE%", nextPage)
+                    .replace("%NEXTPAGE_KEY%", nextPageKey)
+                    .replace("%LASTPAGE%", lastPage)
+                    .replace("%LASTPAGE_KEY%", lastPageKey);
+        }
     }
 
     public interface AnchorLiaison<R, F> {

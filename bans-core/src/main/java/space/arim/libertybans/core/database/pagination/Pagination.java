@@ -22,7 +22,7 @@ package space.arim.libertybans.core.database.pagination;
 import org.jooq.Condition;
 import org.jooq.OrderField;
 
-import java.util.*;
+import java.util.Objects;
 
 import static org.jooq.impl.DSL.noCondition;
 
@@ -38,7 +38,11 @@ public final class Pagination<F> {
         this.defineOrder = Objects.requireNonNull(defineOrder, "defineOrder");
     }
 
-    public Pagination<F> changeAnchor(KeysetAnchor<F> newAnchor) {
+    public KeysetAnchor<F> anchor() {
+        return anchor;
+    }
+
+    public Pagination<F> withAnchor(KeysetAnchor<F> newAnchor) {
         return new Pagination<>(newAnchor, sortAscending, defineOrder);
     }
 
@@ -69,42 +73,6 @@ public final class Pagination<F> {
         // Desc | Backward  | Least + reverse order of results
         return sortAscending == forwardScroll ?
                 defineOrder.ascending() : defineOrder.descending();
-    }
-
-    /**
-     * Builds the page from given query results, resorting if necessary and calculating page anchors
-     *
-     * @param queryResults the raw query results
-     * @param anchorLiaison how to get the anchor from a record
-     * @param <R> the type of the query results
-     * @return the keyset page
-     */
-    public <R> KeysetPage<R, F> buildPage(List<R> queryResults, KeysetPage.AnchorLiaison<R, F> anchorLiaison) {
-
-        // Ensure we return the correct order, before calculating page anchors
-        if (!anchor.fromForwardScroll()) {
-            // Need to reverse the results of the query
-            if (!(queryResults instanceof ArrayList<R>)) {
-                queryResults = new ArrayList<>(queryResults);
-            }
-            Collections.reverse(queryResults);
-        }
-
-        KeysetAnchor<F> lastPageAnchor;
-        KeysetAnchor<F> nextPageAnchor;
-        if (queryResults.isEmpty()) {
-            lastPageAnchor = KeysetAnchor.unset();
-            nextPageAnchor = KeysetAnchor.unset();
-        } else {
-            int currentPage = anchor.page();
-            F lastPageBorder = anchorLiaison.getAnchor(queryResults.get(0));
-            F nextPageBorder = anchorLiaison.getAnchor(queryResults.get(queryResults.size() - 1));
-            lastPageAnchor = new KeysetAnchor<>(
-                    currentPage - 1, lastPageBorder, false);
-            nextPageAnchor = new KeysetAnchor<>(
-                    currentPage + 1, nextPageBorder, true);
-        }
-        return new KeysetPage<>(queryResults, lastPageAnchor, nextPageAnchor, anchorLiaison.borderValueHandle());
     }
 
 }

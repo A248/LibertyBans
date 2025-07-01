@@ -54,10 +54,10 @@ public interface AccountHistorySection {
 	@SubSection
 	Listing listing();
 
-	@ConfHeader("Regards /accounthistory list <user>")
+	@ConfHeader("Regards /accounthistory list")
 	interface Listing extends AccountListFormatting {
 
-		@ConfDefault.DefaultString("&cUsage: /accounthistory list <user|ip>")
+		@ConfDefault.DefaultString("&cUsage: /accounthistory list <user|ip> [page]")
 		Component usage();
 
 		@ConfDefault.DefaultString("&cYou may not list recorded accounts.")

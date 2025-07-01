@@ -23,6 +23,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.core.commands.CommandPackage;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * An anchor for pagination purposes
@@ -49,6 +52,41 @@ public record KeysetAnchor<F>(int page, F borderValue, boolean fromForwardScroll
         return (KeysetAnchor<F>) UNSET;
     }
 
+    /**
+     * Builds the page from given query results, resorting if necessary and calculating new page anchors
+     *
+     * @param queryResults the raw query results
+     * @param anchorLiaison how to get the anchor from a record
+     * @param <R> the type of the query results
+     * @return the keyset page
+     */
+    public <R> KeysetPage<R, F> buildPage(List<R> queryResults, KeysetPage.AnchorLiaison<R, F> anchorLiaison) {
+
+        // Ensure we return the correct order, before calculating page anchors
+        if (!fromForwardScroll) {
+            // Need to reverse the results of the query
+            if (!(queryResults instanceof ArrayList<R>)) {
+                queryResults = new ArrayList<>(queryResults);
+            }
+            Collections.reverse(queryResults);
+        }
+
+        KeysetAnchor<F> lastPageAnchor;
+        KeysetAnchor<F> nextPageAnchor;
+        if (queryResults.isEmpty()) {
+            lastPageAnchor = KeysetAnchor.unset();
+            nextPageAnchor = KeysetAnchor.unset();
+        } else {
+            F lastPageBorder = anchorLiaison.getAnchor(queryResults.get(0));
+            F nextPageBorder = anchorLiaison.getAnchor(queryResults.get(queryResults.size() - 1));
+            lastPageAnchor = new KeysetAnchor<>(
+                    page - 1, lastPageBorder, false);
+            nextPageAnchor = new KeysetAnchor<>(
+                    page + 1, nextPageBorder, true);
+        }
+        return new KeysetPage<>(queryResults, lastPageAnchor, nextPageAnchor, anchorLiaison.borderValueHandle());
+    }
+
     String chatCode(BorderValueHandle<F> borderValueHandle) {
         StringBuilder builder = new StringBuilder();
         builder.append(CHAT_CODE_PREFIX);
@@ -62,12 +100,20 @@ public record KeysetAnchor<F>(int page, F borderValue, boolean fromForwardScroll
         return builder.toString();
     }
 
-    public static KeysetAnchor<Instant> instant(CommandPackage command) {
+    /*
+    All of the following return NULL on user error (bad page number)
+     */
+
+    public static @Nullable KeysetAnchor<Instant> instant(CommandPackage command) {
         return new Build<>(new InstantBorderValue(new LongBorderValue())).fromCommand(command);
     }
 
-    public static KeysetAnchor<InstantThenUUID> instantThenUUID(CommandPackage command) {
+    public static @Nullable KeysetAnchor<InstantThenUUID> instantThenUUID(CommandPackage command) {
         return new Build<>(InstantThenUUID.borderValueHandle()).fromCommand(command);
+    }
+
+    public static @Nullable KeysetAnchor<StartTimeThenId> startTimeThenId(CommandPackage command) {
+        return new Build<>(StartTimeThenId.borderValueHandle()).fromCommand(command);
     }
 
     record Build<F>(BorderValueHandle<F> borderValueHandle) {
@@ -93,22 +139,22 @@ public record KeysetAnchor<F>(int page, F borderValue, boolean fromForwardScroll
             return null;
         }
 
-        private KeysetAnchor<F> fromCommand(CommandPackage command) {
-            if (command.hasNext()) {
-                String pageArg = command.next();
-                var fromCode = fromCode(pageArg);
-                if (fromCode != null) {
-                    return fromCode;
-                }
-                try {
-                    int page = Integer.parseInt(pageArg);
-                    if (page > 0) {
-                        return new KeysetAnchor<>(page, null, true);
-                    }
-                } catch (NumberFormatException ignored) {
-                }
+        private @Nullable KeysetAnchor<F> fromCommand(CommandPackage command) {
+            if (!command.hasNext()) {
+                return unset();
             }
-            return unset();
+            String pageArg = command.next();
+            var fromCode = fromCode(pageArg);
+            if (fromCode != null) {
+                return fromCode;
+            }
+            try {
+                int page = Integer.parseInt(pageArg);
+                if (page > 0) {
+                    return new KeysetAnchor<>(page, null, true);
+                }
+            } catch (NumberFormatException ignored) {}
+            return null;
         }
     }
 }

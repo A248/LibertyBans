@@ -38,7 +38,7 @@ public interface AltsSection {
 	@ConfHeader("Regarding the /alts command")
 	interface Command extends AccountListFormatting {
 
-		@ConfDefault.DefaultString("&cUsage: /alts &e<player>&c.")
+		@ConfDefault.DefaultString("&cUsage: /alts &e<player> [page]&c.")
 		Component usage();
 
 		@ConfDefault.DefaultString("&cYou may not check alts.")

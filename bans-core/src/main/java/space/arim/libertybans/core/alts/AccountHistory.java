@@ -78,7 +78,7 @@ public final class AccountHistory {
 							record.get(ADDRESSES.UPDATED),
 							this
 					));
-			return pagination.buildPage(accounts, new KeysetPage.AnchorLiaison<>() {
+			return pagination.anchor().buildPage(accounts, new KeysetPage.AnchorLiaison<>() {
                 @Override
                 public BorderValueHandle<Instant> borderValueHandle() {
                     return new InstantBorderValue(new LongBorderValue());

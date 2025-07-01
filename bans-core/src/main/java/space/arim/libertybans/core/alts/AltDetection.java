@@ -21,7 +21,10 @@ package space.arim.libertybans.core.alts;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
-import org.jooq.*;
+import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.SelectField;
+import org.jooq.Table;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
@@ -31,12 +34,21 @@ import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.database.pagination.*;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.execute.SQLFunction;
-import space.arim.libertybans.core.database.sql.*;
+import space.arim.libertybans.core.database.sql.AccountExpirationCondition;
+import space.arim.libertybans.core.database.sql.EndTimeCondition;
+import space.arim.libertybans.core.database.sql.TableForType;
+import space.arim.libertybans.core.database.sql.VictimCondition;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.jooq.impl.DSL.*;
 import static space.arim.libertybans.core.schema.tables.Addresses.ADDRESSES;
@@ -151,7 +163,7 @@ public class AltDetection {
 							scannedTypes
 					);
 				});
-		return pagination.buildPage(detectedAlts, new KeysetPage.AnchorLiaison<>() {
+		return pagination.anchor().buildPage(detectedAlts, new KeysetPage.AnchorLiaison<>() {
 
             @Override
             public BorderValueHandle<InstantThenUUID> borderValueHandle() {
