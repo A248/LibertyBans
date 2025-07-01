@@ -34,6 +34,18 @@ A few users will seek to install LibertyBans on a limited set of backend servers
 
 If this describes you, please switch **off** the option `platforms.game-servers.use-plugin-messaging` in your config.yml. By turning this feature off, banned players will not be kicked from the entire network, and they will be sent to the lobby instead (as handled by your proxy software).
 
+### Cracked Networks
+
+If you're running a cracked network -- with unauthenticated Minecraft accounts -- you need to be careful that LibertyBans can only "see" fully authenticated users.
+
+By default, LibertyBans records the UUID and IP address of every user who logs in. If LibertyBans is on the proxy and unauthenticated players join the proxy, this can cause a problem leading to false IP bans.
+
+To remedy this, you should use a limbo server. A limbo server is a specific backend server where unauthenticated users go, and they can't leave the limbo server unless logged in.
+
+After setting up a limbo server, you have two options:
+* If running LibertyBans on the proxy, look at the `alts-registry` setting in the config.yml. There, you can ensure that players joining the limbo server won't have their IP addresses recorded.
+* If running LibertyBans on the backend servers, LibertyBans should only be installed on the backend servers where fully authenticated players can join. That is, every server *except* the limbo server.
+
 ### Multiple Proxies
 
 If you're here, you know who you are. Please let us know how LibertyBans suits your needs, where it could use improvement, and if you found or suspect any performance bottlenecks.
