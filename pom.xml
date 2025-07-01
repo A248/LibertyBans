@@ -254,6 +254,13 @@
 					<artifactId>jooq-codegen-maven</artifactId>
 					<version>${jooq.version}</version>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-invoker-plugin</artifactId>
+					<configuration>
+						<streamLogsOnFailures>true</streamLogsOnFailures>
+					</configuration>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
