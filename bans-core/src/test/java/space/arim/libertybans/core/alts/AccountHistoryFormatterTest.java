@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,7 +32,11 @@ import space.arim.libertybans.api.user.KnownAccount;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.MessagesConfig;
+import space.arim.libertybans.core.database.pagination.InstantBorderValue;
+import space.arim.libertybans.core.database.pagination.KeysetAnchor;
+import space.arim.libertybans.core.database.pagination.KeysetPage;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
+import space.arim.libertybans.core.database.pagination.LongBorderValue;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -83,11 +87,15 @@ public class AccountHistoryFormatterTest {
 			when(listing.header()).thenReturn(header);
 			when(listing.layout()).thenReturn(ComponentText.create(Component.text(
 					"username: %USERNAME%, address: %ADDRESS%, date_recorded: %DATE_RECORDED%")));
+			when(listing.footer()).thenReturn(ComponentText.create(Component.empty()));
 			when(formatter.prefix(any())).thenAnswer((invocation) -> invocation.getArgument(0));
 			when(formatter.formatAbsoluteDate(date)).thenReturn(date.toString());
 		}
+		KeysetPage<KnownAccount, Instant> page = new KeysetPage<>(
+				List.of(knownAccount), KeysetAnchor.unset(), KeysetAnchor.unset(), new InstantBorderValue(new LongBorderValue())
+		);
 		assertEquals("Known accounts for TargetUser\n" +
 						"username: " + username + ", address: " + address + ", date_recorded: " + date,
-				PlainComponentSerializer.plain().serialize(accountHistoryFormatter.formatMessage(username, List.of(knownAccount))));
+				PlainComponentSerializer.plain().serialize(accountHistoryFormatter.formatMessage(page, username, -1)));
 	}
 }

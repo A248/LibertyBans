@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -41,10 +41,6 @@ public interface PunishmentCreator {
 	Punishment createPunishment(long id, PunishmentType type, Victim victim,
 								Operator operator, String reason,
 								ServerScope scope, Instant start, Instant end, EscalationTrack escalationTrack);
-
-	RecordMapper<Record12<
-			Long, PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,
-			Punishment> punishmentMapper();
 
 	RecordMapper<Record11<
 			PunishmentType, Victim.VictimType, UUID, NetworkAddress, Operator, String, String, Instant, Instant, EscalationTrack, ScopeType>,

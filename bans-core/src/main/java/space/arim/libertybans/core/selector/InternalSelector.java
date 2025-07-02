@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,10 +20,12 @@
 package space.arim.libertybans.core.selector;
 
 import net.kyori.adventure.text.Component;
+import space.arim.api.env.annote.PlatformPlayer;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
+import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.util.Set;
@@ -64,4 +66,15 @@ public interface InternalSelector extends PunishmentSelector {
 	 */
 	CentralisedFuture<Component> executeAndCheckServerSwitch(UUID uuid, String name, NetworkAddress address,
 															 String destinationServer);
+
+	/**
+	 * Called when a player joins
+	 *
+	 * @param player the player
+	 * @param envEnforcer the enforcer
+	 * @return a future completed when alts auto show has been sent
+	 * @param <P> the player type
+	 */
+	<@PlatformPlayer P> CentralisedFuture<Void> onJoin(P player, EnvEnforcer<P> envEnforcer);
+
 }

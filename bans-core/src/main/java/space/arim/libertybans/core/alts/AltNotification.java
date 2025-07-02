@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,40 +21,43 @@ package space.arim.libertybans.core.alts;
 
 import jakarta.inject.Inject;
 import net.kyori.adventure.text.Component;
-import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.database.pagination.InstantThenUUID;
+import space.arim.libertybans.core.database.pagination.KeysetPage;
 import space.arim.libertybans.core.env.EnvEnforcer;
-
-import java.util.List;
-import java.util.UUID;
+import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 public class AltNotification {
 
 	private final Configs configs;
+	private final FactoryOfTheFuture futuresFactory;
 	private final AltCheckFormatter altCheckFormatter;
 	private final EnvEnforcer<?> envEnforcer;
 
 	@Inject
-	public AltNotification(Configs configs, AltCheckFormatter altCheckFormatter, EnvEnforcer<?> envEnforcer) {
+	public AltNotification(Configs configs, FactoryOfTheFuture futuresFactory,
+						   AltCheckFormatter altCheckFormatter, EnvEnforcer<?> envEnforcer) {
 		this.configs = configs;
-		this.altCheckFormatter = altCheckFormatter;
+        this.futuresFactory = futuresFactory;
+        this.altCheckFormatter = altCheckFormatter;
 		this.envEnforcer = envEnforcer;
 	}
 
 	/**
 	 * Notifies staff members that a joining user has detected alt accounts
 	 *
-	 * @param uuid the user's uuid
-	 * @param name the user's name
-	 * @param address the user's address
-	 * @param alts the alt accounts found
+	 * @param response the alt retrieval response
+	 * @param name the player name
 	 */
-	public void notifyFoundAlts(UUID uuid, String name, NetworkAddress address, List<DetectedAlt> alts) {
-		if (alts.isEmpty()) {
-			return;
+	public CentralisedFuture<Void> notifyFoundAlts(KeysetPage<DetectedAlt, InstantThenUUID> response, String name) {
+		if (response.data().isEmpty()) {
+			return futuresFactory.completedFuture(null);
 		}
 		Component notification = altCheckFormatter.formatMessage(
-				configs.getMessagesConfig().alts().autoShow().header(), name, alts);
-		envEnforcer.sendToThoseWithPermissionNoPrefix("libertybans.alts.autoshow", notification);
+				configs.getMessagesConfig().alts().autoShow(), response, name, -1
+		);
+		return envEnforcer.sendToThoseWithPermission("libertybans.alts.autoshow", notification);
 	}
+
 }

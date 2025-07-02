@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,6 +26,7 @@ import space.arim.libertybans.core.alts.AccountHistoryFormatter;
 import space.arim.libertybans.core.alts.AccountHistorySection;
 import space.arim.libertybans.core.commands.extra.ParsePlayerVictimCompositeByCmdOnly;
 import space.arim.libertybans.core.commands.extra.TabCompletion;
+import space.arim.libertybans.core.database.pagination.KeysetAnchor;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
@@ -67,14 +68,11 @@ public final class AccountHistoryCommands extends AbstractSubCommandGroup {
 			return new UsageExecution();
 		}
 		String action = command.next();
-		switch (action.toLowerCase(Locale.ROOT)) {
-		case "delete":
-			return new DeleteExecution(sender, command);
-		case "list":
-			return new ListExecution(sender, command);
-		default:
-			return new UsageExecution();
-		}
+        return switch (action.toLowerCase(Locale.ROOT)) {
+            case "delete" -> new DeleteExecution(sender, command);
+            case "list" -> new ListExecution(sender, command);
+            default -> new UsageExecution();
+        };
 	}
 
 	@Override
@@ -176,13 +174,29 @@ public final class AccountHistoryCommands extends AbstractSubCommandGroup {
 				if (victim == null) {
 					return completedFuture(null);
 				}
-				return accountHistory.knownAccounts(victim).thenAccept((knownAccounts) -> {
-					if (knownAccounts.isEmpty()) {
-						sender().sendMessage(listing().noneFound());
+				int page;
+				AccountHistory.Request request;
+				{
+					KeysetAnchor<Instant> anchor = KeysetAnchor.instant(command());
+					if (anchor == null) {
+						sender().sendMessage(listing().usage());
+						return completedFuture(null);
+					}
+					page = anchor.page();
+					int pageSize = listing().perPage();
+					int skipCount = 0;
+					if (anchor.borderValue() == null) {
+						// Traditional pagination
+						skipCount = (page - 1) * pageSize;
+					}
+					request = new AccountHistory.Request(pageSize, anchor, skipCount);
+				}
+				return accountHistory.knownAccounts(victim, request).thenAccept((response) -> {
+					if (response.data().isEmpty()) {
+						sender().sendMessage(listing().noneFound().replaceText("%PAGE%", Integer.toString(page)));
 						return;
 					}
-					sender().sendMessageNoPrefix(
-							accountHistoryFormatter.formatMessage(target, knownAccounts));
+					sender().sendMessage(accountHistoryFormatter.formatMessage(response, target, page));
 				});
 			});
 		}

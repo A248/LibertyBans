@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -30,22 +30,23 @@ import java.util.Set;
 public final class VelocityEnv implements Environment {
 
 	private final Provider<ConnectionListener> connectionListener;
+	private final Provider<JoinListener> joinListener;
 	private final Provider<ChatListener> chatListener;
 	private final CommandHandler.CommandHelper commandHelper;
 
 	@Inject
-	public VelocityEnv(Provider<ConnectionListener> connectionListener, Provider<ChatListener> chatListener,
-					   CommandHandler.CommandHelper commandHelper) {
+	public VelocityEnv(Provider<ConnectionListener> connectionListener, Provider<JoinListener> joinListener,
+					   Provider<ChatListener> chatListener, CommandHandler.CommandHelper commandHelper) {
 		this.connectionListener = connectionListener;
-		this.chatListener = chatListener;
+        this.joinListener = joinListener;
+        this.chatListener = chatListener;
 		this.commandHelper = commandHelper;
 	}
 
 	@Override
 	public Set<PlatformListener> createListeners() {
 		return Set.of(
-				connectionListener.get(),
-				chatListener.get(),
+				connectionListener.get(), joinListener.get(), chatListener.get(),
 				new CommandHandler(commandHelper, Commands.BASE_COMMAND_NAME, false)
 		);
 	}

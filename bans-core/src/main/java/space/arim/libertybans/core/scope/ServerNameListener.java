@@ -36,29 +36,27 @@ import java.time.Duration;
 import java.util.function.Consumer;
 
 @Singleton
-public final class ServerNameListenerBase<@PlatformPlayer P, H> implements PlatformListener {
+public final class ServerNameListener<@PlatformPlayer P, H> implements PlatformListener {
 
 	private final Configs configs;
 	private final FactoryOfTheFuture futuresFactory;
 	private final EnhancedExecutor enhancedExecutor;
 	private final InternalScopeManager scopeManager;
-	private final EnvEnforcer<P> envEnforcer;
 	private final EnvMessageChannel<H> envMessageChannel;
 
 	private final H handler;
 
 	@Inject
-	public ServerNameListenerBase(InstanceType instanceType, Configs configs, FactoryOfTheFuture futuresFactory,
-								  EnhancedExecutor enhancedExecutor, InternalScopeManager scopeManager,
-								  EnvEnforcer<P> envEnforcer, EnvMessageChannel<H> envMessageChannel) {
-		this.futuresFactory = futuresFactory;
-		this.enhancedExecutor = enhancedExecutor;
+	public ServerNameListener(InstanceType instanceType, Configs configs, FactoryOfTheFuture futuresFactory,
+							  EnhancedExecutor enhancedExecutor, InternalScopeManager scopeManager,
+							  EnvMessageChannel<H> envMessageChannel) {
 		if (instanceType != InstanceType.GAME_SERVER) {
 			throw new IllegalStateException("Cannot use server name listener except for backend game servers");
 		}
 		this.configs = configs;
+		this.futuresFactory = futuresFactory;
+		this.enhancedExecutor = enhancedExecutor;
 		this.scopeManager = scopeManager;
-		this.envEnforcer = envEnforcer;
 		this.envMessageChannel = envMessageChannel;
 		handler = envMessageChannel.createHandler(new ResponseHandler(), new GetServer());
 	}
@@ -76,7 +74,7 @@ public final class ServerNameListenerBase<@PlatformPlayer P, H> implements Platf
 		envMessageChannel.uninstallHandler(handler);
 	}
 
-	public void onJoin(P player) {
+	public void onJoin(P player, EnvEnforcer<P> envEnforcer) {
 		if (configs.getMainConfig().platforms().gameServers().usePluginMessaging()
 				&& configs.getScopeConfig().serverName().autoDetect()
 				&& scopeManager.serverNameUndetected()) {

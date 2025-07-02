@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,6 +28,7 @@ import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.user.KnownAccount;
+import space.arim.libertybans.core.database.pagination.*;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.punish.MiscUtil;
@@ -35,6 +36,7 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -54,46 +56,59 @@ public final class AccountHistory {
 		return new KnownAccountImpl(uuid, username, address, recorded, this);
 	}
 
-	private CentralisedFuture<List<? extends KnownAccount>> knownAccountsWhere(Condition condition) {
+	private CentralisedFuture<KeysetPage<KnownAccount, Instant>> knownAccountsWhere(Condition condition, Request request) {
 		return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
-			return context
+			Pagination<Instant> pagination = new Pagination<>(
+					request.pageAnchor, true, new DefineOrder<>(new DefineOrder.SimpleOrderedField<>(ADDRESSES.UPDATED))
+			);
+			List<KnownAccount> accounts = context
 					.select(ADDRESSES.UUID, ADDRESSES.ADDRESS, LATEST_NAMES.NAME, ADDRESSES.UPDATED)
 					.from(ADDRESSES)
 					.leftJoin(LATEST_NAMES)
 					.on(ADDRESSES.UUID.eq(LATEST_NAMES.UUID))
 					.where(condition)
-					.orderBy(ADDRESSES.UPDATED.asc())
-					.fetch((record) -> {
-						return new KnownAccountImpl(
-								record.get(ADDRESSES.UUID),
-								record.get(LATEST_NAMES.NAME),
-								record.get(ADDRESSES.ADDRESS),
-								record.get(ADDRESSES.UPDATED),
-								this
-						);
-					});
+					.and(pagination.seeking())
+					.orderBy(pagination.order())
+					.limit(request.pageSize)
+					.offset(request.skipCount)
+					.fetch((record) -> new KnownAccountImpl(
+							record.get(ADDRESSES.UUID),
+							record.get(LATEST_NAMES.NAME),
+							record.get(ADDRESSES.ADDRESS),
+							record.get(ADDRESSES.UPDATED),
+							this
+					));
+			return pagination.anchor().buildPage(accounts, new KeysetPage.AnchorLiaison<>() {
+                @Override
+                public BorderValueHandle<Instant> borderValueHandle() {
+                    return new InstantBorderValue(new LongBorderValue());
+                }
+
+                @Override
+                public Instant getAnchor(KnownAccount datum) {
+                    return datum.recorded();
+                }
+            });
 		}));
 	}
 
 	/**
-	 * Selects known accounts for a uuid or IP address. <br>
-	 * <br>
-	 * The returned accounts are sorted with the oldest first. See {@link AltDetection}
-	 * for a description of why this sort order is used.
+	 * Selects known accounts for a uuid or IP address.
 	 *
 	 * @param victim the uuid or IP address
-	 * @return the detected alts, sorted in order of oldest first
+	 * @param request the request details
+	 * @return the detected alts, sorted according to configuration
 	 */
-	public CentralisedFuture<List<? extends KnownAccount>> knownAccounts(Victim victim) {
+	public CentralisedFuture<KeysetPage<KnownAccount, Instant>> knownAccounts(Victim victim, Request request) {
 		if (victim instanceof PlayerVictim playerVictim) {
-			return knownAccountsWhere(ADDRESSES.UUID.eq(playerVictim.getUUID()));
+			return knownAccountsWhere(ADDRESSES.UUID.eq(playerVictim.getUUID()), request);
 
 		} else if (victim instanceof AddressVictim addressVictim) {
-			return knownAccountsWhere(ADDRESSES.ADDRESS.eq(addressVictim.getAddress()));
+			return knownAccountsWhere(ADDRESSES.ADDRESS.eq(addressVictim.getAddress()), request);
 
 		} else if (victim instanceof CompositeVictim compositeVictim) {
 			return knownAccountsWhere(ADDRESSES.UUID.eq(compositeVictim.getUUID())
-					.or(ADDRESSES.ADDRESS.eq(compositeVictim.getAddress())));
+					.or(ADDRESSES.ADDRESS.eq(compositeVictim.getAddress())), request);
 
 		} else {
 			throw MiscUtil.unknownVictimType(victim.getType());
@@ -138,4 +153,10 @@ public final class AccountHistory {
 		return AccountHistory.class.hashCode();
 	}
 
+	public record Request(int pageSize, KeysetAnchor<Instant> pageAnchor, int skipCount) {
+
+		public Request {
+			Objects.requireNonNull(pageAnchor);
+		}
+	}
 }

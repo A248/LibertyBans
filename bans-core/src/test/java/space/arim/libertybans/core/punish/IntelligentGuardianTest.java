@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -36,6 +36,7 @@ import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.core.selector.IntelligentGuardian;
 import space.arim.libertybans.core.selector.InternalSelector;
 import space.arim.libertybans.core.selector.cache.MuteCache;
+import space.arim.libertybans.core.service.FuturePoster;
 import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.libertybans.it.util.RandomUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -67,13 +68,15 @@ public class IntelligentGuardianTest {
 	}
 
 	@BeforeEach
-	public void setup(@Mock Configs configs, @Mock ScopeManager scopeManager, @Mock InternalFormatter formatter,
-					  @Mock InternalSelector selector, @Mock UUIDManager uuidManager) {
+	public void setup(@Mock Configs configs, @Mock ScopeManager scopeManager,
+					  @Mock InternalFormatter formatter, @Mock InternalSelector selector, @Mock UUIDManager uuidManager) {
 		uuid = UUID.randomUUID();
 		address = RandomUtil.randomAddress();
 
-		guardian = new IntelligentGuardian(configs, futuresFactory, scopeManager, formatter, selector, uuidManager, muteCache);
-
+		FuturePoster futurePoster = completionStage -> completionStage.toCompletableFuture().join();
+		guardian = new IntelligentGuardian(
+				configs, futurePoster, futuresFactory, scopeManager, formatter, selector, uuidManager, muteCache
+		);
 		MainConfig mainConfig = mock(MainConfig.class);
 		EnforcementConfig enforcementConfig = mock(EnforcementConfig.class);
 		lenient().when(configs.getMainConfig()).thenReturn(mainConfig);

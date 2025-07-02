@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -35,7 +35,11 @@ import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.api.select.SortPunishments;
 import space.arim.libertybans.core.service.SettableTime;
-import space.arim.libertybans.it.*;
+import space.arim.libertybans.it.DontInject;
+import space.arim.libertybans.it.InjectionInvocationContextProvider;
+import space.arim.libertybans.it.SampleData;
+import space.arim.libertybans.it.SetAddressStrictness;
+import space.arim.libertybans.it.SetAltRegistry;
 import space.arim.libertybans.it.resolver.RandomOperatorResolver;
 import space.arim.libertybans.it.util.RandomUtil;
 
@@ -86,7 +90,7 @@ public class MultipleApplicableIT {
 	@TestTemplate
 	@SetAddressStrictness(AddressStrictness.NORMAL)
 	@SetAltRegistry(all = true)
-	@IrrelevantData
+	@SampleData
 	public void selectHistory() {
 		UUID uuid = UUID.randomUUID();
 		NetworkAddress address = RandomUtil.randomAddress();
@@ -113,7 +117,7 @@ public class MultipleApplicableIT {
 	@TestTemplate
 	@SetAddressStrictness(AddressStrictness.STRICT)
 	@SetAltRegistry(all = true)
-	@IrrelevantData
+	@SampleData
 	public void avoidDuplicateApplicablePunishments() {
 		UUID uuid = UUID.randomUUID();
 		NetworkAddress address = RandomUtil.randomAddress();

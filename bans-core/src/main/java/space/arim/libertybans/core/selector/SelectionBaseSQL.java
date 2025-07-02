@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -38,22 +38,16 @@ import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.SelectionPredicate;
 import space.arim.libertybans.api.select.SortPunishments;
 import space.arim.libertybans.core.database.execute.SQLFunction;
-import space.arim.libertybans.core.database.sql.ApplicableViewFields;
-import space.arim.libertybans.core.database.sql.EndTimeCondition;
-import space.arim.libertybans.core.database.sql.PunishmentFields;
-import space.arim.libertybans.core.database.sql.ScopeCondition;
-import space.arim.libertybans.core.database.sql.SimpleViewFields;
-import space.arim.libertybans.core.database.sql.TableForType;
+import space.arim.libertybans.core.database.pagination.KeysetAnchor;
+import space.arim.libertybans.core.database.pagination.Pagination;
+import space.arim.libertybans.core.database.pagination.StartTimeThenId;
+import space.arim.libertybans.core.database.sql.*;
 import space.arim.libertybans.core.scope.ScopeType;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static org.jooq.impl.DSL.*;
 import static space.arim.libertybans.core.schema.tables.ApplicableActive.APPLICABLE_ACTIVE;
@@ -76,28 +70,28 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	 */
 
 	private <F extends PunishmentFields> F determineFields(Function<TableForType, F> forType,
-														   Function<Boolean, F> forActiveOrHistorical) {
+														   F allActive, F allHistorical) {
 		boolean active = selectActiveOnly();
 		if (active && getTypes().isSimpleEquality()) {
 			PunishmentType type = getTypes().acceptedValues().iterator().next();
 			return forType.apply(new TableForType(type));
-		} else {
-			return forActiveOrHistorical.apply(active);
+		} else if (active) {
+			return allActive;
 		}
+		return allHistorical;
 	}
 
-	SimpleViewFields<?> requestSimpleView() {
+	SimpleViewFields requestSimpleView() {
 		return determineFields(
 				TableForType::simpleView,
-				(active) -> active ? new SimpleViewFields<>(SIMPLE_ACTIVE) : new SimpleViewFields<>(SIMPLE_HISTORY)
+				new SimpleActiveFields(SIMPLE_ACTIVE), new SimpleHistoryFields(SIMPLE_HISTORY)
 		);
 	}
 
-	ApplicableViewFields<?> requestApplicableView() {
+	ApplicableViewFields requestApplicableView() {
 		return determineFields(
 				TableForType::applicableView,
-				(active) -> active ?
-						new ApplicableViewFields<>(APPLICABLE_ACTIVE) : new ApplicableViewFields<>(APPLICABLE_HISTORY)
+				new ApplicableActiveFields(APPLICABLE_ACTIVE), new ApplicableHistoryFields(APPLICABLE_HISTORY)
 		);
 	}
 
@@ -159,7 +153,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			return columns;
 		}
 
-		private Condition getPredication(Supplier<Instant> timeSupplier) {
+		private Condition getPredication() {
 			Condition condition = noCondition();
 			boolean active = selectActiveOnly();
 
@@ -175,10 +169,9 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 					.and(new ScopeCondition(fields, resources.scopeManager()).buildCondition(getScopes()));
 			if (active) {
 				condition = condition
-						.and(new EndTimeCondition(fields).isNotExpired(timeSupplier.get()));
+						.and(new EndTimeCondition(fields).isNotExpired(parameters.currentTime));
 			}
 			Instant seekAfterStartTime = seekAfterStartTime();
-			Instant seekBeforeStartTime = seekBeforeStartTime();
 			if (!seekAfterStartTime.equals(Instant.EPOCH)) {
 				long seekAfterId = seekAfterId();
 				if (seekAfterId == 0L) {
@@ -194,6 +187,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 					);
 				}
 			}
+			Instant seekBeforeStartTime = seekBeforeStartTime();
 			if (!seekBeforeStartTime.equals(Instant.MAX)) {
 				long seekBeforeId = seekBeforeId();
 				if (seekBeforeId == Long.MAX_VALUE) {
@@ -290,13 +284,24 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 		}
 
 		Query<?> constructSelect(List<Field<?>> additionalColumns, Condition additionalPredication) {
+			List<OrderField<?>> orderFields;
+			KeysetAnchor<StartTimeThenId> pageAnchor = pageAnchor();
+			if (pageAnchor == null) {
+				orderFields = buildOrdering(parameters.ordering);
+			} else {
+				Pagination<StartTimeThenId> pagination = new Pagination<>(
+						pageAnchor, false, StartTimeThenId.defineOrder(aggregateIfNeeded(fields.start()), fields.id())
+				);
+				additionalPredication = additionalPredication.and(pagination.seeking());
+				orderFields = Arrays.asList(pagination.order());
+			}
 			return new Query<>(
 					parameters.context
 							.select(getColumnsToRetrieve(additionalColumns))
 							.from(table)
-							.where(getPredication(parameters.timeSupplier).and(additionalPredication))
+							.where(getPredication().and(additionalPredication))
 							.groupBy(groupByIdForDeduplication() ? fields.id() : noField())
-							.orderBy(buildOrdering(parameters.ordering))
+							.orderBy(orderFields)
 							.offset((skipCount() == 0) ? noField(Integer.class) : val(skipCount()))
 							.limit(switch (parameters.limit) {
 								case 0 -> noField(Integer.class);
@@ -325,7 +330,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	}
 
 	record QueryParameters(DSLContext context, int limit,
-						   Supplier<Instant> timeSupplier, SortPunishments...ordering) {}
+						   Instant currentTime, SortPunishments...ordering) {}
 
 	abstract Query<?> requestQuery(QueryParameters parameters);
 
@@ -343,7 +348,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	 */
 	public String renderSingleApplicablePunishmentSQL(DSLContext context) {
 		return requestQuery(
-				new QueryParameters(context, 1, () -> Instant.EPOCH, SortPunishments.LATEST_END_DATE_FIRST)
+				new QueryParameters(context, 1, Instant.EPOCH, SortPunishments.LATEST_END_DATE_FIRST)
 		).renderSQL();
 	}
 
@@ -352,14 +357,14 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	 * during execution of incoming logins
 	 *
 	 * @param context the database access
-	 * @param timeSupplier the current time supplier
+	 * @param currentTime the current time snapshot
 	 * @param prioritization sorting prioritization
 	 * @return finds a single punishment from this selection
 	 */
-	public Punishment findFirstSpecificPunishment(DSLContext context, Supplier<Instant> timeSupplier,
+	public Punishment findFirstSpecificPunishment(DSLContext context, Instant currentTime,
 												  SortPunishments...prioritization) {
 		return requestQuery(
-				new QueryParameters(context, 1, timeSupplier, prioritization)
+				new QueryParameters(context, 1, currentTime, prioritization)
 		).fetchOne();
 	}
 
@@ -371,7 +376,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 		}
 		return resources.dbProvider().get()
 				.query(SQLFunction.readOnly((context) -> {
-					return findFirstSpecificPunishment(context, resources.time()::currentTimestamp, prioritization);
+					return findFirstSpecificPunishment(context, resources.time().currentTimestamp(), prioritization);
 				}))
 				.thenApply(Optional::ofNullable);
 	}
@@ -386,7 +391,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 				new QueryParameters(
 						context,
 						limitToRetrieve(),
-						resources.time()::currentTimestamp,
+						resources.time().currentTimestamp(),
 						ordering
 				)
 		).fetch()));
@@ -403,7 +408,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 					new QueryParameters(
 							context,
 							limitToRetrieve(),
-							resources.time()::currentTimestamp
+							resources.time().currentTimestamp()
 					)
 			);
 			return context

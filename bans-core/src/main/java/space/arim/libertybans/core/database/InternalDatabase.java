@@ -43,6 +43,13 @@ public interface InternalDatabase extends QueryExecutor {
 	void truncateAllTables();
 
 	/**
+	 * Checks if the local database needs compaction, and re-sets the file state if needed.
+	 *
+	 * @return true if compact needed, false otherwise
+	 */
+	boolean checkResetLocalDatabaseCompact();
+
+	/**
 	 * Obtains a direct JDBC connection
 	 *
 	 * @return the direct JDBC connection

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,6 +23,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
+import space.arim.api.env.annote.PlatformPlayer;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
@@ -31,6 +32,7 @@ import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
 import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
@@ -121,6 +123,11 @@ public class SelectorImpl implements InternalSelector {
 																	String destinationServer) {
 		return gatekeeper.checkServerSwitch(uuid, name, address, destinationServer,
 				scopeManager.specificScope(destinationServer), this);
+	}
+
+	@Override
+	public <@PlatformPlayer P> CentralisedFuture<Void> onJoin(P player, EnvEnforcer<P> envEnforcer) {
+		return gatekeeper.onJoin(player, envEnforcer);
 	}
 
 	@Override

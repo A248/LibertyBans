@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,6 +24,7 @@ import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.PunishmentType;
@@ -42,7 +43,12 @@ import space.arim.libertybans.core.commands.extra.TabCompletion;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.ListSection;
 import space.arim.libertybans.core.config.ListSection.ListType;
+import space.arim.libertybans.core.database.pagination.BorderValueHandle;
+import space.arim.libertybans.core.database.pagination.KeysetAnchor;
+import space.arim.libertybans.core.database.pagination.KeysetPage;
+import space.arim.libertybans.core.database.pagination.StartTimeThenId;
 import space.arim.libertybans.core.env.CmdSender;
+import space.arim.libertybans.core.selector.SelectionBuilderBaseImpl;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.ReactionStage;
 
@@ -166,7 +172,7 @@ public class ListCommands extends AbstractSubCommandGroup {
 			};
 		}
 
-		private <V> ReactionStage<Void> historyOrWarns(CentralisedFuture<V> parseVictim,
+		private <V> ReactionStage<Void> historyOrWarns(CentralisedFuture<@Nullable V> parseVictim,
 													   Function<@NonNull V, SelectionBuilderBase<?, ?>> createSelection) {
 			return parseVictim.thenCompose((victim) -> {
 				if (victim == null) {
@@ -184,10 +190,16 @@ public class ListCommands extends AbstractSubCommandGroup {
 		}
 
 		private ReactionStage<Void> parsePageThenExecute(SelectionBuilderBase<?, ?> selectionBuilder) {
-			int selectedPage = parsePage();
-			if (selectedPage <= 0) {
+			KeysetAnchor<StartTimeThenId> pageAnchor = KeysetAnchor.startTimeThenId(command());
+			if (pageAnchor == null) {
 				sender().sendMessage(section.usage());
 				return completedFuture(null);
+			}
+			int pageSize = section.perPage();
+			int skipCount = 0;
+			if (pageAnchor.borderValue() == null) {
+				// Traditional pagination
+				skipCount = (pageAnchor.page() - 1) * pageSize;
 			}
 			SelectionPredicate<ServerScope> scopeSelection = argumentParser().parseScope(
 					sender(), command(), ParseScope.selectionPredicate()
@@ -195,32 +207,19 @@ public class ListCommands extends AbstractSubCommandGroup {
 			if (scopeSelection == null) {
 				return completedFuture(null);
 			}
-			int perPage = section.perPage();
+			((SelectionBuilderBaseImpl<?, ?>) selectionBuilder).setPageAnchor(pageAnchor);
 			SelectionBase selection = selectionBuilder
 					.scopes(scopeSelection)
-					.skipFirstRetrieved(perPage * (selectedPage - 1))
-					.limitToRetrieve(perPage)
+					.skipFirstRetrieved(skipCount)
+					.limitToRetrieve(pageSize)
 					.build();
-			return continueWithPageAndSelection(selection, selectedPage);
+			return continueWithPageAndSelection(selection, pageAnchor);
 		}
 
-		private int parsePage() {
-			int page = 1;
-			if (command().hasNext()) {
-				String rawPage = command().next();
-				try {
-					page = Integer.parseInt(rawPage);
-				} catch (NumberFormatException ex) {
-					page = -1;
-				}
-			}
-			return page;
-		}
-
-		private ReactionStage<Void> continueWithPageAndSelection(SelectionBase selection, int page) {
-			return selection.getAllSpecificPunishments().thenCompose((punishments) -> {
-				return showPunishmentsOnPage(punishments, page);
-			});
+		private ReactionStage<Void> continueWithPageAndSelection(SelectionBase selection, KeysetAnchor<StartTimeThenId> pageAnchor) {
+			return selection.getAllSpecificPunishments().thenCompose(
+					(punishments) -> showPunishmentsOnPage(punishments, pageAnchor)
+			);
 		}
 
 		private String replaceTargetIn(String str) {
@@ -242,9 +241,21 @@ public class ListCommands extends AbstractSubCommandGroup {
 			}
 		}
 
-		private CentralisedFuture<Void> showPunishmentsOnPage(List<Punishment> punishments, int page) {
+		private CentralisedFuture<Void> showPunishmentsOnPage(List<Punishment> punishments,
+															  KeysetAnchor<StartTimeThenId> pageAnchor) {
+			KeysetPage<Punishment, StartTimeThenId> keysetPage = pageAnchor.buildPage(punishments, new KeysetPage.AnchorLiaison<>() {
+                @Override
+                public BorderValueHandle<StartTimeThenId> borderValueHandle() {
+                    return StartTimeThenId.borderValueHandle();
+                }
+
+                @Override
+                public StartTimeThenId getAnchor(Punishment datum) {
+                    return new StartTimeThenId(datum.getStartDate(), datum.getIdentifier());
+                }
+            });
 			if (punishments.isEmpty()) {
-				noPunishmentsOnThisPage(page);
+				noPunishmentsOnThisPage(pageAnchor.page());
 				return completedFuture(null);
 			}
 
@@ -254,15 +265,19 @@ public class ListCommands extends AbstractSubCommandGroup {
 				entries.put(punishment, formatter.formatWithPunishment(body, punishment));
 			}
 
-			String pageString = Integer.toString(page);
-			String nextPageString = Integer.toString(page + 1);
-			String previousPageString = Integer.toString(page - 1);
+			int page = pageAnchor.page();
 			class HeaderFooterReplacer implements UnaryOperator<String> {
-				@Override
+
+				private final KeysetPage<?, ?>.VariableReplacer pageReplacer = keysetPage.new VariableReplacer(page);
+
+                @Override
 				public String apply(String str) {
-					str = str.replace("%PAGE%", pageString)
-							.replace("%NEXTPAGE%", nextPageString)
-							.replace("%PREVIOUSPAGE%", previousPageString);
+					str = pageReplacer.apply(str);
+					// Legacy variable - predates pagination overhaul
+					String legacyVar = "%PREVIOUSPAGE%";
+					if (str.contains(legacyVar)) {
+						str = str.replace(legacyVar, Integer.toString(page - 1));
+					}
 					return replaceTargetIn(str);
 				}
 			}

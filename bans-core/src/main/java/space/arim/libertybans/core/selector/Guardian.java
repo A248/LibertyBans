@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,7 +21,9 @@ package space.arim.libertybans.core.selector;
 
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import space.arim.api.env.annote.PlatformPlayer;
 import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.net.InetAddress;
@@ -113,4 +115,11 @@ public interface Guardian {
 		return checkChat(uuid, NetworkAddress.of(address), command);
 	}
 
+	/**
+	 * Called when the player logs in. Currently used for delayed alts auto show if bypass permissions are enabled
+	 *
+	 * @param player the player
+	 * @param envEnforcer the environment enforcer
+	 */
+	<@PlatformPlayer P> void onJoin(P player, EnvEnforcer<P> envEnforcer);
 }
