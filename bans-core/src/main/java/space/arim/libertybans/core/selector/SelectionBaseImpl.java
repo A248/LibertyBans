@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,12 +19,15 @@
 
 package space.arim.libertybans.core.selector;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.EscalationTrack;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.SelectionBase;
 import space.arim.libertybans.api.select.SelectionPredicate;
+import space.arim.libertybans.core.database.pagination.KeysetAnchor;
+import space.arim.libertybans.core.database.pagination.StartTimeThenId;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -42,7 +45,8 @@ abstract class SelectionBaseImpl implements SelectionBase {
 				   SelectionPredicate<Operator> operators, SelectionPredicate<ServerScope> scopes,
 				   SelectionPredicate<Optional<EscalationTrack>> escalationTracks,
 				   boolean selectActiveOnly, int skipCount, int limitToRetrieve,
-				   Instant seekAfterStartTime, long seekAfterId, Instant seekBeforeStartTime, long seekBeforeId) {
+				   Instant seekAfterStartTime, long seekAfterId, Instant seekBeforeStartTime, long seekBeforeId,
+				   KeysetAnchor<StartTimeThenId> pageAnchor) {
 
 		Details {
 			Objects.requireNonNull(types, "types");
@@ -111,6 +115,10 @@ abstract class SelectionBaseImpl implements SelectionBase {
 	@Override
 	public long seekBeforeId() {
 		return details.seekBeforeId;
+	}
+
+	@Nullable KeysetAnchor<StartTimeThenId> pageAnchor() {
+		return details.pageAnchor;
 	}
 
 	@Override

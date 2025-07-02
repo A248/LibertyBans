@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,7 +32,7 @@ import java.util.UUID;
 public interface AccountSupervisor {
 
 	/**
-	 * Begins to detects alts for the given player
+	 * Builder to detect alts for the given player
 	 *
 	 * @param uuid the player's UUID
 	 * @param address the player's address
@@ -41,7 +41,7 @@ public interface AccountSupervisor {
 	AltDetectionQuery.Builder detectAlts(UUID uuid, NetworkAddress address);
 
 	/**
-	 * Finds accounts matching the given UUID
+	 * Lists all recorded log-ons for the given UUID.
 	 *
 	 * @param uuid the uuid
 	 * @return all matching accounts
@@ -49,7 +49,7 @@ public interface AccountSupervisor {
 	CentralisedFuture<List<? extends KnownAccount>> findAccountsMatching(UUID uuid);
 
 	/**
-	 * Finds accounts matching the given address
+	 * Lists all recorded log-ons for the given address.
 	 *
 	 * @param address the address
 	 * @return all matching accounts
@@ -57,7 +57,7 @@ public interface AccountSupervisor {
 	CentralisedFuture<List<? extends KnownAccount>> findAccountsMatching(NetworkAddress address);
 
 	/**
-	 * Finds accounts matching the given UUID or address
+	 * Lists all recorded log-ons originating from either the given UUID or the given address.
 	 *
 	 * @param uuid the uuid
 	 * @param address the address

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -57,9 +57,9 @@ import static space.arim.libertybans.core.schema.Tables.HISTORY;
 import static space.arim.libertybans.core.schema.Tables.NAMES;
 import static space.arim.libertybans.core.schema.Tables.PUNISHMENTS;
 import static space.arim.libertybans.core.schema.Tables.SIMPLE_ACTIVE;
-import static space.arim.libertybans.core.schema.Tables.SIMPLE_HISTORY;
 import static space.arim.libertybans.core.schema.Tables.VICTIMS;
 import static space.arim.libertybans.core.schema.Tables.WARNS;
+import static space.arim.libertybans.core.schema.tables.SimpleHistory.SIMPLE_HISTORY;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
 public class SelfImportIT {
@@ -138,9 +138,15 @@ public class SelfImportIT {
 							scopeManager.globalScope(), Instant.ofEpochSecond(1636139831L), Instant.MAX, null
 					),
 					context
-							.selectFrom(SIMPLE_ACTIVE)
+							.select(
+									SIMPLE_ACTIVE.TYPE,
+									SIMPLE_ACTIVE.VICTIM_TYPE, SIMPLE_ACTIVE.VICTIM_UUID, SIMPLE_ACTIVE.VICTIM_ADDRESS,
+									SIMPLE_ACTIVE.OPERATOR, SIMPLE_ACTIVE.REASON, SIMPLE_ACTIVE.SCOPE,
+									SIMPLE_ACTIVE.START, SIMPLE_ACTIVE.END, SIMPLE_ACTIVE.TRACK, SIMPLE_ACTIVE.SCOPE_TYPE
+							)
+							.from(SIMPLE_ACTIVE)
 							.where(SIMPLE_ACTIVE.ID.eq(17L))
-							.fetchSingle(creator.punishmentMapper())
+							.fetchSingle(creator.punishmentMapper(17L))
 			);
 			assertEquals(
 					creator.createPunishment(
@@ -149,9 +155,15 @@ public class SelfImportIT {
 							scopeManager.globalScope(), Instant.ofEpochSecond(1636916014L), Instant.MAX, null
 					),
 					context
-							.selectFrom(SIMPLE_ACTIVE)
+							.select(
+									SIMPLE_ACTIVE.TYPE,
+									SIMPLE_ACTIVE.VICTIM_TYPE, SIMPLE_ACTIVE.VICTIM_UUID, SIMPLE_ACTIVE.VICTIM_ADDRESS,
+									SIMPLE_ACTIVE.OPERATOR, SIMPLE_ACTIVE.REASON, SIMPLE_ACTIVE.SCOPE,
+									SIMPLE_ACTIVE.START, SIMPLE_ACTIVE.END, SIMPLE_ACTIVE.TRACK, SIMPLE_ACTIVE.SCOPE_TYPE
+							)
+							.from(SIMPLE_ACTIVE)
 							.where(SIMPLE_ACTIVE.ID.eq(44L))
-							.fetchSingle(creator.punishmentMapper())
+							.fetchSingle(creator.punishmentMapper(44L))
 			);
 			assertEquals(
 					creator.createPunishment(
@@ -160,9 +172,15 @@ public class SelfImportIT {
 							scopeManager.globalScope(), Instant.ofEpochSecond(1638635845L), Instant.ofEpochSecond(1639240645L), null
 					),
 					context
-							.selectFrom(SIMPLE_HISTORY)
+							.select(
+									SIMPLE_HISTORY.TYPE,
+									SIMPLE_HISTORY.VICTIM_TYPE, SIMPLE_HISTORY.VICTIM_UUID, SIMPLE_HISTORY.VICTIM_ADDRESS,
+									SIMPLE_HISTORY.OPERATOR, SIMPLE_HISTORY.REASON, SIMPLE_HISTORY.SCOPE,
+									SIMPLE_HISTORY.START, SIMPLE_HISTORY.END, SIMPLE_HISTORY.TRACK, SIMPLE_HISTORY.SCOPE_TYPE
+							)
+							.from(SIMPLE_HISTORY)
 							.where(SIMPLE_HISTORY.ID.eq(135L))
-							.fetchSingle(creator.punishmentMapper())
+							.fetchSingle(creator.punishmentMapper(135L))
 			);
 		}).join();
 	}

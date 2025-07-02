@@ -1,19 +1,19 @@
-/* 
- * LibertyBans-core
- * Copyright © 2020 Anand Beh <https://www.arim.space>
- * 
- * LibertyBans-core is free software: you can redistribute it and/or modify
+/*
+ * LibertyBans
+ * Copyright © 2025 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
- * LibertyBans-core is distributed in the hope that it will be useful,
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
- * along with LibertyBans-core. If not, see <https://www.gnu.org/licenses/>
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 package space.arim.libertybans.core.config;
@@ -95,7 +95,7 @@ public interface ListSection {
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans banlist %NEXTPAGE%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans banlist %NEXTPAGE_KEY%"})
 		ComponentText layoutFooter();
 		
 	}
@@ -140,7 +140,7 @@ public interface ListSection {
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans mutelist %NEXTPAGE%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans mutelist %NEXTPAGE_KEY%"})
 		ComponentText layoutFooter();
 		
 	}
@@ -185,7 +185,7 @@ public interface ListSection {
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans history %TARGET% %NEXTPAGE%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans history %TARGET% %NEXTPAGE_KEY%"})
 		ComponentText layoutFooter();
 		
 	}
@@ -228,7 +228,7 @@ public interface ListSection {
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE_KEY%"})
 		ComponentText layoutFooter();
 		
 	}
@@ -273,7 +273,7 @@ public interface ListSection {
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE_KEY%"})
 		ComponentText layoutFooter();
 		
 	}

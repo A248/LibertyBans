@@ -29,35 +29,43 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 import space.arim.libertybans.core.env.PlatformListener;
-import space.arim.libertybans.core.scope.ServerNameListenerBase;
+import space.arim.libertybans.core.scope.ServerNameListener;
+import space.arim.libertybans.core.selector.Guardian;
 
 @Singleton
-public final class ServerNameListener implements PlatformListener, Listener {
+public final class JoinListener implements PlatformListener, Listener {
 
 	private final Plugin plugin;
-	private final ServerNameListenerBase<Player, ?> baseImpl;
+	private final Guardian guardian;
+	private final ServerNameListener<Player, ?> serverNameListener;
+	private final SpigotEnforcer spigotEnforcer;
 
 	@Inject
-	public ServerNameListener(Plugin plugin, ServerNameListenerBase<Player, ?> baseImpl) {
+	public JoinListener(Plugin plugin, Guardian guardian,
+						ServerNameListener<Player, ?> serverNameListener, SpigotEnforcer spigotEnforcer) {
 		this.plugin = plugin;
-		this.baseImpl = baseImpl;
-	}
+        this.guardian = guardian;
+        this.serverNameListener = serverNameListener;
+        this.spigotEnforcer = spigotEnforcer;
+    }
 
 	@Override
 	public void register() {
-		baseImpl.register();
+		serverNameListener.register();
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
 
 	@Override
 	public void unregister() {
 		HandlerList.unregisterAll(this);
-		baseImpl.unregister();
+		serverNameListener.unregister();
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
 	public void onJoin(PlayerJoinEvent event) {
-		baseImpl.onJoin(event.getPlayer());
+		Player player = event.getPlayer();
+		guardian.onJoin(player, spigotEnforcer);
+		serverNameListener.onJoin(player, spigotEnforcer);
 	}
 
 }

@@ -30,5 +30,16 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface IrrelevantData {
+public @interface SampleData {
+
+    /**
+     * The source of the sample data. Currently only blue tree's is available
+     *
+     * @return the data source
+     */
+    Source source() default Source.BlueTree;
+
+    enum Source {
+        BlueTree
+    }
 }

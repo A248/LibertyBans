@@ -128,29 +128,10 @@ public final class StandardDatabase implements InternalDatabase, AutoCloseable {
 
 	void closeCompletely() {
 		if (getVendor() == Vendor.HSQLDB) {
-			boolean needsCompact;
-			// Keep track of the date of the last compaction
-			Path storeCompactAt = folder.resolve("internal").resolve("last_database_compact");
-			try {
-				Instant currentTime = Instant.now();
-				Instant lastTime;
-				if (Files.exists(storeCompactAt)) {
-					lastTime = Instant.ofEpochSecond(ByteBuffer.wrap(Files.readAllBytes(storeCompactAt)).getLong());
-					needsCompact = Duration.between(lastTime, currentTime).toDays() >= 30L;
-				} else {
-					needsCompact = true;
-				}
-				if (needsCompact) {
-					Files.write(storeCompactAt, ByteBuffer.allocate(Long.BYTES).putLong(currentTime.getEpochSecond()).array());
-				}
-			} catch (IOException | BufferUnderflowException ex) {
-				logger.warn("Unable to update {}", storeCompactAt, ex);
-				needsCompact = false;
-			}
 			String command;
-			if (needsCompact) {
+			if (checkResetLocalDatabaseCompact()) {
 				command = "SHUTDOWN COMPACT";
-				logger.info("Compacting the local database with '{}'", command);
+				logger.info("Compacting the local database with {}", command);
 			} else {
 				command = "SHUTDOWN";
 			}
@@ -221,6 +202,30 @@ public final class StandardDatabase implements InternalDatabase, AutoCloseable {
 				context.deleteFrom(table).execute();
 			}
 		}).join();
+	}
+
+	@Override
+	public boolean checkResetLocalDatabaseCompact() {
+		boolean needsCompact;
+		// Keep track of the date of the last compaction
+		Path storeCompactAt = folder.resolve("internal").resolve("last_database_compact");
+		try {
+			Instant currentTime = Instant.now();
+			Instant lastTime;
+			if (Files.exists(storeCompactAt)) {
+				lastTime = Instant.ofEpochSecond(ByteBuffer.wrap(Files.readAllBytes(storeCompactAt)).getLong());
+				needsCompact = Duration.between(lastTime, currentTime).toDays() >= 30L;
+			} else {
+				needsCompact = true;
+			}
+			if (needsCompact) {
+				Files.write(storeCompactAt, ByteBuffer.allocate(Long.BYTES).putLong(currentTime.getEpochSecond()).array());
+			}
+		} catch (IOException | BufferUnderflowException ex) {
+			logger.warn("Unable to update {}", storeCompactAt, ex);
+			needsCompact = false;
+		}
+		return needsCompact;
 	}
 
 	@Override

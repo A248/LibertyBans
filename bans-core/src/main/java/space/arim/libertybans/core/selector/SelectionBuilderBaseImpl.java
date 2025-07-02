@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.selector;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.EscalationTrack;
@@ -26,12 +27,14 @@ import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.SelectionBase;
 import space.arim.libertybans.api.select.SelectionBuilderBase;
 import space.arim.libertybans.api.select.SelectionPredicate;
+import space.arim.libertybans.core.database.pagination.KeysetAnchor;
+import space.arim.libertybans.core.database.pagination.StartTimeThenId;
 
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
-abstract class SelectionBuilderBaseImpl<B extends SelectionBuilderBase<B, S>, S extends SelectionBase>
+public abstract class SelectionBuilderBaseImpl<B extends SelectionBuilderBase<B, S>, S extends SelectionBase>
 		implements SelectionBuilderBase<B, S> {
 
 	private SelectionPredicate<PunishmentType> types = SelectionPredicate.matchingAll();
@@ -45,6 +48,7 @@ abstract class SelectionBuilderBaseImpl<B extends SelectionBuilderBase<B, S>, S 
 	private long seekAfterId;
 	private Instant seekBeforeStartTime = Instant.MAX;
 	private long seekBeforeId;
+	private KeysetAnchor<StartTimeThenId> pageAnchor;
 
 	abstract B yieldSelf();
 
@@ -112,11 +116,15 @@ abstract class SelectionBuilderBaseImpl<B extends SelectionBuilderBase<B, S>, S 
 		return yieldSelf();
 	}
 
+	public void setPageAnchor(@Nullable KeysetAnchor<StartTimeThenId> pageAnchor) {
+		this.pageAnchor = pageAnchor;
+	}
+
 	@Override
 	public S build() {
 		return buildWith(new SelectionBaseImpl.Details(
 				types, operators, scopes, escalationTracks, selectActiveOnly, skipCount, limitToRetrieve,
-				seekAfterStartTime, seekAfterId, seekBeforeStartTime, seekBeforeId
+				seekAfterStartTime, seekAfterId, seekBeforeStartTime, seekBeforeId, pageAnchor
 		));
 	}
 

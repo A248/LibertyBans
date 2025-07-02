@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2024 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -94,7 +94,7 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 				yield new VictimCondition(fields).simplyMatches(uuid, address);
 			}
 			case NORMAL -> {
-				ApplicableViewFields<?> applView = requestApplicableView();
+				ApplicableViewFields applView = requestApplicableView();
 				fields = applView;
 				table = fields.table();
 				if (potentialNewEntrant) {
@@ -113,10 +113,10 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 				yield applView.uuid().eq(uuid); // appl.uuid = uuid
 			}
 			case STERN -> {
+				ApplicableViewFields applView = requestApplicableView();
+				fields = applView;
 				if (potentialNewEntrant) {
-					ApplicableViewFields<?> applView = requestApplicableView();
-					fields = applView;
-					table = fields
+                    table = fields
 							.table()
 							.leftJoin(STRICT_LINKS)
 							.on(applView.uuid().eq(STRICT_LINKS.UUID1));
@@ -137,8 +137,6 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 							))
 					);
 				}
-				ApplicableViewFields<?> applView = requestApplicableView();
-				fields = applView;
 				table = fields
 						.table()
 						.innerJoin(STRICT_LINKS)
@@ -149,10 +147,10 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 						STRICT_LINKS.UUID2.eq(uuid).and(applView.victimType().notEqual(inline(VictimType.PLAYER))));
 			}
 			case STRICT -> {
+				ApplicableViewFields applView = requestApplicableView();
+				fields = applView;
 				if (potentialNewEntrant) {
-					ApplicableViewFields<?> applView = requestApplicableView();
-					fields = applView;
-					table = fields
+                    table = fields
 							.table()
 							.leftJoin(STRICT_LINKS)
 							.on(applView.uuid().eq(STRICT_LINKS.UUID1));
@@ -165,8 +163,6 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 							STRICT_LINKS.UUID2.isNotNull().and(STRICT_LINKS.UUID2.eq(uuid))
 					);
 				}
-				ApplicableViewFields<?> applView = requestApplicableView();
-				fields = applView;
 				table = fields
 						.table()
 						.innerJoin(STRICT_LINKS)

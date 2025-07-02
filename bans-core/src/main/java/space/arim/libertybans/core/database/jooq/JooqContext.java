@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,11 +19,7 @@
 
 package space.arim.libertybans.core.database.jooq;
 
-import org.jooq.ConnectionProvider;
-import org.jooq.DSLContext;
-import org.jooq.ExecuteListenerProvider;
-import org.jooq.Log;
-import org.jooq.SQLDialect;
+import org.jooq.*;
 import org.jooq.conf.BackslashEscaping;
 import org.jooq.conf.MappedSchema;
 import org.jooq.conf.MappedTable;
@@ -32,17 +28,21 @@ import org.jooq.conf.Settings;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DefaultConfiguration;
 import org.jooq.impl.NoConnectionProvider;
-import org.jooq.tools.JooqLogger;
 
 import java.sql.Connection;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+import static space.arim.libertybans.core.database.DatabaseConstants.TABLE_PREFIX;
+
 public final class JooqContext {
 
 	static {
 		// Silence JOOQ warnings about our database version
-		JooqLogger.globalThreshold(Log.Level.ERROR);
+		System.setProperty(
+				"org.jooq.log.org.jooq.impl.DefaultExecuteContext.logVersionSupport",
+				Log.Level.ERROR.name()
+		);
 	}
 
 	private final SQLDialect dialect;
@@ -59,7 +59,7 @@ public final class JooqContext {
 
 	private static final Pattern MATCH_ALL_EXCEPT_INFORMATION_SCHEMA = Pattern.compile("^(?!INFORMATION_SCHEMA)(.*?)$");
 	static final Pattern MATCH_ALL = Pattern.compile("^(.*?)$");
-	static final String REPLACEMENT = "libertybans_$0";
+	static final String REPLACEMENT_ADDS_PREFIX = TABLE_PREFIX + "$0";
 
 	public DSLContext createContext(Connection connection) {
 		record SimpleConnectionProvider(Connection connection) implements ConnectionProvider {
@@ -100,10 +100,16 @@ public final class JooqContext {
 								.withInputExpression(MATCH_ALL_EXCEPT_INFORMATION_SCHEMA)
 								.withTables(new MappedTable()
 										.withInputExpression(MATCH_ALL)
-										.withOutput(REPLACEMENT)
+										.withOutput(REPLACEMENT_ADDS_PREFIX)
 								)
 						)
-				);
+				)
+				.withTransformPatternsUnnecessaryDistinct(false)
+				.withTransformPatternsUnnecessaryExistsSubqueryClauses(false)
+				.withTransformPatternsUnnecessaryGroupByExpressions(false)
+				.withTransformPatternsUnnecessaryInnerJoin(false)
+				.withTransformPatternsUnnecessaryOrderByExpressions(false)
+				.withTransformPatternsUnnecessaryScalarSubquery(false);
 	}
 
 	@Override

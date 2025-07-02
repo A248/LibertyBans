@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,37 +20,51 @@
 package space.arim.libertybans.core.database.sql;
 
 import org.jooq.Field;
-import org.jooq.Record;
-import org.jooq.Record2;
-import org.jooq.Table;
+import space.arim.libertybans.core.schema.tables.Bans;
+import space.arim.libertybans.core.schema.tables.Mutes;
+import space.arim.libertybans.core.schema.tables.Warns;
 
-import java.util.Objects;
+public interface RawPunishmentFields extends TableFieldAccessor {
+	Field<Long> id();
 
-public final class RawPunishmentFields<R extends Record2<Long, Integer>> implements TableFieldAccessor {
+	Field<Integer> victimId();
+}
 
-	private final Table<R> dataTable;
-
-	public RawPunishmentFields(Table<R> dataTable) {
-		this.dataTable = Objects.requireNonNull(dataTable, "dataTable");
-	}
+record RawBansFields(Bans table) implements RawPunishmentFields {
 
 	@Override
-	public Table<? extends Record> table() {
-		return dataTable;
-	}
-
 	public Field<Long> id() {
-		return dataTable.newRecord().field1();
-	}
-
-	public Field<Integer> victimId() {
-		return dataTable.newRecord().field2();
+		return table.ID;
 	}
 
 	@Override
-	public String toString() {
-		return "RawPunishmentFields{" +
-				"dataTable=" + dataTable +
-				'}';
+	public Field<Integer> victimId() {
+		return table.VICTIM;
+	}
+}
+
+record RawMutesFields(Mutes table) implements RawPunishmentFields {
+
+	@Override
+	public Field<Long> id() {
+		return table.ID;
+	}
+
+	@Override
+	public Field<Integer> victimId() {
+		return table.VICTIM;
+	}
+}
+
+record RawWarnsFields(Warns table) implements RawPunishmentFields {
+
+	@Override
+	public Field<Long> id() {
+		return table.ID;
+	}
+
+	@Override
+	public Field<Integer> victimId() {
+		return table.VICTIM;
 	}
 }

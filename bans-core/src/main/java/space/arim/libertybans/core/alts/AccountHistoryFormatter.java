@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,32 +22,32 @@ package space.arim.libertybans.core.alts;
 import jakarta.inject.Inject;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
-import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.user.KnownAccount;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.database.pagination.KeysetPage;
 
 import java.time.Instant;
-import java.util.List;
 
 public class AccountHistoryFormatter {
 
 	private final Configs configs;
-	private final ListFormat<KnownAccount> listFormat;
+	private final InternalFormatter formatter;
 
 	@Inject
 	public AccountHistoryFormatter(Configs configs, InternalFormatter formatter) {
 		this.configs = configs;
-		listFormat = new ListFormat<>(formatter, new KnownAccountFormat(configs, formatter));
+		this.formatter = formatter;
 	}
 
-	public Component formatMessage(String target, List<? extends KnownAccount> knownAccounts) {
-		ComponentText header = configs.getMessagesConfig().accountHistory().listing().header();
-		return listFormat.formatMessage(header, target, knownAccounts);
+	public Component formatMessage(KeysetPage<KnownAccount, Instant> response, String target, int page) {
+		return new FormatAccounts<>(configs.getMessagesConfig().accountHistory().listing(), response).format(
+				target, page, new KnownAccountFormat(configs, formatter)
+		);
 	}
 
 	private record KnownAccountFormat(Configs configs, InternalFormatter formatter)
-			implements ListFormat.ElementFormat<KnownAccount> {
+			implements FormatAccounts.ElementFormat<KnownAccount> {
 
 		@Override
 		public ComponentLike format(String target, KnownAccount knownAccount) {

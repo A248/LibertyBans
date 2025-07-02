@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -36,8 +36,10 @@ final class InjectorCleanupCallback implements AfterEachCallback {
 
 	@Override
 	public void afterEach(ExtensionContext context) throws Exception {
-		// Reset database
-		injector.request(InternalDatabase.class).truncateAllTables();
+		// Reset database + prevent unneeded compact
+		InternalDatabase database = injector.request(InternalDatabase.class);
+		database.truncateAllTables();
+		database.checkResetLocalDatabaseCompact();
 		// Reset global clock
 		injector.request(SettableTime.class).reset();
 		// Reset synchronization

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -36,6 +36,7 @@ public final class DatabaseConstants {
 	static final long SOCKET_TIMEOUT = Duration.ofSeconds(30L).toMillis();
 
 	public static final String LIBERTYBANS_08X_FLYWAY_TABLE = "libertybans_flyway";
+	public static final String TABLE_PREFIX = "libertybans_";
 
 	private DatabaseConstants() {}
 

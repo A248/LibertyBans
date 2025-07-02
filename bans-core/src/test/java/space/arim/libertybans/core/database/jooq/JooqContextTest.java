@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static space.arim.libertybans.core.database.jooq.JooqContext.MATCH_ALL;
-import static space.arim.libertybans.core.database.jooq.JooqContext.REPLACEMENT;
+import static space.arim.libertybans.core.database.jooq.JooqContext.REPLACEMENT_ADDS_PREFIX;
 
 public class JooqContextTest {
 
@@ -31,6 +31,6 @@ public class JooqContextTest {
 	public void remapTables() {
 		assertEquals(
 				"libertybans_revision",
-				MATCH_ALL.matcher("revision").replaceAll(REPLACEMENT));
+				MATCH_ALL.matcher("revision").replaceAll(REPLACEMENT_ADDS_PREFIX));
 	}
 }

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,11 +21,7 @@ package space.arim.libertybans.core.alts;
 
 import net.kyori.adventure.text.Component;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
-import space.arim.dazzleconf.annote.ConfComments;
-import space.arim.dazzleconf.annote.ConfDefault;
-import space.arim.dazzleconf.annote.ConfHeader;
-import space.arim.dazzleconf.annote.ConfKey;
-import space.arim.dazzleconf.annote.SubSection;
+import space.arim.dazzleconf.annote.*;
 
 @ConfHeader({
 		"Messages for alt-checks and alt account notifications",
@@ -40,24 +36,58 @@ public interface AltsSection {
 	Command command();
 
 	@ConfHeader("Regarding the /alts command")
-	interface Command {
+	interface Command extends AccountListFormatting {
 
-		@ConfDefault.DefaultString("&cUsage: /alts &e<player>&c.")
+		@ConfDefault.DefaultString("&cUsage: /alts &e<player> [page]&c.")
 		Component usage();
 
 		@ConfDefault.DefaultString("&cYou may not check alts.")
 		Component permission();
 
 		@ConfKey("none-found")
-		@ConfDefault.DefaultString("&7No alt accounts found")
-		Component noneFound();
+		@ConfDefault.DefaultString("&7Page does not exist.")
+		ComponentText noneFound();
 
-		@ConfComments("The message to display atop the alt check. Set to an empty string to disable")
+		@Override
+		@ConfComments({
+				"The message to display atop the alt check. Set to an empty string to disable.",
+				"Available variables:",
+				"%TARGET% - the target user",
+				"%PAGE% - the current page number",
+				"%NEXTPAGE% - the next page number",
+				"%NEXTPAGE_KEY% - a code which if used with the command, shows the next page",
+				"%LASTPAGE% - the last page number",
+				"%LASTPAGE_KEY% - a code which if used with the command, shows the last page"
+		})
 		@ConfDefault.DefaultStrings({
 				"&7Alt account report for &c&o%TARGET%&7 follows.",
 				"&7Strong possibility - Same address as banned player.",
 				"&7Mere possibility - Linked to banned player by common past address"})
 		ComponentText header();
+
+		@ConfKey("oldest-first")
+		@ConfComments("Whether to sort by oldest detections first")
+		@ConfDefault.DefaultBoolean(true)
+		boolean oldestFirst();
+
+		@ConfComments("Amount of alts to display per page")
+		@ConfKey("per-page")
+		@IntegerRange(min = 1)
+		@ConfDefault.DefaultInteger(10)
+		int perPage();
+
+		@Override
+		@ConfComments("The separator between list entries")
+		@ConfDefault.DefaultString("")
+		Component separator();
+
+		@Override
+		@ConfComments({
+				"How to format the footer. This is sent after every page.",
+				"Available variables are the same as for the header."
+		})
+		@ConfDefault.DefaultString("&7<Next Page>||ttp:Click for next page||cmd:/libertybans alts %TARGET% %NEXTPAGE_KEY%")
+		ComponentText footer();
 
 	}
 
@@ -65,14 +95,37 @@ public interface AltsSection {
 	@ConfKey("auto-show")
 	AutoShow autoShow();
 
-	interface AutoShow {
+	interface AutoShow extends AccountListFormatting {
 
+		@Override
 		@ConfComments("The message to display atop the alt check. Set to an empty string to disable")
 		@ConfDefault.DefaultStrings({
-				"&c&o%TARGET%&7 may be an alt account. Report follows.",
+				"&c&o%TARGET%&7 may be an alt account. Some of the accounts they're linked to are listed below.",
 				"&7Strong possibility - Same address as banned player.",
 				"&7Mere possibility - Linked to banned player by common past address"})
 		ComponentText header();
+
+		@ConfKey("oldest-first")
+		@ConfComments("Whether to sort by oldest detections first")
+		@ConfDefault.DefaultBoolean(true)
+		boolean oldestFirst();
+
+		@ConfComments("After this many alts, they will stop being shown.")
+		@ConfKey("limit")
+		@IntegerRange(min = 1)
+		@ConfDefault.DefaultInteger(4)
+		int limit();
+
+		@Override
+		@ConfComments("The separator between list entries")
+		@ConfDefault.DefaultString(", ")
+		Component separator();
+
+		@Override
+		@ConfComments("The message following the alt-check. Set to an empty string to disable. %TARGET% available.")
+		@ConfDefault.DefaultString("")
+		ComponentText footer();
+
 	}
 
 	@SubSection
@@ -82,7 +135,7 @@ public interface AltsSection {
 
 		@ConfComments({
 				"How a single detected alt should be displayed",
-				"Available variables:",
+				"In addition to header/footer variables, the following are provided:",
 				"%DETECTION_KIND% - how the account was detected. Will be replaced by the normal or strict options.",
 				"%ADDRESS% - the address in question which led to the detection",
 				"%RELEVANT_USER% - the username of the other account, formatted according to the name-display option",

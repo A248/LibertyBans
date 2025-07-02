@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,6 +28,8 @@ import javax.sql.DataSource;
 import java.util.List;
 import java.util.Map;
 
+import static space.arim.libertybans.core.database.DatabaseConstants.TABLE_PREFIX;
+
 public final class MigrateWithFlyway {
 
 	private final DataSource dataSource;
@@ -37,8 +39,6 @@ public final class MigrateWithFlyway {
 		this.dataSource = dataSource;
 		this.vendor = vendor;
 	}
-
-	private static final String TABLE_PREFIX = "libertybans_";
 
 	public void migrate(JooqContext jooqContext) throws MigrationFailedException {
 		Flyway flyway = createFlyway(new MigrationState(jooqContext));

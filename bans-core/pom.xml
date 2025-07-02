@@ -251,7 +251,7 @@
 			<plugin>
 				<groupId>io.fabric8</groupId>
 				<artifactId>docker-maven-plugin</artifactId>
-				<version>0.38.1</version>
+				<version>0.45.1</version>
 			</plugin>
 		</plugins>
 	</build>
@@ -358,7 +358,6 @@
 								<libertybans.it.postgres.modern.port>${it.postgres.modern.port}</libertybans.it.postgres.modern.port>
 								<libertybans.it.cockroachdb.port>${it.cockroachdb.port}</libertybans.it.cockroachdb.port>
 							</systemPropertyVariables>
-							<argLine>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005</argLine>
 						</configuration>
 					</plugin>
 				</plugins>
@@ -441,7 +440,7 @@
 									</run>
 								</image>
 								<image>
-									<name>mariadb:11.4</name>
+									<name>mariadb:11.8</name>
 									<alias>mariadb-modern</alias>
 									<run>
 										<env>

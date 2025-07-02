@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -70,10 +70,6 @@ public enum DatabaseInstance {
 			logger.info("No database port configured for {}", name());
 		}
 		this.port = port;
-	}
-
-	public Vendor getVendor() {
-		return vendor;
 	}
 
 	static Stream<DatabaseInstance> matchingVendor(Vendor vendor) {
