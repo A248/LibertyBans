@@ -136,7 +136,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
-      footer: '&7页码 &e%PAGE%&7.||ttp:点击跳转到 下一页||cmd:/libertybans banlist %NEXTPAGE%'
+      footer: '&7页码 &e%PAGE%&7.||ttp:点击跳转到 下一页||cmd:/libertybans banlist %NEXTPAGE_KEY%'
 
     usage: '&c用法: /banlist &e[页码]'
     maxPages: '&7页码 &e%PAGE%&7 并不存在。'
@@ -150,7 +150,7 @@ lists:
     layout:
       header: '&7[&eID&7] 操作者 &8/ &7理由 &8/ &7剩余有效期&f'
       body: '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
-      footer: '&7页码 &e%PAGE%&7.||ttp:点击跳转到 下一页||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&7页码 &e%PAGE%&7.||ttp:点击跳转到 下一页||cmd:/libertybans warns %TARGET% %NEXTPAGE_KEY%'
 
     usage: '&c用法: /warns &e<玩家> [页码]'
     maxPages: '&7页码 &e%PAGE%&7 并不存在。'
@@ -168,7 +168,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM% &8 / &7%TYPE%&f'
         - '&7%REASON% &8/ &7%START_DATE%&f'
-      footer: '&7页码 &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&7页码 &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans blame %TARGET% %NEXTPAGE_KEY%'
 
     usage: '&c用法: /blame &e<玩家> [页码]'
     maxPages: '&7页码 &e%PAGE%&7 并不存在。'
@@ -186,7 +186,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
-      footer: '&7Page &e%PAGE%&7.||ttp:点击跳转 下一页||cmd:/libertybans mutelist %NEXTPAGE%'
+      footer: '&7Page &e%PAGE%&7.||ttp:点击跳转 下一页||cmd:/libertybans mutelist %NEXTPAGE_KEY%'
 
     usage: '&c用法: /mutelist &e[页码]'
     maxPages: '&7页码 &e%PAGE%&7 并不存在。'
@@ -204,7 +204,7 @@ lists:
       body:
         - '&7[&e%ID%&7] / %TYPE%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%&f'
-      footer: '&7页码 &e%PAGE%&7.||ttp:点击跳转 下一页||cmd:/libertybans history %TARGET% %NEXTPAGE%'
+      footer: '&7页码 &e%PAGE%&7.||ttp:点击跳转 下一页||cmd:/libertybans history %TARGET% %NEXTPAGE_KEY%'
 
     usage: '&c用法: /history &e<玩家> [页码]'
     maxPages: '&7页码 &e%PAGE%&7 并不存在。'

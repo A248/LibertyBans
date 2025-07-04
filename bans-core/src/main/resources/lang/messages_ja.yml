@@ -112,7 +112,7 @@ lists:
       body:
         - '&7[&e%ID%&7] / %TYPE%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%&f'
-      footer: '&e%PAGE%&7ページ目||ttp:クリックして次のページへ||cmd:/libertybans history %TARGET% %NEXTPAGE%'
+      footer: '&e%PAGE%&7ページ目||ttp:クリックして次のページへ||cmd:/libertybans history %TARGET% %NEXTPAGE_KEY%'
       header:
         - '&7[&e番号&7] &8/ &7罰則&f'
         - '&7担当者 &8/ &7違反内容 &8/ &7施行日&f'
@@ -130,7 +130,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
-      footer: '&e%PAGE%&7ページ目||ttp:クリックして次のページへ||cmd:/libertybans banlist %NEXTPAGE%'
+      footer: '&e%PAGE%&7ページ目||ttp:クリックして次のページへ||cmd:/libertybans banlist %NEXTPAGE_KEY%'
       header:
         - '&7[&e番号&7] &e&o違反者&f'
         - '&7担当者 &8/ &7違反内容 &8/ &7施行日&f'
@@ -148,7 +148,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
-      footer: '&e%PAGE%&7ページ目||ttp:クリックして次のページへ||cmd:/libertybans mutelist %NEXTPAGE%'
+      footer: '&e%PAGE%&7ページ目||ttp:クリックして次のページへ||cmd:/libertybans mutelist %NEXTPAGE_KEY%'
       header:
         - '&7[&e番号&7] &e&o違反者&f'
         - '&7担当者 &8/ &7違反内容 &8/ &7施行日&f'
@@ -166,7 +166,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM% &8 / &7%TYPE%&f'
         - '&7%REASON% &8/ &7%START_DATE%&f'
-      footer: '&e%PAGE%&7ページ目||ttp:クリックして次のページへ||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&e%PAGE%&7ページ目||ttp:クリックして次のページへ||cmd:/libertybans blame %TARGET% %NEXTPAGE_KEY%'
       header:
         - '&7[&e番号&7] &e&o違反者 &8/ &7罰則&f'
         - '&7違反内容 &8/ &7施行日&f'
@@ -182,7 +182,7 @@ lists:
     perPage: 10
     layout:
       body: '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
-      footer: '&e%PAGE%&7ページ目||ttp:クリックして次のページへ||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&e%PAGE%&7ページ目||ttp:クリックして次のページへ||cmd:/libertybans warns %TARGET% %NEXTPAGE_KEY%'
       header: '&7[&e番号&7] 担当者 &8/ &7違反内容 &8/ &7期間&f'
 
     noPages: '&c&o%TARGET%&7は警告を受けていません。'

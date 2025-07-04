@@ -30,7 +30,7 @@
  # 
  # The following variables have limited availability:
  # %TARGET% - the original target argument of a command. For example, in '/ipban Player1', %TARGET% is Player1
- # %NEXTPAGE% - the number of the next page of a list like history
+ # %NEXTPAGE_KEY% - the number of the next page of a list like history
  # %PREVIOUSPAGE% - the number of the previous page of a list like history
  # 
  # 
@@ -46,7 +46,7 @@ lists:
     layout:
       header: '&7[&eID&7] Operateur &8/ &7Raison &8/ &7Temps restant&f'
       body: '&7[&e%ID%&7] %OPERATO% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
-      footer: '&7La page &e%PAGE%&7.||ttp:Page suivante||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&7La page &e%PAGE%&7.||ttp:Page suivante||cmd:/libertybans warns %TARGET% %NEXTPAGE_KEY%'
 
     usage: '&cUsage: /warns &e<joueur> [page]'
 
@@ -64,7 +64,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM% &8 / &7%TYPE%&f'
         - '&7%REASON% &8/ &7%START_DATE%&f'
-      footer: '&7La page &e%PAGE%&7.||ttp:Page suivante||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&7La page &e%PAGE%&7.||ttp:Page suivante||cmd:/libertybans blame %TARGET% %NEXTPAGE_KEY%'
 
     usage: '&cUsage: /blame &e<joueur> [page]'
 
@@ -82,7 +82,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
-      footer: '&7La page &e%PAGE%&7.||ttp:Page suivante||cmd:/libertybans banlist %NEXTPAGE%'
+      footer: '&7La page &e%PAGE%&7.||ttp:Page suivante||cmd:/libertybans banlist %NEXTPAGE_KEY%'
 
     usage: '&cUsage: /banlist &e[page]'
 
@@ -100,7 +100,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
-      footer: '&7Page &e%PAGE%&7.||ttp:Page suivante||cmd:/libertybans mutelist %NEXTPAGE%'
+      footer: '&7Page &e%PAGE%&7.||ttp:Page suivante||cmd:/libertybans mutelist %NEXTPAGE_KEY%'
 
     usage: '&cUsage: /mutelist &e[page]'
 
@@ -118,7 +118,7 @@ lists:
       body:
         - '&7[&e%ID%&7] / %TYPE%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%&f'
-      footer: '&7Page &e%PAGE%&7.||ttp:Page suivante||cmd:/libertybans history %TARGET% %NEXTPAGE%'
+      footer: '&7Page &e%PAGE%&7.||ttp:Page suivante||cmd:/libertybans history %TARGET% %NEXTPAGE_KEY%'
 
     usage: '&cUsage: /history &e<joueur> [page]'
 

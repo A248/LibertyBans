@@ -76,7 +76,7 @@ lists:
     noPages: '&c&o%TARGET%&7 nie ma żadnych ostrzeżeń.'
     layout:
       header: '&7[&eID&7] Operator &8/ &7Powód &8/ &7Pozostały czas&f'
-      footer: '&7Strona &e%PAGE%&7.||ttp:Kliknij, aby przejść do następnej strony||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&7Strona &e%PAGE%&7.||ttp:Kliknij, aby przejść do następnej strony||cmd:/libertybans warns %TARGET% %NEXTPAGE_KEY%'
       body: '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
 
     maxPages: '&7Strona &e%PAGE%&7 nie istnieje.'
@@ -92,7 +92,7 @@ lists:
       header:
         - '&7[&eID&7] &e&oTemat &8/ &7Rodzaj kary&f'
         - '&7Powód &8/ &7Data Nadania&f'
-      footer: '&7Strona &e%PAGE%&7.||ttp:Kliknij, aby przejść do następnej strony||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&7Strona &e%PAGE%&7.||ttp:Kliknij, aby przejść do następnej strony||cmd:/libertybans blame %TARGET% %NEXTPAGE_KEY%'
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM% &8 / &7%TYPE%&f'
         - '&7%REASON% &8/ &7%START_DATE%&f'
@@ -110,7 +110,7 @@ lists:
       header:
         - '&7[&eID&7] &e&oTemat&f'
         - '&7Operator &8/ &7Powód &8/ &7Pozostały czas&f'
-      footer: '&7Strona &e%PAGE%&7.||ttp:Kliknij, aby przejść do następnej strony||cmd:/libertybans banlist %NEXTPAGE%'
+      footer: '&7Strona &e%PAGE%&7.||ttp:Kliknij, aby przejść do następnej strony||cmd:/libertybans banlist %NEXTPAGE_KEY%'
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
@@ -128,7 +128,7 @@ lists:
       header:
         - '&7[&eID&7] &e&oTemat&f'
         - '&7Operator &8/ &7Powód &8/ &7Pozostały czas&f'
-      footer: '&7Strona &e%PAGE%&7.||ttp:Kliknij, aby przejść do następnej strony||cmd:/libertybans mutelist %NEXTPAGE%'
+      footer: '&7Strona &e%PAGE%&7.||ttp:Kliknij, aby przejść do następnej strony||cmd:/libertybans mutelist %NEXTPAGE_KEY%'
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
@@ -146,7 +146,7 @@ lists:
       header:
         - '&7[&eID&7] &8/ &7Rodzaj kary&f'
         - '&7Operator &8/ &7Reason &8/ &7Date Enacted&f'
-      footer: '&7Strona &e%PAGE%&7.||ttp:Kliknij, aby przejść do następnej strony||cmd:/libertybans history %TARGET% %NEXTPAGE%'
+      footer: '&7Strona &e%PAGE%&7.||ttp:Kliknij, aby przejść do następnej strony||cmd:/libertybans history %TARGET% %NEXTPAGE_KEY%'
       body:
         - '&7[&e%ID%&7] / %TYPE%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%&f'

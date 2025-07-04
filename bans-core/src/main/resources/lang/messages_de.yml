@@ -50,7 +50,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
-      footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans banlist %NEXTPAGE%'
+      footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans banlist %NEXTPAGE_KEY%'
 
     usage: '&cSyntax: /banlist &e[Seite]'
 
@@ -68,7 +68,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
-      footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans mutelist %NEXTPAGE%'
+      footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans mutelist %NEXTPAGE_KEY%'
 
     usage: '&cSyntax: /mutelist &e[Seite]'
 
@@ -86,7 +86,7 @@ lists:
       body:
         - '&7[&e%ID%&7] / %TYPE%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%&f'
-      footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans history %TARGET% %NEXTPAGE%'
+      footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans history %TARGET% %NEXTPAGE_KEY%'
 
     usage: '&cSyntax: /history &e<Spieler> [Seite]'
 
@@ -100,7 +100,7 @@ lists:
     layout:
       header: '&7[&eID&7] Ausführender &8/ &7Grund &8/ &7Verbleibende Zeit&f'
       body: '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
-      footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans warns %TARGET% %NEXTPAGE_KEY%'
 
     usage: '&cSyntax: /warns &e<Spieler> [Seite]'
 
@@ -118,7 +118,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM% &8 / &7%TYPE%&f'
         - '&7%REASON% &8/ &7%START_DATE%&f'
-      footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&7Seite &e%PAGE%&7.||ttp:Klicke für die nächste Seite||cmd:/libertybans blame %TARGET% %NEXTPAGE_KEY%'
 
     usage: '&cSyntax: /blame &e<Spieler> [Seite]'
 

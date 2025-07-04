@@ -43,7 +43,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%'
-      footer: '&7Páigna &e%PAGE%&7.||ttp:Click para siguiente página||cmd:/libertybans banlist %NEXTPAGE%'
+      footer: '&7Páigna &e%PAGE%&7.||ttp:Click para siguiente página||cmd:/libertybans banlist %NEXTPAGE_KEY%'
 
     perPage: 10
     usage: '&cUso: /banlist &e[página]'
@@ -61,7 +61,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%'
-      footer: '&7Página &e%PAGE%&7.||ttp:Click para la siguiente página||cmd:/libertybans mutelist %NEXTPAGE%'
+      footer: '&7Página &e%PAGE%&7.||ttp:Click para la siguiente página||cmd:/libertybans mutelist %NEXTPAGE_KEY%'
 
     perPage: 10
     usage: '&cUso: /mutelist &e[página]'
@@ -75,7 +75,7 @@ lists:
     layout:
       header: '&7[&eID&7] Operador &8/ &7Razón &8/ &7Tiempo Restante'
       body: '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%'
-      footer: '&7Página &e%PAGE%&7.||ttp:Click para la siguiente página||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&7Página &e%PAGE%&7.||ttp:Click para la siguiente página||cmd:/libertybans warns %TARGET% %NEXTPAGE_KEY%'
 
     perPage: 10
     usage: '&cUso: /warns &e<jugador> [página]'
@@ -93,7 +93,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM% &r&8 / &7%TYPE%'
         - '%REASON% &8/ &7%START_DATE%'
-      footer: '&7Página &e%PAGE%&7.||ttp:Click para la siguiente página||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&7Página &e%PAGE%&7.||ttp:Click para la siguiente página||cmd:/libertybans blame %TARGET% %NEXTPAGE_KEY%'
 
     perPage: 10
     usage: '&cUso: /blame &e<jugador> [página]'
@@ -111,7 +111,7 @@ lists:
       body:
         - '&7[&e%ID%&7] / %TYPE%'
         - '%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%'
-      footer: '&7Página &e%PAGE%&7.||ttp:Click para la página siguiente||cmd:/libertybans history %TARGET% %NEXTPAGE%'
+      footer: '&7Página &e%PAGE%&7.||ttp:Click para la página siguiente||cmd:/libertybans history %TARGET% %NEXTPAGE_KEY%'
 
     perPage: 10
     usage: '&cUso: /history &e<jugador> [página]'

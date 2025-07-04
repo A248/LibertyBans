@@ -273,7 +273,7 @@ public interface ListSection {
 		
 		@Override
 		@ConfKey("layout.footer")
-		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans warns %TARGET% %NEXTPAGE_KEY%"})
+		@DefaultStrings({"&7Page &e%PAGE%&7.||ttp:Click for next page||cmd:/libertybans blame %TARGET% %NEXTPAGE_KEY%"})
 		ComponentText layoutFooter();
 		
 	}

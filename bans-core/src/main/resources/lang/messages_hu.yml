@@ -40,7 +40,7 @@ lists:
       header:
         - '&7[&eID&7] &8/ &7Büntetés típusa&f'
         - '&7Kiosztó &8/ &7Ok &8/ &7Kiosztás napja&f'
-      footer: '&7Oldal: &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans history %TARGET% %NEXTPAGE%'
+      footer: '&7Oldal: &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans history %TARGET% %NEXTPAGE_KEY%'
 
     perPage: 10
     maxPages: '&7A(z) &e%PAGE%&7. oldal nem létezik.'
@@ -58,7 +58,7 @@ lists:
       header:
         - '&7[&eID&7] &e&oTárgy&f'
         - '&7Kiosztó &8/ &7Ok &8/ &7Hátralévő Idő&f'
-      footer: '&7Oldal &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans mutelist %NEXTPAGE%'
+      footer: '&7Oldal &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans mutelist %NEXTPAGE_KEY%'
 
     perPage: 10
     maxPages: '&7A(z) &e%PAGE%&7. oldal nem létezik.'
@@ -76,7 +76,7 @@ lists:
       header:
         - '&7[&eID&7] &e&oTárgy&f'
         - '&7Kiosztó &8/ &7Ok &8/ &7Hátralévő Idő&f'
-      footer: '&7Oldal &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans banlist %NEXTPAGE%'
+      footer: '&7Oldal &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans banlist %NEXTPAGE_KEY%'
 
     perPage: 10
     maxPages: '&7A(z) &e%PAGE%&7. oldal nem létezik.'
@@ -90,7 +90,7 @@ lists:
     layout:
       body: '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
       header: '&7[&eID&7] Kiosztó &8/ &7Ok &8/ &7Hátralévő Idő&f'
-      footer: 'Oldal &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: 'Oldal &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans warns %TARGET% %NEXTPAGE_KEY%'
 
     perPage: 10
     maxPages: '&7A(z) &e%PAGE%&7. oldal nem létezik.'
@@ -108,7 +108,7 @@ lists:
       header:
         - '&7[&eID&7] &e&oTéma &8/ &7Kioszás Fajtája&f'
         - '&7Ok &8/ &7Hatályba Lépés Dátuma&f'
-      footer: 'Oldal &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: 'Oldal &e%PAGE%&7.||ttp:Nyomj ide a követekző oldalért||cmd:/libertybans blame %TARGET% %NEXTPAGE_KEY%'
 
     perPage: 10
     maxPages: '&7A(z) &e%PAGE%&7. oldal nem létezik.'

@@ -50,7 +50,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
-      footer: '&7頁面 &e%PAGE%&7.||ttp:點擊到下一頁||cmd:/libertybans banlist %NEXTPAGE%'
+      footer: '&7頁面 &e%PAGE%&7.||ttp:點擊到下一頁||cmd:/libertybans banlist %NEXTPAGE_KEY%'
 
     usage: '&c用法: /banlist &e[page]'
 
@@ -68,7 +68,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
-      footer: '&7頁面 &e%PAGE%&7.||ttp:點擊到下一頁||cmd:/libertybans mutelist %NEXTPAGE%'
+      footer: '&7頁面 &e%PAGE%&7.||ttp:點擊到下一頁||cmd:/libertybans mutelist %NEXTPAGE_KEY%'
 
     usage: '&c用法: /mutelist &e[page]'
 
@@ -82,7 +82,7 @@ lists:
     layout:
       header: '&7[&eID&7] 執行者 &8/ &7原因 &8/ &7剩餘時間&f'
       body: '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
-      footer: '&7頁面 &e%PAGE%&7.||ttp:點擊到下一頁||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&7頁面 &e%PAGE%&7.||ttp:點擊到下一頁||cmd:/libertybans warns %TARGET% %NEXTPAGE_KEY%'
 
     usage: '&c用法: /warns &e<player> [page]'
 
@@ -100,7 +100,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM% &8 / &7%TYPE%&f'
         - '&7%REASON% &8/ &7%START_DATE%&f'
-      footer: '&7頁面 &e%PAGE%&7.||ttp:點擊到下一頁||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&7頁面 &e%PAGE%&7.||ttp:點擊到下一頁||cmd:/libertybans blame %TARGET% %NEXTPAGE_KEY%'
 
     usage: '&c用法: /blame &e<player> [page]'
 
@@ -118,7 +118,7 @@ lists:
       body:
         - '&7[&e%ID%&7] / %TYPE%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%&f'
-      footer: '&7頁面 &e%PAGE%&7.||ttp:點擊到下一頁||cmd:/libertybans history %TARGET% %NEXTPAGE%'
+      footer: '&7頁面 &e%PAGE%&7.||ttp:點擊到下一頁||cmd:/libertybans history %TARGET% %NEXTPAGE_KEY%'
 
     usage: '&c用法: /history &e<player> [page]'
 

@@ -46,7 +46,7 @@ lists:
     layout:
       header: '&7[&eID&7] Обвиняющий &8/ &7Причина &8/ &7До снятия'
       body: '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%'
-      footer: '&7Страница &e%PAGE%&7.||ttp:Следующая страница||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&7Страница &e%PAGE%&7.||ttp:Следующая страница||cmd:/libertybans warns %TARGET% %NEXTPAGE_KEY%'
 
     usage: '&cИспользование: /warns &e<игрок> [страница]'
 
@@ -64,7 +64,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM% &8 / &7%TYPE%&f'
         - '%REASON% &8/ &7%START_DATE%'
-      footer: '&7Страница &e%PAGE%&7.||ttp:Следующая страница||cmd:/libertybans warns %TARGET% %NEXTPAGE%'
+      footer: '&7Страница &e%PAGE%&7.||ttp:Следующая страница||cmd:/libertybans blame %TARGET% %NEXTPAGE_KEY%'
 
     usage: '&cИспользование: /blame &e<игрок> [страница]'
 
@@ -82,7 +82,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%'
-      footer: '&7Страница &e%PAGE%&7.||ttp:Следующая страница||cmd:/libertybans banlist %NEXTPAGE%'
+      footer: '&7Страница &e%PAGE%&7.||ttp:Следующая страница||cmd:/libertybans banlist %NEXTPAGE_KEY%'
 
     usage: '&cИспользование: /banlist &e[страница]'
 
@@ -100,7 +100,7 @@ lists:
       body:
         - '&7[&e%ID%&7] &e&o%VICTIM%&f'
         - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%'
-      footer: '&7Страница &e%PAGE%&7.||ttp:Следующая страница||cmd:/libertybans mutelist %NEXTPAGE%'
+      footer: '&7Страница &e%PAGE%&7.||ttp:Следующая страница||cmd:/libertybans mutelist %NEXTPAGE_KEY%'
 
     usage: '&cИспользование: /mutelist &e[страница]'
 
@@ -118,7 +118,7 @@ lists:
       body:
         - '&7[&e%ID%&7] / %TYPE%&f'
         - '%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%'
-      footer: '&7Страница &e%PAGE%&7.||ttp:Следуюшая страница||cmd:/libertybans history %TARGET% %NEXTPAGE%'
+      footer: '&7Страница &e%PAGE%&7.||ttp:Следуюшая страница||cmd:/libertybans history %TARGET% %NEXTPAGE_KEY%'
 
     usage: '&cИспользование: /history &e<игрок> [страница]'
 
