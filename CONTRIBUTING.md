@@ -137,7 +137,7 @@ Using `mvn clean verify` will build and run all tests, including integration tes
 
 If you prefer not to run the integration tests yourself, that's fine. Simply let the CI take care of it.
 
-**Guide**
+**Examples**
 
 Many integration tests rely on docker and can be heavy, so consider disabling the docker detection:
 ```bash

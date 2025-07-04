@@ -132,22 +132,23 @@ public final class Gatekeeper {
 																	String destinationServer, ServerScope serverScope,
 																	SelectorImpl selector) {
 		if (!configs.getMainConfig().platforms().proxies().enforceServerSwitch()) {
-			return null;
+			return futuresFactory.completedFuture(null);
 		}
-
 		return queryExecutor.get().queryWithRetry((context, transaction) -> {
 			Instant currentTime = time.currentTimestamp();
 			var altsRegistry = configs.getMainConfig().enforcement().altsRegistry();
 			boolean registerOnConnection = altsRegistry.shouldRegisterOnConnection();
 			List<String> serversWithoutAssociation = altsRegistry.serversWithoutRegistration();
 
-			if (!registerOnConnection && !serversWithoutAssociation.contains(destinationServer)) {
+			boolean recordUserAssociation = !registerOnConnection && !serversWithoutAssociation.contains(destinationServer);
+			if (recordUserAssociation) {
 				doAssociation(uuid, name, address, currentTime, context);
 			}
 
 			return selector.selectionByApplicabilityBuilder(uuid, address)
 					.type(PunishmentType.BAN)
 					.scopes(SelectionPredicate.matchingOnly(serverScope))
+					.canAssumeUserRecorded(registerOnConnection || recordUserAssociation)
 					.build()
 					.findFirstSpecificPunishment(context, currentTime, SortPunishments.LATEST_END_DATE_FIRST);
 		}).thenCompose((punishment) -> {

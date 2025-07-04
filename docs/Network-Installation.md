@@ -42,9 +42,18 @@ By default, LibertyBans records the UUID and IP address of every user who logs i
 
 To remedy this, you should use a limbo server. A limbo server is a specific backend server where unauthenticated users go, and they can't leave the limbo server unless logged in.
 
-After setting up a limbo server, you have two options:
-* If running LibertyBans on the proxy, look at the `alts-registry` setting in the config.yml. There, you can ensure that players joining the limbo server won't have their IP addresses recorded.
-* If running LibertyBans on the backend servers, LibertyBans should only be installed on the backend servers where fully authenticated players can join. That is, every server *except* the limbo server.
+After setting up a limbo server, look at the `alts-registry` setting in the config.yml. There, you can ensure that players joining the limbo server won't have their IP addresses recorded. Steps:
+* If running LibertyBans on the proxy:
+  * Set `register-on-connection` to false.
+  * Write the names of the limbo servers under `servers-without-ip-registration`.
+* If running LibertyBans on the backend servers:
+  * Set `register-on-connection` to false in the limbo servers' LibertyBans config.
+  * Set `register-on-connection` to true everywhere else. 
+
+Alternatively, you could use partial installation of LibertyBans (on some backend servers) to achieve the same effect:
+  * Only install LibertyBans on the backend servers where fully authenticated players can join. That is, every backend server *except* the limbo server.
+  * This will achieve the same goal of not logging false IP address history, and you won't need to touch the `alts-registry` settings.
+  * Note that banned players will be able to join the limbo servers, but that may not matter to you.
 
 ### Multiple Proxies
 
