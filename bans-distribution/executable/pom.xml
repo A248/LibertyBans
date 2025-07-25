@@ -138,5 +138,9 @@
 			<artifactId>slf4j-simple</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>flyway-patch</artifactId>
+		</dependency>
 	</dependencies>
 </project>

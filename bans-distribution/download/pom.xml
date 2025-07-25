@@ -1,6 +1,6 @@
 <!--
   ~ LibertyBans
-  ~ Copyright © 2023 Anand Beh
+  ~ Copyright © 2025 Anand Beh
   ~
   ~ LibertyBans is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as
@@ -31,10 +31,6 @@
 	<artifactId>bans-download</artifactId>
 	<description>Implementation jar with dependencies shaded. Downloaded at runtime.</description>
 
-	<properties>
-		<bans-distribution.module-hash>${self-implementation.hash}</bans-distribution.module-hash>
-	</properties>
-	
 	<build>
 		<plugins>
 			<plugin>
@@ -43,10 +39,11 @@
 				<configuration>
 					<artifactSet>
 						<excludes>
+							<!-- bootstrap-related -->
 							<exclude>space.arim.libertybans:bans-api</exclude>
 							<exclude>space.arim.omnibus:omnibus</exclude>
 							<exclude>space.arim.libertybans:bans-bootstrap</exclude>
-
+							<!-- platform-provided -->
 							<exclude>org.slf4j:slf4j-api</exclude>
 							<exclude>org.yaml:snakeyaml</exclude>
 							<exclude>com.google.code.gson:gson</exclude>
@@ -56,6 +53,8 @@
 							<exclude>org.jetbrains:annotations</exclude>
 							<exclude>com.github.ben-manes.caffeine:caffeine</exclude>
 							<exclude>jakarta.inject:jakarta.inject-api</exclude>
+							<!-- replaced -->
+							<exclude>org.flywaydb:flyway-core</exclude>
 						</excludes>
 					</artifactSet>
 				</configuration>
@@ -91,6 +90,15 @@
 							<execution>
 								<id>verify-hash</id>
 								<phase>verify</phase>
+								<configuration>
+									<rules>
+										<requireFileChecksum>
+											<file>${project.build.directory}/${project.build.finalName}.jar</file>
+											<checksum>${self-implementation.hash}</checksum>
+											<type>sha512</type>
+										</requireFileChecksum>
+									</rules>
+								</configuration>
 							</execution>
 						</executions>
 					</plugin>
@@ -119,6 +127,10 @@
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
 			<artifactId>bans-env-standalone</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>flyway-patch</artifactId>
 		</dependency>
 	</dependencies>
 </project>

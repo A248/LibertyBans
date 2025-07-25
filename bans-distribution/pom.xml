@@ -1,3 +1,22 @@
+<!--
+  ~ LibertyBans
+  ~ Copyright © 2025 Anand Beh
+  ~
+  ~ LibertyBans is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
+  ~
+  ~ LibertyBans is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
+  ~ and navigate to version 3 of the GNU Affero General Public License.
+  -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -13,11 +32,6 @@
 	<packaging>pom</packaging>
 	<description>Parent pom for distribution-related modules.</description>
 
-	<properties>
-		<bans-distribution.can-deploy>true</bans-distribution.can-deploy>
-		<bans-distribution.module-hash/>
-	</properties>
-	
 	<build>
 		<plugins>
 			<plugin>
@@ -38,22 +52,6 @@
 									<all>false</all>
 									<message>You need to enable the deploy-snapshot profile, or the check-hash profile if performing a release</message>
 								</requireActiveProfile>
-							</rules>
-						</configuration>
-					</execution>
-					<execution>
-						<id>verify-hash</id>
-						<phase>none</phase> <!-- Disable by default -->
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<requireFileChecksum>
-									<file>${project.build.directory}/${project.build.finalName}.jar</file>
-									<checksum>${bans-distribution.module-hash}</checksum>
-									<type>sha512</type>
-								</requireFileChecksum>
 							</rules>
 						</configuration>
 					</execution>
@@ -81,6 +79,7 @@
 	</build>
 
 	<modules>
+		<module>flyway-patch</module>
 		<module>download</module>
 		<module>distributable</module>
 		<module>executable</module>
@@ -88,6 +87,12 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
+				<artifactId>flyway-patch</artifactId>
+				<version>${project.version}</version>
+				<scope>runtime</scope>
+			</dependency>
 			<dependency>
 				<groupId>space.arim.libertybans</groupId>
 				<artifactId>bans-distributable</artifactId>

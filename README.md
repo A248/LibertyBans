@@ -63,6 +63,7 @@ Free software and high quality, LibertyBans is the best-designed punishment plug
   * Manual /alts command - shows suspected alt accounts for a player.
   * Alts notification on join - tells staff members when a player whose suspected alt is banned or muted.
 * Exemption. For example, trainees cannot ban admins; admins cannot ban owners.
+* Layouts & punishment templates. For example, the first mute for swearing lasts 10 days, the next is for 30 days, and the third mute is permanent. Supports calculating the reason, time, and even punishment type.
 * Options and behaviour are fully configurable. You can even tweak your connection pool and statement cache settings to fine-tune performance.
 * Full multi-proxy and multi-instance support. You can place LibertyBans on the proxy if you use a single proxy, or on multiple backend servers.
 * All dependencies are automatically downloaded with secure SHA-512 hashes used to validate the downloads. Additionally, builds of LibertyBans are reproducible from the source code, meaning checksums can be personally verified.
@@ -86,10 +87,11 @@ Compatibility with Geyser/Floodgate usernames. Platform forks supported where re
 
 LibertyBans will work out-of-the-box for most users.
 
-* When using a single proxy, it is recommended, but not required, to install LibertyBans on the proxy itself.
+If you're running a proxy:
+* When using a single proxy, it is recommended to install LibertyBans on the proxy itself.
 * LibertyBans can also be installed on the backend servers if you are willing to configure multi-instance synchronization.
 
-For installing on the backend servers and synchronizing punishments, see the wiki for additional information.
+See also [this wiki page](https://docs.libertybans.org/#/Network-Installation) on proxy installation.
 
 ### Developer API
 

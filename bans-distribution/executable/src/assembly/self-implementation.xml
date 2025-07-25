@@ -58,6 +58,8 @@
                 <exclude>org.checkerframework:checker-qual</exclude>
                 <exclude>com.google.errorprone:error_prone_annotations</exclude>
                 <exclude>org.jetbrains:annotations</exclude>
+                <!-- replaced -->
+                <exclude>org.flywaydb:flyway-core</exclude>
             </excludes>
         </dependencySet>
     </dependencySets>
