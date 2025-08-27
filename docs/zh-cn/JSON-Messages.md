@@ -1,40 +1,40 @@
-JSON messages in LibertyBans are based on RezzedUp's [json.sk](https://www.spigotmc.org/resources/json-sk.8851/). If you have used Skript's JSON.sk or otherwise already use json.sk formatting, you don't need to read this guide. All messages can use json.sk formatting.
+LibertyBans中使用的JSON消息是基于RezzedUp的[json.sk](https://www.spigotmc.org/resources/json-sk.8851/)库。如果您使用过Skript的json.sk功能，或者已经用过json.sk格式，您无需阅读此指南。所有的消息都可以使用json.sk格式。
 
-### What is JSON in Minecraft? ###
+### Minecraft中的JSON起什么作用？
 
-JSON is a way of sending complex messages to players. JSON lets you send hoverable text, clickable links, and much more, putting dynamism in your chat with user-friendly messages.
+JSON可以向玩家发送复杂的消息。您可以通过JSON发送悬浮文本、可点击的链接等，在用户友好的聊天消息提示上提供更多的灵活性。
 
-You may be familiar with the `/tellraw` command. Using /tellraw, you can send JSON messages to other players. However, the format of tellraw is not the best. It looks like: `tellraw @a ["",{"text":"Basic","bold":true,"color":"yellow"},{"text":" tellraw example with ","color":"yellow"},{"text":"tooltip","color":"yellow","hoverEvent":{"action":"show_text","value":"Hey look at this"}},{"text":" and ","color":"yellow"},{"text":"command","color":"yellow","clickEvent":{"action":"run_command","value":"/kill"}}]`.
+您可能熟悉`/tellraw`命令。使用/tellraw命令，您可以想其他玩家发送JSON消息。不过，tellraw的消息格式不是最优的。它看起来像这样：`tellraw @a ["",{"text":"Basic","bold":true,"color":"yellow"},{"text":" tellraw example with ","color":"yellow"},{"text":"tooltip","color":"yellow","hoverEvent":{"action":"show_text","value":"Hey look at this"}},{"text":" and ","color":"yellow"},{"text":"command","color":"yellow","clickEvent":{"action":"run_command","value":"/kill"}}]`.
 
-### How do I use the JSON Format?
+### 我该如何使用JSON格式？
 
-The JSON format revolves around **clusters**. You can create a new cluster like so:
-`this is part 1.||part 2 - a new cluser!`
+JSON格式围绕**文本块**展开。您可以像这样创建文本块：
+`这是第1部分||第2部分：新的文本块！`
 
-Clusters aren't useful unless you add something to them. These are the available JSON tags:
-* `ttp:` - adds a *tooltip*. If a player moves their cursor over the tooltip, they will see the specified text.
-* `cmd:` - adds a command. If a player clicks the text, they will run the specified command.
-* `sgt:` - adds a suggestion. If a player clicks the text, the specified text will enter their chat input.
-* `url:` - adds a URL. If a player clicks the text, it will take them to the URL.
+文本块本身不那么有用，但是当您向它添加一些东西后就不一样了。以下是可用的JSON标签：
+* `ttp:` - 添加一个*工具提示*。如果玩家把鼠标悬停在工具提示上面，他就会看到指定的文字。
+* `cmd:` - 添加一个命令。如果玩家点击文本，他就会执行指定的命令。
+* `sgt:` - 添加一个命令提示。如果玩家点击文本，指定的文字就会出现在他的聊天栏中。
+* `url:` - 添加一个URL。如果玩家点击文本，就会打开URL指向的内容。
 
-Take a look at this:
+请看以下案例：
 
 ```
-"&7&oHello, this is a &bsample json&7.||ttp:&bI'm a tooltip for the first cluster.|| There's no tag, so I've started a new cluster.||cmd:/ping||ttp:&6&o&lCLICK&f for /ping")
-||___________________________________|  |________________________________________||||_____________________________________________|  |_______|  |_________________________||
-|            Average Text                                Tooltip                  ||                 Average Text                   Run Command           Tooltip          |
-|_________________________________________________________________________________||_______________________________________________________________________________________|
-                                  JSON Cluster #1                                                                           JSON Cluster #2
+"&7&o你好，这是一个&b示例JSON文本。&7.||ttp:&b这是第一部分的工具提示。||这里没有新的标签，所以这里是一个新的文本块。||cmd:/ping||ttp:&6&o&l点击&f执行/ping")
+||_________________________________|  |__________________________||||______________________________________|  |_______|  |_________________________||
+|            显示的文本                          工具提示          ||                 显示的文本                 执行命令             工具提示          |
+|_________________________________________________________________||________________________________________________________________________________|
+                         JSON 文本块 #1                                                             JSON 文本块 #2
 ```
-Results in:
+结果：
 
-![Result_image1](https://i.imgur.com/xlnlX02.png)
-![Result_image2](https://i.imgur.com/FSAgQUJu.png)
+![结果图1](https://i.imgur.com/xlnlX02.png)
+![结果图2](https://i.imgur.com/FSAgQUJu.png)
 
-Note that JSON messages are only for chat. Putting them in kick messages, for example, will have no effect.
+注意JSON消息只能用于聊天信息。如果把它们用在别处，如踢出消息，是不会生效的。
 
-### Escaping the JSON syntax
+### 转义JSON语法
 
-To escape double pipes, double them (use quadruple pipes):
+如果要转义双重管道符，请重复1次（即使用四重管道符）：
 
-`This is a double pipe: ||||` results in `This is a double pipe: ||`
+`这是双重管道符：||||`会显示为：`这是双重管道符：||`
