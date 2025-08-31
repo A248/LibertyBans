@@ -1,20 +1,20 @@
 
-This is a formal change-log of changes made in LibertyBans 1.0.0. It notes all manners of changes, including breaking changes; technically-detailed, little-mentioned changes which are invisible to the user; sweeping feature additions, and in-depth descriptions thereof; design and architectural decisions, and various minor matters.
+本页面是LibertyBans在1.0.0版本所更新的正式日志。该页面包含更新的各个方面，包括破坏性更新内容、鲜有提及且用户察觉不到的技术性调整、各方面增加的功能和对新功能通透的描述、还有设计和结构上的决定以及丰富的小细节。
 
-If you are interested in a guide for upgrading to LibertyBans 0.8.x to 1.0.0, which focuses on breaking changes and their impact to you, see [this page](Upgrading-to-LibertyBans-1.0.0-from-0.8.x)
+如果您需要从LibertyBans 0.8.x版本升级到1.0.0版本的指南，请查阅[此页面](Upgrading-to-LibertyBans-1.0.0-from-0.8.x)。这个指南聚焦于破坏性更新以及它们对您的影响。
 
-## Changes
+## 更改日志
 
-* Permissions have been refactored and made into a logically intuitive pattern.
-* Permission messages have been re-organized using `PunishmentPermissionSection`, which is used consistently for each punishment type with regard to punishment additions and removals.
-* Compatibility is removed with a bugged duration permissions format from LibertyBans 0.7.6
-* MariaDB 10.2 and MySQL 5.7 are no longer supported.
-* The `playerOrAddress` option in the messages.yml is now `player-or-address`, `permission.command` is now `permission.uuid` in several places, and `banList` and `muteList` become `ban-list` and `mute-list`
-* The schema history for 1.0.0 is made anew, so older versions like 0.8.2 will fail to use the new database. To ensure seamless transition of existing data, a Java-based Flyway migration will exist in LibertyBans 1.0.0, which will detect existing 0.8.2 tables and transfer their data to the new tables. The Java-based migration will be removed in LibertyBans 1.1.0; Java-based migrations do not use checksums in the same manner as normal Flyway migrations.
-* All SQL queries are rewritten to use JOOQ. The build runs JOOQ's code generation. This change enables PostgreSQL compatibility, as queries previously used back-ticks.
-* Integration tests now start instances of PostgreSQL in addition to MariaDB.
-* Flyway is updated to 8.x
-* The event scheduler feature for MySQL/MariaDB has been removed. Its marginal benefit does not justify the maintenance cost.
+* 权限节点被重构了，现在它们遵循一种逻辑自洽的规则。
+* 权限的消息已通过`PunishmentPermissionSection`重构。在每种处罚类型的记录增减中，都会统一使用这个组件。
+* 放弃了对LibertyBans 0.7.6版本中存在漏洞的处罚时间限制权限节点格式的支持。
+* 不再支持MariaDB 10.2和MySQL 5.7。
+* message.yml中的`playerOrAddress`选项改名为`player-or-address`，多处的`permission.command`改名为`permission.uuid`，同时`banList`和`muteList`也分别改名为`ban-list`和`mute-list`。
+* 1.0.0版本中重写了数据库模式，因此0.8.2等老版本将无法使用新版本的数据库。为确保现有数据被无缝转移，1.0.0版本中将添加一个基于Java的Flyway迁移模块，用于识别现有的0.8.2数据表并将它们中的数据转移到新表中。该迁移模块将在1.1.0版本中被移除，并且基于Java的迁移过程在校验数据时的行为会和普通的Flyway迁移过程有所差异。
+* 所有的SQL查询语句均已使用JOOQ重写。插件构建中将运行JOOQ的代码生成。这一更改实现了对PostgreSQL的兼容，因为以前的查询使用的是反向标记。
+* 集成测试现在在MariaDB实例之外还会会启动PostgreSQL实例。
+* Flyway已更新到8.x版本。
+* MySQL和MariaDB中的事件计划功能已被移除。该功能带来的好处与其维护成本无法匹配。
 * Added accepted value 'MYSQL' for `rdms-vendor` and require MySQL to be distinguished from MariaDB.
 * LibertyBans now handles transaction serialization failure and will retry transactions which failed due to contention:
   * Serialization failure describes the situation where multiple database transactions operate on the same data, and somehow conflict with one another. Serialization failures are propagated to the application.
@@ -23,17 +23,17 @@ If you are interested in a guide for upgrading to LibertyBans 0.8.x to 1.0.0, wh
   * The handling of transaction serialization failure will not be back-ported to LibertyBans 0.8.x. Much software does not handle transaction serialization failure (including LibertyBans 0.8.x) therefore this is not considered a bug of sufficient importance.
   * Further technical reading: https://stackoverflow.com/questions/7705273/what-are-the-conditions-for-encountering-a-serialization-failure
 * Relevant client encoding variables are set per each database upon establishing connection. Also, the charset utf8mb4 and collation utf8mb4_bin are now set on created tables for MariaDB and MySQL.
-* Added the composite victim type, a new kind of victim which is both a UUID and address.
-  * Composite victims are a better choice when you want to IP-ban users by default, but do not want the technical intricacies associated with banning an IP address rather than a user. In other words, you want user bans to be enforced as IP-bans but be able to punish, unpunish, and list punishments as if you were doing so for a user rather than an IP address.
-  * See the wiki page on composite punishments for more details.
-* The /accounthistory command accepts the `-both` argument to show the accounts matching the specified user's UUID or current IP address.
-* HikariCP is now relocated in release builds.
-* New variables are added to punishment messages:
-  * %TYPE_VERB% - verb-based rendition of the punishment type
-  * %TIME_PASSED_SIMPLE% - like TIME_PASSED but rounds to the largest time unit
-  * %TIME_REMAINING_SIMPLE% - like TIME_REMAINING but rounds to the largest time unit
-  * %HAS_EXPIRED% - whether the punishment has expired on account of the passage of time
-* Added the %PREVIOUSPAGE% variable
+* 添加了组合式处罚对象类型。这类处罚目标同时包含一个UUID和IP地址。
+  * 如果您希望默认执行基于IP的处罚，又不想纠结于那些和IP地址相关的技术性内容，那么您适合使用组合式处罚目标。换句话来讲，组合式处罚适用于那些希望将玩家处罚按IP处罚对待，又想要仅通过玩家名而非IP地址来执行处罚、撤销处罚、或列出记录的用户。
+  * 请查阅组合式处罚的wiki页面了解更多细节。
+* /accounthistory命令现在接受`-both`参数，以此来显示匹配指定玩家UUID或IP地址的所有玩家。
+* 调整了HikariCP在发布版中的路径。
+* 为处罚消息添加了新的变量：
+  * %TYPE_VERB% - 处罚类型的动词形式
+  * %TIME_PASSED_SIMPLE% - 与TIME_PASSED类似，但是会四舍五入到最大时间单位
+  * %TIME_REMAINING_SIMPLE% - 与TIME_REMAINING类似，但是会四舍五入到最大时间单位
+  * %HAS_EXPIRED% - 处罚是否已经超出规定的时间并因此过期
+* 添加了%PREVIOUSPAGE%变量。
 
 ### API Changes
 
