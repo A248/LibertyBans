@@ -1,23 +1,23 @@
 
-LibertyBans 1.0.0 contains several breaking changes. This page is intended to help you migrate from 0.8.x.
+LibertyBans 1.0.0版本包含了若干个破坏性更新。本页面将帮助您从0.8.x版本迁移至新版本。
 
-The upgrade should be mostly seamless and core functionality will work out of the box. No manual data migration will be necessary.
+大多数更新内容应当是无感的，核心功能应该能立刻投入使用。没有必需的手动数据迁移操作。
 
-## Pre-requisites and Getting Started
+## 准备开始
 
-To start with, you should be on the latest LibertyBans 0.8.x before you upgrade to 1.0.0 - currently LibertyBans 0.8.1.
+在更新到LibertyBans 1.0.0之前，您应当使用最新的0.8.x版本——目前是0.8.2。
 
-# Manual Action
+# 手动操作
 
-For some changes, you will need to adjust your server configuration manually.
+对于部分更新，您需要手动调整您的服务器配置。
 
-## Changes to permissions
+## 权限的调整
 
-Permissions for enacting punishments (banning, muting, warning, kicking) and undoing punishments (unbanning, unmuting, un-warning) follow a more logical pattern, as described on the wiki page: [Permissions](Permissions)
+执行处罚（如封禁、禁言、警告、踢出等）和撤销处罚的权限节点现在遵循一种更符合逻辑的格式，请查阅wiki页面：[权限](Permissions)。
 
-The difference in permissions between 0.8.x and 1.0.0 is more than a simple rename.
-  * In 0.8.x, creating an IP-ban requires the permission to IP-ban as well as the permission to ban normally. In 1.0.0, creating an IP-ban only requires the permission to IP-ban.
-  * An additional duration permission format was supported on LibertyBans 0.8.x, for backwards compatibility reasons: `libertybans.dur.ban.<timespan>` ('dur' and 'ban' are swapped). Compatibility with this format is removed in 1.0.0; the correct format is `libertybans.ban.dur.<timespan>`.
+0.8.x和1.0.0之前权限的差异不只是简单的重命名。
+  * 在0.8.x版本中，执行IP处罚不仅需要处罚IP的权限，还需要执行常规处罚的权限。在1.0.0版本中，执行IP处罚只需要处罚IP的权限。
+  * 为兼容性考虑，LibertyBans 0.8.x版本支持一个额外的时限权限节点`libertybans.dur.ban.<时间范围>`（即`dur`和`ban`对调了）。1.0.0版本不再支持此格式，正确的格式是`libertybans.ban.dur.<时间范围>`。
 
 ## Changes to the messages.yml
 
