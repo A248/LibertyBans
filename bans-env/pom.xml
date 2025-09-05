@@ -32,6 +32,12 @@
 				<artifactId>bungeecord-api</artifactId>
 				<version>${bungeecord.version}</version>
 				<scope>provided</scope>
+				<exclusions>
+				    <exclusion>
+				        <groupId>com.mojang</groupId>
+				        <artifactId>brigadier</artifactId>
+				    </exclusion>
+				</exclusions>
 			</dependency>
 			<dependency>
 				<groupId>org.spigotmc</groupId>

@@ -83,6 +83,8 @@ Supported platforms:
 
 Compatibility with Geyser/Floodgate usernames. Platform forks supported where reasonable.
 
+Due to 1.19+ chat signing, installing LibertyBans on a Velocity proxy requires [SignedVelocity](https://modrinth.com/plugin/signedvelocity) for mutes to work. Velocity users will need to install SignedVelocity on their proxy and backend servers, or switch to using LibertyBans on the backend servers.
+
 ### Installation
 
 LibertyBans will work out-of-the-box for most users.

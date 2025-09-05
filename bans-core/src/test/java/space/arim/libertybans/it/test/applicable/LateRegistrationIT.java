@@ -35,7 +35,6 @@ import space.arim.libertybans.it.SetAltRegistry;
 import space.arim.libertybans.it.SetTime;
 import space.arim.libertybans.it.env.platform.QuackPlatform;
 import space.arim.libertybans.it.env.platform.QuackPlayer;
-import space.arim.libertybans.it.env.platform.QuackPlayerBuilder;
 
 import java.util.Optional;
 
@@ -74,7 +73,7 @@ public class LateRegistrationIT {
         assertNull(guardian.executeAndCheckConnection(guiltyUser.uuid(), "GuiltyPlayer", guiltyUser.address()).join());
         assertNull(guardian.checkServerSwitch(guiltyUser.uuid(), "GuiltyPlayer", guiltyUser.address(), "please_register").join());
         assertNull(guardian.executeAndCheckConnection(innocentUser.uuid(), "InnocentPlayer", innocentUser.address()).join());
-        assertNull(guardian.checkServerSwitch(innocentUser.uuid(), "InnocentPLayer", innocentUser.address(), "please_register").join());
+        assertNull(guardian.checkServerSwitch(innocentUser.uuid(), "InnocentPlayer", innocentUser.address(), "please_register").join());
 
         // Now add the ban
         drafter.draftBuilder()
@@ -107,15 +106,14 @@ public class LateRegistrationIT {
     @TestTemplate
     @SetAddressStrictness({AddressStrictness.NORMAL, AddressStrictness.STERN, AddressStrictness.STRICT})
     @SetAltRegistry(SetAltRegistry.Option.ON_SERVER_SWITCH)
-    public void banPlayerWhileInLimbo(PunishmentDrafter drafter, Guardian guardian, QuackPlatform platform,
+    public void banPlayerWhileInLimbo(PunishmentDrafter drafter, QuackPlatform platform,
                                       EnvUserResolver envUserResolver) {
 
         User user = User.randomUser();
-        QuackPlayer player = new QuackPlayerBuilder(platform).buildRandomName(user.uuid(), user.address());
+        QuackPlayer player = platform.newPlayer().buildRandomName(user.uuid(), user.address());
 
         // At first, the player joins the proxy - but is not registered yet
-        assertNull(guardian.executeAndCheckConnection(user.uuid(), player.getName(), user.address()).join());
-        platform.login(player);
+        platform.assumeLogin(player);
 
         // Next, they're banned by IP address
         assertEquals(Optional.of(player.getAddress()), envUserResolver.lookupAddress(player.getName()).join());
@@ -130,6 +128,6 @@ public class LateRegistrationIT {
                 .join();
 
         // Now, they should have been ejected from the proxy
-        assertFalse(player.isStillOnline());
+        assertFalse(player.isOnline());
     }
 }

@@ -22,7 +22,6 @@ package space.arim.libertybans.it.env.platform;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.it.util.RandomUtil;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -33,7 +32,7 @@ public final class QuackPlayerBuilder {
 	private final QuackPlatform platform;
 	private Set<String> permissions = Set.of();
 
-	public QuackPlayerBuilder(QuackPlatform platform) {
+	QuackPlayerBuilder(QuackPlatform platform) {
 		this.platform = Objects.requireNonNull(platform);
 	}
 
@@ -43,7 +42,7 @@ public final class QuackPlayerBuilder {
 	}
 
 	public QuackPlayer build(UUID uuid, String name, NetworkAddress address) {
-		return new QuackPlayer(platform, uuid, name, address.toInetAddress(), permissions);
+		return new QuackPlayer(platform.getPlayerStore(), uuid, name, address.toInetAddress(), permissions);
 	}
 
 	public QuackPlayer buildRandomName(UUID uuid, NetworkAddress address) {
@@ -54,14 +53,14 @@ public final class QuackPlayerBuilder {
 		return buildRandomName(UUID.randomUUID(), RandomUtil.randomAddress());
 	}
 
+    private static final char[] VALID_NAME_CHARS = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789".toCharArray();
 	private static String randomName() {
-		return new String(randomBytes(16), StandardCharsets.UTF_8);
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        int length = random.nextInt(4, 16);
+        char[] chosen = new char[length];
+        for (int n = 0; n < length; n++) {
+            chosen[n] = VALID_NAME_CHARS[random.nextInt(VALID_NAME_CHARS.length)];
+        }
+        return String.valueOf(chosen);
 	}
-
-	private static byte[] randomBytes(int length) {
-		byte[] bytes = new byte[length];
-		ThreadLocalRandom.current().nextBytes(bytes);
-		return bytes;
-	}
-
 }

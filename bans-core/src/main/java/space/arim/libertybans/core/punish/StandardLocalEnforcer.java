@@ -52,6 +52,7 @@ import space.arim.libertybans.core.env.Police;
 import space.arim.libertybans.core.env.TargetMatcher;
 import space.arim.libertybans.core.env.message.KickPlayer;
 import space.arim.libertybans.core.punish.permission.PunishmentPermission;
+import space.arim.libertybans.core.scope.InternalScopeManager;
 import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -62,6 +63,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static space.arim.libertybans.core.schema.tables.Addresses.ADDRESSES;
 import static space.arim.libertybans.core.schema.tables.StrictLinks.STRICT_LINKS;
@@ -73,6 +75,7 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 	private final Configs configs;
 	private final FactoryOfTheFuture futuresFactory;
 	private final Provider<QueryExecutor> queryExecutor;
+	private final InternalScopeManager scopeManager;
 	private final PunishmentSelector selector;
 	private final InternalFormatter formatter;
 	private final EnvEnforcer<P> envEnforcer;
@@ -82,13 +85,14 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 
 	@Inject
 	public StandardLocalEnforcer(InstanceType instanceType, Configs configs, FactoryOfTheFuture futuresFactory,
-								 Provider<QueryExecutor> queryExecutor, PunishmentSelector selector,
-								 InternalFormatter formatter, EnvEnforcer<P> envEnforcer, MuteCache muteCache) {
+                                 Provider<QueryExecutor> queryExecutor, InternalScopeManager scopeManager, PunishmentSelector selector,
+                                 InternalFormatter formatter, EnvEnforcer<P> envEnforcer, MuteCache muteCache) {
 		this.instanceType = instanceType;
 		this.configs = configs;
 		this.futuresFactory = futuresFactory;
 		this.queryExecutor = queryExecutor;
-		this.selector = selector;
+        this.scopeManager = scopeManager;
+        this.selector = selector;
 		this.formatter = formatter;
 		this.envEnforcer = envEnforcer;
 		this.muteCache = muteCache;
@@ -129,7 +133,7 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 		if (punishment.getType() == PunishmentType.MUTE) {
 			muteCache.clearCachedMute(punishment);
 		}
-		if (enforcementOptions.broadcasting() == EnforcementOptions.Broadcasting.NONE) {
+		if (enforcementOptions.broadcasting() == Broadcasting.NONE) {
 			return completedFuture(null);
 		}
 		CentralisedFuture<Component> futureNotify;
@@ -145,7 +149,7 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 			}
 		}
 		return futureNotify.thenCompose((notification) -> {
-			boolean silent = enforcementOptions.broadcasting() == EnforcementOptions.Broadcasting.SILENT;
+			boolean silent = enforcementOptions.broadcasting() == Broadcasting.SILENT;
 			return envEnforcer.sendToThoseWithPermission(
 					new PunishmentPermission(
 							punishment.getType(), Mode.UNDO
@@ -160,7 +164,7 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 																   EnforcementOpts enforcementOptions) {
 		assert enforcementOptions.enforcement() != EnforcementOptions.Enforcement.NONE : "Handled elsewhere";
 
-		if (enforcementOptions.broadcasting() != EnforcementOptions.Broadcasting.NONE) {
+		if (enforcementOptions.broadcasting() != Broadcasting.NONE) {
 			// In order to send broadcast messages we need the full punishment details
 			// Therefore we need to fetch the punishment, then redirect to the other unenforce method
 			logger.trace("Fetching punishment details for id {} and type {}", id, type);
@@ -210,6 +214,28 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 
 	private CentralisedFuture<Void> enforceArrestsAndNotices(Punishment punishment) {
 
+        Predicate<String> serverNameMatch;
+        if (instanceType == InstanceType.PROXY) {
+            serverNameMatch = scopeManager.deconstruct(punishment.getScope(), (scopeType, scopeValue) -> {
+                return switch (scopeType) {
+                    case GLOBAL -> (playerServer) -> true;
+                    case CATEGORY -> {
+                        logger.warn(
+                                "You are running LibertyBans on the proxy, but a category-based scope punishment was " +
+                                        "issued. This can't be implemented accurately in LibertyBans 1.x, so it might " +
+                                        "kick extra players. To fix this, either run LibertyBans on the backend servers," +
+                                        "or contribute to the development of LibertyBans 2.x."
+                        );
+                        yield (playerServer) -> true;
+                    }
+                    case SERVER -> scopeValue::equals;
+                };
+            });
+        } else if (!scopeManager.scopesApplicableToCurrentServer().contains(punishment.getScope())) {
+            return futuresFactory.completedFuture(null);
+        } else {
+            serverNameMatch = (playerServer) -> true;
+        }
 		return formatter.getPunishmentMessage(punishment).thenCompose((message) -> {
 
 			Victim victim = punishment.getVictim();
@@ -228,7 +254,7 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 									}
 									uuids.add(uuid);
 								}
- 								return new Police<>(new TargetMatcher.UUIDs(uuids), enforcementCallback);
+ 								return new Police<>(new TargetMatcher.UUIDs(uuids), serverNameMatch, enforcementCallback);
 							})
 							.thenCompose(envEnforcer::dispatchPolice);
 				}
@@ -237,21 +263,22 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 			} else if (victim instanceof AddressVictim addressVictim) {
 				NetworkAddress address = addressVictim.getAddress();
 				return matchAddressPunishment(strictness, address)
-						.thenApply(matcher -> new Police<>(matcher, enforcementCallback))
+						.thenApply(targetMatcher ->
+								new Police<>(targetMatcher, serverNameMatch, enforcementCallback))
 						.thenCompose(envEnforcer::dispatchPolice);
 
 			} else if (victim instanceof CompositeVictim compositeVictim) {
 				UUID uuid = compositeVictim.getUUID();
 				NetworkAddress address = compositeVictim.getAddress();
 				return matchAddressPunishment(strictness, address)
-						.thenApply(matcher -> {
-							if (!matcher.matches(uuid, null)) {
+						.thenApply(targetMatcher -> {
+							if (!targetMatcher.matches(uuid, null)) {
 								// Rare condition, but possible in two situations
 								// 1) lenient strictness
 								// 2) API shenanigans, adding punishments for players never seen before
-								matcher = new TargetMatcher.Combined(matcher, new TargetMatcher.UUIDs(Set.of(uuid)));
+								targetMatcher = new TargetMatcher.Combined(targetMatcher, new TargetMatcher.UUIDs(Set.of(uuid)));
 							}
-							return new Police<>(matcher, enforcementCallback);
+							return new Police<>(targetMatcher, serverNameMatch, enforcementCallback);
 						})
 						.thenCompose(envEnforcer::dispatchPolice);
 

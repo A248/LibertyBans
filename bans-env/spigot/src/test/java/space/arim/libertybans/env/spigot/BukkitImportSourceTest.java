@@ -146,4 +146,27 @@ public class BukkitImportSourceTest {
 		);
 	}
 
+    // Bug caused by address strings that include the port
+    @Test
+    public void ipBanWithPort() throws UnknownHostException {
+        String address = "189.4.74.160:5286";
+        InetAddress expectedAddress = InetAddress.getByAddress(new byte[] {(byte) 189, 4, 74, (byte) 160});
+        String reason = "for no reason";
+        String operator = "A248";
+        Instant start = currentTime();
+
+        assertSourcePunishments(
+                Set.of(new PortablePunishment(
+                        null,
+                        new PortablePunishment.KnownDetails(
+                                PunishmentType.BAN, reason, scopeManager.globalScope(),
+                                start, Punishment.PERMANENT_END_DATE),
+                        new PortablePunishment.VictimInfo(null, null, NetworkAddress.of(expectedAddress)),
+                        PortablePunishment.OperatorInfo.createUser(null, operator),
+                        true)),
+                userBans(Set.of()).ipBans(Set.of(
+                        SimpleBanEntry.forRawTarget(address).reason(reason).created(start)
+                                .source(operator).build()))
+        );
+    }
 }

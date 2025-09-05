@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,6 +25,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
@@ -112,6 +113,11 @@ public class SpigotEnforcer extends AbstractEnvEnforcer<Player> {
 	@Override
 	public String getNameFor(Player player) {
 		return player.getName();
+	}
+
+	@Override
+	public @Nullable String getPlayableServerName(Player player) {
+		return null;
 	}
 
 	@Override

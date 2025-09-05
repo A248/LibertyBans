@@ -62,7 +62,7 @@ public class BukkitImportSource implements PlatformImportSource {
 		var addressPunishments = sourcePunishmentsFrom(BanList.Type.IP, (addressTarget) -> {
 			InetAddress address;
 			try {
-				address = InetAddress.getByName(addressTarget);
+				address = parseIp(addressTarget);
 			} catch (UnknownHostException ex) {
 				throw new ImportException("Unable to parse IP address " + addressTarget, ex);
 			}
@@ -70,6 +70,22 @@ public class BukkitImportSource implements PlatformImportSource {
 		});
 		return Stream.concat(namePunishments, addressPunishments);
 	}
+
+    private InetAddress parseIp(String addressTarget) throws UnknownHostException {
+        int lastColon = addressTarget.lastIndexOf(':');
+        if (lastColon == -1) {
+            // Main code path
+            return InetAddress.getByName(addressTarget);
+        }
+        // In rare cases, the IP address can be formatted with the port
+        // TODO: Is Essentials responsible for this? If not, then who?
+        String beforeColon = addressTarget.substring(0, lastColon);
+        // Parse IPv6 in the format [addr]:port
+        if (beforeColon.startsWith("[") && beforeColon.endsWith("]")) {
+            beforeColon = beforeColon.substring(1, beforeColon.length() -1);
+        }
+        return InetAddress.getByName(beforeColon);
+    }
 
 	private interface BanListTypeHelper {
 		PortablePunishment.VictimInfo getVictim(String target);

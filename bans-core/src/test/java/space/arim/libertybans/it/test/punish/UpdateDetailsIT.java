@@ -54,6 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static space.arim.libertybans.it.util.TestingUtil.assertEqualDetails;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
@@ -195,8 +196,8 @@ public class UpdateDetailsIT {
 	@TestTemplate
 	@Inject
 	public void updateEndDateReactivate(QuackPlatform platform) {
-		QuackPlayer player = new QuackPlayerBuilder(platform).buildFullyRandom();
-		platform.login(player);
+		QuackPlayer player = platform.newPlayer().buildFullyRandom();
+		platform.assumeLogin(player);
 
 		Punishment original = createInitial(
 				PunishmentType.BAN,
@@ -206,13 +207,13 @@ public class UpdateDetailsIT {
 		);
 		time.advanceBy(Duration.ofHours(2L));
 		// The punishment is now expired, and the banned player may re-join
-		platform.login(player);
+		platform.assumeLogin(player);
 		// Now, extend the ban and therefore re-activate it
 		original.modifyPunishment((editor) -> {
 			editor.extendEndDate((Duration.ofHours(3L)));
 		}).toCompletableFuture().join();
 		// By now the punishment should be re-enforced
-		assertFalse(player.isStillOnline());
+		assertFalse(player.isOnline());
 	}
 
 	@TestTemplate

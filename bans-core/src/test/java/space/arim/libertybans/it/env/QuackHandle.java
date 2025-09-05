@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -18,6 +18,8 @@
  */
 package space.arim.libertybans.it.env;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.PlatformPluginInfo;
 import space.arim.libertybans.it.env.platform.QuackPlatform;
@@ -26,11 +28,12 @@ import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.SimplifiedEnhancedExecutor;
 
-public class QuackHandle implements PlatformHandle {
-	
-	private final QuackPlatform platform;
-	
-	QuackHandle(QuackPlatform platform) {
+public final class QuackHandle implements PlatformHandle {
+
+	private final Provider<QuackPlatform> platform;
+
+    @Inject
+	public QuackHandle(Provider<QuackPlatform> platform) {
 		this.platform = platform;
 	}
 

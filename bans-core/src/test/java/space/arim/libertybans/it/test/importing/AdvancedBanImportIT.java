@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -36,7 +36,6 @@ import space.arim.libertybans.core.uuid.UUIDManager;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.PlatformSpecs;
-import space.arim.libertybans.it.SetServerType;
 import space.arim.libertybans.it.SetTime;
 import space.arim.omnibus.util.UUIDUtil;
 
@@ -45,7 +44,6 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
 @ExtendWith(MockitoExtension.class)

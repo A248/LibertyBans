@@ -401,6 +401,7 @@
 									<name>mariadb:10.3</name>
 									<alias>mariadb-retro</alias>
 									<run>
+                                        <cmd>--max_connections=1000</cmd>
 										<env>
 											<MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>true</MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>
 										</env>
@@ -422,6 +423,7 @@
 									<name>mariadb:10.6</name>
 									<alias>mariadb-legacy</alias>
 									<run>
+                                        <cmd>--max_connections=1000</cmd>
 										<env>
 											<MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>true</MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>
 										</env>
@@ -443,6 +445,7 @@
 									<name>mariadb:11.8</name>
 									<alias>mariadb-modern</alias>
 									<run>
+                                        <cmd>--max_connections=1000</cmd>
 										<env>
 											<MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>true</MARIADB_ALLOW_EMPTY_ROOT_PASSWORD>
 										</env>
@@ -522,6 +525,7 @@
 									<name>mysql:8.0</name>
 									<alias>mysql-legacy</alias>
 									<run>
+                                        <cmd>--max_connections=1000</cmd>
 										<env>
 											<MYSQL_ALLOW_EMPTY_PASSWORD>true</MYSQL_ALLOW_EMPTY_PASSWORD>
 										</env>
@@ -543,6 +547,7 @@
 									<name>mysql:8.4</name>
 									<alias>mysql-modern</alias>
 									<run>
+                                        <cmd>--max_connections=1000</cmd>
 										<env>
 											<MYSQL_ALLOW_EMPTY_PASSWORD>true</MYSQL_ALLOW_EMPTY_PASSWORD>
 										</env>
@@ -615,6 +620,7 @@
 									<name>postgres:12</name>
 									<alias>postgresql-legacy</alias>
 									<run>
+                                        <cmd>-c max_connections=1000</cmd>
 										<env>
 											<POSTGRES_PASSWORD>pgpass</POSTGRES_PASSWORD>
 										</env>
@@ -636,6 +642,7 @@
 									<name>postgres:17</name>
 									<alias>postgresql-modern</alias>
 									<run>
+                                        <cmd>-c max_connections=1000</cmd>
 										<env>
 											<POSTGRES_PASSWORD>pgpass</POSTGRES_PASSWORD>
 										</env>

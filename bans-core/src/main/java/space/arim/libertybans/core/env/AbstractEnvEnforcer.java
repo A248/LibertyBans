@@ -105,7 +105,8 @@ public abstract class AbstractEnvEnforcer<P> implements EnvEnforcer<P> {
 			// Some platforms do not provide guarantees about concurrent iteration in presence of kicks
 			// Proxies effectively must, but game server APIs like Bukkit and Sponge need not
 			for (P player : players) {
-				if (police.targetMatcher().matches(getUniqueIdFor(player), getAddressFor(player))) {
+				if (police.targetMatcher().matches(getUniqueIdFor(player), getAddressFor(player))
+						&& police.serverNameMatch().test(getPlayableServerName(player))) {
 					matchedPlayers.add(player);
 				}
 			}

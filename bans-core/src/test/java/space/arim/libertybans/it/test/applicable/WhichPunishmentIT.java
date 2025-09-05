@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -31,7 +31,8 @@ import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetAddressStrictness;
-import space.arim.libertybans.it.util.RandomUtil;
+import space.arim.libertybans.it.env.platform.QuackPlatform;
+import space.arim.libertybans.it.env.platform.QuackPlayer;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -42,14 +43,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ExtendWith(InjectionInvocationContextProvider.class)
 public class WhichPunishmentIT {
 
-	private final StrictnessAssertHelper assertHelper;
+	private final QuackPlatform platform;
 	private final PunishmentDrafter drafter;
 	private final PunishmentSelector selector;
 
 	@Inject
-	public WhichPunishmentIT(StrictnessAssertHelper assertHelper,
-							 PunishmentDrafter drafter, PunishmentSelector selector) {
-		this.assertHelper = assertHelper;
+	public WhichPunishmentIT(QuackPlatform platform, PunishmentDrafter drafter, PunishmentSelector selector) {
+        this.platform = platform;
 		this.drafter = drafter;
 		this.selector = selector;
 	}
@@ -57,10 +57,10 @@ public class WhichPunishmentIT {
 	@TestTemplate
 	@SetAddressStrictness(all = true)
 	public void selectPermanentRatherThanTemporaryPunishment() {
-		UUID uuid = UUID.randomUUID();
-		NetworkAddress address = RandomUtil.randomAddress();
-
-		assertHelper.connectAndAssumeUnbannedUser(uuid, "User", address);
+        QuackPlayer player = platform.newPlayer().buildFullyRandom();
+        platform.assumeLogin(player);
+		UUID uuid = player.getUniqueId();
+		NetworkAddress address = player.getNetworkAddress();
 
 		Punishment permanentPunishment = drafter.draftBuilder()
 				.type(PunishmentType.BAN)
@@ -89,10 +89,10 @@ public class WhichPunishmentIT {
 	@TestTemplate
 	@SetAddressStrictness(all = true)
 	public void selectLongerLivedPunishment() {
-		UUID uuid = UUID.randomUUID();
-		NetworkAddress address = RandomUtil.randomAddress();
-
-		assertHelper.connectAndAssumeUnbannedUser(uuid, "User", address);
+        QuackPlayer player = platform.newPlayer().buildFullyRandom();
+        platform.assumeLogin(player);
+        UUID uuid = player.getUniqueId();
+        NetworkAddress address = player.getNetworkAddress();
 
 		Punishment longerLastingPunishment = drafter.draftBuilder()
 				.type(PunishmentType.BAN)

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,8 +28,8 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
-import space.arim.libertybans.it.test.applicable.StrictnessAssertHelper;
-import space.arim.libertybans.it.util.RandomUtil;
+import space.arim.libertybans.it.env.platform.QuackPlatform;
+import space.arim.libertybans.it.env.platform.QuackPlayer;
 
 import java.util.UUID;
 
@@ -39,28 +39,29 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @ExtendWith(InjectionInvocationContextProvider.class)
 public class MuteCommandsIT {
 
-	private final StrictnessAssertHelper assertHelper;
+	private final QuackPlatform platform;
 
 	@Inject
-	public MuteCommandsIT(StrictnessAssertHelper assertHelper) {
-		this.assertHelper = assertHelper;
+	public MuteCommandsIT(QuackPlatform platform) {
+        this.platform = platform;
 	}
 
 	@TestTemplate
 	@Inject
 	public void muteCommandNotMuted(Guardian guardian) {
-		UUID uuid = UUID.randomUUID();
-		NetworkAddress address = RandomUtil.randomAddress();
-		assertHelper.connectAndAssumeUnbannedUser(uuid, "name", address);
-		assertNull(guardian.checkChat(uuid, address, "msg").join());
+        QuackPlayer player = platform.newPlayer().buildFullyRandom();
+        platform.assumeLogin(player);
+		assertNull(guardian.checkChat(player.getUniqueId(), player.getAddress(), "msg").join());
 	}
 
 	@TestTemplate
 	@Inject
 	public void blockMuteCommandsCorrectly(Guardian guardian, PunishmentDrafter drafter) {
-		UUID uuid = UUID.randomUUID();
-		NetworkAddress address = RandomUtil.randomAddress();
-		assertHelper.connectAndAssumeUnbannedUser(uuid, "name", address);
+        QuackPlayer player = platform.newPlayer().buildFullyRandom();
+        platform.assumeLogin(player);
+        UUID uuid = player.getUniqueId();
+        NetworkAddress address = player.getNetworkAddress();
+
 		drafter.draftBuilder()
 				.type(PunishmentType.MUTE)
 				.victim(PlayerVictim.of(uuid))

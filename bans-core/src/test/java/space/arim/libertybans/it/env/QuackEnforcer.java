@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,13 +21,14 @@ package space.arim.libertybans.it.env;
 
 import jakarta.inject.Inject;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.Interlocutor;
 import space.arim.libertybans.core.env.message.PluginMessage;
-import space.arim.libertybans.it.env.platform.QuackPlatform;
 import space.arim.libertybans.it.env.platform.QuackPlayer;
+import space.arim.libertybans.it.env.platform.QuackPlayerStore;
 import space.arim.libertybans.it.env.platform.ReceivedPluginMessage;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -39,24 +40,24 @@ import java.util.function.Consumer;
 
 public class QuackEnforcer extends AbstractEnvEnforcer<QuackPlayer> {
 
-	private final QuackPlatform platform;
+	private final QuackPlayerStore playerStore;
 
 	@Inject
 	public QuackEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter,
-						 Interlocutor interlocutor, QuackPlatform platform) {
+                         Interlocutor interlocutor, QuackPlayerStore playerStore) {
 		super(futuresFactory, formatter, interlocutor, AudienceRepresenter.identity());
-		this.platform = platform;
+        this.playerStore = playerStore;
 	}
 
 	@Override
 	public CentralisedFuture<Void> doForAllPlayers(Consumer<Collection<? extends QuackPlayer>> callback) {
-		callback.accept(platform.getAllPlayers());
+		callback.accept(playerStore.getAllPlayers());
 		return completedVoid();
 	}
 
 	@Override
 	public CentralisedFuture<Void> doForPlayerIfOnline(UUID uuid, Consumer<QuackPlayer> callback) {
-		platform.getPlayer(uuid).ifPresent(callback);
+		playerStore.getPlayer(uuid).ifPresent(callback);
 		return completedVoid();
 	}
 
@@ -84,6 +85,11 @@ public class QuackEnforcer extends AbstractEnvEnforcer<QuackPlayer> {
 	@Override
 	public String getNameFor(QuackPlayer player) {
 		return player.getName();
+	}
+
+	@Override
+	public @Nullable String getPlayableServerName(QuackPlayer player) {
+		return player.getPlayableServerName();
 	}
 
 	@Override

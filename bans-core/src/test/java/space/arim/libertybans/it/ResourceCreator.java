@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -81,7 +81,7 @@ class ResourceCreator {
 			Injector injector = new InjectorBuilder()
 					.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), tempDirectory)
 					.bindInstance(PlatformId.class, new PlatformId("IT", "0.0"))
-					.bindInstance(InstanceType.class, InstanceType.PROXY)
+					.bindInstance(InstanceType.class, configSpec.instanceType())
 					.bindInstance(ConfigSpec.class, configSpec)
 					.bindInstance(DatabaseInfo.class, databaseInfo)
 					.addBindModules(

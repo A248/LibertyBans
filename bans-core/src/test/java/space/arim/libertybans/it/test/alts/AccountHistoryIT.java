@@ -33,6 +33,8 @@ import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
 import space.arim.libertybans.it.SetAltRegistry;
 import space.arim.libertybans.it.SetTime;
+import space.arim.libertybans.it.env.platform.QuackPlatform;
+import space.arim.libertybans.it.env.platform.QuackPlayer;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -68,23 +70,24 @@ public class AccountHistoryIT {
 
 	@TestTemplate
 	@SetAltRegistry(SetAltRegistry.Option.ON_SERVER_SWITCH)
-	public void listNoAccountHistoryLateRegistration(Guardian guardian) {
-		UUID uuid = UUID.randomUUID();
-		NetworkAddress address = randomAddress();
+	public void listNoAccountHistoryLateRegistration(QuackPlatform platform, Guardian guardian) {
+        QuackPlayer player = platform.newPlayer().buildFullyRandom();
+        UUID uuid = player.getUniqueId();
+        NetworkAddress address = player.getNetworkAddress();
 
-		guardian.executeAndCheckConnection(uuid, "Player", address).join();
+        platform.assumeLogin(player);
 		assertEquals(List.of(),
 				supervisor.knownAccounts(PlayerVictim.of(uuid)).join());
 		assertEquals(List.of(),
 				supervisor.knownAccounts(AddressVictim.of(address)).join());
 
-		guardian.checkServerSwitch(uuid, "Player", address, SetAltRegistry.Option.NON_REGISTERING_SERVER_NAME).join();
+        platform.assumeSendToServer(player, SetAltRegistry.Option.NON_REGISTERING_SERVER_NAME);
 		assertEquals(List.of(),
 				supervisor.knownAccounts(PlayerVictim.of(uuid)).join());
 		assertEquals(List.of(),
 				supervisor.knownAccounts(AddressVictim.of(address)).join());
 
-		guardian.checkServerSwitch(uuid, "Player", address, "please_register").join();
+        platform.assumeSendToServer(player, "please_register");
 		assertFalse(supervisor.knownAccounts(PlayerVictim.of(uuid)).join().isEmpty());
 		assertFalse(supervisor.knownAccounts(AddressVictim.of(address)).join().isEmpty());
 	}

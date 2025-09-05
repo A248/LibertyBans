@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -29,7 +29,7 @@ import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.importing.PlatformImportSource;
 import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.libertybans.core.selector.cache.OnDemandMuteCache;
-import space.arim.libertybans.it.env.platform.QuackPlatform;
+import space.arim.libertybans.it.env.platform.QuackPlayerStore;
 import space.arim.omnibus.DefaultOmnibus;
 import space.arim.omnibus.Omnibus;
 
@@ -41,8 +41,8 @@ public class QuackBindModule {
 	}
 
 	@Singleton
-	public PlatformHandle handle(QuackPlatform platform) {
-		return new QuackHandle(platform);
+	public PlatformHandle handle(QuackHandle handle) {
+		return handle;
 	}
 
 	public MuteCache muteCache(OnDemandMuteCache muteCache) {
@@ -73,4 +73,9 @@ public class QuackBindModule {
 		throw new UnsupportedOperationException("PlatformImportSource not available");
 	}
 
+	// Implementing the platform itself
+
+	public QuackPlayerStore implPlayerStore(QuackPlayerStore.Impl impl) {
+		return impl;
+	}
 }

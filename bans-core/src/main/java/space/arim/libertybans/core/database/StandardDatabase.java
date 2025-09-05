@@ -206,6 +206,8 @@ public final class StandardDatabase implements InternalDatabase, AutoCloseable {
 
 	@Override
 	public boolean checkResetLocalDatabaseCompact() {
+        assert vendor == Vendor.HSQLDB : "Not supported by " + vendor;
+
 		boolean needsCompact;
 		// Keep track of the date of the last compaction
 		Path storeCompactAt = folder.resolve("internal").resolve("last_database_compact");

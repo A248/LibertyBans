@@ -22,9 +22,11 @@ import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.api.jsonchat.adventure.implementor.MessageOnlyAudience;
+import space.arim.libertybans.api.NetworkAddress;
 import space.arim.omnibus.util.ThisClass;
 
 import java.net.InetAddress;
@@ -34,19 +36,20 @@ import java.util.UUID;
 
 public class QuackPlayer implements MessageOnlyAudience {
 
-	private final QuackPlatform platform;
+	private final QuackPlayerStore playerStore;
 	private final UUID uuid;
 	private final String name;
 	private final InetAddress address;
+	private @Nullable String playableServerName;
 	
 	private final Set<String> permissions;
 	private final Set<ReceivedPluginMessage<?>> receivedPluginMessages = new HashSet<>();
 	
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
-	QuackPlayer(QuackPlatform platform, UUID uuid, String name, InetAddress address,
+	QuackPlayer(QuackPlayerStore playerStore, UUID uuid, String name, InetAddress address,
 				Set<String> permissions) {
-		this.platform = platform;
+		this.playerStore = playerStore;
 		this.uuid = uuid;
 		this.name = name;
 		this.address = address;
@@ -65,8 +68,12 @@ public class QuackPlayer implements MessageOnlyAudience {
 		return address;
 	}
 
-	public boolean isStillOnline() {
-		return platform.getPlayer(uuid).isPresent();
+    public NetworkAddress getNetworkAddress() {
+        return NetworkAddress.of(address);
+    }
+
+	public boolean isOnline() {
+		return playerStore.getPlayer(uuid).isPresent();
 	}
 	
 	public boolean hasPermission(String permission) {
@@ -74,16 +81,25 @@ public class QuackPlayer implements MessageOnlyAudience {
 	}
 	
 	public void kickPlayer(Component message) {
-		platform.remove(this, message);
+		playerStore.remove(this);
+		logger.info("{} was kicked for '{}'", getName(), QuackPlatform.toDisplay(message));
 	}
 
 	public Set<ReceivedPluginMessage<?>> receivedPluginMessages() {
 		return receivedPluginMessages;
 	}
 
+	public @Nullable String getPlayableServerName() {
+		return playableServerName;
+	}
+
+	public void setPlayableServerName(@Nullable String playableServerName) {
+		this.playableServerName = playableServerName;
+	}
+
 	@Override
 	public void sendMessage(@NonNull Identity source, @NonNull Component message, @NonNull MessageType type) {
-		String displayMessage = platform.toDisplay(message);
+		String displayMessage = QuackPlatform.toDisplay(message);
 		if (source.equals(Identity.nil())) {
 			logger.info("{} received {} '{}'", name, type, displayMessage);
 		} else {

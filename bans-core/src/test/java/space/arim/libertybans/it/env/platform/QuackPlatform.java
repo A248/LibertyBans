@@ -19,54 +19,57 @@
 
 package space.arim.libertybans.it.env.platform;
 
-import jakarta.inject.Singleton;
+import jakarta.inject.Inject;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import space.arim.omnibus.util.ThisClass;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashSet;
+import java.util.Set;
 
-@Singleton
-public class QuackPlatform {
+import static org.junit.jupiter.api.Assumptions.abort;
 
-	private final Map<UUID, QuackPlayer> players = new ConcurrentHashMap<>();
+public final class QuackPlatform {
 
-	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+	private final QuackPlayerStore playerStore;
+	private final QuackEntryPoint entryPoint;
 
-	public Optional<QuackPlayer> getPlayer(UUID uuid) {
-		return Optional.ofNullable(players.get(uuid));
-	}
+	@Inject
+    public QuackPlatform(QuackPlayerStore playerStore, QuackEntryPoint entryPoint) {
+        this.playerStore = playerStore;
+        this.entryPoint = entryPoint;
+    }
 
-	public Optional<QuackPlayer> getPlayer(String name) {
-		for (QuackPlayer player : players.values()) {
-			if (player.getName().equalsIgnoreCase(name)) {
-				return Optional.of(player);
-			}
-		}
-		return Optional.empty();
-	}
-
-	public Collection<? extends QuackPlayer> getAllPlayers() {
-		return players.values();
-	}
-
-	public void login(QuackPlayer player) {
-		players.put(player.getUniqueId(), player);
-	}
-
-	void remove(QuackPlayer player, Component message) {
-		players.values().remove(player);
-		logger.info("{} was kicked for '{}'", player.getName(), toDisplay(message));
-	}
-
-	String toDisplay(Component message) {
+	static String toDisplay(Component message) {
 		return PlainComponentSerializer.plain().serialize(message);
 	}
 
+	public QuackPlayerStore getPlayerStore() {
+		return playerStore;
+	}
+
+	public QuackEntryPoint getEntryPoint() {
+		return entryPoint;
+	}
+
+	public QuackPlayerBuilder newPlayer() {
+		return new QuackPlayerBuilder(this);
+	}
+
+	public void assumeLogin(QuackPlayer player) {
+        Component denyMessage = getEntryPoint().login(player);
+        if (denyMessage != null) {
+            abort("Denied with reason " + toDisplay(denyMessage));
+        }
+	}
+
+    public void assumeSendToServer(QuackPlayer player, String server) {
+        Component denyMessage = getEntryPoint().sendToServer(player, server);
+        if (denyMessage != null) {
+            abort("Denied with reason " + toDisplay(denyMessage));
+        }
+    }
+
+	public Set<? extends QuackPlayer> getAllPlayers() {
+		return new HashSet<>(playerStore.getAllPlayers());
+	}
 }

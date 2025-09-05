@@ -23,6 +23,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.Police;
 import space.arim.libertybans.core.env.message.PluginMessage;
@@ -97,6 +98,11 @@ final class StandaloneEnforcer implements EnvEnforcer<Void> {
 
 	@Override
 	public String getNameFor(Void player) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public @Nullable String getPlayableServerName(Void player) {
 		throw new UnsupportedOperationException();
 	}
 

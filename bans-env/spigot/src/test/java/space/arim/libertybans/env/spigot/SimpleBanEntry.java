@@ -98,6 +98,10 @@ public final class SimpleBanEntry implements BanEntry {
 		return new Builder(address.getHostAddress());
 	}
 
+	public static Builder forRawTarget(String target) {
+	    return new Builder(target);
+	}
+
 	public static final class Builder {
 
 		private final String target;

@@ -19,10 +19,15 @@
 
 package space.arim.libertybans.core.env;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.api.env.annote.PlatformPlayer;
 
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 // The arm of the state!
-public record Police<@PlatformPlayer P>(TargetMatcher targetMatcher, Consumer<P> arrest) {
+public record Police<@PlatformPlayer P>(TargetMatcher targetMatcher, Predicate<@Nullable String> serverNameMatch,
+                                        Consumer<P> arrest) {
+
+    // They just have orders (field). No logic of their own (methods)
 }

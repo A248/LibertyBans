@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,9 +21,11 @@ package space.arim.libertybans.env.velocity;
 
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.ServerConnection;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.api.env.AudienceRepresenter;
@@ -90,6 +92,12 @@ public class VelocityEnforcer extends AbstractEnvEnforcer<Player> {
 	@Override
 	public String getNameFor(Player player) {
 		return player.getUsername();
+	}
+
+	@Override
+	public @Nullable String getPlayableServerName(Player player) {
+		ServerConnection serverConnection = player.getCurrentServer().orElse(null);
+		return serverConnection == null ? null : serverConnection.getServer().getServerInfo().getName();
 	}
 
 	@Override

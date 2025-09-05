@@ -27,6 +27,7 @@ import java.util.function.Consumer;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.api.env.annote.PlatformPlayer;
 import space.arim.libertybans.core.env.message.PluginMessage;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -144,6 +145,14 @@ public interface EnvEnforcer<@PlatformPlayer P> {
 	 * @return the name
 	 */
 	String getNameFor(P player);
+
+	/**
+	 * For proxies, gets the server name where the player is currently located
+	 *
+	 * @param player the player
+	 * @return the server name, or null if unknown or a backend server
+	 */
+	@Nullable String getPlayableServerName(P player);
 
 	/**
 	 * Determines whether the player has a permission

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,8 +22,8 @@ package space.arim.libertybans.it.env;
 import jakarta.inject.Inject;
 import space.arim.libertybans.core.env.SimpleEnvUserResolver;
 import space.arim.libertybans.core.env.UUIDAndAddress;
-import space.arim.libertybans.it.env.platform.QuackPlatform;
 import space.arim.libertybans.it.env.platform.QuackPlayer;
+import space.arim.libertybans.it.env.platform.QuackPlayerStore;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
@@ -35,12 +35,12 @@ import java.util.function.Supplier;
 public final class QuackUserResolver extends SimpleEnvUserResolver {
 
 	private final FactoryOfTheFuture futuresFactory;
-	private final QuackPlatform platform;
+	private final QuackPlayerStore playerStore;
 
 	@Inject
-	public QuackUserResolver(FactoryOfTheFuture futuresFactory, QuackPlatform platform) {
+	public QuackUserResolver(FactoryOfTheFuture futuresFactory, QuackPlayerStore playerStore) {
 		this.futuresFactory = futuresFactory;
-		this.platform = platform;
+		this.playerStore = playerStore;
 	}
 
 	@Override
@@ -50,28 +50,28 @@ public final class QuackUserResolver extends SimpleEnvUserResolver {
 
 	@Override
 	public Optional<UUID> lookupUUID0(String name) {
-		return platform.getPlayer(name).map(QuackPlayer::getUniqueId);
+		return playerStore.getPlayer(name).map(QuackPlayer::getUniqueId);
 	}
 
 	@Override
 	public Optional<String> lookupName0(UUID uuid) {
-		return platform.getPlayer(uuid).map(QuackPlayer::getName);
+		return playerStore.getPlayer(uuid).map(QuackPlayer::getName);
 	}
 
 	@Override
 	public Optional<InetAddress> lookupAddress0(String name) {
-		return platform.getPlayer(name).map(QuackPlayer::getAddress);
+		return playerStore.getPlayer(name).map(QuackPlayer::getAddress);
 	}
 
 	@Override
 	public Optional<UUIDAndAddress> lookupPlayer0(String name) {
-		return platform.getPlayer(name)
+		return playerStore.getPlayer(name)
 				.map((player) -> new UUIDAndAddress(player.getUniqueId(), player.getAddress()));
 	}
 
 	@Override
 	public Optional<InetAddress> lookupCurrentAddress0(UUID uuid) {
-		return platform.getPlayer(uuid).map(QuackPlayer::getAddress);
+		return playerStore.getPlayer(uuid).map(QuackPlayer::getAddress);
 	}
 
 }

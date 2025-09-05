@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,6 +21,7 @@ package space.arim.libertybans.env.sponge;
 
 import jakarta.inject.Inject;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.api.Game;
@@ -92,6 +93,11 @@ public final class SpongeEnforcer extends AbstractEnvEnforcer<ServerPlayer> {
 	@Override
 	public String getNameFor(ServerPlayer player) {
 		return player.name();
+	}
+
+	@Override
+	public @Nullable String getPlayableServerName(ServerPlayer player) {
+		return null;
 	}
 
 	@Override

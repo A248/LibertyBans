@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,12 +32,12 @@ import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
+import space.arim.libertybans.it.env.platform.QuackPlatform;
+import space.arim.libertybans.it.env.platform.QuackPlayer;
 import space.arim.libertybans.it.resolver.RandomOperatorResolver;
 import space.arim.libertybans.it.resolver.RandomReasonResolver;
 import space.arim.libertybans.it.resolver.RandomReasonResolver.Reason;
 import space.arim.libertybans.it.resolver.RandomVictimResolver;
-import space.arim.libertybans.it.test.applicable.StrictnessAssertHelper;
-import space.arim.libertybans.it.util.RandomUtil;
 
 import java.util.UUID;
 
@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @ExtendWith({RandomOperatorResolver.class, RandomVictimResolver.class, RandomReasonResolver.class})
 public class SelectorIT {
 
-	private final StrictnessAssertHelper assertHelper;
+    private final QuackPlatform platform;
 	private final PunishmentDrafter drafter;
 	private final PunishmentSelector selector;
 	private final Operator operator;
@@ -57,9 +57,9 @@ public class SelectorIT {
 	private final String reason;
 
 	@Inject
-	public SelectorIT(StrictnessAssertHelper assertHelper, PunishmentDrafter drafter, PunishmentSelector selector,
-					  @DontInject Operator operator, @DontInject Victim victim, @DontInject @Reason String reason) {
-		this.assertHelper = assertHelper;
+	public SelectorIT(QuackPlatform platform, PunishmentDrafter drafter, PunishmentSelector selector,
+                      @DontInject Operator operator, @DontInject Victim victim, @DontInject @Reason String reason) {
+        this.platform = platform;
 		this.drafter = drafter;
 		this.selector = selector;
 		this.operator = operator;
@@ -131,9 +131,10 @@ public class SelectorIT {
 
 	@TestTemplate
 	public void selectMute() {
-		UUID uuid = UUID.randomUUID();
-		NetworkAddress address = RandomUtil.randomAddress();
-		assertHelper.connectAndAssumeUnbannedUser(uuid, "name", address);
+        QuackPlayer player = platform.newPlayer().buildFullyRandom();
+        UUID uuid = player.getUniqueId();
+        NetworkAddress address = NetworkAddress.of(player.getAddress());
+        platform.assumeLogin(player);
 
 		Punishment punishment = enactPunishment(PunishmentType.MUTE, PlayerVictim.of(uuid));
 		assertEquals(

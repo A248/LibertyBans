@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,6 +27,8 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.api.connection.Server;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
@@ -97,6 +99,12 @@ public class BungeeEnforcer extends AbstractEnvEnforcer<ProxiedPlayer> {
 	@Override
 	public String getNameFor(ProxiedPlayer player) {
 		return player.getName();
+	}
+
+	@Override
+	public @Nullable String getPlayableServerName(ProxiedPlayer player) {
+		Server server = player.getServer();
+		return server == null ? null : server.getInfo().getName();
 	}
 
 	@Override

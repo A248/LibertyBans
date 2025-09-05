@@ -23,6 +23,7 @@ import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import space.arim.injector.Injector;
 import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.database.Vendor;
 import space.arim.libertybans.core.punish.sync.SQLSynchronizationMessenger;
 import space.arim.libertybans.core.service.SettableTime;
 
@@ -39,7 +40,9 @@ final class InjectorCleanupCallback implements AfterEachCallback {
 		// Reset database + prevent unneeded compact
 		InternalDatabase database = injector.request(InternalDatabase.class);
 		database.truncateAllTables();
-		database.checkResetLocalDatabaseCompact();
+        if (database.getVendor() == Vendor.HSQLDB) {
+            database.checkResetLocalDatabaseCompact();
+        }
 		// Reset global clock
 		injector.request(SettableTime.class).reset();
 		// Reset synchronization

@@ -32,7 +32,6 @@ import space.arim.libertybans.it.ConfigSpec;
 import space.arim.libertybans.it.SetAltRegistry;
 import space.arim.libertybans.it.env.platform.QuackPlatform;
 import space.arim.libertybans.it.env.platform.QuackPlayer;
-import space.arim.libertybans.it.env.platform.QuackPlayerBuilder;
 
 import java.util.UUID;
 
@@ -41,6 +40,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+/**
+ * Used for checking connections and incoming logins, without affecting platform state
+ * <p>
+ * Because applying strictness requires IP address history, the "connect" methods make sure to register IP address
+ * history regardless of the @SetAltRegistry setting
+ */
 public class StrictnessAssertHelper {
 
 	private final PunishmentDrafter drafter;
@@ -65,6 +70,7 @@ public class StrictnessAssertHelper {
 		if (message != null || configSpec.altRegistryOption() == SetAltRegistry.Option.ON_CONNECTION) {
 			return message;
 		}
+		// Otherwise, need to register IP address history for later logic
 		return guardian.checkServerSwitch(uuid, name, address, "please_register").join();
 	}
 
@@ -88,7 +94,7 @@ public class StrictnessAssertHelper {
 				"Conflicting punishment. Punishment reason = " + reason);
 	}
 
-	private Punishment getBan(UUID uuid, NetworkAddress address) {
+	private Punishment getApplicable(UUID uuid, NetworkAddress address) {
 		return selector
 				.getApplicablePunishment(uuid, address, PunishmentType.BAN)
 				.toCompletableFuture()
@@ -96,17 +102,17 @@ public class StrictnessAssertHelper {
 	}
 
 	void assertBanned(UUID uuid, NetworkAddress address, String assertion) {
-		Punishment punishment = getBan(uuid, address);
+		Punishment punishment = getApplicable(uuid, address);
 		assertNotNull(punishment, assertion);
 
-		QuackPlayer player = new QuackPlayerBuilder(platform).buildRandomName(uuid, address);
-		platform.login(player);
+		QuackPlayer player = platform.newPlayer().buildRandomName(uuid, address);
+		platform.getPlayerStore().insert(player);
 		punishment.enforcePunishment().toCompletableFuture().join();
-		assertFalse(player.isStillOnline(), assertion + "; Player should have been kicked");
+		assertFalse(player.isOnline(), assertion + "; Player should have been kicked");
 	}
 
 	void assertNotBanned(UUID uuid, NetworkAddress address, String assertion) {
-		assertNull(getBan(uuid, address), assertion);
+		assertNull(getApplicable(uuid, address), assertion);
 	}
 
 }

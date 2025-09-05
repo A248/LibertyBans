@@ -25,7 +25,7 @@
 	<parent>
 		<groupId>space.arim.parent</groupId>
 		<artifactId>common-parent</artifactId>
-		<version>0.4.2</version>
+		<version>0.4.3</version>
 	</parent>
 
 	<groupId>space.arim.libertybans</groupId>
@@ -43,8 +43,8 @@
 		<common-parent.deploy-url>https://maven.cloudsmith.io/anand-beh/affero-gpl3/</common-parent.deploy-url>
 
 		<!-- Testing dependencies -->
-		<junit.version>5.9.1</junit.version>
-		<mockito.version>5.16.1</mockito.version>
+		<junit.version>5.13.4</junit.version>
+		<mockito.version>5.18.0</mockito.version>
 		<h2.version>2.1.210</h2.version>
 
 		<!-- API dependencies -->
@@ -70,7 +70,7 @@
 		<checkerqual.version>3.49.2</checkerqual.version>
 
 		<!-- Platform dependencies -->
-		<bungeecord.version>1.16-R0.4</bungeecord.version>
+		<bungeecord.version>1.21-R0.3</bungeecord.version>
 		<spigot.version>1.8.8-R0.1-20160221.082514-43</spigot.version>
 		<sponge.version>12.0.0</sponge.version>
 		<velocity.version>3.1.0</velocity.version>
@@ -215,14 +215,6 @@
 						<trimStackTrace>false</trimStackTrace>
 						<argLine>-XX:TieredStopAtLevel=1 -XX:-TieredCompilation -javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
 					</configuration>
-					<dependencies>
-						<dependency>
-							<groupId>org.junit.jupiter</groupId>
-							<artifactId>junit-jupiter-engine</artifactId>
-							<version>${junit.version}</version>
-							<scope>runtime</scope>
-						</dependency>
-					</dependencies>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -231,14 +223,6 @@
 						<argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
 						<failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
 					</configuration>
-					<dependencies>
-						<dependency>
-							<groupId>org.junit.jupiter</groupId>
-							<artifactId>junit-jupiter-engine</artifactId>
-							<version>${junit.version}</version>
-							<scope>runtime</scope>
-						</dependency>
-					</dependencies>
 				</plugin>
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>
@@ -601,6 +585,12 @@
 	</dependencyManagement>
 
 	<dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
