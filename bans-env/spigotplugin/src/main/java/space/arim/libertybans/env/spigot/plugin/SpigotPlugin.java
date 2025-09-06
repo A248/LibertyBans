@@ -68,15 +68,19 @@ public final class SpigotPlugin extends JavaPlugin {
 			}
 		}
 		Server server = plugin.getServer();
+        ClassLoader platformClassLoader = JavaPlugin.class.getClassLoader();
+
 		return Platform
 				.builder(Platform.Category.BUKKIT)
 				.nameAndVersion(server.getName(), server.getVersion())
 				// On Spigot slf4j is an internal dependency
 				.slf4jSupport(LibraryDetection.eitherOf(
 						new LibraryDetection.Slf4jPluginLoggerMethod(plugin),
-						new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.SLF4J_API, JavaPlugin.class.getClassLoader())
+						new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.SLF4J_API, platformClassLoader)
 				))
 				.kyoriAdventureSupport(new AdventureLibraryDetection())
+                // Caffeine is an internal dependency on LeafMC, a Paper fork
+                .caffeineProvided(new LibraryDetection.ByClassLoaderScan(ProtectedLibrary.CAFFEINE, platformClassLoader))
 				.snakeYamlProvided(LibraryDetection.enabled());
 	}
 
