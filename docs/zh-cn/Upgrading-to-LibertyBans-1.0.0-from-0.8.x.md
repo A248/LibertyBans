@@ -19,71 +19,71 @@ LibertyBans 1.0.0版本包含了若干个破坏性更新。本页面将帮助您
   * 在0.8.x版本中，执行IP处罚不仅需要处罚IP的权限，还需要执行常规处罚的权限。在1.0.0版本中，执行IP处罚只需要处罚IP的权限。
   * 为兼容性考虑，LibertyBans 0.8.x版本支持一个额外的时限权限节点`libertybans.dur.ban.<时间范围>`（即`dur`和`ban`对调了）。1.0.0版本不再支持此格式，正确的格式是`libertybans.ban.dur.<时间范围>`。
 
-## Changes to the messages.yml
+## messages.yml中的调整
 
-Some options in the messages.yml configuration have been renamed. To migrate your messages.yml easily, I suggest following this example (sourced from the Russian translation of LibertyBans): 
+message.yml中部分选项被重命名了。为了简单地迁移message.yml，我建议遵循下面这个流程（来自LibertyBans的俄语翻译）：
 
-* The `playerOrAddress` option is renamed to `player-or-address`.
-* `additions.<type>.permission.command` is now `additions.<type>.permission.uuid`. Similarly, `removals.<type>.permission.command` is now `removals.<type>.permission.uuid`.
-* `banList` is now `ban-list` and `muteList` now `mute-list`.
+* `playerOrAddress`选项已被重命名为`player-or-address`。
+* `additions.<type>.permission.command`已改为`additions.<type>.permission.uuid`。类似地，`removals.<type>.permission.command` 也改为`removals.<type>.permission.uuid`。
+* `banList`已改为`ban-list`，且`muteList`已改为`mute-list`.
 
-## Databases - MariaDB and MySQL
+## 数据库 - MariaDB与MySQL
 
-### Version Requirements
+### 版本要求
 
-If you use MariaDB or MySQL, you may need to upgrade your database server:
-* If you use MariaDB, at least MariaDB 10.3 is required. The latest MariaDB version is recommended.
-* If you use MySQL, at least MySQL 8.0 is required. MySQL 8.0 is the latest version.
+如果您使用MariaDB或MySQL，您可能需要升级您的数据库服务器：
+* 如果您使用MariaDB，最低版本要求为MariaDB 10.3。建议使用最新版的MariaDB。
+* 如果您使用MySQL，最低要求为MySQL 8.0。它也正是最新的版本。
 
-From LibertyBans 0.8.1 onward, older database versions are detected and a warning admonishes you in the server console.
-  * If you are on an older database version, you should have seen this warning. Nonetheless you ought to check your server console in the case you missed it.
+自LibertyBans 0.8.1起，插件会检测数据库是否过时，并在检测到时在控制台中向您发送警告消息。
+  * 如果您使用的是旧版本数据库，您应该已经看到过这条警告消息。无论如何，我们都建议您检查一下控制台，以防您漏过了它。
 
-Please keep in mind that other plugins, either on account of software age or inadequacy, may be incompatible with newer database versions. It is your responsibility to ensure compatibility.
+请注意其他插件可能因软件无人维护或功能不足，与新版本数据库不兼容。处理兼容性的事情是您的责任。
 
-### Distinction between MariaDB and MySQL
+### 显式区分MariaDB和MySQL
 
-It is now necessary to distinguish between MariaDB and MySQL when configuring the sql.yml:
+现在在配置sql.yml中，需要显式区分MariaDB和MySQL：
 
-* If you use MySQL, change `rdms-vendor` in the sql.yml to `MYSQL`.
-* If you use MariaDB, no action is needed.
+* 如果您使用MySQL，请在sql.yml中把`rdms-vendor`设置为`MYSQL`。
+* 如果您使用MariaDB，无需任何额外操作。
 
-## Multi-Instance / Multi-Proxy Support
+## 多实例/多代理支持
 
-This documentation is intended for LibertyBans 0.8.2, an upcoming 0.8.x release which will add a compatibility mode.
+本段文档是为LibertyBans 0.8.2版本服务的，这个即将发布的0.8.x版本将添加一个兼容模式。
 
-The compatibility mode will allow you to run LibertyBans 0.8.2 on the same database as 1.0.x.
+兼容模式使得您可以让LibertyBans 0.8.2版本和1.0.x版本同时使用相同的数据库。
 
-Until this compatibility mode is released, it is not possible to use LibertyBans 0.8.x and 1.0.x side-by-side on the same database. Therefore, you should upgrade your multi-proxy network once 0.8.2 has been made available.
+在兼容模式发布之前，您无法让LibertyBans 0.8.x版本与1.0.x版本共用数据库。因此，您应当在0.8.2版本发布后尽快升级您的群组服。
 
 ~~LibertyBans 0.8.2 can co-exist with LibertyBans 1.0.0 on the same database. Before beginning to upgrade to 1.0.0, you must set the option `version1-compatibility-mode` to `true` in the `sql.yml` for all your 0.8.2 LibertyBans instances.~~
 
 ~~After you upgrade to 1.0.0, it is safe to remove `version1-compatibility-mode` since this option does not exist in 1.0.0~~
 
-# Automatic Action
+# 自动操作
 
-## Database Migration
+## 数据库迁移
 
-LibertyBans 1.0.0, when it starts, will automatically upgrade your database to 1.0.0.
+LibertyBans 1.0.0版本启动时，会自动把您的数据库升级到1.0.0版本。
 
-The database schema has breaking changes, and some software which relies on it, such as the NamelessMC punishment panel, may need to be updated.
+升级后的数据库模式存在破坏性变更，因此部分依赖该数据库的软件，如NamelessMC的处罚面板，也需要相应更新。
 
-## Configuration Migration
+## 配置迁移
 
-New configuration options will be added automatically.
+新配置项会被自动添加。
 
-Existing configuration options will be preserved.
+现有的配置项会被保留。
 
-# Other useful information
+# 其他实用信息
 
-## Non-Breaking Changes
+## 非破坏性变更
 
-These changes might be useful to know.
+这些修改信息可能会比较实用。
 
-* The event scheduler feature (`mariadb.use-event-scheduler` in the sql.yml) has been removed. This feature existed solely as a minor performance optimization. If you were using this feature before, you can drop the event with `DROP EVENT IF EXISTS libertybans_refresher`
+* 事件计划的功能（sql.yml中的`mariadb.use-event-scheduler`）已被移除。此前该功能仅用于细微的性能优化。如果您先前使用过这个功能，您可以使用`DROP EVENT IF EXISTS libertybans_refresher`删除这些事件。
 
-## Automatic Upgrade from 0.8.x
+## 从0.8.x的自动更新
 
-LibertyBans will not delete the 0.8.x data. If you'd like to free up disk space, you can remove the old tables.
-  * Following a successful import, the 0.8.x tables will have "zeroeight_postmigration" in their name.
-  * **Please be careful with your data**. Always take a backup before deleting large amounts of data.
-  * In HSQLDB, you would need to edit the hypersql/punishments-database.script file. This must be done while the server is stopped. Deleting the tables correctly is not trivial, so it is suggested to ask for support if necessary.
+LibertyBans不会删除0.8.x的数据。如果您想要释放磁盘空间，您可以移除旧数据表。
+  * 成功迁移数据后，0.8.x的数据表名称中会含有“zeroeight_postmigration”字样。
+  * **数据无价，谨慎操作。**永远不要忘记在大量删除数据之前做好备份。
+  * 在HSQLDB中，您需要编辑hypersql/punishments-database.script文件。该操作只能在服务器关闭时进行。在这里正确地删除数据表并非轻而易举，所以必要时我们建议您来寻求支持。
