@@ -1,27 +1,52 @@
 
-## Changes
+## 更新内容
 
-* Require Java 17.
-* Using MariaDB with LibertyBans now requires MariaDB 10.6 at minimum.
-* Automatic detection of Geyser/Floodgate and determination of the Bedrock name prefix.
-  * The `GEYSER` server-type option has been removed. This server type was inflexible; it failed to distinguish between online and offline Geyser-utilizing servers. It is obsolete due to automatic Floodgate detection.
-  * The name prefix is queried from the Floodgate API at startup.
-* Before this release, `STRICT` address-strictness enforced user punishments too stringently - as if they were IP-based punishments - which was contrary to the documentation.
-  * Because it is impossible to retroactively change the behavior of `STRICT` without breaking existing setups, a new address-strictness setting `STERN` is added. `STERN` behaves the way `STRICT` was previously documented to.
-  * The `STRICT` documentation has updated to reflect its full behavior.
-  * See the wiki page for more information.
-* Added the exemption feature. To support exemption flexibly, different exemption backends are offered:
-  * The `exemption-luckperms` addon depends on LuckPerms and uses LuckPerms' group weights to define the exemption hierarchy.
-  * The `exemption-vault` addon depends on Vault and works only on Bukkit. It uses tiered permissions to define exemption levels.
-  * If their dependencies are not met, or if they are installed on the wrong platform, these addons will not load.
-  * See the wiki for documentation on this feature.
-* In the rare case that multiple mutes are issued very quickly, the `warn-actions` addon will make sure warns do not "overlap" one another. There were no reports of this happening, but it was a theoretical possibility. The solution works by leveraging the newly-added `seekBefore` API.
-* Snapshot versions are now differentiated according to the build timestamp.
-* The database-related thread pool is now fully shut down and its termination awaited before the connection pool is closed. This prevents a harmless exception which occurred when shutdown coincided with the periodic synchronization task.
+* 需要Java 17。
+* LibertyBans现在支持Sponge API 12与13，同时API 8与9也受支持。
+* 现已支持Folia，一个基于Paper、在区块操作上采用多线程的服务端软件。
+* 为LibertyBans使用MariaDB时，最低版本要求现在是MariaDB 10.6。
+  * MariaDB 10.3、10.4、10.5现在受到“反向”支持，这意味着我们特别不建议运行这些版本，并且这些版本需要重写查询语句。
+* 现在可以自动检测Geyser、Floodgate，并且能自行读取基岩版玩家前缀。
+  * server-type的`GEYSER`选项已被移除。这个类型不够灵活，无法区分开启和关闭正版验证的基岩版服务器。由于现在能自动检测Floodgate，它也被弃用了。
+  * 基岩版玩家前缀会在启动时从Floodgate API查询。
+* 在本更新之前，`STRICT`严格等级的执行机制过分严苛：它把所有用户封禁都作为IP封禁处理，这与文档相悖。
+  * 鉴于无法在不造成破坏性更新的前提下修改`STRICT`等级的行为，现在加入了新的严格等级`STERN`，它的机制与先前文档中对`STRICT`等级的描述一致。
+  * `STRICT`严格等级的文档也已经更新，现在能描述它的完整机制。
+  * 请查阅wiki页面了解更多信息。
+* 在罕见的情况下，可能会有多个禁言处罚被快速执行，现在`warn-actions`扩展会确保每个警告处罚不会“覆盖”另一个。尽管没有报告称这样的问题发生过，但理论上这种情况确实有可能发生。解决方法利用了新添加的`seekBefore`API。
+* 快照版本现根据构建时间戳进行区分。
+* 数据库相关的线程池现在会被完全关闭，并在关闭连接池前会等待其终止。此举可避免因关闭操作与周期性同步任务同时发生时出现的无害异常。
 
-### API Changes
+### 新功能
 
-* Expand selection capabilities:
-  * `SelectionOrder#countNumberOfPunishments` yields the pure number of punishments, which is more efficient than retrieving the punishments themselves from the database.
-  * `SelectionOrderBuilder#seekBefore` allows retrieving punishments before a specified time / ID. It is the counterpart of the existing method `SelectionOrderBuilder#seekAfter`.
-  * A selection order may filter by victim types, not just victims.
+* 添加了豁免功能，为了灵活地支持各种豁免场景，我们提供了不同的豁免后端机制：
+  * `exemption-luckperms`扩展依赖LuckPerms运行，会根据LuckPerms的用户组权重决定豁免等级。
+  * `exemption-vault`扩展依赖Vault运行，并且只能在Bukkit系服务端上运行。它会使用分级的权限来决定豁免等级。
+  * 如果扩展的依赖项未被安装，或者扩展被安装到了错误的平台上，这些扩展不会被加载。
+  * 请查阅wiki获取本功能的文档。
+* 添加了预设功能。分级处罚、处罚路径、处罚阶梯……这个功能有很多名字。
+  * 需要安装`layouts`扩展来启用此功能。配置方法已在wiki上描述。
+* 添加了服务器范围。
+  * 服务器范围和范围类别可以在命令中使用。比如：`-scope=<范围>`和`-category=<类别>`。此外，还可以定义管理员未定义范围时使用的默认范围。
+  * 每个服务器实例会生成一个新的配置文件`scope.yml`。该文件控制了该实例的配置文件，可用于设置实例的范围名称和所属的类别。它也具有通过向代理端查询后端实例的名称的选项。
+* 添加了`command-expunge`和`command-extend`扩展。这些扩展分别可以用于彻底清理处罚记录，或者在处罚到期前延长处罚期限。
+* 现在会对没有权限的玩家隐藏或混淆IP地址信息。
+
+### API变更
+
+* 在`PostPunishEvent` / `PostPardonEvent`中添加了目标用户名。
+* 扩展了选择功能并完善了API：
+  * `SelectionOrder#countNumberOfPunishments`返回纯处罚次数，相较于从数据库中检索处罚记录本身更为高效。
+  * `SelectionOrderBuilder#seekBefore`允许检索指定时间/ID之前的惩罚记录。该方法与现有方法`SelectionOrderBuilder#seekAfter`功能互补。
+  * `SelectionOrder`可以筛选目标类型，而不仅仅是特定目标。
+  * 并行和继承的 API 可用于选择适用惩罚措施，包括历史适用惩罚措施。该API复刻了现有基于目标的选择构建器，但需要提供UUID和NetworkAddress才能运作。
+  * 两种选择方法（按目标或按适用性）均可定义检索到的处罚记录的排序顺序。
+  * 在适当平台上运行时，确保了禁言记录缓存的可用性。
+* 添加了新增和更新处罚记录的新途径：
+  * 添加了从`DraftPunishment`恢复`DraftPunishmentBuilder`的方法。
+  * 新增基于升级路径的处罚计算API，并引入新事件。
+  * 添加了更新处罚记录详情（如原因、范围、结束时间）的新方法。
+* 小号检测功能现已公开，这意味着API用户可以获取小号信息。
+* 可以通过恰当的API彻底清理处罚记录。
+* 为服务器范围扩展了API。
+
