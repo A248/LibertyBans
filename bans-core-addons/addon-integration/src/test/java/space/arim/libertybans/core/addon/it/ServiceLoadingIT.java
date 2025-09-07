@@ -31,6 +31,7 @@ import space.arim.libertybans.core.addon.layouts.LayoutsModule;
 import space.arim.libertybans.core.addon.shortcutreasons.ShortcutReasonsModule;
 import space.arim.libertybans.core.addon.staffrollback.StaffRollbackModule;
 import space.arim.libertybans.core.addon.warnactions.WarnActionsModule;
+import space.arim.libertybans.core.addon.webhook.WebhookModule;
 
 import java.util.Set;
 
@@ -45,7 +46,7 @@ public class ServiceLoadingIT {
 				Set.of(
 						new CheckPunishModule(), new CheckUserModule(), new ExpungeModule(), new ExtendModule(),
 						new StaffRollbackModule(), new ExemptionLuckPermsModule(), new ExemptionVaultModule(),
-						new LayoutsModule(), new ShortcutReasonsModule(), new WarnActionsModule()
+						new LayoutsModule(), new ShortcutReasonsModule(), new WarnActionsModule(), new WebhookModule()
 				),
 				assertDoesNotThrow(AddonLoader::loadAddonBindModules)
 		);

@@ -66,6 +66,7 @@
         <module>layouts</module>
         <module>shortcut-reasons</module>
         <module>warn-actions</module>
+        <module>webhook</module>
         <module>addon-integration</module>
     </modules>
 

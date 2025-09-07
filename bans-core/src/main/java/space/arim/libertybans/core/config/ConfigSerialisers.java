@@ -19,6 +19,8 @@
 
 package space.arim.libertybans.core.config;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.DateTimeException;
 import java.time.ZoneId;
 import java.time.zone.ZoneRulesException;
@@ -51,6 +53,7 @@ final class ConfigSerialisers {
 				new ParsedDuration.Serializer(),
 				new DateTimeFormatterSerialiser(),
 				new ZoneIdSerialiser(),
+                new URISerialiser(),
 				new ConfiguredScope.Serializer()
 		);
 	}
@@ -150,5 +153,27 @@ final class ConfigSerialisers {
 		}
 
 	}
-	
+
+    private static final class URISerialiser implements ValueSerialiser<URI> {
+
+        @Override
+        public Class<URI> getTargetClass() {
+            return URI.class;
+        }
+
+        @Override
+        public URI deserialise(FlexibleType flexibleType) throws BadValueException {
+            String uri = flexibleType.getString();
+            try {
+                return new URI(uri);
+            } catch (URISyntaxException ex) {
+                throw flexibleType.badValueExceptionBuilder().message("Invalid URI: " + uri).cause(ex).build();
+            }
+        }
+
+        @Override
+        public String serialise(URI value, Decomposer decomposer) {
+            return value.toString();
+        }
+    }
 }

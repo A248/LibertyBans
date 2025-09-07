@@ -135,3 +135,9 @@ Configuration is straight-forward otherwise. If a staff member specifies an inva
 Allows executing actions, such as executing commands or inflicting additional punishments, when a certain amount of warns is reached.
 
 This addon is relatively easy to use and configure.
+
+### Webhook [webhook]
+
+Lets you send a webhook to an HTTP endpoint, containing punishment information, when a player is punished or pardoned.
+
+Most commonly, this is used for Discord webhooks. For example, you can broadcast to your Discord server when someone gets banned.

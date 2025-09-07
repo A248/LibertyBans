@@ -135,6 +135,11 @@
             <artifactId>addon-warn-actions</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>space.arim.libertybans.addon</groupId>
+            <artifactId>addon-webhook</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
