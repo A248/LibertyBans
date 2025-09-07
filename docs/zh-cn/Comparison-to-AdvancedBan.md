@@ -1,87 +1,87 @@
 
-This is intended to be an impartial analysis of the API, design, and implementation of AdvancedBan compared to LibertyBans.
+本页面旨在对AdvancedBan和LibertyBans之间在API、设计、和功能实现方面进行客观地分析。
 
-I (A248) am both the creator of LibertyBans and one of the lead contributors to AdvancedBan. Although I am not unbiased, I rely on my familiarity with both codebases to conduct an in-depth analysis.
+我（A248）既是LibertyBans的创建者，也是AdvancedBan中的一个主要贡献者。尽管我不能做到完全不偏不倚，我能够依赖对两个插件的代码结构来进行深入的分析。
 
-## Design
+## 设计
 
-### Singleton Managers
+### 单例管理
 
-AdvancedBan's codebase is heavily oriented toward singletons. This design decision leads to very fragile initialization. In the past, there have been issues where another plugin referenced AdvancedBan's classes and initialized them prematurely.<sup id="note1ret">[1](#note1)</sup>
+AdvancedBan的代码高度侧重于单例管理。这个设计思路使得其初始化过程非常脆弱。过去曾出现过其他插件引用AdvancedBan的类并过早初始化它们所导致的问题。<sup id="note1ret">[1](#note1)</sup>
 
-LibertyBans is fully instance-based, which means another plugin referencing its classes will not cause initialization conflicts.
+LibertyBans完全基于实例进行设计，这意味着其他引用其类的插件不会导致初始化冲突。
 
-### IDs
+### ID
 
-AdvancedBan has a quirk where it creates two IDs for every punishment - one ID for the active punishment and another ID for the punishment in history.
+AdvancedBan有一个奇怪的行为：它会为每个处罚记录创建两个ID：一个用于正在生效的处罚记录，另一个用于处罚历史记录之中。
 
-This is quite counter-intuitive. Having two separate punishment IDs can lead to confusion with appeals systems and variables in message configuration.
+这个机制很反直觉。使用两个不同的ID会在配置申诉系统和消息变量时产生误会。
 
-This finding was so unexpected that some of the core contributors to AdvancedBan were not aware of it and were surprised to hear about it.<sup id="note2ret">[2](#note2)</sup>
+这个现象实在是太出人意料，甚至有些AdvancedBan的核心贡献者都对此一无所知，并且在了解到的时候十分惊讶。<sup id="note2ret">[2](#note2)</sup>
 
-### Operator UUIDs
+### 管理员UUID
 
-AdvancedBan stores operator names, but not UUIDs. If a server operator changes their name, AdvancedBan will continue to display the old name in punishment messages.
+AdvancedBan只会存储管理员的名称，而不是UUID。如果一个管理员修改了他的名字，AdvancedBan仍会在处罚记录中显示它的旧名。
 
-LibertyBans stores the operator UUID and displays the most recently-known name.<sup id="note3ret">[3](#note3)</sup>
+LibertyBans会储存管理员的UUID，并展示最新的名称。<sup id="note3ret">[3](#note3)</sup>
 
-### Database Schema
+### 数据库模式
 
-AdvancedBan uses VARCHAR columns for storing UUIDs and IP addresses. This is equivalent to storing the string representation of UUIDs and IP addresses. In contrast, LibertyBans uses BINARY column types in order to reduce storage space. The actual difference is small, but not negligible.
+AdvancedBan在存储UUID和IP地址时会使用VARCHAR类型的列。这等效于在数据库里面储存字符串类型的UUID和IP地址。相反，LibertyBans会使用BINARY类型列存储数据，以此缩减存储体积。二者实际差异很小，但也不能忽视。
 
-### Timezones
+### 时区
 
-AdvancedBan stores the timezone offset as part of the timestamp in the database. This is somewhat clunky, and it requires that users of the AdvancedBan API carefully follow suit with this little-documented behavior.
+AdvancedBan会在数据库中会存储时区差异，作为时间戳的一部分。这个设计略显臃肿，需要AdvancedBan API的用户谨慎地适应这个未被记录的行为。
 
-LibertyBans uses UTC time in the database. When displaying a punishment, it uses the configured timezone.
+LibertyBans会在数据库里面记录UTC时间。在展示处罚记录时，它会将其转换为所配置的时区。
 
-Consequently, if you change the configured timezone in LibertyBans, all punishments will transparently update their displayed time. In AdvancedBan, however, the time will not be updated to the new timezone.
+因此，如果您在LibertyBans里面修改了时区，所有的处罚记录都会自动更新它们的显示时间。但在AdvancedBan中，时间就不会更新到新时区里面。
 
-## Implementation
+## 功能实现
 
-### Caching
+### 缓存
 
-AdvancedBan uses a hand-rolled punishment cache. This cache is quite brittle and has resulted in several bugs. It is populated and invalidated manually. Users ocassionally report issues with cached punishments failing to be invalidated.
+AdvancedBan采用手动构建的处罚缓存机制。该缓存机制相当脆弱，已导致多个漏洞。其数据填充与失效操作均需人工执行。用户偶尔会报告处罚缓存未能失效的问题。
 
-LibertyBans caches only mutes, and nothing else. It uses a caching library. No bugs to date (as of 21 Dec 2021) have been observed with the caching mechanism used by LibertyBans.
+LibertyBans只会缓存禁言处罚。它会使用一个缓存库。截止到2021年12月21日，没有人反馈因LibertyBans的缓存机制所导致的漏洞。
 
-### Transactional Consistency
+### 操作一致性
 
-AdvancedBan does not rely on transactional consistency like LibertyBans does. In practice, this means certain conditions can be violated in certain circumstances in AdvancedBan - this is a bug in AdvancedBan's design, and it is not a simple fix.
+与LibertyBans不同，AdvancedBan不会依赖操作一致性原则。在实践中，这意味着AdvancedBan的部分条件可以在特定情形中被突破——这是AdvancedBan设计中的漏洞，并且不能轻易修复。
 
-In both AdvancedBan and Liberty*Bans, attempting to ban a player already banned results in a message affirming such. If you try to ban another player twice, AdvancedBan will tell you "this player is already banned." However, this guarantee does not hold solid. If you are somehow able to execute /ban quickly enough twice, you can successfully ban another player twice.<sup id="note4ret">[4](#note4)</sup>
+在AdvancedBan和LibertyBans中，尝试封禁一个一封禁的玩家都会产生一条错误消息。如果您尝试二次封禁一个玩家，AdvancedBan会告诉您“该玩家已被封禁”。但是，这种条件不会被100%遵守。如果您设法能够以非常快的速度执行/ban命令两次，您就能成功地封禁同一个玩家两次。<sup id="note4ret">[4](#note4)</sup>
 
-Although it may sound far-fetched to ban a player twice quickly, it has been observed multiple times in practice. Automated punishment mechanisms, such as anticheats, are prone to issue commands very quickly, as they are not limited by human typing speed.
+尽管听起来快速封禁玩家两次很难实现，但是实际环境中该问题已经屡次出现。自动化处罚机制，如反作弊，不受人类输入速度的限制，因此可以以非常快的速度执行封禁命令。
 
-This bug in AdvancedBan used to be one reason users of LibertyBans who had imported from AdvancedBan would observe duplicate punishments. In contrast to AdvancedBan, LibertyBans makes full use of transactional consistency, and is therefore not subjet to the described AdvancedBan bug.
+AdvancedBan中的这个漏洞曾经导致LibertyBans用户在导入AdvancedBan的数据时，发现历史记录中出现了重复的处罚记录。与AdvancedBan不同，LibertyBans充分利用了操作一致性原则，因此不会出现上文所述的AdvancedBan中的漏洞。
 
-### Synchronous / Asynchronous Constructs
+### 同步与异步构造
 
-Unlike in popular myth, threads are not cheap. At present, a thread in Java is a 1-to-1 mapping of an OS thread, which requires significant resources. A wise program avoids context switches for small workloads, since the overhead of multithreaded execution would exceed the gains of using multiple cores.
+与常识相反，线程的开销并不小。目前Java中的线程是和操作系统的线程一一对应的，这使其需要消耗相当多的资源。好的程序设计会避免在细微的工作上切换上下文环境，不然多线程执行的开销会超过使用多核带来的收益。
 
-The AdvancedBan internals and API are synchronously designed. As a result, AdvancedBan necessarily spawns a new threaded task for most operations. This leads to increased context switching and resource consumption.
+AdvancedBan的内部和API都是同步设计的。因此，AdvancedBan的大多数操作都会产生一个新的线程。这就会导致频繁切换上下文，并消耗更多的资源。
 
-LibertyBan's asynchronous design has a few advantages. Threads are created as necessary and in accordance with the workload. This is much more lightweight and scalable.
+LibertyBan的异步设计有一点点优势。线程只会在必要时才会创建，并且会和工作相对应。这样的设计更轻量，也更可控。
 
-As a another consequence, it is easier for developers of AdvancedBan to accidentally introduce bugs. Specifically, it becomes easier to call a heavy operation on the main thread. Indeed, AdvancedBan will perform a query on the main thread in limited circumstances.<sup id="note5ret">[5](#note5)</sup>
+另一个后果就是AdvancedBan的开发者更容易在不经意间写出漏洞。更准确来说，开发者更容易在主线程上执行高开销的任务。比如，AdvancedBan会在有限的情况下在主线程上执行查询任务。<sup id="note5ret">[5](#note5)</sup>
 
-Note that *synchronous*, in this context, does **not** mean "on the main thread". Asynchronous does **not** mean multithreaded. I suggest reading [this StackOverflow answer](https://stackoverflow.com/a/748235/).
+注意，本段中的*同步*，**不表示**“在主线程上执行”；同时异步也**不表示**多线程设计。我推荐阅读一下[这份StackOverflow上的答案](https://stackoverflow.com/a/748235/)。
 
-### Thread safety
+### 线程安全性
 
-Parts of AdvancedBan's code are not thread safe. This has lead to many subtle bugs, which are still plaguing AdvancedBan.<sup id="note6ret">[6](#note6)</sup> Moreover, AdvancedBan does not place much of an emphasis on synchronisation.<sup id="note7ret">[7](#note7)</sup>
+AdvancedBan中的部分代码无法做到线程安全。该问题导致了许多至今仍在烦扰AdvancedBan的漏洞。<sup id="note6ret">[6](#note6)</sup>此外，AdvancedBan也不会太重视同步操作。<sup id="note7ret">[7](#note7)</sup>
 
-In LibertyBans, there have never been any known synchronisation issues to-date.
+在LibertyBans中，目前没有任何线程同步问题。
 
-### Connection Pooling
+### 连接池
 
-AdvancedBan depends on HikariCP since version 2.1.9, so it looks like it uses a connection pool. However, in reality, internal synchronization in AdvancedBan prevents it from taking advantage of the additional connections. Unfortunately, this is not so easy to solve on AdvancedBan's side. That same synchronization is critical for preventing other thread safety problems.<sup id="note8ret">[8](#note8)</sup>
+自2.1.9版本开始，AdvancedBan依赖于HikariCP，所以它看起来会使用连接池。但实际上，AdvancedBan内部的同步设计阻止它利用额外连接的优势。很不幸的是，AdvancedBan很难轻易地修复这个问题。那个同步设计也正是保护其他线程不产生安全问题的关键。<sup id="note8ret">[8](#note8)</sup>
 
-LibertyBans uses HikariCP and takes advantage of it.
+LibertyBans使用HikariCP，并且能充分利用其优势。
 
-### UTF-8 Encoding
+### UTF-8编码
 
-AdvancedBan has historically suffered with UTF-8 support, and the current AdvancedBan codebase still uses the default encoding in some places, which suggests there are still lurking issues. UTF-8 has been problematic in config files as well as database definitions. References: 
+AdvancedBan过去曾经饱受UTF-8支持的困扰，并且目前的AdvancedBan代码仍然会在部分地方使用默认的编码，这意味着还有潜在的问题。UTF-8编码问题一直是配置文件和数据库定义的一大难题。参考资料：
  * https://www.spigotmc.org/resources/advancedban.8695/update?update=327430 
  * https://www.spigotmc.org/resources/advancedban.8695/update?update=228946
  * https://github.com/DevLeoko/AdvancedBan/issues/433
@@ -89,123 +89,123 @@ AdvancedBan has historically suffered with UTF-8 support, and the current Advanc
  * https://github.com/DevLeoko/AdvancedBan/issues/202
  * https://github.com/DevLeoko/AdvancedBan/issues/74
 
-LibertyBans is made with full Unicode support in mind.
+LibertyBans在设计时会刻意的完全支持Unicode编码。
 
-### API Documentation
+### API文档
 
-The AdvancedBan API is significantly under-documented. This makes it time-consuming for other developers to use the AdvancedBan API, as they need to discover the meaning and details of API methods by looking at the implementation or asking for support. Details such as nullability and contractual guarantees are wholly missing from the AdvancedBan API documentation.
+AdvancedBan API的文档很不充分。这使得其他使用AdvancedBan API的开发者不得不花费大量时间，通过查看实际实现代码或者寻求支持来探索API方法的含义和细节。诸如空值性和方法约定的细节在AdvancedBan API的文档中只字未提。
 
-The lack of a clear API specification in AdvancedBan also leads to incorrect assumptions: by relying on certain implementation details, external code becomes reliant on specific behavior which the author of AdvancedBan may not have intended such behavior to be guaranteed. In turn, this means that a future update of AdvancedBan may inadvertently break plugins which depended on the specific internal behavior.
+AdvancedBan不明确的API描述也会导致不正确的假定：外部代码由于高度依赖特定的实现细节，很可能会依赖AdvancedBan作者非预期中的行为来运作。这样一来，AdvancedBan未来的更新可能会意外地破坏依赖特定内部行为的附属插件。
 
-In contrast, the LibertyBans API is fully documented using javadocs. This makes it easy for other developers to learn and use the LibertyBans API. Method expectations, contracts, and guarantees are clearly stated and explained.
+相反，LibertyBans API通过javadoc进行了详尽的说明。这使得其他开发者很容易学习并使用LibertyBans的API。方法预期行为、约定、和保证的细节都有明确的表述和解释。
 
-## Philosophy
+## 设计理念
 
-### Versioning Policy
+### 版本命名规范
 
-LibertyBans follows strict semantic versioning. This means that updates a single major release (e.g. 1.x or 2.x) will not introduce breaking changes. Semantic versioning makes developing dependent plugins much easier, because it ensures compatibility with a clearly stated number. It means updating the plugin within the same major release won't break your setup.
+LibertyBans严格遵守语义化版本控制。这意味着在相同主版本号内更新（比如1.x，或2.x）不会导致破坏性更新。语义化版本空值使得附属插件的开发更加容易，因为其兼容性能够通过一个明确的数字来表明。这意味着在相同主版本号内进行更新不会破坏现有的配置。
 
-AdvancedBan does not follow semver. On the contrary, it has made breaking changes within minor versions. For example, 2.3.0 is not guaranteed to be compatible with 2.2.1. As another example, version 2.1.6 changed the format of notify permissions.
+AdvancedBan并不遵守语义化版本控制。相反，它会在次要版本中引入破坏性更新。比如，2.3.0版本不一定能和2.2.1版本兼容。另一个栗子时2.1.6版本修改了通知的权限节点格式。
 
-The purpose of semantic versioning is to avoid confusion and dependency conflicts by clearly defining compatibility. AdvancedBan's refusal to follow it means code made with a previous version of AdvancedBan could break after a seemingly small update.
+语义化版本控制的目的是通过明确地定义兼容性来避免误会和依赖相冲突。AdvancedBan不遵守语义化版本控制的现状，意味着依赖其前一版本的代码可能会在看似细微的更新之后无法正常运行。
 
-References:
+参考资料：
   * https://www.spigotmc.org/resources/advancedban.8695/update?update=367825
   * https://www.spigotmc.org/resources/advancedban.8695/update?update=321631
 
-### Price
+### 价格
 
-Both AdvancedBan and LibertyBans are distributed at no cost.
+AdvancedBan和LibertyBans均免费发布。
 
-In the past, there was an update of AdvancedBan where **the author charged users to upgrade their data**. The update changed the plugin's data format but AdvancedBan did not provide a free migrator for users on previous versions.<sup id="note9ret">[9](#note9)</sup>
+过去AdvancedBan曾经有一次更新，**但是作者对升级数据格式的服务进行收费。**该更新修改了插件的数据格式，但是AdvancedBan并没有为旧版本用户提供一个免费的迁移工具。<sup id="note9ret">[9](#note9)</sup>
 
-### User Philosophy
+### 用户理念
 
-There is an increased tendency to cater to users' every wish in AdvancedBan. In LibertyBans, there is more of an emphasis on *doing things correctly* than making things easy. Cutting corners often leads to problems.
+AdvancedBan更倾向于满足用户的各种需求，而LibertyBans则更注重*正确地实现*而非追求便捷。走捷径往往会引发问题。
 
-An example of this difference in philosophy is a bug in AdvancedBan which causes it to take over other plugins' commands. For example, if you are running Essentials, `/essentials:ban` may actually become an AdvancedBan command! This is confusing behavior. It leads to silly error messages such as:
+一个案例就是AdvancedBan当中一个接管其他插件命令的漏洞。比如，如果您同时使用了Essentials插件，`/essentials:ban`可能实际上会变成AdvancedBan的命令！这是个很诡异的行为。它会使得产生这样的奇怪报错：
 
 > Unhandled exception during tab completion for command '/tempban Siikeee ' in plugin Essentials v2.18.1.0
 
-Even though it is AdvancedBan which is managing the /tempban command.<sup id="note10ret">[10](#note10)</sup> See also [the full error](https://pastebin.com/v46X9J2M).
+尽管实际上是AdvancedBan在管理/tempban命令。<sup id="note10ret">[10](#note10)</sup>另请参阅[完整的错误日志](https://pastebin.com/v46X9J2M)。
 
-LibertyBans believes in better stewardship and will not take over other plugins' commands. If there is a conflicting command, users should solve the conflict through the correct means (using the server's commands.yml, defining aliases, etc.).
+LibertyBans更相信用户的管理能力，因此不会接管其他插件的命令。如果出现了命令冲突，用户自己应当通过恰当的方式解决冲突（如使用服务器的commands.yml，定义命令别名，等等）。
 
-## Requirements
+## 依赖要求
 
-In general, LibertyBans uses more modern technology, but also has greater requirements.
+总体而言，LibertyBans使用更现代的技术，但是也会有更高的要求。
 
-### Java Version Support
+### Java版本支持
 
-LibertyBans requires Java 17 whereas AdvancedBan permits Java 8.
+LibertyBans需要Java 17，而AdvancedBan仅需Java 8。
 
-### External Databases
+### 外部数据库
 
-Using an external database in either plugin is optional. Both AdvancedBan and LibertyBans use HSQLDB by default.
+两个插件中都可选地使用外部数据库。AdvancedBan和LibertyBans都会默认使用HSQLDB。
 
-LibertyBans requires certain minimum versions for database servers. At least MySQL 8.0, MariaDB 10.6, or PostgreSQL 12 is required. Older versions are not supported.
+LibertyBans对于数据库服务端有特定的最低版本要求。它至少需要MySQL 8.0，MariaDB 10.6，或者PostgreSQL 12。旧版本不受支持。
 
-### Platform Support
+### 平台支持
 
-LibertyBans supports Sponge and Velocity, which AdvancedBan does not. Both support Bukkit and BungeeCord.
+LibertyBans支持Sponge和Velocity，而AdvancedBan不支持。二者都支持Bukkit和Bungeecord。
 
-Note that AdvancedBan has "unstable" Velocity support, but the feature has known bugs. Contributors say it is not maintained.<sup id="note11ret">[11](#note11)</sup>
+注意AdvancedBan有对Velocity“不稳定”的支持，但是这个功能有已知的漏洞。贡献者说这项支持现已不再维护。<sup id="note11ret">[11](#note11)</sup>
 
-## Features
+## 功能
 
-AdvancedBan and LibertyBans each have several features the other does not.
+AdvancedBan和LibertyBans都有一些另一方不包含的功能。
 
-### Core punishment types
+### 核心处罚类型
 
-* Both LibertyBans and AdvancedBan include bans, ip-bans, mutes, warns, and kicks.
-* AdvancedBan supports player notes, whereas LibertyBans does not.
-* By the nature of its flexible design, LibertyBans also supports ip-mutes, ip-warns, and ip-kicks, even though these are rarely used. It costs nothing to add these extra features.
+* LibertyBans和AdvancedBan均支持封禁、IP封禁、禁言、警告、踢出处罚。
+* AdvancedBan支持对玩家进行标注，而LibertyBans不支持。
+* 得益于LibertyBans的灵活设计，它也支持对IP地址进行禁言、警告或踢出（虽说很少被使用）。添加这些功能没有任何额外开销。
 
-### Combatting Punishment Evasion (Alt Accounts)
+### 对抗处罚逃避（应对小号）
 
-LibertyBans supports multiple modes of IP address-based punishment, in order to automatically block alt accounts. There is also a command to check for alts, as well as an automatic notification when an alt of a banned player joins the server.
+LibertyBans支持多种基于IP的处罚严格等级来自动处理小号。它也同样具有检查小号的命令，同时能够在已封禁玩家的小号进入服务器时自动发送通知。
 
-AdvancedBan has no similar functionality. It does have a command to check a player's IP address, however.
+AdvancedBan没有类似的功能。不过它确实有一个查询玩家IP地址的命令。
 
-### Exemption
+### 豁免
 
-Although both plugins support the exemption feature which prevents staff from banning each other, it is implemented slightly differently.
+尽管两个插件都支持阻止管理员互相封禁的豁免功能，它们各自的实现有细微的差异。
 
-For offline players, AdvancedBan's permission checking depends on LuckPerms on proxies and Vault permissions on single servers. If these conditions are not met, the feature breaks silently for offline players.
+对于离线玩家，AdvancedBan的权限检查依赖于LuckPerms（代理端）或Vault权限节点（单服务器）。如果这些需求未被满足，离线玩家的权限检测会静默地被跳过。
 
-LibertyBans' exemption feature will never break silently. However, this imposes greater requirements. LibertyBans requires the installation of a supported exemption provider - currently LuckPerms or Vault. Without an exemption provider, the feature is entirely unavailable.
+LibertyBans的豁免功能不会被静默地跳过。不过，这就会导致更多的依赖项。LibertyBans要求安装支持的豁免提供者——目前是LuckPerms或者Vault。如果提供者不存在，该功能完全不可用。
 
-### Importing From Other Plugins
+### 从其他插件导入
 
-LibertyBans supports importing from AdvancedBan, BanManager, LiteBans, and vanilla.
+LibertyBans支持导入AdvancedBan、BanManager、LiteBan、和原版服务器导入数据。
 
-AdvancedBan does not provide any importers.
+AdvancedBan没有提供任何导入功能。
 
-### Converting Storage Backends
+### 切换数据存储
 
-LibertyBans allows the user to swap between storage backends using the self-import feature.
+LibertyBans通过自我导入功能允许用户切换数据存储方式。
 
-AdvancedBan does not provide this feature itself, but [an extension plugin](https://github.com/A248/AdvancedBanMigrator) implements this conversion.
+AdvancedBan本身并没有提供这项功能，但是有[一个附属插件](https://github.com/A248/AdvancedBanMigrator)实现了这一功能。
 
-### Punishment Listing
+### 处罚记录列表
 
-AdvancedBan has /banlist, which is really a punishment list which includes all active punishments.
+AdvancedBan有/banlist命令，但实际上是一个包含所有生效处罚记录的完整列表。
 
-LibertyBans' /banlist only shows bans, while /mutelist only shows mutes.
+LibertyBans的/banlist只显示封禁记录，同时/mutelist只显示禁言记录。
 
-Both plugins provide /history and /warns in the same manner.
+二者都提供/history和/warns命令，其功能也相似。
 
-LibertyBans also includes /blame, which AdvancedBan does not.
+LibertyBans还提供了AdvancedBan中不存在的/blame命令。
 
-### Multi-Proxy / Multi-Instance Synchronization
+### 多代理/多实例同步
 
-LibertyBans synchronizes punishments across multiple instances, if enabled. This is commonly used for multi-proxy setups.
+LibertyBans在启用功能的时候会在多个实例之间同步处罚记录。这一般用于多个代理的配置。
 
-### Layouts
+### 预设
 
-AdvancedBan has a feature called layouts which specifies pre-defined reasons for use by staff.
+AdvancedBan有一个名为预设（Layouts）的功能，会为管理员提供预定义的处罚原因。
 
-## References
+## 参考资料
 
 <a id="note1">1</a>: A248. "Singleton initialization beginning to show its weakness." AdvancedBan Github Issue. https://github.com/DevLeoko/AdvancedBan/issues/406 [↩](#note1ret)
 
@@ -229,6 +229,6 @@ AdvancedBan has a feature called layouts which specifies pre-defined reasons for
 
 <a id="note11">11</a>: Hopefuls. Comment on "Create AdvancedBan on velocity." AdvancedBan Github Issue. https://github.com/DevLeoko/AdvancedBan/issues/547#issuecomment-1013552009 [↩](#note11ret)
 
-### Disclaimer
+### 免责声明
 
-Please note that no harm is meant to subjects of criticism. If the writing sounds harsh, we apologize; please let us know and we will make the language less harsh.
+请注意，本文没有任何贬损其中插件主体的目的。如有冒犯，我们深表歉意；请联系我们，我们会修改其措辞。
