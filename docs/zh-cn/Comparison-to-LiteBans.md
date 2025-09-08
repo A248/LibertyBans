@@ -1,63 +1,63 @@
 
-Since LiteBans is closed-source and pay-walled, it is hard to gather information about its workings. Very little is known about its internal code design. In fact, it may even be illegal to reverse-engineer LiteBans.
+鉴于LiteBans是闭源收费的，我们很难获取其运作的信息。其内部的代码设计细节几乎不为人所知。事实上，对LiteBans进行逆向工程可能甚至是违法的。
 
-This comparison will focus on what information is known about LiteBans.
+本对比页面将聚焦于对LiteBans已知的信息。
 
-## Design
+## 设计
 
 ### API
 
-LiteBans's API encourages users to query its database directly. As a  result, developers working with the LiteBans API have criticized it as a poor abstraction. Requiring API users to execute SQL tightly couples the database schema and API users.
+LiteBans的API鼓励用户去直接查询它的数据库。因此，和它的API打交道的开发者批评过它的抽象性很差。要求API用户直接执行SQL语句，会把这些用户与数据库模式牢牢绑定在一起。
 
-This has consequences:
-* If a plugin leaks a connection, it will appear that LiteBans is the source of the leak. Debugging connection leaks is further complicated because the LiteBans binary is obfuscated.
-* Creating a rigid database schema upon which API users rely means LiteBans is unable to improve its database schema without widespread breakage.
+这便有以下后果：
+* 如果附属插件发生了连接泄露，其原因便会归咎到LiteBans上面。由于LiteBans的代码被混淆，随后的调试工作就会变得更复杂。
+* API用户高度依赖数据库模式的现状，意味着在不造成大规模破坏性变更的前提下，LiteBans很难优化它的数据库模式。
 
-LibertyBans instead provides an expansive Java API which attempts to cover the capabilities offered by a punishment plugin. In contrast to LiteBans, plugins using the LibertyBans API need not execute SQL.
+相反，LibertyBans提供了一个可扩展的Java API，旨在囊括一个处罚插件能够提供的所有功能。相比于LiteBans，使用LibertyBans API的插件不需要直接执行SQL语句。
 
-### Database Schema
+### 数据库模式
 
-LiteBans, like other ban plugins, uses VARCHAR columns for storing UUIDs and IP addresses. This is equivalent to storing the string representation of UUIDs and IP addresses.
+和其他处罚插件一样，LiteBans会在储存UUID和IP地址时使用VARCHAR类型的列。这等效于直接存储字符串格式的UUID和IP地址。
 
-LibertyBans uses BINARY column types in order to reduce storage space. This means only the necessary bytes of the UUIDs and IP addresses are stored. The actual difference is small, but not negligible.
+LibertyBans则会使用BINARY类型的列，以此来节约储存空间。这意味着只有存储UUID和IP地址时必须的字节会被储存。实际上的差异很小，但也不容忽视。
 
-### Undoing Operator
+### 撤销操作者
 
-LiteBans stores the operator who revoked a punishment. This makes it possible for staff to determine who is responsible for unbans, unmutes, etc.
+LiteBans会记录撤销处罚的管理员信息。这样工作人员可以决定撤销处罚的责任人。
 
-LibertyBans does not store this information.
+LibertyBans则不会储存这一信息。
 
-## Implementation
+## 功能实现
 
-### Test Suite
+### 测试套件
 
-LibertyBans has an extensive test suite. Automated tests help catch bugs before a release can be made. The scope and strength of automated testing in LibertyBans has saved countless hours of development time.
+LibertyBans拥有一套广泛的测试套件。自动的测试可以在发布版本之前找出可能的漏洞。自动测试的范围和深度为LibertyBans省下了无数的开发时间。
 
-LiteBans is closed-source; as such, it is not clear whether it has a test suite. However, evidence suggests LiteBans has little automated testing:
-* LiteBans has experienced bugs which are of such a kind as to imply LiteBans does not have significant automated testing:
-  * "Fixed the /unwarn command, broken since 2.1" and "Fixed a harmless error when starting the plugin for the first time if config.yml doesn't exist yet" - https://www.spigotmc.org/resources/litebans.3715/update?update=102167
-  * "Fixed Database.prepareStatement() returning a closed statement" - https://www.spigotmc.org/resources/litebans.3715/update?update=163048
-  * A bug due to an invalid query string: https://gitlab.com/ruany/LiteBans/-/issues/391
-  * These kinds of bugs would most likely be prevented by automated testing
-* Bug descriptions frequently mention manual testing, but none of them mention automated testing.
+LiteBans是闭源的，因此并不清楚其是否具备测试套件。但是，现有证据表明LiteBans并没有完备的自动测试：
+* LiteBans曾经出现过一些漏洞，这些漏洞暗示LiteBans没有足够的测试流程：
+  * “Fixed the /unwarn command, broken since 2.1”（修复了自2.1以来乌发运作的/unwarn命令）与“Fixed a harmless error when starting the plugin for the first time if config.yml doesn't exist yet”（修复了在首次启动插件时因config.yml不存在抛出的一个无害的错误） - https://www.spigotmc.org/resources/litebans.3715/update?update=102167
+  * “Fixed Database.prepareStatement() returning a closed statement”（修复了Database.prepareStatement()返回一个已关闭语句的问题） - https://www.spigotmc.org/resources/litebans.3715/update?update=163048
+  * 因无效查询语句导致的一个bug： https://gitlab.com/ruany/LiteBans/-/issues/391
+  * 这些类型的bug很可能会通过自动测试被避免。
+* 漏洞描述中频繁提及手动测试，但没有一个提到自动测试。
 
-### Platform Separation
+### 平台区分
 
-The LibertyBans codebase is separated based on the platform.
+LibertyBans的代码会被拆分成面向不同平台的代码。
 
-Separating code for each platform prevents whole categories of bugs relating to accidental class initialization. Fewer bugs means less time spent debugging and more time available for improving the rest of the plugin.
+为平台拆分代码可以完全避免意外的类初始化导致的一整类漏洞。漏洞越少，耗在调试问题的时间就越少，提升插件其余部分的时间就越多。
 
-Although LiteBans is closed-source, evidence strongly suggests that its codebase is *not* separated for each platform.<sup id="note1ret">[1](#note1)</sup>
+尽管LiteBans是闭源的，现有证据表明它的代码很可能并没有依据平台进行拆分。<sup id="note1ret">[1](#note1)</sup>
 
-## Philosophy
+## 设计理念
 
-### Price and Availability
+### 价格与可用性
 
-LibertyBans is free and open-source. Anyone can inspect the source code if they so desire. Anyone can work on it; anyone can contribute and add features or modify it for own use. Users can use the latest version of the source code without having to wait until the next official release.
+LibertyBans是自由、开源的软件。所有人都可以查看它的源代码。所有人都可以参与其中、为其做出贡献、添加新功能、或者修改后自用。用户随时可以使用最新版本的源代码，无需等到下一次官方发布。
 
-LiteBans is closed-source. Only the author has access to the source code; only the author can implement new features. The JAR is obfuscated so that it cannot be decompiled into readable source code.
+LiteBans则是闭源的。只有作者能够访问源代码，只有作者能够实现新功能。它的jar文件经过混淆，所以不能被反编译成可读的源代码。
 
-LiteBans is also behind a pay-wall, meaning that users have to pay in order to use it. This also means that prospective users cannot test out the plugin so easily. They have to pay before testing.
+此外，LiteBans是收费的，用户必须为了能使用它而付费。这也意味着那些有前瞻性的用户不能轻易地进行测试。他们必须在测试前付费。
 
 Users of LiteBans must carefully consider whether they are willing to rely entirely on the author of LiteBans for features and improvements.
 
