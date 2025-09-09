@@ -35,8 +35,8 @@ LibertyBans拥有一套广泛的测试套件。自动的测试可以在发布版
 
 LiteBans是闭源的，因此并不清楚其是否具备测试套件。但是，现有证据表明LiteBans并没有完备的自动测试：
 * LiteBans曾经出现过一些漏洞，这些漏洞暗示LiteBans没有足够的测试流程：
-  * “Fixed the /unwarn command, broken since 2.1”（修复了自2.1以来乌发运作的/unwarn命令）与“Fixed a harmless error when starting the plugin for the first time if config.yml doesn't exist yet”（修复了在首次启动插件时因config.yml不存在抛出的一个无害的错误） - https://www.spigotmc.org/resources/litebans.3715/update?update=102167
-  * “Fixed Database.prepareStatement() returning a closed statement”（修复了Database.prepareStatement()返回一个已关闭语句的问题） - https://www.spigotmc.org/resources/litebans.3715/update?update=163048
+  * “Fixed the /unwarn command, broken since 2.1”（修复了自2.1以来无法运作的/unwarn命令）与“Fixed a harmless error when starting the plugin for the first time if config.yml doesn't exist yet”（修复了在首次启动插件时因config.yml不存在抛出的一个无害的错误） - https://www.spigotmc.org/resources/litebans.3715/update?update=102167
+  * “Fixed Database.prepareStatement() returning a closed statement”（修复了Database.prepareStatement()会返回一个已关闭语句的问题） - https://www.spigotmc.org/resources/litebans.3715/update?update=163048
   * 因无效查询语句导致的一个bug： https://gitlab.com/ruany/LiteBans/-/issues/391
   * 这些类型的bug很可能会通过自动测试被避免。
 * 漏洞描述中频繁提及手动测试，但没有一个提到自动测试。
@@ -73,15 +73,15 @@ LiteBans并不遵守语义化版本控制，这为使用其API的用户带来了
 
 LibertyBans的API完全遵守语义化版本控制。
 
-## 需求
+## 依赖
 
 ### Java版本支持
 
-LibertyBans需要至少Java 17,而LiteBans仅需Java 8。
+LibertyBans需要至少Java 17，而LiteBans仅需Java 8。
 
 ### 外部数据库
 
-LibertyBans和LiteBans均不必需一个外部数据库。LibertyBans默认使用HSQLDB数据库，而LiteBans默认使用H2数据库。
+外部数据库对LibertyBans和LiteBans均不是必需的。LibertyBans默认使用HSQLDB数据库，而LiteBans默认使用H2数据库。
 
 LibertyBans和LiteBans均支持MariaDB、MySQL、和PostgreSQL。LiteBans还支持SQLite，但是他们并不推荐使用它。
 
