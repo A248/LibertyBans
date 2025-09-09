@@ -59,92 +59,92 @@ LiteBans则是闭源的。只有作者能够访问源代码，只有作者能够
 
 此外，LiteBans是收费的，用户必须为了能使用它而付费。这也意味着那些有前瞻性的用户不能轻易地进行测试。他们必须在测试前付费。
 
-Users of LiteBans must carefully consider whether they are willing to rely entirely on the author of LiteBans for features and improvements.
+LiteBans的用户应当谨慎考虑他们是否愿意完全仰仗于LiteBans的作者来添加新功能和改进。
 
-### Support
+### 支持
 
-Support for LibertyBans is provided through GitHub Issues and a dedicated text channel on a Discord Server.
+LibertyBans的支持通道位于Github Issues和Discord频道上一个独立的文本频道。
 
-LiteBans primarily offers support through Discord; however, it only does so for users who verified their purchase of the plugin. This also includes requesting support for their API, meaning if you're not a customer of their plugin, chances are low you will gain access to their support server, or receive help with their API at all.
+LiteBans主要通过Discord提供支持；但是他们只会为已购买插件并通过验证的用户提供支持。这也包括请求与API相关的支持。这意味着如果您不是该插件的客户，您不太可能能够访问他们的支持通道，或者取得与其API相关的支持。
 
-### Versioning
+### 版本控制
 
-LiteBans does not follow semantic versioning, leading to potential instability for developers using its API. It has introduced new API without issuing a minor release.<sup id="note2ret">[2](#note2)</sup>
+LiteBans并不遵守语义化版本控制，这为使用其API的用户带来了潜在的不稳定性。它已经有过引入新API功能，但不发布新的次版本号的先例。<sup id="note2ret">[2](#note2)</sup>
 
-LibertyBans fully follows semantic versioning for its API.
+LibertyBans的API完全遵守语义化版本控制。
 
-## Requirements
+## 需求
 
-### Java Version Support
+### Java版本支持
 
-LibertyBans requires Java 17 whereas LiteBans permits Java 8.
+LibertyBans需要至少Java 17,而LiteBans仅需Java 8。
 
-### External Databases
+### 外部数据库
 
-Neither LibertyBans nor LiteBans requires an external database. LibertyBans uses HSQLDB by default, and LiteBans uses H2 by default.
+LibertyBans和LiteBans均不必需一个外部数据库。LibertyBans默认使用HSQLDB数据库，而LiteBans默认使用H2数据库。
 
-Both LibertyBans and LiteBans support MariaDB, MySQL, and PostgreSQL. LiteBans also has support for SQLite, but SQLite usage is discouraged by LiteBans.
+LibertyBans和LiteBans均支持MariaDB、MySQL、和PostgreSQL。LiteBans还支持SQLite，但是他们并不推荐使用它。
 
-LibertyBans requires certain minimum versions for database servers. At least MySQL 8.0, MariaDB 10.3, or PostgreSQL 12 is required. Older versions are not supported.
+LibertyBans对部分数据库服务器有最低版本要求。MySQL需至少8.0，MariaDB需至少10.3，而PostgreSQL需至少12。旧版本均不受支持。
 
-## Platform Support
+## 平台支持
 
-* Bukkit, BungeeCord, and Velocity are supported by both plugins.
-* Sponge:
-  * LibertyBans supports Sponge.
-  * LiteBans declines to support Sponge on the author's reason that Sponge does not provide asynchronous chat events.<sup id="note3ret">[3](#note3)</sup>
+* 两个插件均支持Bukkit，Bungeecord，和Velocity。
+* 关于Sponge：
+  * LibertyBans支持Sponge.
+  * LiteBans拒绝支持Sponge，作者给出的原因是Sponge不提供异步聊天事件。<sup id="note3ret">[3](#note3)</sup>
 
-LiteBans' support for Velocity came after repeated user requests. It was suggested that LiteBans be made open-source so that someone could contribute a Velocity version. The reluctance of the LiteBans author to add Velocity support suggests that it may be unwise to rely on proprietary software for critical functionality.
+LiteBans对Velocity的支持是在用户反复提出功能请求后才添加的。有人提出LiteBans应该开源，这样就有人能贡献一个Velocity版本。LiteBans作者添加Velocity的迟滞性表明，依赖闭源软件实现关键功能恐怕是不明智的。
 
-## Features
+## 功能
 
-### Geyser Support
+### Geyser支持
 
-LibertyBans and LiteBans have Geyser support.
+LibertyBans和LiteBans均提供Geyser支持。
 
-However, documentation suggests LiteBans requires the prefix to be the period character (".").<sup id="note4ret">[4](#note4)</sup>
+但是，LiteBans的文档表明Geyser的用户名前缀必须是点（"."）。<sup id="note4ret">[4](#note4)</sup>
 
-### Core punishment types
+### 核心处罚类型
 
-Both LibertyBans and LiteBans include bans, ip-bans, mutes, warns, and kicks.
+LibertyBans和LiteBans均提供封禁、IP封禁、禁烟、警告和踢出功能。
 
-By the nature of its flexible design, LibertyBans also supports ip-mutes, ip-warns, and ip-kicks, even though these are rarely used. It costs nothing to add these extra features.
+得益于LibertyBans的灵活设计，它也支持对IP地址进行禁言、警告或踢出（虽说很少被使用）。添加这些功能没有任何额外开销。
 
-LiteBans allows banning IP ranges. LibertyBans does not.
+LiteBans支持封禁IP地址范围，而LibertyBans不支持。
 
-### Combatting Punishment Evasion (Alt Accounts)
+### 对抗处罚逃避（应对小号）
 
-Both LibertyBans and LiteBans have a command to check for alts as well as an automatic notification when an alt of a banned player joins the server.
+LibertyBans和LiteBans都有查询小号的命令，也都能在被封禁用户的小号进入服务器时自动发出提示。
 
-LibertyBans further supports multiple modes of IP address-based punishment, in order to automatically block alt accounts. LiteBans does not have this feature.
+LibertyBans还支持多种基于IP地址的处罚严格等级，以此自动封禁小号。LiteBans则不存在此功能。
 
-### Exemption
+### 豁免功能
 
-Although both plugins support the exemption feature which prevents staff from banning each other, it is implemented slightly differently.
+尽管两个插件都支持阻止管理员互相封禁的豁免功能，它们各自的实现有细微的差异。
 
-For offline players, LiteBans's permission checking depends on Vault on single servers. Without a Vault-compatible permissions plugin, the feature breaks silently for offline players.
+对于离线玩家，单服务器上LiteBans的权限检查依赖于Vault权限节点（单服务器）。如果没有安装与Vault兼容的权限插件，离线玩家的权限检测会静默地被跳过。
 
-LibertyBans' exemption feature will never break silently. However, it requires the installation of a supported exemption provider - currently LuckPerms or Vault. Without an exemption provider, the feature is entirely unavailable.
+LibertyBans的豁免功能不会被静默地跳过。不过，这就会导致更多的依赖项。LibertyBans要求安装支持的豁免提供者——目前是LuckPerms或者Vault。如果提供者不存在，该功能完全不可用。
 
-Moreover, LiteBans' exemption does not provide arbitrary levels.<sup id="note5ret">[5](#note5)</sup>
+此外，LiteBans的豁免功能并没有数字等级。<sup id="note5ret">[5](#note5)</sup>
 
-### Importing From Other Plugins
+### 从其他插件导入
 
-LibertyBans supports importing from AdvancedBan, BanManager, LiteBans, and vanilla.
+LibertyBans支持从AdvancedBan、BanManager、LiteBans、和原版服务器导入数据。
 
-LiteBans supports importing from AdvancedBan, BanManager, BungeeAdminTools, MaxBans, UltraBans, and vanilla.
+LiteBans支持从AdvancedBan、BanManager、BungeeAdminTools、MaxBans、UltraBans、和原版服务器导入数据。
 
-### Server Scopes
+### 服务器范围
 
-Both plugins enable punishments scoped to certain servers.
+两个插件都可以执行针对特定服务器的处罚。
 
-However, LiteBans lacks scope categories, or the ability to group servers into a single scope.<sup id="note6ret">[6](#note6)</sup>
+不过，LiteBans没有服务器分类功能，即把多个服务器组合为一个范围的功能。<sup id="note6ret">[6](#note6)</sup>
 
-### Multi-Proxy / Multi-Instance Synchronization
+### 多代理/多实例同步
 
-Both LibertyBans and LiteBans provide synchronization across multiple instances, a feature commonly used for multi-proxy setups.
+LibertyBans和LiteBans都会在多个实例之间同步处罚记录。这一般用于多个代理的配置。
 
-## References
+## 参考资料
 
 <a id="note1">1</a>: Falistos. "Start error under Java 18." LiteBans Gitlab Issue. https://gitlab.com/ruany/LiteBans/-/issues/408 [↩](#note1ret)
 
@@ -158,6 +158,6 @@ Both LibertyBans and LiteBans provide synchronization across multiple instances,
 
 <a id="note6">6</a>: lewisakura. "Server scope groups". LiteBans Gitlab Issue. https://gitlab.com/ruany/LiteBans/-/issues/452 [↩](#note6ret)
 
-### Disclaimer
+### 免责声明
 
-Please note that no harm is meant to subjects of criticism. If the writing sounds harsh, we apologize; please let us know and we will make the language less harsh.
+请注意，本文没有任何贬损其中插件主体的目的。如有冒犯，我们深表歉意；请联系我们，我们会修改其措辞。
