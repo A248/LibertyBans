@@ -1,22 +1,22 @@
 
-This is intended to be an impartial analysis of the API, design, and implementation of BanManager compared to LibertyBans.
+本页面旨在对BanManager和LibertyBans之间在API、设计、和功能实现方面进行客观地分析。
 
-BanManager is somewhat unlike the other punishment plugins compared here (AdvancedBan, LibertyBans, LiteBans). It introduces several unique features and creative approaches. This is despite BanManager's much older codebase. As such, BanManager deserves additional credit.
+某种程度上，BanManager和这里所比较的其他处罚插件（即AdvancedBans，LibertyBans，和LiteBans）不太一样。它引入了很多独特的功能，并且做了很多有创意的尝试，尽管BanManager的代码要老旧得多。因此，BanManager理应得到额外的关注。
 
-## Design
+## 设计
 
-### Database Schema
+### 数据库模式
 
-The database schemas used by BanManager and LibertyBans are quite similar to each other.
-* Both plugins store the raw bytes of UUIDs and IP addresses, rather than using text: BINARY for UUIDs, VARBINARY for IP addresses.
-* Both store joining players' UUIDs and IP addresses, so that this information can be retrieved later as needed.
-* Both provide seconds-level precision for dates.
+BanManager和LibertyBans所采用的数据库模式彼此很相似。
+* 二者都会以原始二进制码、而不是文本的格式储存UUID和IP地址：UUID采用BINARY格式，IP地址采用VARBINARY格式。
+* 二者都会记录进入过服务器的玩家地UUID和IP地址，以供未来按需调用。
+* 二者都为日期提供了二级精确度。
 
-Differences: 
-* BanManager additionally stores the undoing operator, the staff member who revoked a punishment. This enables staff to see who is responsible for unbans, unmutes, etc. Moreover, BanManager stores *when* the punishment was revoked.
-* BanManager stores whether a punishment was made silently.
-* Whereas BanManager repeats its schema, LibertyBans' schema is *normalized*, following common practice for relational database schemas.
-* LibertyBans uses fewer tables than BanManager to store the same amount of punishments, which may or may not improve code quality.
+差异：
+* BanManager还会记录撤销处罚的执行者，即撤销处罚的管理员信息。这样工作人员可以知道是谁对解封、解除禁言等操作负责。此外，BanManager还会记录撤销处罚的*时间*。
+* BanManager会记录处罚是否是被静默执行的。
+* BanManager地数据库模式会重复，而LibertyBans的数据库模式是*规范化*的，遵循关系数据库模式的常见做法。
+* LibertyBans储存等量数据所使用的表格比BanManager要少，这可能会提高代码质量，也可能不会。
 
 ### API
 
