@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2026 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,26 +17,27 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.env;
+package space.arim.libertybans.env.fabric;
+
+import space.arim.libertybans.core.env.Environment;
+import space.arim.libertybans.core.env.PlatformListener;
 
 import java.util.Set;
 
-public interface Environment {
+public final class FabricEnv implements Environment {
 
-	Set<PlatformListener> createListeners();
+    @Override
+    public Set<PlatformListener> createListeners() {
+        return Set.of();
+    }
 
-	PlatformListener createAliasCommand(String alias, String target);
+    @Override
+    public PlatformListener createAliasCommand(String command) {
+        return null;
+    }
 
-	/**
-	 * Used for Sponge, Fabric, and the standalone application only. <br>
-	 * <br>
-	 * Sponge requires early command registration and service provision, Fabric needs similar command accessors;
-     * while for the standalone application this usage is merely convenient.
-	 *
-	 * @return the platform accessors
-	 */
-	default Object platformAccess() {
-		throw new UnsupportedOperationException("Used for Sponge/Fabric/standalone only");
-	}
-
+    @Override
+    public Object platformAccess() {
+        return Environment.super.platformAccess();
+    }
 }

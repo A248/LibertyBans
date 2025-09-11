@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "${plugin_id}",
+  "name": "${plugin_name}",
+  "version": "${plugin_version}",
+  "description": "${plugin_description}",
+  "license": "AGPL-3.0-or-later",
+  "contact": {
+    "homepage": "${plugin_url}",
+    "issues": "${plugin_url}/issues",
+    "sources": "${plugin_url}"
+  },
+  "depends": {
+    "minecraft": [
+      "1.21.8"
+    ]
+  },
+  "environment": "*",
+  "authors": [
+    {
+      "name": "${plugin_author}"
+    }
+  ],
+  "entrypoints": {
+    "main": [
+      "space.arim.libertybans.env.fabric.mod.FabricMod"
+    ]
+  }
+}

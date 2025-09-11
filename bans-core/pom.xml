@@ -889,6 +889,11 @@
 			<groupId>com.github.ben-manes.caffeine</groupId>
 			<artifactId>caffeine</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>space.arim.managedwaits</groupId>
+            <artifactId>managedwaits</artifactId>
+            <version>${managedwaits.version}</version>
+        </dependency>
 		<dependency>
 			<groupId>space.arim.api</groupId>
 			<artifactId>arimapi-chat</artifactId>

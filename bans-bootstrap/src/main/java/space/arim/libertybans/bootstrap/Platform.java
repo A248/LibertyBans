@@ -133,6 +133,7 @@ public final class Platform {
 	public enum Category {
 		BUKKIT,
 		BUNGEECORD,
+        FABRIC,
 		SPONGE,
 		VELOCITY,
 		STANDALONE;

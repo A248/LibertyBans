@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2026 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,26 +17,42 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.env;
+package space.arim.libertybans.env.fabric.mod;
 
-import java.util.Set;
+import org.slf4j.Logger;
+import space.arim.libertybans.bootstrap.logger.BootstrapLogger;
 
-public interface Environment {
+final class Slf4jBootstrapLogger implements BootstrapLogger {
 
-	Set<PlatformListener> createListeners();
+	private final Logger logger;
 
-	PlatformListener createAliasCommand(String alias, String target);
+	Slf4jBootstrapLogger(Logger logger) {
+		this.logger = logger;
+	}
 
-	/**
-	 * Used for Sponge, Fabric, and the standalone application only. <br>
-	 * <br>
-	 * Sponge requires early command registration and service provision, Fabric needs similar command accessors;
-     * while for the standalone application this usage is merely convenient.
-	 *
-	 * @return the platform accessors
-	 */
-	default Object platformAccess() {
-		throw new UnsupportedOperationException("Used for Sponge/Fabric/standalone only");
+	@Override
+	public void debug(String message) {
+		logger.debug(message);
+	}
+
+	@Override
+	public void info(String message) {
+		logger.info(message);
+	}
+
+	@Override
+	public void warn(String message) {
+		logger.warn(message);
+	}
+
+	@Override
+	public void warn(String message, Throwable ex) {
+		logger.warn(message, ex);
+	}
+
+	@Override
+	public void error(String message) {
+		logger.error(message);
 	}
 
 }

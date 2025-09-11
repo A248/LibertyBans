@@ -34,6 +34,7 @@
 	<modules>
 		<module>bungee</module>
 		<module>bungeeplugin</module>
+        <module>fabric</module>
 		<module>spigot</module>
 		<module>spigotplugin</module>
 		<module>sponge</module>

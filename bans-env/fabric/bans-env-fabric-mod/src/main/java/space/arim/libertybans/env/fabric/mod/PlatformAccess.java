@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2026 Anand Beh
+ * Copyright © 2022 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,26 +17,17 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.env;
+package space.arim.libertybans.env.fabric.mod;
 
-import java.util.Set;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import net.minecraft.server.command.ServerCommandSource;
+import space.arim.libertybans.bootstrap.BaseFoundation;
 
-public interface Environment {
+public interface PlatformAccess {
 
-	Set<PlatformListener> createListeners();
+	LiteralArgumentBuilder<ServerCommandSource> commandHandler();
 
-	PlatformListener createAliasCommand(String alias, String target);
-
-	/**
-	 * Used for Sponge, Fabric, and the standalone application only. <br>
-	 * <br>
-	 * Sponge requires early command registration and service provision, Fabric needs similar command accessors;
-     * while for the standalone application this usage is merely convenient.
-	 *
-	 * @return the platform accessors
-	 */
-	default Object platformAccess() {
-		throw new UnsupportedOperationException("Used for Sponge/Fabric/standalone only");
-	}
-
+    static PlatformAccess access(BaseFoundation base) {
+        return (PlatformAccess) base.platformAccess();
+    }
 }
