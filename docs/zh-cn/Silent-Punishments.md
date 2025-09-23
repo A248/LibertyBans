@@ -22,4 +22,4 @@
 * 拥有`libertybans.<类型>.notifysilent`或`libertybans.<类型>.unnotifysilent`的管理员总是会看到通知消息，无论执行者是否添加了`-s`参数。
 以上说明中的`<类型>`表示如'ban'或'mute'这类处罚类型。
 
-请参阅[权限](Permissions)了解更多信息。
+请参阅[权限](zh-cn/Permissions)了解更多信息。

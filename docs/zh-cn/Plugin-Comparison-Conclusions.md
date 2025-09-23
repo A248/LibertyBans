@@ -2,9 +2,9 @@
 Clearly, the advice here will tell you to use LibertyBans.
 
 Nevertheless, it's useful to know why. This page derives conclusions from the comparisons to each individual plugin:
-* [Comparison to AdvancedBan](Comparison-to-AdvancedBan)
-* [Comparison to BanManager](Comparison-to-BanManager)
-* [Comparison to LiteBans](Comparison-to-LiteBans)
+* [Comparison to AdvancedBan](zh-cn/Comparison-to-AdvancedBan)
+* [Comparison to BanManager](zh-cn/Comparison-to-BanManager)
+* [Comparison to LiteBans](zh-cn/Comparison-to-LiteBans)
 
 ### Terminology
 

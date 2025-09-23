@@ -20,7 +20,7 @@ LibertyBans使用常见的".yml"文件。您可以使用[在线YAML解析器](ht
 
 ### 重载命令
 
-如果您拥有必需的[权限](Permissions)，您可以使用重载命令重新加载大部分配置。
+如果您拥有必需的[权限](zh-cn/Permissions)，您可以使用重载命令重新加载大部分配置。
 
 ```
 /libertybans reload
@@ -39,4 +39,4 @@ LibertyBans使用常见的".yml"文件。您可以使用[在线YAML解析器](ht
 
 ### 扩展
 
-安装[扩展](Addons)则需要彻底重启服务器。
+安装[扩展](zh-cn/Addons)则需要彻底重启服务器。

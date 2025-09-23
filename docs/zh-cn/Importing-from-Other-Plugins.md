@@ -5,7 +5,7 @@ LibertyBans支持从以下来源导入数据：
 * LiteBans
 * 原版服务器封禁 (包括 Essentials)
   * 从原版服务器导入封禁数据需要您在导入过程中在Bukkit服务器上运行LibertyBans。导入完成之后，您就可以将LibertyBans移动到其他受支持的平台。
-* LibertyBans自身，旨在进行存储后端转换。请查阅[自我导入](Self-Importing)页面了解更多信息。
+* LibertyBans自身，旨在进行存储后端转换。请查阅[自我导入](zh-cn/Self-Importing)页面了解更多信息。
 
 如果您没有看到您使用的插件列在上面，请创建[新的反馈](https://github.com/A248/LibertyBans/issues)并描述您需要的功能。
 

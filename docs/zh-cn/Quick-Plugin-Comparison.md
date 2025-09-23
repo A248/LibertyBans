@@ -79,7 +79,7 @@ LiteBans的代码经过了混淆，这意味着它的jar文件被刻意地进行
 
 即插件的API是否遵循语义化版本控制，因此其他插件是否可以稳定地依赖它的API。
 
-请参阅[semver.org](https://semver.org/)和详细的插件对比页面。
+请参阅[semver.org](https://semver.org/lang/zh-CN/)和详细的插件对比页面。
 
 LiteBans的“部分”标记：LiteBans遵循语义化版本控制中对“主版本号”仅限于破坏性修改的要求，但是并没有遵循对新API的语义化版本要求，这理应在次版本号中予以指出。
 

@@ -72,11 +72,11 @@
 
 ### 范围功能
 
-如果启用了范围权限，还需要设置额外的权限来使用处罚和列表命令。请参阅[范围处罚](Scoped-Punishments.md)页面。
+如果启用了范围权限，还需要设置额外的权限来使用处罚和列表命令。请参阅[范围处罚](zh-cn/Scoped-Punishments.md)页面。
 
 ## 附加功能
 
-附加功能的具体权限在 [附加组件](Addons) 页面上有说明。
+附加功能的具体权限在 [附加组件](zh-cn/Addons) 页面上有说明。
 
 # LibertyBans 0.8.x
 
@@ -97,4 +97,4 @@
 
 限制时长的权限与1.0.0版本中相同。
 
-另请参阅 [从 0.8.x 升级至 1.0.0](Upgrading-to-LibertyBans-1.0.0-from-0.8.x)
+另请参阅 [从 0.8.x 升级至 1.0.0](zh-cn/Upgrading-to-LibertyBans-1.0.0-from-0.8.x)

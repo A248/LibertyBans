@@ -18,7 +18,7 @@ LibertyBans遵循语义版本控制规则，并且附带一些额外的说明来
 ### 数据库格式
 
 您只需要在以下情形中关注数据库格式的变更：
-1. 运行LibertyBans的[多个实例](Running-Multiple-Instances)。
+1. 运行LibertyBans的[多个实例](zh-cn/Running-Multiple-Instances)。
 2. 使用连接到数据库的外部程序，如网页面板。
 
 在假定没有额外程序连接到数据库的情况下，使用LibertyBans的唯一实例不需要考虑数据库格式修改。

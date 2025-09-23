@@ -7,7 +7,7 @@
 
 默认的地址严格等级是"普通"（`NORMAL`）。其他处罚插件的行为与LibertyBans中的"宽容"（`LENIENT`）等级类似。
 
-对于大型服务器，在选择严格等级时还需要考虑[性能因素](Database-Performance.md)。
+对于大型服务器，在选择严格等级时还需要考虑[性能因素](zh-cn/Database-Performance.md)。
 
 ## 用户封禁
 

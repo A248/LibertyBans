@@ -7,7 +7,7 @@ LibertyBans提供了一系列工具，来防止被处罚者使用小号绕过处
 
 管理员可以对IP地址进行处罚。不过，相比于同类型的其他插件，LibertyBans不仅会对IP地址进行处理，还会根据现有的数据来发现相关联的小号。
 
-请参阅[处罚执行方式](Punishment-Enforcement_-Lenient,-Normal,-and-Strict-settings)页面了解更多信息。
+请参阅[处罚执行方式](zh-cn/Punishment-Enforcement_-Lenient,-Normal,-and-Strict-settings)页面了解更多信息。
 
 ## 组合式处罚
 
@@ -17,7 +17,7 @@ UUID与IP地址的共存也使得针对每个用户的组合惩罚更易于追�
 * 如果您平时习惯于对IP地址进行处罚，可以试试组合式处罚。
 * 如果您想对玩家直接执行IP处罚，可以考虑组合式处罚。
 
-组合式处罚的概念简单有效，但也有要注意的地方。请参阅[组合式处罚指南](Guide-to-Composite-Punishments)。
+组合式处罚的概念简单有效，但也有要注意的地方。请参阅[组合式处罚指南](zh-cn/Guide-to-Composite-Punishments)。
 
 ## 小号检查
 

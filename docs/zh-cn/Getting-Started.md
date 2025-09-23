@@ -36,7 +36,7 @@
 您可以使用玩家的玩家名或者IP地址来执行处罚。
 
 * 如果您指定的是玩家名，LibertyBans将封禁该玩家的UUID，这样该玩家无法通过改名绕过处罚。
-* 如果您指定的是IP地址，LibertyBans将封禁该IP地址，任何使用该IP地址的玩家都会被封禁（参见[处罚的执行方式](Punishment-Enforcement_-Lenient,-Normal,-and-Strict-settings)）
+* 如果您指定的是IP地址，LibertyBans将封禁该IP地址，任何使用该IP地址的玩家都会被封禁（参见[处罚的执行方式](zh-cn/Punishment-Enforcement_-Lenient,-Normal,-and-Strict-settings)）
 
 封禁举例：
 * `/ban DeviousPlayer` - 封禁DeviousPlayer。
