@@ -1,0 +1,575 @@
+ # 
+ # Messages configuration
+ # 
+ # 
+ # In most cases, the variables inside the default messages are those available
+ # in that specific message. The exception to this is messages which are related
+ # to a certain punishment.
+ # 
+ # When message has an associated punishment, multiple variables are available:
+ # 
+ # %ID% - punishment ID number
+ # %TYPE% - punishment type, e.g. 'Ban'
+ # %TYPE_VERB% - punishment type as a verb, e.g. 'Banned'
+ # %VICTIM% - display name of the victim of the punishment
+ # %VICTIM_ID% - identifier of victim, like the target player's UUID
+ # %OPERATOR% - display name of the staff member who made the punishment
+ # %OPERATOR_ID% - identifier of the operator, like the staff member's UUID
+ # %UNOPERATOR% - staff member undoing the punishment. available only when the punishment is undone
+ # %UNOPERATOR_ID% - identifier of staff member undoing the punishment, like the staff members' UUID
+ # %REASON% - reason for the punishment
+ # %SCOPE% - scope of the punishment
+ # %DURATION% - original duration (how long the punishment was made for)
+ # %START_DATE% - the date the punishment was created
+ # %TIME_PASSED% - the time since the punishment was created
+ # %TIME_PASSED_SIMPLE% - the time since the punishment was created, rounded to the biggest time unit possible (e.g. 2 months instead of 1 month 23 days)
+ # %END_DATE% - the date the punishment will end, or formatting.permanent-display.absolute for permanent punishments
+ # %TIME_REMAINING% - the time until the punishment ends, or formatting.permanent-display.relative for permanent punishments
+ # %TIME_REMAINING_SIMPLE% - the time until the punishment ends, rounded to the biggest time unit possible (e.g. 10 days instead of 9 days 13 hours)
+ # %HAS_EXPIRED% - Shows if a punishments duration has run out. Does not check if the punishment is revoked!
+ # %TRACK% - the escalation track of the punishment, for example if you are using layouts
+ # %TRACK_ID% - the ID of the escalation track
+ # %TRACK_NAMESPACE% - the namespace of a track can be used by other plugins to implement their own layouts
+ # 
+ # The following variables have limited availability:
+ # %TARGET% - the original target argument of a command. For example, in '/ipban Player1', %TARGET% is Player1
+ # %PAGE% - the number of the current page in a list
+ # %NEXTPAGE% - the number of the next page
+ # %LASTPAGE% - the number of the last page
+ # %NEXTPAGE_KEY% - a code which if used with the command, shows the next page
+ # %LASTPAGE_KEY% - a code which if used with the command, shows the last page
+ # (%PREVIOUSPAGE% - a deprecated equivalent for %LASTPAGE%)
+ # 
+ # Pagination can be absolute or relative depending on which variables you use. For example, the %NEXTPAGE_KEY%
+ # and %LASTPAGE_KEY% variables provide special codes which, when used with the command, switch to the next page.
+ # These are designed to be used with 'click events' so that staff can easily click to move between pages.
+ # Please note that this feature is based on relative browsing of the page results, which means that a page represents
+ # a "place" in the list and not really an absolute page number.
+all:
+  usage: '&cBilinmeyen alt komut. Kullanım gösteriliyor:'
+   # Bu bölüm sadece sunucu kapsamları özelliği kullanılıyorsa geçerlidir
+  scopes:
+    invalid: '&cGeçersiz kapsam belirtildi: &e%SCOPE_ARG%&c.'
+    no-permission-for-default: '&cBu komutu kapsam belirtmeden kullanamazsın.'
+    no-permission: '&c&e%SCOPE%&c kapsamını kullanamazsın.'
+
+   # Bir oyuncu /libertybans yazarsa ama 'libertybans.commands' iznine sahip değilse, bu reddetme mesajı gösterilir
+  base-permission-message: '&cBunu yapamazsın.'
+  prefix:
+     # Etkinleştirilirse, tüm mesajlar önek ile başlayacak
+    enable: true
+     # Kullanılacak önek
+    value: '&6&lLibertyBans &8»&7 '
+
+   # Komut verirken, belirtilen oyuncu veya IP bulunamazsa gösterilecek hata mesajı
+  not-found:
+    uuid: '&c&o%TARGET%&7 geçerli bir uuid değil.'
+    player: '&c&o%TARGET%&7 çevrimiçi veya çevrimdışı bulunamadı.'
+    player-or-address: '&c&o%TARGET%&7 çevrimiçi veya çevrimdışı bulunamadı ve geçerli bir IP adresi değil.'
+
+
+ # /banlist, /mutelist, /history, /warns, /blame için kullanılır
+lists:
+  history:
+    usage: '&cKullanım: /history &e<oyuncu> [sayfa]'
+    layout:
+      body:
+        - '&7[&e%ID%&7] / %TYPE%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%START_DATE%&f'
+      footer: '&7Sayfa &e%PAGE%&7.||ttp:Sonraki sayfaya geçmek için tıkla||cmd:/libertybans history %TARGET% %NEXTPAGE_KEY%'
+      header:
+        - '&7[&eID&7] &8/ &7Ceza Türü&f'
+        - '&7Yetkili &8/ &7Sebep &8/ &7Uygulandığı Tarih&f'
+
+    maxPages: '&7Sayfa &e%PAGE%&7 mevcut değil.'
+    perPage: 10
+    noPages: '&c&o%TARGET%&7 geçmiş cezası yok.'
+    permission:
+      command: '&7Geçmişi görüntüleyemezsin.'
+
+
+  ban-list:
+    usage: '&cKullanım: /banlist &e[sayfa]'
+    layout:
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      footer: '&7Sayfa &e%PAGE%&7.||ttp:Sonraki sayfaya geçmek için tıkla||cmd:/libertybans banlist %NEXTPAGE_KEY%'
+      header:
+        - '&7[&eID&7] &e&oHedef&f'
+        - '&7Yetkili &8/ &7Sebep &8/ &7Kalan Süre&f'
+
+    maxPages: '&7Sayfa &e%PAGE%&7 mevcut değil.'
+    perPage: 10
+    noPages: '&7Aktif yasaklama yok.'
+    permission:
+      command: '&7Yasaklama listesini görüntüleyemezsin.'
+
+
+  mute-list:
+    usage: '&cKullanım: /mutelist &e[sayfa]'
+    layout:
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM%&f'
+        - '&7%OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      footer: '&7Sayfa &e%PAGE%&7.||ttp:Sonraki sayfaya geçmek için tıkla||cmd:/libertybans mutelist %NEXTPAGE_KEY%'
+      header:
+        - '&7[&eID&7] &e&oHedef&f'
+        - '&7Yetkili &8/ &7Sebep &8/ &7Kalan Süre&f'
+
+    maxPages: '&7Sayfa &e%PAGE%&7 mevcut değil.'
+    perPage: 10
+    noPages: '&7Aktif susturma yok.'
+    permission:
+      command: '&7Susturma listesini görüntüleyemezsin.'
+
+
+  warns:
+    usage: '&cKullanım: /warns &e<oyuncu> [sayfa]'
+    layout:
+      body: '&7[&e%ID%&7] %OPERATOR% &8/ &7%REASON% &8/ &7%TIME_REMAINING%&f'
+      footer: '&7Sayfa &e%PAGE%&7.||ttp:Sonraki sayfaya geçmek için tıkla||cmd:/libertybans warns %TARGET% %NEXTPAGE_KEY%'
+      header: '&7[&eID&7] Yetkili &8/ &7Sebep &8/ &7Kalan Süre&f'
+
+    maxPages: '&7Sayfa &e%PAGE%&7 mevcut değil.'
+    perPage: 10
+    noPages: '&c&o%TARGET%&7 uyarısı yok.'
+    permission:
+      command: '&7Uyarıları görüntüleyemezsin.'
+
+
+  blame:
+    usage: '&cKullanım: /blame &e<oyuncu> [sayfa]'
+    layout:
+      body:
+        - '&7[&e%ID%&7] &e&o%VICTIM% &8 / &7%TYPE%&f'
+        - '&7%REASON% &8/ &7%START_DATE%&f'
+      footer: '&7Sayfa &e%PAGE%&7.||ttp:Sonraki sayfaya geçmek için tıkla||cmd:/libertybans blame %TARGET% %NEXTPAGE_KEY%'
+      header:
+        - '&7[&eID&7] &e&oHedef &8/ &7Ceza Türü&f'
+        - '&7Sebep &8/ &7Uygulandığı Tarih&f'
+
+    maxPages: '&7Sayfa &e%PAGE%&7 mevcut değil.'
+    perPage: 10
+    noPages: '&c&o%TARGET%&7 henüz hiç oyuncuya ceza vermemiş.'
+    permission:
+      command: '&7Blame komutunu kullanamazsın.'
+
+
+
+ # /unban, /unmute, /unwarn ile ilgili
+removals:
+  mutes:
+    usage: '&cKullanım: /unmute &e<oyuncu>&c.'
+    success:
+      notification: '&c&o%UNOPERATOR%&7, &c&o%VICTIM%&7 kişisinin susturulmasını kaldırdı.'
+      message: '&7&c&o%VICTIM%&7 kişisinin susturulmasını kaldırdım.'
+
+    not-found: '&c&o%TARGET%&7 susturulmamış.'
+    permission:
+      uuid: '&cOyunculara bunu yapamazsın.'
+      both: '&cOyunculara ve IP adreslerine bunu yapamazsın.'
+      ip-address: '&cIP adreslerine bunu yapamazsın.'
+
+
+  bans:
+    usage: '&cKullanım: /unban &e<oyuncu>&c.'
+    success:
+      notification: '&c&o%UNOPERATOR%&7, &c&o%VICTIM%&7 kişisinin yasaklanmasını kaldırdı.'
+      message: '&7&c&o%VICTIM%&7 kişisinin yasaklanmasını kaldırdım.'
+
+    not-found: '&c&o%TARGET%&7 yasaklanmamış.'
+    permission:
+      uuid: '&cOyunculara bunu yapamazsın.'
+      both: '&cOyunculara ve IP adreslerine bunu yapamazsın.'
+      ip-address: '&cIP adreslerine bunu yapamazsın.'
+
+
+  warns:
+    usage: '&cKullanım: /unwarn &e<oyuncu> <id>&c.'
+    success:
+      notification: '&c&o%UNOPERATOR%&7, &c&o%VICTIM%&7 kişisinin uyarısını kaldırdı.'
+      message: '&7&c&o%VICTIM%&7 kişisinin uyarısını kaldırdım.'
+
+    not-a-number: '&c&o%ID_ARG%&7 sayı değil.'
+    not-found: '&c&o%TARGET%&7 kişisinin &c&o%ID%&7 numaralı uyarısı yok.'
+    permission:
+      uuid: '&cOyunculara bunu yapamazsın.'
+      both: '&cOyunculara ve IP adreslerine bunu yapamazsın.'
+      ip-address: '&cIP adreslerine bunu yapamazsın.'
+
+
+
+ # Özel biçimlendirme seçenekleri
+formatting:
+   # Mağdurların nasıl görüntüleneceğini kontrol eder
+  victim-display:
+     # Nadir durumlarda, ismi bilinmeyen bir kullanıcı için ceza verilmiş olabilir. Bu durum,
+     # kullanıcıların UUID ile cezalandırılması ama bazı konfigürasyonlarda oyuncu isimlerinin bulunamaması nedeniyle oluşabilir.
+     # Bu durumda oyuncu ismi yerine aşağıdaki metin kullanılır.
+    player-name-unknown: '-İsimBilinmiyor-'
+     # libertybans.admin.viewips iznine sahip olmayan oyuncular için IP adreslerini sansürle
+    censor-ip-addresses: false
+     # Kullanıcı izni olmadığı için IP adresi görüntülenemediğinde kullanılan yedek metin
+    censored-ip-address: '<sansürlü IP adresi>'
+
+   # Genel kapsam nasıl görüntülenmeli?
+  global-scope-display: 'Tüm sunucular'
+   # Konsol nasıl görüntülenmeli?
+  console-display: 'Konsol'
+   # %TRACK%, %TRACK_ID%, ve %TRACK_NAMESPACE% değişkenlerinin nasıl görüntüleneceğini kontrol eder
+  track-display:
+     # Takip görüntüleme isimlerini geçersiz kılmak isteyebilirsiniz. Normalde takip ID'si görüntülenir,
+     # bu küçük harfli ve veritabanında saklanır. Takip için farklı bir isim görüntülenmesini istiyorsanız,
+     # buraya yazın.
+     #
+     # Bu seçenek %TRACK% değişkenini etkiler ama %TRACK_ID% değişkenini etkilemez.
+    track-display-names:
+      spam: 'Spam'
+      hacking: 'Hile'
+
+     # Bir yükseltme takibinin eksikliğini, ad alanı açısından nasıl tanımlarsınız?
+     # Değer %TRACK_NAMESPACE% değişkeni için görüntülenecektir
+    no-track-namespace: '(yok)'
+     # Bir yükseltme takibinin eksikliğini nasıl tanımlarsınız?
+     # Değer %TRACK% değişkeni için görüntülenecektir
+    no-track: 'Takip yok'
+     # Bir yükseltme takibinin eksikliğini, ID açısından nasıl tanımlarsınız?
+     # Değer %TRACK_ID% değişkeni için görüntülenecektir
+    no-track-id: 'Takip ID yok'
+
+   # 'Kalıcı' süre nasıl görüntülenmeli?
+  permanent-display:
+     # Kalıcı süreye ne dersiniz?
+    duration: 'Sonsuz'
+     # Kalıcı bir ceza ne zaman biter?
+    absolute: 'Asla'
+     # Kalıcı cezada kalan süreyi nasıl tanımlarsınız?
+    relative: 'Kalıcı'
+
+   # Kalıcı cezalar yapmak için 2 yol vardır. Birincisi zaman belirtmemek (/ban <oyuncu> <sebep>).
+   # İkincisi kalıcı zaman belirtmek (/ban <oyuncu> perm <sebep>).
+   # Komut yazarken hangi zaman argümanları kalıcı olarak sayılacak?
+  permanent-arguments:
+    - 'perm'
+    - 'permanent'
+    - 'kalici'
+    - 'sonsuz'
+   # Ceza türleri nasıl görüntülenmeli?
+  punishment-type-display:
+    WARN: 'Uyarı'
+    MUTE: 'Susturma'
+    BAN: 'Yasaklama'
+    KICK: 'Atma'
+
+   # Ceza türleri fiil olarak nasıl görüntülenmeli? %TYPE_VERB% değişkeni için kullanılır.
+  punishment-type-verb-display:
+    WARN: 'Uyarılmış'
+    MUTE: 'Susturulmuş'
+    BAN: 'Yasaklanmış'
+    KICK: 'Atılmış'
+
+   # %HAS_EXPIRED% değişkeni nasıl görüntülenmeli?
+  punishment-expired-display:
+     # Süresi dolmuş bir cezayı nasıl tanımlarsınız?
+    expired: 'Süresi Dolmuş'
+     # Süresi dolmamış bir cezayı nasıl tanımlarsınız?
+    not-expired: 'Süresi Dolmamış'
+
+   # Cezada kalan süre kalmadığında (cezanın süresi dolmuşsa),
+   # bu %TIME_REMAINING% değişkeninin değeri olur
+  no-time-remaining-display: 'Yok'
+   # Çoğu kullanıcı bu bölümü ihtiyaç duymayacaktır. Asıl olarak süs için var.
+   # ID'lerin nasıl görüntüleneceğini ve ayrıştırılacağını değiştirmek istiyorsanız, davranışı buradan değiştirin.
+  id-display:
+     # Hangi sayı sistemi tabanı kullanılmalı? Örneğin:
+     # 2 - ikili, 10 - normal, 16 - onaltılı
+     # Maksimum değer 36'dır, alfabenin tüm harflerini ve 10 rakamı kullanır (26 + 10 = 36).
+    base: 10
+     # 'scrambling-algorithm' algoritmasını kaç kez çalıştırmalı?
+    number-of-algorithm-runs: 2
+     # Bazı kullanıcılar ID'lerinin 'rastgele' veya en azından sözde rastgele görüntülenmesini ister.
+     # Sözde rastgele ID karıştırma eklemek için bu seçeneği değiştirin. Kullanılabilir değerler:
+     # - NONE : değişiklik yok (varsayılan)
+     # - BITFIDDLE : sadece bitleri hareket ettiren sözde rastgele yaklaşım (36 tabanlı ile kullanılması önerilir)
+     # - CIPHER : Blok şifreleme kullanır. Çok rastgele görünür
+     #
+     # Tüm algoritmalar geri döndürülebilir. Bu, ne yapılandırırsanız yapılandırın, bu ID'ler
+     # eklenti boyunca şeffaf olarak kullanılabilir. Örneğin /unwarn <oyuncu> <ID> çalışacaktır
+     # ama sadece karıştırılmış ID girerseniz.
+     #
+     # Not: Birden fazla örnek çalıştırıyorsanız, bu ayarı ve 'number-of-algorithm-runs'
+     # değerini aynı yapmalısınız. Yapmazsanız eklenti çalışacaktır ama ID kullanmak cehennem olacaktır.
+    scrambling-algorithm: 'NONE'
+     # 10'dan büyük taban kullanıyorsanız, bu harflerin büyük harf olup olmadığını kontrol eder.
+    capitalize-letters-in-display: false
+
+   # /blame kullanırken, konsol nasıl belirtilmeli?
+  console-arguments:
+    - 'konsol'
+
+ #
+ # /ban, /mute, /warn, /kick ile ilgili mesajlar
+ # Ceza düzenlerini içerir
+ #
+ #
+additions:
+  kicks:
+    layout:
+      - '&7&lAtıldı&f'
+      - ''
+      - '&c&lSebep&f'
+      - '&7%REASON%'
+    usage: '&cKullanım: /kick &e<oyuncu> <sebep>&c.'
+    must-be-online: '&c&o%TARGET%&7 çevrimiçi olmalı.'
+    success:
+      notification: '&c&o%OPERATOR%&7, &c&o%VICTIM%&7 kişisini &e&o%REASON%&7 nedeniyle attı.'
+      message: '&a&c&o%VICTIM%&a kişisini &e&o%REASON%&a nedeniyle attım.'
+
+    exempted: '&c&o%TARGET%&7 atılamaz.'
+    permission:
+      uuid: '&cOyunculara bunu yapamazsın.'
+      both: '&cOyunculara ve IP adreslerine bunu yapamazsın.'
+      ip-address: '&cIP adreslerine bunu yapamazsın.'
+
+
+  mutes:
+    layout:
+      - '&7&lSusturuldu&f'
+      - '&cSüre: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&lSebep&f'
+      - '&7%REASON%'
+    usage: '&cKullanım: /mute &e<oyuncu> [süre] <sebep>&c.'
+    success:
+      notification: '&c&o%OPERATOR%&7, &c&o%VICTIM%&7 kişisini &a&o%DURATION%&7 süreliğine &e&o%REASON%&7 nedeniyle susturdu.'
+      message: '&a&c&o%VICTIM%&a kişisini &o%DURATION%&r&a süreliğine &e&o%REASON%&a nedeniyle susturdum.'
+
+    exempted: '&c&o%TARGET%&7 susturulamaz.'
+    conflicting: '&c&o%TARGET%&7 zaten susturulmuş.'
+    permission:
+      duration: '&c&e%DURATION%&c süresi için bunu yapamazsın.'
+      uuid: '&cOyunculara bunu yapamazsın.'
+      both: '&cOyunculara ve IP adreslerine bunu yapamazsın.'
+      ip-address: '&cIP adreslerine bunu yapamazsın.'
+
+
+  bans:
+    layout:
+      - '&7&lYasaklandı&f'
+      - '&cSüre: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&lSebep&f'
+      - '&7%REASON%&f'
+      - ''
+      - '&3&lCezanızı İtiraz Edin&f'
+      - '&cWebsite: &7website&f'
+      - '&cDiscord: &7discord'
+    usage: '&cKullanım: /ban &e<oyuncu> [süre] <sebep>&c.'
+    success:
+      notification: '&c&o%OPERATOR%&7, &c&o%VICTIM%&7 kişisini &a&o%DURATION%&7 süreliğine &e&o%REASON%&7 nedeniyle yasakladı.'
+      message: '&a&c&o%VICTIM%&a kişisini &o%DURATION%&r&a süreliğine &e&o%REASON%&a nedeniyle yasakladım.'
+
+    exempted: '&c&o%TARGET%&7 yasaklanamaz.'
+    conflicting: '&c&o%TARGET%&7 zaten yasaklanmış.'
+    permission:
+      duration: '&c&e%DURATION%&c süresi için bunu yapamazsın.'
+      uuid: '&cOyunculara bunu yapamazsın.'
+      both: '&cOyunculara ve IP adreslerine bunu yapamazsın.'
+      ip-address: '&cIP adreslerine bunu yapamazsın.'
+
+
+  warns:
+    layout:
+      - '&7&lUyarılmış&f'
+      - '&cSüre: &e%TIME_REMAINING%&f'
+      - ''
+      - '&c&lSebep&f'
+      - '&7%REASON%'
+    usage: '&cKullanım: /warn &e<oyuncu> [süre] <sebep>&c.'
+    success:
+      notification: '&c&o%OPERATOR%&7, &c&o%VICTIM%&7 kişisini &a&o%DURATION%&7 süreliğine &e&o%REASON%&7 nedeniyle uyardı.'
+      message: '&a&c&o%VICTIM%&a kişisini &o%DURATION%&r&a süreliğine &e&o%REASON%&a nedeniyle uyardım.'
+
+    exempted: '&c&o%TARGET%&7 uyarılama.'
+    permission:
+      duration: '&c&e%DURATION%&c süresi için bunu yapamazsın.'
+      uuid: '&cOyunculara bunu yapamazsın.'
+      both: '&cOyunculara ve IP adreslerine bunu yapamazsın.'
+      ip-address: '&cIP adreslerine bunu yapamazsın.'
+
+
+
+ # /accounthistory komutu için konfigürasyon
+account-history:
+   # /accounthistory delete <kullanıcı> <zaman damgası> ile ilgili
+  delete:
+    permission: '&cKaydedilmiş hesapları silemezsin.'
+    success: '&7&e%TARGET%&7 kişisinin kaydedilmiş hesabı başarıyla silindi'
+    usage:
+      - '&cKullanım: /accounthistory delete <kullanıcı> <zaman damgası>.&f'
+      - '&7Zaman damgası unix saniye cinsindendir ve genellikle /accounthistory list''ten elde edilir'
+    no-such-account: '&c%TARGET% belirtilen zaman damgası için kaydedilmiş hesap sahibi değil.'
+
+  usage: '&cKullanım: /accounthistory <delete|list>'
+   # /accounthistory list ile ilgili
+  listing:
+     # Altbilginin nasıl formatlanacağı. Bu her sayfa sonrasında gönderilir.
+     # Kullanılabilir değişkenler başlık için olanlarla aynıdır.
+    footer: '&7<Sonraki Sayfa>||ttp:Sonraki sayfaya geçmek için tıkla||cmd:/libertybans accounthistory %TARGET% %NEXTPAGE_KEY%'
+     # Liste girişleri arasındaki ayırıcı
+    separator: ''
+     # Tek bir kaydedilmiş hesabın nasıl görüntüleneceği
+     # Kullanılabilir değişkenler, başlık değişkenlerine ek olarak:
+     # %USERNAME% - oyuncunun bağlandığı kullanıcı adı
+     # %ADDRESS% - oyuncunun bağlandığı adres
+     # %DATE_RECORDED% - katılımın kaydedildiği tarih
+     # %DATE_RECORDED_RAW% - katılımın kaydedildiği ham zaman damgası
+    layout: '%USERNAME% &7(%ADDRESS% üzerinde) %DATE_RECORDED% tarihinde (%DATE_RECORDED_RAW%)||ttp:&7Bu kaydedilmiş hesabı silmek için tıkla||cmd:/accounthistory delete %TARGET% %DATE_RECORDED_RAW%'
+     # Hesap listelemesinden önce görüntülenecek mesaj. Devre dışı bırakmak için boş metin yapın
+     # Kullanılabilir değişkenler:
+     # %TARGET% - hedef kullanıcı
+     # %PAGE% - mevcut sayfa numarası
+     # %NEXTPAGE% - sonraki sayfa numarası
+     # %NEXTPAGE_KEY% - komutla kullanıldığında sonraki sayfayı gösteren kod
+     # %LASTPAGE% - son sayfa numarası
+     # %LASTPAGE_KEY% - komutla kullanıldığında son sayfayı gösteren kod
+    header: '&7&c&o%TARGET%&7 için bilinen hesaplar raporu aşağıda.'
+    permission: '&cKaydedilmiş hesapları listeleyemezsin.'
+    usage: '&cKullanım: /accounthistory list <kullanıcı|ip> [sayfa]'
+     # Sayfa başına görüntülenecek hesap miktarı
+    per-page: 10
+    none-found: '&7Sayfa mevcut değil.'
+
+
+misc:
+   # Göreli zamanların ve sürelerin formatlanmasını ilgilendirir
+  time:
+    fragments:
+      HOURS: '%VALUE% saat'
+      WEEKS: '%VALUE% hafta'
+      MINUTES: '%VALUE% dakika'
+      MONTHS: '%VALUE% ay'
+      YEARS: '%VALUE% yıl'
+      DAYS: '%VALUE% gün'
+
+    grammar:
+       # Son parçadan önce ne gelmeli? Devre dışı bırakmak için boş metin yapın
+      and: 've '
+       # Etkinleştirilirse, sonuncusu hariç her zaman parçasından sonra virgül koyar
+      comma: true
+
+     # Zamanlar saniye hassasiyetine formatlanır ama çoğu zaman için saniye göstermek istemeyebilirsiniz.
+     # Ancak çok küçük süreler için saniye cinsinden değer göstermek gerekir.
+     # Yukarıdaki bölümde SECONDS kullanıyorsanız bu değer anlamsızdır.
+    fallback-seconds: '%VALUE% saniye'
+
+   # Sadece ana konfigürasyonda senkronize uygulama stratejisi DENY ise uygulanabilir
+  sync-chat-denial-message: '&cSenkronize sohbet reddedildi. &7Lütfen tekrar deneyin.'
+  unknown-error: '&cBilinmeyen bir hata oluştu.'
+
+ # Alt kontrolü ve alt hesap bildirimleri için mesajlar
+ #
+ # Bu bölümü yapılandırmadan önce, ana config.yml'deki address-enforcement
+ # ayarlarına bakmak ve farklı alt tespit türlerini anlamak gerekir.
+ # Normal ve katı tespit vardır.
+alts:
+   # /alts komutu ile ilgili
+  command:
+     # Altbilginin nasıl formatlanacağı. Bu her sayfa sonrasında gönderilir.
+     # Kullanılabilir değişkenler başlık için olanlarla aynıdır.
+    footer: '&7<Sonraki Sayfa>||ttp:Sonraki sayfaya geçmek için tıkla||cmd:/libertybans alts %TARGET% %NEXTPAGE_KEY%'
+     # Liste girişleri arasındaki ayırıcı
+    separator: []
+     # Alt kontrolünün üstünde görüntülenecek mesaj. Devre dışı bırakmak için boş metin yapın.
+     # Kullanılabilir değişkenler:
+     # %TARGET% - hedef kullanıcı
+     # %PAGE% - mevcut sayfa numarası
+     # %NEXTPAGE% - sonraki sayfa numarası
+     # %NEXTPAGE_KEY% - komutla kullanıldığında sonraki sayfayı gösteren kod
+     # %LASTPAGE% - son sayfa numarası
+     # %LASTPAGE_KEY% - komutla kullanıldığında son sayfayı gösteren kod
+    header:
+      - '&7&c&o%TARGET%&7 için alt hesap raporu aşağıda.&f'
+      - '&7Güçlü olasılık - Yasaklanmış oyuncunun aynı adresi.&f'
+      - '&7Zayıf olasılık - Yasaklanmış oyuncuyla ortak geçmiş adres üzerinden bağlantılı'
+    permission: '&cAlt hesapları kontrol edemezsin.'
+    usage: '&cKullanım: /alts &e<oyuncu> [sayfa]&c.'
+     # Sayfa başına görüntülenecek alt hesap miktarı
+    per-page: 10
+     # En eski tespitlerden başlayarak sırala
+    oldest-first: true
+    none-found: '&7Sayfa mevcut değil.'
+
+  auto-show:
+     # Alt kontrolünü takip eden mesaj. Devre dışı bırakmak için boş metin yapın. %TARGET% kullanılabilir.
+    footer: []
+     # Bu kadar alttan sonra gösterilmeleri duracaktır.
+    limit: 4
+     # Liste girişleri arasındaki ayırıcı
+    separator: ', '
+     # Alt kontrolünün üstünde görüntülenecek mesaj. Devre dışı bırakmak için boş metin yapın
+    header:
+      - '&c&o%TARGET%&7 alt hesap olabilir. Bağlantılı olduğu hesapların bazıları aşağıda listelenmiştir.&f'
+      - '&7Güçlü olasılık - Başka oyuncunun aynı adresi.&f'
+      - '&7Zayıf olasılık - Başka oyuncuyla ortak geçmiş adres üzerinden bağlantılı'
+     # En eski tespitlerden başlayarak sırala
+    oldest-first: true
+
+  formatting:
+     # Katı tespit ile bulunan alt hesap için açıklama.
+    strict: '&eZayıf olasılık'
+     # Tek bir tespit edilmiş alt hesabın nasıl görüntüleneceği
+     # Başlık/altbilgi değişkenlerine ek olarak aşağıdakiler sağlanır:
+     # %DETECTION_KIND% - hesabın nasıl tespit edildiği. Normal veya katı seçeneklerle değiştirilir.
+     # %ADDRESS% - tespiti sağlayan adres
+     # %RELEVANT_USER% - diğer hesabın kullanıcı adı, name-display seçeneğine göre formatlanır
+     # %RELEVANT_USERID% - diğer hesabın uuid'si
+     # %DATE_RECORDED% - alt hesabın kaydedildiği tarih
+    layout: '%RELEVANT_USER% &7(%ADDRESS% üzerinden) %DATE_RECORDED% tarihinde - %DETECTION_KIND%'
+     # Normal tespit ile bulunan alt hesap için açıklama.
+    normal: '&cGüçlü olasılık'
+     # Alt kontrol düzeninde, alt hesabın kullanıcı adı yasaklanmış olup olmamasına göre formatlanabilir
+     # Örneğin, yasaklanmış alt hesapların kullanıcı adları kırmızı, yasaklanmamış olanlar yeşil olabilir
+     # Değişkenler: %USERNAME%
+    name-display:
+      not-punished: '&o%USERNAME%'
+      muted: '&e&o%USERNAME%'
+      banned: '&c&o%USERNAME%'
+
+
+
+admin:
+  addons:
+    usage: '&cKullanım: /libertybans addon <install|list|reload>'
+    install:
+      installed: '&a&e%ADDON%&a eklentisi kuruldu. Sonraki sunucu yeniden başlatmasında yüklenecek.'
+      usage: '&cKullanım: /libertybans addon install <eklenti>'
+      already-installed: '&a&e%ADDON%&a eklentisi zaten kurulu veya dosya sisteminde mevcut.'
+      does-not-exist: '&cStandart eklenti paketleri arasında &e%ADDON%&c bulunamadı. &7Harici veya özel bir eklenti kullanmak istiyorsanız, jar dosyasını doğrudan plugins/LibertyBans/addons klasörüne yükleyin.'
+
+    reload-addon:
+      success: '&a&e%ADDON%&a eklentisi yeniden yüklendi.'
+      usage: '&cKullanım: /libertybans addon reload <eklenti>. Tüm eklentileri yeniden yüklemek için /libertybans reload yeterli olacaktır.'
+      does-not-exist: '&cBu eklenti mevcut değil.'
+      failed: '&cEklenti konfigürasyonu yeniden yüklenirken bir hata oluştu. Lütfen sunucu konsolunu kontrol edin.'
+
+    listing:
+      message: '&b&lKurulu Eklentiler'
+      layout: '&7- %ADDON%'
+
+
+  reload-failed: '&cKonfigürasyon yeniden yüklenirken bir hata oluştu. Lütfen sunucu konsolunu kontrol edin.'
+  no-permission: '&cÜzgünüm, bunu kullanamazsın.'
+  restarted: '&aYeniden başlatıldı'
+  importing:
+    failure: '&cİçe aktarma başarısız. Ayrıntılar için sunucu konsolunu görüntüleyin.'
+    started: '&7İçe aktarma başladı. Ayrıntılar ve ilerleme için sunucu konsolunu görüntüleyin.'
+    complete: '&7İçe aktarma tamamlandı.'
+    usage: '&cKullanım: /libertybans import <advancedban|litebans|vanilla|self>'
+     # Hataları önlemek için aynı anda birden fazla içe aktarmaya izin verilmez.
+    in-progress: '&cZaten devam eden bir içe aktarma var.'
+
+  ellipses: '&a...'
+  reloaded: '&aYeniden yüklendi'
+
