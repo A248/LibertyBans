@@ -26,6 +26,7 @@ import space.arim.libertybans.core.database.InternalDatabase;
 import space.arim.libertybans.core.database.Vendor;
 import space.arim.libertybans.core.punish.sync.SQLSynchronizationMessenger;
 import space.arim.libertybans.core.service.SettableTime;
+import space.arim.libertybans.it.env.platform.QuackPlatform;
 
 final class InjectorCleanupCallback implements AfterEachCallback {
 
@@ -36,7 +37,7 @@ final class InjectorCleanupCallback implements AfterEachCallback {
 	}
 
 	@Override
-	public void afterEach(ExtensionContext context) throws Exception {
+	public void afterEach(ExtensionContext context) {
 		// Reset database + prevent unneeded compact
 		InternalDatabase database = injector.request(InternalDatabase.class);
 		database.truncateAllTables();
@@ -47,5 +48,7 @@ final class InjectorCleanupCallback implements AfterEachCallback {
 		injector.request(SettableTime.class).reset();
 		// Reset synchronization
 		injector.request(SQLSynchronizationMessenger.class).resetLastTimestamp();
+		// Reset players online
+		injector.request(QuackPlatform.class).getPlayerStore().removeAll();
 	}
 }
