@@ -116,6 +116,11 @@ public abstract class SelectionBuilderBaseImpl<B extends SelectionBuilderBase<B,
 		return yieldSelf();
 	}
 
+	/**
+	 * Sets the page anchor for this builder. <b>Overrides</b> standard API ordering settings
+	 *
+	 * @param pageAnchor the page anchor
+	 */
 	public void setPageAnchor(@Nullable KeysetAnchor<StartTimeThenId> pageAnchor) {
 		this.pageAnchor = pageAnchor;
 	}

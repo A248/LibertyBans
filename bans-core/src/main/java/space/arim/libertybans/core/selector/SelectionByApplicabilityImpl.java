@@ -177,12 +177,12 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 		assert table != null;
 		return new QueryBuilder(parameters, fields, table) {
 			@Override
-			Victim victimFromRecord(Record record) {
+			Victim victimFromRecord(Record record, PunishmentFields fields) {
 				return new DeserializedVictim(
-						record.get(aggregateIfNeeded(fields.victimUuid())),
-						record.get(aggregateIfNeeded(fields.victimAddress()))
+						record.get(fields.victimUuid()),
+						record.get(fields.victimAddress())
 				).victim(
-						record.get(aggregateIfNeeded(fields.victimType()))
+						record.get(fields.victimType())
 				);
 			}
 
