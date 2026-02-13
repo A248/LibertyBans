@@ -61,21 +61,21 @@ final class SelectionOrderImpl extends SelectionBaseSQL implements SelectionOrde
 	Query<?> requestQuery(QueryParameters parameters) {
 		PunishmentFields fields = requestSimpleView();
 
-		List<Field<?>> additionalColumns = new ArrayList<>(3);
+		List<Field<?>> victimRelatedColumns = new ArrayList<>(3);
 		if (getVictims().isNotSimpleEquality()) {
 			if (getVictimTypes().isNotSimpleEquality()) {
-				additionalColumns.add(fields.victimType());
+				victimRelatedColumns.add(fields.victimType());
 			}
-			additionalColumns.add(fields.victimUuid());
-			additionalColumns.add(fields.victimAddress());
+			victimRelatedColumns.add(fields.victimUuid());
+			victimRelatedColumns.add(fields.victimAddress());
 		}
-		Condition additionalPredication = noCondition()
+		Condition victimPredication = noCondition()
 				.and(new SingleFieldCriterion<>(fields.victimType()).matches(getVictimTypes()))
 				.and(new VictimCondition(fields).buildCondition(getVictims()));
 
 		return new QueryBuilder(parameters, fields, fields.table()) {
 			@Override
-			Victim victimFromRecord(Record record) {
+			Victim victimFromRecord(Record record, PunishmentFields fields) {
 				if (getVictims().isSimpleEquality()) {
 					return getVictims().acceptedValues().iterator().next();
 				} else {
@@ -83,8 +83,8 @@ final class SelectionOrderImpl extends SelectionBaseSQL implements SelectionOrde
 							getVictimTypes(), record, fields.victimType()
 					);
 					return new DeserializedVictim(
-							record.get(aggregateIfNeeded(fields.victimUuid())),
-							record.get(aggregateIfNeeded(fields.victimAddress()))
+							record.get(fields.victimUuid()),
+							record.get(fields.victimAddress())
 					).victim(victimType);
 				}
 			}
@@ -93,7 +93,7 @@ final class SelectionOrderImpl extends SelectionBaseSQL implements SelectionOrde
 			boolean mightRepeatIds() {
 				return false;
 			}
-		}.constructSelect(additionalColumns, additionalPredication);
+		}.constructSelect(victimRelatedColumns, victimPredication);
 	}
 
 	@Override

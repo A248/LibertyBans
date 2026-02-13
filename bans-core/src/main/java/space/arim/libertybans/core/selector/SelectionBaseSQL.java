@@ -19,9 +19,11 @@
 
 package space.arim.libertybans.core.selector;
 
+import org.jooq.Binding;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
+import org.jooq.Name;
 import org.jooq.OrderField;
 import org.jooq.Record;
 import org.jooq.RecordMapper;
@@ -95,25 +97,23 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 		);
 	}
 
+	record Fundamental(Condition victimPredication) {}
+
 	abstract class QueryBuilder {
 
 		private final QueryParameters parameters;
-		final PunishmentFields fields;
-		private final Table<?> table;
+		private final PunishmentFields usingFields;
+		private final Table<?> usingTable;
 
-		QueryBuilder(QueryParameters parameters, PunishmentFields fields, Table<?> table) {
+		QueryBuilder(QueryParameters parameters, PunishmentFields usingFields, Table<?> usingTable) {
 			this.parameters = parameters;
-			this.fields = fields;
-			this.table = table;
+			this.usingFields = usingFields;
+			this.usingTable = usingTable;
 		}
 
-		abstract Victim victimFromRecord(Record record);
+		abstract Victim victimFromRecord(Record record, PunishmentFields fields);
 
 		abstract boolean mightRepeatIds();
-
-		private boolean groupByIdForDeduplication() {
-			return mightRepeatIds() && parameters.limit != 1;
-		}
 
 		private <U> Field<U> aggregate(Field<U> field) {
 			if (parameters.context.family() == SQLDialect.POSTGRES) {
@@ -128,85 +128,160 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			return max(field);
 		}
 
-		private List<Field<?>> getColumnsToRetrieve(List<Field<?>> additionalColumns) {
-			List<Field<?>> columns = new ArrayList<>(additionalColumns);
-			if (getTypes().isNotSimpleEquality()) {
-				columns.add(fields.type());
-			}
-			if (getOperators().isNotSimpleEquality()) {
-				columns.add(fields.operator());
-			}
-			columns.add(fields.reason());
-			if (getScopes().isNotSimpleEquality()) {
-				columns.add(fields.scopeType());
-				columns.add(fields.scope());
-			}
-			columns.add(fields.start());
-			columns.add(fields.end());
-			if (getEscalationTracks().isNotSimpleEquality()) {
-				columns.add(fields.track());
-			}
-			if (groupByIdForDeduplication()) {
-				columns.replaceAll(this::aggregate);
-			}
-			columns.add(fields.id());
-			return columns;
-		}
+		private final class WithFields {
 
-		private Condition getPredication() {
-			Condition condition = noCondition();
-			boolean active = selectActiveOnly();
+			private final PunishmentFields fields;
 
-			if (active && getTypes().isSimpleEquality()) {
-				// Type is ensured by selected table
-			} else {
-				condition = condition
-						.and(new SingleFieldCriterion<>(fields.type()).matches(getTypes()));
-			}
-			condition = condition
-					.and(new SingleFieldCriterion<>(fields.operator()).matches(getOperators()))
-					.and(new SingleFieldCriterion<>(fields.track()).matches(getEscalationTracks(), (optTrack) -> optTrack.orElse(null)))
-					.and(new ScopeCondition(fields, resources.scopeManager()).buildCondition(getScopes()));
-			if (active) {
-				condition = condition
-						.and(new EndTimeCondition(fields).isNotExpired(parameters.currentTime));
-			}
-			Instant seekAfterStartTime = seekAfterStartTime();
-			if (!seekAfterStartTime.equals(Instant.EPOCH)) {
-				long seekAfterId = seekAfterId();
-				if (seekAfterId == 0L) {
-					// Optimization since seekAfterId is irrelevant
-					// start >= seekAfterStartTime
-					condition = condition.and(fields.start().greaterOrEqual(seekAfterStartTime));
-				} else {
-					// start > seekAfterStartTime OR (start = seekAfterStartTime AND id >= seekAfterId)
-					condition = condition.and(
-							fields.start().greaterThan(seekAfterStartTime).or(
-									fields.start().eq(seekAfterStartTime).and(fields.id().greaterOrEqual(seekAfterId))
-							)
-					);
+            private WithFields(PunishmentFields fields) {
+                this.fields = fields;
+            }
+
+			// Columns used excluding victim-related or ID
+			private void getRegularColumns(List<Field<?>> output) {
+				if (getTypes().isNotSimpleEquality()) {
+					output.add(fields.type());
+				}
+				if (getOperators().isNotSimpleEquality()) {
+					output.add(fields.operator());
+				}
+				output.add(fields.reason());
+				if (getScopes().isNotSimpleEquality()) {
+					output.add(fields.scopeType());
+					output.add(fields.scope());
+				}
+				output.add(fields.start());
+				output.add(fields.end());
+				if (getEscalationTracks().isNotSimpleEquality()) {
+					output.add(fields.track());
 				}
 			}
-			Instant seekBeforeStartTime = seekBeforeStartTime();
-			if (!seekBeforeStartTime.equals(Instant.MAX)) {
-				long seekBeforeId = seekBeforeId();
-				if (seekBeforeId == Long.MAX_VALUE) {
-					// start <= seekBeforeStartTime
-					condition = condition.and(fields.start().lessOrEqual(seekBeforeStartTime));
+
+			private Condition regularPredication() {
+				Condition condition = noCondition();
+				boolean active = selectActiveOnly();
+
+				if (active && getTypes().isSimpleEquality()) {
+					// Type is ensured by selected table
 				} else {
-					// start < seekBeforeStartTime OR (start = seekBeforeStartTime AND id <= seekBeforeId)
-					condition = condition.and(
-							fields.start().lessThan(seekBeforeStartTime).or(
-									fields.start().eq(seekBeforeStartTime).and(fields.id().lessOrEqual(seekBeforeId))
-							)
-					);
+					condition = condition
+							.and(new SingleFieldCriterion<>(fields.type()).matches(getTypes()));
+				}
+				condition = condition
+						.and(new SingleFieldCriterion<>(fields.operator()).matches(getOperators()))
+						.and(new SingleFieldCriterion<>(fields.track()).matches(getEscalationTracks(), (optTrack) -> optTrack.orElse(null)))
+						.and(new ScopeCondition(fields, resources.scopeManager()).buildCondition(getScopes()));
+				if (active) {
+					condition = condition
+							.and(new EndTimeCondition(fields).isNotExpired(parameters.currentTime));
+				}
+				Instant seekAfterStartTime = seekAfterStartTime();
+				if (!seekAfterStartTime.equals(Instant.EPOCH)) {
+					long seekAfterId = seekAfterId();
+					if (seekAfterId == 0L) {
+						// Optimization since seekAfterId is irrelevant
+						// start >= seekAfterStartTime
+						condition = condition.and(fields.start().greaterOrEqual(seekAfterStartTime));
+					} else {
+						// start > seekAfterStartTime OR (start = seekAfterStartTime AND id >= seekAfterId)
+						condition = condition.and(
+								fields.start().greaterThan(seekAfterStartTime).or(
+										fields.start().eq(seekAfterStartTime).and(fields.id().greaterOrEqual(seekAfterId))
+								)
+						);
+					}
+				}
+				Instant seekBeforeStartTime = seekBeforeStartTime();
+				if (!seekBeforeStartTime.equals(Instant.MAX)) {
+					long seekBeforeId = seekBeforeId();
+					if (seekBeforeId == Long.MAX_VALUE) {
+						// start <= seekBeforeStartTime
+						condition = condition.and(fields.start().lessOrEqual(seekBeforeStartTime));
+					} else {
+						// start < seekBeforeStartTime OR (start = seekBeforeStartTime AND id <= seekBeforeId)
+						condition = condition.and(
+								fields.start().lessThan(seekBeforeStartTime).or(
+										fields.start().eq(seekBeforeStartTime).and(fields.id().lessOrEqual(seekBeforeId))
+								)
+						);
+					}
+				}
+				return condition;
+			}
+
+			private Punishment mapRecord(Record record) {
+				PunishmentType type = retrieveValueFromRecordOrSelection(
+						getTypes(), record, fields.type()
+				);
+				Victim victim = victimFromRecord(
+						record, fields
+				);
+				Operator operator = retrieveValueFromRecordOrSelection(
+						getOperators(), record, fields.operator()
+				);
+				ServerScope scope;
+				if (getScopes().isSimpleEquality()) {
+					scope = getScopes().acceptedValues().iterator().next();
+				} else {
+					ScopeType scopeType = record.get(fields.scopeType());
+					String scopeValue = record.get(fields.scope());
+					scope = resources.scopeManager().deserialize(scopeType, scopeValue);
+				}
+				EscalationTrack escalationTrack = retrieveValueFromRecordOrSelection(
+						getEscalationTracks(), record, fields.track(),
+						(optTrack) -> optTrack.orElse(null)
+				);
+				return resources.creator().createPunishment(
+						record.get(fields.id()),
+						type,
+						victim,
+						operator,
+						record.get(fields.reason()),
+						scope,
+						record.get(fields.start()),
+						record.get(fields.end()),
+						escalationTrack
+				);
+			}
+
+			private List<OrderField<?>> traditionalOrdering(SortPunishments[] ordering) {
+				Field<Instant> start = fields.start();
+				Field<Long> end = fields.end().coerce(Long.class);
+				// Since end = 0 defines a permanent punishment, use
+				// CASE WHEN end = 0 THEN Long.MAX_VALUE ELSE end END
+				end = choose(end)
+						.when(inline(0L), inline(Long.MAX_VALUE))
+						.otherwise(end);
+
+				List<OrderField<?>> orderFields = new ArrayList<>(ordering.length * 2);
+				for (SortPunishments sortPunishments : ordering) {
+					switch (sortPunishments) {
+						case NEWEST_FIRST -> {
+							orderFields.add(start.desc());
+							orderFields.add(fields.id().desc());
+						}
+						case OLDEST_FIRST -> {
+							orderFields.add(start.asc());
+							orderFields.add(fields.id().asc());
+						}
+						case LATEST_END_DATE_FIRST -> orderFields.add(end.desc());
+						case SOONEST_END_DATE_FIRST -> orderFields.add(end.asc());
+					}
+				}
+				return orderFields;
+			}
+
+			private Ordering buildOrdering() {
+				KeysetAnchor<StartTimeThenId> pageAnchor = pageAnchor();
+				if (pageAnchor == null) {
+					return new Ordering(noCondition(), traditionalOrdering(parameters.ordering));
+				} else {
+					Pagination<StartTimeThenId> pagination = new Pagination<>(
+							pageAnchor, false, StartTimeThenId.defineOrder(
+							fields.start(), fields.id()
+					));
+					return new Ordering(pagination.seeking(), Arrays.asList(pagination.order()));
 				}
 			}
-			return condition;
-		}
-
-		<U> Field<U> aggregateIfNeeded(Field<U> field) {
-			return groupByIdForDeduplication() ? aggregate(field) : field;
 		}
 
 		private <F, G> F retrieveValueFromRecordOrSelection(
@@ -214,104 +289,112 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			if (selection.isSimpleEquality()) {
 				return converter.apply(selection.acceptedValues().iterator().next());
 			}
-			return record.get(aggregateIfNeeded(field));
+			return record.get(field);
 		}
 
 		<F> F retrieveValueFromRecordOrSelection(SelectionPredicate<F> selection, Record record, Field<F> field) {
 			return retrieveValueFromRecordOrSelection(selection, record, field, Function.identity());
 		}
 
-		private Punishment mapRecord(Record record) {
-			PunishmentType type = retrieveValueFromRecordOrSelection(
-					getTypes(), record, fields.type()
-			);
-			Victim victim = victimFromRecord(
-					record
-			);
-			Operator operator = retrieveValueFromRecordOrSelection(
-					getOperators(), record, fields.operator()
-			);
-			ServerScope scope;
-			if (getScopes().isSimpleEquality()) {
-				scope = getScopes().acceptedValues().iterator().next();
+		private record Ordering(Condition predicate, List<OrderField<?>> byFields) {}
+
+		Query<?> constructSelect(List<Field<?>> victimColumns, Condition victimPredication) {
+			var dequalifyField = new MappedPunishmentFields.Mapper() {
+				@Override
+				public <T> Field<T> map(Field<T> original) {
+					return renameField(original, original.getQualifiedName());
+				}
+			};
+			WithFields qualified = new WithFields(usingFields);
+			WithFields simplified = new WithFields(new MappedPunishmentFields(usingFields, dequalifyField));
+			Select<Record> selectQuery;
+
+			Field<Long> fieldId = simplified.fields.id();
+			Field<Integer> skipField = (skipCount() == 0) ? noField(Integer.class) : val(skipCount());
+			Field<Integer> limitField = switch (parameters.limit) {
+				case 0 -> noField(Integer.class);
+				case 1 -> inline(1);
+				default -> val(parameters.limit);
+			};
+			if (mightRepeatIds() && parameters.limit != 1) {
+				// Perform a subquery where we group by ID to remove duplicates
+
+				List<Field<?>> innerColumns = new ArrayList<>(victimColumns);
+				qualified.getRegularColumns(innerColumns);
+				innerColumns.replaceAll((field) -> {
+					Field<?> aggregated = aggregate(field);
+					return aggregated.as("inner_" + field.getName());
+				});
+				innerColumns.add(fieldId);
+
+				List<Field<?>> outerColumns = new ArrayList<>(innerColumns.size());
+				outerColumns.addAll(victimColumns);
+				qualified.getRegularColumns(outerColumns);
+				outerColumns.replaceAll((field) -> {
+					Name innerName = name("inner_" + field.getName());
+					return renameField(field, innerName).as(field.getName());
+				});
+				outerColumns.add(field(fieldId.getUnqualifiedName()));
+
+				var innerQuery = parameters.context
+						.select(innerColumns)
+						.from(usingTable)
+						.where(victimPredication)
+						.and(qualified.regularPredication())
+						.groupBy(fieldId);
+
+				// Order using the "inner_"-prefixed names where possible
+				var innerFieldName =  new MappedPunishmentFields.Mapper() {
+					@Override
+					public <T> Field<T> map(Field<T> original) {
+						String originalName = original.getName();
+						if (originalName.equals(fieldId.getName())) {
+							return renameField(original, original.getUnqualifiedName());
+						}
+						Name innerName = name("inner_" + originalName);
+						return renameField(original, innerName);
+					}
+				};
+				WithFields innerFields = new WithFields(new MappedPunishmentFields(usingFields, innerFieldName));
+				Ordering ordering = innerFields.buildOrdering();
+				selectQuery = parameters.context
+						.select(outerColumns)
+						.from(innerQuery)
+						.where(ordering.predicate)
+						.orderBy(ordering.byFields)
+						.offset(skipField)
+						.limit(limitField);
 			} else {
-				ScopeType scopeType = record.get(aggregateIfNeeded(fields.scopeType()));
-				String scopeValue = record.get(aggregateIfNeeded(fields.scope()));
-				scope = resources.scopeManager().deserialize(scopeType, scopeValue);
+				List<Field<?>> allColumns = new ArrayList<>(victimColumns);
+				simplified.getRegularColumns(allColumns);
+				allColumns.add(fieldId);
+
+				Ordering ordering = simplified.buildOrdering();
+				selectQuery = parameters.context
+						.select(allColumns)
+						.from(usingTable)
+						.where(simplified.regularPredication().and(victimPredication).and(ordering.predicate))
+						.orderBy(ordering.byFields)
+						.offset(skipField)
+						.limit(limitField);
 			}
-			EscalationTrack escalationTrack = retrieveValueFromRecordOrSelection(
-					getEscalationTracks(), record, fields.track(),
-					(optTrack) -> optTrack.orElse(null)
-			);
-			return resources.creator().createPunishment(
-					record.get(fields.id()),
-					type,
-					victim,
-					operator,
-					record.get(aggregateIfNeeded(fields.reason())),
-					scope,
-					record.get(aggregateIfNeeded(fields.start())),
-					record.get(aggregateIfNeeded(fields.end())),
-					escalationTrack
-			);
+			return new Query<>(selectQuery, qualified::mapRecord);
 		}
 
-		private List<OrderField<?>> buildOrdering(SortPunishments[] ordering) {
-			Field<Instant> start = aggregateIfNeeded(fields.start());
-			Field<Long> end = aggregateIfNeeded(fields.end()).coerce(Long.class);
-			// Since end = 0 defines a permanent punishment, use
-			// CASE WHEN end = 0 THEN Long.MAX_VALUE ELSE end END
-			end = choose(end)
-					.when(inline(0L), inline(Long.MAX_VALUE))
-					.otherwise(end);
+	}
 
-			List<OrderField<?>> orderFields = new ArrayList<>(ordering.length * 2);
-			for (SortPunishments sortPunishments : ordering) {
-				switch (sortPunishments) {
-				case NEWEST_FIRST -> {
-					orderFields.add(start.desc());
-					orderFields.add(fields.id().desc());
-				}
-				case OLDEST_FIRST -> {
-					orderFields.add(start.asc());
-					orderFields.add(fields.id().asc());
-				}
-				case LATEST_END_DATE_FIRST -> orderFields.add(end.desc());
-				case SOONEST_END_DATE_FIRST -> orderFields.add(end.asc());
-				}
-			}
-			return orderFields;
-		}
-
-		Query<?> constructSelect(List<Field<?>> additionalColumns, Condition additionalPredication) {
-			List<OrderField<?>> orderFields;
-			KeysetAnchor<StartTimeThenId> pageAnchor = pageAnchor();
-			if (pageAnchor == null) {
-				orderFields = buildOrdering(parameters.ordering);
-			} else {
-				Pagination<StartTimeThenId> pagination = new Pagination<>(
-						pageAnchor, false, StartTimeThenId.defineOrder(aggregateIfNeeded(fields.start()), fields.id())
-				);
-				additionalPredication = additionalPredication.and(pagination.seeking());
-				orderFields = Arrays.asList(pagination.order());
-			}
-			return new Query<>(
-					parameters.context
-							.select(getColumnsToRetrieve(additionalColumns))
-							.from(table)
-							.where(getPredication().and(additionalPredication))
-							.groupBy(groupByIdForDeduplication() ? fields.id() : noField())
-							.orderBy(orderFields)
-							.offset((skipCount() == 0) ? noField(Integer.class) : val(skipCount()))
-							.limit(switch (parameters.limit) {
-								case 0 -> noField(Integer.class);
-								case 1 -> inline(1);
-								default -> val(parameters.limit);
-							}),
-					this::mapRecord
-			);
-		}
-
+	private static <F> Field<F> renameField(Field<F> original, Name newName) {
+		// Return field with same type + binding + converter, but strip qualifying table
+		@SuppressWarnings("unchecked")
+		Binding<Object, F> binding = (Binding<Object, F>) original.getBinding();
+		Field<?> renamed = field(newName, original.getDataType());
+		@SuppressWarnings("unchecked")
+		Field<Object> eraseRenamed = (Field<Object>) renamed;
+		Field<F> rebound = eraseRenamed.convert(binding);
+		assert rebound.getDataType() == original.getDataType() : "data type mismatch";
+		assert rebound.getConverter().getClass() == original.getConverter().getClass() : "converter mismatch";
+		assert rebound.getBinding().getClass() == original.getBinding().getClass() : "binding mismatch";
+		return rebound;
 	}
 
 	record Query<R extends Record>(Select<R> select, RecordMapper<R, Punishment> mapper) {
