@@ -51,25 +51,26 @@ class ResourceCreator {
 	}
 
 	Stream<Injector> create(ConfigSpec configSpec) {
-		return createUsing(configSpec, ConfigSpecWithDatabase::new);
+		return createUsing(configSpec, false, ConfigSpecWithDatabase::new);
 	}
 
-	Stream<Injector> createIsolated(ConfigSpec configSpec) {
-		return createUsing(configSpec, (db, spec) -> new InstanceKey() {});
+	Stream<Injector> createIsolated(ConfigSpec configSpec, boolean manualStart) {
+		return createUsing(configSpec, manualStart, (db, spec) -> new InstanceKey() {});
 	}
 
-	private Stream<Injector> createUsing(ConfigSpec configSpec,
+	private Stream<Injector> createUsing(ConfigSpec configSpec, boolean manualStart,
 										 BiFunction<ConfigSpec, DatabaseInstance, InstanceKey> keyFunction) {
 		return DatabaseInstance
 				.matchingVendor(configSpec.vendor())
 				.map((database) -> {
 					InstanceKey instanceKey = keyFunction.apply(configSpec, database);
-					return createSingle(configSpec, database, instanceKey);
+					return createSingle(configSpec, manualStart, database, instanceKey);
 				})
 				.flatMap(Optional::stream);
 	}
 
-	private Optional<Injector> createSingle(ConfigSpec configSpec, DatabaseInstance database, InstanceKey instanceKey) {
+	private Optional<Injector> createSingle(ConfigSpec configSpec, boolean manualStart,
+											DatabaseInstance database, InstanceKey instanceKey) {
 		DatabaseInstance.Credential databaseCredential = database.createInfo(store).orElse(null);
 		if (databaseCredential == null) {
 			return Optional.empty();
@@ -95,7 +96,9 @@ class ResourceCreator {
 					.build();
 
 			BaseFoundation base = injector.request(BaseFoundation.class);
-			base.startup();
+			if (!manualStart) {
+				base.startup();
+			}
 			return new BaseWrapper(injector, base, tempDirectory);
 
 		}, BaseWrapper.class).injector);

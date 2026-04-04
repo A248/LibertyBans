@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,8 +19,12 @@
 
 package space.arim.libertybans.it.util;
 
+import org.junit.jupiter.api.function.Executable;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentBase;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -52,4 +56,14 @@ public final class TestingUtil {
 		assertEquals(expected.getEndDate(), actual.getEndDate());
 	}
 
+	public static Executable unwrapInnerEx(Executable command) {
+		return () -> {
+			try {
+				command.execute();
+			} catch (InvocationTargetException | CompletionException ex) {
+				Throwable cause = ex.getCause();
+				throw cause == null ? ex : cause;
+			}
+		};
+	}
 }

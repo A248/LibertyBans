@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,6 +26,7 @@ import space.arim.libertybans.api.database.PunishmentDatabase;
 import space.arim.libertybans.bootstrap.StartupException;
 import space.arim.libertybans.core.Part;
 import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.database.flyway.MigrationTargetController;
 import space.arim.libertybans.core.punish.GlobalEnforcement;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
@@ -37,6 +38,7 @@ import java.nio.file.Path;
 public class DatabaseManager implements Part {
 
 	private final Path folder;
+	private final MigrationTargetController migrationTargetController;
 	private final FactoryOfTheFuture futuresFactory;
 	private final EnhancedExecutor enhancedExecutor;
 	private final Configs configs;
@@ -46,15 +48,20 @@ public class DatabaseManager implements Part {
 	private volatile StandardDatabase database;
 
 	@Inject
-	public DatabaseManager(@Named("folder") Path folder, FactoryOfTheFuture futuresFactory,
-						   EnhancedExecutor enhancedExecutor, Configs configs, Time time,
-						   GlobalEnforcement globalEnforcement) {
+	public DatabaseManager(@Named("folder") Path folder, MigrationTargetController migrationTargetController,
+						   FactoryOfTheFuture futuresFactory, EnhancedExecutor enhancedExecutor, Configs configs,
+						   Time time, GlobalEnforcement globalEnforcement) {
 		this.folder = folder;
-		this.futuresFactory = futuresFactory;
+        this.migrationTargetController = migrationTargetController;
+        this.futuresFactory = futuresFactory;
 		this.enhancedExecutor = enhancedExecutor;
 		this.configs = configs;
 		this.time = time;
 		this.globalEnforcement = globalEnforcement;
+	}
+
+	MigrationTargetController migrationTargetController() {
+		return migrationTargetController;
 	}
 
 	public FactoryOfTheFuture futuresFactory() {

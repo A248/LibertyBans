@@ -17,29 +17,22 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.it;
+package space.arim.libertybans.core.database.flyway;
 
-import space.arim.libertybans.bootstrap.BaseFoundation;
+import jakarta.inject.Singleton;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.flywaydb.core.api.MigrationVersion;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+@Singleton
+public final class MigrationTargetController {
 
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+    private MigrationVersion target;
 
-/**
- * Provides an instance of LibertyBans which is completed isolated from other test runs. <br>
- * <br>
- * For use with {@link InjectionInvocationContextProvider}
- */
-@Retention(RUNTIME)
-@Target(TYPE)
-public @interface ThrowawayInstance {
+    @Nullable MigrationVersion getTarget() {
+        return target;
+    }
 
-    /**
-     * If set to {@code true}, prevents calling {@link BaseFoundation#startup()} on the instance
-     *
-     * @return true if the test will manually start the instance
-     */
-    boolean manualStartup() default false;
+    public void setTarget(@Nullable MigrationVersion target) {
+        this.target = target;
+    }
 }

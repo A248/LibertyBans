@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -43,7 +43,15 @@ public class InjectionInvocationContextProvider implements TestTemplateInvocatio
 	@Override
 	public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
 
-		boolean throwaway = context.getRequiredTestClass().isAnnotationPresent(ThrowawayInstance.class);
+		boolean throwaway, manualStart;
+		ThrowawayInstance throwawayAnnotation = context.getRequiredTestClass().getAnnotation(ThrowawayInstance.class);
+		if (throwawayAnnotation != null) {
+			throwaway = true;
+			manualStart = throwawayAnnotation.manualStartup();
+		} else {
+			throwaway = false;
+			manualStart = false;
+		}
 		SampleData.Source sampleDataSource;
 		{
 			SampleData sampleData = context.getRequiredTestMethod().getAnnotation(SampleData.class);
@@ -56,7 +64,7 @@ public class InjectionInvocationContextProvider implements TestTemplateInvocatio
 		ResourceCreator creator = new ResourceCreator(context.getRoot().getStore(NAMESPACE));
 		return new ConfigSpecPossiblities(context.getElement().orElseThrow())
 				.getAll()
-				.flatMap((throwaway) ? creator::createIsolated : creator::create)
+				.flatMap(throwaway ? (spec) -> creator.createIsolated(spec, manualStart) : creator::create)
 				.map((injector) -> new InjectorInvocationContext(injector, throwaway, sampleDataSource));
 	}
 

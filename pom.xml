@@ -43,7 +43,7 @@
 		<common-parent.deploy-url>https://maven.cloudsmith.io/anand-beh/affero-gpl3/</common-parent.deploy-url>
 
 		<!-- Testing dependencies -->
-		<junit.version>5.13.4</junit.version>
+		<junit.version>5.14.3</junit.version>
 		<mockito.version>5.18.0</mockito.version>
 		<h2.version>2.1.210</h2.version>
 

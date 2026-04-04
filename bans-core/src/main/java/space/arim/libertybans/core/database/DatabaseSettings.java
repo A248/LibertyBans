@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -114,7 +114,9 @@ public class DatabaseSettings {
 		);
 
 		JooqClassloading jooqClassloading = new JooqClassloading(jooqContext);
-		MigrateWithFlyway migrateWithFlyway = new MigrateWithFlyway(hikariDataSource, vendor);
+		MigrateWithFlyway migrateWithFlyway = new MigrateWithFlyway(
+				manager.migrationTargetController(), hikariDataSource, vendor
+		);
 		try {
 			migrateWithFlyway.migrate(jooqContext);
 		} catch (MigrationFailedException ex) {

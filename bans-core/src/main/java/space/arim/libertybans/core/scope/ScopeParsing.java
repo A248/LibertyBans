@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -29,7 +29,7 @@ public class ScopeParsing {
 
 	public static final String GLOBAL_SCOPE_USER_INPUT = "*";
 
-	private static final int SCOPE_VALUE_LENGTH_LIMIT = 32;
+	private static final int SCOPE_VALUE_LENGTH_LIMIT = 255;
 
 	static void checkScopeValue(String value) {
 		if (value.isEmpty()) {

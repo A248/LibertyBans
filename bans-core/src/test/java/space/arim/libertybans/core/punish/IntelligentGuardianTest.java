@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -75,7 +75,7 @@ public class IntelligentGuardianTest {
 
 		FuturePoster futurePoster = completionStage -> completionStage.toCompletableFuture().join();
 		guardian = new IntelligentGuardian(
-				configs, futurePoster, futuresFactory, scopeManager, formatter, selector, uuidManager, muteCache
+				configs, futurePoster, futuresFactory, scopeManager, selector, uuidManager, muteCache
 		);
 		MainConfig mainConfig = mock(MainConfig.class);
 		EnforcementConfig enforcementConfig = mock(EnforcementConfig.class);

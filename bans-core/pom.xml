@@ -163,9 +163,12 @@
 						<zerosmallintliteral>CAST(0 AS SMALLINT)</zerosmallintliteral>
 						<migratescopestart>CAST(</migratescopestart>
 						<migratescopeend> AS CHARACTER VARYING(32))</migratescopeend>
+						<migratescopepost343start>CAST(</migratescopepost343start>
+						<migratescopepost343end> AS CHARACTER VARYING(255))</migratescopepost343end>
 					</placeholders>
 					<locations>
 						<location>filesystem:src/main/resources/database-migrations</location>
+						<location>filesystem:src/main/resources/database-migrations-hsql</location>
 						<location>filesystem:src/test/resources/extra-database-migrations/codegen</location>
 						<location>filesystem:src/test/resources/extra-database-migrations/zeroeight</location>
 					</locations>

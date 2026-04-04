@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,7 +21,6 @@ package space.arim.libertybans.it;
 
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import space.arim.injector.Identifier;
 import space.arim.injector.Injector;
 import space.arim.libertybans.core.importing.SelfImportProcess;
 import space.arim.libertybans.it.test.importing.SelfImportData;
@@ -40,9 +39,8 @@ final class SampleDataCallback implements BeforeEachCallback {
 
 	@Override
 	public void beforeEach(ExtensionContext context) throws Exception {
-		Path folder = injector.request(Identifier.ofTypeAndNamed(Path.class, "folder"));
 		SelfImportProcess selfImportProcess = injector.request(SelfImportProcess.class);
-		SelfImportData selfImportData = new SelfImportData(folder);
+		SelfImportData selfImportData = new SelfImportData(selfImportProcess.folder);
 
 		Path dataSource = switch (source) {
             case BlueTree -> selfImportData.copyBlueTree242();
