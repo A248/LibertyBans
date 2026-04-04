@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -85,8 +85,9 @@ public class Enaction {
 								 DSLContext context, Transaction transaction, boolean active) {
 			MiscUtil.checkNoCompositeVictimWildcards(victim);
 
-			Field<Integer> escalationTrackId = new TrackIdSequenceValue(context).retrieveTrackId(escalationTrack);
+			// issue 343: scope length of greater than 32 will throw here (solve in 1.2.0)
 			Field<Integer> scopeId = new ScopeIdSequenceValue(context).retrieveScopeId(scope);
+			Field<Integer> escalationTrackId = new TrackIdSequenceValue(context).retrieveTrackId(escalationTrack);
 
 			SequenceValue<Long> punishmentIdSequence = new SequenceValue<>(context, LIBERTYBANS_PUNISHMENT_IDS);
 			context

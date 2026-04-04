@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -36,11 +36,17 @@ public final class ScopeIdSequenceValue extends SequenceValue<Integer> {
 		super(context, LIBERTYBANS_SCOPE_IDS);
 	}
 
+	// issue 343: scope length checks are temporarily limited to insertion, pending full removal
+	private static final int SCOPE_VALUE_LENGTH_LIMIT = 32;
+
 	private RetrieveOrGenerate retrieveOrGenerate(ScopeType type, String value) {
 		return new RetrieveOrGenerate(
 				SCOPES, SCOPES.ID,
 				SCOPES.TYPE.eq(type).and(SCOPES.VALUE.eq(value)),
 				(newId) -> {
+					if (value.length() > SCOPE_VALUE_LENGTH_LIMIT) {
+						throw new IllegalArgumentException("Scope length must be less than " + SCOPE_VALUE_LENGTH_LIMIT);
+					}
 					context
 							.insertInto(SCOPES)
 							.columns(SCOPES.ID, SCOPES.TYPE, SCOPES.VALUE)
