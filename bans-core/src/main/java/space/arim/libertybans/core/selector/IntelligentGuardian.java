@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,7 +27,6 @@ import space.arim.api.env.annote.PlatformPlayer;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.libertybans.core.service.FuturePoster;
@@ -48,20 +47,18 @@ public final class IntelligentGuardian implements Guardian {
 	private final FuturePoster futurePoster;
 	private final FactoryOfTheFuture futuresFactory;
 	private final ScopeManager scopeManager;
-	private final InternalFormatter formatter;
 	private final InternalSelector selector;
 	private final UUIDManager uuidManager;
 	private final MuteCache muteCache;
 
 	@Inject
 	public IntelligentGuardian(Configs configs, FuturePoster futurePoster, FactoryOfTheFuture futuresFactory,
-							   ScopeManager scopeManager, InternalFormatter formatter, InternalSelector selector,
+							   ScopeManager scopeManager, InternalSelector selector,
 							   UUIDManager uuidManager, MuteCache muteCache) {
 		this.configs = configs;
         this.futurePoster = futurePoster;
         this.futuresFactory = futuresFactory;
 		this.scopeManager = scopeManager;
-		this.formatter = formatter;
 		this.selector = selector;
 		this.uuidManager = uuidManager;
 		this.muteCache = muteCache;

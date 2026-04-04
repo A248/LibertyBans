@@ -31,6 +31,7 @@ import space.arim.libertybans.core.database.DatabaseManager;
 import space.arim.libertybans.core.database.DatabaseResult;
 import space.arim.libertybans.core.database.DatabaseSettings;
 import space.arim.libertybans.core.database.Vendor;
+import space.arim.libertybans.core.database.flyway.MigrationTargetController;
 import space.arim.libertybans.it.util.ContextClassLoaderAction;
 import space.arim.libertybans.it.util.FlywayStaticStateManagementExtension;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
@@ -66,6 +67,7 @@ public class DatabaseSettingsIT {
 	private DatabaseSettings createDatabaseSettings() {
 		DatabaseManager dbManager = mock(DatabaseManager.class);
 		when(dbManager.futuresFactory()).thenReturn(new IndifferentFactoryOfTheFuture());
+		when(dbManager.migrationTargetController()).thenReturn(new MigrationTargetController());
 		return new DatabaseSettings(databaseDir, dbManager);
 	}
 

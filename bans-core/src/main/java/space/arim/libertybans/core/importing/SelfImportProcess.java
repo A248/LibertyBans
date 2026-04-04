@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -55,7 +55,7 @@ import static space.arim.libertybans.core.schema.tables.Victims.VICTIMS;
 
 public final class SelfImportProcess {
 
-	private final Path folder;
+	public final Path folder;
 	private final Configs configs;
 	private final DatabaseManager databaseManager;
 	private final Provider<QueryExecutor> queryExecutor;

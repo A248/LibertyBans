@@ -26,16 +26,17 @@ import static space.arim.libertybans.bootstrap.RunState.RUNNING;
 
 import java.time.Duration;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import space.arim.libertybans.bootstrap.LoadingException;
 import space.arim.omnibus.util.ThisClass;
 
 import space.arim.libertybans.bootstrap.BaseFoundation;
-import space.arim.libertybans.bootstrap.LoadingException;
 import space.arim.libertybans.bootstrap.RunState;
 
 abstract class AbstractBaseFoundation implements BaseFoundation {
@@ -128,12 +129,15 @@ abstract class AbstractBaseFoundation implements BaseFoundation {
 			case STOP -> shutdown0();
 			default -> throw new IllegalArgumentException("Unknown load point " + point);
 			}
-		} catch (LoadingException failure) {
-			logger.warn("Conducting " + point + " failed: " + failure.getMessage());
-			Throwable cause = failure.getCause();
-			if (cause != null) {
-				logger.warn("Extended failure cause:", cause);
+		} catch (RuntimeException failure) {
+			Throwable reportErr;
+			if (failure instanceof LoadingException) {
+				Throwable cause = failure.getCause();
+				reportErr = Objects.requireNonNullElse(cause, failure);
+			} else {
+				reportErr = failure;
 			}
+			logger.error("Conducting " + point + " failed. Reason follows.", reportErr);
 			return false;
 		}
 		long endTime = System.nanoTime();

@@ -125,7 +125,7 @@ public class AddonsIT {
 			public void unregister() {}
 		});
 		BaseFoundation foundation = injector.request(BaseFoundation.class);
-		foundation.startup();
+		foundation.assertStartup();
 	}
 
 	@Test

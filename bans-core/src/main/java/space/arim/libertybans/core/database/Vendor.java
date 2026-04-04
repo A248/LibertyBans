@@ -155,14 +155,22 @@ public enum Vendor {
 		};
 	}
 
-	public String[] migrateScope() {
+	private String[] migrateScope(int varCharLen) {
 		return switch (this) {
 			case MARIADB, MYSQL -> new String[] {"", ""};
 			case HSQLDB, POSTGRES, COCKROACH -> new String[] {
 					"CAST(",
-					" AS CHARACTER VARYING(32))"
+					" AS CHARACTER VARYING(" + varCharLen + "))"
 			};
 		};
+	}
+
+	public String[] migrateScope() {
+		return migrateScope(32);
+	}
+
+	public String[] migrateScopePostIssue343() {
+		return migrateScope(255);
 	}
 
 	String getConnectionInitSql() {
