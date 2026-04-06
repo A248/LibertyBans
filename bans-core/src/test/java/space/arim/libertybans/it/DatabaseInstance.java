@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.it;
 
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.core.database.Vendor;
@@ -28,6 +29,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -76,41 +78,78 @@ public enum DatabaseInstance {
 		return Arrays.stream(DatabaseInstance.values()).filter((dbInstance) -> dbInstance.vendor == vendor);
 	}
 
-	Optional<DatabaseInfo> createInfo() {
+	Optional<Credential> createInfo(ExtensionContext.Store store) {
 		return switch (port) {
-			case NO_PORT_APPLICABLE -> Optional.of(new DatabaseInfo());
+			case NO_PORT_APPLICABLE -> Optional.of(new Credential());
 			case NO_PORT_CONFIGURED -> Optional.empty();
 			default -> {
 				String database = "libertybans_it_" + DB_NAME_COUNTER.incrementAndGet();
-				createDatabase(database);
-				yield Optional.of(new DatabaseInfo(port, database));
+				Credential databaseCredential = new Credential(port, database);
+				databaseCredential.init(vendor);
+				store.put(new Object(), databaseCredential.new Cleanup(vendor));
+				yield Optional.of(databaseCredential);
 			}
 		};
 	}
 
-	private void createDatabase(String database) {
-		switch (vendor) {
-		case MARIADB, MYSQL ->
-				createDatabaseUsing("jdbc:mariadb", database, " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-		case POSTGRES, COCKROACH ->
-				createDatabaseUsing("jdbc:postgresql", database, "");
-		default ->
-				throw new IllegalStateException("No database creation exists for " + this);
+	public record Credential(int port, String database) {
+
+		public Credential() {
+			this(-1, "");
 		}
-	}
 
-	private void createDatabaseUsing(String jdbcPrefix, String database, String characterSet) {
-		String user = vendor.userForITs();
-		String password = vendor.passwordForITs();
-		String jdbcUrl = jdbcPrefix + "://127.0.0.1:" + port + '/';
-		try (Connection conn = DriverManager.getConnection(jdbcUrl, user, password);
-			 PreparedStatement prepStmt = conn.prepareStatement(
-					 "CREATE DATABASE " + database + characterSet)) {
+		public Credential {
+			Objects.requireNonNull(database, "database");
+		}
 
-			prepStmt.execute();
-		} catch (SQLException ex) {
-			throw new IllegalStateException(
-					"Failed to connect to " + jdbcUrl + " with user:password " + user + ':' + password, ex);
+		private void executeStatement(Vendor vendor, String statement) {
+			String user = vendor.userForITs();
+			String password = vendor.passwordForITs();
+			String jdbcPrefix = switch (vendor) {
+				case COCKROACH, POSTGRES -> "jdbc:postgresql";
+				case MARIADB, MYSQL -> "jdbc:mariadb";
+				case HSQLDB -> throw new UnsupportedOperationException();
+			};
+			String jdbcUrl = jdbcPrefix + "://127.0.0.1:" + port + '/';
+			try (Connection conn = DriverManager.getConnection(jdbcUrl, user, password);
+				 PreparedStatement prepStmt = conn.prepareStatement(statement)) {
+
+				prepStmt.execute();
+			} catch (SQLException ex) {
+				throw new IllegalStateException(
+						"Failed to execute statement " + statement + " using " + jdbcUrl +
+								" with user:password " + user + ':' + password, ex
+				);
+			}
+		}
+
+		private void createDatabaseUsing(Vendor vendor, String createOptions) {
+			executeStatement(vendor, "CREATE DATABASE " + database + createOptions);
+		}
+
+		void init(Vendor vendor) {
+			switch (vendor) {
+				case MARIADB, MYSQL ->
+						createDatabaseUsing(vendor, " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+				case POSTGRES, COCKROACH ->
+						createDatabaseUsing(vendor, "");
+				default ->
+						throw new IllegalStateException("No database creation exists for " + this);
+			}
+		}
+
+		final class Cleanup implements AutoCloseable {
+
+			private final Vendor vendor;
+
+			Cleanup(Vendor vendor) {
+				this.vendor = vendor;
+			}
+
+			@Override
+			public void close() {
+				executeStatement(vendor, "DROP DATABASE " + database);
+			}
 		}
 	}
 }

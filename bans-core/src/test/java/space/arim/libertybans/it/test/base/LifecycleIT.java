@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,7 +17,7 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.it.test;
+package space.arim.libertybans.it.test.base;
 
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.TestTemplate;
