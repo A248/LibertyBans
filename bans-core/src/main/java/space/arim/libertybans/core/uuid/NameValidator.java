@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,8 +24,6 @@ import java.util.UUID;
 public interface NameValidator {
 
 	String associatedPrefix();
-
-	boolean validateNameArgument(String name);
 
 	boolean isVanillaName(String name);
 

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -129,9 +129,6 @@ public final class CachingUUIDManager implements UUIDManager {
 	}
 
 	private CentralisedFuture<Optional<UUID>> lookupUUIDExactOrNot(String name, boolean exact) {
-		if (!nameValidator.validateNameArgument(name)) {
-			return completedFuture(Optional.empty());
-		}
 		UUID cachedResolve = nameToUuidCache.getIfPresent(name.toLowerCase(Locale.ROOT));
 		if (cachedResolve != null) {
 			return completedFuture(Optional.of(cachedResolve));
@@ -143,9 +140,7 @@ public final class CachingUUIDManager implements UUIDManager {
 			return completedFuture(Optional.of(offlineUuid));
 		}
 		return lookupUUIDUncached(name).thenApply((optExternalUuid) -> {
-			if (optExternalUuid.isPresent()) {
-				addCache(optExternalUuid.get(), name);
-			}
+            optExternalUuid.ifPresent(uuid -> addCache(uuid, name));
 			return optExternalUuid;
 		});
 	}
@@ -178,9 +173,7 @@ public final class CachingUUIDManager implements UUIDManager {
 			return completedFuture(Optional.of(cachedResolve));
 		}
 		return lookupNameUncached(uuid).thenApply((optExternalName) -> {
-			if (optExternalName.isPresent()) {
-				addCache(uuid, optExternalName.get());
-			}
+            optExternalName.ifPresent(name -> addCache(uuid, name));
 			return optExternalName;
 		});
 	}
@@ -218,9 +211,6 @@ public final class CachingUUIDManager implements UUIDManager {
 
 	@Override
 	public CentralisedFuture<NetworkAddress> lookupAddress(String name) {
-		if (!nameValidator.validateNameArgument(name)) {
-			return completedFuture(null);
-		}
 		return envResolver.lookupAddress(name).thenCompose((envResolve) -> {
 			if (envResolve.isPresent()) {
 				return completedFuture(NetworkAddress.of(envResolve.get()));
@@ -231,9 +221,6 @@ public final class CachingUUIDManager implements UUIDManager {
 
 	@Override
 	public CentralisedFuture<Optional<UUIDAndAddress>> lookupPlayer(String name) {
-		if (!nameValidator.validateNameArgument(name)) {
-			return completedFuture(Optional.empty());
-		}
 		return envResolver.lookupPlayer(name).thenCompose((envResolve) -> {
 			if (envResolve.isPresent()) {
 				return completedFuture(envResolve);
