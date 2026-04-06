@@ -1,6 +1,6 @@
 <!--
   ~ LibertyBans
-  ~ Copyright © 2025 Anand Beh
+  ~ Copyright © 2026 Anand Beh
   ~
   ~ LibertyBans is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as
@@ -85,6 +85,11 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>space.arim.libertybans.addon</groupId>
+            <artifactId>addon-command-changereason</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>space.arim.libertybans.addon</groupId>
             <artifactId>addon-command-checkpunish</artifactId>

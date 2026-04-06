@@ -1,6 +1,6 @@
 <!--
   ~ LibertyBans
-  ~ Copyright © 2025 Anand Beh
+  ~ Copyright © 2026 Anand Beh
   ~
   ~ LibertyBans is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as
@@ -56,6 +56,7 @@
     </build>
 
     <modules>
+        <module>command-changereason</module>
         <module>command-checkpunish</module>
         <module>command-checkuser</module>
         <module>command-expunge</module>

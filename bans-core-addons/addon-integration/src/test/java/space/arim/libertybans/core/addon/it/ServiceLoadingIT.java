@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,6 +26,7 @@ import space.arim.libertybans.core.addon.checkuser.CheckUserModule;
 import space.arim.libertybans.core.addon.exempt.luckperms.ExemptionLuckPermsModule;
 import space.arim.libertybans.core.addon.exempt.vault.ExemptionVaultModule;
 import space.arim.libertybans.core.addon.expunge.ExpungeModule;
+import space.arim.libertybans.core.addon.changereason.ChangeReasonModule;
 import space.arim.libertybans.core.addon.extend.ExtendModule;
 import space.arim.libertybans.core.addon.layouts.LayoutsModule;
 import space.arim.libertybans.core.addon.shortcutreasons.ShortcutReasonsModule;
@@ -44,9 +45,10 @@ public class ServiceLoadingIT {
 	public void loadAddons() {
 		assertEquals(
 				Set.of(
-						new CheckPunishModule(), new CheckUserModule(), new ExpungeModule(), new ExtendModule(),
-						new StaffRollbackModule(), new ExemptionLuckPermsModule(), new ExemptionVaultModule(),
-						new LayoutsModule(), new ShortcutReasonsModule(), new WarnActionsModule(), new WebhookModule()
+						new ChangeReasonModule(), new CheckPunishModule(), new CheckUserModule(), new ExpungeModule(),
+						new ExtendModule(), new ExemptionLuckPermsModule(), new ExemptionVaultModule(),
+						new LayoutsModule(), new StaffRollbackModule(),
+						new ShortcutReasonsModule(), new WarnActionsModule(), new WebhookModule()
 				),
 				assertDoesNotThrow(AddonLoader::loadAddonBindModules)
 		);

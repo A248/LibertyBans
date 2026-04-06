@@ -17,7 +17,7 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.addon.extend;
+package space.arim.libertybans.core.addon.changereason;
 
 import net.kyori.adventure.text.Component;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
@@ -26,9 +26,9 @@ import space.arim.dazzleconf.annote.ConfDefault;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.libertybans.core.addon.AddonConfig;
 
-public interface ExtendConfig extends AddonConfig {
+public interface ChangeReasonConfig extends AddonConfig {
 
-	@ConfDefault.DefaultString("&cUsage: /libertybans extend <id> <time>")
+	@ConfDefault.DefaultString("&cUsage: /libertybans changereason <id> <new reason>")
 	Component usage();
 
 	@ConfKey("no-permission")
@@ -39,16 +39,11 @@ public interface ExtendConfig extends AddonConfig {
 	@ConfDefault.DefaultString("&7No punishment exists with ID &e%ID%&7.")
 	ComponentText notFound();
 
-	@ConfKey("cannot-extend-kicks")
-	@ConfDefault.DefaultString("&cThe punishment with ID &e%ID%&c is a kick so it cannot be extended.")
-	ComponentText cannotExtendKicks();
-
-	@ConfKey("invalid-duration")
-	@ConfDefault.DefaultString("&e%DURATION_ARG%&c is not a valid duration.")
-	ComponentText invalidDuration();
-
-	@ConfComments("The success message. All the usual punishment variables can be used here.")
-	@ConfDefault.DefaultString("&7Extended punishment &e%ID%&7. It now ends on &e%END_DATE%&7.")
+	@ConfComments({
+			"The success message. All the usual punishment variables can be used here.",
+			"The old punishment reason is available with %OLD_REASON%."
+	})
+	@ConfDefault.DefaultString("&7Changed reason of punishment &e%ID%&7 from '%OLD_REASON%' to '%REASON%.'")
 	ComponentText success();
 
 }
