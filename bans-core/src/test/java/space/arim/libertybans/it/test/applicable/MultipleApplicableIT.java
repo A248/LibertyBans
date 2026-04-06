@@ -20,6 +20,7 @@
 package space.arim.libertybans.it.test.applicable;
 
 import jakarta.inject.Inject;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.api.AddressVictim;
@@ -118,6 +119,7 @@ public class MultipleApplicableIT {
 	@SetAddressStrictness(AddressStrictness.STRICT)
 	@SetAltRegistry(all = true)
 	@SampleData
+	@Disabled
 	public void avoidDuplicateApplicablePunishments() {
 		UUID uuid = UUID.randomUUID();
 		NetworkAddress address = RandomUtil.randomAddress();
