@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -113,7 +113,10 @@ public final class AltCommands extends AbstractSubCommandGroup {
 						// Traditional pagination
 						skipCount = (page - 1) * pageSize;
 					}
-					request = new AltInfoRequest(uuid, address, WhichAlts.ALL_ALTS, oldestFirst, pageSize, anchor, skipCount);
+					request = new AltInfoRequest(
+							uuid, address, WhichAlts.ALL_ALTS, oldestFirst, pageSize, anchor, skipCount,
+							config().commands().excisePrivateNetworks().altsCommand()
+					);
 				}
 				return altDetection.detectAlts(request).thenAccept((response) -> {
 					if (response.data().isEmpty()) {

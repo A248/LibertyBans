@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -105,6 +105,9 @@ public class AltDetection {
 				.where(ADDRESSES.UUID.eq(query.uuid()))
 				.and(new AccountExpirationCondition(ADDRESSES.UPDATED).isNotExpired(configs, currentTime))
 				.fetch(ADDRESSES.ADDRESS);
+		if (query.request.removeAddressIf() != null) {
+			lookForAddresses.removeIf(query.request.removeAddressIf());
+		}
 
 		var detectedAlt = ADDRESSES;
 		List<SelectField<?>> selectFields = new ArrayList<>(List.of(

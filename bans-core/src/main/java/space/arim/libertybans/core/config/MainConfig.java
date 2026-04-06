@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -151,6 +151,33 @@ public interface MainConfig {
 		@DefaultBoolean(false)
 		boolean showApplicableForHistory();
 
+		@ConfKey("excise-private-networks")
+		@SubSection
+		ExcisePrivateNetworks excisePrivateNetworks();
+
+		@ConfHeader({
+				"A rarely needed section. Use this feature to account for complicated networking setups that mask player IP addresses",
+				"as private networks. It allows you to strip usage and appearance of private IPs in the following areas."
+		})
+		interface ExcisePrivateNetworks {
+
+			@ConfKey("alts-command")
+			@DefaultBoolean(false)
+			boolean altsCommand();
+
+			@ConfKey("alts-auto-show")
+			@DefaultBoolean(false)
+			boolean altsAutoShow();
+
+			@ConfKey("ip-punishments")
+			@DefaultBoolean(false)
+			boolean ipPunishments();
+
+			@ConfKey("composite-punishments")
+			@DefaultBoolean(false)
+			boolean compositePunishments();
+
+		}
 	}
 
 	@SubSection

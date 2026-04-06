@@ -22,6 +22,9 @@ package space.arim.libertybans.core.config;
 import jakarta.inject.Inject;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import space.arim.libertybans.api.AddressVictim;
+import space.arim.libertybans.api.CompositeVictim;
+import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.event.BasePunishEvent;
 import space.arim.libertybans.api.punish.DraftSanction;
@@ -79,15 +82,19 @@ public final class AdditionAssistant {
 
 	public final class Execution<S extends DraftSanction, I> extends AbstractCommandExecution {
 
+		private final MainConfig.Commands commandsConf;
+		private final MessagesConfig.All messagesConf;
 		private final PunishmentAdditionSection section;
 		private final Client<S, I> client;
 
 		private String targetArg;
 
-		public Execution(CmdSender sender, CommandPackage command,
-						 PunishmentAdditionSection section, Client<S, I> client) {
+		public Execution(CmdSender sender, CommandPackage command, MainConfig.Commands commandsConf,
+						 MessagesConfig.All messagesConf, PunishmentAdditionSection section, Client<S, I> client) {
 			super(sender, command);
-			this.section = section;
+            this.commandsConf = commandsConf;
+            this.messagesConf = messagesConf;
+            this.section = section;
 			this.client = client;
 		}
 
@@ -115,6 +122,25 @@ public final class AdditionAssistant {
 				var permissionCheck = client.createPermissionCheck(implement);
 				if (!permissionCheck.checkPermission(victim, section)) {
 					return futuresFactory.completedFuture(null);
+				}
+				// Check private network if applicable
+				{
+					NetworkAddress targetedAddress = null;
+					boolean checkPrivate = false;
+					var excisePrivateConf = commandsConf.excisePrivateNetworks();
+					if (victim instanceof AddressVictim addressVictim) {
+						targetedAddress = addressVictim.getAddress();
+						checkPrivate = excisePrivateConf.ipPunishments();
+					} else if (victim instanceof CompositeVictim compositeVictim) {
+						targetedAddress = compositeVictim.getAddress();
+						checkPrivate = excisePrivateConf.compositePunishments();
+					}
+					if (targetedAddress != null && checkPrivate && targetedAddress.toInetAddress().isSiteLocalAddress()) {
+						sender().sendMessage(messagesConf.privateNetworkUnusable().replaceText(
+								"%IP%", targetedAddress.toString()
+						));
+						return futuresFactory.completedFuture(null);
+					}
 				}
 				// Check exemption
 				return exemption.isVictimExempt(sender(), client.exemptionCategory(), victim).thenCompose((isExempt) -> {

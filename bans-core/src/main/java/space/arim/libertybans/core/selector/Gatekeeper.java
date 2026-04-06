@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -34,6 +34,7 @@ import space.arim.libertybans.api.select.SortPunishments;
 import space.arim.libertybans.core.alts.*;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.database.execute.SQLFunction;
 import space.arim.libertybans.core.database.pagination.InstantThenUUID;
 import space.arim.libertybans.core.database.pagination.KeysetPage;
@@ -103,12 +104,15 @@ public final class Gatekeeper {
 				return connectionLimitMessage;
 			}
 			// The player may join, but should be checked for alts
-			EnforcementConfig.AltsAutoShow altsAutoShow = configs.getMainConfig().enforcement().altsAutoShow();
+			MainConfig mainConfig = configs.getMainConfig();
+			EnforcementConfig.AltsAutoShow altsAutoShow = mainConfig.enforcement().altsAutoShow();
 			if (altsAutoShow.enable() && !altsAutoShow.enableBypassPermission()) {
 				var formatting = configs.getMessagesConfig().alts().autoShow();
-                return altDetection.detectAlts(context, new AltInfoRequest(
-						uuid, address, altsAutoShow.showWhichAlts(), formatting.oldestFirst(), formatting.limit()
-				));
+				var altInfoRequest = new AltInfoRequest(
+						uuid, address, altsAutoShow.showWhichAlts(), formatting.oldestFirst(), formatting.limit(),
+						mainConfig.commands().excisePrivateNetworks().altsAutoShow()
+				);
+                return altDetection.detectAlts(context, altInfoRequest);
 			}
 			return null;
 		}).thenCompose((banOrLimitMessageOrDetectedAltsOrNull) -> {

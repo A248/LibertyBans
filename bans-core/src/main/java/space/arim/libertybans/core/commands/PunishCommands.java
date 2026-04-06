@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -150,7 +150,9 @@ abstract class PunishCommands extends AbstractSubCommandGroup implements PunishU
 				return new PunishEventImpl(draftSanction, sender);
 			}
 		};
-		return additionAssistant.new Execution<>(sender, command, section, client);
+		return additionAssistant.new Execution<>(
+				sender, command, config().commands(), messages().all(), section, client
+		);
 	}
 
 	@Override

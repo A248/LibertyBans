@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,16 +19,19 @@
 
 package space.arim.libertybans.core.alts;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.core.database.pagination.InstantThenUUID;
 import space.arim.libertybans.core.database.pagination.KeysetAnchor;
 
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 public record AltInfoRequest(UUID uuid, NetworkAddress address, WhichAlts filter,
                              boolean oldestFirst, int pageSize,
-                             KeysetAnchor<InstantThenUUID> pageAnchor, int skipCount) {
+                             KeysetAnchor<InstantThenUUID> pageAnchor, int skipCount,
+                             @Nullable Predicate<NetworkAddress> removeAddressIf) {
 
     /**
      * Creates a retrieval request without a page anchor, meaning start at the first page.
@@ -40,7 +43,22 @@ public record AltInfoRequest(UUID uuid, NetworkAddress address, WhichAlts filter
      * @param pageSize    the maximum number to retrieve, or -1 for unlimited
      */
     public AltInfoRequest(UUID uuid, NetworkAddress address, WhichAlts filter, boolean oldestFirst, int pageSize) {
-        this(uuid, address, filter, oldestFirst, pageSize, KeysetAnchor.unset(), 0);
+        this(uuid, address, filter, oldestFirst, pageSize, KeysetAnchor.unset(), 0, null);
+    }
+
+    /**
+     * Creates a retrieval request.
+     *
+     * @param uuid                the user ID
+     * @param address             their address
+     * @param filter              which alts to filter for
+     * @param oldestFirst         whether to sort oldest first
+     * @param pageSize            the maximum number to retrieve, for -1 for unlimited
+     * @param excisePrivateNetworks whether to excise private networks
+     */
+    public AltInfoRequest(UUID uuid, NetworkAddress address, WhichAlts filter, boolean oldestFirst, int pageSize,
+                          boolean excisePrivateNetworks) {
+        this(uuid, address, filter, oldestFirst, pageSize, KeysetAnchor.unset(), 0, excisePrivateNetworks);
     }
 
     /**
@@ -53,10 +71,18 @@ public record AltInfoRequest(UUID uuid, NetworkAddress address, WhichAlts filter
      * @param pageSize            the maximum number to retrieve, for -1 for unlimited
      * @param pageAnchor          the numeric code after which to retrieve alts, 0 if unset
      * @param skipCount           how many alts to skip
+     * @param removeAddressIf     the filter for the target user's addresses
      */
     public AltInfoRequest {
         Objects.requireNonNull(uuid);
         Objects.requireNonNull(address);
         Objects.requireNonNull(filter);
+    }
+
+    public AltInfoRequest(UUID uuid, NetworkAddress address, WhichAlts filter,
+                          boolean oldestFirst, int pageSize,
+                          KeysetAnchor<InstantThenUUID> pageAnchor, int skipCount, boolean excisePrivateNetworks) {
+        this(uuid, address, filter, oldestFirst, pageSize, pageAnchor, skipCount,
+                excisePrivateNetworks ? (checkAddress) -> checkAddress.toInetAddress().isSiteLocalAddress() : null);
     }
 }

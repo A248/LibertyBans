@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -125,7 +125,9 @@ public final class LayoutPunishCommand extends AbstractSubCommandGroup {
 			}
 
 		};
-		return additionAssistant.new Execution<>(sender, command, config, client);
+		return additionAssistant.new Execution<>(
+				sender, command, config().commands(), messages().all(), config, client
+		);
 	}
 
 	@Override

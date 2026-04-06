@@ -132,9 +132,14 @@ public interface MessagesConfig {
 			ComponentText playerOrAddress();
 
 		}
-		
+
 		@DefaultString("&cUnknown sub command. Displaying usage:")
 		Component usage();
+
+		@ConfKey("private-network-unusable")
+		@ConfComments("A rare message caused by specifying a private IP network (likely indicates a broken setup).")
+		@DefaultString("&cThe IP address %IP% is a private network and punishing it is meaningless.")
+		ComponentText privateNetworkUnusable();
 
 		@SubSection
 		Scopes scopes();
