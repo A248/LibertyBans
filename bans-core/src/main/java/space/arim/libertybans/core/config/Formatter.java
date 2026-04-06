@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,6 +24,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.ComponentSerializer;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.api.jsonchat.adventure.ChatMessageComponentSerializer;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.AddressVictim;
@@ -111,36 +112,35 @@ public class Formatter implements InternalFormatter {
 	public CentralisedFuture<Component> getPunishmentMessage(Punishment punishment) {
 		return formatWithPunishment(messages().additions().forType(punishment.getType()).layout(), punishment);
 	}
-	
+
 	@Override
 	public CentralisedFuture<Component> formatWithPunishment(ComponentText componentText,
 															 Punishment punishment) {
-		return formatWithPunishment(componentText, punishment, null);
+		return formatWithPunishment(componentText, punishment, null, null);
+	}
+
+	@Override
+	public CentralisedFuture<Component> formatNotificationIssue(ComponentText componentText,
+	                                                            Punishment punishment,
+	                                                            boolean silent) {
+		return formatWithPunishment(componentText, punishment, null, silent);
 	}
 	
 	@Override
-	public CentralisedFuture<Component> formatWithPunishmentAndUnoperator(ComponentText componentText,
-																		  Punishment punishment, Operator unOperator) {
-		return formatWithPunishment(componentText, punishment, Objects.requireNonNull(unOperator, "unOperator"));
+	public CentralisedFuture<Component> formatNotificationRevoke(
+			ComponentText componentText, Punishment punishment, Operator unOperator, boolean silent) {
+		Objects.requireNonNull(unOperator, "unOperator");
+		return formatWithPunishment(componentText, punishment, unOperator, silent);
 	}
 
-	private CentralisedFuture<Component> formatWithPunishment(ComponentText componentText,
-															  Punishment punishment, Operator unOperator) {
-		Map<FutureReplaceable, CentralisedFuture<String>> futureReplacements = new EnumMap<>(FutureReplaceable.class);
-		for (FutureReplaceable futureReplaceable : FutureReplaceable.values()) {
-
-			if (unOperator == null && futureReplaceable == FutureReplaceable.UNOPERATOR) {
-				continue;
-			}
-			if (componentText.contains(futureReplaceable.getVariable())) {
-				CentralisedFuture<String> replacement = getFutureReplacement(futureReplaceable, punishment, unOperator);
-				futureReplacements.put(futureReplaceable, replacement);
-			}
-		}
-		return futuresFactory.supplyAsync(() -> getSimpleReplacements(punishment, unOperator))
-				.thenCompose((simpleReplacements) -> {
-			return formatWithPunishment0(componentText, simpleReplacements, futureReplacements);
-		});
+	private CentralisedFuture<Component> formatWithPunishment(
+			ComponentText componentText, Punishment punishment, @Nullable Operator unOperator, @Nullable Boolean silence) {
+		Formatting formatting = new Formatting(punishment, unOperator, silence);
+		formatting.requestFutureVars(componentText);
+		return futuresFactory.supplyAsync(() -> {
+			formatting.computeRemaining();
+			return formatting.replaceInMessage(componentText);
+		}).thenCompose(future -> future);
 	}
 	
 	private enum SimpleReplaceable {
@@ -159,7 +159,6 @@ public class Formatter implements InternalFormatter {
 		END_DATE,
 		TIME_REMAINING,
 		TIME_REMAINING_SIMPLE,
-		HAS_EXPIRED,
 		TRACK,
 		TRACK_ID,
 		TRACK_NAMESPACE,
@@ -169,6 +168,16 @@ public class Formatter implements InternalFormatter {
 			return "%" + name() + "%";
 		}
 		
+	}
+
+	private enum ComponentReplaceable {
+		HAS_EXPIRED,
+		SILENCE
+		;
+
+		String getVariable() {
+			return "%" + name() + "%";
+		}
 	}
 	
 	private enum FutureReplaceable {
@@ -180,119 +189,155 @@ public class Formatter implements InternalFormatter {
 			return "%" + name() + "%";
 		}
 	}
-	
-	private Map<SimpleReplaceable, String> getSimpleReplacements(Punishment punishment, Operator unOperator) {
-		MessagesConfig.Formatting formatting = messages().formatting();
 
-		Map<SimpleReplaceable, String> simpleReplacements = new EnumMap<>(SimpleReplaceable.class);
-		simpleReplacements.put(SimpleReplaceable.ID, abacusForIds.displayId(punishment.getIdentifier()));
-		simpleReplacements.put(SimpleReplaceable.TYPE, formatPunishmentType(punishment.getType()));
-		simpleReplacements.put(SimpleReplaceable.TYPE_VERB, formatPunishmentTypeVerb(punishment.getType()));
-		simpleReplacements.put(SimpleReplaceable.VICTIM_ID, formatVictimId(punishment.getVictim()));
-		simpleReplacements.put(SimpleReplaceable.OPERATOR_ID, formatOperatorId(punishment.getOperator()));
-		if (unOperator != null)
-			simpleReplacements.put(SimpleReplaceable.UNOPERATOR_ID, formatOperatorId(unOperator));
-		simpleReplacements.put(SimpleReplaceable.REASON, punishment.getReason());
-		simpleReplacements.put(SimpleReplaceable.SCOPE, formatScope(punishment.getScope()));
-		{
-			final long now = time.currentTime();
-			final long start = punishment.getStartDateSeconds();
+	private final class Formatting {
 
-			final long timePassed = now - start;
+		private final Punishment punishment;
+		private final @Nullable Operator unOperator;
+		private final @Nullable Boolean silence;
 
-			final String durationFormatted;
-			final String relativeEndFormatted, relativeEndFormattedSimple;
-			boolean notExpired = false;
+		private final EnumMap<SimpleReplaceable, String> simpleReplacements = new EnumMap<>(SimpleReplaceable.class);
+		private final EnumMap<ComponentReplaceable, Component> componentReplacements = new EnumMap<>(ComponentReplaceable.class);
+		private final Map<FutureReplaceable, CentralisedFuture<String>> futureReplacements = new EnumMap<>(FutureReplaceable.class);
 
-			if (punishment.isPermanent()) {
-				// Permanent punishment
-				MessagesConfig.Formatting.PermanentDisplay display = formatting.permanentDisplay();
-				durationFormatted = display.duration();
-				relativeEndFormatted = display.relative();
-				relativeEndFormattedSimple = relativeEndFormatted;
-				notExpired = true;
+        private Formatting(Punishment punishment, @Nullable Operator unOperator, @Nullable Boolean silence) {
+            this.punishment = punishment;
+            this.unOperator = unOperator;
+            this.silence = silence;
+        }
 
-			} else {
-				final long end = punishment.getEndDateSeconds();
-				assert end != 0 : end;
-				// Temporary punishment
-				long duration = end - start;
-				durationFormatted = formatRelative(duration);
+        void requestFutureVars(ComponentText componentText) {
+			for (FutureReplaceable futureReplaceable : FutureReplaceable.values()) {
 
-				if (timePassed < MARGIN_OF_INITIATION) {
-					// Punishment recently enacted
-					// Using a margin of initiation prevents the "29 days, 23 hours, 59 minutes" issue
-					relativeEndFormatted = durationFormatted;
-					relativeEndFormattedSimple = formatRelativeSimple(duration);
-					notExpired = true;
+				if (unOperator == null && futureReplaceable == FutureReplaceable.UNOPERATOR) {
+					continue;
+				}
+				if (componentText.contains(futureReplaceable.getVariable())) {
+					CentralisedFuture<String> replacement = getFutureReplacement(futureReplaceable, punishment, unOperator);
+					futureReplacements.put(futureReplaceable, replacement);
+				}
+			}
+		}
 
-				} else if (timePassed >= duration) {
-					// Expired punishment
-					relativeEndFormatted = formatting.noTimeRemainingDisplay();
+		void computeRemaining() {
+			MessagesConfig.Formatting formatting = messages().formatting();
+
+			simpleReplacements.put(SimpleReplaceable.ID, abacusForIds.displayId(punishment.getIdentifier()));
+			simpleReplacements.put(SimpleReplaceable.TYPE, formatPunishmentType(punishment.getType()));
+			simpleReplacements.put(SimpleReplaceable.TYPE_VERB, formatPunishmentTypeVerb(punishment.getType()));
+			simpleReplacements.put(SimpleReplaceable.VICTIM_ID, formatVictimId(punishment.getVictim()));
+			simpleReplacements.put(SimpleReplaceable.OPERATOR_ID, formatOperatorId(punishment.getOperator()));
+			if (unOperator != null)
+				simpleReplacements.put(SimpleReplaceable.UNOPERATOR_ID, formatOperatorId(unOperator));
+			simpleReplacements.put(SimpleReplaceable.REASON, punishment.getReason());
+			simpleReplacements.put(SimpleReplaceable.SCOPE, formatScope(punishment.getScope()));
+			{
+				final long now = time.currentTime();
+				final long start = punishment.getStartDateSeconds();
+
+				final long timePassed = now - start;
+
+				final String durationFormatted;
+				final String relativeEndFormatted, relativeEndFormattedSimple;
+				boolean notExpired = false;
+
+				if (punishment.isPermanent()) {
+					// Permanent punishment
+					MessagesConfig.Formatting.PermanentDisplay display = formatting.permanentDisplay();
+					durationFormatted = display.duration();
+					relativeEndFormatted = display.relative();
 					relativeEndFormattedSimple = relativeEndFormatted;
-				} else {
-					// Punishment still active
-					long timeRemaining = end - now;
-					relativeEndFormatted = formatRelative(timeRemaining);
-					relativeEndFormattedSimple = formatRelativeSimple(timeRemaining);
 					notExpired = true;
-				}
-			}
-			simpleReplacements.put(SimpleReplaceable.DURATION, durationFormatted);
-			simpleReplacements.put(SimpleReplaceable.START_DATE, formatAbsoluteDate(punishment.getStartDate()));
-			simpleReplacements.put(SimpleReplaceable.TIME_PASSED, formatRelative(timePassed));
-			simpleReplacements.put(SimpleReplaceable.TIME_PASSED_SIMPLE, formatRelativeSimple(timePassed));
-			simpleReplacements.put(SimpleReplaceable.END_DATE, formatAbsoluteDate(punishment.getEndDate()));
-			simpleReplacements.put(SimpleReplaceable.TIME_REMAINING, relativeEndFormatted);
-			simpleReplacements.put(SimpleReplaceable.TIME_REMAINING_SIMPLE, relativeEndFormattedSimple);
-			MessagesConfig.Formatting.PunishmentExpiredDisplay display = formatting.punishmentExpiredDisplay();
-			simpleReplacements.put(SimpleReplaceable.HAS_EXPIRED, (notExpired) ? display.notExpired() : display.expired());
-		}
-		String track, trackId, trackNamespace;
-		MessagesConfig.Formatting.TrackDisplay trackDisplay = formatting.trackDisplay();
-		EscalationTrack escalationTrack = punishment.getEscalationTrack().orElse(null);
-		if (escalationTrack == null) {
-			track = trackDisplay.noTrack();
-			trackId = trackDisplay.noTrackId();
-			trackNamespace = trackDisplay.noTrackNamespace();
-		} else {
-			String id = escalationTrack.getValue();
-			track = trackDisplay.trackDisplayNames().getOrDefault(id, id);
-			trackId = id;
-			trackNamespace = escalationTrack.getNamespace();
-		}
-		simpleReplacements.put(SimpleReplaceable.TRACK, track);
-		simpleReplacements.put(SimpleReplaceable.TRACK_ID, trackId);
-		simpleReplacements.put(SimpleReplaceable.TRACK_NAMESPACE, trackNamespace);
 
-		return simpleReplacements;
+				} else {
+					final long end = punishment.getEndDateSeconds();
+					assert end != 0 : end;
+					// Temporary punishment
+					long duration = end - start;
+					durationFormatted = formatRelative(duration);
+
+					if (timePassed < MARGIN_OF_INITIATION) {
+						// Punishment recently enacted
+						// Using a margin of initiation prevents the "29 days, 23 hours, 59 minutes" issue
+						relativeEndFormatted = durationFormatted;
+						relativeEndFormattedSimple = formatRelativeSimple(duration);
+						notExpired = true;
+
+					} else if (timePassed >= duration) {
+						// Expired punishment
+						relativeEndFormatted = formatting.noTimeRemainingDisplay();
+						relativeEndFormattedSimple = relativeEndFormatted;
+					} else {
+						// Punishment still active
+						long timeRemaining = end - now;
+						relativeEndFormatted = formatRelative(timeRemaining);
+						relativeEndFormattedSimple = formatRelativeSimple(timeRemaining);
+						notExpired = true;
+					}
+				}
+				simpleReplacements.put(SimpleReplaceable.DURATION, durationFormatted);
+				simpleReplacements.put(SimpleReplaceable.START_DATE, formatAbsoluteDate(punishment.getStartDate()));
+				simpleReplacements.put(SimpleReplaceable.TIME_PASSED, formatRelative(timePassed));
+				simpleReplacements.put(SimpleReplaceable.TIME_PASSED_SIMPLE, formatRelativeSimple(timePassed));
+				simpleReplacements.put(SimpleReplaceable.END_DATE, formatAbsoluteDate(punishment.getEndDate()));
+				simpleReplacements.put(SimpleReplaceable.TIME_REMAINING, relativeEndFormatted);
+				simpleReplacements.put(SimpleReplaceable.TIME_REMAINING_SIMPLE, relativeEndFormattedSimple);
+				MessagesConfig.Formatting.PunishmentExpiredDisplay display = formatting.punishmentExpiredDisplay();
+				componentReplacements.put(ComponentReplaceable.HAS_EXPIRED, (notExpired) ? display.notExpired() : display.expired());
+			}
+			if (silence != null) {
+				var silenceDisplay = formatting.silence();
+				componentReplacements.put(ComponentReplaceable.SILENCE, (silence) ? silenceDisplay.silent() : silenceDisplay.notSilent());
+			}
+			String track, trackId, trackNamespace;
+			MessagesConfig.Formatting.TrackDisplay trackDisplay = formatting.trackDisplay();
+			EscalationTrack escalationTrack = punishment.getEscalationTrack().orElse(null);
+			if (escalationTrack == null) {
+				track = trackDisplay.noTrack();
+				trackId = trackDisplay.noTrackId();
+				trackNamespace = trackDisplay.noTrackNamespace();
+			} else {
+				String id = escalationTrack.getValue();
+				track = trackDisplay.trackDisplayNames().getOrDefault(id, id);
+				trackId = id;
+				trackNamespace = escalationTrack.getNamespace();
+			}
+			simpleReplacements.put(SimpleReplaceable.TRACK, track);
+			simpleReplacements.put(SimpleReplaceable.TRACK_ID, trackId);
+			simpleReplacements.put(SimpleReplaceable.TRACK_NAMESPACE, trackNamespace);
+		}
+
+		private CentralisedFuture<Component> replaceInMessage(ComponentText componentText) {
+			return futuresFactory.allOf(futureReplacements.values()).thenApply((ignore) -> {
+
+				class Replacer implements UnaryOperator<String> {
+					@Override
+					public String apply(String text) {
+						for (Map.Entry<SimpleReplaceable, String> simpleReplacement : simpleReplacements.entrySet()) {
+							text = text.replace(
+									simpleReplacement.getKey().getVariable(),
+									simpleReplacement.getValue());
+						}
+						for (Map.Entry<FutureReplaceable, CentralisedFuture<String>> futureReplacement : futureReplacements.entrySet()) {
+							text = text.replace(
+									futureReplacement.getKey().getVariable(),
+									futureReplacement.getValue().join());
+						}
+						return text;
+					}
+				}
+				Component component = componentText.replaceText(new Replacer()).asComponent();
+				for (Map.Entry<ComponentReplaceable, Component> componentReplacement : componentReplacements.entrySet()) {
+					component = component.replaceText(config -> {
+						config.matchLiteral(componentReplacement.getKey().getVariable())
+								.replacement(componentReplacement.getValue());
+					});
+				}
+				return component;
+			});
+		}
 	}
 
-	private CentralisedFuture<Component> formatWithPunishment0(ComponentText componentText,
-															   Map<SimpleReplaceable, String> simpleReplacements,
-															   Map<FutureReplaceable, CentralisedFuture<String>> futureReplacements) {
-		return futuresFactory.allOf(futureReplacements.values()).thenApply((ignore) -> {
-
-			class Replacer implements UnaryOperator<String> {
-				@Override
-				public String apply(String text) {
-					for (Map.Entry<SimpleReplaceable, String> simpleReplacement : simpleReplacements.entrySet()) {
-						text = text.replace(
-								simpleReplacement.getKey().getVariable(),
-								simpleReplacement.getValue());
-					}
-					for (Map.Entry<FutureReplaceable, CentralisedFuture<String>> futureReplacement : futureReplacements.entrySet()) {
-						text = text.replace(
-								futureReplacement.getKey().getVariable(),
-								futureReplacement.getValue().join());
-					}
-					return text;
-				}
-			}
-			return componentText.replaceText(new Replacer()).asComponent();
-		});
-	}
-	
 	private CentralisedFuture<String> getFutureReplacement(FutureReplaceable futureReplaceable, Punishment punishment,
 			Operator unOperator) {
 		return switch (futureReplaceable) {

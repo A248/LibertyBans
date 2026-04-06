@@ -1,7 +1,7 @@
 
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -53,6 +53,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -185,9 +186,13 @@ public class FormatterTest {
 		lenient().when(victimDisplay.playerNameUnknown()).thenReturn("-NameUnknown-");
 		lenient().when(formatting.victimDisplay()).thenReturn(victimDisplay);
 		MessagesConfig.Formatting.PunishmentExpiredDisplay expiredDisplay = mock(MessagesConfig.Formatting.PunishmentExpiredDisplay.class);
-		lenient().when(expiredDisplay.notExpired()).thenReturn("not expired");
-		lenient().when(expiredDisplay.expired()).thenReturn("expired");
+		lenient().when(expiredDisplay.notExpired()).thenReturn(Component.text("not expired"));
+		lenient().when(expiredDisplay.expired()).thenReturn(Component.text("expired"));
 		when(formatting.punishmentExpiredDisplay()).thenReturn(expiredDisplay);
+		MessagesConfig.Formatting.Silence silenceDisplay = mock(MessagesConfig.Formatting.Silence.class);
+		lenient().when(silenceDisplay.silent()).thenReturn(Component.text("[silent!] "));
+		lenient().when(silenceDisplay.notSilent()).thenReturn(Component.empty());
+		lenient().when(formatting.silence()).thenReturn(silenceDisplay);
 		MessagesConfig.Formatting.TrackDisplay trackDisplay = mock(MessagesConfig.Formatting.TrackDisplay.class);
 		lenient().when(trackDisplay.noTrack()).thenReturn("no track");
 		lenient().when(trackDisplay.noTrackId()).thenReturn("no track id");
@@ -305,9 +310,39 @@ public class FormatterTest {
 		assertEquals(expectedFormat, format(punishment, layout));
 	}
 
+	@ParameterizedTest
+	@ArgumentsSource(FormatterTestArgumentsProvider.class)
+	public void silenceIfAvailable(FormatterTestInfo testInfo) {
+		setupSimpleDefaults();
+
+		Instant start = INSTANT_2021_01_01;
+		Instant end = INSTANT_2021_01_05.plus(Duration.ofHours(2L)).plus(Duration.ofMinutes(15L));
+		Punishment punishment = punishmentFor(testInfo, start, end);
+
+		String layout = "%SILENCE%%TYPE% [%TRACK%] > %OPERATOR% enacted against %VICTIM% for %DURATION% due to %REASON%. " +
+				"Starts on %START_DATE%. Ends on %END_DATE%. Remaining time is %TIME_REMAINING%. " +
+				"Time passed is %TIME_PASSED%. Operator ID is %OPERATOR_ID%; Victim ID is %VICTIM_ID%.";
+		String expectedFormat = testInfo.formatVariables(layout)
+				.replace("%SILENCE%", "[silent!] ")
+				.replace("%DURATION%", "4 days, 2 hours, and 15 minutes")
+				.replace("%TIME_REMAINING%", "2 hours, and 15 minutes")
+				.replace("%START_DATE%", "01/01/2021 24:00")
+				.replace("%END_DATE%", "05/01/2021 02:15")
+				.replace("%TIME_PASSED%", "4 days")
+				.replace("%TRACK%", "no track");
+
+		assertEquals(expectedFormat, formatUsing(layout, layoutMsg -> {
+			return formatter.formatNotificationIssue(layoutMsg, punishment, true);
+		}));
+	}
+
 	private String format(Punishment punishment, String layout) {
+		return formatUsing(layout, (layoutMsg) -> formatter.formatWithPunishment(layoutMsg, punishment));
+	}
+
+	private String formatUsing(String layout, Function<ComponentText, CentralisedFuture<Component>> formatMethod) {
 		ComponentText layoutMessage = ComponentText.create(Component.text(layout));
-		var formatFuture = formatter.formatWithPunishment(layoutMessage, punishment);
+		var formatFuture = formatMethod.apply(layoutMessage);
 		return PlainComponentSerializer.plain().serialize(formatFuture.join());
 	}
 

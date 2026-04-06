@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,7 +26,7 @@ import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.event.PostPardonEvent;
 import space.arim.libertybans.api.punish.Punishment;
 
-public record PostPardonEventImpl(Operator operator, Punishment punishment, String target) implements PostPardonEvent {
+public record PostPardonEventImpl(Operator operator, Punishment punishment, String target, boolean silent) implements PostPardonEvent {
 
 	public PostPardonEventImpl {
 		Objects.requireNonNull(operator);
@@ -49,4 +49,8 @@ public record PostPardonEventImpl(Operator operator, Punishment punishment, Stri
 		return Optional.of(target);
 	}
 
+	// Pending - See #350
+	public boolean isSilent() {
+		return silent;
+	}
 }

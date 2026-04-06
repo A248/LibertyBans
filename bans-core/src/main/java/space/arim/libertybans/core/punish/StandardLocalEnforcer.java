@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -136,20 +136,20 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 		if (enforcementOptions.broadcasting() == Broadcasting.NONE) {
 			return completedFuture(null);
 		}
+		boolean silent = enforcementOptions.broadcasting() == Broadcasting.SILENT;
 		CentralisedFuture<Component> futureNotify;
 		{
 			RemovalsSection.PunishmentRemoval section = configs.getMessagesConfig().removals().forType(punishment.getType());
-			ComponentText successNotification = enforcementOptions.replaceTargetArgument(section.successNotification());
+			ComponentText msg = enforcementOptions.replaceTargetArgument(section.successNotification());
 
 			Optional<Operator> unOperator = enforcementOptions.unOperator();
 			if (unOperator.isEmpty()) {
-				futureNotify = formatter.formatWithPunishment(successNotification, punishment);
+				futureNotify = formatter.formatNotificationIssue(msg, punishment, silent);
 			} else {
-				futureNotify = formatter.formatWithPunishmentAndUnoperator(successNotification, punishment, unOperator.get());
+				futureNotify = formatter.formatNotificationRevoke(msg, punishment, unOperator.get(), silent);
 			}
 		}
 		return futureNotify.thenCompose((notification) -> {
-			boolean silent = enforcementOptions.broadcasting() == Broadcasting.SILENT;
 			return envEnforcer.sendToThoseWithPermission(
 					new PunishmentPermission(
 							punishment.getType(), Mode.UNDO

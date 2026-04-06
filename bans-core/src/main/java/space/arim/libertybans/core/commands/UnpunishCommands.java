@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -204,10 +204,11 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 
 			notificationMessage.evaluate(command()); // Evaluate -s
 
+			boolean silent = notificationMessage.isSilent();
 			EnforcementOptions enforcementOptions = EnforcementOpts
 					.builder()
 					.enforcement(EnforcementOptions.Enforcement.GLOBAL)
-					.broadcasting(notificationMessage.isSilent() ?
+					.broadcasting(silent ?
 							EnforcementOptions.Broadcasting.SILENT : EnforcementOptions.Broadcasting.NORMAL
 					)
 					.targetArgument(targetArg)
@@ -220,7 +221,7 @@ abstract class UnpunishCommands extends AbstractSubCommandGroup implements Punis
 					section.successMessage().replaceText("%TARGET%", targetArg), punishment);
 
 			return futuresFactory().allOf(unenforcement, futureMessage).thenCompose((ignore) -> {
-				return fireWithTimeout(new PostPardonEventImpl(sender().getOperator(), punishment, targetArg));
+				return fireWithTimeout(new PostPardonEventImpl(sender().getOperator(), punishment, targetArg, silent));
 			}).thenRun(() -> {
 				sender().sendMessage(futureMessage.join());
 			});
