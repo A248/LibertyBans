@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,6 +26,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginIdentifiableCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.api.env.bukkit.BukkitCommandSkeleton;
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
@@ -39,16 +40,17 @@ import space.arim.omnibus.util.ArraysUtil;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 public final class CommandHandler extends BukkitCommandSkeleton implements PlatformListener, PluginIdentifiableCommand {
 
 	private final CommandHelper commandHelper;
-	private final boolean alias;
+	private final @Nullable String aliasTarget;
 	
-	CommandHandler(CommandHelper commandHelper, String command, boolean alias) {
+	CommandHandler(CommandHelper commandHelper, String command, @Nullable String aliasTarget) {
 		super(command);
 		this.commandHelper = commandHelper;
-		this.alias = alias;
+        this.aliasTarget = aliasTarget;
 	}
 	
 	public static class CommandHelper {
@@ -91,7 +93,7 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 	public void register() {
 		CommandMapHelper commandMapHelper = commandHelper.commandMapHelper;
 		CommandMap commandMap = commandMapHelper.getCommandMap();
-		if (commandMapHelper.getKnownCommands(commandMap) == null && alias) {
+		if (commandMapHelper.getKnownCommands(commandMap) == null && aliasTarget != null) {
 			return;
 		}
 		commandMap.register(getName(), commandHelper.plugin.getName().toLowerCase(Locale.ENGLISH), this);
@@ -111,8 +113,8 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 	}
 
 	private String[] adaptArgs(String[] args) {
-		if (alias) {
-			return ArraysUtil.expandAndInsert(args, getName(), 0);
+		if (aliasTarget != null) {
+			return ArraysUtil.expandAndInsert(args, aliasTarget, 0);
 		}
 		return args;
 	}
@@ -137,7 +139,7 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 	public boolean testPermissionSilent(CommandSender platformSender) {
 		return commandHelper.commands.hasPermissionFor(
 				commandHelper.adaptSender(platformSender),
-				getName()
+				Objects.requireNonNullElse(aliasTarget, getName())
 		);
 	}
 

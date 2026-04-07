@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,6 +25,7 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.TabExecutor;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
 import space.arim.libertybans.core.commands.Commands;
@@ -34,17 +35,19 @@ import space.arim.libertybans.core.env.Interlocutor;
 import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.omnibus.util.ArraysUtil;
 
+import java.util.Objects;
+
 public final class CommandHandler extends Command implements TabExecutor, PlatformListener {
 
 	private final CommandHelper commandHelper;
-	private final boolean alias;
+	private final @Nullable String aliasTarget;
 	
-	CommandHandler(CommandHelper commandHelper, String command, boolean alias) {
+	CommandHandler(CommandHelper commandHelper, String command, @Nullable String aliasTarget) {
 		super(command);
 		this.commandHelper = commandHelper;
-		this.alias = alias;
+		this.aliasTarget = aliasTarget;
 	}
-	
+
 	public static class CommandHelper {
 
 		private final InternalFormatter formatter;
@@ -87,8 +90,8 @@ public final class CommandHandler extends Command implements TabExecutor, Platfo
 	}
 
 	private String[] adaptArgs(String[] args) {
-		if (alias) {
-			return ArraysUtil.expandAndInsert(args, getName(), 0);
+		if (aliasTarget != null) {
+			return ArraysUtil.expandAndInsert(args, aliasTarget, 0);
 		}
 		return args;
 	}
@@ -113,7 +116,7 @@ public final class CommandHandler extends Command implements TabExecutor, Platfo
 	public boolean hasPermission(CommandSender platformSender) {
 		return commandHelper.commands.hasPermissionFor(
 				commandHelper.adaptSender(platformSender),
-				getName()
+				Objects.requireNonNullElse(aliasTarget, getName())
 		);
 	}
 

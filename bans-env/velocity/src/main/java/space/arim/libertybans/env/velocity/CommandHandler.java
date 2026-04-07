@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,6 +27,7 @@ import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import jakarta.inject.Inject;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.config.InternalFormatter;
@@ -36,17 +37,18 @@ import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.omnibus.util.ArraysUtil;
 
 import java.util.List;
+import java.util.Objects;
 
 public final class CommandHandler implements SimpleCommand, PlatformListener {
 
 	private final CommandHelper commandHelper;
 	private final String name;
-	private final boolean alias;
+	private final @Nullable String aliasTarget;
 
-	CommandHandler(CommandHelper commandHelper, String name, boolean alias) {
+	CommandHandler(CommandHelper commandHelper, String name, @Nullable String aliasTarget) {
 		this.commandHelper = commandHelper;
 		this.name = name;
-		this.alias = alias;
+		this.aliasTarget = aliasTarget;
 	}
 
 	public static class CommandHelper {
@@ -93,13 +95,13 @@ public final class CommandHandler implements SimpleCommand, PlatformListener {
 	}
 
 	private String[] adaptArgs(String[] args, boolean tabComplete) {
-		if (alias) {
+		if (aliasTarget != null) {
 			if (tabComplete && args.length == 0) {
 				// This fixes tab completion for aliased commands
 				// Tab completion relies on the existence of empty strings
-				return new String[] {name, ""};
+				return new String[] {aliasTarget, ""};
 			}
-			return ArraysUtil.expandAndInsert(args, name, 0);
+			return ArraysUtil.expandAndInsert(args, aliasTarget, 0);
 		}
 		return args;
 	}
@@ -129,7 +131,7 @@ public final class CommandHandler implements SimpleCommand, PlatformListener {
 		CommandSource platformSender = invocation.source();
 		return commandHelper.commands.hasPermissionFor(
 				commandHelper.adaptSender(platformSender),
-				name
+				Objects.requireNonNullElse(aliasTarget, name)
 		);
 	}
 

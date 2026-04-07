@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -31,7 +31,7 @@ public class QuackEnv implements Environment {
 	}
 
 	@Override
-	public PlatformListener createAliasCommand(String command) {
+	public PlatformListener createAliasCommand(String alias, String target) {
 		return new PlatformListener() {
 
 			@Override

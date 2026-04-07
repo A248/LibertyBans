@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -117,7 +117,7 @@ public class AddonsIT {
 		Files.createDirectories(folder.resolve("addons"));
 
 		when(environment.createListeners()).thenReturn(Set.of());
-		when(environment.createAliasCommand(any())).thenReturn(new PlatformListener() {
+		when(environment.createAliasCommand(any(), any())).thenReturn(new PlatformListener() {
 			@Override
 			public void register() {}
 
