@@ -70,7 +70,7 @@ public class ExtendScopeLengthMigrationIT {
     @BeforeEach
     public void supplySampleData(SelfImportProcess selfImportProcess) throws IOException {
         migrationTargetController.setTarget(MigrationVersion.fromVersion("38"));
-        baseFoundation.startup();
+        baseFoundation.assertStartup();
         SelfImportData selfImportData = new SelfImportData(selfImportProcess.folder);
         Path dataSource = selfImportData.copyBlueTree242();
         selfImportProcess.transferAllData(dataSource).join();

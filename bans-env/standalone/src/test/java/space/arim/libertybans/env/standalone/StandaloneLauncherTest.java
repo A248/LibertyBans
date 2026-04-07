@@ -29,11 +29,13 @@ import space.arim.libertybans.api.LibertyBans;
 import space.arim.libertybans.bootstrap.BaseFoundation;
 import space.arim.libertybans.bootstrap.Payload;
 import space.arim.libertybans.bootstrap.PlatformId;
+import space.arim.libertybans.bootstrap.RunState;
 import space.arim.omnibus.DefaultOmnibus;
 
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.mock;
 
@@ -66,12 +68,14 @@ public class StandaloneLauncherTest {
 		// Startup
 		BaseFoundation base = injector.request(BaseFoundation.class);
 		assertDoesNotThrow(base::startup);
+		assertEquals(RunState.RUNNING, base.getRunState());
 
 		injector.request(CommandDispatch.class).accept("about");
 		assertFalse(consoleReceiver.messages().isEmpty());
 
 		// Shutdown
 		base.shutdown();
+		assertEquals(RunState.IDLE, base.getRunState());
 	}
 
 }

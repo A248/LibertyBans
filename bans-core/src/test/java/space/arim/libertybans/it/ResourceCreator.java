@@ -71,7 +71,7 @@ class ResourceCreator {
 
 	private Optional<Injector> createSingle(ConfigSpec configSpec, boolean manualStart,
 											DatabaseInstance database, InstanceKey instanceKey) {
-		DatabaseInstance.Credential databaseCredential = database.createInfo(store).orElse(null);
+		DatabaseInstance.Credential databaseCredential = database.newCredential(store).orElse(null);
 		if (databaseCredential == null) {
 			return Optional.empty();
 		}
@@ -97,7 +97,7 @@ class ResourceCreator {
 
 			BaseFoundation base = injector.request(BaseFoundation.class);
 			if (!manualStart) {
-				base.startup();
+				base.assertStartup();
 			}
 			return new BaseWrapper(injector, base, tempDirectory);
 

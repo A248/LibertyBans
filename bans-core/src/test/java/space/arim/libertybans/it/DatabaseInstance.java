@@ -78,31 +78,32 @@ public enum DatabaseInstance {
 		return Arrays.stream(DatabaseInstance.values()).filter((dbInstance) -> dbInstance.vendor == vendor);
 	}
 
-	Optional<Credential> createInfo(ExtensionContext.Store store) {
+	Optional<Credential> newCredential(ExtensionContext.Store store) {
 		return switch (port) {
-			case NO_PORT_APPLICABLE -> Optional.of(new Credential());
+			case NO_PORT_APPLICABLE -> Optional.of(new Credential(vendor));
 			case NO_PORT_CONFIGURED -> Optional.empty();
 			default -> {
 				String database = "libertybans_it_" + DB_NAME_COUNTER.incrementAndGet();
-				Credential databaseCredential = new Credential(port, database);
-				databaseCredential.init(vendor);
-				store.put(new Object(), databaseCredential.new Cleanup(vendor));
+				Credential databaseCredential = new Credential(vendor, port, database);
+				databaseCredential.init();
+				store.put(new Object(), databaseCredential.new Cleanup());
 				yield Optional.of(databaseCredential);
 			}
 		};
 	}
 
-	public record Credential(int port, String database) {
+	public record Credential(Vendor vendor, int port, String database) {
 
-		public Credential() {
-			this(-1, "");
+		public Credential(Vendor vendor) {
+			this(vendor, -1, "");
 		}
 
 		public Credential {
+			Objects.requireNonNull(vendor, "vendor");
 			Objects.requireNonNull(database, "database");
 		}
 
-		private void executeStatement(Vendor vendor, String statement) {
+		public void executeStatement(String statement) {
 			String user = vendor.userForITs();
 			String password = vendor.passwordForITs();
 			String jdbcPrefix = switch (vendor) {
@@ -123,32 +124,25 @@ public enum DatabaseInstance {
 			}
 		}
 
-		private void createDatabaseUsing(Vendor vendor, String createOptions) {
-			executeStatement(vendor, "CREATE DATABASE " + database + createOptions);
+		private void createDatabaseUsing(String createOptions) {
+			executeStatement("CREATE DATABASE " + database + createOptions);
 		}
 
-		void init(Vendor vendor) {
-			switch (vendor) {
-				case MARIADB, MYSQL ->
-						createDatabaseUsing(vendor, " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-				case POSTGRES, COCKROACH ->
-						createDatabaseUsing(vendor, "");
+		void init() {
+			String createOptions = switch (vendor) {
+				case MARIADB, MYSQL -> " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
+				case POSTGRES, COCKROACH -> "";
 				default ->
 						throw new IllegalStateException("No database creation exists for " + this);
-			}
+			};
+			createDatabaseUsing(createOptions);
 		}
 
 		final class Cleanup implements AutoCloseable {
 
-			private final Vendor vendor;
-
-			Cleanup(Vendor vendor) {
-				this.vendor = vendor;
-			}
-
 			@Override
 			public void close() {
-				executeStatement(vendor, "DROP DATABASE " + database);
+				executeStatement("DROP DATABASE " + database);
 			}
 		}
 	}

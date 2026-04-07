@@ -29,6 +29,11 @@ public interface BaseFoundation {
 
 	void shutdown();
 
+	default void assertStartup() {
+		startup();
+		assert getRunState() == RunState.RUNNING;
+	}
+
 	/**
 	 * Used for Sponge and standalone only. Sponge requires early command registration and service provision
 	 *
