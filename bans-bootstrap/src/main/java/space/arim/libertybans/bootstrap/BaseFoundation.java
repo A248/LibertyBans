@@ -31,7 +31,8 @@ public interface BaseFoundation {
 
 	default void assertStartup() {
 		startup();
-		assert getRunState() == RunState.RUNNING;
+		RunState runState = getRunState();
+		assert runState == RunState.RUNNING : "expected RUNNING but was " + runState;
 	}
 
 	/**
