@@ -19,7 +19,9 @@
 
 package space.arim.libertybans.core.database.sql;
 
+import org.jooq.Binding;
 import org.jooq.Field;
+import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Table;
 import space.arim.libertybans.api.NetworkAddress;
@@ -34,7 +36,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static org.jooq.impl.DSL.field;
+
 public record MappedPunishmentFields(PunishmentFields inner, Mapper mapper) implements PunishmentFields {
+
+    public static <F> Field<F> renameField(Field<F> original, Name newName) {
+        // Return field with same type + binding + converter, but strip qualifying table
+        @SuppressWarnings("unchecked")
+        Binding<Object, F> binding = (Binding<Object, F>) original.getBinding();
+        Field<?> renamed = field(newName, original.getDataType());
+        @SuppressWarnings("unchecked")
+        Field<Object> eraseRenamed = (Field<Object>) renamed;
+        Field<F> rebound = eraseRenamed.convert(binding);
+        assert rebound.getDataType() == original.getDataType() : "data type mismatch";
+        assert rebound.getConverter().getClass() == original.getConverter().getClass() : "converter mismatch";
+        assert rebound.getBinding().getClass() == original.getBinding().getClass() : "binding mismatch";
+        return rebound;
+    }
 
     @Override
     public Field<Long> id() {
