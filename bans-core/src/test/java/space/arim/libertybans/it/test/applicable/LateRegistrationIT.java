@@ -26,7 +26,6 @@ import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
-import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
@@ -39,6 +38,9 @@ import space.arim.libertybans.it.env.platform.QuackPlayer;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static space.arim.libertybans.api.select.AddressStrictness.NORMAL;
+import static space.arim.libertybans.api.select.AddressStrictness.STERN;
+import static space.arim.libertybans.api.select.AddressStrictness.STRICT;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
 public class LateRegistrationIT {
@@ -57,7 +59,7 @@ public class LateRegistrationIT {
      * @param guardian the guardian, injected
      */
     @TestTemplate
-    @SetAddressStrictness(AddressStrictness.NORMAL)
+    @SetAddressStrictness(NORMAL)
     @SetAltRegistry(SetAltRegistry.Option.ON_SERVER_SWITCH)
     // We use a consistent time in order to get the same punishment message
     @SetTime(unixTime = 1751274626)
@@ -104,7 +106,7 @@ public class LateRegistrationIT {
     }
 
     @TestTemplate
-    @SetAddressStrictness({AddressStrictness.NORMAL, AddressStrictness.STERN, AddressStrictness.STRICT})
+    @SetAddressStrictness({NORMAL, STERN, STRICT})
     @SetAltRegistry(SetAltRegistry.Option.ON_SERVER_SWITCH)
     public void banPlayerWhileInLimbo(PunishmentDrafter drafter, QuackPlatform platform,
                                       EnvUserResolver envUserResolver) {
