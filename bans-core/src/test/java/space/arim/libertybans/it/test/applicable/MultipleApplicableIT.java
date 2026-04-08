@@ -119,7 +119,7 @@ public class MultipleApplicableIT {
 	@SetAddressStrictness(AddressStrictness.STRICT)
 	@SetAltRegistry(all = true)
 	@SampleData
-	@Disabled
+	//@Disabled
 	public void avoidDuplicateApplicablePunishments() {
 		UUID uuid = UUID.randomUUID();
 		NetworkAddress address = RandomUtil.randomAddress();
