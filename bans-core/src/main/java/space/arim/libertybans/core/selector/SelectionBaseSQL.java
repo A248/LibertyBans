@@ -489,7 +489,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	}
 
 	/**
-	 * Visible for testing purposes, to make sure queries are as optimized as possible
+	 * Visible for testing purposes, to make sure applicability queries are as optimized as possible
 	 *
 	 * @param context the database access
 	 * @return the SQL which would be used to select a single applicable punishment

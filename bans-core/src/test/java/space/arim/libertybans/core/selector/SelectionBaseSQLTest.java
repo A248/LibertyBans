@@ -21,7 +21,6 @@ package space.arim.libertybans.core.selector;
 
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -43,11 +42,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
-@Disabled("until the new queries are proven to work")
 public class SelectionBaseSQLTest {
 
 	@ParameterizedTest
-	@EnumSource(value = AddressStrictness.class, names = "STERN", mode = EnumSource.Mode.EXCLUDE)
+	@EnumSource(AddressStrictness.class)
 	public void optimizedApplicabilityQuery(AddressStrictness strictness) {
 		SelectionResources selectionResources = new SelectionResources(
 				new IndifferentFactoryOfTheFuture(), () -> mock(QueryExecutor.class),
@@ -70,46 +68,47 @@ public class SelectionBaseSQLTest {
 	private String expectedSql(AddressStrictness strictness) {
 		return switch (strictness) {
 			case LENIENT -> """
-select "libertybans_simple_bans"."victim_type", "libertybans_simple_bans"."victim_uuid", \
-"libertybans_simple_bans"."victim_address", "libertybans_simple_bans"."operator", \
-"libertybans_simple_bans"."reason", "libertybans_simple_bans"."scope_type", "libertybans_simple_bans"."scope", \
-"libertybans_simple_bans"."start", "libertybans_simple_bans"."end", "libertybans_simple_bans"."track", \
-"libertybans_simple_bans"."id" \
+select \
+"victim_type", "victim_uuid", "victim_address", "operator", "reason", "scope_type", "scope", "start", "end", "track", "id" \
 from "libertybans_simple_bans" where \
-(("libertybans_simple_bans"."end" = 0 or "libertybans_simple_bans"."end" > cast(? as bigint)) \
+(("end" = 0 or "end" > cast(? as bigint)) \
 and \
 (("libertybans_simple_bans"."victim_type" = 0 and "libertybans_simple_bans"."victim_uuid" = cast(? as uuid)) or \
 ("libertybans_simple_bans"."victim_type" = 1 and "libertybans_simple_bans"."victim_address" = cast(? as varbinary(16))) \
 or ("libertybans_simple_bans"."victim_type" = 2 and ("libertybans_simple_bans"."victim_uuid" = cast(? as uuid) or \
 "libertybans_simple_bans"."victim_address" = cast(? as varbinary(16)))))) \
-order by case "libertybans_simple_bans"."end" \
-when 0 then 9223372036854775807 else "libertybans_simple_bans"."end" end desc limit 1""";
+order by case "end" \
+when 0 then 9223372036854775807 else "end" end desc limit 1""";
 			case NORMAL -> """
-select "libertybans_applicable_bans"."victim_type", \
-"libertybans_applicable_bans"."victim_uuid", "libertybans_applicable_bans"."victim_address", \
-"libertybans_applicable_bans"."operator", "libertybans_applicable_bans"."reason", \
-"libertybans_applicable_bans"."scope_type", "libertybans_applicable_bans"."scope", "libertybans_applicable_bans"."start", \
-"libertybans_applicable_bans"."end", "libertybans_applicable_bans"."track", "libertybans_applicable_bans"."id" \
+select \
+"victim_type", "victim_uuid", "victim_address", "operator", "reason", "scope_type", "scope", "start", "end", "track", "id" \
 from "libertybans_applicable_bans" where \
-(("libertybans_applicable_bans"."end" = 0 or "libertybans_applicable_bans"."end" > cast(? as bigint)) \
+(("end" = 0 or "end" > cast(? as bigint)) \
 and \
 "libertybans_applicable_bans"."uuid" = cast(? as uuid)) \
-order by case "libertybans_applicable_bans"."end" \
-when 0 then 9223372036854775807 else "libertybans_applicable_bans"."end" end desc limit 1""";
-			case STERN -> throw new UnsupportedOperationException("too complicated");
+order by case "end" \
+when 0 then 9223372036854775807 else "end" end desc limit 1""";
+			case STERN -> """
+select \
+"victim_type", "victim_uuid", "victim_address", "operator", "reason", "scope_type", "scope", "start", "end", "track", "id" \
+from (\
+select "libertybans_applicable_bans".* from "libertybans_applicable_bans" \
+join "libertybans_strict_links" on "libertybans_applicable_bans"."uuid" = "libertybans_strict_links"."uuid1" \
+where ("libertybans_strict_links"."uuid2" = cast(? as uuid) and "libertybans_applicable_bans"."victim_type" <> 0) \
+union all select "libertybans_applicable_bans".* from "libertybans_applicable_bans" \
+where "libertybans_applicable_bans"."uuid" = cast(? as uuid)) as "sq_union" \
+where ("end" = 0 or "end" > cast(? as bigint)) \
+order by case "end" when 0 then 9223372036854775807 else "end" end desc limit 1""";
 			case STRICT -> """
-select "libertybans_applicable_bans"."victim_type", \
-"libertybans_applicable_bans"."victim_uuid", "libertybans_applicable_bans"."victim_address", \
-"libertybans_applicable_bans"."operator", "libertybans_applicable_bans"."reason", \
-"libertybans_applicable_bans"."scope_type", "libertybans_applicable_bans"."scope", "libertybans_applicable_bans"."start", \
-"libertybans_applicable_bans"."end", "libertybans_applicable_bans"."track", "libertybans_applicable_bans"."id" \
+select \
+"victim_type", "victim_uuid", "victim_address", "operator", "reason", "scope_type", "scope", "start", "end", "track", "id" \
 from "libertybans_applicable_bans" \
 join "libertybans_strict_links" on "libertybans_applicable_bans"."uuid" = "libertybans_strict_links"."uuid1" \
-where (("libertybans_applicable_bans"."end" = 0 or "libertybans_applicable_bans"."end" > cast(? as bigint)) \
+where (("end" = 0 or "end" > cast(? as bigint)) \
 and \
 "libertybans_strict_links"."uuid2" = cast(? as uuid)) \
-order by case "libertybans_applicable_bans"."end" \
-when 0 then 9223372036854775807 else "libertybans_applicable_bans"."end" end desc limit 1""";
+order by case "end" \
+when 0 then 9223372036854775807 else "end" end desc limit 1""";
 		};
 	}
 
