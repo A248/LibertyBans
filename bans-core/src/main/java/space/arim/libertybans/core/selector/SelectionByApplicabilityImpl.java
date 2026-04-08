@@ -23,6 +23,7 @@ import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Table;
+import org.jooq.impl.DSL;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.Victim.VictimType;
@@ -33,12 +34,14 @@ import space.arim.libertybans.core.database.sql.DeserializedVictim;
 import space.arim.libertybans.core.database.sql.PunishmentFields;
 import space.arim.libertybans.core.database.sql.VictimCondition;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
-import static org.jooq.impl.DSL.inline;
-import static org.jooq.impl.DSL.or;
+import static org.jooq.impl.DSL.*;
+import static space.arim.libertybans.core.schema.tables.Addresses.ADDRESSES;
 import static space.arim.libertybans.core.schema.tables.StrictLinks.STRICT_LINKS;
 
 public final class SelectionByApplicabilityImpl extends SelectionBaseSQL implements SelectionByApplicability {
@@ -103,38 +106,43 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 				yield new VictimCondition(fields).simplyMatches(uuid, address);
 			}
 			case NORMAL -> {
+				if (potentialNewEntrant) {
+					// Compute by hand by selecting addresses. Then pipeline into "lenient" style query
+					// This is the best way according to execution plans on MariaDB
+					Set<NetworkAddress> addresses = parameters.context()
+							.select(ADDRESSES.ADDRESS)
+							.from(ADDRESSES)
+							.where(ADDRESSES.UUID.eq(uuid))
+							.fetchSet(ADDRESSES.ADDRESS);
+					if (!(addresses instanceof HashSet<NetworkAddress>)) {
+						addresses = new HashSet<>(addresses);
+					}
+					addresses.add(address);
+
+					fields = requestSimpleView();
+					table = fields.table();
+					yield new VictimCondition(fields).matchesUUIDOrAddresses(uuid, addresses);
+				}
 				ApplicableViewFields applView = requestApplicableView();
 				fields = applView;
 				table = fields.table();
-				if (potentialNewEntrant) {
-					// appl.uuid = uuid
-					// OR victim_type != 'PLAYER' AND victim_address = address
-					//
-					// Note: It must be victim_address and not appl.address
-					// Exercise for understanding: Why?
-					//
-					yield or(
-							applView.uuid().eq(uuid),
-							applView.victimType().notEqual(inline(VictimType.PLAYER))
-									.and(applView.victimAddress().eq(address))
-					);
-				}
-				yield applView.uuid().eq(uuid); // appl.uuid = uuid
+				yield applView.uuid().eq(uuid);
 			}
 			case STERN -> {
 				ApplicableViewFields applView = requestApplicableView();
 				fields = applView;
 				if (potentialNewEntrant) {
-					// appl.uuid = uuid														# NORMAL
-					// OR victim_type != 'PLAYER' AND (
-					//   appl.address = address												# NORMAL + STERN
-					//   OR strict_links.uuid2 IS NOT NULL AND strict_links.uuid2 = uuid	# STERN
-					// )
-					//
-					// Note: The last predicate must use appl.address and not victim_address
-					// Exercise for understanding: Why?
-					//
 					/*
+					SELECT * FROM appl
+					WHERE appl.uuid = uuid													# NORMAL
+					OR victim_type != 'PLAYER' AND (
+					    appl.address = address												# NORMAL + STERN
+					    OR strict_links.uuid2 IS NOT NULL AND strict_links.uuid2 = uuid		# STERN
+					)
+
+					Note: The last predicate must use appl.address and not victim_address
+					Exercise for understanding: Why?
+
 					yield or(
 							applView.uuid().eq(uuid),
 							applView.victimType().notEqual(inline(VictimType.PLAYER)).and(or(
@@ -146,11 +154,11 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 					- Also, IS NOT NULL on one union branch implies INNER JOIN for that query.
 					Thus:
 
-					SELECT * FROM apply INNER JOIN strict_links
+					SELECT * FROM appl INNER JOIN strict_links
 					    ON appl.uuid = strict_links.uuid1
 					    WHERE victim_type != 'PLAYER' AND strict_links.uuid2 = uuid
 					UNION
-					SELECT * FROM apply
+					SELECT * FROM appl
 					    WHERE appl.uuid = uuid OR victim_type != 'PLAYER' AND appl.address = address
 					 */
 					tableUnion = applView.table();
@@ -209,11 +217,6 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 					 */
 					tableUnion = applView.table();
 					victimCondUnion = applView.uuid().eq(uuid).or(applView.address().eq(address));
-					table = applView
-							.table()
-							.innerJoin(STRICT_LINKS)
-							.on(applView.uuid().eq(STRICT_LINKS.UUID1));
-					yield STRICT_LINKS.UUID2.eq(uuid);
 				}
 				table = applView
 						.table()

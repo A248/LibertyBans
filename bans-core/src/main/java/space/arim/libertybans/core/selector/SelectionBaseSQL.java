@@ -344,7 +344,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 				innerColumns.addAll(victimColumns);
 				qualified.getRegularColumns(innerColumns);
 				innerColumns.replaceAll((field) -> {
-					Field<?> aggregated = aggregate(field);
+					Field<?> aggregated = aggregate(dequalifyField.map(field));
 					return aggregated.as("inner_" + field.getName());
 				});
 				innerColumns.add(fieldId);
