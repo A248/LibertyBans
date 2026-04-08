@@ -408,7 +408,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 				Ordering ordering = innerFields.buildOrdering();
 				selectQuery = parameters.context
 						.select(outerColumns)
-						.from(subQuery)
+						.from(subQuery.asTable("sq_agg"))
 						.where(ordering.predicate)
 						.orderBy(ordering.byFields)
 						.offset(skipField)
