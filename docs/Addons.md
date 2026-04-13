@@ -26,6 +26,12 @@ Each addon has its ID listed in [brackets].
 
 ## New Commands
 
+### Change reason [command-changereason]
+
+Lets you change the reason of a punishment. Supplies the command `/libertybans changereason <id> <new reason>`.
+
+Requires the permission `libertybans.addon.changereason.use`.
+
 ### Check punishment [command-checkpunish]
 
 This addon enables the `/libertybans checkpunish <id>` command. This command displays the details of a specific punishment given the punishment ID.

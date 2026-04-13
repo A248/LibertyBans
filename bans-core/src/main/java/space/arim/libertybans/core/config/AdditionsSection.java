@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -96,7 +96,7 @@ public interface AdditionsSection {
 		
 		@Override
 		@ConfKey("success.notification")
-		@DefaultString("&c&o%OPERATOR%&r&7 muted &c&o%VICTIM%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.")
+		@DefaultString("&c&o%OPERATOR%&r&7 muted &c&o%VICTIM%&r&7 for &a&o%DURATION%&r&7 because of &e&o%REASON%&r&7.%SILENCE%")
 		ComponentText successNotification();
 		
 		@Override

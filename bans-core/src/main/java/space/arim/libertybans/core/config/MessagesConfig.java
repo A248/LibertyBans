@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -73,6 +73,7 @@ import space.arim.libertybans.core.config.displayid.IdAlgorithm;
 		"",
 		"The following variables have limited availability:",
 		"%TARGET% - the original target argument of a command. For example, in '/ipban Player1', %TARGET% is Player1",
+		"%SILENCE% - a user-defined variable that changes based on the command's silent status. Only available in notification messages.",
 		"%PAGE% - the number of the current page in a list",
 		"%NEXTPAGE% - the number of the next page",
 		"%LASTPAGE% - the number of the last page",
@@ -432,12 +433,30 @@ public interface MessagesConfig {
 
 			@ConfKey("not-expired")
 			@ConfComments("How do you describe a punishment which is not expired?")
-			@DefaultString("Not expired")
-			String notExpired();
+			@DefaultString("&7Not expired")
+			Component notExpired();
 
 			@ConfComments("How do you describe an expired punishment?")
-			@DefaultString("Expired")
-			String expired();
+			@DefaultString("&cExpired")
+			Component expired();
+
+		}
+
+		@SubSection
+		Silence silence();
+
+		@ConfHeader({
+				"Controls the %SILENCE% variable when it is available.",
+				"Look at the mute message for an example of how this can be used."
+		})
+		interface Silence {
+
+			@DefaultString("&7 [&f&oSilent&r&7]")
+			Component silent();
+
+			@ConfKey("not-silent")
+			@DefaultString("")
+			Component notSilent();
 
 		}
 

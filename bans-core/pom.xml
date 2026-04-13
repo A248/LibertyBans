@@ -74,6 +74,46 @@
 					<useModulePath>false</useModulePath>
 					<argLine>@{jacoco.argLine} -javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
 				</configuration>
+				<executions>
+					<execution>
+						<id>run-integration-tests</id>
+						<configuration>
+							<includes>
+								<include>**/space/arim/libertybans/it/test/alts/**/*IT.java</include>
+								<include>**/space/arim/libertybans/it/test/applicable/**/*IT.java</include>
+								<include>**/space/arim/libertybans/it/test/base/**/*IT.java</include>
+								<include>**/space/arim/libertybans/it/test/command/**/*IT.java</include>
+							</includes>
+						</configuration>
+					</execution>
+					<execution>
+						<id>run-integration-tests-secondary</id>
+						<goals>
+							<goal>integration-test</goal>
+						</goals>
+						<configuration>
+							<reportNameSuffix>secondary</reportNameSuffix>
+							<includes>
+								<include>**/space/arim/libertybans/it/test/database/**/*IT.java</include>
+								<include>**/space/arim/libertybans/it/test/importing/**/*IT.java</include>
+							</includes>
+						</configuration>
+					</execution>
+					<execution>
+						<id>run-integration-tests-tertiary</id>
+						<goals>
+							<goal>integration-test</goal>
+						</goals>
+						<configuration>
+							<reportNameSuffix>tertiary</reportNameSuffix>
+							<includes>
+								<include>**/space/arim/libertybans/it/test/punish/**/*IT.java</include>
+								<include>**/space/arim/libertybans/it/test/select/**/*IT.java</include>
+								<include>**/space/arim/libertybans/it/test/uuid/**/*IT.java</include>
+							</includes>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -251,7 +291,7 @@
 			<plugin>
 				<groupId>io.fabric8</groupId>
 				<artifactId>docker-maven-plugin</artifactId>
-				<version>0.45.1</version>
+				<version>0.48.1</version>
 			</plugin>
 		</plugins>
 	</build>
@@ -281,6 +321,37 @@
 								<goals>
 									<goal>report</goal>
 								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>select-it</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>default-test</id>
+								<phase>none</phase>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-failsafe-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>run-integration-tests-secondary</id>
+								<phase>none</phase>
+							</execution>
+							<execution>
+								<id>run-integration-tests-tertiary</id>
+								<phase>none</phase>
 							</execution>
 						</executions>
 					</plugin>
@@ -357,6 +428,7 @@
 								<libertybans.it.postgres.legacy.port>${it.postgres.legacy.port}</libertybans.it.postgres.legacy.port>
 								<libertybans.it.postgres.modern.port>${it.postgres.modern.port}</libertybans.it.postgres.modern.port>
 								<libertybans.it.cockroachdb.port>${it.cockroachdb.port}</libertybans.it.cockroachdb.port>
+								<org.jooq.debug-log-on-discouraged-static-type-registry-access>true</org.jooq.debug-log-on-discouraged-static-type-registry-access>
 							</systemPropertyVariables>
 						</configuration>
 					</plugin>
@@ -442,7 +514,7 @@
 									</run>
 								</image>
 								<image>
-									<name>mariadb:11.8</name>
+									<name>mariadb:12.2</name>
 									<alias>mariadb-modern</alias>
 									<run>
                                         <cmd>--max_connections=1000</cmd>
@@ -544,7 +616,7 @@
 									</run>
 								</image>
 								<image>
-									<name>mysql:8.4</name>
+									<name>mysql:9.6</name>
 									<alias>mysql-modern</alias>
 									<run>
                                         <cmd>--max_connections=1000</cmd>
@@ -556,7 +628,7 @@
 										</ports>
 										<wait>
 											<time>60000</time>
-											<log>/usr/sbin/mysqld: ready for connections. Version: '8.4</log>
+											<log>/usr/sbin/mysqld: ready for connections. Version: '9.6</log>
 										</wait>
 										<volumes>
 											<bind>
@@ -633,13 +705,13 @@
 										</wait>
 										<volumes>
 											<bind>
-												<volume>libertybans-build-postgresql-legacy:/var/lib/postgresql/data</volume>
+												<volume>libertybans-build-postgres-legacy:/var/lib/postgresql/data</volume>
 											</bind>
 										</volumes>
 									</run>
 								</image>
 								<image>
-									<name>postgres:17</name>
+									<name>postgres:18</name>
 									<alias>postgresql-modern</alias>
 									<run>
                                         <cmd>-c max_connections=1000</cmd>
@@ -655,7 +727,7 @@
 										</wait>
 										<volumes>
 											<bind>
-												<volume>libertybans-build-postgresql-modern:/var/lib/postgresql/data</volume>
+												<volume>libertybans-build-postgres-modern:/var/lib/postgresql</volume>
 											</bind>
 										</volumes>
 									</run>
@@ -663,14 +735,14 @@
 							</images>
 							<volumes combine.children="append">
 								<volume>
-									<name>libertybans-build-postgresql-legacy</name>
+									<name>libertybans-build-postgres-legacy</name>
 									<opts>
 										<type>tmpfs</type>
 										<device>tmpfs</device>
 									</opts>
 								</volume>
 								<volume>
-									<name>libertybans-build-postgresql-modern</name>
+									<name>libertybans-build-postgres-modern</name>
 									<opts>
 										<type>tmpfs</type>
 										<device>tmpfs</device>

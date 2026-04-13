@@ -29,7 +29,7 @@ import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 /*
   This class used to be a record, but when we compile on JDK 21 with --release, it breaks generic information.
-  See JDK-9078340 for details. Keep this class a non-record until that issue is resolved.
+  See https://bugs.java.com/bugdatabase/JDK-8353799 for details. Keep this class a non-record until that issue is resolved.
  */
 public final class SelectionResources {
 

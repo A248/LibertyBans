@@ -91,20 +91,27 @@ public class AltDetection {
  		strictly detected if the alt address is different from the input address.
  		 */
 		final Instant currentTime = time.currentTimestamp();
-		var detectedAlt = ADDRESSES.as("detected_alt");
 
+		/*
+		Database optimization: we pre-fetch the target player's addresses, then use them.
+
+		The RDMS is not powerful enough to optimize the query if we don't do this. The query becomes too complicated,
+		and the engine falls back to a full table scan (tested with MariaDB). In practice, performance scales better
+		by fetching the IP addresses and using an IN clause like we do here.
+		 */
+		List<NetworkAddress> lookForAddresses = context
+				.select(ADDRESSES.ADDRESS)
+				.from(ADDRESSES)
+				.where(ADDRESSES.UUID.eq(query.uuid()))
+				.and(new AccountExpirationCondition(ADDRESSES.UPDATED).isNotExpired(configs, currentTime))
+				.fetch(ADDRESSES.ADDRESS);
+
+		var detectedAlt = ADDRESSES;
 		List<SelectField<?>> selectFields = new ArrayList<>(List.of(
 				detectedAlt.ADDRESS, detectedAlt.UUID,
 				LATEST_NAMES.NAME, detectedAlt.UPDATED
 		));
-		Table<?> joinedTables = ADDRESSES
-				// Detect alts
-				.innerJoin(detectedAlt)
-				.on(ADDRESSES.ADDRESS.eq(detectedAlt.ADDRESS))
-				.and(ADDRESSES.UUID.notEqual(detectedAlt.UUID))
-				// Filter non-expired alts
-				.and(new AccountExpirationCondition(detectedAlt.UPDATED).isNotExpired(configs, currentTime))
-				// Pair with latest names
+		Table<?> selectTables = detectedAlt
 				.leftJoin(LATEST_NAMES)
 				.on(LATEST_NAMES.UUID.eq(detectedAlt.UUID));
 
@@ -112,7 +119,7 @@ public class AltDetection {
 		for (PunishmentType type : query.punishmentTypes()) {
 			// Pair with that particular type
 			var simpleView = new TableForType(type).simpleView();
-			joinedTables = joinedTables
+			selectTables = selectTables
 					.leftJoin(simpleView.table())
 					.on(new VictimCondition(simpleView).matchesUUID(detectedAlt.UUID))
 					.and(new EndTimeCondition(simpleView).isNotExpired(currentTime));
@@ -127,9 +134,13 @@ public class AltDetection {
 		);
 		List<DetectedAlt> detectedAlts = context
 				.select(selectFields)
-				.from(joinedTables)
-				// Select alts for the player in question
-				.where(ADDRESSES.UUID.eq(query.uuid()))
+				.from(selectTables)
+				// Select alts for the player in question (same IP address)
+				.where(detectedAlt.ADDRESS.in(lookForAddresses))
+				// Ignore the player themselves
+				.and(detectedAlt.UUID.notEqual(query.uuid()))
+				// Filter non-expired alts
+				.and(new AccountExpirationCondition(detectedAlt.UPDATED).isNotExpired(configs, currentTime))
 				// Filter based on punishments matched
 				.and(switch (request.filter()) {
                     case ALL_ALTS -> noCondition();

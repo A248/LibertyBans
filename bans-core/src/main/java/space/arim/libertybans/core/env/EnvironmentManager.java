@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -63,7 +63,16 @@ public final class EnvironmentManager implements Part {
 		List<String> aliases = configs.getMainConfig().commands().aliases();
 		PlatformListener[] commands = new PlatformListener[aliases.size()];
 		for (int n = 0; n < commands.length; n++) {
-			commands[n] = environment.createAliasCommand(aliases.get(n));
+			String alias, base;
+			String mapping = aliases.get(n);
+			if (mapping.indexOf(':') == -1) {
+				alias = base = mapping;
+			} else {
+				String[] split = mapping.split(":");
+				alias = split[0];
+				base = split[1];
+			}
+			commands[n] = environment.createAliasCommand(alias, base);
 			commands[n].register();
 		}
 		this.commandAliases = commands;

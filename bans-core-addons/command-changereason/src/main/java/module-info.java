@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2025 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,21 +17,18 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.it.test;
+import space.arim.libertybans.core.addon.AddonProvider;
+import space.arim.libertybans.core.addon.changereason.ChangeReasonProvider;
 
-import jakarta.inject.Inject;
-import org.junit.jupiter.api.TestTemplate;
-import org.junit.jupiter.api.extension.ExtendWith;
-import space.arim.libertybans.bootstrap.BaseFoundation;
-import space.arim.libertybans.it.InjectionInvocationContextProvider;
-
-@ExtendWith(InjectionInvocationContextProvider.class)
-public class LifecycleIT {
-
-	@TestTemplate
-	@Inject
-	public void fullRestart(BaseFoundation foundation) {
-		foundation.fullRestart();
-	}
-
+module space.arim.libertybans.core.addon.changereason {
+	requires jakarta.inject;
+	requires net.kyori.adventure;
+	requires net.kyori.examination.api;
+	requires static org.checkerframework.checker.qual;
+	requires space.arim.api.jsonchat;
+	requires space.arim.dazzleconf;
+	requires space.arim.injector;
+	requires space.arim.libertybans.core;
+	exports space.arim.libertybans.core.addon.changereason;
+	provides AddonProvider with ChangeReasonProvider;
 }

@@ -61,21 +61,26 @@ final class SelectionOrderImpl extends SelectionBaseSQL implements SelectionOrde
 	Query<?> requestQuery(QueryParameters parameters) {
 		PunishmentFields fields = requestSimpleView();
 
-		List<Field<?>> additionalColumns = new ArrayList<>(3);
-		if (getVictims().isNotSimpleEquality()) {
-			if (getVictimTypes().isNotSimpleEquality()) {
-				additionalColumns.add(fields.victimType());
-			}
-			additionalColumns.add(fields.victimUuid());
-			additionalColumns.add(fields.victimAddress());
-		}
-		Condition additionalPredication = noCondition()
-				.and(new SingleFieldCriterion<>(fields.victimType()).matches(getVictimTypes()))
+		Condition victimCond = new SingleFieldCriterion<>(fields.victimType()).matches(getVictimTypes())
 				.and(new VictimCondition(fields).buildCondition(getVictims()));
 
-		return new QueryBuilder(parameters, fields, fields.table()) {
+		return new QueryBuilder(parameters, fields) {
 			@Override
-			Victim victimFromRecord(Record record) {
+			List<Field<?>> victimColumns(PunishmentFields fields) {
+				if (getVictims().isNotSimpleEquality()) {
+					List<Field<?>> victimColumns = new ArrayList<>(3);
+					if (getVictimTypes().isNotSimpleEquality()) {
+						victimColumns.add(fields.victimType());
+					}
+					victimColumns.add(fields.victimUuid());
+					victimColumns.add(fields.victimAddress());
+					return victimColumns;
+				}
+				return List.of();
+			}
+
+			@Override
+			Victim victimFromRecord(Record record, PunishmentFields fields) {
 				if (getVictims().isSimpleEquality()) {
 					return getVictims().acceptedValues().iterator().next();
 				} else {
@@ -83,8 +88,8 @@ final class SelectionOrderImpl extends SelectionBaseSQL implements SelectionOrde
 							getVictimTypes(), record, fields.victimType()
 					);
 					return new DeserializedVictim(
-							record.get(aggregateIfNeeded(fields.victimUuid())),
-							record.get(aggregateIfNeeded(fields.victimAddress()))
+							record.get(fields.victimUuid()),
+							record.get(fields.victimAddress())
 					).victim(victimType);
 				}
 			}
@@ -93,7 +98,7 @@ final class SelectionOrderImpl extends SelectionBaseSQL implements SelectionOrde
 			boolean mightRepeatIds() {
 				return false;
 			}
-		}.constructSelect(additionalColumns, additionalPredication);
+		}.constructSelect(fields.table(), null, victimCond, null);
 	}
 
 	@Override

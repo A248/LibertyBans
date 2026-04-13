@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -41,7 +41,7 @@ final class StandaloneEnv implements Environment {
 	}
 
 	@Override
-	public PlatformListener createAliasCommand(String command) {
+	public PlatformListener createAliasCommand(String alias, String target) {
 		// No-op
 		return new PlatformListener() {
 			@Override

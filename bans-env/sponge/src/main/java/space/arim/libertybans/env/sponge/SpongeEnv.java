@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -56,8 +56,8 @@ public final class SpongeEnv implements Environment {
 	}
 
 	@Override
-	public PlatformListener createAliasCommand(String command) {
-		LOGGER.debug("Skipping alias {} since the Sponge API does not support command unregistration.", command);
+	public PlatformListener createAliasCommand(String alias, String target) {
+		LOGGER.debug("Skipping alias {} since the Sponge API does not support command unregistration.", alias);
 		class DummyListener implements PlatformListener {
 
 			@Override

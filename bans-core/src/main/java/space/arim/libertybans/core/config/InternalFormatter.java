@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -64,18 +64,29 @@ public interface InternalFormatter extends PunishmentFormatter {
 	 */
 	CentralisedFuture<Component> formatWithPunishment(ComponentText componentText,
 													  Punishment punishment);
-	
+
+	/**
+	 * Parses and formats a message with a punishment and silent status. Used when punishments are issued.
+	 *
+	 * @param componentText the message
+	 * @param punishment the punishment
+	 * @param silent true if silent, false if not silent
+	 * @return a future of the resulting formatted sendable message
+	 */
+	CentralisedFuture<Component> formatNotificationIssue(
+			ComponentText componentText, Punishment punishment, boolean silent);
+
 	/**
 	 * Parses and formats a message with a punishment and an undoing operator. Used when punishments are revoked.
 	 * 
 	 * @param componentText the message
 	 * @param punishment the punishment
 	 * @param unOperator the operator undoing the punishment
+	 * @param silent true if silent, false if not silent
 	 * @return a future of the resulting formatted sendable message
 	 */
-	CentralisedFuture<Component> formatWithPunishmentAndUnoperator(ComponentText componentText,
-																   Punishment punishment,
-																   Operator unOperator);
+	CentralisedFuture<Component> formatNotificationRevoke(
+			ComponentText componentText, Punishment punishment, Operator unOperator, boolean silent);
 
 	/**
 	 * Formats the value of a victim variable

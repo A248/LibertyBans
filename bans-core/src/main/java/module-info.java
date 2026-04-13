@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -55,7 +55,7 @@ module space.arim.libertybans.core {
 	exports space.arim.libertybans.core.database.flyway to org.flywaydb.core;
 	exports space.arim.libertybans.core.env;
 	exports space.arim.libertybans.core.env.message;
-	exports space.arim.libertybans.core.event to space.arim.injector, space.arim.libertybans.core.addon.shortcutreasons, space.arim.libertybans.core.addon.layouts;
+	exports space.arim.libertybans.core.event to space.arim.injector, space.arim.libertybans.core.addon.shortcutreasons, space.arim.libertybans.core.addon.layouts, space.arim.libertybans.core.addon.webhook;
 	exports space.arim.libertybans.core.importing;
 	exports space.arim.libertybans.core.punish;
 	exports space.arim.libertybans.core.punish.permission;

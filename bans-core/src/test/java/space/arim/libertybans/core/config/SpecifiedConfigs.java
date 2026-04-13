@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,7 +26,7 @@ import space.arim.libertybans.core.uuid.RemoteApiBundle;
 import space.arim.libertybans.core.uuid.ServerType;
 import space.arim.libertybans.core.uuid.UUIDResolutionConfig;
 import space.arim.libertybans.it.ConfigSpec;
-import space.arim.libertybans.it.DatabaseInfo;
+import space.arim.libertybans.it.DatabaseInstance;
 import space.arim.libertybans.it.SetAltRegistry;
 
 import java.util.List;
@@ -36,13 +36,13 @@ public class SpecifiedConfigs implements Configs {
 
 	private final StandardConfigs delegate;
 	private final ConfigSpec spec;
-	private final DatabaseInfo databaseInfo;
+	private final DatabaseInstance.Credential databaseCredential;
 
 	@Inject
-	public SpecifiedConfigs(StandardConfigs delegate, ConfigSpec spec, DatabaseInfo databaseInfo) {
+	public SpecifiedConfigs(StandardConfigs delegate, ConfigSpec spec, DatabaseInstance.Credential databaseCredential) {
 		this.delegate = delegate;
 		this.spec = spec;
-		this.databaseInfo = databaseInfo;
+		this.databaseCredential = databaseCredential;
 	}
 	
 	@Override
@@ -61,11 +61,11 @@ public class SpecifiedConfigs implements Configs {
 						}
 						@Override
 						public int port() {
-							return databaseInfo.port();
+							return databaseCredential.port();
 						}
 						@Override
 						public String database() {
-							return databaseInfo.database();
+							return databaseCredential.database();
 						}
 						@Override
 						public String username() {

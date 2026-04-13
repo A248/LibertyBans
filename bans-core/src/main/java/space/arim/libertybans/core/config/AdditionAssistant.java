@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -179,11 +179,11 @@ public final class AdditionAssistant {
 
 		private CentralisedFuture<Void> enforceAndSendSuccess(Punishment punishment, String targetArg,
 															  NotificationMessage notificationMessage) {
-
+			boolean silent = notificationMessage.isSilent();
 			EnforcementOptions enforcementOptions = EnforcementOpts
 					.builder()
 					.enforcement(EnforcementOptions.Enforcement.GLOBAL)
-					.broadcasting(notificationMessage.isSilent() ?
+					.broadcasting(silent ?
 							EnforcementOptions.Broadcasting.SILENT : EnforcementOptions.Broadcasting.NORMAL
 					)
 					.targetArgument(targetArg)
@@ -195,7 +195,7 @@ public final class AdditionAssistant {
 					section.successMessage().replaceText("%TARGET%", targetArg), punishment);
 
 			return futuresFactory.allOf(enforcement, futureMessage).thenCompose((ignore) -> {
-				return fireEventWithTimeout.fire(new PostPunishEventImpl(punishment, targetArg));
+				return fireEventWithTimeout.fire(new PostPunishEventImpl(punishment, targetArg, silent));
 			}).thenRun(() -> {
 				sender().sendMessage(futureMessage.join());
 			});

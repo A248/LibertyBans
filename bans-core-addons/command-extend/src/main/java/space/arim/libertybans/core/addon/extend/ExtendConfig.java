@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,6 +21,7 @@ package space.arim.libertybans.core.addon.extend;
 
 import net.kyori.adventure.text.Component;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
+import space.arim.dazzleconf.annote.ConfComments;
 import space.arim.dazzleconf.annote.ConfDefault;
 import space.arim.dazzleconf.annote.ConfKey;
 import space.arim.libertybans.core.addon.AddonConfig;
@@ -46,6 +47,7 @@ public interface ExtendConfig extends AddonConfig {
 	@ConfDefault.DefaultString("&e%DURATION_ARG%&c is not a valid duration.")
 	ComponentText invalidDuration();
 
+	@ConfComments("The success message. All the usual punishment variables can be used here.")
 	@ConfDefault.DefaultString("&7Extended punishment &e%ID%&7. It now ends on &e%END_DATE%&7.")
 	ComponentText success();
 

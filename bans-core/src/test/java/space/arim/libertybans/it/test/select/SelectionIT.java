@@ -24,6 +24,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.api.AddressVictim;
+import space.arim.libertybans.api.CompositeVictim;
+import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
@@ -34,13 +36,23 @@ import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
 import space.arim.libertybans.api.scope.ScopeManager;
 import space.arim.libertybans.api.scope.ServerScope;
+import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.api.select.PunishmentSelector;
+import space.arim.libertybans.api.select.SelectionBase;
+import space.arim.libertybans.api.select.SelectionBuilderBase;
 import space.arim.libertybans.api.select.SelectionOrderBuilder;
 import space.arim.libertybans.api.select.SelectionPredicate;
 import space.arim.libertybans.api.select.SortPunishments;
+import space.arim.libertybans.core.commands.ListCommands;
+import space.arim.libertybans.core.database.pagination.KeysetAnchor;
+import space.arim.libertybans.core.database.pagination.KeysetPage;
+import space.arim.libertybans.core.database.pagination.StartTimeThenId;
+import space.arim.libertybans.core.selector.Guardian;
+import space.arim.libertybans.core.selector.SelectionBuilderBaseImpl;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
+import space.arim.libertybans.it.SetAddressStrictness;
 import space.arim.libertybans.it.resolver.NotConsole;
 import space.arim.libertybans.it.resolver.RandomOperatorResolver;
 import space.arim.libertybans.it.resolver.RandomPunishmentTypeResolver;
@@ -51,6 +63,7 @@ import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -58,6 +71,7 @@ import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static space.arim.libertybans.api.select.SelectionPredicate.matchingNone;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
@@ -89,7 +103,7 @@ public class SelectionIT {
 		return selectionBuilder.build().getFirstSpecificPunishment().toCompletableFuture().join().orElseThrow();
 	}
 
-	private static List<Punishment> getPunishments(SelectionOrderBuilder selectionBuilder) {
+	private static <B extends SelectionBuilderBase<B, S>, S extends SelectionBase> List<Punishment> getPunishments(B selectionBuilder) {
 		return selectionBuilder.build().getAllSpecificPunishments(SortPunishments.OLDEST_FIRST).toCompletableFuture().join();
 	}
 
@@ -399,4 +413,53 @@ public class SelectionIT {
 		);
 	}
 
+	@TestTemplate
+	@SetAddressStrictness({AddressStrictness.NORMAL, AddressStrictness.STERN, AddressStrictness.STRICT})
+	public void paginatedApplicableHistory(Guardian guardian) {
+		UUID uuid = UUID.randomUUID();
+		NetworkAddress firstAddress = RandomUtil.randomAddress();
+		NetworkAddress secondAddress = RandomUtil.randomAddress();
+		assumeTrue(null == guardian.executeAndCheckConnection(uuid, "MyName", firstAddress).join());
+		Punishment initialKick = getPunishment(draftBuilder(PunishmentType.KICK, AddressVictim.of(firstAddress), "kicked for badness"));
+		time.advanceBy(Duration.ofDays(1L));
+		assumeTrue(null == guardian.executeAndCheckConnection(uuid, "MyName", secondAddress).join());
+		Punishment pastWarn = getPunishment(draftBuilder(PunishmentType.WARN, CompositeVictim.of(uuid, secondAddress), "warned for being naughty").duration(Duration.ofHours(5L)));
+		time.advanceBy(Duration.ofHours(1L));
+		Punishment pastBan = getPunishment(draftBuilder(PunishmentType.BAN, AddressVictim.of(firstAddress), "banned for further rulebreaking").duration(Duration.ofDays(1L)));
+		time.advanceBy(Duration.ofDays(2L));
+		Punishment tempMute = getPunishment(draftBuilder(PunishmentType.MUTE, PlayerVictim.of(uuid), "clemency but temporary mute").duration(Duration.ofDays(1L)));
+		time.advanceBy(Duration.ofMinutes(1L));
+		Punishment activeWarn = getPunishment(draftBuilder(PunishmentType.WARN, CompositeVictim.of(uuid, firstAddress), "finally warned"));
+		time.advanceBy(Duration.ofHours(1L));
+
+		List<List<Punishment>> expectedPages = List.of(
+				List.of(activeWarn, tempMute),
+				List.of(pastBan, pastWarn),
+				List.of(initialKick)
+		);
+		assertEquals(expectedPages, getHistoryApplicablePages(uuid, firstAddress));
+		// Second address should have same results
+		assertEquals(expectedPages, getHistoryApplicablePages(uuid, secondAddress));
+		// Results should be consistent
+		assertEquals(expectedPages, getHistoryApplicablePages(uuid, secondAddress));
+	}
+
+	private List<List<Punishment>> getHistoryApplicablePages(UUID uuid, NetworkAddress address) {
+		List<List<Punishment>> pages = new ArrayList<>();
+		KeysetPage.AnchorLiaison<Punishment, StartTimeThenId> pageLiaison = new ListCommands.PageLiaison();
+		KeysetAnchor<StartTimeThenId> pageAnchor = KeysetAnchor.unset();
+		while (true) {
+			var selectBuilder = selector
+					.selectionByApplicabilityBuilder(uuid, address)
+					.selectAll()
+					.limitToRetrieve(2);
+			((SelectionBuilderBaseImpl<?, ?>) selectBuilder).setPageAnchor(pageAnchor);
+			List<Punishment> retrieved = getPunishments(selectBuilder);
+			if (retrieved.isEmpty()) {
+				return pages;
+			}
+			pages.add(retrieved);
+			pageAnchor = pageAnchor.buildPage(retrieved, pageLiaison).nextPageAnchor();
+		}
+	}
 }

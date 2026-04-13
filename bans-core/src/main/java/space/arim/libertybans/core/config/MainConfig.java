@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -98,14 +98,16 @@ public interface MainConfig {
 		TabCompletionConfig tabCompletion();
 
 		@ConfComments({
-				"What commands should be registered as aliases for libertybans commands?",
-				"For each command listed here, '/<command>' will be equal to '/libertybans <command>'",
+				"What commands should be registered as aliases for LibertyBans commands?",
+				"For each command listed here, '/<command>' will be equal to '/libertybans <command>'.",
 				"",
-				"This basic system is for convenience; please use a dedicated alias plugin if you need more control.",
+				"A value with a colon changes the alias name. For example, 'ban-ip:ipban' makes '/ban-ip' become '/libertybans ipban'.",
+				"",
+				"This basic system is for convenience. Please use a dedicated alias plugin if you need more control.",
 				"Also, please note that command aliases are disabled on Sponge, due to command API differences."
 		})
 		@DefaultStrings({
-			"ban", "ipban",
+			"ban", "ipban", "ban-ip:ipban",
 		    "mute", "ipmute",
 		    "warn", "ipwarn",
 		    "kick", "ipkick",

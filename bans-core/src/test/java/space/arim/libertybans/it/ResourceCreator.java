@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,11 +32,13 @@ import space.arim.libertybans.core.PillarOneReplacementModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
 import space.arim.libertybans.core.env.InstanceType;
 import space.arim.libertybans.it.env.QuackBindModule;
+import space.arim.omnibus.util.UUIDUtil;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
@@ -68,12 +70,10 @@ class ResourceCreator {
 	}
 
 	private Optional<Injector> createSingle(ConfigSpec configSpec, DatabaseInstance database, InstanceKey instanceKey) {
-
-		DatabaseInfo databaseInfo = database.createInfo().orElse(null);
-		if (databaseInfo == null) {
+		DatabaseInstance.Credential databaseCredential = database.createInfo(store).orElse(null);
+		if (databaseCredential == null) {
 			return Optional.empty();
 		}
-
 		return Optional.of(store.getOrComputeIfAbsent(instanceKey, (ignore) -> {
 
 			Path tempDirectory = createTempDirectory();
@@ -83,7 +83,7 @@ class ResourceCreator {
 					.bindInstance(PlatformId.class, new PlatformId("IT", "0.0"))
 					.bindInstance(InstanceType.class, configSpec.instanceType())
 					.bindInstance(ConfigSpec.class, configSpec)
-					.bindInstance(DatabaseInfo.class, databaseInfo)
+					.bindInstance(DatabaseInstance.Credential.class, databaseCredential)
 					.addBindModules(
 							new ApiBindModule(),
 							new PillarOneReplacementModule(),
@@ -101,13 +101,28 @@ class ResourceCreator {
 		}, BaseWrapper.class).injector);
 	}
 
+	private static volatile Path mainTempDir;
+	private static Path createTempDirectory0() throws IOException {
+		Path mainTempDir = ResourceCreator.mainTempDir;
+		if (mainTempDir == null) {
+			synchronized (ResourceCreator.class) {
+				mainTempDir = ResourceCreator.mainTempDir;
+				if (mainTempDir == null) {
+					mainTempDir = Files.createTempDirectory("libertybans-it-temp");
+					ResourceCreator.mainTempDir = mainTempDir;
+				}
+			}
+		}
+		Path retDir = mainTempDir.resolve("test-dir-" + UUIDUtil.toShortString(UUID.randomUUID()));
+		Files.createDirectories(retDir);
+		return retDir;
+	}
+
 	private static Path createTempDirectory() {
-		Path tempDir;
 		try {
-			tempDir = Files.createTempDirectory("libertybans-test-dir");
+			return createTempDirectory0();
 		} catch (IOException ex) {
 			throw Assertions.<RuntimeException>fail(ex);
 		}
-		return tempDir;
 	}
 }

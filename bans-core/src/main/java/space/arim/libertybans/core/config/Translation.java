@@ -32,5 +32,6 @@ enum Translation {
 	ZH_TW,
 	DE,
 	PL,
-	JA
+	JA,
+	TR
 }

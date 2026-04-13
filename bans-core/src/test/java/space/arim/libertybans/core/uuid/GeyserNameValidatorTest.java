@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -42,30 +42,33 @@ public class GeyserNameValidatorTest {
 	@ParameterizedTest
 	@ValueSource(strings = {"A248", "ObsidianWolf_", "lol_haha_dead", "123Numbers"})
 	public void validJavaEditionNames(String name) {
-		assertTrue(validator.validateNameArgument(name));
 		assertTrue(validator.isVanillaName(name));
 	}
 
 	@ParameterizedTest
 	@ValueSource(strings = {".BedrockPlayer", ".123Numbers"})
 	public void validBedrockEditionNames(String name) {
-		assertTrue(validator.validateNameArgument(name));
 		assertFalse(validator.isVanillaName(name));
 	}
 
 	@Test
 	public void nonAlphaNumericUnderscore() {
-		assertFalse(validator.validateNameArgument("NameWith=Sign"));
+		assertFalse(validator.isVanillaName("NameWith=Sign"));
 	}
 
 	@Test
 	public void geyserPrefixNotUsedAsPrefix() {
-		assertFalse(validator.validateNameArgument("NameWith."));
+		assertFalse(validator.isVanillaName("NameWith."));
 	}
 
 	@Test
 	public void tooManyCharacters() {
-		assertFalse(validator.validateNameArgument("ThisNameHasMoreThan16Characters"));
+		assertFalse(validator.isVanillaName("ThisNameHasMoreThan16Characters"));
+	}
+
+	@Test
+	public void nonAsciiCharacters() {
+		assertFalse(validator.isVanillaName("حماس"));
 	}
 
 	@Test

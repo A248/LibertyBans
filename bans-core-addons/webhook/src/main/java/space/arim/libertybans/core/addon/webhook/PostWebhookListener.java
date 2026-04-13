@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,6 +32,8 @@ import space.arim.libertybans.api.event.PostPardonEvent;
 import space.arim.libertybans.api.event.PostPunishEvent;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.event.PostPardonEventImpl;
+import space.arim.libertybans.core.event.PostPunishEventImpl;
 import space.arim.libertybans.core.service.FuturePoster;
 import space.arim.omnibus.events.ListenerPriorities;
 import space.arim.omnibus.events.ListeningMethod;
@@ -64,16 +66,21 @@ public final class PostWebhookListener {
 
     @ListeningMethod(priority = ListenerPriorities.LOW)
     public void onPunish(PostPunishEvent event) {
-        onEvent(event.getPunishment(), event.getTarget().orElse(null), null, WebhookConfig::onPunish);
+        onEvent(
+                event.getPunishment(), event.getTarget().orElse(null), null,
+                ((PostPunishEventImpl) event).isSilent(), WebhookConfig::onPunish
+        );
     }
 
     @ListeningMethod(priority = ListenerPriorities.LOW)
     public void onPardon(PostPardonEvent event) {
-        onEvent(event.getPunishment(), event.getTarget().orElse(null), event.getOperator(), WebhookConfig::onPardon);
+        onEvent(event.getPunishment(), event.getTarget().orElse(null), event.getOperator(),
+                ((PostPardonEventImpl) event).isSilent(), WebhookConfig::onPardon
+        );
     }
 
     private void onEvent(Punishment punishment, @Nullable String target, @Nullable Operator unOperator,
-                         Function<WebhookConfig, WebhookConfig.EventPayload> getEventPayload) {
+                         boolean silent, Function<WebhookConfig, WebhookConfig.EventPayload> getEventPayload) {
         WebhookConfig config = addon.config();
         if (!config.enable()) {
             return;
@@ -88,9 +95,9 @@ public final class PostWebhookListener {
         ComponentText formattable = ComponentText.create(Component.text(jsonPayload));
         CompletableFuture<Component> formatted;
         if (unOperator == null) {
-            formatted = formatter.formatWithPunishment(formattable, punishment);
+            formatted = formatter.formatNotificationIssue(formattable, punishment, silent);
         } else {
-            formatted = formatter.formatWithPunishmentAndUnoperator(formattable, punishment, unOperator);
+            formatted = formatter.formatNotificationRevoke(formattable, punishment, unOperator, silent);
         }
         var future = formatted.thenCompose(component -> {
             String json = ((TextComponent) component).content();

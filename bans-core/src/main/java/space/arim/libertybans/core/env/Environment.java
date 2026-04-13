@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,7 +25,7 @@ public interface Environment {
 
 	Set<PlatformListener> createListeners();
 
-	PlatformListener createAliasCommand(String command);
+	PlatformListener createAliasCommand(String alias, String target);
 
 	/**
 	 * Used for Sponge and the standalone application only. <br>
@@ -36,7 +36,7 @@ public interface Environment {
 	 * @return the platform accessors
 	 */
 	default Object platformAccess() {
-		throw new UnsupportedOperationException("Used for Sponge only");
+		throw new UnsupportedOperationException("Used for Sponge and standalone only");
 	}
 
 }

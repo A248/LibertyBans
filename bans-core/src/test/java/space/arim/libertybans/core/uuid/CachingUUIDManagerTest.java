@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -42,11 +42,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class CachingUUIDManagerTest {
@@ -86,7 +82,6 @@ public class CachingUUIDManagerTest {
 		when(time.toCaffeineTicker()).thenReturn(Ticker.disabledTicker());
 
 		uuidManager.startup();
-		lenient().when(nameValidator.validateNameArgument(name)).thenReturn(true);
 
 		lenient().when(envUserResolver.lookupUUID(any())).thenReturn(completedFuture(Optional.empty()));
 		lenient().when(envUserResolver.lookupName(any())).thenReturn(completedFuture(Optional.empty()));
@@ -301,16 +296,37 @@ public class CachingUUIDManagerTest {
 	}
 
 	@Test
-	public void badName() {
-		String badName = "lol_haha_dead";
-		when(nameValidator.validateNameArgument(badName)).thenReturn(false);
+	public void resolveNonAsciiNameFromEnv() {
+		UUID uuid = UUID.randomUUID();
+		String nonAsciiName = "حماس";
+		when(envUserResolver.lookupUUID(nonAsciiName)).thenReturn(completedFuture(Optional.of(uuid)));
 
-		assertNull(lookupUUID(badName));
-		assertNull(lookupUUIDExact(badName));
-		assertNull(lookupAddress(badName));
-		assertNull(lookupPlayer(badName));
-
-		verify(nameValidator, times(4)).validateNameArgument(badName);
+		assertEquals(uuid, lookupUUID(nonAsciiName));
+		assertEquals(uuid, lookupUUIDExact(nonAsciiName));
 	}
 
+	@Test
+	public void resolveNonAsciiNameFromDatabase() {
+		UUID uuid = UUID.randomUUID();
+		String nonAsciiName = "حماس";
+		when(queryingImpl.resolve(nonAsciiName)).thenReturn(completedFuture(uuid));
+
+		assertEquals(uuid, lookupUUID(nonAsciiName));
+		assertEquals(uuid, lookupUUIDExact(nonAsciiName));
+	}
+
+	@Test
+	public void nonAsciiNameDontHitApi(@Mock RemoteApiBundle remoteApiBundle) {
+		String nonAsciiName = "حماس";
+		when(queryingImpl.resolve(nonAsciiName)).thenReturn(completedFuture(null));
+		when(nameValidator.isVanillaName(nonAsciiName)).thenReturn(false);
+		mockConfig(ServerType.ONLINE, remoteApiBundle);
+
+		assertNull(lookupUUID(nonAsciiName));
+		verify(nameValidator, times(1)).isVanillaName(nonAsciiName);
+		assertNull(lookupUUIDExact(nonAsciiName));
+		verify(nameValidator, times(2)).isVanillaName(nonAsciiName);
+
+		verifyNoInteractions(remoteApiBundle);
+	}
 }

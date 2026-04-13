@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,6 +26,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginIdentifiableCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.LoggerFactory;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.api.env.bukkit.BukkitCommandSkeleton;
 import space.arim.libertybans.core.commands.ArrayCommandPackage;
@@ -39,18 +41,19 @@ import space.arim.omnibus.util.ArraysUtil;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 public final class CommandHandler extends BukkitCommandSkeleton implements PlatformListener, PluginIdentifiableCommand {
 
 	private final CommandHelper commandHelper;
-	private final boolean alias;
+	private final @Nullable String aliasTarget;
 	
-	CommandHandler(CommandHelper commandHelper, String command, boolean alias) {
+	CommandHandler(CommandHelper commandHelper, String command, @Nullable String aliasTarget) {
 		super(command);
 		this.commandHelper = commandHelper;
-		this.alias = alias;
+        this.aliasTarget = aliasTarget;
 	}
-	
+
 	public static class CommandHelper {
 		
 		private final InternalFormatter formatter;
@@ -91,10 +94,42 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 	public void register() {
 		CommandMapHelper commandMapHelper = commandHelper.commandMapHelper;
 		CommandMap commandMap = commandMapHelper.getCommandMap();
-		if (commandMapHelper.getKnownCommands(commandMap) == null && alias) {
+		if (commandMapHelper.getKnownCommands(commandMap) == null && aliasTarget != null) {
 			return;
 		}
 		commandMap.register(getName(), commandHelper.plugin.getName().toLowerCase(Locale.ENGLISH), this);
+
+		Command otherCommand = commandMap.getCommand(getName());
+		boolean belongsToUs = otherCommand instanceof PluginIdentifiableCommand otherPluginCommand
+				&& otherPluginCommand.getPlugin() == getPlugin();
+		if (!belongsToUs && !getName().equals(Commands.BASE_COMMAND_NAME)) {
+
+			String belongingTo;
+			if (otherCommand instanceof PluginIdentifiableCommand otherPluginCommand) {
+				Plugin otherPlugin = otherPluginCommand.getPlugin();
+				belongingTo = " belonging to plugin " + otherPlugin.getDescription().getFullName();
+			} else {
+				belongingTo = "";
+			}
+			LoggerFactory.getLogger(getClass()).warn(
+					"""
+							LibertyBans attempted to register '/{}', but it already exists as {}{}.
+							
+							If you want LibertyBans to control this command, you must solve the command registration
+							conflict with the other plugin:
+							1. First check if the other plugin has an option to disable the command. If it does, use it.
+							   Good plugins will provide this option, but many, including Essentials, do not.
+							2. Otherwise, you will have to use the server's commands.yml to specify command overrides.
+							   You can find information about this at https://bukkit.fandom.com/wiki/Commands.yml
+							3. It is also possible to use an alias plugin to specify which plugin uses the command.
+							   Many alias plugins exist on popular plugin release websites.
+
+							If you do not want LibertyBans to control this command, you should disable it in the
+							alias configuration.
+							""",
+					getName(), otherCommand, belongingTo
+			);
+		}
 	}
 
 	@Override
@@ -111,8 +146,8 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 	}
 
 	private String[] adaptArgs(String[] args) {
-		if (alias) {
-			return ArraysUtil.expandAndInsert(args, getName(), 0);
+		if (aliasTarget != null) {
+			return ArraysUtil.expandAndInsert(args, aliasTarget, 0);
 		}
 		return args;
 	}
@@ -137,7 +172,7 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 	public boolean testPermissionSilent(CommandSender platformSender) {
 		return commandHelper.commands.hasPermissionFor(
 				commandHelper.adaptSender(platformSender),
-				getName()
+				Objects.requireNonNullElse(aliasTarget, getName())
 		);
 	}
 

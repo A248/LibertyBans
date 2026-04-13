@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -91,11 +91,6 @@ public final class DynamicNameValidator implements NameValidator {
 	@Override
 	public String associatedPrefix() {
 		return impl().associatedPrefix();
-	}
-
-	@Override
-	public boolean validateNameArgument(String name) {
-		return impl().validateNameArgument(name);
 	}
 
 	@Override

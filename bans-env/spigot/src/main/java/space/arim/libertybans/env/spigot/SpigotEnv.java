@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -51,13 +51,13 @@ public final class SpigotEnv implements Environment {
 	public Set<PlatformListener> createListeners() {
 		return Set.of(
 				connectionListener.get(), joinListener.get(), chatListener.get(), pluginMessageChannel.get(),
-				new CommandHandler(commandHelper, Commands.BASE_COMMAND_NAME, false)
+				new CommandHandler(commandHelper, Commands.BASE_COMMAND_NAME, null)
 		);
 	}
 
 	@Override
-	public PlatformListener createAliasCommand(String command) {
-		return new CommandHandler(commandHelper, command, true);
+	public PlatformListener createAliasCommand(String alias, String target) {
+		return new CommandHandler(commandHelper, alias, target);
 	}
 
 }

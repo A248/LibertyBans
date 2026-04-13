@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -18,13 +18,12 @@
  */
 package space.arim.libertybans.it;
 
-import org.junit.jupiter.api.extension.ExtensionContext.Store.CloseableResource;
 import space.arim.injector.Injector;
 import space.arim.libertybans.bootstrap.BaseFoundation;
 
 import java.nio.file.Path;
 
-class BaseWrapper implements CloseableResource, AutoCloseable {
+class BaseWrapper implements AutoCloseable {
 
 	final Injector injector;
 	private final BaseFoundation base;

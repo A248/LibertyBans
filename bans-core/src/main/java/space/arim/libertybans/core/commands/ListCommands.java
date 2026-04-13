@@ -243,17 +243,7 @@ public class ListCommands extends AbstractSubCommandGroup {
 
 		private CentralisedFuture<Void> showPunishmentsOnPage(List<Punishment> punishments,
 															  KeysetAnchor<StartTimeThenId> pageAnchor) {
-			KeysetPage<Punishment, StartTimeThenId> keysetPage = pageAnchor.buildPage(punishments, new KeysetPage.AnchorLiaison<>() {
-                @Override
-                public BorderValueHandle<StartTimeThenId> borderValueHandle() {
-                    return StartTimeThenId.borderValueHandle();
-                }
-
-                @Override
-                public StartTimeThenId getAnchor(Punishment datum) {
-                    return new StartTimeThenId(datum.getStartDate(), datum.getIdentifier());
-                }
-            });
+			KeysetPage<Punishment, StartTimeThenId> keysetPage = pageAnchor.buildPage(punishments, new PageLiaison());
 			if (punishments.isEmpty()) {
 				noPunishmentsOnThisPage(pageAnchor.page());
 				return completedFuture(null);
@@ -299,7 +289,17 @@ public class ListCommands extends AbstractSubCommandGroup {
 				sender().sendMessage(joinedMessage);
 			});
 		}
-		
 	}
 
+	public record PageLiaison() implements KeysetPage.AnchorLiaison<Punishment, StartTimeThenId> {
+		@Override
+		public BorderValueHandle<StartTimeThenId> borderValueHandle() {
+			return StartTimeThenId.borderValueHandle();
+		}
+
+		@Override
+		public StartTimeThenId getAnchor(Punishment datum) {
+			return new StartTimeThenId(datum.getStartDate(), datum.getIdentifier());
+		}
+	}
 }
