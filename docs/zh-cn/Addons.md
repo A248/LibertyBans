@@ -26,7 +26,7 @@ LibertyBans以扩展程序的形式提供了一些额外功能。
 
 ## 添加新命令
 
-### 修改出发原因 [command-changereason]
+### 修改处罚原因 [command-changereason]
 
 此扩展提供了`/libertybans changereason <id> <新的原因>`命令，允许管理员修改特定处罚的原因。
 
