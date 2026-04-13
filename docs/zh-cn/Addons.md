@@ -26,6 +26,12 @@ LibertyBans以扩展程序的形式提供了一些额外功能。
 
 ## 添加新命令
 
+### 修改出发原因 [command-changereason]
+
+此扩展提供了`/libertybans changereason <id> <新的原因>`命令，允许管理员修改特定处罚的原因。
+
+命令需要权限`libertybans.addon.changereason.use`。
+
 ### 检查处罚记录 [command-checkpunish]
 
 此扩展启用了`/libertybans checkpunish <id>`命令。该命令可以根据提供的处罚ID显示一次处罚操作的具体信息。
