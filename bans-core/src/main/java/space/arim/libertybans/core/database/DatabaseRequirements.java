@@ -29,6 +29,8 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -102,7 +104,7 @@ public final class DatabaseRequirements {
 		// https://github.com/pterodactyl/panel/issues/3761
 		// Check grants manually to provide a user-friendly error message and reduce the support burden
 		if (vendor.isMySQLLike()) {
-			String actualGrants;
+			String databaseGrants;
 			try (Statement statement = connection.createStatement();
 				 ResultSet grantResultSet = statement.executeQuery("SHOW GRANTS")) {
 
@@ -110,33 +112,36 @@ public final class DatabaseRequirements {
 				while (grantResultSet.next()) {
 					actualGrantsBuilder.add(grantResultSet.getString(1));
 				}
-				actualGrants = actualGrantsBuilder.toString();
+				databaseGrants = actualGrantsBuilder.toString();
 			}
 			/*
 			Examples of what actualGrants might look like:
 			- GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, CREATE ROLE, DROP ROLE ON *.* TO "root"@"%"
 			- GRANT ALL PRIVILEGES ON *.* TO "root"@"%" WITH GRANT OPTION
 			 */
-			if (actualGrants.contains("ALL PRIVILEGES")) {
+			if (databaseGrants.contains("ALL PRIVILEGES")) {
 				return;
 			}
-			List<String> requiredGrants = List.of(
+			List<String> ungranted = new ArrayList<>(Arrays.asList(
 					"ALTER", "ALTER ROUTINE", "CREATE", "CREATE ROUTINE", "CREATE TEMPORARY TABLES", "CREATE VIEW",
 					"DELETE", "DROP", "EVENT", "EXECUTE", "INDEX", "INSERT", "LOCK TABLES", "REFERENCES",
-					"SELECT", "SHOW VIEW", "TRIGGER", "UPDATE");
-			for (String requiredGrant : requiredGrants) {
-				if (actualGrants.contains(requiredGrant + ",") // not the last privilege listed
-						|| actualGrants.contains(requiredGrant + " ON") /* last privilege listed */) {
-					continue;
+					"SELECT", "SHOW VIEW", "TRIGGER", "UPDATE"
+			));
+			// Iterate in reverse + remove the grant if it exists
+			for (int idx = ungranted.size() - 1; idx >= 0; idx--) {
+				String lookFor = ungranted.get(idx);
+				if (databaseGrants.contains(lookFor + ",") // not the last privilege listed
+						|| databaseGrants.contains(lookFor + " ON") /* last privilege listed */) {
+					ungranted.remove(idx);
 				}
-				LoggerFactory.getLogger(getClass()).debug("Full set of privileges detected: {}", actualGrants);
+			}
+			if (!ungranted.isEmpty()) {
+				LoggerFactory.getLogger(getClass()).debug("Full set of privileges required: {}", databaseGrants);
 				throw databaseMisconfiguration("The database user has insufficient permissions. " +
 						"LibertyBans needs full permissions to function properly.\n" +
 						"You MUST grant the proper set of privileges to the database user in order to use " + vendor + ". " +
-						"Missing permission: " + requiredGrant +
-						"\n\n" +
-						"If you are using pterodatyl, this is a known bug which must be solved by pterodactyl.\n" +
-						"We suggest either not using pterodactyl or, if you know how, modifying your database installation.");
+						"Missing permission(s): " + ungranted
+				);
 			}
 		}
 	}
