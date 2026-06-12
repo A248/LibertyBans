@@ -93,19 +93,25 @@ public interface MessagesConfig {
 	All all();
 
 	interface All {
-		
-		@ConfKey("prefix.enable")
-		@ConfComments("If enabled, all messages will be prefixed")
-		@DefaultBoolean(true)
-		boolean enablePrefix();
-		
-		@ConfKey("prefix.value")
-		@ConfComments("The prefix to use")
-		@DefaultString("&6&lLibertyBans &r&8»&7 ")
-		Component rawPrefix();
 
-		default Component prefix() {
-			return (enablePrefix()) ? rawPrefix() : Component.empty();
+		@SubSection
+		PrefixSection prefix();
+
+		interface PrefixSection {
+
+			@ConfComments("If enabled, all messages will be prefixed")
+			@DefaultBoolean(true)
+			boolean enable();
+
+			@ConfComments("The prefix to use")
+			@DefaultString("&6&lLibertyBans &r&8»&7 ")
+			Component value();
+
+		}
+
+		default Component getPrefix() {
+			PrefixSection section = prefix();
+			return section.enable() ? section.value() : Component.empty();
 		}
 		
 		@ConfKey("base-permission-message")

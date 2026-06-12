@@ -53,13 +53,13 @@
 		<!-- Internal dependencies -->
 		<jakarta-inject.version>2.0.0</jakarta-inject.version>
 		<solidinjector.version>1.1.0-RC2</solidinjector.version>
-		<dazzleconf.version>1.3.0-M2</dazzleconf.version>
+		<dazzleconf.version>1.3.0-RC1</dazzleconf.version>
 		<slf4j.version>1.7.30</slf4j.version>
-		<hikari.version>5.0.1</hikari.version>
+		<hikari.version>7.0.2</hikari.version>
 		<hsqldb.version>2.7.1</hsqldb.version>
 		<mariadb-connector.version>3.5.8</mariadb-connector.version>
 		<pgjdbc.version>42.5.1</pgjdbc.version>
-		<caffeine.version>3.1.2</caffeine.version>
+		<caffeine.version>3.2.4</caffeine.version>
 		<flyway.version>8.2.0</flyway.version>
 		<jooq.version>3.19.30</jooq.version>
 		<adventure.version>4.7.0</adventure.version>
@@ -113,14 +113,14 @@
 
 	<developers>
 		<developer>
-			<id>anandbeh</id>
-			<name>Anand Beh</name>
-			<url>https://www.arim.space</url>
+			<id>a248</id>
+			<name>A248</name>
+			<email>a248-dev@tuta.io</email>
+			<url>https://github.com/A248</url>
 			<roles>
 				<role>creator</role>
 				<role>developer</role>
 			</roles>
-			<timezone>America/New_York</timezone>
 		</developer>
 	</developers>
 

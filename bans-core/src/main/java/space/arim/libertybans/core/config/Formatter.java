@@ -100,7 +100,7 @@ public class Formatter implements InternalFormatter {
 	
 	@Override
 	public ComponentLike prefix(ComponentLike message) {
-		Component prefix = configs.getMessagesConfig().all().prefix();
+		Component prefix = configs.getMessagesConfig().all().getPrefix();
 		if (prefix instanceof TextComponent && ((TextComponent) prefix).content().isEmpty() && prefix.children().isEmpty()) {
 			// Empty prefix optimization
 			return message;

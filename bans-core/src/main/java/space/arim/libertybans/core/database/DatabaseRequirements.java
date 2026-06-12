@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,6 +23,7 @@ import org.flywaydb.core.api.MigrationVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.bootstrap.StartupException;
+import space.arim.omnibus.util.ThisClass;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -41,6 +42,8 @@ public final class DatabaseRequirements {
 
 	private final Vendor vendor;
 	private final Connection connection;
+
+	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
 	public DatabaseRequirements(Vendor vendor, Connection connection) {
 		this.vendor = Objects.requireNonNull(vendor, "vendor");
@@ -86,7 +89,6 @@ public final class DatabaseRequirements {
 		// We might still provide retrograde compatibility with very old databases
 		Optional<String> retroVersion = vendor.retroSupportVersion();
 		if (retroVersion.isPresent() && semanticVersion.isAtLeast(retroVersion.get())) {
-			Logger logger = LoggerFactory.getLogger(getClass());
 			logger.warn(
 					"You are using " + vendor + " version " + rawSemanticVersion + ". This database version is old " +
 							"and only supported for retrograde compatibility. It is strongly recommended to update " +
@@ -136,7 +138,7 @@ public final class DatabaseRequirements {
 				}
 			}
 			if (!ungranted.isEmpty()) {
-				LoggerFactory.getLogger(getClass()).debug("Full set of privileges required: {}", databaseGrants);
+				logger.debug("Full set of privileges required: {}", databaseGrants);
 				throw databaseMisconfiguration("The database user has insufficient permissions. " +
 						"LibertyBans needs full permissions to function properly.\n" +
 						"You MUST grant the proper set of privileges to the database user in order to use " + vendor + ". " +

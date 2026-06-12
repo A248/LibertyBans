@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -51,6 +51,7 @@ public final class ConfigHolder<C> {
 	
 	static {
 		ConfigurationOptions.Builder optionsBuilder = new ConfigurationOptions.Builder()
+				.setDottedPathInConfKey(true)
 				.setCreateSingleElementCollections(true);
 		ConfigSerialisers.addTo(optionsBuilder);
 		CONFIG_OPTIONS = optionsBuilder.build();
