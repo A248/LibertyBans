@@ -61,19 +61,24 @@ final class SelectionOrderImpl extends SelectionBaseSQL implements SelectionOrde
 	Query<?> requestQuery(QueryParameters parameters) {
 		PunishmentFields fields = requestSimpleView();
 
-		List<Field<?>> victimRelatedColumns = new ArrayList<>(3);
-		if (getVictims().isNotSimpleEquality()) {
-			if (getVictimTypes().isNotSimpleEquality()) {
-				victimRelatedColumns.add(fields.victimType());
-			}
-			victimRelatedColumns.add(fields.victimUuid());
-			victimRelatedColumns.add(fields.victimAddress());
-		}
-		Condition victimPredication = noCondition()
-				.and(new SingleFieldCriterion<>(fields.victimType()).matches(getVictimTypes()))
+		Condition victimCond = new SingleFieldCriterion<>(fields.victimType()).matches(getVictimTypes())
 				.and(new VictimCondition(fields).buildCondition(getVictims()));
 
-		return new QueryBuilder(parameters, fields, fields.table()) {
+		return new QueryBuilder(parameters, fields) {
+			@Override
+			List<Field<?>> victimColumns(PunishmentFields fields) {
+				if (getVictims().isNotSimpleEquality()) {
+					List<Field<?>> victimColumns = new ArrayList<>(3);
+					if (getVictimTypes().isNotSimpleEquality()) {
+						victimColumns.add(fields.victimType());
+					}
+					victimColumns.add(fields.victimUuid());
+					victimColumns.add(fields.victimAddress());
+					return victimColumns;
+				}
+				return List.of();
+			}
+
 			@Override
 			Victim victimFromRecord(Record record, PunishmentFields fields) {
 				if (getVictims().isSimpleEquality()) {
@@ -93,7 +98,7 @@ final class SelectionOrderImpl extends SelectionBaseSQL implements SelectionOrde
 			boolean mightRepeatIds() {
 				return false;
 			}
-		}.constructSelect(victimRelatedColumns, victimPredication);
+		}.constructSelect(fields.table(), null, victimCond, null);
 	}
 
 	@Override

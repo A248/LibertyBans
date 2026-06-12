@@ -19,7 +19,7 @@
 
 package space.arim.libertybans.core.selector;
 
-import org.jooq.Binding;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
@@ -52,10 +52,12 @@ import java.util.*;
 import java.util.function.Function;
 
 import static org.jooq.impl.DSL.*;
+import static space.arim.libertybans.core.database.sql.MappedPunishmentFields.renameField;
 import static space.arim.libertybans.core.schema.tables.ApplicableActive.APPLICABLE_ACTIVE;
 import static space.arim.libertybans.core.schema.tables.ApplicableHistory.APPLICABLE_HISTORY;
 import static space.arim.libertybans.core.schema.tables.SimpleActive.SIMPLE_ACTIVE;
 import static space.arim.libertybans.core.schema.tables.SimpleHistory.SIMPLE_HISTORY;
+import static space.arim.libertybans.core.selector.SelectionBaseSQL.QueryBuilder.WithFields.NUM_REGULAR_COLUMNS;
 
 public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 
@@ -103,16 +105,22 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 
 		private final QueryParameters parameters;
 		private final PunishmentFields usingFields;
-		private final Table<?> usingTable;
 
-		QueryBuilder(QueryParameters parameters, PunishmentFields usingFields, Table<?> usingTable) {
+		QueryBuilder(QueryParameters parameters, PunishmentFields usingFields) {
 			this.parameters = parameters;
 			this.usingFields = usingFields;
-			this.usingTable = usingTable;
 		}
+
+		abstract List<Field<?>> victimColumns(PunishmentFields fields);
 
 		abstract Victim victimFromRecord(Record record, PunishmentFields fields);
 
+		/**
+		 * Should return true if a punishment ID can be returned more than once by the query parameters, and the
+		 * results need to be de-duplicated. If using unions, this should definitely be true.
+		 *
+		 * @return true if an ID can be returned more than once
+		 */
 		abstract boolean mightRepeatIds();
 
 		private <U> Field<U> aggregate(Field<U> field) {
@@ -128,13 +136,15 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			return max(field);
 		}
 
-		private final class WithFields {
+		final class WithFields {
 
 			private final PunishmentFields fields;
 
             private WithFields(PunishmentFields fields) {
                 this.fields = fields;
             }
+
+			static final int NUM_REGULAR_COLUMNS = 8;
 
 			// Columns used excluding victim-related or ID
 			private void getRegularColumns(List<Field<?>> output) {
@@ -298,11 +308,21 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 
 		private record Ordering(Condition predicate, List<OrderField<?>> byFields) {}
 
-		Query<?> constructSelect(List<Field<?>> victimColumns, Condition victimPredication) {
+		/**
+		 * As a general rule, the table union has a subset of the columns of the original table
+		 *
+		 * @param table the main table
+		 * @param tableUnion the table to unite with
+		 * @param victimCond the condition for selecting victims
+		 * @param victimCondUnion the condition for selecting victims from the other table
+		 * @return the query
+		 */
+		Query<?> constructSelect(Table<?> table, @Nullable Table<?> tableUnion,
+								 Condition victimCond, @Nullable Condition victimCondUnion) {
 			var dequalifyField = new MappedPunishmentFields.Mapper() {
 				@Override
 				public <T> Field<T> map(Field<T> original) {
-					return renameField(original, original.getQualifiedName());
+					return renameField(original, original.getUnqualifiedName());
 				}
 			};
 			WithFields qualified = new WithFields(usingFields);
@@ -317,12 +337,14 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 				default -> val(parameters.limit);
 			};
 			if (mightRepeatIds() && parameters.limit != 1) {
-				// Perform a subquery where we group by ID to remove duplicates
+				// Need to group by ID in order to de-duplicate results
 
-				List<Field<?>> innerColumns = new ArrayList<>(victimColumns);
+				List<Field<?>> victimColumns = victimColumns(simplified.fields);
+				List<Field<?>> innerColumns = new ArrayList<>(victimColumns.size() + NUM_REGULAR_COLUMNS + 1);
+				innerColumns.addAll(victimColumns);
 				qualified.getRegularColumns(innerColumns);
 				innerColumns.replaceAll((field) -> {
-					Field<?> aggregated = aggregate(field);
+					Field<?> aggregated = aggregate(dequalifyField.map(field));
 					return aggregated.as("inner_" + field.getName());
 				});
 				innerColumns.add(fieldId);
@@ -336,15 +358,41 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 				});
 				outerColumns.add(field(fieldId.getUnqualifiedName()));
 
-				var innerQuery = parameters.context
-						.select(innerColumns)
-						.from(usingTable)
-						.where(victimPredication)
-						.and(qualified.regularPredication())
-						.groupBy(fieldId);
+				Select<Record> subQuery;
 
-				// Order using the "inner_"-prefixed names where possible
-				var innerFieldName =  new MappedPunishmentFields.Mapper() {
+				if (tableUnion == null) {
+					subQuery = parameters.context
+							.select(innerColumns)
+							.from(table)
+							.where(qualified.regularPredication())
+							.and(victimCond)
+							.groupBy(fieldId);
+				} else {
+					List<Field<?>> innerMostColumns = new ArrayList<>(innerColumns.size());
+					innerMostColumns.addAll(victimColumns);
+					simplified.getRegularColumns(innerMostColumns);
+					innerMostColumns.add(fieldId);
+
+					Condition regularPredication = simplified.regularPredication();
+					var subSubQueryOne = parameters.context
+							.select(innerMostColumns)
+							.from(table)
+							.where(regularPredication)
+							.and(victimCond);
+					var subSubQueryTwo = parameters.context
+							.select(innerMostColumns)
+							.from(tableUnion)
+							.where(regularPredication)
+							.and(victimCondUnion);
+					var subSubQuery = subSubQueryOne.unionAll(subSubQueryTwo).asTable("sq_union");
+
+					subQuery = parameters.context
+							.select(innerColumns)
+							.from(subSubQuery)
+							.groupBy(fieldId);
+				}
+
+				var innerFieldName = new MappedPunishmentFields.Mapper() {
 					@Override
 					public <T> Field<T> map(Field<T> original) {
 						String originalName = original.getName();
@@ -356,24 +404,55 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 					}
 				};
 				WithFields innerFields = new WithFields(new MappedPunishmentFields(usingFields, innerFieldName));
+				// Order using the "inner_"-prefixed names
 				Ordering ordering = innerFields.buildOrdering();
 				selectQuery = parameters.context
 						.select(outerColumns)
-						.from(innerQuery)
+						.from(subQuery.asTable("sq_agg"))
 						.where(ordering.predicate)
 						.orderBy(ordering.byFields)
 						.offset(skipField)
 						.limit(limitField);
+			} else if (tableUnion != null) {
+				List<Field<?>> victimColumns = victimColumns(simplified.fields);
+				List<Field<?>> columns = new ArrayList<>(victimColumns.size() + NUM_REGULAR_COLUMNS + 1);
+				columns.addAll(victimColumns);
+				simplified.getRegularColumns(columns);
+				columns.add(fieldId);
+
+				var firstSub = parameters.context
+						.select(tableUnion.asterisk())
+						.from(table)
+						.where(victimCond);
+				var secondSub = parameters.context
+						.select(tableUnion.asterisk())
+						.from(tableUnion)
+						.where(victimCondUnion);
+				var subQuery = firstSub.unionAll(secondSub).asTable("sq_union");
+
+				Ordering ordering = simplified.buildOrdering();
+				selectQuery = parameters.context
+						.select(columns)
+						.from(subQuery)
+						.where(simplified.regularPredication())
+						.and(ordering.predicate)
+						.orderBy(ordering.byFields)
+						.offset(skipField)
+						.limit(limitField);
 			} else {
-				List<Field<?>> allColumns = new ArrayList<>(victimColumns);
+				List<Field<?>> victimColumns = victimColumns(simplified.fields);
+				List<Field<?>> allColumns = new ArrayList<>(victimColumns.size() + NUM_REGULAR_COLUMNS + 1);
+				allColumns.addAll(victimColumns);
 				simplified.getRegularColumns(allColumns);
 				allColumns.add(fieldId);
 
 				Ordering ordering = simplified.buildOrdering();
 				selectQuery = parameters.context
 						.select(allColumns)
-						.from(usingTable)
-						.where(simplified.regularPredication().and(victimPredication).and(ordering.predicate))
+						.from(table)
+						.where(simplified.regularPredication())
+						.and(victimCond)
+						.and(ordering.predicate)
 						.orderBy(ordering.byFields)
 						.offset(skipField)
 						.limit(limitField);
@@ -381,20 +460,6 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 			return new Query<>(selectQuery, qualified::mapRecord);
 		}
 
-	}
-
-	private static <F> Field<F> renameField(Field<F> original, Name newName) {
-		// Return field with same type + binding + converter, but strip qualifying table
-		@SuppressWarnings("unchecked")
-		Binding<Object, F> binding = (Binding<Object, F>) original.getBinding();
-		Field<?> renamed = field(newName, original.getDataType());
-		@SuppressWarnings("unchecked")
-		Field<Object> eraseRenamed = (Field<Object>) renamed;
-		Field<F> rebound = eraseRenamed.convert(binding);
-		assert rebound.getDataType() == original.getDataType() : "data type mismatch";
-		assert rebound.getConverter().getClass() == original.getConverter().getClass() : "converter mismatch";
-		assert rebound.getBinding().getClass() == original.getBinding().getClass() : "binding mismatch";
-		return rebound;
 	}
 
 	record Query<R extends Record>(Select<R> select, RecordMapper<R, Punishment> mapper) {
@@ -424,7 +489,7 @@ public abstract class SelectionBaseSQL extends SelectionBaseImpl {
 	}
 
 	/**
-	 * Visible for testing purposes, to make sure queries are as optimized as possible
+	 * Visible for testing purposes, to make sure applicability queries are as optimized as possible
 	 *
 	 * @param context the database access
 	 * @return the SQL which would be used to select a single applicable punishment

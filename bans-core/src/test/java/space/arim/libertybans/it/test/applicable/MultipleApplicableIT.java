@@ -20,11 +20,11 @@
 package space.arim.libertybans.it.test.applicable;
 
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.CompositeVictim;
+import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerVictim;
@@ -32,9 +32,11 @@ import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.punish.PunishmentDrafter;
-import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.api.select.PunishmentSelector;
 import space.arim.libertybans.api.select.SortPunishments;
+import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.selector.Guardian;
+import space.arim.libertybans.core.selector.SelectionByApplicabilityBuilderImpl;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.it.DontInject;
 import space.arim.libertybans.it.InjectionInvocationContextProvider;
@@ -42,16 +44,24 @@ import space.arim.libertybans.it.SampleData;
 import space.arim.libertybans.it.SetAddressStrictness;
 import space.arim.libertybans.it.SetAltRegistry;
 import space.arim.libertybans.it.resolver.RandomOperatorResolver;
-import space.arim.libertybans.it.util.RandomUtil;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static space.arim.libertybans.api.PunishmentType.BAN;
 import static space.arim.libertybans.api.PunishmentType.MUTE;
 import static space.arim.libertybans.api.PunishmentType.WARN;
+import static space.arim.libertybans.api.select.AddressStrictness.LENIENT;
+import static space.arim.libertybans.api.select.AddressStrictness.NORMAL;
+import static space.arim.libertybans.api.select.AddressStrictness.STERN;
+import static space.arim.libertybans.api.select.AddressStrictness.STRICT;
+import static space.arim.libertybans.it.util.RandomUtil.randomAddress;
+import static space.arim.libertybans.it.util.RandomUtil.randomName;
 
 @ExtendWith(InjectionInvocationContextProvider.class)
 @ExtendWith(RandomOperatorResolver.class)
@@ -89,12 +99,12 @@ public class MultipleApplicableIT {
 	}
 
 	@TestTemplate
-	@SetAddressStrictness(AddressStrictness.NORMAL)
+	@SetAddressStrictness({NORMAL, LENIENT})
 	@SetAltRegistry(all = true)
 	@SampleData
 	public void selectHistory() {
 		UUID uuid = UUID.randomUUID();
-		NetworkAddress address = RandomUtil.randomAddress();
+		NetworkAddress address = randomAddress();
 		strictnessAssertHelper.connectAndAssertUnbannedUser(uuid, "username", address);
 
 		Punishment banOnUuid = addPunishment(BAN, PlayerVictim.of(uuid), "ban on uuid", Duration.ZERO);
@@ -116,16 +126,15 @@ public class MultipleApplicableIT {
 	}
 
 	@TestTemplate
-	@SetAddressStrictness(AddressStrictness.STRICT)
+	@SetAddressStrictness(STRICT)
 	@SetAltRegistry(all = true)
 	@SampleData
-	@Disabled
 	public void avoidDuplicateApplicablePunishments() {
 		UUID uuid = UUID.randomUUID();
-		NetworkAddress address = RandomUtil.randomAddress();
+		NetworkAddress address = randomAddress();
 		strictnessAssertHelper.connectAndAssertUnbannedUser(uuid, "username", address);
 		UUID altUuid = UUID.randomUUID();
-		NetworkAddress altAddress = RandomUtil.randomAddress();
+		NetworkAddress altAddress = randomAddress();
 		strictnessAssertHelper.connectAndAssertUnbannedUser(altUuid, "alt username", address);
 		strictnessAssertHelper.connectAndAssertUnbannedUser(altUuid, "alt username", altAddress);
 
@@ -161,4 +170,96 @@ public class MultipleApplicableIT {
 		);
 	}
 
+
+    private static final Duration ONE_DAY = Duration.ofDays(1L);
+
+    @TestTemplate
+    @SetAddressStrictness({NORMAL, STERN, STRICT})
+    @SetAltRegistry(all = true)
+    public void enforceNormalBansAndImpliedHistory(Guardian guardian, Configs configs) {
+        boolean canAssumeUserRecorded = !configs.getMainConfig().enforcement().altsRegistry().shouldRegisterOnConnection();
+
+        NetworkAddress pastAddressOne = randomAddress();
+        NetworkAddress pastAddressTwo = randomAddress();
+        UUID uuid = UUID.randomUUID();
+        String name = randomName();
+        NetworkAddress latestAddress = randomAddress();
+
+        // Backfill connection and IP address history
+        assumeTrue(null == guardian.executeAndCheckConnection(uuid, name, pastAddressOne).join());
+        assumeTrue(null == guardian.checkServerSwitch(uuid, name, pastAddressOne, "register_ip").join());
+
+        time.advanceBy(ONE_DAY);
+        assumeTrue(null == guardian.executeAndCheckConnection(uuid, name, pastAddressTwo).join());
+        assumeTrue(null == guardian.checkServerSwitch(uuid, name, pastAddressTwo, "register_ip").join());
+
+        time.advanceBy(ONE_DAY);
+        Punishment firstPunishment = drafter.draftBuilder()
+                .type(PunishmentType.BAN)
+                .victim(AddressVictim.of(pastAddressOne))
+                .operator(ConsoleOperator.INSTANCE)
+                .duration(Duration.ofHours(5L))
+                .reason("banned on bad IP")
+                .build()
+                .enactPunishment()
+                .toCompletableFuture()
+                .join()
+                .orElseThrow();
+
+        // Player is banned (past address has IP ban)
+        assertNotNull(guardian.executeAndCheckConnection(uuid, name, latestAddress).join());
+        // Ban is in implied history too (this is an internal API, but we still test it)
+        assertEquals(
+                List.of(firstPunishment),
+                ((SelectionByApplicabilityBuilderImpl) selector.selectionByApplicabilityBuilder(uuid, latestAddress))
+                        .canAssumeUserRecorded(canAssumeUserRecorded)
+                        .selectAll()
+                        .build()
+                        .getAllSpecificPunishments(SortPunishments.OLDEST_FIRST)
+                        .toCompletableFuture()
+                        .join()
+        );
+
+        // Expire the punishment so we can repeat the test
+        time.advanceBy(ONE_DAY);
+        assertNull(guardian.executeAndCheckConnection(uuid, name, latestAddress).join());
+
+        // Ban a composite victim using some other UUID
+        time.advanceBy(ONE_DAY);
+        CompositeVictim compositeVictim = CompositeVictim.of(UUID.randomUUID(), pastAddressTwo);
+        Punishment secondPunishment = drafter.draftBuilder()
+                .type(PunishmentType.BAN)
+                .victim(compositeVictim)
+                .operator(ConsoleOperator.INSTANCE)
+                .reason("banned forever now")
+                .build()
+                .enactPunishment()
+                .toCompletableFuture()
+                .join()
+                .orElseThrow();
+
+        // Player is banned (past address has composite ban)
+        assertNotNull(guardian.executeAndCheckConnection(uuid, name, latestAddress).join());
+        // Implied history includes it
+        assertEquals(
+                List.of(firstPunishment, secondPunishment),
+                ((SelectionByApplicabilityBuilderImpl) selector.selectionByApplicabilityBuilder(uuid, latestAddress))
+                        .canAssumeUserRecorded(canAssumeUserRecorded)
+                        .selectAll()
+                        .build()
+                        .getAllSpecificPunishments(SortPunishments.OLDEST_FIRST)
+                        .toCompletableFuture()
+                        .join()
+        );
+        // But active only returns this punishment
+        assertEquals(
+                List.of(secondPunishment),
+                ((SelectionByApplicabilityBuilderImpl) selector.selectionByApplicabilityBuilder(uuid, latestAddress))
+                        .canAssumeUserRecorded(canAssumeUserRecorded)
+                        .build()
+                        .getAllSpecificPunishments(SortPunishments.OLDEST_FIRST)
+                        .toCompletableFuture()
+                        .join()
+        );
+    }
 }

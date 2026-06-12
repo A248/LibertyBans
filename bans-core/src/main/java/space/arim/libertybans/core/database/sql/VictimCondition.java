@@ -25,6 +25,7 @@ import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Victim;
 
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.jooq.impl.DSL.inline;
@@ -40,9 +41,7 @@ public final class VictimCondition implements MultiFieldCriterion<Victim> {
 		this.fields = Objects.requireNonNull(fields, "fields");
 	}
 
-	public Condition simplyMatches(UUID uuid, NetworkAddress address) {
-		Condition matchesUUID = fields.victimUuid().eq(uuid);
-		Condition matchesAddress = fields.victimAddress().eq(address);
+	private Condition triForkMatches(Condition matchesUUID, Condition matchesAddress) {
 		// victim_type = PLAYER AND victim_uuid = uuid
 		// OR victim_type = ADDRESS AND victim_address = address
 		// OR victim_type = COMPOSITE AND (victim_uuid = uuid OR victim_address = address)
@@ -52,6 +51,18 @@ public final class VictimCondition implements MultiFieldCriterion<Victim> {
 				).or(
 						fields.victimType().eq(inline(Victim.VictimType.COMPOSITE)).and(matchesUUID.or(matchesAddress))
 				);
+	}
+
+	public Condition simplyMatches(UUID uuid, NetworkAddress address) {
+		Condition matchesUUID = fields.victimUuid().eq(uuid);
+		Condition matchesAddress = fields.victimAddress().eq(address);
+		return triForkMatches(matchesUUID, matchesAddress);
+	}
+
+	public Condition matchesUUIDOrAddresses(UUID uuid, Set<NetworkAddress> addresses) {
+		Condition matchesUUID = fields.victimUuid().eq(uuid);
+		Condition matchesAddress = fields.victimAddress().in(addresses);
+		return triForkMatches(matchesUUID, matchesAddress);
 	}
 
 	public Condition matchesUUID(Field<UUID> uuid) {

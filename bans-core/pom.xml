@@ -428,6 +428,7 @@
 								<libertybans.it.postgres.legacy.port>${it.postgres.legacy.port}</libertybans.it.postgres.legacy.port>
 								<libertybans.it.postgres.modern.port>${it.postgres.modern.port}</libertybans.it.postgres.modern.port>
 								<libertybans.it.cockroachdb.port>${it.cockroachdb.port}</libertybans.it.cockroachdb.port>
+								<org.jooq.debug-log-on-discouraged-static-type-registry-access>true</org.jooq.debug-log-on-discouraged-static-type-registry-access>
 							</systemPropertyVariables>
 						</configuration>
 					</plugin>
