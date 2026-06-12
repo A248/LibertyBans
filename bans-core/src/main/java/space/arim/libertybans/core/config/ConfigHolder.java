@@ -51,6 +51,7 @@ public final class ConfigHolder<C> {
 	
 	static {
 		ConfigurationOptions.Builder optionsBuilder = new ConfigurationOptions.Builder()
+				.setDottedPathInConfKey(true)
 				.setCreateSingleElementCollections(true);
 		ConfigSerialisers.addTo(optionsBuilder);
 		CONFIG_OPTIONS = optionsBuilder.build();
