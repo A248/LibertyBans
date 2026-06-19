@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,7 +23,6 @@ import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Table;
-import org.jooq.impl.DSL;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.Victim.VictimType;
@@ -93,8 +92,6 @@ public final class SelectionByApplicabilityImpl extends SelectionBaseSQL impleme
 
 	@Override
 	Query<?> requestQuery(QueryParameters parameters) {
-		org.slf4j.LoggerFactory.getLogger(getClass())
-				.info("LOGISTICS strictness/potentialNewEntrant = " + strictness + '/' + potentialNewEntrant);
 		PunishmentFields fields;
 		Table<?> table;
 		Table<?> tableUnion = null;
