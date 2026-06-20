@@ -17,33 +17,38 @@
  * and navigate to version 3 of the GNU Affero General Public License.
  */
 
-package space.arim.libertybans.core.event;
+package space.arim.libertybans.api.event;
 
-import space.arim.libertybans.api.event.PostPunishEvent;
 import space.arim.libertybans.api.punish.Punishment;
 
-import java.util.Objects;
 import java.util.Optional;
 
-public record PostPunishEventImpl(Punishment punishment, String target, boolean silent) implements PostPunishEvent {
+/**
+ * Parent event for both {@link PostPunishEvent} and {@link PostPardonEvent}.
+ *
+ */
+public interface PostOpNotificationEvent {
 
-	public PostPunishEventImpl {
-		Objects.requireNonNull(punishment);
-		Objects.requireNonNull(target);
-	}
+    /**
+     * Gets the punishment involved in the event
+     *
+     * @return the punishment
+     */
+    Punishment getPunishment();
 
-	@Override
-	public Punishment getPunishment() {
-		return punishment;
-	}
+    /**
+     * If this event was the result of a command line action, the targeted user may be available in many circumstances
+     *
+     * @return the targeted user (victim name) on the command line, if available
+     */
+    Optional<String> getTarget();
 
-	@Override
-	public Optional<String> getTarget() {
-		return Optional.of(target);
-	}
+    /**
+     * If the operation should happen silently. This may influence notification messages, for example. If {@code true},
+     * it can be taken as a hint to reduce the level of broadcasting to staff members.
+     *
+     * @return true if silent
+     */
+    boolean isSilent();
 
-	@Override
-	public boolean isSilent() {
-		return silent;
-	}
 }

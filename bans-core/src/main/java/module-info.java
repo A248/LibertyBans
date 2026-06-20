@@ -55,7 +55,7 @@ module space.arim.libertybans.core {
 	exports space.arim.libertybans.core.database.flyway to org.flywaydb.core, space.arim.injector;
 	exports space.arim.libertybans.core.env;
 	exports space.arim.libertybans.core.env.message;
-	exports space.arim.libertybans.core.event to space.arim.injector, space.arim.libertybans.core.addon.shortcutreasons, space.arim.libertybans.core.addon.layouts, space.arim.libertybans.core.addon.webhook;
+	exports space.arim.libertybans.core.event to space.arim.injector, space.arim.libertybans.core.addon.shortcutreasons, space.arim.libertybans.core.addon.layouts;
 	exports space.arim.libertybans.core.importing;
 	exports space.arim.libertybans.core.punish;
 	exports space.arim.libertybans.core.punish.permission;

@@ -49,7 +49,7 @@ public record PostPardonEventImpl(Operator operator, Punishment punishment, Stri
 		return Optional.of(target);
 	}
 
-	// Pending - See #350
+	@Override
 	public boolean isSilent() {
 		return silent;
 	}

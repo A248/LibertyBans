@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,7 +32,7 @@ import java.util.Optional;
  * @author A248
  *
  */
-public interface PostPardonEvent extends AsyncEvent {
+public interface PostPardonEvent extends AsyncEvent, PostOpNotificationEvent {
 
 	/**
 	 * Gets the staff member who revoked the punishment
@@ -46,15 +46,30 @@ public interface PostPardonEvent extends AsyncEvent {
 	 * 
 	 * @return the punishment which was revoked
 	 */
+	@Override
 	Punishment getPunishment();
 
 	/**
-	 * If this event was the result of a command line action, the targeted user may be available in many circumstances
+	 * The command line target of the removal.
+	 * <p>
+	 * This is not necessarily the same as the punished victim ({@link Punishment#getVictim()}), but rather the string
+	 * argument interpreted to mean it. In some contexts this argument will be unavailable; for example, removing a
+	 * punishment by its ID alone has no target argument.
 	 *
 	 * @return the targeted user (victim name) on the command line, if available
 	 */
+	@Override
 	default Optional<String> getTarget() {
 		return Optional.empty();
 	}
 
+	/**
+	 * If the punishment was removed silently.
+	 *
+	 * @return true if silent
+	 */
+	@Override
+	default boolean isSilent() {
+		return false;
+	}
 }

@@ -28,12 +28,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.Operator;
+import space.arim.libertybans.api.event.PostOpNotificationEvent;
 import space.arim.libertybans.api.event.PostPardonEvent;
 import space.arim.libertybans.api.event.PostPunishEvent;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.core.config.InternalFormatter;
-import space.arim.libertybans.core.event.PostPardonEventImpl;
-import space.arim.libertybans.core.event.PostPunishEventImpl;
 import space.arim.libertybans.core.service.FuturePoster;
 import space.arim.omnibus.events.ListenerPriorities;
 import space.arim.omnibus.events.ListeningMethod;
@@ -44,6 +43,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
@@ -66,21 +66,18 @@ public final class PostWebhookListener {
 
     @ListeningMethod(priority = ListenerPriorities.LOW)
     public void onPunish(PostPunishEvent event) {
-        onEvent(
-                event.getPunishment(), event.getTarget().orElse(null), null,
-                ((PostPunishEventImpl) event).isSilent(), WebhookConfig::onPunish
-        );
+        onEvent(event, null, WebhookConfig::onPunish);
     }
 
     @ListeningMethod(priority = ListenerPriorities.LOW)
     public void onPardon(PostPardonEvent event) {
-        onEvent(event.getPunishment(), event.getTarget().orElse(null), event.getOperator(),
-                ((PostPardonEventImpl) event).isSilent(), WebhookConfig::onPardon
-        );
+        Operator unOperator = event.getOperator();
+        Objects.requireNonNull(unOperator, "unOperator"); // bad event impl
+        onEvent(event, unOperator, WebhookConfig::onPardon);
     }
 
-    private void onEvent(Punishment punishment, @Nullable String target, @Nullable Operator unOperator,
-                         boolean silent, Function<WebhookConfig, WebhookConfig.EventPayload> getEventPayload) {
+    private void onEvent(PostOpNotificationEvent event, @Nullable Operator unOperator,
+                         Function<WebhookConfig, WebhookConfig.EventPayload> getEventPayload) {
         WebhookConfig config = addon.config();
         if (!config.enable()) {
             return;
@@ -91,13 +88,20 @@ public final class PostWebhookListener {
             return;
         }
         String jsonPayload = eventPayload.jsonPayload();
-        jsonPayload = jsonPayload.replace("%TARGET%", target == null ? "<none>" : target);
+        {
+            String target = event.getTarget().orElse(null);
+            jsonPayload = jsonPayload.replace("%TARGET%", target == null ? "<none>" : target);
+        }
         ComponentText formattable = ComponentText.create(Component.text(jsonPayload));
         CompletableFuture<Component> formatted;
-        if (unOperator == null) {
-            formatted = formatter.formatNotificationIssue(formattable, punishment, silent);
-        } else {
-            formatted = formatter.formatNotificationRevoke(formattable, punishment, unOperator, silent);
+        {
+            Punishment punishment = event.getPunishment();
+            boolean silent = event.isSilent();
+            if (unOperator == null) {
+                formatted = formatter.formatNotificationIssue(formattable, punishment, silent);
+            } else {
+                formatted = formatter.formatNotificationRevoke(formattable, punishment, unOperator, silent);
+            }
         }
         var future = formatted.thenCompose(component -> {
             String json = ((TextComponent) component).content();
