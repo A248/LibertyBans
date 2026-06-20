@@ -46,9 +46,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/**
+ * Both DatabaseSchemaLocalIT and DatabaseSchemaRemoteIT check for pre-existing schema tables, but the local
+ * version uses quick data source creation instead of full startup/shutdown.
+ */
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(FlywayStaticStateManagementExtension.class)
-public class DatabaseSettingsIT {
+public class DatabaseSchemaLocalIT {
 
 	@TempDir
 	public Path databaseDir;
@@ -84,16 +88,17 @@ public class DatabaseSettingsIT {
 		return sqlConfig;
 	}
 
-	// Database initialization with a non-empty database
 	@Test
-	public void createWithExistingTablePresent() throws SQLException {
+	public void preExistingTables() throws SQLException {
 		DatabaseSettings databaseSettings = createDatabaseSettings();
 		SqlConfig sqlConfig = createSqlConfig();
+		// 1. Create data source WITHOUT migrating the database
 		try (HikariDataSource tempPool = databaseSettings.createDataSource(sqlConfig);
 			 Connection conn = tempPool.getConnection();
 			 PreparedStatement prepStmt = conn.prepareStatement("CREATE TABLE myTable (id INT NOT NULL)")) {
 			prepStmt.execute();
 		}
+		// 2. Set up database as usual
 		DatabaseResult dbResult = assertDoesNotThrow(() -> databaseSettings.create(sqlConfig));
 		assertTrue(dbResult.success(), "Database creation failed");
 	}

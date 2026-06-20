@@ -19,6 +19,7 @@
 [![Discord]](https://discord.gg/3C4qeG8XhE)
 [![Documentation]](https://docs.libertybans.org/#/Getting-Started)
 [![Spigot]](https://spigotmc.org/resources/81063)
+<img alt="Static Badge" src="https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith&style=flat-square&link=https%3A%2F%2Fcloudsmith.com"></img>
 <br><br>[![TestedVersion]](https://spigotmc.org/resources/81063) ![SpigotRating]
 <br>![License] ![GitHubStar] ![CodeSize]
 </div>

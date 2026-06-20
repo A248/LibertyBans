@@ -64,6 +64,7 @@ dependencies {
 
 <!-- tabs:end -->
 
+These repositories are currently hosted by [cloudsmith](https://cloudsmith.io).
 
 ### Javadoc
 
