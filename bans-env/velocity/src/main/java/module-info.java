@@ -7,6 +7,7 @@ module space.arim.libertybans.env.velocity {
 	requires space.arim.injector;
 	requires space.arim.libertybans.core;
     requires org.checkerframework.checker.qual;
+    requires space.arim.api.jsonchat;
     exports space.arim.libertybans.env.velocity to space.arim.injector;
 	opens space.arim.libertybans.env.velocity to com.velocitypowered.api;
 }

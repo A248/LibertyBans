@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -115,7 +115,7 @@ public final class AddonCommands extends AbstractSubCommandGroup {
 				sender().sendMessage(Component.text()
 						.append(listing.message())
 						.append(Component.newline())
-						.append(Component.join(
+						.append(adventure5Compat().join(
 								Component.newline(),
 								addonCenter.allIdentifiers()
 										.map((identifier) -> layout.replaceText("%ADDON%", identifier))

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
@@ -65,14 +66,14 @@ public class AltCheckFormatterTest {
 		when(configs.getMessagesConfig()).thenReturn(messagesConfig);
 		when(messagesConfig.alts()).thenReturn(altsSection);
 		when(altsSection.formatting()).thenReturn(conf);
-		altCheckFormatter = new AltCheckFormatter(configs, formatter);
+		altCheckFormatter = new AltCheckFormatter(configs, formatter, Adventure5Compat.DEFAULT);
 	}
 
 	private AccountListFormatting formattingConfig(Component header, Component footer) {
 		return new AccountListFormatting() {
 			@Override
 			public ComponentText header() {
-				return ComponentText.create(header);
+				return ComponentText.create(header, Adventure5Compat.DEFAULT);
 			}
 
 			@Override
@@ -82,7 +83,7 @@ public class AltCheckFormatterTest {
 
 			@Override
 			public ComponentText footer() {
-				return ComponentText.create(footer);
+				return ComponentText.create(footer, Adventure5Compat.DEFAULT);
 			}
 		};
 	}
@@ -100,10 +101,10 @@ public class AltCheckFormatterTest {
 		{
 			when(conf.layout()).thenReturn(ComponentText.create(Component.text(
 					"detection_kind: %DETECTION_KIND%, address: %ADDRESS%, username: %RELEVANT_USER%, " +
-							"user_id: %RELEVANT_USERID%, date_recorded: %DATE_RECORDED%")));
+							"user_id: %RELEVANT_USERID%, date_recorded: %DATE_RECORDED%"), Adventure5Compat.DEFAULT));
 			when(conf.normal()).thenReturn(Component.text("NORMAL"));
 			var nameDisplay = mock(AltsSection.Formatting.NameDisplay.class);
-			when(nameDisplay.notPunished()).thenReturn(ComponentText.create(Component.text("%USERNAME%")));
+			when(nameDisplay.notPunished()).thenReturn(ComponentText.create(Component.text("%USERNAME%"), Adventure5Compat.DEFAULT));
 			when(conf.nameDisplay()).thenReturn(nameDisplay);
 			when(formatter.prefix(any())).thenAnswer((invocation) -> invocation.getArgument(0));
 			when(formatter.formatAbsoluteDate(date)).thenReturn(date.toString());
@@ -128,16 +129,16 @@ public class AltCheckFormatterTest {
 		Instant date = Instant.parse("2021-07-23T02:15:23.000000Z");
 		{
 			when(conf.layout()).thenReturn(ComponentText.create(Component.text(
-					"kind: %DETECTION_KIND%, username: %RELEVANT_USER%")));
+					"kind: %DETECTION_KIND%, username: %RELEVANT_USER%"), Adventure5Compat.DEFAULT));
 			when(conf.normal()).thenReturn(Component.text("NORMAL"));
 			when(conf.strict()).thenReturn(Component.text("STRICT"));
 			when(formatter.prefix(any())).thenAnswer((invocation) -> invocation.getArgument(0));
 			when(formatter.formatAbsoluteDate(any())).thenReturn("date");
 
 			var nameDisplay = mock(AltsSection.Formatting.NameDisplay.class);
-			when(nameDisplay.banned()).thenReturn(ComponentText.create(Component.text("Banned(%USERNAME%)")));
-			when(nameDisplay.muted()).thenReturn(ComponentText.create(Component.text("Muted(%USERNAME%)")));
-			when(nameDisplay.notPunished()).thenReturn(ComponentText.create(Component.text("None(%USERNAME%)")));
+			when(nameDisplay.banned()).thenReturn(ComponentText.create(Component.text("Banned(%USERNAME%)"), Adventure5Compat.DEFAULT));
+			when(nameDisplay.muted()).thenReturn(ComponentText.create(Component.text("Muted(%USERNAME%)"), Adventure5Compat.DEFAULT));
+			when(nameDisplay.notPunished()).thenReturn(ComponentText.create(Component.text("None(%USERNAME%)"), Adventure5Compat.DEFAULT));
 			when(conf.nameDisplay()).thenReturn(nameDisplay);
 		}
 		List<DetectedAlt> alts = List.of(

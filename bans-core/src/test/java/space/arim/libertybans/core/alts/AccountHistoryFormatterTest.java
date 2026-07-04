@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.user.KnownAccount;
@@ -66,12 +67,12 @@ public class AccountHistoryFormatterTest {
 	public void setAccountHistoryFormatter(@Mock Configs configs, @Mock MessagesConfig messagesConfig) {
 		when(configs.getMessagesConfig()).thenReturn(messagesConfig);
 		when(messagesConfig.accountHistory()).thenReturn(conf);
-		accountHistoryFormatter = new AccountHistoryFormatter(configs, formatter);
+		accountHistoryFormatter = new AccountHistoryFormatter(configs, formatter, Adventure5Compat.DEFAULT);
 	}
 
 	@Test
 	public void formatMessage() throws UnknownHostException {
-		ComponentText header = ComponentText.create(Component.text("Known accounts for %TARGET%"));
+		ComponentText header = ComponentText.create(Component.text("Known accounts for %TARGET%"), Adventure5Compat.DEFAULT);
 		UUID userId = UUID.randomUUID();
 		String username = "TargetUser";
 		String address = "207.144.101.102";
@@ -86,8 +87,8 @@ public class AccountHistoryFormatterTest {
 			when(conf.listing()).thenReturn(listing);
 			when(listing.header()).thenReturn(header);
 			when(listing.layout()).thenReturn(ComponentText.create(Component.text(
-					"username: %USERNAME%, address: %ADDRESS%, date_recorded: %DATE_RECORDED%")));
-			when(listing.footer()).thenReturn(ComponentText.create(Component.empty()));
+					"username: %USERNAME%, address: %ADDRESS%, date_recorded: %DATE_RECORDED%"), Adventure5Compat.DEFAULT));
+			when(listing.footer()).thenReturn(ComponentText.create(Component.empty(), Adventure5Compat.DEFAULT));
 			when(formatter.prefix(any())).thenAnswer((invocation) -> invocation.getArgument(0));
 			when(formatter.formatAbsoluteDate(date)).thenReturn(date.toString());
 		}

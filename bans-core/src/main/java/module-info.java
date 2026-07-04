@@ -32,7 +32,7 @@ module space.arim.libertybans.core {
 	requires org.jooq;
 	requires org.slf4j;
 	requires space.arim.api.env;
-	requires space.arim.api.jsonchat;
+	requires transitive space.arim.api.jsonchat;
 	requires space.arim.api.util.dazzleconf;
 	requires space.arim.api.util.web;
 	requires space.arim.dazzleconf;

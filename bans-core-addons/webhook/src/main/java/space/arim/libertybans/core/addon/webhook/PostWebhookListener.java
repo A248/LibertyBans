@@ -26,6 +26,7 @@ import net.kyori.adventure.text.TextComponent;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.event.PostOpNotificationEvent;
@@ -53,15 +54,18 @@ public final class PostWebhookListener {
     private final WebhookAddon addon;
     private final InternalFormatter formatter;
     private final FuturePoster futurePoster;
+    private final Adventure5Compat adventure5Compat;
     private final HttpClient client = HttpClient.newHttpClient();
 
     private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
 
     @Inject
-    public PostWebhookListener(WebhookAddon addon, InternalFormatter formatter, FuturePoster futurePoster) {
+    public PostWebhookListener(WebhookAddon addon, InternalFormatter formatter, FuturePoster futurePoster,
+                               Adventure5Compat adventure5Compat) {
         this.addon = addon;
         this.formatter = formatter;
         this.futurePoster = futurePoster;
+        this.adventure5Compat = adventure5Compat;
     }
 
     @ListeningMethod(priority = ListenerPriorities.LOW)
@@ -92,7 +96,7 @@ public final class PostWebhookListener {
             String target = event.getTarget().orElse(null);
             jsonPayload = jsonPayload.replace("%TARGET%", target == null ? "<none>" : target);
         }
-        ComponentText formattable = ComponentText.create(Component.text(jsonPayload));
+        ComponentText formattable = ComponentText.create(Component.text(jsonPayload), adventure5Compat);
         CompletableFuture<Component> formatted;
         {
             Punishment punishment = event.getPunishment();

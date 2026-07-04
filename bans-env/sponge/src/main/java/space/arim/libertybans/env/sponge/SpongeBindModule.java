@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,6 +27,7 @@ import space.arim.api.env.AudienceRepresenter;
 import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.sponge.SpongeAudienceRepresenter;
 import space.arim.api.env.sponge.SpongePlatformHandle;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.EnvMessageChannel;
 import space.arim.libertybans.core.env.EnvServerNameDetection;
@@ -85,4 +86,7 @@ public class SpongeBindModule {
 		return platformAccess;
 	}
 
+	public Adventure5Compat adventure5Compat() {
+		return Adventure5Compat.DEFAULT;
+	}
 }

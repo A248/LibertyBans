@@ -29,6 +29,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
@@ -94,7 +95,7 @@ public class FormatterTest {
 		this.globalScope = globalScope;
 
 		formatter = new Formatter(futuresFactory, configs, new AbacusForIds(configs), scopeManager, uuidManager,
-				new FixedTime(INSTANT_2021_01_05));
+				new FixedTime(INSTANT_2021_01_05), Adventure5Compat.DEFAULT);
 	}
 
 	@BeforeEach
@@ -341,7 +342,7 @@ public class FormatterTest {
 	}
 
 	private String formatUsing(String layout, Function<ComponentText, CentralisedFuture<Component>> formatMethod) {
-		ComponentText layoutMessage = ComponentText.create(Component.text(layout));
+		ComponentText layoutMessage = ComponentText.create(Component.text(layout), Adventure5Compat.DEFAULT);
 		var formatFuture = formatMethod.apply(layoutMessage);
 		return PlainComponentSerializer.plain().serialize(formatFuture.join());
 	}

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,6 +25,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.api.jsonchat.adventure.util.TextGoal;
 import space.arim.libertybans.api.ConsoleOperator;
@@ -53,19 +54,21 @@ public final class WarnActionsListener implements AsynchronousEventConsumer<Post
 	private final PunishmentSelector selector;
 	private final InternalFormatter formatter;
 	private final EnvEnforcer<?> envEnforcer;
+	private final Adventure5Compat adventure5Compat;
 	private final WarnActionsAddon addon;
 
 	@Inject
 	public WarnActionsListener(FactoryOfTheFuture futuresFactory, PunishmentDrafter drafter, ScopeManager scopeManager,
-							   PunishmentSelector selector, InternalFormatter formatter,
-							   EnvEnforcer<?> envEnforcer, WarnActionsAddon addon) {
+                               PunishmentSelector selector, InternalFormatter formatter, EnvEnforcer<?> envEnforcer,
+							   Adventure5Compat adventure5Compat, WarnActionsAddon addon) {
 		this.futuresFactory = futuresFactory;
 		this.drafter = drafter;
 		this.scopeManager = scopeManager;
 		this.selector = selector;
 		this.formatter = formatter;
 		this.envEnforcer = envEnforcer;
-		this.addon = addon;
+        this.adventure5Compat = adventure5Compat;
+        this.addon = addon;
 	}
 
 	@Override
@@ -115,7 +118,7 @@ public final class WarnActionsListener implements AsynchronousEventConsumer<Post
 			}
 			// Turn command into ComponentText for purposes of variable replacement
 			ComponentText commandText = ComponentText.create(
-					Component.text(command), TextGoal.SIMPLE_TEXT
+					Component.text(command), adventure5Compat, TextGoal.SIMPLE_TEXT
 			);
 			return formatter.formatWithPunishment(commandText, warn).thenCompose((formattedCommand) -> {
 				String commandToExecute = ((TextComponent) formattedCommand).content();

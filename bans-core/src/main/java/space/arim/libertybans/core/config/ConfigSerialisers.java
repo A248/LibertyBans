@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -30,10 +30,11 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.ComponentSerializer;
 import space.arim.api.jsonchat.adventure.ChatMessageComponentSerializer;
 
+import space.arim.api.jsonchat.adventure.JsonSkFormattingSerializer;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.api.util.dazzleconf.ComponentTextSerializer;
 import space.arim.dazzleconf.ConfigurationOptions;
 import space.arim.dazzleconf.error.BadValueException;
@@ -46,10 +47,12 @@ final class ConfigSerialisers {
 
 	private ConfigSerialisers() {}
 
-	static void addTo(ConfigurationOptions.Builder builder) {
+	static void addTo(Adventure5Compat adventure5Compat, ConfigurationOptions.Builder builder) {
 		builder.addSerialisers(
-				new ComponentValueSerializer(new ChatMessageComponentSerializer()),
-				new ComponentTextSerializer(),
+				new ComponentValueSerializer(new ChatMessageComponentSerializer(
+						new JsonSkFormattingSerializer(), adventure5Compat
+				), adventure5Compat),
+				new ComponentTextSerializer(adventure5Compat),
 				new ParsedDuration.Serializer(),
 				new DateTimeFormatterSerialiser(),
 				new ZoneIdSerialiser(),
@@ -61,10 +64,12 @@ final class ConfigSerialisers {
 	private static class ComponentValueSerializer implements ValueSerialiser<Component> {
 
 		private final ComponentSerializer<Component, Component, String> adventureSerializer;
+		private final Adventure5Compat adventure5Compat;
 
-		ComponentValueSerializer(ComponentSerializer<Component, Component, String> adventureSerializer) {
+		ComponentValueSerializer(ComponentSerializer<Component, Component, String> adventureSerializer, Adventure5Compat adventure5Compat) {
 			this.adventureSerializer = Objects.requireNonNull(adventureSerializer);
-		}
+            this.adventure5Compat = adventure5Compat;
+        }
 
 		@Override
 		public Class<Component> getTargetClass() {
@@ -84,7 +89,7 @@ final class ConfigSerialisers {
 			if (components.size() == 1) {
 				return components.get(0);
 			}
-			return TextComponent.ofChildren(components.toArray(Component[]::new));
+			return adventure5Compat.textOfChildren(components.toArray(Component[]::new));
 		}
 
 		@Override

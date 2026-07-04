@@ -24,6 +24,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import jakarta.inject.Singleton;
 import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.velocity.VelocityPlatformHandle;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.EnvMessageChannel;
 import space.arim.libertybans.core.env.EnvServerNameDetection;
@@ -68,4 +69,7 @@ public class VelocityBindModule {
 		throw new UnsupportedOperationException("It is impossible to import from vanilla on Velocity");
 	}
 
+	public Adventure5Compat adventure5Compat() {
+		return Adventure5Compat.DEFAULT;
+	}
 }

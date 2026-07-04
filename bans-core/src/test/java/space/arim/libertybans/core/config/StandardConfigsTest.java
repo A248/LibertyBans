@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,7 +44,7 @@ public class StandardConfigsTest {
 
 	@BeforeEach
 	public void setup() {
-		configs = new StandardConfigs(folder);
+		configs = new StandardConfigs(folder, new ConfigOptionsProvider(Adventure5Compat.DEFAULT));
 	}
 
 	@Test
@@ -67,7 +68,7 @@ public class StandardConfigsTest {
 		Path langFile = langFolder.resolve("messages_" + translation.name().toLowerCase(Locale.ROOT) + ".yml");
 		assertTrue(Files.exists(langFile));
 
-		ConfigHolder<MessagesConfig> configHolder = new ConfigHolder<>(MessagesConfig.class);
+		ConfigHolder<MessagesConfig> configHolder = new ConfigHolder<>(MessagesConfig.class, configs.getOptions());
 		assertEquals(
 				ConfigResult.SUCCESS_LOADED,
 				configHolder.reload(langFile).join()

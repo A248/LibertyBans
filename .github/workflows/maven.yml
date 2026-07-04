@@ -23,6 +23,7 @@ jobs:
   deploy:
     if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
+    environment: deployment
     needs: build
     steps:
     - uses: actions/checkout@v7

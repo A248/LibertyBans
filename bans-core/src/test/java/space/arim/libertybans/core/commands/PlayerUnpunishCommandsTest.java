@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.ConsoleOperator;
@@ -96,7 +97,7 @@ public class PlayerUnpunishCommandsTest {
 		Component notFoundMsg = Component.text("Not found");
 		{
 			RemovalsSection.PunishmentRemoval punishmentRemoval = mock(RemovalsSection.PunishmentRemoval.class);
-			when(punishmentRemoval.notFound()).thenReturn(ComponentText.create(notFoundMsg));
+			when(punishmentRemoval.notFound()).thenReturn(ComponentText.create(notFoundMsg, Adventure5Compat.DEFAULT));
 			RemovalsSection removalsSection = mock(RemovalsSection.class);
 			when(removalsSection.forType(PunishmentType.BAN)).thenReturn(punishmentRemoval);
 			when(messagesConfig.removals()).thenReturn(removalsSection);
@@ -131,7 +132,7 @@ public class PlayerUnpunishCommandsTest {
 			VictimPermissionSection permissionSection = mock(VictimPermissionSection.class);
 			when(punishmentRemoval.permission()).thenReturn(permissionSection);
 			when(permissionSection.ipAddress()).thenReturn(noPermission);
-			lenient().when(punishmentRemoval.notFound()).thenReturn(ComponentText.create(Component.text("Not found")));
+			lenient().when(punishmentRemoval.notFound()).thenReturn(ComponentText.create(Component.text("Not found"), Adventure5Compat.DEFAULT));
 			RemovalsSection removalsSection = mock(RemovalsSection.class);
 			when(removalsSection.forType(PunishmentType.BAN)).thenReturn(punishmentRemoval);
 			when(messagesConfig.removals()).thenReturn(removalsSection);

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,7 +21,7 @@ package space.arim.libertybans.core.alts;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
-import net.kyori.adventure.text.TextComponent;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.user.AccountBase;
 import space.arim.libertybans.core.database.pagination.KeysetPage;
@@ -29,7 +29,8 @@ import space.arim.libertybans.core.database.pagination.KeysetPage;
 import java.util.ArrayList;
 import java.util.List;
 
-record FormatAccounts<A extends AccountBase, F>(AccountListFormatting config, KeysetPage<A, F> response) {
+record FormatAccounts<A extends AccountBase, F>(Adventure5Compat adventure5Compat,
+                                                AccountListFormatting config, KeysetPage<A, F> response) {
 
     Component format(String target, int page, ElementFormat<A> elementFormat) {
         // Construct the form of the message
@@ -59,8 +60,8 @@ record FormatAccounts<A extends AccountBase, F>(AccountListFormatting config, Ke
                 messages.add(Component.newline());
                 messages.add(footer);
             }
-            Component concat = TextComponent.ofChildren(messages.toArray(ComponentLike[]::new));
-            built = ComponentText.create(concat);
+            Component concat = adventure5Compat.textOfChildren(messages.toArray(ComponentLike[]::new));
+            built = ComponentText.create(concat, adventure5Compat);
         }
         // Add in the variable content
         built = built.replaceText("%TARGET%", target);

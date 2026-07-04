@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,6 +24,7 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.mockito.Mockito;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.libertybans.core.commands.extra.ArgumentParser;
 import space.arim.libertybans.core.commands.usage.UsageGlossary;
 import space.arim.libertybans.core.config.Configs;
@@ -72,7 +73,9 @@ public final class CommandSetupExtension implements ParameterResolver {
 					new IndifferentFactoryOfTheFuture(),
 					new FireEventWithTimeout(new DefaultOmnibus()),
 					configs,
-					argParser);
+					argParser,
+					Adventure5Compat.DEFAULT
+			);
 		});
 	}
 }

@@ -42,25 +42,20 @@ import java.util.concurrent.CompletableFuture;
 public final class ConfigHolder<C> {
 
 	private final Class<C> configClass;
+	private final ConfigurationOptions options;
 	
 	private volatile C instance;
-	
-	private static final ConfigurationOptions CONFIG_OPTIONS;
+
 	private static final SnakeYamlOptions YAML_OPTIONS;
 	private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
-	
-	static {
-		ConfigurationOptions.Builder optionsBuilder = new ConfigurationOptions.Builder()
-				.setDottedPathInConfKey(true)
-				.setCreateSingleElementCollections(true);
-		ConfigSerialisers.addTo(optionsBuilder);
-		CONFIG_OPTIONS = optionsBuilder.build();
 
+	static {
 		YAML_OPTIONS = new SnakeYamlOptions.Builder().commentMode(CommentMode.alternativeWriter()).build();
 	}
-	
-	public ConfigHolder(Class<C> configClass) {
-		this.configClass = Objects.requireNonNull(configClass);
+
+	public ConfigHolder(Class<C> configClass, ConfigurationOptions options) {
+		this.configClass = Objects.requireNonNull(configClass, "configClass");
+		this.options = Objects.requireNonNull(options, "options");
 	}
 
 	public Class<C> getConfigClass() {
@@ -73,7 +68,7 @@ public final class ConfigHolder<C> {
 
 	public CompletableFuture<ConfigResult> reload(Path path) {
 		return CompletableFuture.supplyAsync(() -> {
-			ConfigurationFactory<C> factory = SnakeYamlConfigurationFactory.create(configClass, CONFIG_OPTIONS, YAML_OPTIONS);
+			ConfigurationFactory<C> factory = SnakeYamlConfigurationFactory.create(configClass, options, YAML_OPTIONS);
 			C defaults = factory.loadDefaults();
 			try {
 				if (!Files.exists(path)) {

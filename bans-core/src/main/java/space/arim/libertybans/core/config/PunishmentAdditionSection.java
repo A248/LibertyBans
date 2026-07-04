@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,6 +21,7 @@ package space.arim.libertybans.core.config;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.dazzleconf.annote.SubSection;
 
@@ -29,7 +30,7 @@ public interface PunishmentAdditionSection extends PunishmentSection {
 	ComponentText SHOULD_NOT_CONFLICT = ComponentText.create(Component.text(
 			"Unable to add punishment due to a conflict, but a conflict is impossible. Please report this as a bug",
 			NamedTextColor.RED
-	));
+	), Adventure5Compat.DEFAULT);
 
 	Component usage();
 

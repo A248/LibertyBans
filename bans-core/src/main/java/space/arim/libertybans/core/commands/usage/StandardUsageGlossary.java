@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,17 +20,27 @@
 package space.arim.libertybans.core.commands.usage;
 
 import jakarta.inject.Inject;
+import net.kyori.adventure.text.Component;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.env.CmdSender;
 
+import java.util.EnumMap;
+
 public class StandardUsageGlossary implements UsageGlossary {
 
 	private final Configs configs;
+	private final EnumMap<UsageSection, Component> allContents;
 
 	@Inject
-	public StandardUsageGlossary(Configs configs) {
+	public StandardUsageGlossary(Configs configs, Adventure5Compat adventure5Compat) {
 		this.configs = configs;
+		EnumMap<UsageSection, Component> allContents = new EnumMap<>(UsageSection.class);
+		for (UsageSection section : UsageSection.values()) {
+			allContents.put(section, section.loadContent(adventure5Compat));
+		}
+		this.allContents = allContents;
 	}
 
 	@Override
@@ -49,7 +59,7 @@ public class StandardUsageGlossary implements UsageGlossary {
 			}
 		}
 		UsageSection section = sections[page - 1];
-		sender.sendMessageNoPrefix(section.content());
+		sender.sendMessageNoPrefix(allContents.get(section));
 		sender.sendLiteralMessage("&ePage " + page + "/4. &7Use /libertybans usage <page> to navigate");
 	}
 
