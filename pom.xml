@@ -30,7 +30,7 @@
 
 	<groupId>space.arim.libertybans</groupId>
 	<artifactId>bans-parent</artifactId>
-	<version>1.1.4-SNAPSHOT</version>
+	<version>1.1.4</version>
 	<packaging>pom</packaging>
 
 	<name>LibertyBans</name>
@@ -76,7 +76,7 @@
 		<velocity.version>3.1.0</velocity.version>
 
 		<!-- Internal hash -->
-		<self-implementation.hash>483de1896d34185c02780026da1f81fa87a49a81c29088dd987585e8ec3992dccb20d07e1daa9102f5d61bfa823502ef2f50a4cff2fcd0c1e8b2326dbd0a5710</self-implementation.hash>
+		<self-implementation.hash>b57322263ec2b8c4e99d1e2a68c8bcc0520e82eb856b05b49931d9afe79077a94b64da7f775af7e2f28e8b8ec73611816c821aaf605470dfd21db3e27e13f19a</self-implementation.hash>
 
 		<!-- Plugin variables -->
 		<plugin.id>libertybans</plugin.id>
