@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,8 +19,6 @@
 
 package space.arim.libertybans.env.standalone;
 
-import net.kyori.adventure.audience.MessageType;
-import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -36,7 +34,7 @@ public record ConsoleAudienceToLogger(Logger logger) implements ConsoleAudience,
 	}
 
 	@Override
-	public void sendMessage(@NonNull Identity source, @NonNull Component message, @NonNull MessageType type) {
+	public void sendMessage(@NonNull Component message) {
 		logger.info(PlainComponentSerializer.plain().serialize(message));
 	}
 

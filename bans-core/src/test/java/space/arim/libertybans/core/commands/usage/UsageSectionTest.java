@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,6 +23,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.junit.jupiter.api.Test;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -44,6 +45,6 @@ public class UsageSectionTest {
 				deserialize("&e/warn, /ipwarn &7- warn players"),
 				Component.newline(),
 				deserialize("&e/kick, /ipkick &7- kick players")
-		), UsageSection.PUNISH.content());
+		), UsageSection.PUNISH.loadContent(Adventure5Compat.DEFAULT));
 	}
 }

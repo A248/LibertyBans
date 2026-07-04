@@ -60,22 +60,25 @@ public class InjectionInvocationContextProvider implements TestTemplateInvocatio
 				.map((injector) -> new InjectorInvocationContext(injector, throwaway, sampleDataSource));
 	}
 
+	@Override
+	public boolean mayReturnZeroTestTemplateInvocationContexts(ExtensionContext context) {
+		return true;
+	}
+
 	private record InjectorInvocationContext(Injector injector, boolean throwaway, SampleData.Source sampleDataSource)
 			implements TestTemplateInvocationContext {
 
 		@Override
-			public List<Extension> getAdditionalExtensions() {
-				List<Extension> extensions = new ArrayList<>(3);
-				extensions.add(new InjectorParameterResolver(injector));
-				if (!throwaway) {
-					extensions.add(new InjectorCleanupCallback(injector));
-				}
-				if (sampleDataSource != null) {
-					extensions.add(new SampleDataCallback(injector, sampleDataSource));
-				}
-				return extensions;
+		public List<Extension> getAdditionalExtensions() {
+			List<Extension> extensions = new ArrayList<>(3);
+			extensions.add(new InjectorParameterResolver(injector));
+			if (!throwaway) {
+				extensions.add(new InjectorCleanupCallback(injector));
 			}
-
+			if (sampleDataSource != null) {
+				extensions.add(new SampleDataCallback(injector, sampleDataSource));
+			}
+			return extensions;
 		}
-
+	}
 }

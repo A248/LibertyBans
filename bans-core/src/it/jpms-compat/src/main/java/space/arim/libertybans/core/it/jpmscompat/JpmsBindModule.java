@@ -23,6 +23,7 @@ import space.arim.libertybans.core.env.EnvMessageChannel;
 import space.arim.libertybans.core.selector.cache.MuteCache;
 import space.arim.libertybans.core.selector.cache.OnDemandMuteCache;
 import space.arim.libertybans.core.importing.PlatformImportSource;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 
 public class JpmsBindModule {
 
@@ -38,4 +39,7 @@ public class JpmsBindModule {
 		throw new UnsupportedOperationException("PlatformImportSource not available");
 	}
 
+	public Adventure5Compat adventure5Compat() {
+		return Adventure5Compat.DEFAULT;
+	}
 }

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -105,6 +105,11 @@ public class QuackPlayer implements MessageOnlyAudience {
 		} else {
 			logger.info("{} received {} '{}' from {}", name, type, displayMessage, source);
 		}
+	}
+
+	@Override
+	public void sendMessage(@NonNull Component message) {
+		sendMessage(Identity.nil(), message, MessageType.SYSTEM);
 	}
 
 	@Override

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,6 +22,7 @@ package space.arim.libertybans.core.alts;
 import jakarta.inject.Inject;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.config.Configs;
@@ -33,17 +34,19 @@ public class AltCheckFormatter {
 
 	private final Configs configs;
 	private final InternalFormatter formatter;
+	private final Adventure5Compat adventure5Compat;
 
 	@Inject
-	public AltCheckFormatter(Configs configs, InternalFormatter formatter) {
+	public AltCheckFormatter(Configs configs, InternalFormatter formatter, Adventure5Compat adventure5Compat) {
 		this.configs = configs;
 		this.formatter = formatter;
-	}
+        this.adventure5Compat = adventure5Compat;
+    }
 
 	public Component formatMessage(AccountListFormatting formatting,
 								   KeysetPage<DetectedAlt, InstantThenUUID> response,
 								   String target, int page) {
-		return new FormatAccounts<>(formatting, response).format(
+		return new FormatAccounts<>(adventure5Compat, formatting, response).format(
 				target, page, new DetectedAltFormat(configs, formatter)
 		);
 	}

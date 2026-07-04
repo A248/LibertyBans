@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -39,6 +39,11 @@ public record ConsoleReceiver(List<String> messages) implements ConsoleAudience,
 	@Override
 	public void sendMessage(@NonNull Identity source, @NonNull Component message, @NonNull MessageType type) {
 		messages.add(PlainComponentSerializer.plain().serialize(message));
+	}
+
+	@Override
+	public void sendMessage(@NonNull Component message) {
+		sendMessage(Identity.nil(), message, MessageType.SYSTEM);
 	}
 
 	@Override

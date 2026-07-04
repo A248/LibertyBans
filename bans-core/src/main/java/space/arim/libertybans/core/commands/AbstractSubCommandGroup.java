@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,6 +21,7 @@ package space.arim.libertybans.core.commands;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.libertybans.core.commands.extra.ArgumentParser;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.MainConfig;
@@ -64,15 +65,17 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 		final FireEventWithTimeout fireEventWithTimeout;
 		final Configs configs;
 		final ArgumentParser argumentParser;
+		final Adventure5Compat adventure5Compat;
 
 		@Inject
 		public Dependencies(FactoryOfTheFuture futuresFactory, FireEventWithTimeout fireEventWithTimeout,
-							Configs configs, ArgumentParser argumentParser) {
+                            Configs configs, ArgumentParser argumentParser, Adventure5Compat adventure5Compat) {
 			this.futuresFactory = futuresFactory;
 			this.fireEventWithTimeout = fireEventWithTimeout;
 			this.configs = configs;
 			this.argumentParser = argumentParser;
-		}
+            this.adventure5Compat = adventure5Compat;
+        }
 
 	}
 
@@ -93,6 +96,10 @@ public abstract class AbstractSubCommandGroup implements SubCommandGroup {
 
 	protected FactoryOfTheFuture futuresFactory() {
 		return dependencies.futuresFactory;
+	}
+
+	protected Adventure5Compat adventure5Compat() {
+		return dependencies.adventure5Compat;
 	}
 
 	protected <T> CentralisedFuture<T> completedFuture(T value) {

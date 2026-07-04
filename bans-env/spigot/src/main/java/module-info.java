@@ -13,7 +13,8 @@ module space.arim.libertybans.env.spigot {
 	requires space.arim.morepaperlib;
 	requires space.arim.omnibus;
 	requires spigot.api;
-    requires org.checkerframework.checker.qual; // org.bukkit
+    requires org.checkerframework.checker.qual;
+    requires space.arim.api.jsonchat; // org.bukkit
 	exports space.arim.libertybans.env.spigot to space.arim.injector;
 	opens space.arim.libertybans.env.spigot to org.bukkit;
 }

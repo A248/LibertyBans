@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,6 +21,7 @@ package space.arim.libertybans.env.velocity;
 
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.ProxyServer;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.injector.Identifier;
 import space.arim.injector.InjectorBuilder;
 import space.arim.injector.SpecificationSupport;
@@ -77,4 +78,7 @@ public final class VelocityLauncher implements PlatformLauncher {
 				.request(BaseFoundation.class);
 	}
 
+	public Adventure5Compat adventure5Compat() {
+		return Adventure5Compat.DEFAULT;
+	}
 }

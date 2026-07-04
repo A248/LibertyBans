@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,6 +22,7 @@ package space.arim.libertybans.env.standalone;
 import jakarta.inject.Singleton;
 import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.PlatformPluginInfo;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.EnvMessageChannel;
 import space.arim.libertybans.core.env.EnvServerNameDetection;
@@ -95,4 +96,7 @@ public class StandaloneBindModule {
 		throw new UnsupportedOperationException("It is impossible to import from vanilla on the standalone application");
 	}
 
+	public Adventure5Compat adventure5Compat() {
+		return Adventure5Compat.DEFAULT;
+	}
 }

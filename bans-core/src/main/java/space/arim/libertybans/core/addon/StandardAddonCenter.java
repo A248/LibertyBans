@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.injector.MultiBinding;
 import space.arim.libertybans.core.config.ConfigHolder;
+import space.arim.libertybans.core.config.ConfigOptionsProvider;
 import space.arim.libertybans.core.config.ConfigResult;
 import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -48,16 +49,18 @@ public final class StandardAddonCenter implements AddonCenter {
 
 	private final FactoryOfTheFuture futuresFactory;
 	private final Path folder;
+	private final ConfigOptionsProvider configOptions;
 	private final Provider<Set<Addon<?>>> addons;
 
 	private final Map<Class<?>, ConfigWrapper<?>> configurations = new ConcurrentHashMap<>();
 
 	@Inject
 	public StandardAddonCenter(FactoryOfTheFuture futuresFactory, @Named("folder") Path folder,
-							   @MultiBinding Provider<Set<Addon<?>>> addons) {
+							   ConfigOptionsProvider configOptions, @MultiBinding Provider<Set<Addon<?>>> addons) {
 		this.futuresFactory = futuresFactory;
 		this.folder = folder;
-		this.addons = addons;
+        this.configOptions = configOptions;
+        this.addons = addons;
 	}
 
 	private <C extends AddonConfig> void startupAddon(Path addonsFolder, Addon<C> addon) {
@@ -65,7 +68,7 @@ public final class StandardAddonCenter implements AddonCenter {
 
 		// Install configuration
 		ConfigWrapper<C> configWrapper = new ConfigWrapper<>(
-				new ConfigHolder<>(configClass),
+				new ConfigHolder<>(configClass, configOptions.getOptions()),
 				addonsFolder.resolve(addon.identifier() + ".yml")
 		);
 		configurations.put(configClass, configWrapper);

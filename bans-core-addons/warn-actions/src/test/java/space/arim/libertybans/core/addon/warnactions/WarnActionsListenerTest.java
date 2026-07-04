@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.PlayerVictim;
@@ -97,7 +98,7 @@ public class WarnActionsListenerTest {
 	public void setWarnActionsListener(@Mock ScopeManager scopeManager) {
 		WarnActionsAddon addon = new WarnActionsAddon(addonCenter, new DefaultOmnibus(), () -> warnActionsListener);
 		warnActionsListener = new WarnActionsListener(
-				futuresFactory, drafter, scopeManager, selector, formatter, envEnforcer, addon
+				futuresFactory, drafter, scopeManager, selector, formatter, envEnforcer, Adventure5Compat.DEFAULT, addon
 		);
 	}
 

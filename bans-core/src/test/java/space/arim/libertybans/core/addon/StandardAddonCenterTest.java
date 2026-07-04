@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,7 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.dazzleconf.annote.ConfDefault;
+import space.arim.libertybans.core.config.ConfigOptionsProvider;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 
 import java.io.BufferedWriter;
@@ -55,7 +57,8 @@ public class StandardAddonCenterTest {
 	public void setup(@TempDir Path folder) {
 		Set<Addon<?>> addons = new HashSet<>();
 		addonCenter = new StandardAddonCenter(
-				new IndifferentFactoryOfTheFuture(), folder, () -> Collections.unmodifiableSet(addons)
+				new IndifferentFactoryOfTheFuture(), folder, new ConfigOptionsProvider(Adventure5Compat.DEFAULT),
+				() -> Collections.unmodifiableSet(addons)
 		);
 		simpleAddon = new SimpleAddon(addonCenter);
 		addons.add(simpleAddon);

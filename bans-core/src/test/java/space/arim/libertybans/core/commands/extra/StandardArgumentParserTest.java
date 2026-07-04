@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.AddressVictim;
 import space.arim.libertybans.api.CompositeVictim;
@@ -156,7 +157,7 @@ public class StandardArgumentParserTest {
 		public void unknownPlayerVictimForName() {
 			String name = "A248";
 			when(uuidManager.lookupUUID(name)).thenReturn(completedFuture(Optional.empty()));
-			when(notFoundConfig.player()).thenReturn(ComponentText.create(notFoundMessage));
+			when(notFoundConfig.player()).thenReturn(ComponentText.create(notFoundMessage, Adventure5Compat.DEFAULT));
 
 			assertNull(parseVictim(name));
 
@@ -192,7 +193,7 @@ public class StandardArgumentParserTest {
 		public void unknownPlayerVictimForName() {
 			String name = "A248";
 			when(uuidManager.lookupPlayer(name)).thenReturn(completedFuture(Optional.empty()));
-			when(notFoundConfig.player()).thenReturn(ComponentText.create(notFoundMessage));
+			when(notFoundConfig.player()).thenReturn(ComponentText.create(notFoundMessage, Adventure5Compat.DEFAULT));
 
 			assertNull(parseVictim(name));
 
@@ -244,7 +245,7 @@ public class StandardArgumentParserTest {
 			String name = "A248";
 			mockConsoleArguments(Set.of());
 			when(uuidManager.lookupUUID(name)).thenReturn(completedFuture(Optional.empty()));
-			when(notFoundConfig.player()).thenReturn(ComponentText.create(notFoundMessage));
+			when(notFoundConfig.player()).thenReturn(ComponentText.create(notFoundMessage, Adventure5Compat.DEFAULT));
 
 			assertNull(parseOperator(name));
 
@@ -295,7 +296,7 @@ public class StandardArgumentParserTest {
 		public void unknownAddressVictimForName() {
 			String name = "A248";
 			when(uuidManager.lookupAddress(name)).thenReturn(completedFuture(null));
-			when(notFoundConfig.playerOrAddress()).thenReturn(ComponentText.create(notFoundMessage));
+			when(notFoundConfig.playerOrAddress()).thenReturn(ComponentText.create(notFoundMessage, Adventure5Compat.DEFAULT));
 
 			assertNull(parseVictim(name));
 
@@ -387,7 +388,7 @@ public class StandardArgumentParserTest {
 
 		@Test
 		public void invalidScope(@Mock CommandPackage command, @Mock MessagesConfig.All.Scopes section) {
-			ComponentText errorMsg = ComponentText.create(Component.text("Not a valid scope"));
+			ComponentText errorMsg = ComponentText.create(Component.text("Not a valid scope"), Adventure5Compat.DEFAULT);
 			when(allConfig.scopes()).thenReturn(section);
 			when(section.invalid()).thenReturn(errorMsg);
 

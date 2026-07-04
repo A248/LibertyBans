@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,6 +21,7 @@ package space.arim.libertybans.core.config;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
+import space.arim.dazzleconf.ConfigurationOptions;
 import space.arim.libertybans.bootstrap.StartupException;
 import space.arim.libertybans.core.importing.ImportConfig;
 
@@ -42,18 +43,29 @@ import java.util.concurrent.CompletableFuture;
 public class StandardConfigs implements Configs {
 	
 	private final Path folder;
-	
-	private final ConfigHolder<MainConfig> mainHolder = new ConfigHolder<>(MainConfig.class);
-	private final ConfigHolder<MessagesConfig> messagesHolder = new ConfigHolder<>(MessagesConfig.class);
-	private final ConfigHolder<SqlConfig> sqlHolder = new ConfigHolder<>(SqlConfig.class);
-	private final ConfigHolder<ImportConfig> importHolder = new ConfigHolder<>(ImportConfig.class);
-	private final ConfigHolder<ScopeConfig> scopeHolder = new ConfigHolder<>(ScopeConfig.class);
-	
+	private final ConfigurationOptions options;
+	private final ConfigHolder<MainConfig> mainHolder;
+	private final ConfigHolder<MessagesConfig> messagesHolder;
+	private final ConfigHolder<SqlConfig> sqlHolder;
+	private final ConfigHolder<ImportConfig> importHolder;
+	private final ConfigHolder<ScopeConfig> scopeHolder;
+
 	@Inject
-	public StandardConfigs(@Named("folder") Path folder) {
+	public StandardConfigs(@Named("folder") Path folder, ConfigOptionsProvider configOptions) {
 		this.folder = folder;
+		ConfigurationOptions options = configOptions.getOptions();
+		mainHolder = new ConfigHolder<>(MainConfig.class, options);
+		messagesHolder = new ConfigHolder<>(MessagesConfig.class, options);
+		sqlHolder = new ConfigHolder<>(SqlConfig.class, options);
+		importHolder = new ConfigHolder<>(ImportConfig.class, options);
+		scopeHolder = new ConfigHolder<>(ScopeConfig.class, options);
+		this.options = options;
 	}
-	
+
+	ConfigurationOptions getOptions() {
+		return options;
+	}
+
 	@Override
 	public MainConfig getMainConfig() {
 		return mainHolder.getConfigData();

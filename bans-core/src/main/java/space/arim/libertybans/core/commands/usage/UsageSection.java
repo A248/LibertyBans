@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,8 +21,9 @@ package space.arim.libertybans.core.commands.usage;
 import java.util.Locale;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import space.arim.api.jsonchat.adventure.ChatMessageComponentSerializer;
+import space.arim.api.jsonchat.adventure.JsonSkFormattingSerializer;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 
 enum UsageSection {
 
@@ -48,27 +49,26 @@ enum UsageSection {
 			"&e/libertybans &7addon - manage installed addons",
 			"&e/libertybans &7import - imports from another plugin");
 	
-	private final Component content;
+	private final String[] lines;
 	
-	UsageSection(String...commands) {
+	UsageSection(String...lines) {
+		this.lines = lines;
+	}
+
+	Component loadContent(Adventure5Compat adventure5Compat) {
 		String name = name().replace("_", " ");
 		String formattedName = name.charAt(0) + name.substring(1).toLowerCase(Locale.ROOT);
 		String headerString = "&b" + formattedName + " commands:";
 
-		ChatMessageComponentSerializer serializer = new ChatMessageComponentSerializer();
-		Component[] components = new Component[1 + (2 * commands.length)];
+		ChatMessageComponentSerializer serializer = new ChatMessageComponentSerializer(new JsonSkFormattingSerializer(), adventure5Compat);
+		Component[] components = new Component[1 + (2 * lines.length)];
 		components[0] = serializer.deserialize(headerString);
 		int n = 1;
-		for (String command : commands) {
+		for (String command : lines) {
 			components[n] = Component.newline();
 			components[n + 1] = serializer.deserialize(command);
 			n += 2;
 		}
-		content = TextComponent.ofChildren(components);
+		return adventure5Compat.textOfChildren(components);
 	}
-	
-	Component content() {
-		return content;
-	}
-	
 }

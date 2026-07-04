@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.punish.DraftPunishment;
 import space.arim.libertybans.api.punish.DraftPunishmentBuilder;
@@ -110,13 +111,15 @@ public class ShortcutReasonsListenerTest {
 				"spamming", "don't be a spammer, thank you"
 		));
 		when(draftPunishment.getReason()).thenReturn("#invalid");
-		ComponentText invalidMessage = ComponentText.create(Component.text("Not a valid shortcut: %SHORTCUT_ARG%"));
+		ComponentText invalidMessage = ComponentText.create(
+				Component.text("Not a valid shortcut: %SHORTCUT_ARG%"), Adventure5Compat.DEFAULT
+		);
 		when(config.doesNotExist()).thenReturn(invalidMessage);
 
 		var event = fireEvent(draftPunishment);
 		assertTrue(event.isCancelled());
 		verify(event.getSender()).sendMessage(
-				ComponentText.create(Component.text("Not a valid shortcut: #invalid"))
+				ComponentText.create(Component.text("Not a valid shortcut: #invalid"), Adventure5Compat.DEFAULT)
 		);
 	}
 

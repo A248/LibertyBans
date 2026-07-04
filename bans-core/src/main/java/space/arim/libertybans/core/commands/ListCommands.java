@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,6 +25,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
 import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.PunishmentType;
@@ -281,9 +282,11 @@ public class ListCommands extends AbstractSubCommandGroup {
 				for (Punishment punishment : punishments) {
 					punishmentMessages.add(entries.get(punishment).join());
 				}
-				Component joinedMessage = Component.join(Component.newline(),
+				Adventure5Compat adventure5Compat = adventure5Compat();
+				Component joinedMessage = adventure5Compat.join(
+						Component.newline(),
 						header,
-						Component.join(Component.newline(), punishmentMessages),
+						adventure5Compat.join(Component.newline(), punishmentMessages.toArray(ComponentLike[]::new)),
 						footer
 				);
 				sender().sendMessage(joinedMessage);
