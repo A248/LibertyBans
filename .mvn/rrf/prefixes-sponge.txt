@@ -1,0 +1,2 @@
+## repository-prefixes/2.0
+/org/spongepowered

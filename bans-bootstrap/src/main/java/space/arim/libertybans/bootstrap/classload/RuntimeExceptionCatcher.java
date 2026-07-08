@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -85,7 +85,7 @@ public final class RuntimeExceptionCatcher implements ClassLoadGuard {
 
     @Override
     public String toString() {
-        return "IllegalStateCatcher{" +
+        return "RuntimeExceptionCatcher{" +
                 "reportFolder " + reportFolder +
                 ", next=" + next +
                 '}';

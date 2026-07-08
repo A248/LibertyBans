@@ -1,6 +1,6 @@
 <!--
   ~ LibertyBans
-  ~ Copyright © 2025 Anand Beh
+  ~ Copyright © 2026 Anand Beh
   ~
   ~ LibertyBans is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as
@@ -64,7 +64,7 @@
 
     <repositories>
         <repository>
-            <id>spigot-repo</id>
+            <id>spigot</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/public/</url>
         </repository>
         <repository>

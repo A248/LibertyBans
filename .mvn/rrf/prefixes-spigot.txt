@@ -1,0 +1,3 @@
+## repository-prefixes/2.0
+/org/spigotmc
+/net/md-5

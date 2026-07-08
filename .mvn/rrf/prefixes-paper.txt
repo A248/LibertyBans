@@ -1,0 +1,5 @@
+## repository-prefixes/2.0
+/com/destroystokyo/paper
+/com/velocitypowered
+/io/papermc
+/net/md-5

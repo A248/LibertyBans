@@ -4,6 +4,7 @@
 ### Maven ###
 
 target/
+.mvn/local-repo/
 dependency-reduced-pom.xml
 pom.xml.versionsBackup
 

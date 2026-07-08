@@ -174,9 +174,46 @@
 										<exclude>space.arim.libertybans:*</exclude>
 										<exclude>space.arim.libertybans.addon:*</exclude>
 										<exclude>org.spigotmc:spigot-api</exclude>
-										<exclude>org.spongepowered:spongeapi</exclude>
 									</excludes>
 								</requireReleaseDeps>
+							</rules>
+						</configuration>
+					</execution>
+					<!--
+					Restrict allowed repositories to those which we manage in .mvn/rrf. This prevents accidentally
+					declaring a new repository without adding filtering for it.
+					-->
+					<execution>
+						<id>enforce-restricted-repositories</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireNoRepositories>
+									<allowedRepositories>
+										<allowedRepository>arim-mvn-lgpl3</allowedRepository>
+										<allowedRepository>arim-mvn-gpl3</allowedRepository>
+										<allowedRepository>paper</allowedRepository>
+										<allowedRepository>paper-releases</allowedRepository>
+										<allowedRepository>paper-snapshots</allowedRepository>
+										<allowedRepository>spigot</allowedRepository>
+										<allowedRepository>sponge</allowedRepository>
+										<allowedRepository>jitpack</allowedRepository>
+									</allowedRepositories>
+									<message>New repositories must be managed in .mvn/rff, then added to parent pom.</message>
+								</requireNoRepositories>
+								<bannedRepositories>
+									<allowedRepositories>
+										<allowedRepository>https://repo.maven.apache.org/*</allowedRepository>
+										<allowedRepository>https://mvn-repo.arim.space/lesser-gpl3/</allowedRepository>
+										<allowedRepository>https://mvn-repo.arim.space/gpl3/</allowedRepository>
+										<allowedRepository>https://repo.papermc.io/repository/*</allowedRepository>
+										<allowedRepository>https://hub.spigotmc.org/nexus/content/repositories/*</allowedRepository>
+										<allowedRepository>https://repo.spongepowered.org/repository/*</allowedRepository>
+										<allowedRepository>https://jitpack.io</allowedRepository>
+									</allowedRepositories>
+								</bannedRepositories>
 							</rules>
 						</configuration>
 					</execution>

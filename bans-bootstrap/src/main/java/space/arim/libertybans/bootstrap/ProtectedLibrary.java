@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -38,6 +38,7 @@ public enum ProtectedLibrary {
 
 	JAKARTA_INJECT("Jakarta-Inject", "jakarta.inject", "Provider"),
 	SOLID_INJECTOR("SolidInjector", "space.arim.injector", "Injector"),
+	MORE_PAPER_LIB("MorePaperLib", "space.arim.morepaperlib", "MorePaperLib"),
 
 	CAFFEINE("Caffeine", "com.github.benmanes.caffeine.cache", "Caffeine"),
 	KYORI_ADVENTURE("Kyori-Adventure", "net.kyori.adventure", "audience.Audience"),

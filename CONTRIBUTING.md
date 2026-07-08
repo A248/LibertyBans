@@ -6,10 +6,12 @@
 You will need:
 
 1. Git
-2. Maven
+2. Maven 3.9.3 or greater
 3. JDK 21 or greater
 
 These can be installed through your package manager of choice.
+
+Maven is technically optional and can be substituted with the Maven wrapper - use `./mvnw` instead of `mvn` in commands. This guide will use both commands interchangeably.
 
 ## Cloning and Building
 
@@ -191,6 +193,6 @@ I make releases with a few steps:
 1. `mvn versions:set -DnewVersion={theNextVersion}`
 2. `build/check-hashes.sh` to see the new dependency hashes for internal dependencies
 3. Update the dependency hashes in the parent pom
-4. Perform the deployment with `mvn clean deploy -Pcheck-hash,-docker-enabled -DskipTests -Dinvoker.skip=true`
+4. Perform the deployment with `./mvnw clean deploy -Pcheck-hash,-docker-enabled -DskipTests -Dinvoker.skip=true`
 5. Commit and tag the results.
 

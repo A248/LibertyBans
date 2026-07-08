@@ -107,7 +107,7 @@
 	
 	<repositories>
 		<repository>
-			<id>spigot-repo</id>
+			<id>spigot</id>
 			<url>https://hub.spigotmc.org/nexus/content/repositories/public/</url>
 		</repository>
 	</repositories>
