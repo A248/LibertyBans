@@ -54,6 +54,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,6 @@ public class Formatter implements InternalFormatter {
 	private final InternalScopeManager scopeManager;
 	private final UUIDManager uuidManager;
 	private final Time time;
-	private final Adventure5Compat adventure5Compat;
 	private final ComponentSerializer<Component, ? extends Component, String> messageParser;
 
 	private static final long MARGIN_OF_INITIATION = 10; // seconds
@@ -78,20 +78,18 @@ public class Formatter implements InternalFormatter {
 	@Inject
 	public Formatter(FactoryOfTheFuture futuresFactory, Configs configs, AbacusForIds abacusForIds,
 	                 InternalScopeManager scopeManager, UUIDManager uuidManager, Time time, Adventure5Compat adventure5Compat) {
-		this(futuresFactory, configs, abacusForIds, scopeManager, uuidManager, time, adventure5Compat,
+		this(futuresFactory, configs, abacusForIds, scopeManager, uuidManager, time,
 				new ChatMessageComponentSerializer(new JsonSkFormattingSerializer(), adventure5Compat));
 	}
 
 	Formatter(FactoryOfTheFuture futuresFactory, Configs configs, AbacusForIds abacusForIds, InternalScopeManager scopeManager,
-              UUIDManager uuidManager, Time time, Adventure5Compat adventure5Compat,
-			  ComponentSerializer<Component, ? extends Component, String> messageParser) {
+              UUIDManager uuidManager, Time time, ComponentSerializer<Component, ? extends Component, String> messageParser) {
 		this.futuresFactory = futuresFactory;
 		this.configs = configs;
         this.abacusForIds = abacusForIds;
         this.scopeManager = scopeManager;
 		this.uuidManager = uuidManager;
 		this.time = time;
-		this.adventure5Compat = adventure5Compat;
 		this.messageParser = messageParser;
 	}
 	
@@ -111,7 +109,7 @@ public class Formatter implements InternalFormatter {
 			// Empty prefix optimization
 			return message;
 		}
-		return adventure5Compat.textOfChildren(prefix, message);
+		return Component.empty().children(Arrays.asList(prefix, message));
 	}
 	
 	@Override

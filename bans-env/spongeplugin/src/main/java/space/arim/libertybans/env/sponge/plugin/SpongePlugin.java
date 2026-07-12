@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -39,6 +39,8 @@ import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.CompletableFuture;
 
 @Plugin(PluginInfo.ID)
@@ -69,69 +71,120 @@ public final class SpongePlugin {
 			throw new IllegalStateException("Server initialised twice?");
 		}
 		initializationFuture = initialize();
+		if (initializationFuture != null) {
+			game.eventManager().registerListeners(plugin, new EntryPoints());
+		}
 	}
 
 	private static PlatformAccess platformAccess(BaseFoundation base) {
 		return (PlatformAccess) base.platformAccess();
 	}
 
-	@Listener
-	public synchronized void onRegisterCommands(RegisterCommandEvent<Command.Raw> event) {
+	private BaseFoundation getBase(String purpose, boolean tryStart) {
+		BaseFoundation base = this.base;
 		if (initializationFuture != null) {
 			try {
-				base = initializationFuture.join();
+				this.base = base = initializationFuture.join();
 			} finally {
 				initializationFuture = null;
 			}
 		}
 		if (base == null) {
-			return;
+			logger.warn("LibertyBans never launched so it cannot {}.", purpose);
+			return null;
 		}
-		Command.Raw command = platformAccess(base).commandHandler();
-		event.register(plugin, command, "libertybans");
+		if (tryStart && base.getRunState() == RunState.IDLE) {
+			base.startup();
+		}
+		if (base.getRunState() == RunState.FAILED) {
+			logger.warn("Unable to {} because LibertyBans failed to start", purpose);
+			return null;
+		}
+		return base;
 	}
 
-	@Listener
-	public synchronized void onServiceProvision(ProvideServiceEvent.EngineScoped<BanService> event) {
-		if (base == null) {
-			return;
-		}
-		base.startup();
+	public final class EntryPoints {
 
-		PlatformAccess platformAccess = platformAccess(base);
-		if (platformAccess.registerBanService()) {
-			event.suggest(platformAccess::banService);
+		@Listener
+		public synchronized void onRegisterCommands(RegisterCommandEvent<Command.Raw> event) {
+			BaseFoundation base = getBase("register commands", false);
+			if (base == null) {
+				return;
+			}
+			Command.Raw command = platformAccess(base).commandHandler();
+			event.register(plugin, command, "libertybans");
+		}
+
+		@Listener
+		public synchronized void onServiceProvision(ProvideServiceEvent.EngineScoped<BanService> event) {
+			BaseFoundation base = getBase("provide services", true);
+			if (base == null) {
+				return;
+			}
+			PlatformAccess platformAccess = platformAccess(base);
+			if (platformAccess.registerBanService()) {
+				event.suggest(platformAccess::banService);
+			}
+		}
+
+		@Listener
+		public synchronized void onReload(RefreshGameEvent event) {
+			BaseFoundation base = getBase("reload", true);
+			if (base == null) {
+				return;
+			}
+			boolean restarted = base.fullRestart();
+			if (!restarted) {
+				logger.info("Not restarting because loading already in process");
+			}
+		}
+
+		@Listener
+		public synchronized void onStop(StoppingEngineEvent<Server> event) {
+			BaseFoundation base = getBase("shutdown", false);
+			if (base == null) {
+				return;
+			}
+			SpongePlugin.this.base = null;
+			base.shutdown();
 		}
 	}
 
-	@Listener
-	public synchronized void onReload(RefreshGameEvent event) {
-		if (base == null) {
-			logger.warn("LibertyBans never launched so it cannot reload.");
-			return;
-		}
-		boolean restarted = base.fullRestart();
-		if (!restarted) {
-			logger.info("Not restarting because loading already in process");
-		}
-	}
-
-	@Listener
-	public synchronized void onStop(StoppingEngineEvent<Server> event) {
-		BaseFoundation base = this.base;
-		this.base = null;
-		if (base == null) {
-			logger.warn("LibertyBans wasn't launched; check your log for a startup error");
-			return;
-		}
-		base.shutdown();
+	private CompletableFuture<BaseFoundation> unsupported(String msg) {
+		logger.error(
+                """
+                \
+                ERROR
+                \
+                Sorry, however your Sponge server is not supported. You may need to file a request on the issue tracker.
+                https://github.com/A248/LibertyBans/issues\
+                \
+                Reason:\
+                {}""",
+				msg
+		);
+		throw new UnsupportedOperationException(msg);
 	}
 
 	private CompletableFuture<BaseFoundation> initialize() {
-
-		SpongeVersion spongeVersion = SpongeVersion
-				.detectVersion(game.platform().minecraftVersion().dataVersion().orElse(0))
-				.orElseGet(SpongeVersion::latestSupported);
+		SpongeVersion spongeVersion;
+		{
+			OptionalInt optDataVersion = game.platform().minecraftVersion().dataVersion();
+			if (optDataVersion.isEmpty()) {
+				return unsupported("Unknown Minecraft data version (cannot detect Sponge API version)");
+			}
+			int dataVersion = optDataVersion.getAsInt();
+			Optional<SpongeVersion> optSpongeVersion = SpongeVersion.detectVersion(dataVersion);
+			if (optSpongeVersion.isEmpty()) {
+				return unsupported("Unknown or unsupported Minecraft data version " + dataVersion);
+			}
+			spongeVersion = optSpongeVersion.get();
+		}
+		// The oldest API version which we do NOT support
+		SpongeVersion apiLimit = SpongeVersion.API_18;
+		if (spongeVersion.isAtLeast(apiLimit)) {
+			return unsupported("Detected Sponge API version " + spongeVersion + " or greater");
+		}
 		ClassLoader platformClassLoader = Game.class.getClassLoader();
 
 		LibertyBansLauncher launcher = new LibertyBansLauncher.Builder()

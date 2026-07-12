@@ -23,13 +23,14 @@ import jakarta.inject.Inject;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentBuilder;
 import net.kyori.adventure.text.ComponentLike;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.api.jsonchat.ClickEventInfo;
 import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.morepaperlib.adventure.ClickEventType;
 import space.arim.morepaperlib.adventure.MorePaperLibAdventure;
+
+import java.util.function.Function;
 
 public final class DynamicAdventure5Compat implements Adventure5Compat {
 
@@ -46,12 +47,17 @@ public final class DynamicAdventure5Compat implements Adventure5Compat {
     }
 
     @Override
-    public ClickEvent clickEvent(ClickEvent.Action action, String value) {
-        ClickEventType clickEventType = morePaperLibAdventure.clickEventType(action);
+    public ClickEvent mapClickEventValue(ClickEvent original, Function<? super String, String> stringMap) {
+        ClickEventType clickEventType = morePaperLibAdventure.clickEventType(original.action());
         if (clickEventType == null) {
-            throw new UnsupportedOperationException("" + action);
+            return original;
         }
-        return morePaperLibAdventure.clickEvent(clickEventType, value);
+        String oldValue = clickEventValue(original);
+        String newValue = stringMap.apply(oldValue);
+        if (oldValue.equals(newValue)) {
+            return original;
+        }
+        return morePaperLibAdventure.clickEvent(clickEventType, newValue);
     }
 
     @Override
@@ -68,20 +74,23 @@ public final class DynamicAdventure5Compat implements Adventure5Compat {
         if (payload instanceof ClickEvent.Payload.Text) {
             return ((ClickEvent.Payload.Text) payload).value();
         }
-        return "<bad payload>";
+        if (payload instanceof ClickEvent.Payload.Int) {
+            return Integer.toString(((ClickEvent.Payload.Int) payload).integer());
+        }
+        return clickEvent.payload().toString();
     }
 
     @Override
     public ClickEventInfo.ClickType clickActionToType(ClickEvent.Action action) {
         ClickEventType clickEventType = morePaperLibAdventure.clickEventType(action);
         if (clickEventType == null) {
-            throw new UnsupportedOperationException("" + action);
+            throw new UnsupportedOperationException("Unknown action: " + action);
         }
         return switch (clickEventType) {
             case RUN_COMMAND -> ClickEventInfo.ClickType.RUN_COMMAND;
             case SUGGEST_COMMAND -> ClickEventInfo.ClickType.SUGGEST_COMMAND;
             case OPEN_URL -> ClickEventInfo.ClickType.OPEN_URL;
-            default -> throw new UnsupportedOperationException("" + clickEventType);
+            default -> throw new UnsupportedOperationException("Unknown click event type: " + clickEventType);
         };
     }
 
@@ -93,11 +102,6 @@ public final class DynamicAdventure5Compat implements Adventure5Compat {
             case OPEN_URL -> ClickEventType.OPEN_URL;
         };
         return morePaperLibAdventure.clickEventAction(clickEventType);
-    }
-
-    @Override
-    public TextComponent textOfChildren(ComponentLike...components) {
-        return morePaperLibAdventure.textOfChildren(components);
     }
 
     @Override

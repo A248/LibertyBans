@@ -19,11 +19,15 @@
 
 package space.arim.libertybans.env.velocity;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static space.arim.libertybans.env.velocity.VelocityLauncher.extractMajorVer;
 
 import java.nio.file.Path;
 
+import com.velocitypowered.api.util.ProxyVersion;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -44,10 +48,34 @@ public class VelocityLauncherTest {
 	public void allBindings() {
 		ProxyServer proxyServer = mock(ProxyServer.class);
 		PluginContainer pluginContainer = mock(PluginContainer.class);
+		when(proxyServer.getVersion()).thenReturn(new ProxyVersion("Velocity", getClass().getName(), "3.4.0"));
 
 		assertNotNull(new VelocityLauncher(
 				new Payload<>(pluginContainer, PlatformId.STUB, tempDir), proxyServer
 		).launch());
 	}
 
+	@Test
+	public void extractMajorVersion() {
+		assertEquals(3, extractMajorVer("3.4.0"));
+		assertEquals(3, extractMajorVer("3.3"));
+		assertEquals(4, extractMajorVer("4"));
+		assertEquals(3, extractMajorVer("3.4.0-b12"));
+		assertEquals(3, extractMajorVer("3.3-af-preview"));
+		assertEquals(4, extractMajorVer("4+45"));
+		assertEquals(3, extractMajorVer("3.5.1 (git-4498f1e)"));
+		assertEquals(2, extractMajorVer("2.5.0 (git-ab98f1e)"));
+		assertEquals(4, extractMajorVer("4.2.0 (git-0b98f1e)"));
+		assertEquals(3, extractMajorVer("3.5.1 (git-4498f1e-b15)"));
+		assertEquals(2, extractMajorVer("2.5.0 (git-ab98f1e-b40)"));
+		assertEquals(4, extractMajorVer("4.2.0 (git-0b98f1e-ba9)"));
+	}
+
+	@Test
+	public void extractMajorVersionUnknown() {
+		assertEquals(-1, extractMajorVer("<none>"));
+		assertEquals(-1, extractMajorVer(""));
+		assertEquals(-1, extractMajorVer("letters"));
+		assertEquals(-1, extractMajorVer(".4"));
+	}
 }

@@ -24,11 +24,11 @@
 	
 	<parent>
 		<groupId>space.arim.libertybans</groupId>
-		<artifactId>bans-env</artifactId>
+		<artifactId>bans-env-velocity-parent</artifactId>
 		<version>1.2.0-M1-SNAPSHOT</version>
 	</parent>
 	
-	<artifactId>bans-env-velocityplugin</artifactId>
+	<artifactId>bans-env-velocity</artifactId>
 
 	<build>
 		<plugins>
@@ -38,14 +38,14 @@
 				<configuration>
 					<archive>
 						<manifestEntries>
-							<Automatic-Module-Name>space.arim.libertybans.env.velocity.plugin</Automatic-Module-Name>
+							<Automatic-Module-Name>space.arim.libertybans.env.velocity</Automatic-Module-Name>
 						</manifestEntries>
 					</archive>
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>com.velocitypowered</groupId>
@@ -53,7 +53,15 @@
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-bootstrap</artifactId>
+			<artifactId>bans-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans</groupId>
+			<artifactId>bans-env-velocityfour</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.api</groupId>
+			<artifactId>arimapi-env-velocity</artifactId>
 		</dependency>
 
 		<dependency>
@@ -61,19 +69,21 @@
 			<artifactId>junit-jupiter-api</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-junit-jupiter</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
+			<groupId>space.arim.api</groupId>
+			<artifactId>arimapi-util-testing</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.kyori</groupId>
+			<artifactId>adventure-text-serializer-plain</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
-	
-	<repositories>
-		<repository>
-			<id>paper-releases</id>
-			<url>https://repo.papermc.io/repository/maven-releases/</url>
-		</repository>
-	</repositories>
 </project>

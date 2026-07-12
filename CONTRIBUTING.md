@@ -7,7 +7,7 @@ You will need:
 
 1. Git
 2. Maven 3.9.3 or greater
-3. JDK 21 or greater
+3. JDK 25 or greater
 
 These can be installed through your package manager of choice.
 
@@ -15,7 +15,7 @@ Maven is technically optional and can be substituted with the Maven wrapper - us
 
 ## Cloning and Building
 
-Run `git clone https://github.com/A248/LibertyBans.git && cd LibertyBans && mvn package`
+Run `git clone https://github.com/A248/LibertyBans.git && cd LibertyBans && mvn package -DskipTests`
 
 This will clone the source repository and start the Maven build in the cloned directory.
 

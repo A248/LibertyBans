@@ -21,40 +21,40 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
+	
 	<parent>
 		<groupId>space.arim.libertybans</groupId>
-		<artifactId>bans-env</artifactId>
+		<artifactId>bans-env-velocity-parent</artifactId>
 		<version>1.2.0-M1-SNAPSHOT</version>
 	</parent>
+	
+	<artifactId>bans-env-velocityfour</artifactId>
 
-	<artifactId>bans-env-velocity-parent</artifactId>
-	<packaging>pom</packaging>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<Automatic-Module-Name>space.arim.libertybans.env.velocity.velocityfour</Automatic-Module-Name>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
-	<modules>
-		<module>velocityfour</module>
-		<module>core</module>
-		<module>plugin</module>
-	</modules>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>space.arim.libertybans</groupId>
-				<artifactId>bans-env-velocityfour</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
-	<repositories>
-		<repository>
-			<id>paper-releases</id>
-			<url>https://repo.papermc.io/repository/maven-releases/</url>
-		</repository>
-		<repository>
-			<id>paper-snapshots</id>
-			<url>https://repo.papermc.io/repository/maven-snapshots/</url>
-		</repository>
-	</repositories>
+	<dependencies>
+		<dependency>
+			<groupId>com.velocitypowered</groupId>
+			<artifactId>velocity-api</artifactId>
+			<version>4.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.api</groupId>
+			<artifactId>arimapi-env-velocity</artifactId>
+		</dependency>
+	</dependencies>
 </project>

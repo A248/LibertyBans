@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -32,6 +32,7 @@ import space.arim.libertybans.core.ApiBindModule;
 import space.arim.libertybans.core.CommandsModule;
 import space.arim.libertybans.core.PillarOneBindModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
+import space.arim.libertybans.core.addon.AddonLoader;
 import space.arim.libertybans.core.env.InstanceType;
 import space.arim.libertybans.env.sponge.listener.RegisterListeners;
 import space.arim.libertybans.env.sponge.listener.RegisterListenersRegular;
@@ -98,6 +99,7 @@ public final class SpongeLauncher implements PlatformLauncher {
 				.bindIdentifier(RegisterListeners.class, registerListenersBinding)
 				.bindIdentifier(ChannelFacade.class, channelFacadeBinding)
 				.bindIdentifier(ChatListener.class, chatListenerBinding)
+				.addBindModules(AddonLoader.loadAddonBindModules())
 				.specification(SpecificationSupport.JAKARTA)
 				.multiBindings(true)
 				.build()

@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.core.commands.usage;
 
+import java.util.List;
 import java.util.Locale;
 
 import net.kyori.adventure.text.Component;
@@ -69,6 +70,6 @@ enum UsageSection {
 			components[n + 1] = serializer.deserialize(command);
 			n += 2;
 		}
-		return adventure5Compat.textOfChildren(components);
+		return Component.empty().children(List.of(components));
 	}
 }

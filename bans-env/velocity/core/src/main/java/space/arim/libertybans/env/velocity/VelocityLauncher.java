@@ -35,6 +35,7 @@ import space.arim.libertybans.core.PillarOneBindModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
 import space.arim.libertybans.core.addon.AddonLoader;
 import space.arim.libertybans.core.env.InstanceType;
+import space.arim.libertybans.env.velocity.velocityfour.Adventure5ForVelocityFour;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
@@ -56,8 +57,39 @@ public final class VelocityLauncher implements PlatformLauncher {
 		this.omnibus = omnibus;
 	}
 
+	// Visible for testing
+	static int extractMajorVer(String version) {
+		// Strip anything after these characters, so we get a plain X.Y.Z version
+		for (char discardAfter : new char[] {' ', '+', '-'}) {
+			int discardAfterIdx = version.indexOf(discardAfter);
+			if (discardAfterIdx != -1) {
+				version = version.substring(0, discardAfterIdx);
+			}
+		}
+		int firstPeriod = version.indexOf('.');
+		if (firstPeriod != -1) {
+			version = version.substring(0, firstPeriod);
+		}
+		try {
+			return Integer.parseInt(version);
+		} catch (NumberFormatException ignored) {
+			return -1;
+		}
+	}
+
 	@Override
 	public BaseFoundation launch() {
+		String proxyVersion = server.getVersion().getVersion();
+		int majorVersion = extractMajorVer(proxyVersion);
+		Adventure5Compat adventure5Compat = switch (majorVersion) {
+			case 3 -> Adventure5Compat.DEFAULT;
+			case 4 -> new Adventure5ForVelocityFour();
+			default ->
+				throw new UnsupportedOperationException(
+						"Velocity major version unknown or not supported. Received proxy version '" + proxyVersion +
+								"', from which extracted major version " + majorVersion + '.'
+				);
+		};
 		return new InjectorBuilder()
 				.bindInstance(PluginContainer.class, payload.plugin())
 				.bindInstance(ProxyServer.class, server)
@@ -71,14 +103,11 @@ public final class VelocityLauncher implements PlatformLauncher {
 						new PillarTwoBindModule(),
 						new CommandsModule(),
 						new VelocityBindModule())
+				.bindInstance(Adventure5Compat.class, adventure5Compat)
 				.addBindModules(AddonLoader.loadAddonBindModules())
 				.specification(SpecificationSupport.JAKARTA)
 				.multiBindings(true)
 				.build()
 				.request(BaseFoundation.class);
-	}
-
-	public Adventure5Compat adventure5Compat() {
-		return Adventure5Compat.DEFAULT;
 	}
 }

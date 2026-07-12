@@ -60,7 +60,7 @@ record FormatAccounts<A extends AccountBase, F>(Adventure5Compat adventure5Compa
                 messages.add(Component.newline());
                 messages.add(footer);
             }
-            Component concat = adventure5Compat.textOfChildren(messages.toArray(ComponentLike[]::new));
+            Component concat = Component.empty().children(messages);
             built = ComponentText.create(concat, adventure5Compat);
         }
         // Add in the variable content

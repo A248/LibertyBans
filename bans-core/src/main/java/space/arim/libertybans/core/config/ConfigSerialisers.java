@@ -51,7 +51,7 @@ final class ConfigSerialisers {
 		builder.addSerialisers(
 				new ComponentValueSerializer(new ChatMessageComponentSerializer(
 						new JsonSkFormattingSerializer(), adventure5Compat
-				), adventure5Compat),
+				)),
 				new ComponentTextSerializer(adventure5Compat),
 				new ParsedDuration.Serializer(),
 				new DateTimeFormatterSerialiser(),
@@ -64,11 +64,9 @@ final class ConfigSerialisers {
 	private static class ComponentValueSerializer implements ValueSerialiser<Component> {
 
 		private final ComponentSerializer<Component, Component, String> adventureSerializer;
-		private final Adventure5Compat adventure5Compat;
 
-		ComponentValueSerializer(ComponentSerializer<Component, Component, String> adventureSerializer, Adventure5Compat adventure5Compat) {
+        ComponentValueSerializer(ComponentSerializer<Component, Component, String> adventureSerializer) {
 			this.adventureSerializer = Objects.requireNonNull(adventureSerializer);
-            this.adventure5Compat = adventure5Compat;
         }
 
 		@Override
@@ -89,7 +87,7 @@ final class ConfigSerialisers {
 			if (components.size() == 1) {
 				return components.get(0);
 			}
-			return adventure5Compat.textOfChildren(components.toArray(Component[]::new));
+			return Component.empty().children(components);
 		}
 
 		@Override
