@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,31 +22,23 @@ package space.arim.libertybans.env.sponge;
 import jakarta.inject.Inject;
 import org.spongepowered.api.command.Command;
 import org.spongepowered.api.service.ban.BanService;
-import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.env.sponge.banservice.PluginBanService;
 import space.arim.libertybans.env.sponge.plugin.PlatformAccess;
 
 public final class SpongePlatformAccess implements PlatformAccess {
 
 	private final CommandHandler commandHandler;
-	private final Configs configs;
 	private final PluginBanService banService;
 
 	@Inject
-	public SpongePlatformAccess(CommandHandler commandHandler, Configs configs, PluginBanService banService) {
+	public SpongePlatformAccess(CommandHandler commandHandler, PluginBanService banService) {
 		this.commandHandler = commandHandler;
-		this.configs = configs;
 		this.banService = banService;
 	}
 
 	@Override
 	public Command.Raw commandHandler() {
 		return commandHandler;
-	}
-
-	@Override
-	public boolean registerBanService() {
-		return configs.getMainConfig().platforms().sponge().registerBanService();
 	}
 
 	@Override

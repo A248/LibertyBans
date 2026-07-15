@@ -30,6 +30,7 @@ import org.spongepowered.api.event.lifecycle.ConstructPluginEvent;
 import org.spongepowered.api.event.lifecycle.ProvideServiceEvent;
 import org.spongepowered.api.event.lifecycle.RefreshGameEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
+import org.spongepowered.api.event.lifecycle.StartedEngineEvent;
 import org.spongepowered.api.event.lifecycle.StoppingEngineEvent;
 import org.spongepowered.api.service.ban.BanService;
 import org.spongepowered.plugin.PluginContainer;
@@ -37,6 +38,7 @@ import org.spongepowered.plugin.builtin.jvm.Plugin;
 import space.arim.libertybans.bootstrap.*;
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -72,12 +74,8 @@ public final class SpongePlugin {
 		}
 		initializationFuture = initialize();
 		if (initializationFuture != null) {
-			game.eventManager().registerListeners(plugin, new EntryPoints());
+			game.eventManager().registerListeners(plugin, new EntryPoints(), MethodHandles.lookup());
 		}
-	}
-
-	private static PlatformAccess platformAccess(BaseFoundation base) {
-		return (PlatformAccess) base.platformAccess();
 	}
 
 	private BaseFoundation getBase(String purpose, boolean tryStart) {
@@ -111,25 +109,28 @@ public final class SpongePlugin {
 			if (base == null) {
 				return;
 			}
-			Command.Raw command = platformAccess(base).commandHandler();
+			Command.Raw command = PlatformAccess.get(base).commandHandler();
 			event.register(plugin, command, "libertybans");
 		}
 
 		@Listener
-		public synchronized void onServiceProvision(ProvideServiceEvent.EngineScoped<BanService> event) {
-			BaseFoundation base = getBase("provide services", true);
+		public synchronized void onServiceProvision(ProvideServiceEvent.EngineScoped<BanService, Server> event) {
+			BaseFoundation base = getBase("provide services", false);
 			if (base == null) {
 				return;
 			}
-			PlatformAccess platformAccess = platformAccess(base);
-			if (platformAccess.registerBanService()) {
-				event.suggest(platformAccess::banService);
-			}
+			PlatformAccess platformAccess = PlatformAccess.get(base);
+			event.suggest(platformAccess::banService);
+		}
+
+		@Listener
+		public synchronized void onStart(StartedEngineEvent<Server> event) {
+			getBase("start up", true);
 		}
 
 		@Listener
 		public synchronized void onReload(RefreshGameEvent event) {
-			BaseFoundation base = getBase("reload", true);
+			BaseFoundation base = getBase("reload", false);
 			if (base == null) {
 				return;
 			}
@@ -153,14 +154,13 @@ public final class SpongePlugin {
 	private CompletableFuture<BaseFoundation> unsupported(String msg) {
 		logger.error(
                 """
-                \
-                ERROR
-                \
-                Sorry, however your Sponge server is not supported. You may need to file a request on the issue tracker.
-                https://github.com/A248/LibertyBans/issues\
-                \
-                Reason:\
-                {}""",
+                        ERROR
+                        
+                        Sorry, however your Sponge server is not supported. You may need to upgrade your server or file a
+                        request on the issue tracker. https://github.com/A248/LibertyBans/issues
+                        
+                        
+                        Reason: {}""",
 				msg
 		);
 		throw new UnsupportedOperationException(msg);
@@ -180,10 +180,15 @@ public final class SpongePlugin {
 			}
 			spongeVersion = optSpongeVersion.get();
 		}
-		// The oldest API version which we do NOT support
-		SpongeVersion apiLimit = SpongeVersion.API_18;
-		if (spongeVersion.isAtLeast(apiLimit)) {
-			return unsupported("Detected Sponge API version " + spongeVersion + " or greater");
+		// The earliest version we support
+		SpongeVersion apiFloor = SpongeVersion.API_15;
+		if (!spongeVersion.isAtLeast(apiFloor)) {
+			return unsupported("Sponge API version must be at least " + apiFloor + '.');
+		}
+		// The latest version which we do NOT support
+		SpongeVersion apiCeiling = SpongeVersion.API_18;
+		if (spongeVersion.isAtLeast(apiCeiling)) {
+			return unsupported("Sponge API version " + spongeVersion + " (or greater) is not supported.");
 		}
 		ClassLoader platformClassLoader = Game.class.getClassLoader();
 

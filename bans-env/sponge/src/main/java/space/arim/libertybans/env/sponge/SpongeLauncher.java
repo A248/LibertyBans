@@ -34,12 +34,6 @@ import space.arim.libertybans.core.PillarOneBindModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
 import space.arim.libertybans.core.addon.AddonLoader;
 import space.arim.libertybans.core.env.InstanceType;
-import space.arim.libertybans.env.sponge.listener.RegisterListeners;
-import space.arim.libertybans.env.sponge.listener.RegisterListenersRegular;
-import space.arim.libertybans.env.sponge.listener.RegisterListenersWithLookup;
-import space.arim.libertybans.env.sponge.plugin.ChannelFacade;
-import space.arim.libertybans.env.sponge.plugin.ChannelFacadeApi8;
-import space.arim.libertybans.env.sponge.plugin.SpongeVersion;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
@@ -63,30 +57,13 @@ public final class SpongeLauncher implements PlatformLauncher {
 
 	@Override
 	public BaseFoundation launch() {
-		SpongeVersion spongeVersion = payload.getAttachment(0, SpongeVersion.class);
-
-		Class<? extends RegisterListeners> registerListenersBinding;
-		if (spongeVersion.isAtLeast(SpongeVersion.API_12) || RegisterListenersWithLookup.detectIfUsable()) {
-			registerListenersBinding = RegisterListenersWithLookup.class;
-		} else {
-			// Fallback to regular method (Sponge API 8)
-			registerListenersBinding = RegisterListenersRegular.class;
-		}
-		Class<? extends ChannelFacade> channelFacadeBinding;
-		Class<? extends ChatListener> chatListenerBinding;
-		if (spongeVersion.isAtLeast(SpongeVersion.API_12)) {
-			channelFacadeBinding = ChannelFacadeApi12.class;
-			chatListenerBinding = ChatListener.ChatApi12.class;
-		} else {
-			channelFacadeBinding = ChannelFacadeApi8.class;
-			chatListenerBinding = ChatListener.ChatApi8.class;
-		}
+		// Bring back if needed
+		//SpongeVersion spongeVersion = payload.getAttachment(0, SpongeVersion.class);
 		return new InjectorBuilder()
 				.bindInstance(PluginContainer.class, payload.plugin())
 				.bindInstance(Game.class, game)
 				.bindInstance(PlatformId.class, payload.platformId())
 				.bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), payload.pluginFolder())
-				.bindInstance(SpongeVersion.class,  spongeVersion)
 				.bindInstance(InstanceType.class, InstanceType.GAME_SERVER)
 				.bindInstance(Omnibus.class, omnibus)
 				.addBindModules(
@@ -96,9 +73,6 @@ public final class SpongeLauncher implements PlatformLauncher {
 						new CommandsModule(),
 						new SpongeBindModule()
 				)
-				.bindIdentifier(RegisterListeners.class, registerListenersBinding)
-				.bindIdentifier(ChannelFacade.class, channelFacadeBinding)
-				.bindIdentifier(ChatListener.class, chatListenerBinding)
 				.addBindModules(AddonLoader.loadAddonBindModules())
 				.specification(SpecificationSupport.JAKARTA)
 				.multiBindings(true)

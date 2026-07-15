@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,7 +27,6 @@ import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.network.ServerSideConnectionEvent;
 import space.arim.libertybans.core.env.ParallelisedListener;
 import space.arim.libertybans.core.selector.Guardian;
-import space.arim.libertybans.env.sponge.listener.RegisterListeners;
 
 import java.net.InetAddress;
 import java.util.UUID;

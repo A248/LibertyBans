@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,7 +28,6 @@ import org.spongepowered.api.event.network.ServerSideConnectionEvent;
 import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.libertybans.core.scope.ServerNameListener;
 import space.arim.libertybans.core.selector.Guardian;
-import space.arim.libertybans.env.sponge.listener.RegisterListeners;
 
 @Singleton
 public final class JoinListener implements PlatformListener {

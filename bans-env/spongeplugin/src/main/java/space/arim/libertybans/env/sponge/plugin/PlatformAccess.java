@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,13 +21,15 @@ package space.arim.libertybans.env.sponge.plugin;
 
 import org.spongepowered.api.command.Command;
 import org.spongepowered.api.service.ban.BanService;
+import space.arim.libertybans.bootstrap.BaseFoundation;
 
 public interface PlatformAccess {
 
 	Command.Raw commandHandler();
 
-	boolean registerBanService();
-
 	BanService banService();
 
+	static PlatformAccess get(BaseFoundation base) {
+		return (PlatformAccess) base.platformAccess();
+	}
 }

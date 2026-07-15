@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -45,7 +45,7 @@ public class SpongeLauncherTest {
 							@Mock Scheduler scheduler) {
 		when(game.asyncScheduler()).thenReturn(scheduler);
 		assertNotNull(new SpongeLauncher(
-				new Payload<>(plugin, PlatformId.STUB, folder, List.of(SpongeVersion.API_8)), game
+				new Payload<>(plugin, PlatformId.STUB, folder, List.of(SpongeVersion.API_15)), game
 		).launch());
 	}
 

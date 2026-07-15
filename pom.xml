@@ -72,7 +72,7 @@
 		<!-- Platform dependencies -->
 		<bungeecord.version>1.21-R0.3</bungeecord.version>
 		<spigot.version>1.8.8-R0.1-20160221.082514-43</spigot.version>
-		<sponge.version>12.0.0</sponge.version>
+		<sponge.version>15.0.0</sponge.version>
 		<velocity.version>3.1.0</velocity.version>
 
 		<!-- Internal hash -->

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -30,10 +30,9 @@ import org.spongepowered.api.event.command.ExecuteCommandEvent;
 import org.spongepowered.api.event.message.PlayerChatEvent;
 import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.libertybans.core.selector.Guardian;
-import space.arim.libertybans.env.sponge.listener.RegisterListeners;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 
-public abstract class ChatListener implements PlatformListener {
+public final class ChatListener implements PlatformListener {
 
 	private final RegisterListeners registerListeners;
 	private final Guardian guardian;
@@ -54,7 +53,7 @@ public abstract class ChatListener implements PlatformListener {
 		registerListeners.unregister(this);
 	}
 
-	<E extends Cancellable & Event> void combinedChatEvent(E event, String command) {
+	private <E extends Cancellable & Event> void combinedChatEvent(E event, String command) {
 		if (!(event.cause().root() instanceof ServerPlayer player)) {
 			return;
 		}
@@ -77,50 +76,13 @@ public abstract class ChatListener implements PlatformListener {
 		player.sendMessage(message);
 	}
 
-	/*
-	API differences require us to support everyone
-
-	In Sponge API 8 and 9, PlayerChatEvent is Cancellable and handled by us
-	In Sponge API 13, PlayerChatEvent.Submit becomes the event we need to listen to
-
-	So we split the implementation based on runtime API detection
-	 */
-
-	public static final class ChatApi8 extends ChatListener {
-
-		@Inject
-		public ChatApi8(RegisterListeners registerListeners, Guardian guardian) {
-			super(registerListeners, guardian);
-		}
-
-		@Listener(order = Order.LATE)
-		public void onChat(PlayerChatEvent event) {
-			// This is a fully safe cast on Sponge API 8 and 9
-			combinedChatEvent((Cancellable & Event) event, null);
-		}
-
-		@Listener(order = Order.LATE)
-		public void onCommand(ExecuteCommandEvent.Pre event) {
-			combinedChatEvent(event, event.command());
-		}
+	@Listener(order = Order.LATE)
+	public void onChat(PlayerChatEvent.Submit event) {
+		combinedChatEvent(event, null);
 	}
 
-	public static final class ChatApi12 extends ChatListener {
-
-		@Inject
-		public ChatApi12(RegisterListeners registerListeners, Guardian guardian) {
-			super(registerListeners, guardian);
-		}
-
-		@Listener(order = Order.LATE)
-		public void onChat(PlayerChatEvent.Submit event) {
-			combinedChatEvent(event, null);
-		}
-
-		@Listener(order = Order.LATE)
-		public void onCommand(ExecuteCommandEvent.Pre event) {
-			combinedChatEvent(event, event.command());
-		}
+	@Listener(order = Order.LATE)
+	public void onCommand(ExecuteCommandEvent.Pre event) {
+		combinedChatEvent(event, event.command());
 	}
-
 }

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -60,9 +60,11 @@ public final class SpongeImportSource implements PlatformImportSource {
 		BanService banService = futuresFactory.supplySync(() -> game.server().serviceProvider().banService()).join();
 		if (banService instanceof PluginBanService) {
 			throw new ImportException(
-					"Since register-ban-service is enabled in the config.yml, it is impossible to import from Sponge. " +
-							"Due to technical restrictions, you must disable register-ban-service, perform the import, " +
-							"then re-enable register-ban-service if you wish to use it.");
+					"LibertyBans is enabled as Sponge's global ban service. Due to technical restrictions, this " +
+							"makes it impossible to import in the present state. To import, you should configure the " +
+							"sponge.conf file with the vanilla ban service, run the import, then change the " +
+							"sponge.conf file back to how it was."
+			);
 		}
 		return banService.bans().thenApply((bans) -> {
 			List<PortablePunishment> punishments = new ArrayList<>(bans.size());

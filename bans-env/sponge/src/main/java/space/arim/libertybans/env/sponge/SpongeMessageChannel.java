@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -24,28 +24,26 @@ import org.slf4j.LoggerFactory;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
+import org.spongepowered.api.network.EngineConnectionState;
 import org.spongepowered.api.network.channel.ChannelBuf;
 import org.spongepowered.api.network.channel.raw.RawDataChannel;
 import org.spongepowered.api.network.channel.raw.play.RawPlayDataChannel;
+import org.spongepowered.api.network.channel.raw.play.RawPlayDataHandler;
 import space.arim.libertybans.core.env.EnvMessageChannel;
 import space.arim.libertybans.core.env.message.PluginMessage;
 import space.arim.libertybans.core.env.message.PluginMessageInput;
 import space.arim.libertybans.core.env.message.PluginMessageOutput;
-import space.arim.libertybans.env.sponge.plugin.ChannelFacade;
 
-import java.io.IOException;
 import java.util.function.Consumer;
 
-public final class SpongeMessageChannel implements EnvMessageChannel<ChannelFacade.Handler> {
+public final class SpongeMessageChannel implements EnvMessageChannel<RawPlayDataHandler<EngineConnectionState.Game>> {
 
 	private final Game game;
-	private final ChannelFacade channelFacade;
 
-	@Inject
-	public SpongeMessageChannel(Game game, ChannelFacade channelFacade) {
+    @Inject
+	public SpongeMessageChannel(Game game) {
 		this.game = game;
-		this.channelFacade = channelFacade;
-	}
+    }
 
 	private RawPlayDataChannel channel() {
 		return game.channelManager()
@@ -63,7 +61,7 @@ public final class SpongeMessageChannel implements EnvMessageChannel<ChannelFaca
 		boolean canSend = !game.server().isOnlineModeEnabled() && supported;
 		if (canSend) {
 			channel.sendTo(player, (buffer) -> {
-				pluginMessage.writeTo(data, new ChannelBufAsOutput(buffer));
+				pluginMessage.writeTo(data, new ChannelBufIO(buffer));
 			}).exceptionally((ex) -> {
 				LoggerFactory.getLogger(getClass()).error("Failed to send plugin message", ex);
 				return null;
@@ -73,40 +71,38 @@ public final class SpongeMessageChannel implements EnvMessageChannel<ChannelFaca
 	}
 
 	@Override
-	public void installHandler(ChannelFacade.Handler handler) {
-		handler.install(channel());
+	public void installHandler(RawPlayDataHandler<EngineConnectionState.Game> rawHandler) {
+		channel().addHandler(EngineConnectionState.Game.class, rawHandler);
 	}
 
 	@Override
-	public void uninstallHandler(ChannelFacade.Handler handler) {
-		handler.uninstall(channel());
+	public void uninstallHandler(RawPlayDataHandler<EngineConnectionState.Game> handler) {
+		channel().removeHandler(handler);
 	}
 
 	@Override
-	public <R> ChannelFacade.Handler createHandler(Consumer<R> acceptor, PluginMessage<?, R> pluginMessage) {
-		return channelFacade.makeHandler(new Adapter<>(acceptor, pluginMessage));
+	public <R> RawPlayDataHandler<EngineConnectionState.Game> createHandler(Consumer<R> acceptor, PluginMessage<?, R> pluginMessage) {
+		return new Handler<>(acceptor, pluginMessage);
 	}
 
-	record Adapter<R>(Consumer<R> acceptor, PluginMessage<?, R> pluginMessage) implements ChannelFacade.Adapter {
+	private record Handler<R>(Consumer<R> acceptor, PluginMessage<?, R> pluginMessage)
+			implements RawPlayDataHandler<EngineConnectionState.Game> {
 
 		@Override
-		public void handlePayload(ChannelBuf data) {
-			pluginMessage.readFrom(new ChannelBufAsInput(data)).ifPresent(acceptor);
+		public void handlePayload(ChannelBuf data, EngineConnectionState.Game state) {
+			pluginMessage.readFrom(new ChannelBufIO(data)).ifPresent(acceptor);
 		}
 	}
 
-	private record ChannelBufAsOutput(ChannelBuf buffer) implements PluginMessageOutput {
+	private record ChannelBufIO(ChannelBuf buffer) implements PluginMessageOutput, PluginMessageInput {
 		@Override
-		public void writeUTF(String utf) throws IOException {
+		public void writeUTF(String utf) {
 			buffer.writeUTF(utf);
 		}
-	}
 
-	private record ChannelBufAsInput(ChannelBuf buffer) implements PluginMessageInput {
 		@Override
-		public String readUTF() throws IOException {
+		public String readUTF() {
 			return buffer.readUTF();
 		}
 	}
-
 }
