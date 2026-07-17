@@ -19,4 +19,4 @@
 # and navigate to version 3 of the GNU Affero General Public License.
 #
 
-./mvnw clean verify -DskipTests -Dinvoker.skip=true -Pcheck-hash,-docker-enabled
+./mvnw clean verify -DskipTests -Dinvoker.skip=true -Pbuild-release,-docker-enabled

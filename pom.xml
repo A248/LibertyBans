@@ -217,6 +217,23 @@
 							</rules>
 						</configuration>
 					</execution>
+					<execution>
+						<!-- On deployment, ensure either the build-release or build-snapshot profile is active -->
+						<id>enforce-deployment-profile</id>
+						<phase>install</phase>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireActiveProfile>
+									<profiles>build-release,build-snapshot</profiles>
+									<all>false</all>
+									<message>You need to enable the build-snapshot or build-release profile if deploying a snapshot or release jar.</message>
+								</requireActiveProfile>
+							</rules>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 		</plugins>
@@ -321,7 +338,7 @@
 			</build>
 		</profile>
 		<profile>
-			<id>check-hash</id>
+			<id>build-release</id>
 			<properties>
 				<project.build.outputTimestamp>2022-01-04T00:00:00Z</project.build.outputTimestamp>
 				<plugin.version>${project.version}</plugin.version>
@@ -333,14 +350,14 @@
 						<artifactId>maven-enforcer-plugin</artifactId>
 						<executions>
 							<execution>
-								<id>enforce-jdk-21</id>
+								<id>enforce-jdk-25</id>
 								<goals>
 									<goal>enforce</goal>
 								</goals>
 								<configuration>
 									<rules>
 										<requireJavaVersion>
-											<version>[21,22)</version>
+											<version>[25,26)</version>
 										</requireJavaVersion>
 									</rules>
 								</configuration>

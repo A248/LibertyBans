@@ -33,31 +33,6 @@
 	<description>Parent pom for distribution-related modules.</description>
 
 	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<executions>
-					<execution>
-						<!-- Ensure either the check-hash or deploy-snapshot profile is active -->
-						<id>enforce-deployment-profile</id>
-						<phase>install</phase>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<requireActiveProfile>
-									<profiles>check-hash,deploy-snapshot</profiles>
-									<all>false</all>
-									<message>You need to enable the deploy-snapshot profile, or the check-hash profile if performing a release</message>
-								</requireActiveProfile>
-							</rules>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
 		<pluginManagement>
 			<plugins>
 				<plugin>

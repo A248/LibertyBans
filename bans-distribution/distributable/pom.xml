@@ -78,7 +78,7 @@
 
 	<profiles>
 		<profile>
-			<id>deploy-snapshot</id>
+			<id>build-snapshot</id>
 			<build>
 				<plugins>
 					<!-- Skip deployment -->

@@ -64,7 +64,7 @@
 
 	<profiles>
 		<profile>
-			<id>deploy-snapshot</id>
+			<id>build-snapshot</id>
 			<build>
 				<plugins>
 					<!-- Skip deployment -->
@@ -79,7 +79,7 @@
 			</build>
 		</profile>
 		<profile>
-			<id>check-hash</id>
+			<id>build-release</id>
 			<build>
 				<plugins>
 					<!-- Check hash of own jar -->
