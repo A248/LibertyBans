@@ -24,7 +24,7 @@ import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import space.arim.libertybans.core.commands.CommandSource;
+import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.it.DontInject;
@@ -55,7 +55,7 @@ public class TabCompletionIT {
 		List<String> onSameServer = List.of("aplayer", "bplayer", "cplayer");
 		when(sender.getPlayerNamesOnSameServer()).thenReturn(onSameServer.stream());
 
-		List<String> suggestions = commands.suggest(sender, CommandSource.OfArray.create("mute", ""));
+		List<String> suggestions = commands.suggest(sender, CommandPackage.ofArray("mute", ""));
 		assertEquals(onSameServer, suggestions);
 	}
 

@@ -104,6 +104,7 @@ public class CommandSourceTest {
     @ArgumentsSource(CommandSourceImpl.Provider.class)
     public void whollyEmpty(CommandSourceImpl impl) {
         CommandSource cmd = impl.create("");
-        assertEquals(List.of(""), collect(cmd));
+        var collected = collect(cmd);
+        assertEquals(List.of(""), collected, () -> "got " + collected);
     }
 }

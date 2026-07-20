@@ -156,7 +156,7 @@ public interface CommandSource extends Iterator<String> {
                 return "";
             }
             String allRemaining = args.substring(position);
-            position = args.length();
+            position = 1 + args.length();
             return allRemaining;
         }
 

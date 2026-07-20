@@ -128,7 +128,7 @@ public class UnspecifiedReasonsTest {
 
 	private void executeBan(CmdSender sender) {
 		when(sender.hasPermission(any())).thenReturn(true);
-		var execution = punishCommands.execute(sender, CommandSource.OfArray.create("A248"), "ban");
+		var execution = punishCommands.execute(sender, CommandPackage.ofArray("A248"), "ban");
 		try {
 			execution.executeNow();
 		} catch (CompletionException ex) {

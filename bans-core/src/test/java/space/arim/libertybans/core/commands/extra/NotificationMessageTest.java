@@ -26,7 +26,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.core.commands.CommandPackage;
-import space.arim.libertybans.core.commands.CommandSource;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.punish.Mode;
 import space.arim.libertybans.core.punish.permission.PunishmentPermission;
@@ -45,7 +44,7 @@ public class NotificationMessageTest {
 
 	@BeforeEach
 	public void setCommand() {
-		command = CommandSource.OfArray.create("-s", "user");
+		command = CommandPackage.ofArray("-s", "user");
 	}
 
 	private NotificationMessage newFor(CmdSender sender, PunishmentType type, Mode mode) {

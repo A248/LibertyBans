@@ -62,6 +62,10 @@ public final class CommandPackage implements CommandSource {
 		movePastHiddenArguments();
     }
 
+	public static CommandPackage ofArray(String...args) {
+		return new CommandPackage(new CommandSource.OfArray(args));
+	}
+
 	// Maintains the guarantee that iterator never refers to a hidden argument
 	private void movePastHiddenArguments() {
 		String hiddenArg;
@@ -71,7 +75,7 @@ public final class CommandPackage implements CommandSource {
 			String next = source.next();
 			assert hiddenArg.equals(next) : "bad impl source";
 			// Then parse it and add it to our known collection
-			String[] hiddenArgPieces = hiddenArg.split("=", 2);
+			String[] hiddenArgPieces = hiddenArg.substring(1).split("=", 2);
 			hiddenArguments.put(
 					hiddenArgPieces[0].toLowerCase(Locale.ROOT),
 					hiddenArgPieces.length == 2 ? hiddenArgPieces[1] : null
