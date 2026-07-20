@@ -19,4 +19,4 @@
 # and navigate to version 3 of the GNU Affero General Public License.
 #
 
-./mvnw clean package -DskipTests -Pbuild-snapshot
+./mvnw clean package -Pbuild-snapshot,skip-all-tests,-docker-enabled

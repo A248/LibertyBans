@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,10 +27,12 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
-import net.minecraft.command.CommandRegistryAccess;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.bootstrap.BaseFoundation;
@@ -39,6 +41,7 @@ import space.arim.libertybans.bootstrap.LibertyBansLauncher;
 import space.arim.libertybans.bootstrap.LibraryDetection;
 import space.arim.libertybans.bootstrap.Payload;
 import space.arim.libertybans.bootstrap.Platform;
+import space.arim.libertybans.bootstrap.RunState;
 import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 
 import java.util.concurrent.CompletableFuture;
@@ -47,13 +50,14 @@ import java.util.concurrent.ForkJoinPool;
 public final class FabricMod implements ModInitializer,
         ServerLifecycleEvents.ServerStarting, CommandRegistrationCallback, ServerLifecycleEvents.ServerStopped {
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     private CompletableFuture<BaseFoundation> initializationFuture;
     private BaseFoundation base;
 
 	@Override
 	public synchronized void onInitialize() {
+        LOGGER.debug("Initializing with debug logging...");
         if (initializationFuture != null || base != null) {
             throw new IllegalStateException("Server initialised twice?");
         }
@@ -63,42 +67,69 @@ public final class FabricMod implements ModInitializer,
         ServerLifecycleEvents.SERVER_STOPPED.register(this);
 	}
 
-    @Override
-    public synchronized void onServerStarting(MinecraftServer server) {
-        logger.info("Server starting called");
-        if (base == null) {
-            return;
-        }
-        base.startup();
-    }
-
-    @Override
-    public synchronized void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registry,
-                                      CommandManager.RegistrationEnvironment environment) {
-        logger.info("Command registration called");
+    /**
+     * Attempts to get the foundation: initializing and setting the server as appropriate
+     *
+     * @param purpose why it is needed
+     * @param tryStart whether to enable startup via this call
+     * @param server if non-null, will make sure that the implementation can see the server obect
+     * @return the started foundation, or {@code null} if unable to start or not started
+     */
+    private BaseFoundation getBase(String purpose, boolean tryStart, @Nullable MinecraftServer server) {
+        LOGGER.info("Called to {}", purpose);
+        BaseFoundation base = this.base;
         if (initializationFuture != null) {
             try {
-                base = initializationFuture.join();
+                this.base = base = initializationFuture.join();
             } finally {
                 initializationFuture = null;
             }
         }
         if (base == null) {
-            return;
+            LOGGER.warn("LibertyBans never launched so it cannot {}.", purpose);
+            return null;
         }
-        PlatformAccess platformAccess = PlatformAccess.access(base);
-        dispatcher.register(platformAccess.commandHandler());
+        if (server != null) {
+            PlatformAccess.access(base).installServer(server);
+        }
+        boolean doStart = tryStart && server != null && base.getRunState() == RunState.IDLE;
+        if (doStart) {
+            base.startup();
+        }
+        if (base.getRunState() == RunState.FAILED) {
+            LOGGER.warn("Unable to {} because LibertyBans failed to start", purpose);
+            return null;
+        }
+        if (doStart) {
+            PlatformAccess.Holder.install(base);
+        }
+        return base;
     }
 
     @Override
-    public void onServerStopped(MinecraftServer server) {
-        BaseFoundation base = this.base;
-        this.base = null;
+    public synchronized void onServerStarting(@NonNull MinecraftServer server) {
+        getBase("start up", true, server);
+    }
+
+    @Override
+    public synchronized void register(@NonNull CommandDispatcher<CommandSourceStack> dispatcher,
+                                      @NonNull CommandBuildContext buildContext,
+                                      Commands.@NonNull CommandSelection selection) {
+        BaseFoundation base = getBase("register commands", false, null);
         if (base == null) {
-            logger.warn("LibertyBans wasn't launched; check your log for a startup error");
             return;
         }
-        base.shutdown();
+        PlatformAccess platformAccess = PlatformAccess.access(base);
+        dispatcher.register(platformAccess.rootCommand());
+    }
+
+    @Override
+    public synchronized void onServerStopped(@NonNull MinecraftServer server) {
+        BaseFoundation base = getBase("shut down", false, server);
+        this.base = null;
+        if (base != null) {
+            base.shutdown();
+        }
     }
 
     private CompletableFuture<BaseFoundation> initialize() {
@@ -108,7 +139,7 @@ public final class FabricMod implements ModInitializer,
 
         LibertyBansLauncher launcher = new LibertyBansLauncher.Builder()
                 .folder(fabricLoader.getConfigDir().resolve(PluginInfo.ID))
-                .logger(new Slf4jBootstrapLogger(logger))
+                .logger(new Slf4jBootstrapLogger(LOGGER))
                 .platform(Platform.builder(Platform.Category.FABRIC)
                         .nameAndVersion(fabricApi.getName(), fabricApi.getVersion().getFriendlyString())
                         .slf4jSupport(LibraryDetection.enabled())
@@ -124,7 +155,7 @@ public final class FabricMod implements ModInitializer,
                         "space.arim.libertybans.env.fabric.FabricLauncher", launchLoader
                 ).invoke(payload);
             } catch (IllegalArgumentException | SecurityException | ReflectiveOperationException ex) {
-                logger.warn("Failed to launch LibertyBans", ex);
+                LOGGER.warn("Failed to launch LibertyBans", ex);
                 return null;
             }
             return base;

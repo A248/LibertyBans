@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.commands;
 
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.StringJoiner;
@@ -114,4 +115,11 @@ public final class ArrayCommandPackage implements CommandPackage {
 		return copy;
 	}
 
+	@Override
+	public String toString() {
+		return "ArrayCommandPackage{" +
+				"args=" + Arrays.toString(args) +
+				", position=" + position +
+				'}';
+	}
 }

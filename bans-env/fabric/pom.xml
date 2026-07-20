@@ -1,6 +1,6 @@
 <!--
   ~ LibertyBans
-  ~ Copyright © 2025 Anand Beh
+  ~ Copyright © 2026 Anand Beh
   ~
   ~ LibertyBans is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as
@@ -25,17 +25,59 @@
     <parent>
         <groupId>space.arim.libertybans</groupId>
         <artifactId>bans-env</artifactId>
-        <version>1.1.2-SNAPSHOT</version>
+        <version>1.2.0-M1-SNAPSHOT</version>
     </parent>
 
     <artifactId>bans-env-fabric</artifactId>
 
+    <properties>
+        <fabric.loader_version>0.19.2</fabric.loader_version>
+        <fabric.minecraft_version>26.2</fabric.minecraft_version>
+        <fabric.adventure_platform_version>7.1.1</fabric.adventure_platform_version>
+    </properties>
+
     <build>
+        <!--
+        We employ a multistage process in order to prepare, execute, process, and clean up a Gradle build.
+
+        1. Fill a temporary "local repository" with the artifacts we need to depend upon
+        2. Copy resources in src/build/filtered-resources, to pass pom properties into gradle.properties
+        3. Copy fabric.mod.json from src/mod/resources
+        4. Execute the Gradle build on command line
+        5. After successful build, use the built jar as this module's jar, and attach the mod jar with "mod" classifier
+        6. When `mvn clean` is requested, delete Gradle build data directories
+        -->
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <!-- 1. -->
+                    <execution>
+                        <id>copy-artifacts</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <useRepositoryLayout>true</useRepositoryLayout>
+                            <outputDirectory>${project.build.directory}/maven/local-repo</outputDirectory>
+                            <includeScope>compile</includeScope>
+                            <copyPom>true</copyPom>
+                            <addParentPoms>true</addParentPoms>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
+                    <execution>
+                        <id>default-resources</id>
+                        <phase>none</phase>
+                    </execution>
+                    <!-- 2. -->
                     <execution>
                         <id>copy-gradle-properties</id>
                         <phase>initialize</phase>
@@ -45,7 +87,7 @@
                         <configuration>
                             <resources>
                                 <resource>
-                                    <directory>src/build-resources</directory>
+                                    <directory>src/build/filtered-resources</directory>
                                     <filtering>true</filtering>
                                 </resource>
                             </resources>
@@ -54,24 +96,39 @@
                             <propertiesEncoding>UTF-8</propertiesEncoding>
                         </configuration>
                     </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
+                    <!-- 3. -->
                     <execution>
-                        <id>copy-artifacts</id>
-                        <phase>compile</phase>
+                        <id>copy-fabric-mod-json</id>
+                        <phase>generate-resources</phase>
                         <goals>
-                            <goal>copy-dependencies</goal>
+                            <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <useRepositoryLayout>true</useRepositoryLayout>
-                            <outputDirectory>${project.build.directory}/local-maven-repo</outputDirectory>
-                            <includeScope>compile</includeScope>
-                            <copyPom>true</copyPom>
-                            <addParentPoms>true</addParentPoms>
+                            <resources>
+                                <resource>
+                                    <directory>src/mod/resources</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                            <outputDirectory>bans-env-fabric-mod/target/maven/generated-resources</outputDirectory>
+                            <encoding>UTF-8</encoding>
+                            <propertiesEncoding>UTF-8</propertiesEncoding>
+                        </configuration>
+                    </execution>
+                    <!-- 5 -->
+                    <execution>
+                        <id>prepare-main-artifact</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>bans-env-fabric/target/libs</directory>
+                                </resource>
+                            </resources>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -80,34 +137,10 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <executions>
+                    <!-- 4 -->
                     <execution>
-                        <id>clean-gradle</id>
-                        <phase>clean</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <arguments>
-                                <argument>clean</argument>
-                                <argument>--stacktrace</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>compile-gradle</id>
+                        <id>build-gradle</id>
                         <phase>compile</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <arguments>
-                                <argument>compileJava</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>package-gradle</id>
-                        <phase>package</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
@@ -123,30 +156,12 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>com.coderplus.maven.plugins</groupId>
-                <artifactId>copy-rename-maven-plugin</artifactId>
-                <version>1.0</version>
-                <executions>
-                    <execution>
-                        <id>use-jar-from-gradle</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <sourceFile>bans-env-fabric/target/libs/bans-env-fabric-${project.version}.jar</sourceFile>
-                            <destinationFile>${project.build.directory}/${project.build.finalName}.jar</destinationFile>
-                            <overWrite>true</overWrite>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <executions>
+                    <!-- 5 -->
                     <execution>
-                        <id>attach-fabric-mod</id>
+                        <id>attach-fabric-artifacts</id>
                         <phase>package</phase>
                         <goals>
                             <goal>attach-artifact</goal>
@@ -163,6 +178,34 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <!-- 6 -->
+                    <filesets>
+                        <fileset>
+                            <directory>.</directory>
+                            <includes>
+                                <include>**/.gradle/**</include>
+                                <include>bans-env-fabric/target/**</include>
+                                <include>bans-env-fabric-mod/target/**</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <!-- This turns out to be needed to replace the original jar -->
+                        <id>default-jar</id>
+                        <phase>prepare-package</phase>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -170,10 +213,17 @@
         <dependency>
             <groupId>space.arim.libertybans</groupId>
             <artifactId>bans-core</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>space.arim.libertybans</groupId>
             <artifactId>bans-bootstrap</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>space.arim.libertybans</groupId>
+            <artifactId>bans-env-adventure5-common</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

@@ -19,13 +19,27 @@
 
 package space.arim.libertybans.core.env;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.Set;
 
 public interface Environment {
 
-	Set<PlatformListener> createListeners();
+	Set<PlatformListener> createListeners(AliasCommand.RegisterOutcome registerRootCommand);
 
-	PlatformListener createAliasCommand(String alias, String target);
+	/**
+	 * Creates an alias to the plugin subcommand target
+	 *
+	 * @param alias the alias
+	 * @param target the subcommand to alias to
+	 * @return the registrable command upon success, or {@code null} if not supported by the platform
+	 */
+	@Nullable AliasCommand createAliasCommand(String alias, String target);
+
+	/**
+	 * Called after all aliases are registered
+	 */
+	void refreshServerCommands();
 
 	/**
 	 * Used for Sponge, Fabric, and the standalone application only. <br>

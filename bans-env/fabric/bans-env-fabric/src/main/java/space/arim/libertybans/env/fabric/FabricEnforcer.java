@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,50 +20,40 @@
 package space.arim.libertybans.env.fabric;
 
 import jakarta.inject.Inject;
-import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.kyori.adventure.text.Component;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.network.packet.s2c.common.CustomPayloadS2CPacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractEnvEnforcer;
 import space.arim.libertybans.core.env.Interlocutor;
 import space.arim.libertybans.core.env.PluginMessageAsBytes;
 import space.arim.libertybans.core.env.message.PluginMessage;
-import space.arim.omnibus.util.ThisClass;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-public final class FabricEnforcer extends AbstractEnvEnforcer<ServerPlayerEntity> {
+public final class FabricEnforcer extends AbstractEnvEnforcer<ServerPlayer> {
 
-    private final MinecraftServer server;
-    private final ServerRegistrars serverRegistrars;
-
-    private static final Logger logger = LoggerFactory.getLogger(ThisClass.get());
+    private final ServerProvide serverProvide;
+    private final FabricUserResolver userResolver;
+    private final ServerAudiences serverAudiences;
 
     @Inject
-    public FabricEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter,
-                          Interlocutor interlocutor, MinecraftServer server, ServerRegistrars serverRegistrars) {
+    public FabricEnforcer(FactoryOfTheFuture futuresFactory, InternalFormatter formatter, Interlocutor interlocutor,
+                          ServerProvide serverProvide, FabricUserResolver userResolver, ServerAudiences serverAudiences) {
         super(futuresFactory, formatter, interlocutor, AudienceRepresenter.identity());
-        this.server = server;
-        this.serverRegistrars = serverRegistrars;
+        this.serverProvide = serverProvide;
+        this.userResolver = userResolver;
+        this.serverAudiences = serverAudiences;
     }
 
     @SuppressWarnings("unchecked")
@@ -73,89 +63,68 @@ public final class FabricEnforcer extends AbstractEnvEnforcer<ServerPlayerEntity
     }
 
     @Override
-    public CentralisedFuture<Void> doForPlayerIfOnline(UUID uuid, Consumer<ServerPlayerEntity> callback) {
+    public CentralisedFuture<Void> doForPlayerIfOnline(UUID uuid, Consumer<ServerPlayer> callback) {
         return runSync(() -> {
-            PlayerManager playerManager = server.getPlayerManager();
-            ServerPlayerEntity player;
-            if (playerManager != null && (player = playerManager.getPlayer(uuid)) != null) {
+            PlayerList playerList = serverProvide.get().getPlayerList();
+            ServerPlayer player;
+            if (playerList != null && (player = playerList.getPlayer(uuid)) != null) {
                 callback.accept(player);
             }
         });
     }
 
     @Override
-    public CentralisedFuture<Void> doForAllPlayers(Consumer<Collection<? extends ServerPlayerEntity>> action) {
+    public CentralisedFuture<Void> doForAllPlayers(Consumer<Collection<? extends ServerPlayer>> action) {
         return runSync(() -> {
-            PlayerManager playerManager = server.getPlayerManager();
-            List<ServerPlayerEntity> players = playerManager == null ? List.of() : playerManager.getPlayerList();
+            PlayerList playerList = serverProvide.get().getPlayerList();
+            List<ServerPlayer> players = playerList == null ? List.of() : playerList.getPlayers();
             action.accept(players);
         });
     }
 
     @Override
-    public <D> boolean sendPluginMessageIfListening(ServerPlayerEntity player, PluginMessage<D, ?> pluginMessage, D data) {
-        Identifier bungeeChannel = Identifier.of("bungeecord", "main");
-        if (!ServerPlayNetworking.canSend(player, bungeeChannel)) {
+    public <D> boolean sendPluginMessageIfListening(ServerPlayer player, PluginMessage<D, ?> pluginMessage, D data) {
+        if (!ServerPlayNetworking.canSend(player, BungeeMessage.TYPE)) {
             return false;
         }
-        PayloadTypeRegistry.playS2C().register()
         byte[] dataBytes = new PluginMessageAsBytes<>(pluginMessage).generateBytes(data);
-        ServerPlayNetworking.send();
-        record BungeeCordMessage<D>(PluginMessage<D, ?> pluginMessage, D data) implements CustomPayload {
-
-            @Override
-            public Id<BungeeCordMessage<D>> getId() {
-                return new Id<>();
-            }
-        }
-        player.networkHandler.sendPacket(new CustomPayloadS2CPacket(new BungeeCordMessage<>(pluginMessage, data)));
-        return false;
+        ServerPlayNetworking.send(player, new BungeeMessage(dataBytes));
+        return true;
     }
 
     @Override
-    public UUID getUniqueIdFor(ServerPlayerEntity player) {
-        return player.getUuid();
+    public UUID getUniqueIdFor(ServerPlayer player) {
+        return player.getUUID();
     }
 
     @Override
-    public InetAddress getAddressFor(ServerPlayerEntity player) {
-        SocketAddress socketAddress = player.networkHandler.getConnectionAddress();
-        if (socketAddress instanceof InetSocketAddress inetSocketAddress) {
-            return inetSocketAddress.getAddress();
-        } else {
-            // Probably a player connected to an integrated server
-            logger.info(
-                    "No InetSocketAddress for {}, probably due to running on integrated server. We will use 127.0.0.1.",
-                    player.getGameProfile()
-            );
-            return InetAddress.getLoopbackAddress();
-        }
+    public InetAddress getAddressFor(ServerPlayer player) {
+        return userResolver.getAddress(player);
     }
 
     @Override
-    public String getNameFor(ServerPlayerEntity player) {
-        return player.getGameProfile().getName();
+    public String getNameFor(ServerPlayer player) {
+        return player.getGameProfile().name();
     }
 
     @Override
-    public String getPlayableServerName(ServerPlayerEntity player) {
+    public String getPlayableServerName(ServerPlayer player) {
         return null;
     }
 
     @Override
-    public boolean hasPermission(ServerPlayerEntity player, String permission) {
-        return Permissions.check(player, permission);
+    public boolean hasPermission(ServerPlayer player, String permission) {
+        return player.permissions().hasPermission(Namespacing.parsePermission(permission));
     }
 
     @Override
     public CompletableFuture<Void> executeConsoleCommand(String command) {
-        return runSync(() -> {
-            server.getCommandManager().executeWithPrefix(server.getCommandSource(), '/' + command);
-        });
+        MinecraftServer server = serverProvide.get();
+        return runSync(() -> server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), '/' + command));
     }
 
     @Override
-    public void kickPlayer(ServerPlayerEntity player, Component message) {
-        player.networkHandler.disconnect(serverRegistrars.getServerAudiences().asNative(message));
+    public void kickPlayer(ServerPlayer player, Component message) {
+        player.connection.disconnect(serverAudiences.getServerAudiences().asNative(message));
     }
 }

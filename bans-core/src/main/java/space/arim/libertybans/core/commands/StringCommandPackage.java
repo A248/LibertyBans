@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -49,30 +49,31 @@ public final class StringCommandPackage implements CommandPackage {
 		return commandPackage;
 	}
 
-	private String viewCurrentArgument() {
-		// Move past and collect the argument
-		int endPosition = position;
-		while (endPosition != args.length() && args.charAt(endPosition) != ' ') {
-			endPosition++;
+	private int computeNextAdvance() {
+		int pos = position;
+		while (pos < args.length() && args.charAt(pos) != ' ') {
+			pos++;
 		}
-		return args.substring(position, endPosition);
+		return pos - position;
 	}
 
 	private String consumeCurrentArgument() {
-		String argument = viewCurrentArgument();
-		int endPosition = position + argument.length();
-		if (endPosition != args.length()) {
-			// Skip the space character
-			endPosition++;
+		int initialPos = position;
+		int nextAdvance = computeNextAdvance();
+		position += nextAdvance;
+		// 1. Skip the space character before moving onto the next argument
+		if (position < args.length() && args.charAt(position) == ' '
+				// 2. Consume trailing empty argument only once
+				|| position == args.length()) {
+			position++;
 		}
-		position = endPosition;
-		return argument;
+		return args.substring(initialPos, initialPos + nextAdvance);
 	}
 
 	// Maintains the guarantee that position never refers to a hidden argument
 	private void consumeHiddenArguments() {
 		while (true) {
-			if (position == args.length()) {
+			if (position >= args.length()) {
 				return;
 			}
 			if (args.charAt(position) != HIDDEN_ARG_PREFIX) {
@@ -107,12 +108,14 @@ public final class StringCommandPackage implements CommandPackage {
 		if (!hasNext()) {
 			throw new NoSuchElementException();
 		}
-		return viewCurrentArgument();
+		int initialPos = position;
+		int nextAdvance = computeNextAdvance();
+		return args.substring(initialPos, initialPos + nextAdvance);
 	}
 
 	@Override
 	public boolean hasNext() {
-		return position != args.length();
+		return position <= args.length();
 	}
 
 	@Override
@@ -127,8 +130,11 @@ public final class StringCommandPackage implements CommandPackage {
 
 	@Override
 	public String allRemaining() {
+		if (position > args.length()) {
+			return "";
+		}
 		String allRemaining = args.substring(position);
-		position = args.length();
+		position = args.length() + 1;
 		return allRemaining;
 	}
 
@@ -140,4 +146,12 @@ public final class StringCommandPackage implements CommandPackage {
 		return copy;
 	}
 
+	@Override
+	public String toString() {
+		return "StringCommandPackage{" +
+				"args='" + args + '\'' +
+				", position=" + position +
+				", hiddenArguments=" + hiddenArguments +
+				'}';
+	}
 }

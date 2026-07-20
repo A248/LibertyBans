@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -26,7 +26,6 @@ import org.spongepowered.api.command.Command;
 import org.spongepowered.api.command.CommandCause;
 import org.spongepowered.api.command.CommandCompletion;
 import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.exception.CommandException;
 import org.spongepowered.api.command.parameter.ArgumentReader;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import space.arim.libertybans.core.commands.CommandPackage;
@@ -64,15 +63,15 @@ public final class CommandHandler implements Command.Raw {
 	}
 
 	@Override
-	public CommandResult process(CommandCause cause, ArgumentReader.Mutable arguments) throws CommandException {
+	public CommandResult process(CommandCause cause, ArgumentReader.Mutable arguments) {
 		CommandPackage command = StringCommandPackage.create(arguments.input());
 		commands.execute(adaptSender(cause), command);
 		return CommandResult.success();
 	}
 
 	@Override
-	public List<CommandCompletion> complete(CommandCause cause, ArgumentReader.Mutable arguments) throws CommandException {
-		List<String> suggestions = commands.suggest(adaptSender(cause), arguments.input().split(" "));
+	public List<CommandCompletion> complete(CommandCause cause, ArgumentReader.Mutable arguments) {
+		List<String> suggestions = commands.suggest(adaptSender(cause), StringCommandPackage.create(arguments.input()));
 		CommandCompletion[] completions = new CommandCompletion[suggestions.size()];
 		for (int n = 0; n < completions.length; n++) {
 			completions[n] = CommandCompletion.of(suggestions.get(n));

@@ -1,7 +1,26 @@
+/*
+ * LibertyBans
+ * Copyright © 2026 Anand Beh
+ *
+ * LibertyBans is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * LibertyBans is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with LibertyBans. If not, see <https://www.gnu.org/licenses/>
+ * and navigate to version 3 of the GNU Affero General Public License.
+ */
+
 plugins {
     id("java")
     id("maven-publish")
-    id("fabric-loom") version "1.11.8"
+    id("net.fabricmc.fabric-loom") version "1.17.12"
 }
 
 allprojects {
@@ -11,18 +30,16 @@ allprojects {
 
     apply(plugin = "java")
     apply(plugin = "maven-publish")
-    apply(plugin = "fabric-loom")
+    apply(plugin = "net.fabricmc.fabric-loom")
 
     tasks.withType<JavaCompile>().configureEach {
-        options.release.set(17)
+        options.release.set(25)
     }
 
-    // TODO: Figure out how to put this in subprojects and stop applying fabric-loom to root project
     dependencies {
-        minecraft("com.mojang:minecraft:1.21.8")
-        mappings("net.fabricmc:yarn:1.21.8+build.1:v2")
-        modImplementation("net.fabricmc:fabric-loader:0.16.14")
-        modImplementation("net.fabricmc.fabric-api:fabric-api:0.129.0+1.21.8")
+        minecraft("com.mojang:minecraft:${project.findProperty("minecraft_version")}")
+        implementation("net.fabricmc:fabric-loader:${project.findProperty("loader_version")}")
+        implementation("net.fabricmc.fabric-api:fabric-api:0.152.1+26.2")
     }
 }
 
@@ -30,10 +47,16 @@ subprojects {
     repositories {
         mavenCentral()
         maven("https://maven.fabricmc.net/")
-        maven("https://mvn-repo.arim.space/lesser-gpl3/")
-        maven("https://mvn-repo.arim.space/gpl3/")
-        maven{
-            url = uri("${project.rootDir}/target/local-maven-repo")
+        maven {
+            url = uri("https://mvn-repo.arim.space/lesser-gpl3/")
+            //includeGroupAndSubgroups("space.arim")
+        }
+        maven {
+            url = uri("https://mvn-repo.arim.space/gpl3/")
+            //includeGroupAndSubgroups("space.arim")
+        }
+        maven {
+            url = uri("${project.rootDir}/target/maven/local-repo")
             metadataSources {
                 mavenPom()
                 artifact()
@@ -42,9 +65,11 @@ subprojects {
     }
 
     tasks.processResources {
-        filesMatching("fabric.mod.json") {
-            expand(rootProject.properties)
-        }
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+
+    tasks.withType<Test> {
+        systemProperty("log4j2.configurationFile", uri("${project.rootDir}/src/build/log4j2.xml").toString())
     }
 
     loom {

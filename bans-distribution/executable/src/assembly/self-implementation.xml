@@ -1,6 +1,6 @@
 <!--
   ~ LibertyBans
-  ~ Copyright © 2025 Anand Beh
+  ~ Copyright © 2026 Anand Beh
   ~
   ~ LibertyBans is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as
@@ -47,6 +47,7 @@
                 <exclude>space.arim.omnibus:omnibus</exclude>
                 <exclude>space.arim.libertybans:bans-bootstrap</exclude>
                 <exclude>space.arim.libertybans:bans-env-bungeeplugin</exclude>
+                <exclude>space.arim.libertybans:bans-env-fabric:jar:mod</exclude>
                 <exclude>space.arim.libertybans:bans-env-spigotplugin</exclude>
                 <exclude>space.arim.libertybans:bans-env-spongeplugin</exclude>
                 <exclude>space.arim.libertybans:bans-env-velocityplugin</exclude>
@@ -61,6 +62,13 @@
                 <!-- replaced -->
                 <exclude>org.flywaydb:flyway-core</exclude>
             </excludes>
+            <unpackOptions>
+                <excludes>
+                    <exclude>module-info.class</exclude>
+                    <exclude>**/pom.xml</exclude>
+                    <exclude>**/pom.properties</exclude>
+                </excludes>
+            </unpackOptions>
         </dependencySet>
     </dependencySets>
 </assembly>

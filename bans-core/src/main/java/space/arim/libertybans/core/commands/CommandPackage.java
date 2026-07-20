@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,7 +21,9 @@ package space.arim.libertybans.core.commands;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * A command argument iterator. Defines several means for accessing
@@ -108,4 +110,25 @@ public interface CommandPackage extends Iterator<String> {
 	 */
 	CommandPackage copy();
 
+	/**
+	 * Gets remaining arguments, one by one, skipping hidden arguments
+	 *
+	 * @return the collected arguments
+	 */
+	default List<String> collect() {
+		List<String> result = new ArrayList<>();
+		while (hasNext()) {
+			result.add(next());
+		}
+		return result;
+	}
+
+	/**
+	 * Same as {@link #collect()}
+	 *
+	 * @return the collected arguments
+	 */
+	default String[] collectArray() {
+		return collect().toArray(String[]::new);
+	}
 }

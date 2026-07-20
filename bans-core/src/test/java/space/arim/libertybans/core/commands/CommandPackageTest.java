@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,6 +22,7 @@ package space.arim.libertybans.core.commands;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -201,4 +202,18 @@ public class CommandPackageTest {
 		assertFalse(cmd.hasNext());
 	}
 
+	@ParameterizedTest
+	@ArgumentsSource(CommandPackageImpl.Provider.class)
+	public void trailingEmpty(CommandPackageImpl impl) {
+		CommandPackage cmd = impl.create("go find ");
+		assertEquals("go find ", cmd.copy().allRemaining());
+		assertEquals(List.of("go", "find", ""), cmd.collect(), () -> "failed for " + impl);
+	}
+
+	@ParameterizedTest
+	@ArgumentsSource(CommandPackageImpl.Provider.class)
+	public void whollyEmpty(CommandPackageImpl impl) {
+		CommandPackage cmd = impl.create("");
+		assertEquals(List.of(""), cmd.collect());
+	}
 }

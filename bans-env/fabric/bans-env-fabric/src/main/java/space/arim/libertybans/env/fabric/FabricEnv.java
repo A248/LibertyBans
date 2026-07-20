@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,25 +19,69 @@
 
 package space.arim.libertybans.env.fabric;
 
+import jakarta.inject.Inject;
+import net.minecraft.commands.Commands;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import space.arim.libertybans.core.config.Configs;
+import space.arim.libertybans.core.env.AliasCommand;
 import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.env.PlatformListener;
+import space.arim.libertybans.env.fabric.mod.PlatformAccess;
 
 import java.util.Set;
 
 public final class FabricEnv implements Environment {
 
-    @Override
-    public Set<PlatformListener> createListeners() {
-        return Set.of();
+    private final Configs configs;
+    private final ServerAudiences serverAudiences;
+    private final TaskQueueLifecycle taskQueueLifecycle;
+    private final FabricMessageChannel messageChannel;
+    private final ChatListener chatListener;
+    private final JoinListener joinListener;
+    private final CommandHandler.Factory commandFactory;
+    private final ServerProvide serverProvide;
+    private final PlatformAccess platformAccess;
+
+    @Inject
+    public FabricEnv(Configs configs, ServerAudiences serverAudiences, TaskQueueLifecycle taskQueueLifecycle,
+                     FabricMessageChannel messageChannel, ChatListener chatListener, JoinListener joinListener,
+                     CommandHandler.Factory commandFactory, ServerProvide serverProvide, PlatformAccess platformAccess) {
+        this.configs = configs;
+        this.serverAudiences = serverAudiences;
+        this.taskQueueLifecycle = taskQueueLifecycle;
+        this.messageChannel = messageChannel;
+        this.chatListener = chatListener;
+        this.joinListener = joinListener;
+        this.commandFactory = commandFactory;
+        this.serverProvide = serverProvide;
+        this.platformAccess = platformAccess;
     }
 
     @Override
-    public PlatformListener createAliasCommand(String command) {
-        return null;
+    public Set<PlatformListener> createListeners(AliasCommand.RegisterOutcome registerRootCommand) {
+        return Set.of(serverAudiences, taskQueueLifecycle, messageChannel, chatListener, joinListener);
+    }
+
+    @Override
+    public AliasCommand createAliasCommand(String alias, String target) {
+        if (!configs.getMainConfig().platforms().fabric().registerCommandsDynamically()) {
+            return null;
+        }
+        return commandFactory.dynamicCommand(alias, target);
+    }
+
+    @Override
+    public void refreshServerCommands() {
+        MinecraftServer server = serverProvide.get();
+        Commands commands = server.getCommands();
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            commands.sendCommands(player);
+        }
     }
 
     @Override
     public Object platformAccess() {
-        return Environment.super.platformAccess();
+        return platformAccess;
     }
 }

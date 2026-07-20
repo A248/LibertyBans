@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,17 +20,13 @@
 package space.arim.libertybans.env.fabric;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
-import net.minecraft.server.MinecraftServer;
 import space.arim.api.env.PlatformHandle;
 import space.arim.api.env.PlatformPluginInfo;
 import space.arim.api.env.concurrent.ClosableFactoryOfTheFuture;
 import space.arim.managedwaits.DeadlockFreeFutureFactory;
 import space.arim.managedwaits.LightSleepManagedWaitStrategy;
-import space.arim.managedwaits.SimpleTaskQueue;
-import space.arim.managedwaits.TaskQueue;
 import space.arim.omnibus.util.concurrent.EnhancedExecutor;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.SimplifiedEnhancedExecutor;
@@ -39,14 +35,15 @@ import java.util.concurrent.ForkJoinPool;
 
 public final class FabricPlatformHandle implements PlatformHandle {
 
-    private final Thread mainThread;
-    private final MinecraftServer server;
+    private final ServerProvide serverProvide;
+    private final TaskQueueLifecycle taskQueueLifecycle;
     private final ModContainer modContainer;
 
     @Inject
-    public FabricPlatformHandle(@Named("mainThread") Thread mainThread, MinecraftServer server, ModContainer modContainer) {
-        this.mainThread = mainThread;
-        this.server = server;
+    public FabricPlatformHandle(ServerProvide serverProvide, TaskQueueLifecycle taskQueueLifecycle,
+                                ModContainer modContainer) {
+        this.serverProvide = serverProvide;
+        this.taskQueueLifecycle = taskQueueLifecycle;
         this.modContainer = modContainer;
     }
 
@@ -54,32 +51,26 @@ public final class FabricPlatformHandle implements PlatformHandle {
     public FactoryOfTheFuture createFuturesFactory() {
         class FabricFactoryOfTheFuture extends DeadlockFreeFutureFactory implements ClosableFactoryOfTheFuture {
 
-            private final RunTaskQueuePerTick runTaskQueuePerTick;
-
-            FabricFactoryOfTheFuture(TaskQueue taskQueue, RunTaskQueuePerTick runTaskQueuePerTick) {
-                super(taskQueue, new LightSleepManagedWaitStrategy());
-                this.runTaskQueuePerTick = runTaskQueuePerTick;
+            FabricFactoryOfTheFuture() {
+                super(taskQueueLifecycle.taskQueue, new LightSleepManagedWaitStrategy());
             }
 
             @Override
             public boolean isPrimaryThread() {
-                return mainThread == Thread.currentThread();
+                return getPrimaryThread() == Thread.currentThread();
             }
 
             @Override
             public Thread getPrimaryThread() {
-                return mainThread;
+                return serverProvide.get().getRunningThread();
             }
 
             @Override
             public void close() {
-                // Canceling now will allow existing tasks to finish -- see MinecraftServer implementation
-                runTaskQueuePerTick.cancel();
+                taskQueueLifecycle.cancel();
             }
         }
-        SimpleTaskQueue taskQueue = new SimpleTaskQueue();
-        RunTaskQueuePerTick runTaskQueuePerTick = new RunTaskQueuePerTick(taskQueue, server);
-        return new FabricFactoryOfTheFuture(taskQueue, runTaskQueuePerTick);
+        return new FabricFactoryOfTheFuture();
     }
 
     @Override
@@ -100,6 +91,6 @@ public final class FabricPlatformHandle implements PlatformHandle {
 
     @Override
     public String getPlatformVersion() {
-        return PlatformHandle.super.getPlatformVersion();
+        return serverProvide.get().getServerVersion();
     }
 }

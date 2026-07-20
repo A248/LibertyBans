@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -119,35 +119,34 @@ public class CommandsCore implements Commands {
 	}
 
 	@Override
-	public List<String> suggest(CmdSender sender, String[] args) {
-
+	public List<String> suggest(CmdSender sender, CommandPackage args) {
 		if (!sender.hasPermission(BASE_COMMAND_PERMISSION) || !configs.getMainConfig().commands().tabComplete()) {
 			// No permission or tab complete is disabled
 			return List.of();
 		}
-		if (args.length == 0) {
+		if (!args.hasNext()) {
 			// A length of 0 means '/libertybans ' itself is tab completed
 			return subCommandCompletions(sender, (subCmd) -> true);
 		}
-		if (args.length == 1) {
+		String firstArg = args.next().toLowerCase(Locale.ROOT);
+		if (!args.hasNext()) {
 			// Length 1 means a sub-command name like '/libertybans ban' is tab completed
-			String lookingFor = args[0].toLowerCase(Locale.ROOT);
-			return subCommandCompletions(sender, (subCmd) -> subCmd.startsWith(lookingFor));
+			return subCommandCompletions(sender, (subCmd) -> subCmd.startsWith(firstArg));
 		}
-		String firstArg = args[0].toLowerCase(Locale.ROOT);
 		SubCommandGroup subCommand = getMatchingSubCommand(firstArg);
 		if (subCommand == null || !subCommand.hasTabCompletePermission(sender, firstArg)) {
 			return List.of();
 		}
 		/*
-		Subtract 2 from arguments length to determine argument index
+		Subtract 2 from total arguments length to determine argument index
 		'/libertybans ban A248' - argIndex is 0 for the first argument, which is A248
 		'/libertybans ban A248 ' - argIndex is 1 for the second argument, after A248
 		'/libertybans ban A248 30d' - argIndex is 1, again
 		 */
-		int argIndex = args.length - 2;
+		String[] remainder = args.collectArray();
+		int argIndex = remainder.length - 1; // one consumed already
 		Stream<String> completions = subCommand.suggest(sender, firstArg, argIndex);
-		String lastArg = args[args.length - 1].toLowerCase(Locale.ROOT);
+		String lastArg = remainder[remainder.length - 1].toLowerCase(Locale.ROOT);
 		if (!lastArg.isEmpty()) {
 			completions = completions.filter((completion) -> completion.toLowerCase(Locale.ROOT).startsWith(lastArg));
 		}

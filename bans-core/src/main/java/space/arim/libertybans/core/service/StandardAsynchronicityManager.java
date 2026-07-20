@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -104,13 +104,12 @@ public class StandardAsynchronicityManager implements AsynchronicityManager {
 		universalJoiner.shutdown();
 
 		/*
-		 * On Bukkit, this prevents deadlocks. On any other platform, this is
-		 * unimportant.
+		 * Aim to await all posted futures. Use the futures factory so that on Bukkit, Fabric, and Sponge, deadlocks do
+		 * not happen. On proxy platforms, deadlock is not a concern.
 		 *
-		 * By awaiting termination through the futures factory, the managed wait
-		 * implementation breaks dependencies arising from tasks needing the main
-		 * thread. If the main thread is simply blocked, tasks depending on it cannot
-		 * complete.
+		 * By awaiting termination through the futures factory, the managed wait implementation breaks dependencies
+		 * arising from tasks needing the main thread. If the main thread were simply blocked, tasks depending on it
+		 * could not complete.
 		 */
 		boolean termination = futuresFactory.supplyAsync(() -> {
 			try {

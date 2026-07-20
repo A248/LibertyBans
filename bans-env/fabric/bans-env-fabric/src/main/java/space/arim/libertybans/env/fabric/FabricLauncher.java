@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,8 +20,7 @@
 package space.arim.libertybans.env.fabric;
 
 import net.fabricmc.loader.api.ModContainer;
-import net.minecraft.server.MinecraftServer;
-import org.slf4j.LoggerFactory;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.injector.Identifier;
 import space.arim.injector.InjectorBuilder;
 import space.arim.injector.SpecificationSupport;
@@ -34,33 +33,31 @@ import space.arim.libertybans.core.CommandsModule;
 import space.arim.libertybans.core.PillarOneBindModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
 import space.arim.libertybans.core.env.InstanceType;
+import space.arim.libertybans.env.adventure5common.Adventure5CompatLayer;
 import space.arim.omnibus.Omnibus;
+import space.arim.omnibus.OmnibusProvider;
 
 import java.nio.file.Path;
 
 public final class FabricLauncher implements PlatformLauncher {
 
     private final Payload<ModContainer> payload;
-    private final MinecraftServer server;
     private final Omnibus omnibus;
 
-    public FabricLauncher(Payload<ModContainer> payload, MinecraftServer server, Omnibus omnibus) {
+    public FabricLauncher(Payload<ModContainer> payload) {
+        this(payload, OmnibusProvider.getOmnibus());
+    }
+
+    public FabricLauncher(Payload<ModContainer> payload, Omnibus omnibus) {
         this.payload = payload;
-        this.server = server;
         this.omnibus = omnibus;
     }
 
     @Override
     public BaseFoundation launch() {
-        Thread mainThread = Thread.currentThread();
-        LoggerFactory.getLogger(getClass()).info(
-                "Using thread '{}' as the main thread. Details: {}", mainThread.getName(), mainThread
-        );
         return new InjectorBuilder()
                 .bindInstance(ModContainer.class, payload.plugin())
-                .bindInstance(MinecraftServer.class, server)
                 .bindInstance(PlatformId.class, payload.platformId())
-                .bindInstance(Identifier.ofTypeAndNamed(Thread.class, "mainThread"), mainThread)
                 .bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), payload.pluginFolder())
                 .bindInstance(InstanceType.class, InstanceType.GAME_SERVER)
                 .bindInstance(Omnibus.class, omnibus)
@@ -71,6 +68,7 @@ public final class FabricLauncher implements PlatformLauncher {
                         new CommandsModule(),
                         new FabricBindModule()
                 )
+                .bindInstance(Adventure5Compat.class, new Adventure5CompatLayer())
                 .specification(SpecificationSupport.JAKARTA)
                 .multiBindings(true)
                 .build()

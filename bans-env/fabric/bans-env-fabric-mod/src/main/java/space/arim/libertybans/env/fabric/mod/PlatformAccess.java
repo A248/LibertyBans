@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,12 +20,40 @@
 package space.arim.libertybans.env.fabric.mod;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import org.jspecify.annotations.Nullable;
 import space.arim.libertybans.bootstrap.BaseFoundation;
+
+import java.net.SocketAddress;
+import java.util.UUID;
 
 public interface PlatformAccess {
 
-	LiteralArgumentBuilder<ServerCommandSource> commandHandler();
+    void installServer(MinecraftServer server);
+
+	LiteralArgumentBuilder<CommandSourceStack> rootCommand();
+
+    @Nullable Component checkConnection(UUID uuid, SocketAddress address, String name);
+
+    boolean checkCommand(ServerPlayer player, String command);
+
+    final class Holder {
+
+        private static volatile PlatformAccess access;
+
+        private Holder() {}
+
+        public static @Nullable PlatformAccess getInstance() {
+            return Holder.access;
+        }
+
+        static void install(BaseFoundation base) {
+            access = access(base);
+        }
+    }
 
     static PlatformAccess access(BaseFoundation base) {
         return (PlatformAccess) base.platformAccess();
