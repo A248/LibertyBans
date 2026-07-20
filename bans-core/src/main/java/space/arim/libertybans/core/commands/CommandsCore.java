@@ -72,27 +72,28 @@ public class CommandsCore implements Commands {
 	 */
 
 	@Override
-	public void execute(CmdSender sender, CommandPackage command) {
+	public void execute(CmdSender sender, CommandSource source) {
+		CommandPackage args = new CommandPackage(source);
 		if (!sender.hasPermission(BASE_COMMAND_PERMISSION)) {
 			sender.sendMessage(configs.getMessagesConfig().all().basePermissionMessage());
 			return;
 		}
-		if (!command.hasNext()) {
+		if (!args.hasNext()) {
 			infoMessage.send(sender);
 			sender.sendLiteralMessage("&7Use '/libertybans usage' for help");
 			return;
 		}
-		String firstArg = command.next().toLowerCase(Locale.ROOT);
+		String firstArg = args.next().toLowerCase(Locale.ROOT);
 		if (firstArg.equals("version") || firstArg.equals("about")) {
 			infoMessage.send(sender);
 			return;
 		}
 		SubCommandGroup subCommand = getMatchingSubCommand(firstArg);
 		if (subCommand == null) {
-			usage.sendUsage(sender, command, firstArg.equals("usage") || firstArg.equals("help"));
+			usage.sendUsage(sender, args, firstArg.equals("usage") || firstArg.equals("help"));
 			return;
 		}
-		CommandExecution execution = subCommand.execute(sender, command, firstArg);
+		CommandExecution execution = subCommand.execute(sender, args, firstArg);
 		ReactionStage<Void> future = execution.execute();
 		if (future != null) {
 			futurePoster.postFuture(future);
@@ -119,7 +120,8 @@ public class CommandsCore implements Commands {
 	}
 
 	@Override
-	public List<String> suggest(CmdSender sender, CommandPackage args) {
+	public List<String> suggest(CmdSender sender, CommandSource source) {
+		CommandPackage args = new CommandPackage(source);
 		if (!sender.hasPermission(BASE_COMMAND_PERMISSION) || !configs.getMainConfig().commands().tabComplete()) {
 			// No permission or tab complete is disabled
 			return List.of();
@@ -129,7 +131,8 @@ public class CommandsCore implements Commands {
 			return subCommandCompletions(sender, (subCmd) -> true);
 		}
 		String firstArg = args.next().toLowerCase(Locale.ROOT);
-		if (!args.hasNext()) {
+		CommandPackage.CountAndLast countAndLast = args.countAndLast();
+		if (countAndLast == null) {
 			// Length 1 means a sub-command name like '/libertybans ban' is tab completed
 			return subCommandCompletions(sender, (subCmd) -> subCmd.startsWith(firstArg));
 		}
@@ -143,10 +146,9 @@ public class CommandsCore implements Commands {
 		'/libertybans ban A248 ' - argIndex is 1 for the second argument, after A248
 		'/libertybans ban A248 30d' - argIndex is 1, again
 		 */
-		String[] remainder = args.collectArray();
-		int argIndex = remainder.length - 1; // one consumed already
+		int argIndex = countAndLast.count() - 1; // one consumed already
 		Stream<String> completions = subCommand.suggest(sender, firstArg, argIndex);
-		String lastArg = remainder[remainder.length - 1].toLowerCase(Locale.ROOT);
+		String lastArg = countAndLast.last().toLowerCase(Locale.ROOT);
 		if (!lastArg.isEmpty()) {
 			completions = completions.filter((completion) -> completion.toLowerCase(Locale.ROOT).startsWith(lastArg));
 		}

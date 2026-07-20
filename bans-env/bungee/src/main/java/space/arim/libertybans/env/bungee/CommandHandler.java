@@ -28,10 +28,8 @@ import net.md_5.bungee.api.plugin.PluginManager;
 import net.md_5.bungee.api.plugin.TabExecutor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.api.env.AudienceRepresenter;
-import space.arim.libertybans.core.commands.ArrayCommandPackage;
-import space.arim.libertybans.core.commands.CommandPackage;
+import space.arim.libertybans.core.commands.CommandSource;
 import space.arim.libertybans.core.commands.Commands;
-import space.arim.libertybans.core.commands.PrependedCommandPackage;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AliasCommand;
 import space.arim.libertybans.core.env.CmdSender;
@@ -103,10 +101,10 @@ public final class CommandHandler extends Command implements TabExecutor, AliasC
 		commandHelper.plugin.getProxy().getPluginManager().unregisterCommand(this);
 	}
 
-	private CommandPackage adaptArgs(String[] argArray) {
-		CommandPackage args = ArrayCommandPackage.create(argArray);
+	private CommandSource adaptArgs(String[] argArray) {
+		CommandSource args = new CommandSource.OfArray(argArray);
 		if (aliasTarget != null) {
-			args = new PrependedCommandPackage(aliasTarget, args);
+			args = new CommandSource.Prepended(aliasTarget, args);
 		}
 		return args;
 	}

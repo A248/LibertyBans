@@ -33,7 +33,7 @@ public interface Commands {
 	 * @param sender the command sender
 	 * @param command the command
 	 */
-	void execute(CmdSender sender, CommandPackage command);
+	void execute(CmdSender sender, CommandSource command);
 
 	/**
 	 * Requests tab completions
@@ -43,7 +43,7 @@ public interface Commands {
 	 *             also include trailing empty elements if the player is completing the latest argument as a wildcard.
 	 * @return the tab completions
 	 */
-	List<String> suggest(CmdSender sender, CommandPackage args);
+	List<String> suggest(CmdSender sender, CommandSource args);
 
 	/**
 	 * Determines whether a sender has permission for a command, for tab completion purposes

@@ -21,13 +21,13 @@ package space.arim.libertybans.core.commands;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
 
 /**
- * A command argument iterator. Defines several means for accessing
- * command arguments: <br>
+ * A command argument iterator. Defines several means for accessing command arguments: <br>
  * <br>
  * 1. Iterative methods: next, hasNext, and peek.
  * 2. Aggregate methods: allRemaining
@@ -42,35 +42,59 @@ import java.util.List;
  * "encountered" if the process of iteration has passed the argument in its course.
  *
  */
-public interface CommandPackage extends Iterator<String> {
+public final class CommandPackage implements CommandSource {
+
+	private final CommandSource source;
+	private final Map<String, String> hiddenArguments;
 
 	/**
 	 * The prefix denoting a hidden argument
 	 */
-	char HIDDEN_ARG_PREFIX = '-';
+	private static final char HIDDEN_ARG_PREFIX = '-';
 
-	/**
-	 * Gets the current argument and advances to the next argument
-	 * 
-	 * @return the current argument
-	 */
+	private CommandPackage(CommandSource source, Map<String, String> hiddenArguments) {
+		this.source = Objects.requireNonNull(source, "source");
+		this.hiddenArguments = hiddenArguments;
+	}
+
+    public CommandPackage(CommandSource source) {
+		this(source, new HashMap<>());
+		movePastHiddenArguments();
+    }
+
+	// Maintains the guarantee that iterator never refers to a hidden argument
+	private void movePastHiddenArguments() {
+		String hiddenArg;
+		while (source.hasNext()
+				&& !(hiddenArg = source.peek()).isEmpty()
+				&& hiddenArg.charAt(0) == HIDDEN_ARG_PREFIX) {
+			String next = source.next();
+			assert hiddenArg.equals(next) : "bad impl source";
+			// Then parse it and add it to our known collection
+			String[] hiddenArgPieces = hiddenArg.split("=", 2);
+			hiddenArguments.put(
+					hiddenArgPieces[0].toLowerCase(Locale.ROOT),
+					hiddenArgPieces.length == 2 ? hiddenArgPieces[1] : null
+			);
+		}
+	}
+
 	@Override
-	String next();
+	public String next() {
+		String innerNext = source.next();
+		movePastHiddenArguments();
+		return innerNext;
+	}
 
-	/**
-	 * Gets the current argument without advancing to the next one
-	 * 
-	 * @return the current argument
-	 */
-	String peek();
-
-	/**
-	 * Indicates whether there are more arguments.
-	 * 
-	 * @return true if there are more arguments, false otherwise
-	 */
 	@Override
-	boolean hasNext();
+	public String peek() {
+		return source.peek();
+	}
+
+	@Override
+	public boolean hasNext() {
+		return source.hasNext();
+	}
 
 	/**
 	 * Finds a certain hidden argument. See the class javadoc for the meaning of hidden arguments. <br>
@@ -81,7 +105,9 @@ public interface CommandPackage extends Iterator<String> {
 	 * @param argument the hidden argument, excluding any special leading characters. Case insensitive
 	 * @return whether the hidden argument is present in the arguments which have been encountered so far
 	 */
-	boolean findHiddenArgument(String argument);
+	public boolean findHiddenArgument(String argument) {
+		return hiddenArguments.containsKey(argument);
+	}
 
 	/**
 	 * Finds a certain hidden argument such as "arg=value" and yields the associated value.
@@ -91,44 +117,40 @@ public interface CommandPackage extends Iterator<String> {
 	 * @param argPrefix the first part of the hidden argument, i.e. "arg" in "arg=value"
 	 * @return the value if it exists
 	 */
-	@Nullable String findHiddenArgumentSpecifiedValue(String argPrefix);
+	public @Nullable String findHiddenArgumentSpecifiedValue(String argPrefix) {
+		return hiddenArguments.get(argPrefix);
+	}
+
+	@Override
+	public CommandPackage copy() {
+		CommandSource source = this.source.copy();
+		Map<String, String> hiddenArguments = new HashMap<>(this.hiddenArguments);
+		return new CommandPackage(source, hiddenArguments);
+	}
+
+	@Override
+	public String allRemaining() {
+		return source.allRemaining();
+	}
 
 	/**
-	 * Concatenates the current argument and all remaining arguments. This would
-	 * be equivalent to joining all calls to {@link #next()}, separating with spaces,
-	 * until this iterator is exhausted.
-	 * 
-	 * @return the concatenated result
-	 */
-	String allRemaining();
-
-	/**
-	 * Creates an identical copy of this command package. Mutating this object
-	 * or the produced copy will not affect the other.
+	 * Gets remaining arguments, skipping hidden ones, counting them and getting the last argument
 	 *
-	 * @return the copy
+	 * @return the count and last argument
 	 */
-	CommandPackage copy();
-
-	/**
-	 * Gets remaining arguments, one by one, skipping hidden arguments
-	 *
-	 * @return the collected arguments
-	 */
-	default List<String> collect() {
-		List<String> result = new ArrayList<>();
-		while (hasNext()) {
-			result.add(next());
+	public @Nullable CountAndLast countAndLast() {
+		if (!hasNext()) {
+			return null;
 		}
-		return result;
+		int count = 0;
+		String last;
+		do {
+			count++;
+			last = next();
+		} while (hasNext());
+		return new CountAndLast(count, last);
 	}
 
-	/**
-	 * Same as {@link #collect()}
-	 *
-	 * @return the collected arguments
-	 */
-	default String[] collectArray() {
-		return collect().toArray(String[]::new);
-	}
+	public record CountAndLast(int count, String last) {}
+
 }

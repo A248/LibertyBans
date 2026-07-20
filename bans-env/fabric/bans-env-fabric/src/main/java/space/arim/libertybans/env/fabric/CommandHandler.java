@@ -37,10 +37,8 @@ import org.slf4j.LoggerFactory;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
-import space.arim.libertybans.core.commands.CommandPackage;
+import space.arim.libertybans.core.commands.CommandSource;
 import space.arim.libertybans.core.commands.Commands;
-import space.arim.libertybans.core.commands.PrependedCommandPackage;
-import space.arim.libertybans.core.commands.StringCommandPackage;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AliasCommand;
 import space.arim.libertybans.core.env.CmdSender;
@@ -145,13 +143,13 @@ public final class CommandHandler implements Command<CommandSourceStack>, Sugges
                 .executes(this);
     }
 
-    private CommandPackage adaptArgs(String input) {
-        CommandPackage args = StringCommandPackage.create(input);
+    private CommandSource adaptArgs(String input) {
+        CommandSource args = new CommandSource.OfString(input);
         if (aliasTarget == null) {
             args.next();
         } else if (!aliasTarget.equals(name)) {
             args.next();
-            args = new PrependedCommandPackage(aliasTarget, args);
+            args = new CommandSource.Prepended(aliasTarget, args);
         }
         return args;
     }
@@ -159,7 +157,7 @@ public final class CommandHandler implements Command<CommandSourceStack>, Sugges
     @Override
     public int run(CommandContext<CommandSourceStack> context) {
         CmdSender sender = commandFactory.adaptSender(context.getSource());
-        CommandPackage args = adaptArgs(context.getInput());
+        CommandSource args = adaptArgs(context.getInput());
         LOGGER.trace("Executing command by {} with arguments {}", sender, args);
         commandFactory.commands.execute(sender, args);
         return Command.SINGLE_SUCCESS;
@@ -180,7 +178,7 @@ public final class CommandHandler implements Command<CommandSourceStack>, Sugges
             LOGGER.warn("Expectations violated; empty input while computing suggestions");
             return builder.buildFuture();
         }
-        CommandPackage args = adaptArgs(input.substring(1));
+        CommandSource args = adaptArgs(input.substring(1));
         LOGGER.trace("Computing suggestions to send to {} based on args {}", sender, args);
         for (String suggestion : commandFactory.commands.suggest(sender, args)) {
             builder.suggest(suggestion);

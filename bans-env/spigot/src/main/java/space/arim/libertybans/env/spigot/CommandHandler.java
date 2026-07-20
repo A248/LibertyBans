@@ -32,10 +32,8 @@ import space.arim.api.env.bukkit.BukkitCommandSkeleton;
 import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.PlayerOperator;
-import space.arim.libertybans.core.commands.ArrayCommandPackage;
-import space.arim.libertybans.core.commands.CommandPackage;
+import space.arim.libertybans.core.commands.CommandSource;
 import space.arim.libertybans.core.commands.Commands;
-import space.arim.libertybans.core.commands.PrependedCommandPackage;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AliasCommand;
 import space.arim.libertybans.core.env.CmdSender;
@@ -131,10 +129,10 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Alias
 		}
 	}
 
-	private CommandPackage adaptArgs(String[] argArray) {
-		CommandPackage args = ArrayCommandPackage.create(argArray);
+	private CommandSource adaptArgs(String[] argArray) {
+		CommandSource args = new CommandSource.OfArray(argArray);
 		if (aliasTarget != null) {
-			args = new PrependedCommandPackage(aliasTarget, args);
+			args = new CommandSource.Prepended(aliasTarget, args);
 		}
 		return args;
 	}

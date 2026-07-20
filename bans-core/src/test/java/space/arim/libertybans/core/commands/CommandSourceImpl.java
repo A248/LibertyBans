@@ -26,56 +26,56 @@ import org.junit.jupiter.params.support.ParameterDeclarations;
 
 import java.util.stream.Stream;
 
-public interface CommandPackageImpl {
+public interface CommandSourceImpl {
 
-	CommandPackage create(String args);
+	CommandSource create(String args);
 
-	CommandPackage createEmpty();
+	CommandSource createEmpty();
 
 	class Provider implements ArgumentsProvider {
 
 		@Override
 		public Stream<? extends Arguments> provideArguments(ParameterDeclarations parameterDeclarations,
 															ExtensionContext context) throws Exception {
-			CommandPackageImpl impl1 = new CommandPackageImpl() {
+			CommandSourceImpl impl1 = new CommandSourceImpl() {
 				@Override
-				public CommandPackage create(String args) {
-					return ArrayCommandPackage.create(args.split(" ", -1));
+				public CommandSource create(String args) {
+					return new CommandSource.OfArray(args.split(" ", -1));
 				}
 
 				@Override
-				public CommandPackage createEmpty() {
-					return ArrayCommandPackage.create();
-				}
-			};
-			CommandPackageImpl impl2 = new CommandPackageImpl() {
-				@Override
-				public CommandPackage create(String args) {
-					return StringCommandPackage.create(args);
-				}
-
-				@Override
-				public CommandPackage createEmpty() {
-					CommandPackage commandPackage = StringCommandPackage.create("");
-					commandPackage.next();
-					return commandPackage;
+				public CommandSource createEmpty() {
+					return new CommandSource.OfArray();
 				}
 			};
-			class Impl3 implements CommandPackageImpl {
+			CommandSourceImpl impl2 = new CommandSourceImpl() {
+				@Override
+				public CommandSource create(String args) {
+					return new CommandSource.OfString(args);
+				}
 
-				private final CommandPackageImpl inner;
+				@Override
+				public CommandSource createEmpty() {
+					CommandSource source = create("");
+					source.next();
+					return source;
+				}
+			};
+			class Impl3 implements CommandSourceImpl {
 
-                Impl3(CommandPackageImpl inner) {
+				private final CommandSourceImpl inner;
+
+                Impl3(CommandSourceImpl inner) {
                     this.inner = inner;
                 }
 
 				@Override
-				public CommandPackage create(String args) {
+				public CommandSource create(String args) {
 					int indexOfSpace = args.indexOf(' ');
 					if (indexOfSpace == -1) {
 						return inner.create(args);
 					} else {
-						return new PrependedCommandPackage(
+						return new CommandSource.Prepended(
 								args.substring(0, indexOfSpace),
 								inner.create(args.substring(indexOfSpace + 1))
 						);
@@ -83,7 +83,7 @@ public interface CommandPackageImpl {
 				}
 
 				@Override
-				public CommandPackage createEmpty() {
+				public CommandSource createEmpty() {
 					return inner.createEmpty();
 				}
 			}

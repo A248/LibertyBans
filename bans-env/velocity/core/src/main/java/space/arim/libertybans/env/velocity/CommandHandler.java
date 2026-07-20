@@ -21,7 +21,6 @@ package space.arim.libertybans.env.velocity;
 
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
-import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
@@ -29,10 +28,8 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import jakarta.inject.Inject;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import space.arim.libertybans.core.commands.ArrayCommandPackage;
-import space.arim.libertybans.core.commands.CommandPackage;
+import space.arim.libertybans.core.commands.CommandSource;
 import space.arim.libertybans.core.commands.Commands;
-import space.arim.libertybans.core.commands.PrependedCommandPackage;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AliasCommand;
 import space.arim.libertybans.core.env.CmdSender;
@@ -71,7 +68,7 @@ public final class CommandHandler implements SimpleCommand, AliasCommand {
 			this.server = server;
 		}
 
-		private CmdSender adaptSender(CommandSource platformSender) {
+		private CmdSender adaptSender(com.velocitypowered.api.command.CommandSource platformSender) {
 			if (platformSender instanceof Player player) {
 				return new VelocityCmdSender.PlayerSender(formatter, interlocutor, player, server);
 			}
@@ -114,17 +111,17 @@ public final class CommandHandler implements SimpleCommand, AliasCommand {
 		cmdManager.unregister(name);
 	}
 
-	private CommandPackage adaptArgs(Invocation invocation, boolean tabComplete) {
+	private CommandSource adaptArgs(Invocation invocation, boolean tabComplete) {
 		String[] args = invocation.arguments();
 		if (aliasTarget != null) {
 			if (tabComplete && args.length == 0) {
 				// This fixes tab completion for aliased commands
 				// Tab completion relies on the existence of empty strings
-				return ArrayCommandPackage.create(aliasTarget, "");
+				return new CommandSource.OfArray(aliasTarget, "");
 			}
-			return new PrependedCommandPackage(aliasTarget, ArrayCommandPackage.create(args));
+			return new CommandSource.Prepended(aliasTarget, new CommandSource.OfArray(args));
 		}
-		return ArrayCommandPackage.create(args);
+		return new CommandSource.OfArray(args);
 	}
 
 	@Override
@@ -143,9 +140,8 @@ public final class CommandHandler implements SimpleCommand, AliasCommand {
 
 	@Override
 	public boolean hasPermission(Invocation invocation) {
-		CommandSource platformSender = invocation.source();
 		return commandHelper.commands.hasPermissionFor(
-				commandHelper.adaptSender(platformSender),
+				commandHelper.adaptSender(invocation.source()),
 				Objects.requireNonNullElse(aliasTarget, name)
 		);
 	}

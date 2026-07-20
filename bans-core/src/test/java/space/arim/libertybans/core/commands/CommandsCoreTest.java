@@ -74,7 +74,7 @@ public class CommandsCoreTest {
 		when(messagesConfig.all()).thenReturn(all);
 		when(all.basePermissionMessage()).thenReturn(noPermMessage);
 
-		CommandPackage dummyCommand = ArrayCommandPackage.create("args");
+		CommandPackage dummyCommand = CommandSource.OfArray.create("args");
 		newCommandsCore(Set.of()).execute(sender, dummyCommand);
 
 		verify(sender).sendMessage(noPermMessage);
@@ -88,7 +88,7 @@ public class CommandsCoreTest {
 	public void usageUnknownCommand() {
 		addBasePermission();
 
-		CommandPackage dummyCommand = ArrayCommandPackage.create("args");
+		CommandPackage dummyCommand = CommandSource.OfArray.create("args");
 		newCommandsCore(Set.of()).execute(sender, dummyCommand);
 
 		verify(usage).sendUsage(sender, dummyCommand, false);
@@ -98,7 +98,7 @@ public class CommandsCoreTest {
 	public void explicitUsage() {
 		addBasePermission();
 
-		CommandPackage dummyCommand = ArrayCommandPackage.create("help");
+		CommandPackage dummyCommand = CommandSource.OfArray.create("help");
 		newCommandsCore(Set.of()).execute(sender, dummyCommand);
 
 		verify(usage).sendUsage(sender, dummyCommand, true);
@@ -115,7 +115,7 @@ public class CommandsCoreTest {
 		when(subCommandOneExecution.execute()).thenReturn(futuresFactory.completedFuture(null));
 		SubCommandGroup subCommandTwo = mock(SubCommandGroup.class);
 
-		CommandPackage commandOne = ArrayCommandPackage.create("one");
+		CommandPackage commandOne = CommandSource.OfArray.create("one");
 		newCommandsCore(Set.of(subCommandOne, subCommandTwo)).execute(sender, commandOne);
 
 		verify(subCommandOne).execute(sender, commandOne, "one");
@@ -132,7 +132,7 @@ public class CommandsCoreTest {
 		SubCommandGroup subCommandTwo = mock(SubCommandGroup.class);
 		when(subCommandTwo.matches()).thenReturn(Set.of());
 
-		CommandPackage commandNone = ArrayCommandPackage.create("none");
+		CommandPackage commandNone = CommandSource.OfArray.create("none");
 		newCommandsCore(Set.of(subCommandOne, subCommandTwo)).execute(sender, commandNone);
 
 		verify(usage).sendUsage(sender, commandNone, false);
@@ -146,7 +146,7 @@ public class CommandsCoreTest {
 		when(subCommand.execute(any(), any(), any())).thenReturn(commandExecution);
 		when(commandExecution.execute()).thenReturn(null);
 
-		CommandPackage command = ArrayCommandPackage.create("arg");
+		CommandPackage command = CommandSource.OfArray.create("arg");
 		newCommandsCore(Set.of(subCommand)).execute(sender, command);
 
 		verify(subCommand).execute(sender, command, "arg");
