@@ -4,7 +4,7 @@
   "name": "${plugin.name}",
   "version": "${plugin.version}",
   "description": "${plugin.description}",
-  "license": "AGPL-3.0-or-later",
+  "license": ["AGPL-3.0-or-later", "LGPL-3.0-or-later"],
   "contact": {
     "homepage": "${plugin.url}",
     "issues": "${plugin.url}/issues",
