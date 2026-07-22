@@ -105,7 +105,7 @@ public class PlayerUnpunishCommandsTest {
 
 		when(revoker.revokeByTypeAndPossibleVictims(any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory));
 
-		commands.execute(sender, ArrayCommandPackage.create(address), "unban").executeNow();
+		commands.execute(sender, CommandPackage.ofArray(address), "unban").executeNow();
 
 		verify(revoker).revokeByTypeAndPossibleVictims(
 				eq(PunishmentType.BAN), argThat(argument -> argument.contains(victim))
@@ -139,7 +139,7 @@ public class PlayerUnpunishCommandsTest {
 		}
 		lenient().when(revoker.revokeByTypeAndPossibleVictims(any(), any())).thenReturn(new EmptyRevocationOrder(futuresFactory));
 
-		commands.execute(sender, ArrayCommandPackage.create(address), "unban").executeNow();
+		commands.execute(sender, CommandPackage.ofArray(address), "unban").executeNow();
 
 		verify(sender).sendMessage(argThat(new ComponentMatcher<>(noPermission)));
 		verifyNoMoreInteractions(revoker);

@@ -21,25 +21,24 @@ package space.arim.libertybans.env.velocity;
 
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
-import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.plugin.PluginContainer;
+import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import jakarta.inject.Inject;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import space.arim.libertybans.core.commands.ArrayCommandPackage;
+import space.arim.libertybans.core.commands.CommandSource;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.env.AliasCommand;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.Interlocutor;
-import space.arim.libertybans.core.env.PlatformListener;
-import space.arim.omnibus.util.ArraysUtil;
 
 import java.util.List;
 import java.util.Objects;
 
-public final class CommandHandler implements SimpleCommand, PlatformListener {
+public final class CommandHandler implements SimpleCommand, AliasCommand {
 
 	private final CommandHelper commandHelper;
 	private final String name;
@@ -69,7 +68,7 @@ public final class CommandHandler implements SimpleCommand, PlatformListener {
 			this.server = server;
 		}
 
-		private CmdSender adaptSender(CommandSource platformSender) {
+		private CmdSender adaptSender(com.velocitypowered.api.command.CommandSource platformSender) {
 			if (platformSender instanceof Player player) {
 				return new VelocityCmdSender.PlayerSender(formatter, interlocutor, player, server);
 			}
@@ -79,13 +78,31 @@ public final class CommandHandler implements SimpleCommand, PlatformListener {
 	}
 
 	@Override
-	public void register() {
+	public void register(AliasCommand.RegisterOutcome registerOutcome) {
 		CommandManager commandManager = commandHelper.server.getCommandManager();
 		CommandMeta commandMeta = commandManager
 				.metaBuilder(name)
 				.plugin(commandHelper.plugin)
 				.build();
 		commandManager.register(commandMeta, this);
+		CommandMeta actualMeta = commandManager.getCommandMeta(name);
+		Object registeringPlugin;
+		if (actualMeta == null) {
+			registerOutcome.disappear();
+		} else if ((registeringPlugin = actualMeta.getPlugin()) == commandHelper.plugin) {
+			registerOutcome.success();
+		} else {
+			String belongingTo;
+			if (registeringPlugin instanceof PluginContainer otherPlugin) {
+				PluginDescription description = otherPlugin.getDescription();
+				belongingTo = description.getName().orElse(description.getId()) + ' ' + description.getVersion().orElse("0.0");
+			} else if (registeringPlugin != null) {
+				belongingTo = registeringPlugin.toString();
+			} else {
+				belongingTo = null;
+			}
+			registerOutcome.alreadyRegistered(actualMeta, belongingTo);
+		}
 	}
 
 	@Override
@@ -94,43 +111,37 @@ public final class CommandHandler implements SimpleCommand, PlatformListener {
 		cmdManager.unregister(name);
 	}
 
-	private String[] adaptArgs(String[] args, boolean tabComplete) {
+	private CommandSource adaptArgs(Invocation invocation, boolean tabComplete) {
+		String[] args = invocation.arguments();
 		if (aliasTarget != null) {
 			if (tabComplete && args.length == 0) {
 				// This fixes tab completion for aliased commands
 				// Tab completion relies on the existence of empty strings
-				return new String[] {aliasTarget, ""};
+				return new CommandSource.OfArray(aliasTarget, "");
 			}
-			return ArraysUtil.expandAndInsert(args, aliasTarget, 0);
+			return new CommandSource.Prepended(aliasTarget, new CommandSource.OfArray(args));
 		}
-		return args;
+		return new CommandSource.OfArray(args);
 	}
 
 	@Override
 	public void execute(Invocation invocation) {
-		CommandSource platformSender = invocation.source();
-		String[] args = invocation.arguments();
 		commandHelper.commands.execute(
-				commandHelper.adaptSender(platformSender),
-				ArrayCommandPackage.create(adaptArgs(args, false))
+				commandHelper.adaptSender(invocation.source()), adaptArgs(invocation, false)
 		);
 	}
 
 	@Override
 	public List<String> suggest(Invocation invocation) {
-		CommandSource platformSender = invocation.source();
-		String[] args = invocation.arguments();
 		return commandHelper.commands.suggest(
-				commandHelper.adaptSender(platformSender),
-				adaptArgs(args, true)
+				commandHelper.adaptSender(invocation.source()), adaptArgs(invocation, true)
 		);
 	}
 
 	@Override
 	public boolean hasPermission(Invocation invocation) {
-		CommandSource platformSender = invocation.source();
 		return commandHelper.commands.hasPermissionFor(
-				commandHelper.adaptSender(platformSender),
+				commandHelper.adaptSender(invocation.source()),
 				Objects.requireNonNullElse(aliasTarget, name)
 		);
 	}

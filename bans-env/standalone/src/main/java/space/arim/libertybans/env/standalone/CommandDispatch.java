@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,8 +22,8 @@ package space.arim.libertybans.env.standalone;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.LoggerFactory;
+import space.arim.libertybans.core.commands.CommandSource;
 import space.arim.libertybans.core.commands.Commands;
-import space.arim.libertybans.core.commands.StringCommandPackage;
 import space.arim.libertybans.core.env.PlatformListener;
 
 import java.util.function.Consumer;
@@ -56,7 +56,7 @@ public final class CommandDispatch implements PlatformListener, Consumer<String>
 			);
 			return;
 		}
-		commands.execute(sender, StringCommandPackage.create(command));
+		commands.execute(sender, new CommandSource.OfString(command));
 	}
 
 	@Override

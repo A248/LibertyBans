@@ -20,6 +20,7 @@
 package space.arim.libertybans.env.standalone;
 
 import jakarta.inject.Inject;
+import space.arim.libertybans.core.env.AliasCommand;
 import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.env.PlatformListener;
 
@@ -36,25 +37,17 @@ final class StandaloneEnv implements Environment {
 	}
 
 	@Override
-	public Set<PlatformListener> createListeners() {
+	public Set<PlatformListener> createListeners(AliasCommand.RegisterOutcome registerRootCommand) {
 		return Set.of(commandHandler);
 	}
 
 	@Override
-	public PlatformListener createAliasCommand(String alias, String target) {
-		// No-op
-		return new PlatformListener() {
-			@Override
-			public void register() {
-
-			}
-
-			@Override
-			public void unregister() {
-
-			}
-		};
+	public AliasCommand createAliasCommand(String alias, String target) {
+		return AliasCommand.NO_OP_SUCCESS;
 	}
+
+	@Override
+	public void refreshServerCommands() {}
 
 	@Override
 	public Consumer<String> platformAccess() {

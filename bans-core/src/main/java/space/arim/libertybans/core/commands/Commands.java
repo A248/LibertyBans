@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -33,18 +33,17 @@ public interface Commands {
 	 * @param sender the command sender
 	 * @param command the command
 	 */
-	void execute(CmdSender sender, CommandPackage command);
+	void execute(CmdSender sender, CommandSource command);
 
 	/**
 	 * Requests tab completions
 	 *
 	 * @param sender the command sender
-	 * @param args The argument array. This must include the command name as the first
-	 *             element in the array. This must also include trailing empty elements
-	 *             if the player is tab completing the latest argument in wildcard fashion.
+	 * @param args The arguments. This must include the command name as the first element in the iterator. This must
+	 *             also include trailing empty elements if the player is completing the latest argument as a wildcard.
 	 * @return the tab completions
 	 */
-	List<String> suggest(CmdSender sender, String[] args);
+	List<String> suggest(CmdSender sender, CommandSource args);
 
 	/**
 	 * Determines whether a sender has permission for a command, for tab completion purposes

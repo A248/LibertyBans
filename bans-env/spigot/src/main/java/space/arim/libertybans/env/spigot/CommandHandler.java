@@ -27,23 +27,24 @@ import org.bukkit.command.PluginIdentifiableCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.LoggerFactory;
 import space.arim.api.env.AudienceRepresenter;
 import space.arim.api.env.bukkit.BukkitCommandSkeleton;
-import space.arim.libertybans.core.commands.ArrayCommandPackage;
+import space.arim.libertybans.api.ConsoleOperator;
+import space.arim.libertybans.api.Operator;
+import space.arim.libertybans.api.PlayerOperator;
+import space.arim.libertybans.core.commands.CommandSource;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.env.AliasCommand;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.Interlocutor;
-import space.arim.libertybans.core.env.PlatformListener;
-import space.arim.omnibus.util.ArraysUtil;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-public final class CommandHandler extends BukkitCommandSkeleton implements PlatformListener, PluginIdentifiableCommand {
+public final class CommandHandler extends BukkitCommandSkeleton implements AliasCommand, PluginIdentifiableCommand {
 
 	private final CommandHelper commandHelper;
 	private final @Nullable String aliasTarget;
@@ -54,7 +55,7 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
         this.aliasTarget = aliasTarget;
 	}
 
-	public static class CommandHelper {
+	public static final class CommandHelper {
 		
 		private final InternalFormatter formatter;
 		private final Interlocutor interlocutor;
@@ -76,12 +77,13 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 		}
 
 		private CmdSender adaptSender(CommandSender platformSender) {
-			if (platformSender instanceof Player) {
-				return new SpigotCmdSender.PlayerSender(formatter, interlocutor, audienceRepresenter,
-						(Player) platformSender, plugin);
+			Operator operator;
+			if (platformSender instanceof Player playerSender) {
+				operator = PlayerOperator.of(playerSender.getUniqueId());
+			} else {
+				operator = ConsoleOperator.INSTANCE;
 			}
-			return new SpigotCmdSender.ConsoleSender(formatter, interlocutor, audienceRepresenter,
-					platformSender, plugin);
+			return new SpigotCmdSender(formatter, interlocutor, audienceRepresenter, platformSender, operator, plugin);
 		}
 	}
 
@@ -91,7 +93,7 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 	}
 
 	@Override
-	public void register() {
+	public void register(AliasCommand.RegisterOutcome registerOutcome) {
 		CommandMapHelper commandMapHelper = commandHelper.commandMapHelper;
 		CommandMap commandMap = commandMapHelper.getCommandMap();
 		if (commandMapHelper.getKnownCommands(commandMap) == null && aliasTarget != null) {
@@ -99,36 +101,18 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 		}
 		commandMap.register(getName(), commandHelper.plugin.getName().toLowerCase(Locale.ENGLISH), this);
 
-		Command otherCommand = commandMap.getCommand(getName());
-		boolean belongsToUs = otherCommand instanceof PluginIdentifiableCommand otherPluginCommand
-				&& otherPluginCommand.getPlugin() == getPlugin();
-		if (!belongsToUs && !getName().equals(Commands.BASE_COMMAND_NAME)) {
-
-			String belongingTo;
-			if (otherCommand instanceof PluginIdentifiableCommand otherPluginCommand) {
-				Plugin otherPlugin = otherPluginCommand.getPlugin();
-				belongingTo = " belonging to plugin " + otherPlugin.getDescription().getFullName();
+		Command actualCommand = commandMap.getCommand(getName());
+		if (actualCommand instanceof PluginIdentifiableCommand pluginCommand) {
+			Plugin registeringPlugin = pluginCommand.getPlugin();
+			if (registeringPlugin == getPlugin()) {
+				registerOutcome.success();
 			} else {
-				belongingTo = "";
+				registerOutcome.alreadyRegistered(actualCommand, registeringPlugin.getDescription().getFullName());
 			}
-			LoggerFactory.getLogger(getClass()).warn(
-					"""
-							LibertyBans attempted to register '/{}', but it already exists as {}{}.
-							
-							If you want LibertyBans to control this command, you must solve the command registration
-							conflict with the other plugin:
-							1. First check if the other plugin has an option to disable the command. If it does, use it.
-							   Good plugins will provide this option, but many, including Essentials, do not.
-							2. Otherwise, you will have to use the server's commands.yml to specify command overrides.
-							   You can find information about this at https://bukkit.fandom.com/wiki/Commands.yml
-							3. It is also possible to use an alias plugin to specify which plugin uses the command.
-							   Many alias plugins exist on popular plugin release websites.
-
-							If you do not want LibertyBans to control this command, you should disable it in the
-							alias configuration.
-							""",
-					getName(), otherCommand, belongingTo
-			);
+		} else if (actualCommand == null) {
+			registerOutcome.disappear();
+		} else {
+			registerOutcome.alreadyRegistered(actualCommand, null);
 		}
 	}
 
@@ -145,27 +129,22 @@ public final class CommandHandler extends BukkitCommandSkeleton implements Platf
 		}
 	}
 
-	private String[] adaptArgs(String[] args) {
+	private CommandSource adaptArgs(String[] argArray) {
+		CommandSource args = new CommandSource.OfArray(argArray);
 		if (aliasTarget != null) {
-			return ArraysUtil.expandAndInsert(args, aliasTarget, 0);
+			args = new CommandSource.Prepended(aliasTarget, args);
 		}
 		return args;
 	}
 
 	@Override
 	protected void execute(CommandSender platformSender, String[] args) {
-		commandHelper.commands.execute(
-				commandHelper.adaptSender(platformSender),
-				ArrayCommandPackage.create(adaptArgs(args))
-		);
+		commandHelper.commands.execute(commandHelper.adaptSender(platformSender), adaptArgs(args));
 	}
 
 	@Override
 	protected List<String> suggest(CommandSender platformSender, String[] args) {
-		return commandHelper.commands.suggest(
-				commandHelper.adaptSender(platformSender),
-				adaptArgs(args)
-		);
+		return commandHelper.commands.suggest(commandHelper.adaptSender(platformSender), adaptArgs(args));
 	}
 
 	@Override

@@ -27,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.api.env.PlatformHandle;
 import space.arim.libertybans.bootstrap.BaseFoundation;
+import space.arim.libertybans.core.env.AliasCommand;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.env.Environment;
@@ -90,15 +91,8 @@ public class JpmsTest {
 	public void startupAndShutdown() {
 		// This test is mostly intended to check that the configuration is exported to dazzleconf
 		when(handle.createFuturesFactory()).thenReturn(new IndifferentFactoryOfTheFuture());
-		when(environment.createListeners()).thenReturn(Set.of());
-		when(environment.createAliasCommand(any(), any())).thenReturn(new PlatformListener() {
-
-			@Override
-			public void register() { }
-
-			@Override
-			public void unregister() { }
-		});
+		when(environment.createListeners(any())).thenReturn(Set.of());
+		when(environment.createAliasCommand(any(), any())).thenReturn(AliasCommand.NO_OP_SUCCESS);
 
 		BaseFoundation foundation = newLauncher().launch();
 		assertDoesNotThrow(foundation::startup);

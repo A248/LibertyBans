@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -29,10 +29,8 @@ public class SpigotEnvTest {
 	public void allListenersDeclared() {
 		new InjectableConstructor(SpigotEnv.class)
 				.verifyParametersContainSubclassesOf(PlatformListener.class, (clazz) -> {
-					// Exclude CommandHandler since it is constructed directly
 					// Use only classes in our package or subpackages
-					return !clazz.equals(CommandHandler.class)
-							&& clazz.getPackageName().startsWith(getClass().getPackageName());
+					return clazz.getPackageName().startsWith(getClass().getPackageName());
 				});
 	}
 }

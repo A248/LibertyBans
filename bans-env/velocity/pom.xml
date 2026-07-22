@@ -32,20 +32,9 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>velocityfour</module>
 		<module>core</module>
 		<module>plugin</module>
 	</modules>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>space.arim.libertybans</groupId>
-				<artifactId>bans-env-velocityfour</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 
 	<repositories>
 		<repository>

@@ -22,12 +22,6 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>space.arim.parent</groupId>
-		<artifactId>common-parent</artifactId>
-		<version>0.4.3</version>
-	</parent>
-
 	<groupId>space.arim.libertybans</groupId>
 	<artifactId>bans-parent</artifactId>
 	<version>1.2.0-M1-SNAPSHOT</version>
@@ -40,7 +34,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<common-parent.deploy-url>https://maven.cloudsmith.io/anand-beh/affero-gpl3/</common-parent.deploy-url>
+		<deployment.deploy-url>https://maven.cloudsmith.io/anand-beh/affero-gpl3/</deployment.deploy-url>
+		<deployment.self-impl-hash>1dfb80352adbb90d3d25a3cc4f1d6d0dc310c22c96d95906c7b7947558ad90e545a7becef36fd0c5b28c7472099251a42e753efdec975157e68b46d51f3bd70a</deployment.self-impl-hash>
 
 		<!-- Testing dependencies -->
 		<junit.version>5.14.3</junit.version>
@@ -75,9 +70,6 @@
 		<sponge.version>15.0.0</sponge.version>
 		<velocity.version>3.1.0</velocity.version>
 
-		<!-- Internal hash -->
-		<self-implementation.hash>1dfb80352adbb90d3d25a3cc4f1d6d0dc310c22c96d95906c7b7947558ad90e545a7becef36fd0c5b28c7472099251a42e753efdec975157e68b46d51f3bd70a</self-implementation.hash>
-
 		<!-- Plugin variables -->
 		<plugin.id>libertybans</plugin.id>
 		<plugin.name>LibertyBans</plugin.name>
@@ -90,10 +82,6 @@
 		<!-- Database revision table -->
 		<dbrevision.major>3</dbrevision.major>
 		<dbrevision.minor>5</dbrevision.minor>
-
-		<!-- Skip javadocs and sources by default -->
-		<common-parent.skip-javadoc>true</common-parent.skip-javadoc>
-		<common-parent.skip-sources>true</common-parent.skip-sources>
 	</properties>
 
 	<scm>
@@ -107,7 +95,6 @@
 			<name>GNU Affero General Public License, Version 3</name>
 			<url>https://www.gnu.org/licenses/agpl-3.0-standalone.html</url>
 			<distribution>repo</distribution>
-			<comments>Strong copyleft license, commonly known as the GNU AGPL v3</comments>
 		</license>
 	</licenses>
 
@@ -128,12 +115,8 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.3.0</version>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.11.0</version>
 				<executions>
 					<execution>
 						<goals>
@@ -145,6 +128,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.6.1</version>
 				<executions>
 					<execution>
 						<id>enforce-sane-build</id>
@@ -241,7 +225,23 @@
 			<plugins>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>3.8.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-clean-plugin</artifactId>
+					<version>3.5.0</version>
+				</plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>3.5.0</version>
+                </plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.15.0</version>
 					<configuration>
 						<release>17</release>
 						<testRelease>17</testRelease>
@@ -249,7 +249,18 @@
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-install-plugin</artifactId>
+					<version>3.1.4</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>3.4.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-shade-plugin</artifactId>
+					<version>3.6.2</version>
 					<executions>
 						<execution>
 							<phase>package</phase>
@@ -264,7 +275,18 @@
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>3.3.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>3.11.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
+					<version>3.5.5</version>
 					<configuration>
 						<trimStackTrace>false</trimStackTrace>
 						<argLine>-XX:TieredStopAtLevel=1 -XX:-TieredCompilation -javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
@@ -273,6 +295,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-failsafe-plugin</artifactId>
+					<version>3.5.5</version>
 					<configuration>
 						<argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
 						<failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
@@ -281,7 +304,17 @@
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>
 					<artifactId>build-helper-maven-plugin</artifactId>
-					<version>3.2.0</version>
+					<version>3.6.1</version>
+				</plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>3.5.1</version>
+                </plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>versions-maven-plugin</artifactId>
+					<version>2.18.0</version>
 				</plugin>
 				<plugin>
 					<groupId>org.flywaydb</groupId>
@@ -296,7 +329,34 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-invoker-plugin</artifactId>
+					<version>3.9.1</version>
+					<executions>
+						<execution>
+							<id>install-artifacts</id>
+							<goals>
+								<goal>install</goal>
+							</goals>
+						</execution>
+						<execution>
+							<id>test-api-consumers</id>
+							<goals>
+								<goal>integration-test</goal>
+							</goals>
+							<configuration>
+								<goals>verify</goals>
+							</configuration>
+						</execution>
+						<execution>
+							<id>verify-api-consumers</id>
+							<goals>
+								<goal>verify</goal>
+							</goals>
+						</execution>
+					</executions>
 					<configuration>
+						<cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
+						<localRepositoryPath>${project.build.directory}/local-it-repo</localRepositoryPath>
+						<scope>test</scope>
 						<streamLogsOnFailures>true</streamLogsOnFailures>
 					</configuration>
 				</plugin>
@@ -367,7 +427,59 @@
 				</plugins>
 			</build>
 		</profile>
+		<profile>
+			<id>skip-all-tests</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>default-testCompile</id>
+								<configuration>
+									<skip>true</skip>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<skip>true</skip>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-failsafe-plugin</artifactId>
+						<configuration>
+							<skip>true</skip>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-invoker-plugin</artifactId>
+						<configuration>
+							<skipInstallation>true</skipInstallation>
+							<skipInvocation>true</skipInvocation>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
+
+	<distributionManagement>
+		<repository>
+			<id>cloudsmith-deploy</id>
+			<url>${deployment.deploy-url}</url>
+		</repository>
+		<snapshotRepository>
+			<id>cloudsmith-deploy</id>
+			<url>${deployment.deploy-url}</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 	<modules>
 		<module>bans-api</module>
@@ -403,6 +515,11 @@
 			</dependency>
 			<dependency>
 				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-env-fabric</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
 				<artifactId>bans-env-spigot</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -420,6 +537,12 @@
 				<groupId>space.arim.libertybans</groupId>
 				<artifactId>bans-env-bungeeplugin</artifactId>
 				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>space.arim.libertybans</groupId>
+				<artifactId>bans-env-fabric</artifactId>
+				<version>${project.version}</version>
+				<classifier>mod</classifier>
 			</dependency>
 			<dependency>
 				<groupId>space.arim.libertybans</groupId>
@@ -629,11 +752,6 @@
 				<groupId>org.yaml</groupId>
 				<artifactId>snakeyaml</artifactId>
 				<version>1.26</version>
-			</dependency>
-			<dependency>
-				<groupId>space.arim.licenser</groupId>
-				<artifactId>licenser-agpl3</artifactId>
-				<version>0.2.1</version>
 			</dependency>
 			<dependency>
 				<groupId>org.checkerframework</groupId>

@@ -79,6 +79,7 @@ public final class SpongePlugin {
 	}
 
 	private BaseFoundation getBase(String purpose, boolean tryStart) {
+		logger.info("Called to {}", purpose);
 		BaseFoundation base = this.base;
 		if (initializationFuture != null) {
 			try {
@@ -142,12 +143,11 @@ public final class SpongePlugin {
 
 		@Listener
 		public synchronized void onStop(StoppingEngineEvent<Server> event) {
-			BaseFoundation base = getBase("shutdown", false);
-			if (base == null) {
-				return;
-			}
+			BaseFoundation base = getBase("shut down", false);
 			SpongePlugin.this.base = null;
-			base.shutdown();
+			if (base != null) {
+				base.shutdown();
+			}
 		}
 	}
 

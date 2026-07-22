@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -128,7 +128,7 @@ public class UnspecifiedReasonsTest {
 
 	private void executeBan(CmdSender sender) {
 		when(sender.hasPermission(any())).thenReturn(true);
-		var execution = punishCommands.execute(sender, ArrayCommandPackage.create("A248"), "ban");
+		var execution = punishCommands.execute(sender, CommandPackage.ofArray("A248"), "ban");
 		try {
 			execution.executeNow();
 		} catch (CompletionException ex) {

@@ -175,8 +175,12 @@ public interface MainConfig {
 					" - Detecting the name of the backend server for use with server scopes",
 					" - Synchronizing punishments across instances, depending on the mode in the sql.yml",
 					"",
+					"WARNING",
 					"DO NOT enable this option if you do not run a network. Otherwise, you create a security vulnerability",
-					"whereby players can pretend to be coming from a proxy, evading kicks and sending sync messages.",
+					"whereby players can pretend to be coming from a proxy. Such a vulnerability could allow a dedicated attacker",
+					"to spoof the backend server name if they accomplish precise timing, plus spoof other proxy-retrieved data.",
+					"This would currently affect the server scopes feature and command tab completions.",
+					"",
 					"After changing this option, please perform a restart (/libertybans restart)."
 			})
 			@DefaultBoolean(false)
@@ -210,6 +214,24 @@ public interface MainConfig {
 			})
 			@DefaultBoolean(true)
 			boolean enforceServerSwitch();
+
+		}
+
+		@SubSection
+		Fabric fabric();
+
+		@ConfHeader("Settings for Fabric only. If you do not use Fabric, the settings here are useless.")
+		interface Fabric {
+
+			@ConfKey("register-commands-dynamically")
+			@ConfComments({
+					"By default, we register commands for all aliases requested. For example, '/ban' is forcibly registered and will replace the vanilla command.",
+					"However, this relies on modifying the server's commands tree and dynamic registration and deregistration. For technical reasons, we offer the option to disable it.",
+					"",
+					"If disabled, only the root command '/libertybans' will stay registered. All aliases will be disabled (requires /libertybans restart to take effect)."
+			})
+			@DefaultBoolean(true)
+			boolean registerCommandsDynamically();
 
 		}
 	}

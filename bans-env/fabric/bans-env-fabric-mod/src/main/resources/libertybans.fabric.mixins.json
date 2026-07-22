@@ -1,0 +1,9 @@
+{
+  "package": "space.arim.libertybans.env.fabric.mod.mixin",
+  "required": true,
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "ChatListenerMixin",
+    "ConnectionListenerMixin"
+  ]
+}

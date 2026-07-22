@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,16 +23,14 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import space.arim.api.env.AudienceRepresenter;
-import space.arim.libertybans.api.ConsoleOperator;
 import space.arim.libertybans.api.Operator;
-import space.arim.libertybans.api.PlayerOperator;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.env.AbstractCmdSender;
 import space.arim.libertybans.core.env.Interlocutor;
 
 import java.util.stream.Stream;
 
-public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
+final class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 
 	private final Plugin plugin;
 
@@ -44,40 +42,17 @@ public abstract class SpigotCmdSender extends AbstractCmdSender<CommandSender> {
 	}
 
 	@Override
-	public final Stream<String> getPlayerNames() {
+	public Stream<String> getPlayerNames() {
 		return plugin.getServer().getOnlinePlayers().stream().map(Player::getName);
 	}
 
 	@Override
-	public final Stream<String> getPlayerNamesOnSameServer() {
+	public Stream<String> getPlayerNamesOnSameServer() {
 		return getPlayerNames();
 	}
 
 	@Override
-	public final boolean hasPermission(String permission) {
+	public boolean hasPermission(String permission) {
 		return getRawSender().hasPermission(permission);
 	}
-
-	static class PlayerSender extends SpigotCmdSender {
-
-		PlayerSender(InternalFormatter formatter, Interlocutor interlocutor,
-					 AudienceRepresenter<CommandSender> audienceRepresenter,
-					 Player player, Plugin plugin) {
-			super(formatter, interlocutor, audienceRepresenter,
-					player, PlayerOperator.of(player.getUniqueId()), plugin);
-		}
-
-	}
-
-	static class ConsoleSender extends SpigotCmdSender {
-
-		ConsoleSender(InternalFormatter formatter, Interlocutor interlocutor,
-					  AudienceRepresenter<CommandSender> audienceRepresenter,
-					  CommandSender sender, Plugin plugin) {
-			super(formatter, interlocutor, audienceRepresenter,
-					sender, ConsoleOperator.INSTANCE, plugin);
-		}
-
-	}
-	
 }
