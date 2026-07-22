@@ -21,12 +21,11 @@ package space.arim.libertybans.env.sponge;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import space.arim.libertybans.core.env.AliasCommand;
 import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.libertybans.env.sponge.plugin.PlatformAccess;
-import space.arim.omnibus.util.ThisClass;
 
 import java.util.Set;
 
@@ -37,9 +36,7 @@ public final class SpongeEnv implements Environment {
 	private final Provider<ChatListener> chatListener;
 	private final PlatformAccess platformAccess;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ThisClass.get());
-
-	@Inject
+    @Inject
 	public SpongeEnv(Provider<ConnectionListener> connectionListener,Provider<JoinListener> joinListener,
 					 Provider<ChatListener> chatListener, PlatformAccess platformAccess) {
 		this.connectionListener = connectionListener;
@@ -49,25 +46,19 @@ public final class SpongeEnv implements Environment {
 	}
 
 	@Override
-	public Set<PlatformListener> createListeners() {
+	public Set<PlatformListener> createListeners(AliasCommand.RegisterOutcome registerRootCommand) {
 		return Set.of(
 				connectionListener.get(), joinListener.get(), chatListener.get()
 		);
 	}
 
 	@Override
-	public PlatformListener createAliasCommand(String alias, String target) {
-		LOGGER.debug("Skipping alias {} since the Sponge API does not support command unregistration.", alias);
-		class DummyListener implements PlatformListener {
-
-			@Override
-			public void register() {}
-
-			@Override
-			public void unregister() {}
-		}
-		return new DummyListener();
+	public @Nullable AliasCommand createAliasCommand(String alias, String target) {
+		return null;
 	}
+
+	@Override
+	public void refreshServerCommands() {}
 
 	@Override
 	public Object platformAccess() {

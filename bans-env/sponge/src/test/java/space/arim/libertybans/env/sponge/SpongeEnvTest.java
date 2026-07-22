@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -29,14 +29,8 @@ public class SpongeEnvTest {
 	public void allListenersDeclared() {
 		new InjectableConstructor(SpongeEnv.class)
 				.verifyParametersContainSubclassesOf(PlatformListener.class, (clazz) -> {
-					// Exclude CommandHandler which is constructed directly
 					// Use only classes in our package or subpackages
-					// Exclude enclosed, anonymous, or local classes
-					return !clazz.equals(CommandHandler.class)
-							&& clazz.getPackageName().startsWith(getClass().getPackageName())
-							&& clazz.getEnclosingClass() == null
-							&& !clazz.isAnonymousClass()
-							&& !clazz.isLocalClass();
+					return clazz.getPackageName().startsWith(getClass().getPackageName());
 				});
 	}
 

@@ -57,7 +57,7 @@
 		</dependency>
 		<dependency>
 			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-env-velocityfour</artifactId>
+			<artifactId>bans-env-adventure5-common</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.api</groupId>

@@ -18,6 +18,7 @@
  */
 package space.arim.libertybans.it.env;
 
+import space.arim.libertybans.core.env.AliasCommand;
 import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.env.PlatformListener;
 
@@ -26,23 +27,16 @@ import java.util.Set;
 public class QuackEnv implements Environment {
 
 	@Override
-	public Set<PlatformListener> createListeners() {
+	public Set<PlatformListener> createListeners(AliasCommand.RegisterOutcome registerRootOutcome) {
 		return Set.of();
 	}
 
 	@Override
-	public PlatformListener createAliasCommand(String alias, String target) {
-		return new PlatformListener() {
-
-			@Override
-			public void register() {
-			}
-
-			@Override
-			public void unregister() {
-			}
-
-		};
+	public AliasCommand createAliasCommand(String alias, String target) {
+		return AliasCommand.NO_OP_SUCCESS;
 	}
+
+	@Override
+	public void refreshServerCommands() {}
 
 }

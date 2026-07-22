@@ -35,7 +35,7 @@ import space.arim.libertybans.core.PillarOneBindModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
 import space.arim.libertybans.core.addon.AddonLoader;
 import space.arim.libertybans.core.env.InstanceType;
-import space.arim.libertybans.env.velocity.velocityfour.Adventure5ForVelocityFour;
+import space.arim.libertybans.env.adventure5common.Adventure5CompatLayer;
 import space.arim.omnibus.Omnibus;
 import space.arim.omnibus.OmnibusProvider;
 
@@ -83,7 +83,7 @@ public final class VelocityLauncher implements PlatformLauncher {
 		int majorVersion = extractMajorVer(proxyVersion);
 		Adventure5Compat adventure5Compat = switch (majorVersion) {
 			case 3 -> Adventure5Compat.DEFAULT;
-			case 4 -> new Adventure5ForVelocityFour();
+			case 4 -> new Adventure5CompatLayer();
 			default ->
 				throw new UnsupportedOperationException(
 						"Velocity major version unknown or not supported. Received proxy version '" + proxyVersion +

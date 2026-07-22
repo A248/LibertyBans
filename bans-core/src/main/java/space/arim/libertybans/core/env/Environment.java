@@ -19,24 +19,38 @@
 
 package space.arim.libertybans.core.env;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.Set;
 
 public interface Environment {
 
-	Set<PlatformListener> createListeners();
-
-	PlatformListener createAliasCommand(String alias, String target);
+	Set<PlatformListener> createListeners(AliasCommand.RegisterOutcome registerRootCommand);
 
 	/**
-	 * Used for Sponge and the standalone application only. <br>
+	 * Creates an alias to the plugin subcommand target
+	 *
+	 * @param alias the alias
+	 * @param target the subcommand to alias to
+	 * @return the registrable command upon success, or {@code null} if not supported by the platform
+	 */
+	@Nullable AliasCommand createAliasCommand(String alias, String target);
+
+	/**
+	 * Called after all aliases are registered
+	 */
+	void refreshServerCommands();
+
+	/**
+	 * Used for Sponge, Fabric, and the standalone application only. <br>
 	 * <br>
-	 * Sponge requires early command registration and service provision, while for the standalone application
-	 * this usage is merely convenient.
+	 * Sponge requires early command registration and service provision, Fabric needs similar command accessors;
+     * while for the standalone application this usage is merely convenient.
 	 *
 	 * @return the platform accessors
 	 */
 	default Object platformAccess() {
-		throw new UnsupportedOperationException("Used for Sponge and standalone only");
+		throw new UnsupportedOperationException("Used for Sponge/Fabric/standalone only");
 	}
 
 }

@@ -41,11 +41,11 @@ import space.arim.libertybans.core.PillarOneBindModule;
 import space.arim.libertybans.core.PillarTwoBindModule;
 import space.arim.libertybans.core.addon.Addon;
 import space.arim.libertybans.core.addon.AddonLoader;
+import space.arim.libertybans.core.env.AliasCommand;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.env.InstanceType;
-import space.arim.libertybans.core.env.PlatformListener;
 import space.arim.omnibus.util.concurrent.impl.IndifferentFactoryOfTheFuture;
 import space.arim.omnibus.util.concurrent.impl.SimplifiedEnhancedExecutor;
 
@@ -116,14 +116,8 @@ public class AddonsIT {
 	public void startup() throws IOException {
 		Files.createDirectories(folder.resolve("addons"));
 
-		when(environment.createListeners()).thenReturn(Set.of());
-		when(environment.createAliasCommand(any(), any())).thenReturn(new PlatformListener() {
-			@Override
-			public void register() {}
-
-			@Override
-			public void unregister() {}
-		});
+		when(environment.createListeners(any())).thenReturn(Set.of());
+		when(environment.createAliasCommand(any(), any())).thenReturn(AliasCommand.NO_OP_SUCCESS);
 		BaseFoundation foundation = injector.request(BaseFoundation.class);
 		foundation.assertStartup();
 	}

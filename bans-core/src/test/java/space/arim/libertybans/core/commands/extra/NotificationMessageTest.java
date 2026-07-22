@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,7 +25,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.PunishmentType;
-import space.arim.libertybans.core.commands.ArrayCommandPackage;
 import space.arim.libertybans.core.commands.CommandPackage;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.punish.Mode;
@@ -45,7 +44,7 @@ public class NotificationMessageTest {
 
 	@BeforeEach
 	public void setCommand() {
-		command = ArrayCommandPackage.create("-s", "user");
+		command = CommandPackage.ofArray("-s", "user");
 	}
 
 	private NotificationMessage newFor(CmdSender sender, PunishmentType type, Mode mode) {

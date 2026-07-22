@@ -32,8 +32,10 @@
 	<packaging>pom</packaging>
 
 	<modules>
+		<module>adventure5-common</module>
 		<module>bungee</module>
 		<module>bungeeplugin</module>
+        <module>fabric</module>
 		<module>spigot</module>
 		<module>spigotplugin</module>
 		<module>sponge</module>
@@ -45,6 +47,11 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>bans-env-adventure5-common</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>net.md-5</groupId>
 				<artifactId>bungeecord-api</artifactId>

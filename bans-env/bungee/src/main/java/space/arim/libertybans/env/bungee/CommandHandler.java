@@ -24,20 +24,21 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.Plugin;
+import net.md_5.bungee.api.plugin.PluginManager;
 import net.md_5.bungee.api.plugin.TabExecutor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.api.env.AudienceRepresenter;
-import space.arim.libertybans.core.commands.ArrayCommandPackage;
+import space.arim.libertybans.core.commands.CommandSource;
 import space.arim.libertybans.core.commands.Commands;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.env.AliasCommand;
 import space.arim.libertybans.core.env.CmdSender;
 import space.arim.libertybans.core.env.Interlocutor;
-import space.arim.libertybans.core.env.PlatformListener;
-import space.arim.omnibus.util.ArraysUtil;
 
+import java.util.Map;
 import java.util.Objects;
 
-public final class CommandHandler extends Command implements TabExecutor, PlatformListener {
+public final class CommandHandler extends Command implements TabExecutor, AliasCommand {
 
 	private final CommandHelper commandHelper;
 	private final @Nullable String aliasTarget;
@@ -48,7 +49,7 @@ public final class CommandHandler extends Command implements TabExecutor, Platfo
 		this.aliasTarget = aliasTarget;
 	}
 
-	public static class CommandHelper {
+	public static final class CommandHelper {
 
 		private final InternalFormatter formatter;
 		private final Interlocutor interlocutor;
@@ -75,13 +76,24 @@ public final class CommandHandler extends Command implements TabExecutor, Platfo
 			return new BungeeCmdSender.ConsoleSender(
 					formatter, interlocutor, audienceRepresenter, platformSender, plugin);
 		}
-
 	}
 
 	@Override
-	public void register() {
+	public void register(RegisterOutcome outcome) {
 		Plugin plugin = commandHelper.plugin;
-		plugin.getProxy().getPluginManager().registerCommand(plugin, this);
+		PluginManager pluginManager = plugin.getProxy().getPluginManager();
+		pluginManager.registerCommand(plugin, this);
+		for (Map.Entry<String, Command> entry : pluginManager.getCommands()) {
+			if (entry.getKey().equalsIgnoreCase(getName())) {
+				if (entry.getValue() == this) {
+					outcome.success();
+				} else {
+					outcome.alreadyRegistered(entry.getValue(), null);
+				}
+				return;
+			}
+		}
+		outcome.disappear();
 	}
 
 	@Override
@@ -89,27 +101,22 @@ public final class CommandHandler extends Command implements TabExecutor, Platfo
 		commandHelper.plugin.getProxy().getPluginManager().unregisterCommand(this);
 	}
 
-	private String[] adaptArgs(String[] args) {
+	private CommandSource adaptArgs(String[] argArray) {
+		CommandSource args = new CommandSource.OfArray(argArray);
 		if (aliasTarget != null) {
-			return ArraysUtil.expandAndInsert(args, aliasTarget, 0);
+			args = new CommandSource.Prepended(aliasTarget, args);
 		}
 		return args;
 	}
 
 	@Override
 	public void execute(CommandSender platformSender, String[] args) {
-		commandHelper.commands.execute(
-				commandHelper.adaptSender(platformSender),
-				ArrayCommandPackage.create(adaptArgs(args))
-		);
+		commandHelper.commands.execute(commandHelper.adaptSender(platformSender), adaptArgs(args));
 	}
 
 	@Override
 	public Iterable<String> onTabComplete(CommandSender platformSender, String[] args) {
-		return commandHelper.commands.suggest(
-				commandHelper.adaptSender(platformSender),
-				adaptArgs(args)
-		);
+		return commandHelper.commands.suggest(commandHelper.adaptSender(platformSender), adaptArgs(args));
 	}
 
 	@Override
@@ -119,5 +126,4 @@ public final class CommandHandler extends Command implements TabExecutor, Platfo
 				Objects.requireNonNullElse(aliasTarget, getName())
 		);
 	}
-
 }

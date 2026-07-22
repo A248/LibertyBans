@@ -22,6 +22,7 @@ package space.arim.libertybans.env.bungee;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import space.arim.libertybans.core.commands.Commands;
+import space.arim.libertybans.core.env.AliasCommand;
 import space.arim.libertybans.core.env.Environment;
 import space.arim.libertybans.core.env.PlatformListener;
 
@@ -44,16 +45,19 @@ public final class BungeeEnv implements Environment {
 	}
 
 	@Override
-	public Set<PlatformListener> createListeners() {
+	public Set<PlatformListener> createListeners(AliasCommand.RegisterOutcome registerRootCommand) {
 		return Set.of(
 				connectionListener.get(), joinListener.get(), chatListener.get(),
-				new CommandHandler(commandHelper, Commands.BASE_COMMAND_NAME, null)
+				new CommandHandler(commandHelper, Commands.BASE_COMMAND_NAME, null).asListener(registerRootCommand)
 		);
 	}
 
 	@Override
-	public PlatformListener createAliasCommand(String alias, String target) {
+	public AliasCommand createAliasCommand(String alias, String target) {
 		return new CommandHandler(commandHelper, alias, target);
 	}
+
+	@Override
+	public void refreshServerCommands() {}
 
 }

@@ -1,0 +1,77 @@
+/*
+ * LibertyBans-fabric
+ * Copyright © 2026 Anand Beh
+ *
+ * LibertyBans-fabric is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LibertyBans-fabric is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with LibertyBans-fabric. If not, see <https://www.gnu.org/licenses/>
+ * and navigate to version 3 of the GNU Lesser General Public License.
+ */
+
+package space.arim.libertybans.env.fabric;
+
+import net.fabricmc.loader.api.ModContainer;
+import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
+import space.arim.injector.Identifier;
+import space.arim.injector.InjectorBuilder;
+import space.arim.injector.SpecificationSupport;
+import space.arim.libertybans.bootstrap.BaseFoundation;
+import space.arim.libertybans.bootstrap.Payload;
+import space.arim.libertybans.bootstrap.PlatformId;
+import space.arim.libertybans.bootstrap.PlatformLauncher;
+import space.arim.libertybans.core.ApiBindModule;
+import space.arim.libertybans.core.CommandsModule;
+import space.arim.libertybans.core.PillarOneBindModule;
+import space.arim.libertybans.core.PillarTwoBindModule;
+import space.arim.libertybans.core.env.InstanceType;
+import space.arim.libertybans.env.adventure5common.Adventure5CompatLayer;
+import space.arim.omnibus.Omnibus;
+import space.arim.omnibus.OmnibusProvider;
+
+import java.nio.file.Path;
+
+public final class FabricLauncher implements PlatformLauncher {
+
+    private final Payload<ModContainer> payload;
+    private final Omnibus omnibus;
+
+    public FabricLauncher(Payload<ModContainer> payload) {
+        this(payload, OmnibusProvider.getOmnibus());
+    }
+
+    public FabricLauncher(Payload<ModContainer> payload, Omnibus omnibus) {
+        this.payload = payload;
+        this.omnibus = omnibus;
+    }
+
+    @Override
+    public BaseFoundation launch() {
+        return new InjectorBuilder()
+                .bindInstance(ModContainer.class, payload.plugin())
+                .bindInstance(PlatformId.class, payload.platformId())
+                .bindInstance(Identifier.ofTypeAndNamed(Path.class, "folder"), payload.pluginFolder())
+                .bindInstance(InstanceType.class, InstanceType.GAME_SERVER)
+                .bindInstance(Omnibus.class, omnibus)
+                .addBindModules(
+                        new ApiBindModule(),
+                        new PillarOneBindModule(),
+                        new PillarTwoBindModule(),
+                        new CommandsModule(),
+                        new FabricBindModule()
+                )
+                .bindInstance(Adventure5Compat.class, new Adventure5CompatLayer())
+                .specification(SpecificationSupport.JAKARTA)
+                .multiBindings(true)
+                .build()
+                .request(BaseFoundation.class);
+    }
+}

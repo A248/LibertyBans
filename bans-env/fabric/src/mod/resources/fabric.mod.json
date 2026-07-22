@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "${plugin.id}",
+  "name": "${plugin.name}",
+  "version": "${plugin.version}",
+  "description": "${plugin.description}",
+  "license": ["AGPL-3.0-or-later", "LGPL-3.0-or-later"],
+  "contact": {
+    "homepage": "${plugin.url}",
+    "issues": "${plugin.url}/issues",
+    "sources": "${plugin.url}"
+  },
+  "depends": {
+    "fabricloader": ">=${fabric.loader_version}",
+    "minecraft": "${fabric.minecraft_version}",
+    "java": ">=25",
+    "adventure-platform-fabric": "${fabric.adventure_platform_version}",
+    "fabric-api": "*"
+  },
+  "environment": "*",
+  "authors": [
+    {
+      "name": "${plugin.author}"
+    }
+  ],
+  "entrypoints": {
+    "main": [
+      "space.arim.libertybans.env.fabric.mod.FabricMod"
+    ]
+  },
+  "mixins": [
+    "libertybans.fabric.mixins.json"
+  ]
+}

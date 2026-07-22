@@ -77,12 +77,13 @@ Free software and high quality, LibertyBans is the best-designed punishment plug
 
 Supported platforms:
 
-* Spigot / Paper / Purpur (+Folia)
+* Bukkit Spigot / Paper / Purpur (+Folia)
 * BungeeCord / Waterfall
+* Fabric
 * Sponge
 * Velocity
 
-Compatibility with Geyser/Floodgate usernames. Platform forks supported where reasonable.
+Compatibility with Geyser/Floodgate usernames and China Edition. Platform forks supported where reasonable.
 
 Due to 1.19+ chat signing, installing LibertyBans on a Velocity proxy requires [SignedVelocity](https://modrinth.com/plugin/signedvelocity) for mutes to work. Velocity users will need to install SignedVelocity on their proxy and backend servers, or switch to using LibertyBans on the backend servers.
 
@@ -102,6 +103,11 @@ The developer API is extensive. LibertyBans does not recommend developers mess w
 
 ### License
 
-LibertyBans is licensed under the GNU AGPL v3. See the license file for more information.
+Most of LibertyBans is licensed under the GNU AGPL, v3 or later. See the license file LICENSE.txt for its terms.
+
+Some of LibertyBans falls under the GNU LGPL, v3 or later. See the LICENSE-LGPL.txt file. Covered areas include:
+* The initialization-related code in the bans-boostrap/ directory.
+* Support for the Fabric platform as implemented in the bans-env/fabric/ directory.
 
 [![GNU AGPL Logo](https://www.gnu.org/graphics/agplv3-155x51.png)](https://www.gnu.org/licenses/agpl-3.0.en.html)
+[![GNU LGPL Logo](https://www.gnu.org/graphics/lgplv3-147x51.png)](https://www.gnu.org/licenses/lgpl-3.0.en.html)

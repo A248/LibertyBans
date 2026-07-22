@@ -84,8 +84,12 @@ synchronization:
 
 We might implement more synchronization modes (like Redis, RabbitMQ, Kafka) if there is demand in the future.
 
+### Running on both the proxy and the backends at the same time
+
+This setup is not recommended. However, it is supported. There will be some resource wastage, like duplicated mute caching and login checks.
+
+If you use this approach, you will want to disable notification permissions in one of the places.
+
 ### Final Notes and Limitations
 
 **Kicking offline players**: LibertyBans can allow you to "kick" offline players if you are using synchronization. The kick will be recorded in punishment history.
-
-**Installing on proxy and backends simultaneously**: Installing LibertyBans on the proxy and backends at the same time is heavily discouraged and officially unsupported, but we will make an effort to help you if there are problems with it. You will need to configure permissions on the proxy and backend servers to avoid receiving double notifications for new punishments.
