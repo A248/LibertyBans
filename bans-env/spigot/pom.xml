@@ -39,7 +39,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>space.arim.libertybans.dep</groupId>
-			<artifactId>dep-spigot-api</artifactId>
+			<artifactId>dep-spigot-api-1.8.8</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>

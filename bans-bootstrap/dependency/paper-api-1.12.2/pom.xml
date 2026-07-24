@@ -1,0 +1,54 @@
+<!--
+  ~ LibertyBans-bootstrap
+  ~ Copyright © 2026 Anand Beh
+  ~
+  ~ LibertyBans-bootstrap is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Lesser General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ LibertyBans-bootstrap is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with LibertyBans-bootstrap. If not, see <https://www.gnu.org/licenses/>
+  ~ and navigate to version 3 of the GNU Lesser General Public License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>space.arim.libertybans.dep</groupId>
+		<artifactId>dep-parent</artifactId>
+		<version>1.2.0-M1-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>dep-paper-api-1.12.2</artifactId>
+
+	<properties>
+		<dep.enforce-phase>initialize</dep.enforce-phase>
+		<dep.file-name>com.destroystokyo.paper.paper-api</dep.file-name>
+		<dep.jar-sig>ed3b2b6fffcd782ee58bb83c561a1e21f089b97bced47eedbb1c1f3c919692f41ac1591b8259696e65cc523852252fee3733b74c8b8816988cf25d205f06b0ab</dep.jar-sig>
+		<dep.pom-sig>4d68a64a754f3b0139fb2370a917a7721bf4052d2ced637fd9b5253bda9c2163719e4ccc582dd943a3dec52d0f9dcd33ec93d7a7f235694731732bfb5bdf2c4c</dep.pom-sig>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.destroystokyo.paper</groupId>
+			<artifactId>paper-api</artifactId>
+			<version>1.12.2-R0.1-20190714.184133-413</version>
+		</dependency>
+	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>paper-snapshots</id>
+			<url>https://repo.papermc.io/repository/maven-snapshots/</url>
+		</repository>
+	</repositories>
+</project>

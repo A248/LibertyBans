@@ -253,11 +253,18 @@ Note: Snapshot versions are not checked by Gradle, so they are banned inside the
 
 To enforce snapshot consistency and checksums, snapshots must be listed and locked to a fixed version before their inclusion in the build. A locked snapshot looks like this: `org.spigotmc:spigot-api:1.8.8-R0.1-20160221.082514-43`.
 
-A snapshot dependency is referenced in 4 places:
+A snapshot dependency with only one used version is referenced in 4 places:
 1. In the parent pom's `<dependencyManagement>` section, under the comment "Locked snapshots". The version is defined here as a timestamped snapshot.
 2. In the parent pom's `enforce-locked-snapshots` execution of the maven-enforcer-plugin.
 3. Declared in the module that verifies its checksum, under `bans-boostrap/dependencies`.
-4. Referenced indirectly by the code that uses the dependency. The downstream consumer should refer to the module in `bans-boostrap/dependencies`, not the original dependency. The original dependency will be pulled in transitively.
+4. Referenced indirectly by the code that uses the dependency.
+
+A snapshot dependency with more than one version in use (for example, spigot-api 1.8.8 and spigot-api 1.16.5) is referenced in 3 logical places:
+1. In the parent pom's `enforce-locked-snapshots` execution of the maven-enforcer-plugin, per version.
+2. Declared in the module(s) that verifies its checksum, under `bans-boostrap/dependencies`.
+3. Referenced indirectly by the code that uses the dependency.
+
+The downstream consumer of a locked snapshot should refer to the module in `bans-boostrap/dependencies`, not the original dependency. The original dependency will be pulled in transitively.
 
 ## Repository filtering and prefixes
 

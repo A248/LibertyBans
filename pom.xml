@@ -69,9 +69,11 @@
 
 		<!-- Platform dependencies -->
 		<bungeecord.version>1.21-R0.3</bungeecord.version>
-		<spigot.version>1.8.8-R0.1-20160221.082514-43</spigot.version>
+		<spigot-1.8.8.version>1.8.8-R0.1-20160221.082514-43</spigot-1.8.8.version>
 		<sponge.version>15.0.0</sponge.version>
 		<velocity.version>3.1.0</velocity.version>
+		<bungeecord-chat-1.8.version>1.8-20160221.214602-128</bungeecord-chat-1.8.version>
+		<spigot-1.17.1.version>1.17.1-R0.1-20211121.234319-104</spigot-1.17.1.version>
 
 		<!-- Plugin variables -->
 		<plugin.id>libertybans</plugin.id>
@@ -163,19 +165,21 @@
 								<requireReleaseDeps>
 									<message>Snapshot dependencies lead to unstable builds. Use release versions.</message>
 									<searchTransitive>true</searchTransitive>
-									<failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
 									<excludes>
 										<exclude>space.arim.libertybans:*</exclude>
 										<exclude>space.arim.libertybans.addon:*</exclude>
 										<exclude>space.arim.libertybans.dep:*</exclude>
 										<exclude>space.arim.libertybans.it:*</exclude>
 
-										<exclude>org.spigotmc:spigot-api</exclude>
-										<exclude>net.md-5:bungeecord-chat</exclude>
+										<exclude>org.spigotmc:spigot-api:${spigot-1.8.8.version}</exclude>
+										<exclude>org.spigotmc:spigot-api:${spigot-1.17.1.version}</exclude>
+										<exclude>net.md-5:bungeecord-chat:${bungeecord-chat-1.8.version}</exclude>
 										<exclude>com.velocitypowered:velocity-brigadier</exclude>
 										<exclude>org.geysermc.floodgate:api</exclude>
 										<exclude>org.geysermc.geyser:common</exclude>
 										<exclude>org.geysermc.event:events</exclude>
+										<exclude>io.github.waterfallmc:waterfall-api</exclude>
+										<exclude>com.destroystokyo.paper:paper-api</exclude>
 									</excludes>
 								</requireReleaseDeps>
 							</rules>
@@ -775,21 +779,11 @@
 				<scope>runtime</scope>
 			</dependency>
 
-			<!-- Locked snapshots -->
-			<dependency>
-				<groupId>org.spigotmc</groupId>
-				<artifactId>spigot-api</artifactId>
-				<version>${spigot.version}</version>
-			</dependency>
+			<!-- Locked snapshots (version invariant) -->
 			<dependency>
 				<groupId>com.velocitypowered</groupId>
 				<artifactId>velocity-brigadier</artifactId>
 				<version>1.0.0-20210613.082804-10</version>
-			</dependency>
-			<dependency>
-				<groupId>net.md-5</groupId>
-				<artifactId>bungeecord-chat</artifactId>
-				<version>1.8-20160221.214602-128</version>
 			</dependency>
 			<dependency>
 				<groupId>org.geysermc.floodgate</groupId>

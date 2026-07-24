@@ -3,3 +3,5 @@
 /com/velocitypowered
 /io/papermc
 /net/md-5
+/io/github/waterfallmc
+/com/mojang/authlib

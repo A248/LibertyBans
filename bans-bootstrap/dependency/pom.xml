@@ -35,7 +35,11 @@
 	<modules>
 		<module>bungeecord-chat-1.8</module>
 		<module>geyser</module>
-		<module>spigot-api</module>
+		<module>spigot-api-1.8.8</module>
+		<module>spigot-api-1.17.1</module>
+		<module>paper-api-1.12.2</module>
+		<module>paper-api-1.16.5</module>
+		<module>waterfall-api-1.16</module>
 		<module>vault</module>
 		<module>velocity-brigadier</module>
 	</modules>

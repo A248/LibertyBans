@@ -41,6 +41,7 @@
 		<dependency>
 			<groupId>net.md-5</groupId>
 			<artifactId>bungeecord-chat</artifactId>
+			<version>${bungeecord-chat-1.8.version}</version>
 		</dependency>
 	</dependencies>
 

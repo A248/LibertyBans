@@ -83,6 +83,26 @@
 			<artifactId>dep-floodgate-api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans.dep</groupId>
+			<artifactId>dep-waterfall-api-1.16</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans.dep</groupId>
+			<artifactId>dep-spigot-api-1.17.1</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans.dep</groupId>
+			<artifactId>dep-paper-api-1.12.2</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.libertybans.dep</groupId>
+			<artifactId>dep-paper-api-1.16.5</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<!-- Critical parent pom -->
 		<dependency>
@@ -94,6 +114,22 @@
 	</dependencies>
 
 	<repositories>
+		<repository>
+			<id>spigot</id>
+			<url>https://hub.spigotmc.org/nexus/content/repositories/public/</url>
+		</repository>
+		<repository>
+			<id>paper</id>
+			<url>https://repo.papermc.io/repository/maven-public/</url>
+		</repository>
+		<repository>
+			<id>paper-snapshots</id>
+			<url>https://repo.papermc.io/repository/maven-snapshots/</url>
+		</repository>
+		<repository>
+			<id>paper-releases</id>
+			<url>https://repo.papermc.io/repository/maven-releases/</url>
+		</repository>
 		<repository>
 			<id>opencollab-releases</id>
 			<url>https://repo.opencollab.dev/maven-releases/</url>
