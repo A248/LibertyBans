@@ -21,94 +21,27 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<parent>
 		<groupId>space.arim.libertybans</groupId>
 		<artifactId>bans-env</artifactId>
 		<version>1.2.0-M1-SNAPSHOT</version>
 	</parent>
-	
-	<artifactId>bans-env-spigot</artifactId>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<useModulePath>false</useModulePath>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>test-jar</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<excludes>module-info.class</excludes>
-					<archive>
-						<manifestEntries>
-							<Automatic-Module-Name>space.arim.libertybans.env.spigot</Automatic-Module-Name>
-						</manifestEntries>
-					</archive>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
-	
+
+	<artifactId>bans-env-spigot-parent</artifactId>
+	<packaging>pom</packaging>
+
+	<modules>
+		<module>core</module>
+		<module>plugin</module>
+	</modules>
+
 	<dependencies>
 		<dependency>
-			<groupId>org.spigotmc</groupId>
-			<artifactId>spigot-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>space.arim.libertybans</groupId>
-			<artifactId>bans-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>space.arim.api</groupId>
-			<artifactId>arimapi-env-bukkit</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>space.arim.morepaperlib</groupId>
-			<artifactId>morepaperlib</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.kyori</groupId>
-			<artifactId>adventure-api</artifactId>
-			<version>4.26.1</version>
-		</dependency>
-		<dependency>
-			<groupId>net.kyori</groupId>
-			<artifactId>adventure-text-serializer-legacy</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-junit-jupiter</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>space.arim.api</groupId>
-			<artifactId>arimapi-util-testing</artifactId>
+			<groupId>space.arim.libertybans.dep</groupId>
+			<artifactId>dep-spigot-api</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
-	
-	<repositories>
-		<repository>
-			<id>spigot</id>
-			<url>https://hub.spigotmc.org/nexus/content/repositories/public/</url>
-		</repository>
-	</repositories>
 </project>

@@ -119,7 +119,6 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-invoker-plugin</artifactId>
 				<configuration>
-					<settingsFile>src/it/settings.xml</settingsFile>
 					<parallelThreads>3</parallelThreads>
 				</configuration>
 			</plugin>

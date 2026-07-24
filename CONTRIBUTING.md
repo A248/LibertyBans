@@ -15,13 +15,26 @@ Maven is technically optional and can be substituted with the Maven wrapper - us
 
 ## Cloning and Building
 
-Run `git clone https://github.com/A248/LibertyBans.git && cd LibertyBans && mvn package -DskipTests`
+Run `git clone https://github.com/A248/LibertyBans.git && cd LibertyBans && mvn package -Pskip-all-tests`
 
 This will clone the source repository and start the Maven build in the cloned directory.
 
 When the build is complete, the jar at `bans-distribution/executable/target/LibertyBans_version.jar` can run as a plugin on any supported platform.
 
-# Introduction to the Codebase
+### Build errors (if code modified)
+
+1. A new dependency was declared, and its checksum data needs to be updated. Resolution: Run build/update-checksums.sh and refer to "Adding new dependencies and repositories" below.
+```
+Missing from sparseDirectory trusted checksum(s) [SHA-512] for artifact
+```
+
+2. A new repository was declared, and it needs to be filtered and whitelisted. Resolution: See "Adding new dependencies and repositories" below.
+```
+Rule 1: org.apache.maven.enforcer.rules.BannedRepositories failed with message:
+Current maven session contains banned repository urls, please double check your pom or settings.xml:
+```
+
+# Maintenance of the Codebase
 
 ## Working on the source code
 
@@ -29,7 +42,7 @@ You can use any IDE you choose. Simply import the project and ensure it is confi
 
 The project is split into several Maven modules. You will want to make sure that your IDE recognizes these modules.
 
-## Code Formatting
+### Code Formatting
 
 Please use tabs. Otherwise, try to follow the surrounding code style.
 
@@ -60,6 +73,16 @@ return selector.getApplicablePunishment(
 	// Callback
 });
 ```
+
+### Adding new dependencies and repositories
+
+For security reasons, the LibertyBans build requires you to include checksum metadata when declaring new dependencies. The maintainers will review your PR, inspect the dependency, and make sure it matches the expected checksum. Similarly, repositories need to declare which artifact prefixes they will serve.
+
+During the development process, here are ways to make building and testing on your machine easier:
+* Run with the unlocked-build profile to allow SNAPSHOT dependency versions and new repository declarations.
+  * E.g. `mvn package -Punlocked-build`
+  * This will allow you to use SNAPSHOT dependencies and new repositories for now, and you can add metadata later.
+* Run the `build/update-checksums.sh` script after adding new stable dependencies.
 
 ## Architecture
 
@@ -191,7 +214,57 @@ See the section "Cloning and building" for how to obtain a plugin jar.
 I make releases with a few steps:
 
 1. `mvn versions:set -DnewVersion={theNextVersion}`
-2. `build/check-hashes.sh` to see the new dependency hashes for internal dependencies
+2. `build/prepare-release.sh` to see the new dependency hashes for own-project dependencies
 3. Update the dependency hashes in the parent pom
 4. Perform the deployment with `./mvnw clean deploy -Pbuild-release,-docker-enabled -DskipTests -Dinvoker.skip=true`
 5. Commit and tag the results.
+
+# Build integrity and security
+
+The Minecraft-related ecosystem makes frequent use of private Maven repositories. Many dependencies, including those provided by server platforms, can only be fetched through these repositories. Additionally, many dependencies are `SNAPSHOT` versions, which means that dependency changes can easily slip by unnoticed.
+
+This presents a security vulnerability, especially for big, complicated builds. A compromised repository could easily spread malicious artifacts to builds that depend on it, and even compromise other developers' machines in a chain reaction. We don't want this to happen here, so the LibertyBans build takes steps to protect itself.
+
+## Artifact checksums
+
+SHA-512 checksums are used to guarantee artifact immutability. While this cannot prevent new compromised dependencies from being introduced, it does ensure that the existing build (if unchanged) cannot be compromised.
+
+## Releases
+
+For release dependencies, Maven's [Trusted Checksums](https://maven.apache.org/resolver/expected-checksums.html) prevent dependencies from being used except where their hashes are explicitly written out. See the `.mvn/maven.config` file for these arguments. Developers can use the `build/update-checksums.sh` script to update the checksums when adding new dependencies.
+
+The checksums are stored in the repository under `.mvn/artifact-checksums`. This directory cannot be modified. It can have new files added to it, but if existing files are modified, the Github Action "Artifact checksum preservation" will fail. This Github Action helps prevent maintainers from accidentally merging PRs with checksums of corrupted or malicious artifacts, whether intentional or unintentional.
+
+### Snapshots
+
+For snapshot versions, we enforce checksums manually by placing every snapshot dependency into its own module, under `bans-bootstrap/dependencies`.
+
+This module should be referred to, instead of the original dependency, in code that wants to use the dependency.
+
+### Gradle
+
+The build uses a child process that executes Gradle, to build the Fabric platform. This embedded Gradle build is similarly vulnerable, so Gradle's [dependency checksums feature](https://docs.gradle.org/current/userguide/dependency_verification.html).
+
+Checksums are stored in `gradle/verification-metadata.xml` relative to the Fabric project, and they are updated with `./gradlew --write-verification-metadata sha512`.
+
+Note: Snapshot versions are not checked by Gradle, so they are banned inside the Gradle build.
+
+## Locked snapshots
+
+To enforce snapshot consistency and checksums, snapshots must be listed and locked to a fixed version before their inclusion in the build. A locked snapshot looks like this: `org.spigotmc:spigot-api:1.8.8-R0.1-20160221.082514-43`.
+
+A snapshot dependency is referenced in 4 places:
+1. In the parent pom's `<dependencyManagement>` section, under the comment "Locked snapshots". The version is defined here as a timestamped snapshot.
+2. In the parent pom's `enforce-locked-snapshots` execution of the maven-enforcer-plugin.
+3. Declared in the module that verifies its checksum, under `bans-boostrap/dependencies`.
+4. Referenced indirectly by the code that uses the dependency. The downstream consumer should refer to the module in `bans-boostrap/dependencies`, not the original dependency. The original dependency will be pulled in transitively.
+
+## Repository filtering and prefixes
+
+While not strictly necessary from a security perspective, repository filtering prevents remote repositories from serving unexpected artifacts. For example, the SpigotMC repository shouldn't be responsible for serving an artifact like `slf4j-api`, which is found on Maven Central.
+
+Repositories are managed in two places:
+1. In the `.mvn/rrf` directory.
+2. In the parent pom's `enforce-restricted-repositories` execution of the maven-enforcer-plugin.
+
+To add a new such repository, follow the pattern in `.mvn/rrf`, then whitelist the repository in the parent pom.

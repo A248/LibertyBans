@@ -21,6 +21,7 @@ package space.arim.libertybans.core.it.test;
 
 import org.geysermc.floodgate.api.FloodgateApi;
 import org.geysermc.floodgate.api.InstanceHolder;
+import org.geysermc.floodgate.api.event.FloodgateEventBus;
 import org.geysermc.floodgate.api.handshake.HandshakeHandlers;
 import org.geysermc.floodgate.api.inject.PlatformInjector;
 import org.geysermc.floodgate.api.link.PlayerLink;
@@ -54,12 +55,12 @@ public class GeyserTest {
 	}
 
 	@BeforeAll
-	public static void setFloodgateApi(@Mock FloodgateApi floodgateApi,
-									   @Mock PlayerLink playerLink, @Mock PlatformInjector platformInjector,
+	public static void setFloodgateApi(@Mock FloodgateApi floodgateApi, @Mock PlayerLink playerLink,
+									   @Mock FloodgateEventBus eventBus, @Mock PlatformInjector platformInjector,
 									   @Mock PacketHandlers packetHandlers, @Mock HandshakeHandlers handshakeHandlers) {
 		GeyserTest.floodgateApi = floodgateApi;
 		assertTrue(InstanceHolder.set(
-				floodgateApi, playerLink, platformInjector, packetHandlers, handshakeHandlers, UUID.randomUUID()
+				floodgateApi, playerLink, eventBus, platformInjector, packetHandlers, handshakeHandlers, UUID.randomUUID()
 		));
 	}
 

@@ -38,12 +38,8 @@
 
 	<repositories>
 		<repository>
-			<id>paper-releases</id>
-			<url>https://repo.papermc.io/repository/maven-releases/</url>
-		</repository>
-		<repository>
-			<id>paper-snapshots</id>
-			<url>https://repo.papermc.io/repository/maven-snapshots/</url>
+			<id>paper</id>
+			<url>https://repo.papermc.io/repository/maven-public/</url>
 		</repository>
 	</repositories>
 </project>

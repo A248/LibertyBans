@@ -28,12 +28,8 @@
 		<version>1.2.0-M1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>bans-bootstrap</artifactId>
-	<!--
-	Do not add a description here, because PluginInfo.java's source filtering relies
-	on the description property being inherited from the parent pom.xml
-	-->
-	<!-- <description /> -->
+	<artifactId>bans-bootstrap-parent</artifactId>
+	<packaging>pom</packaging>
 
 	<properties>
 		<deployment.deploy-url>https://maven.cloudsmith.io/anand-beh/lesser-gpl3/</deployment.deploy-url>
@@ -47,71 +43,10 @@
 		</license>
 	</licenses>
 
-	<build>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
-			</resource>
-		</resources>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>templating-maven-plugin</artifactId>
-				<version>1.0.0</version>
-				<executions>
-					<execution>
-						<id>add-plugin-info</id>
-						<goals>
-							<goal>filter-sources</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>compile-java8</id>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>compile</goal>
-						</goals>
-						<configuration>
-							<release>8</release>
-							<compileSourceRoots>
-								<compileSourceRoot>${project.basedir}/src/main/java8</compileSourceRoot>
-							</compileSourceRoots>
-						</configuration>
-					</execution>
-					<execution>
-						<id>default-compile</id>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifestEntries>
-							<Automatic-Module-Name>space.arim.libertybans.bootstrap</Automatic-Module-Name>
-						</manifestEntries>
-					</archive>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-failsafe-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</build>
-
-	<dependencies>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
-		</dependency>
-	</dependencies>
+	<modules>
+		<module>bootstrap</module>
+		<module>dependency</module>
+		<module>invoker-it-parent</module>
+		<module>invoker-it-setup</module>
+	</modules>
 </project>

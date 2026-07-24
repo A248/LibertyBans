@@ -1,0 +1,53 @@
+<!--
+  ~ LibertyBans-bootstrap
+  ~ Copyright © 2026 Anand Beh
+  ~
+  ~ LibertyBans-bootstrap is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Lesser General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ LibertyBans-bootstrap is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with LibertyBans-bootstrap. If not, see <https://www.gnu.org/licenses/>
+  ~ and navigate to version 3 of the GNU Lesser General Public License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>space.arim.libertybans.dep</groupId>
+		<artifactId>dep-parent</artifactId>
+		<version>1.2.0-M1-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>dep-velocity-brigadier</artifactId>
+
+	<properties>
+		<dep.enforce-phase>initialize</dep.enforce-phase>
+		<dep.file-name>com.velocitypowered.velocity-brigadier</dep.file-name>
+		<dep.jar-sig>f971c86b343d0c9d614c591250714d0847db1280742be14d7f3f6cd0fca25fe6ffb3c0a3b012b2b1983576ac51b607489f58a45ae56ad6308e3c1ba9032d00ed</dep.jar-sig>
+		<dep.pom-sig>3fe9e88c454ab7762159348e64c28514e2b8671177667f5ff9d5665c6086e6b65506c79515c47db5bb18f7238279cd5922b04ab8f2b448d8b75581ef4d3af82d</dep.pom-sig>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.velocitypowered</groupId>
+			<artifactId>velocity-brigadier</artifactId>
+		</dependency>
+	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>paper-snapshots</id>
+			<url>https://repo.papermc.io/repository/maven-snapshots/</url>
+		</repository>
+	</repositories>
+</project>

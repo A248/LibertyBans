@@ -80,9 +80,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-invoker-plugin</artifactId>
-				<configuration>
-					<settingsFile>src/it/settings.xml</settingsFile>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>

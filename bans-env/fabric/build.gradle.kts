@@ -36,6 +36,18 @@ allprojects {
         options.release.set(25)
     }
 
+    configurations.all {
+        resolutionStrategy {
+            eachDependency {
+                val resolvedVersion = this.requested.version!!
+                if (resolvedVersion.endsWith("-SNAPSHOT") && !this.requested.group.startsWith("space.arim.libertybans")) {
+                    throw org.gradle.api.GradleException("Found snapshot dependency ${resolvedVersion}")
+                }
+            }
+            //failOnNonReproducibleResolution()
+        }
+    }
+
     dependencies {
         minecraft("com.mojang:minecraft:${project.findProperty("minecraft_version")}")
         implementation("net.fabricmc:fabric-loader:${project.findProperty("loader_version")}")

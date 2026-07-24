@@ -1,0 +1,53 @@
+<!--
+  ~ LibertyBans-bootstrap
+  ~ Copyright © 2026 Anand Beh
+  ~
+  ~ LibertyBans-bootstrap is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Lesser General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ LibertyBans-bootstrap is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with LibertyBans-bootstrap. If not, see <https://www.gnu.org/licenses/>
+  ~ and navigate to version 3 of the GNU Lesser General Public License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>space.arim.libertybans.dep</groupId>
+		<artifactId>dep-geyser</artifactId>
+		<version>1.2.0-M1-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>dep-floodgate-api</artifactId>
+
+	<properties>
+		<dep.enforce-phase>initialize</dep.enforce-phase>
+		<dep.file-name>org.geysermc.floodgate.api</dep.file-name>
+		<dep.jar-sig>59c30d1dd8f3f9973fb00b00edbb7558875a107cc565fc6c986c0f02baec29cd1879e1506b47bf0bd9b738c8118379e070a5444fbdec725ec6de1b38897204c1</dep.jar-sig>
+		<dep.pom-sig>d741cc03aa68725b5f109b11012fce896b657dea89cf6a4b6b3d5649cdc54bcab9321882f9f06b769b97a56438aeebb957abefd68cb98a9e79ec408e247ba220</dep.pom-sig>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.geysermc.floodgate</groupId>
+			<artifactId>api</artifactId>
+		</dependency>
+		<dependency>
+			<!-- Used internally by Floodgate. Needed for mock resolution -->
+			<groupId>io.netty</groupId>
+			<artifactId>netty-all</artifactId>
+			<version>4.1.68.Final</version>
+			<scope>runtime</scope>
+		</dependency>
+	</dependencies>
+</project>
