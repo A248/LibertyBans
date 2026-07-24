@@ -152,12 +152,13 @@
 							<rules>
 								<requireReleaseDeps>
 									<message>Snapshot dependencies lead to unstable builds. Use release versions.</message>
-									<searchTransitive>false</searchTransitive>
+									<searchTransitive>true</searchTransitive>
 									<failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
 									<excludes>
 										<exclude>space.arim.libertybans:*</exclude>
 										<exclude>space.arim.libertybans.addon:*</exclude>
 										<exclude>org.spigotmc:spigot-api</exclude>
+										<exclude>net.md_5:bungeecord-chat</exclude>
 									</excludes>
 								</requireReleaseDeps>
 							</rules>
@@ -232,6 +233,11 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-clean-plugin</artifactId>
 					<version>3.5.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>3.1.4</version>
 				</plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -354,8 +360,8 @@
 						</execution>
 					</executions>
 					<configuration>
-						<cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
-						<localRepositoryPath>${project.build.directory}/local-it-repo</localRepositoryPath>
+						<cloneProjectsTo>${project.build.directory}/invoker-it/projects</cloneProjectsTo>
+						<localRepositoryPath>${project.build.directory}/invoker-it/local-repo</localRepositoryPath>
 						<scope>test</scope>
 						<streamLogsOnFailures>true</streamLogsOnFailures>
 					</configuration>

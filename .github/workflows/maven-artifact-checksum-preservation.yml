@@ -1,0 +1,17 @@
+name: Artifact checksum preservation
+
+on:
+  pull_request_target:
+    branches: [ master ]
+
+jobs:
+  block-checksum-modification:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Prevent existing checksum files from being modified
+        uses: xalvarez/prevent-file-change-action@v3.0.1
+        with:
+          pattern: ^\.mvn\/artifact-checksums\/.+
+          allowNewFiles: true
