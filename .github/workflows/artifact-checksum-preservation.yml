@@ -2,7 +2,7 @@ name: Artifact checksum preservation
 
 on:
   pull_request_target:
-    branches: [ master ]
+    branches: [ '**' ]
 
 jobs:
   block-maven-checksum-modification:
