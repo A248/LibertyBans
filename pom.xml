@@ -269,7 +269,7 @@
                     <version>3.5.0</version>
 					<executions>
 						<execution>
-							<id>prepare-invoker-local-repo</id>
+							<id>copy-local-repo</id>
 							<phase>none</phase>
 							<goals>
 								<goal>copy-resources</goal>
@@ -510,7 +510,7 @@
 						<artifactId>maven-resources-plugin</artifactId>
 						<executions>
 							<execution>
-								<id>prepare-invoker-local-repo</id>
+								<id>copy-local-repo</id>
 								<configuration>
 									<skip>true</skip>
 								</configuration>

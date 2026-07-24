@@ -53,7 +53,7 @@
 				<artifactId>maven-resources-plugin</artifactId>
 				<executions>
 					<execution>
-						<id>prepare-invoker-local-repo</id>
+						<id>copy-local-repo</id>
 						<phase>pre-integration-test</phase>
 					</execution>
 				</executions>

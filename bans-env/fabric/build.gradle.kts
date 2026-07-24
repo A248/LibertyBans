@@ -58,16 +58,22 @@ allprojects {
 subprojects {
     repositories {
         mavenCentral()
-        maven("https://maven.fabricmc.net/")
         maven {
+            name = "fabricmc"
+            url = uri("https://maven.fabricmc.net/")
+        }
+        maven {
+            name = "arim-mvn-lgpl3"
             url = uri("https://mvn-repo.arim.space/lesser-gpl3/")
             //includeGroupAndSubgroups("space.arim")
         }
         maven {
+            name = "arim-mvn-gpl3"
             url = uri("https://mvn-repo.arim.space/gpl3/")
             //includeGroupAndSubgroups("space.arim")
         }
         maven {
+            name = "local-repo-input"
             url = uri("${project.rootDir}/target/maven/local-repo")
             metadataSources {
                 mavenPom()
