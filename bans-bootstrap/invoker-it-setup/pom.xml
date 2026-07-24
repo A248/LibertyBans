@@ -40,17 +40,6 @@
 					<execution>
 						<id>prepare-invoker-local-repo</id>
 						<phase>pre-integration-test</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${maven-invoker.local-repo-path}</outputDirectory>
-							<resources>
-								<resource>
-									<directory>${settings.localRepository}</directory>
-								</resource>
-							</resources>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>

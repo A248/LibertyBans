@@ -267,6 +267,23 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
                     <version>3.5.0</version>
+					<executions>
+						<execution>
+							<id>prepare-invoker-local-repo</id>
+							<phase>none</phase>
+							<goals>
+								<goal>copy-resources</goal>
+							</goals>
+							<configuration>
+								<outputDirectory>${maven-invoker.local-repo-path}</outputDirectory>
+								<resources>
+									<resource>
+										<directory>${settings.localRepository}</directory>
+									</resource>
+								</resources>
+							</configuration>
+						</execution>
+					</executions>
                 </plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -487,6 +504,18 @@
 						<configuration>
 							<skip>true</skip>
 						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-resources-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>prepare-invoker-local-repo</id>
+								<configuration>
+									<skip>true</skip>
+								</configuration>
+							</execution>
+						</executions>
 					</plugin>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
