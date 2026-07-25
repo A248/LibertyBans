@@ -6,7 +6,7 @@ on:
     branches: [ '**' ]
 
 jobs:
-  block-maven-checksum-modification:
+  maven-artifact-checksums:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
@@ -14,9 +14,10 @@ jobs:
       - name: Prevent existing Maven checksum files from being modified
         uses: xalvarez/prevent-file-change-action@v3.0.1
         with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
           pattern: ^\.mvn\/artifact-checksums\/.+
           allowNewFiles: true
-  block-gradle-checksum-modification:
+  gradle-verification-metadata:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
@@ -24,5 +25,6 @@ jobs:
       - name: Prevent Gradle verification file from being modified
         uses: xalvarez/prevent-file-change-action@v3.0.1
         with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
           pattern: .*gradle\/verification-metadata\.xml
           trustedAuthors: A248
