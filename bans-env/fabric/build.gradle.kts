@@ -83,6 +83,10 @@ subprojects {
         maven {
             name = "local-maven-repo"
             url = uri("${project.rootDir}/../../.mvn/local-repo")
+            metadataSources {
+                mavenPom()
+                artifact()
+            }
         }
     }
 
