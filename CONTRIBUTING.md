@@ -15,9 +15,9 @@ Maven is technically optional and can be substituted with the Maven wrapper - us
 
 ## Cloning and Building
 
-Run `git clone https://github.com/A248/LibertyBans.git && cd LibertyBans && mvn package -Pskip-all-tests`
+Run `git clone https://github.com/A248/LibertyBans.git && cd LibertyBans && build/snap-build.sh`
 
-This will clone the source repository and start the Maven build in the cloned directory.
+This will clone the source repository and start a quick Maven build in the cloned directory.
 
 When the build is complete, the jar at `bans-distribution/executable/target/LibertyBans_version.jar` can run as a plugin on any supported platform.
 
@@ -177,6 +177,9 @@ mvn clean verify -Dinvoker.skip=true -P-docker-enabled
 To run a specific integration test (e.g. PaginationIT), you can select it:
 ```bash
 mvn clean verify -Dinvoker.skip=true -Dit.test=PaginationIT -P-docker-enabled
+
+# Alternatively
+build/choose-its PaginationIT -P-docker-enabled
 ```
 
 **Notes on Docker Usage**
@@ -190,7 +193,7 @@ If you don't turn off docker detection, please keep in mind:
 
 ### Logging and debugging
 
-You can configure log levels in `bans-core/src/main/resources/simplelogger.properties` on a per-package basis. Changing the org.jooq logger to 'debug' will enable statement logging.
+For test runs, you can configure log levels in `bans-core/src/main/resources/simplelogger.properties` on a per-package basis. Changing the org.jooq logger to 'debug' will enable statement logging.
 
 Using a debugger is possible. You will need to add your debugger's command line arguments to the maven-failsafe plugin configuration. For example:
 
@@ -208,6 +211,8 @@ Using a debugger is possible. You will need to add your debugger's command line 
 ### Manual testing
 
 See the section "Cloning and building" for how to obtain a plugin jar.
+
+You can run `mvn package` to run unit tests and jar packaging in a single build.
 
 ## Making a release
 

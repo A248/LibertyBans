@@ -73,12 +73,16 @@ subprojects {
             //includeGroupAndSubgroups("space.arim")
         }
         maven {
-            name = "local-repo-input"
-            url = uri("${project.rootDir}/target/maven/local-repo")
+            name = "local-build-artifacts"
+            url = uri("${project.rootDir}/target/maven/build-artifact-repo")
             metadataSources {
                 mavenPom()
                 artifact()
             }
+        }
+        maven {
+            name = "local-maven-repo"
+            url = uri("${project.rootDir}/../../.mvn/local-repo")
         }
     }
 

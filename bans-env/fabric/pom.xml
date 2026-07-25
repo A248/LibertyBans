@@ -60,20 +60,48 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <!-- 1. -->
+                    <execution>
+                        <id>transfer-build-artifacts</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <useRepositoryLayout>true</useRepositoryLayout>
+                            <addParentPoms>true</addParentPoms>
+                            <copyPom>true</copyPom>
+                            <outputDirectory>${project.build.directory}/maven/build-artifact-repo</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
                         <id>default-resources</id>
                         <phase>none</phase>
                     </execution>
-                    <!-- 1. -->
+                    <!-- 1.
                     <execution>
-                        <id>copy-local-repo</id>
-                        <phase>pre-integration-test</phase>
+                        <id>fill-in-local-repo</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/maven/local-repo</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${settings.localRepository}</directory>
+                                </resource>
+                            </resources>
                         </configuration>
-                    </execution>
+                    </execution> -->
                     <!-- 2. -->
                     <execution>
                         <id>copy-gradle-properties</id>
@@ -137,7 +165,7 @@
                     <!-- 4 -->
                     <execution>
                         <id>build-gradle</id>
-                        <phase>compile</phase>
+                        <phase>prepare-package</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
@@ -217,7 +245,7 @@
                         <executions>
                             <execution>
                                 <id>build-gradle</id>
-                                <phase>compile</phase>
+                                <phase>prepare-package</phase>
                                 <goals>
                                     <goal>exec</goal>
                                 </goals>
