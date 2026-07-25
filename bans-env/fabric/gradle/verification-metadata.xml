@@ -6,6 +6,7 @@
       <trusted-artifacts>
          <!-- Wait for publication of https://github.com/FabricMC/fabric-loom/pull/1587 -->
          <trust group="net.minecraft" name="minecraft-merged-043a8b3edf" reason="Fabric server jar is nondeterministic"/>
+         <trust group="net.minecraft" name="minecraft-merged-1a8b55f9cd" reason="Fabric server jar is nondeterministic"/>
       </trusted-artifacts>
    </configuration>
    <components>
