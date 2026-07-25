@@ -74,9 +74,6 @@ subprojects {
         maven {
             name = "central"
             url = uri("https://repo.maven.org/maven2")
-            metadataSources {
-                mavenPom()
-            }
         }
         maven {
             name = "fabricmc"
@@ -86,17 +83,11 @@ subprojects {
             name = "arim-mvn-lgpl3"
             url = uri("https://mvn-repo.arim.space/lesser-gpl3/")
             //includeGroupAndSubgroups("space.arim")
-            metadataSources {
-                mavenPom()
-            }
         }
         maven {
             name = "arim-mvn-gpl3"
             url = uri("https://mvn-repo.arim.space/gpl3/")
             //includeGroupAndSubgroups("space.arim")
-            metadataSources {
-                mavenPom()
-            }
         }
     }
 
