@@ -51,7 +51,7 @@ allprojects {
     dependencies {
         minecraft("com.mojang:minecraft:${project.findProperty("minecraft_version")}")
         implementation("net.fabricmc:fabric-loader:${project.findProperty("loader_version")}")
-        implementation("net.fabricmc.fabric-api:fabric-api:0.152.1+26.2")
+        implementation("net.fabricmc.fabric-api:fabric-api:0.155.0+26.2")
     }
 }
 

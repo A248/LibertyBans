@@ -33,7 +33,7 @@
     <properties>
         <deployment.deploy-url>https://maven.cloudsmith.io/anand-beh/lesser-gpl3/</deployment.deploy-url>
 
-        <fabric.loader_version>0.19.2</fabric.loader_version>
+        <fabric.loader_version>0.19.3</fabric.loader_version>
         <fabric.minecraft_version>26.2</fabric.minecraft_version>
         <fabric.adventure_platform_version>7.1.1</fabric.adventure_platform_version>
     </properties>
