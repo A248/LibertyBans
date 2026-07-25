@@ -33,7 +33,7 @@
     <properties>
         <deployment.deploy-url>https://maven.cloudsmith.io/anand-beh/lesser-gpl3/</deployment.deploy-url>
 
-        <fabric.loader_version>0.19.2</fabric.loader_version>
+        <fabric.loader_version>0.19.3</fabric.loader_version>
         <fabric.minecraft_version>26.2</fabric.minecraft_version>
         <fabric.adventure_platform_version>7.1.1</fabric.adventure_platform_version>
     </properties>
@@ -50,7 +50,7 @@
         <!--
         We employ a multistage process in order to prepare, execute, process, and clean up a Gradle build.
 
-        1. Fill a temporary "local repository" with the artifacts we need to depend upon
+        1. Fill a temporary local repository with the current build artifacts
         2. Copy resources in src/build/resources, to pass pom properties into gradle.properties
         3. Copy fabric.mod.json from src/mod/resources
         4. Execute the Gradle build on command line
@@ -64,17 +64,16 @@
                 <executions>
                     <!-- 1. -->
                     <execution>
-                        <id>copy-artifacts</id>
+                        <id>transfer-build-artifacts</id>
                         <phase>compile</phase>
                         <goals>
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
                             <useRepositoryLayout>true</useRepositoryLayout>
-                            <outputDirectory>${project.build.directory}/maven/local-repo</outputDirectory>
-                            <includeScope>compile</includeScope>
-                            <copyPom>true</copyPom>
                             <addParentPoms>true</addParentPoms>
+                            <copyPom>true</copyPom>
+                            <outputDirectory>${project.build.directory}/maven/build-artifact-repo</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -150,7 +149,7 @@
                     <!-- 4 -->
                     <execution>
                         <id>build-gradle</id>
-                        <phase>compile</phase>
+                        <phase>prepare-package</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
@@ -230,7 +229,7 @@
                         <executions>
                             <execution>
                                 <id>build-gradle</id>
-                                <phase>compile</phase>
+                                <phase>prepare-package</phase>
                                 <goals>
                                     <goal>exec</goal>
                                 </goals>

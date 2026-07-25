@@ -1,0 +1,110 @@
+<!--
+  ~ LibertyBans-bootstrap
+  ~ Copyright © 2026 Anand Beh
+  ~
+  ~ LibertyBans-bootstrap is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Lesser General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ LibertyBans-bootstrap is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with LibertyBans-bootstrap. If not, see <https://www.gnu.org/licenses/>
+  ~ and navigate to version 3 of the GNU Lesser General Public License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>space.arim.libertybans</groupId>
+		<artifactId>bans-bootstrap-parent</artifactId>
+		<version>1.2.0-M1-SNAPSHOT</version>
+	</parent>
+
+	<groupId>space.arim.libertybans.dep</groupId>
+	<artifactId>dep-parent</artifactId>
+	<packaging>pom</packaging>
+
+	<modules>
+		<module>bungeecord-chat-1.8</module>
+		<module>geyser</module>
+		<module>spigot-api-1.8.8</module>
+		<module>spigot-api-1.17.1</module>
+		<module>paper-api-1.12.2</module>
+		<module>paper-api-1.16.5</module>
+		<module>waterfall-api-1.16</module>
+		<module>vault</module>
+		<module>velocity-brigadier</module>
+	</modules>
+
+	<properties>
+		<dep.enforce-phase>none</dep.enforce-phase>
+		<dep.file-name/>
+		<dep.jar-sig/>
+		<dep.pom-sig/>
+	</properties>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>copy-target-dependency</id>
+							<phase>validate</phase>
+							<goals>
+								<goal>copy-dependencies</goal>
+							</goals>
+							<configuration>
+								<overWriteIfNewer>true</overWriteIfNewer>
+								<overWriteSnapshots>true</overWriteSnapshots>
+								<excludeTransitive>true</excludeTransitive>
+								<copyPom>true</copyPom>
+								<prependGroupId>true</prependGroupId>
+								<stripVersion>true</stripVersion>
+								<outputDirectory>${project.build.directory}/inspect</outputDirectory>
+								<includeScope>compile</includeScope>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-enforcer-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>check-dependency</id>
+							<phase>${dep.enforce-phase}</phase>
+							<goals>
+								<goal>enforce</goal>
+							</goals>
+							<configuration>
+								<rules>
+									<requireFileChecksum>
+										<file>${project.build.directory}/inspect/${dep.file-name}.jar</file>
+										<checksum>${dep.jar-sig}</checksum>
+										<type>sha512</type>
+									</requireFileChecksum>
+									<requireFileChecksum>
+										<file>${project.build.directory}/inspect/${dep.file-name}.pom</file>
+										<checksum>${dep.pom-sig}</checksum>
+										<type>sha512</type>
+									</requireFileChecksum>
+								</rules>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+</project>

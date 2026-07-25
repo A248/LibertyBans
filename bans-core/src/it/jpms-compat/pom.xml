@@ -1,6 +1,6 @@
 <!--
   ~ LibertyBans
-  ~ Copyright © 2021 Anand Beh
+  ~ Copyright © 2026 Anand Beh
   ~
   ~ LibertyBans is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as
@@ -22,20 +22,19 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>space.arim.libertybans</groupId>
-    <artifactId>it-core-jpms-compat</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <parent>
+        <groupId>space.arim.libertybans.it</groupId>
+        <artifactId>invoker-it-parent</artifactId>
+        <version>@project.version@</version>
+    </parent>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <artifactId>it-core-jpms-compat</artifactId>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.3.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -47,7 +46,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
                 <configuration>
                     <release>17</release>
                 </configuration>
@@ -55,18 +53,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M5</version>
-                <configuration>
-                    <trimStackTrace>false</trimStackTrace>
-                    <argLine>-XX:TieredStopAtLevel=1 -XX:-TieredCompilation -javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.junit.jupiter</groupId>
-                        <artifactId>junit-jupiter-engine</artifactId>
-                        <version>@junit.version@</version>
-                    </dependency>
-                </dependencies>
             </plugin>
         </plugins>
     </build>
@@ -75,25 +61,18 @@
         <dependency>
             <groupId>space.arim.libertybans</groupId>
             <artifactId>bans-core</artifactId>
-            <version>@project.version@</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>@junit.version@</version>
-            <scope>test</scope>
+            <artifactId>junit-jupiter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
-            <version>@mockito.version@</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>@slf4j.version@</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

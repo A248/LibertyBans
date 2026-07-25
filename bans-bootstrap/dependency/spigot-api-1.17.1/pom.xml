@@ -1,0 +1,54 @@
+<!--
+  ~ LibertyBans-bootstrap
+  ~ Copyright © 2026 Anand Beh
+  ~
+  ~ LibertyBans-bootstrap is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Lesser General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ LibertyBans-bootstrap is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with LibertyBans-bootstrap. If not, see <https://www.gnu.org/licenses/>
+  ~ and navigate to version 3 of the GNU Lesser General Public License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>space.arim.libertybans.dep</groupId>
+		<artifactId>dep-parent</artifactId>
+		<version>1.2.0-M1-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>dep-spigot-api-1.17.1</artifactId>
+
+	<properties>
+		<dep.enforce-phase>initialize</dep.enforce-phase>
+		<dep.file-name>org.spigotmc.spigot-api</dep.file-name>
+		<dep.jar-sig>545d540b9b451a4217d2b82383f64ca72b8cd1583e025648bc11481dc5597964412a624cd8b4400180959b9bea3d727888552ecffa2e08041cd09ff527f112e7</dep.jar-sig>
+		<dep.pom-sig>7b12ef9c18115982641539793c00939b13828fdb59c568bcddb9a8e267ce6a6eed10606e7bdca26be24c63ed1551dca972af53a6cba6cc4dda4ff2f3f295c31f</dep.pom-sig>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.spigotmc</groupId>
+			<artifactId>spigot-api</artifactId>
+			<version>${spigot-1.17.1.version}</version>
+		</dependency>
+	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>spigot</id>
+			<url>https://hub.spigotmc.org/nexus/content/repositories/public/</url>
+		</repository>
+	</repositories>
+</project>

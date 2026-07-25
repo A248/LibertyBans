@@ -1,0 +1,65 @@
+<!--
+  ~ LibertyBans-bootstrap
+  ~ Copyright © 2026 Anand Beh
+  ~
+  ~ LibertyBans-bootstrap is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Lesser General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ LibertyBans-bootstrap is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with LibertyBans-bootstrap. If not, see <https://www.gnu.org/licenses/>
+  ~ and navigate to version 3 of the GNU Lesser General Public License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>space.arim.libertybans.dep</groupId>
+		<artifactId>dep-parent</artifactId>
+		<version>1.2.0-M1-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>dep-waterfall-api-1.16</artifactId>
+
+	<properties>
+		<dep.enforce-phase>initialize</dep.enforce-phase>
+		<dep.file-name>io.github.waterfallmc.waterfall-api</dep.file-name>
+		<dep.jar-sig>8781362dac35e8f392ef7671259604e0ba592123fb2c83ed38ce29e71e8dfbedd321cb4e835250308bab63bc4b9773b6d3dd28bd3c60dd4c99a6721facaa7d4f</dep.jar-sig>
+		<dep.pom-sig>9060277097d6c1b202bc80055350c81cb2e20858fc6e3e93c92e8ef67a0e360a778eb6a39c506a10e0ec404ff24fb1918b45336eb411a39177990c65e01d745b</dep.pom-sig>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>io.github.waterfallmc</groupId>
+			<artifactId>waterfall-api</artifactId>
+			<version>1.16-R0.4-20210121.111912-28</version>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>net.md-5</groupId>
+			<artifactId>bungeecord-chat</artifactId>
+			<version>1.16-R0.4</version>
+		</dependency>
+	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>paper</id>
+			<url>https://repo.papermc.io/repository/maven-public/</url>
+		</repository>
+	</repositories>
+</project>

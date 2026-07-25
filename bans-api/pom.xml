@@ -62,12 +62,37 @@
 					</archive>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadoc</id>
+						<goals>
+							<goal>javadoc</goal>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
 	<profiles>
 		<profile>
-			<id>build-release</id>
+			<id>snap-build</id>
 			<build>
 				<plugins>
 					<plugin>
@@ -76,9 +101,7 @@
 						<executions>
 							<execution>
 								<id>attach-sources</id>
-								<goals>
-									<goal>jar-no-fork</goal>
-								</goals>
+								<phase>none</phase>
 							</execution>
 						</executions>
 					</plugin>
@@ -88,10 +111,7 @@
 						<executions>
 							<execution>
 								<id>attach-javadoc</id>
-								<goals>
-									<goal>javadoc</goal>
-									<goal>jar</goal>
-								</goals>
+								<phase>none</phase>
 							</execution>
 						</executions>
 					</plugin>

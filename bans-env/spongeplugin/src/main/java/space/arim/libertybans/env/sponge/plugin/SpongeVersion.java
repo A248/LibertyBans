@@ -19,7 +19,11 @@
 
 package space.arim.libertybans.env.sponge.plugin;
 
-import java.util.Optional;
+import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.spongepowered.api.Platform;
+
+import java.util.OptionalInt;
 
 public enum SpongeVersion {
     /*
@@ -59,24 +63,81 @@ public enum SpongeVersion {
         this.dataVersion = dataVersion;
     }
 
-    public String display() {
+    private String display() {
         return name().replace('_', ' ');
     }
 
-    public boolean isAtLeast(SpongeVersion other) {
+    private boolean isAtLeast(SpongeVersion other) {
         return ordinal() >= other.ordinal();
     }
 
-    public static Optional<SpongeVersion> detectVersion(int dataVersion) {
+    private static @Nullable SpongeVersion detectVersion(int dataVersion) {
         SpongeVersion lastPassed = null;
         for (SpongeVersion candidate : SpongeVersion.values()) {
             if (candidate.dataVersion == dataVersion) {
-                return Optional.of(candidate);
+                return candidate;
             }
             if (candidate.dataVersion < dataVersion) {
                 lastPassed = candidate;
             }
         }
-        return Optional.ofNullable(lastPassed);
+        return lastPassed;
+    }
+
+    static final class ComputeFrom {
+
+        private final Logger logger;
+        private final Platform platform;
+
+        ComputeFrom(Logger logger, Platform platform) {
+            this.logger = logger;
+            this.platform = platform;
+        }
+
+        private SpongeVersion unsupported(String msg) {
+            logger.error(
+                    """
+                            ERROR
+                            
+                            Sorry, however your Sponge server is not supported. You may need to upgrade your server or file a
+                            request on the issue tracker. https://github.com/A248/LibertyBans/issues
+                            
+                            
+                            Reason: {}""",
+                    msg
+            );
+            throw new UnsupportedOperationException(msg);
+        }
+
+        SpongeVersion detectSupportedVersion() {
+            OptionalInt optDataVersion = platform.minecraftVersion().dataVersion();
+            if (optDataVersion.isEmpty()) {
+                return unsupported("Unknown Minecraft data version (cannot detect Sponge API version)");
+            }
+            int dataVersion = optDataVersion.getAsInt();
+            SpongeVersion spongeVersion = SpongeVersion.detectVersion(dataVersion);
+            if (spongeVersion == null) {
+                return unsupported("Unknown or unsupported Minecraft data version " + dataVersion);
+            }
+            // The earliest version we support
+            SpongeVersion apiFloor = SpongeVersion.API_15;
+            if (!spongeVersion.isAtLeast(apiFloor)) {
+                return unsupported("Sponge API version must be at least " + apiFloor + '.');
+            }
+            // The latest version which we do NOT support
+            SpongeVersion apiCeiling = SpongeVersion.API_18;
+            if (spongeVersion.isAtLeast(apiCeiling)) {
+                return unsupported(
+                        "Sponge API version " + spongeVersion + " (or greater) is not supported. Versions "
+                                + apiCeiling + " and above are not supported."
+                );
+            }
+            return spongeVersion;
+        }
+
+        String displayVersion(SpongeVersion spongeVersion) {
+            return platform.container(Platform.Component.API).metadata().version()
+					+ " (" + spongeVersion.display() + ')';
+        }
     }
 }

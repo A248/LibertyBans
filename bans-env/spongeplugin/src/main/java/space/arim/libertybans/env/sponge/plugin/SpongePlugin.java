@@ -41,8 +41,6 @@ import space.arim.libertybans.bootstrap.plugin.PluginInfo;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.concurrent.CompletableFuture;
 
 @Plugin(PluginInfo.ID)
@@ -151,45 +149,10 @@ public final class SpongePlugin {
 		}
 	}
 
-	private CompletableFuture<BaseFoundation> unsupported(String msg) {
-		logger.error(
-                """
-                        ERROR
-                        
-                        Sorry, however your Sponge server is not supported. You may need to upgrade your server or file a
-                        request on the issue tracker. https://github.com/A248/LibertyBans/issues
-                        
-                        
-                        Reason: {}""",
-				msg
-		);
-		throw new UnsupportedOperationException(msg);
-	}
-
 	private CompletableFuture<BaseFoundation> initialize() {
-		SpongeVersion spongeVersion;
-		{
-			OptionalInt optDataVersion = game.platform().minecraftVersion().dataVersion();
-			if (optDataVersion.isEmpty()) {
-				return unsupported("Unknown Minecraft data version (cannot detect Sponge API version)");
-			}
-			int dataVersion = optDataVersion.getAsInt();
-			Optional<SpongeVersion> optSpongeVersion = SpongeVersion.detectVersion(dataVersion);
-			if (optSpongeVersion.isEmpty()) {
-				return unsupported("Unknown or unsupported Minecraft data version " + dataVersion);
-			}
-			spongeVersion = optSpongeVersion.get();
-		}
-		// The earliest version we support
-		SpongeVersion apiFloor = SpongeVersion.API_15;
-		if (!spongeVersion.isAtLeast(apiFloor)) {
-			return unsupported("Sponge API version must be at least " + apiFloor + '.');
-		}
-		// The latest version which we do NOT support
-		SpongeVersion apiCeiling = SpongeVersion.API_18;
-		if (spongeVersion.isAtLeast(apiCeiling)) {
-			return unsupported("Sponge API version " + spongeVersion + " (or greater) is not supported.");
-		}
+		SpongeVersion.ComputeFrom spongeVersionCompute = new SpongeVersion.ComputeFrom(logger, game.platform());
+		SpongeVersion spongeVersion = spongeVersionCompute.detectSupportedVersion();
+		String spongeVersionDisplay = spongeVersionCompute.displayVersion(spongeVersion);
 		ClassLoader platformClassLoader = Game.class.getClassLoader();
 
 		LibertyBansLauncher launcher = new LibertyBansLauncher.Builder()
@@ -197,7 +160,7 @@ public final class SpongePlugin {
 				.logger(new Log4jBootstrapLogger(logger))
 				.platform(Platform
 						.builder(Platform.Category.SPONGE)
-						.nameAndVersion("Sponge", spongeVersion.display())
+						.nameAndVersion("Sponge", spongeVersionDisplay)
 						// Slf4j is an internal dependency
 						.slf4jSupport(new LibraryDetection.ByClassResolution(ProtectedLibrary.SLF4J_API))
 						.kyoriAdventureSupport(LibraryDetection.enabled())

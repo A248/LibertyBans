@@ -1,0 +1,46 @@
+<!--
+  ~ LibertyBans-bootstrap
+  ~ Copyright © 2026 Anand Beh
+  ~
+  ~ LibertyBans-bootstrap is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Lesser General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ LibertyBans-bootstrap is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with LibertyBans-bootstrap. If not, see <https://www.gnu.org/licenses/>
+  ~ and navigate to version 3 of the GNU Lesser General Public License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>space.arim.libertybans.dep</groupId>
+		<artifactId>dep-geyser</artifactId>
+		<version>1.2.0-M1-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>dep-geyser-common</artifactId>
+
+	<properties>
+		<dep.enforce-phase>initialize</dep.enforce-phase>
+		<dep.file-name>org.geysermc.geyser.common</dep.file-name>
+		<dep.jar-sig>f5127a2854056feddf404e41e4fd55fd938592cd0097277cc147c272e7add27772a2214712b2f041bba7b44d15ba585f1c94489b46e9a0a154c410bf81273155</dep.jar-sig>
+		<dep.pom-sig>6764bfb361eef1a6d31d29a499192aafc214e6718df045c3753b65cefd66457b97a86e00237513a26a7d9ad8ce412558db283f929086cc07abc5434fa87ae2c3</dep.pom-sig>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.geysermc.geyser</groupId>
+			<artifactId>common</artifactId>
+		</dependency>
+	</dependencies>
+</project>

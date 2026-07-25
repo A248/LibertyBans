@@ -33,9 +33,12 @@
 	<inceptionYear>2019</inceptionYear>
 
 	<properties>
+		<!-- Build related -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<deployment.deploy-url>https://maven.cloudsmith.io/anand-beh/affero-gpl3/</deployment.deploy-url>
 		<deployment.self-impl-hash>1dfb80352adbb90d3d25a3cc4f1d6d0dc310c22c96d95906c7b7947558ad90e545a7becef36fd0c5b28c7472099251a42e753efdec975157e68b46d51f3bd70a</deployment.self-impl-hash>
+		<maven-surefire.version>3.5.5</maven-surefire.version>
+		<maven-invoker.local-repo-path>${session.executionRootDirectory}/target/invoker-it/local-repo</maven-invoker.local-repo-path>
 
 		<!-- Testing dependencies -->
 		<junit.version>5.14.3</junit.version>
@@ -66,9 +69,11 @@
 
 		<!-- Platform dependencies -->
 		<bungeecord.version>1.21-R0.3</bungeecord.version>
-		<spigot.version>1.8.8-R0.1-20160221.082514-43</spigot.version>
+		<spigot-1.8.8.version>1.8.8-R0.1-20160221.082514-43</spigot-1.8.8.version>
 		<sponge.version>15.0.0</sponge.version>
 		<velocity.version>3.1.0</velocity.version>
+		<bungeecord-chat-1.8.version>1.8-20160221.214602-128</bungeecord-chat-1.8.version>
+		<spigot-1.17.1.version>1.17.1-R0.1-20211121.234319-104</spigot-1.17.1.version>
 
 		<!-- Plugin variables -->
 		<plugin.id>libertybans</plugin.id>
@@ -144,7 +149,14 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>enforce-no-snapshots</id>
+						<!--
+						Goal: The build should not rely on changing snapshot dependencies.
+						Purpose: Build integrity and security. The build should produce the same artifacts from the
+						same dependencies, and all artifacts should be verified as equal through checksums.
+
+						Execution of this scheme is described in the CONTRIBUTING.md file.
+						 -->
+						<id>enforce-locked-snapshots</id>
 						<goals>
 							<goal>enforce</goal>
 						</goals>
@@ -152,12 +164,22 @@
 							<rules>
 								<requireReleaseDeps>
 									<message>Snapshot dependencies lead to unstable builds. Use release versions.</message>
-									<searchTransitive>false</searchTransitive>
-									<failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
+									<searchTransitive>true</searchTransitive>
 									<excludes>
 										<exclude>space.arim.libertybans:*</exclude>
 										<exclude>space.arim.libertybans.addon:*</exclude>
-										<exclude>org.spigotmc:spigot-api</exclude>
+										<exclude>space.arim.libertybans.dep:*</exclude>
+										<exclude>space.arim.libertybans.it:*</exclude>
+
+										<exclude>org.spigotmc:spigot-api:${spigot-1.8.8.version}</exclude>
+										<exclude>org.spigotmc:spigot-api:${spigot-1.17.1.version}</exclude>
+										<exclude>net.md-5:bungeecord-chat:${bungeecord-chat-1.8.version}</exclude>
+										<exclude>com.velocitypowered:velocity-brigadier</exclude>
+										<exclude>org.geysermc.floodgate:api</exclude>
+										<exclude>org.geysermc.geyser:common</exclude>
+										<exclude>org.geysermc.event:events</exclude>
+										<exclude>io.github.waterfallmc:waterfall-api</exclude>
+										<exclude>com.destroystokyo.paper:paper-api</exclude>
 									</excludes>
 								</requireReleaseDeps>
 							</rules>
@@ -184,6 +206,8 @@
 										<allowedRepository>spigot</allowedRepository>
 										<allowedRepository>sponge</allowedRepository>
 										<allowedRepository>jitpack</allowedRepository>
+										<allowedRepository>opencollab-releases</allowedRepository>
+										<allowedRepository>opencollab-snapshots</allowedRepository>
 									</allowedRepositories>
 									<message>New repositories must be managed in .mvn/rff, then added to parent pom.</message>
 								</requireNoRepositories>
@@ -196,6 +220,7 @@
 										<allowedRepository>https://hub.spigotmc.org/nexus/content/repositories/*</allowedRepository>
 										<allowedRepository>https://repo.spongepowered.org/repository/*</allowedRepository>
 										<allowedRepository>https://jitpack.io</allowedRepository>
+										<allowedRepository>https://repo.opencollab.dev/*</allowedRepository>
 									</allowedRepositories>
 								</bannedRepositories>
 							</rules>
@@ -233,10 +258,32 @@
 					<artifactId>maven-clean-plugin</artifactId>
 					<version>3.5.0</version>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>3.1.4</version>
+				</plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
                     <version>3.5.0</version>
+					<executions>
+						<execution>
+							<id>copy-local-repo</id>
+							<phase>none</phase>
+							<goals>
+								<goal>copy-resources</goal>
+							</goals>
+							<configuration>
+								<outputDirectory>${maven-invoker.local-repo-path}</outputDirectory>
+								<resources>
+									<resource>
+										<directory>${settings.localRepository}</directory>
+									</resource>
+								</resources>
+							</configuration>
+						</execution>
+					</executions>
                 </plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -286,7 +333,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
-					<version>3.5.5</version>
+					<version>${maven-surefire.version}</version>
 					<configuration>
 						<trimStackTrace>false</trimStackTrace>
 						<argLine>-XX:TieredStopAtLevel=1 -XX:-TieredCompilation -javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
@@ -295,7 +342,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-failsafe-plugin</artifactId>
-					<version>3.5.5</version>
+					<version>${maven-surefire.version}</version>
 					<configuration>
 						<argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
 						<failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
@@ -344,6 +391,7 @@
 							</goals>
 							<configuration>
 								<goals>verify</goals>
+								<invokerPropertiesFile>invoker.properties</invokerPropertiesFile>
 							</configuration>
 						</execution>
 						<execution>
@@ -354,8 +402,8 @@
 						</execution>
 					</executions>
 					<configuration>
-						<cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
-						<localRepositoryPath>${project.build.directory}/local-it-repo</localRepositoryPath>
+						<cloneProjectsTo>${project.build.directory}/invoker-it/projects</cloneProjectsTo>
+						<localRepositoryPath>${maven-invoker.local-repo-path}</localRepositoryPath>
 						<scope>test</scope>
 						<streamLogsOnFailures>true</streamLogsOnFailures>
 					</configuration>
@@ -456,6 +504,18 @@
 						<configuration>
 							<skip>true</skip>
 						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-resources-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>copy-local-repo</id>
+								<configuration>
+									<skip>true</skip>
+								</configuration>
+							</execution>
+						</executions>
 					</plugin>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
@@ -582,6 +642,12 @@
 			</dependency>
 
 			<!-- Testing Dependencies -->
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter</artifactId>
+				<version>${junit.version}</version>
+				<scope>test</scope>
+			</dependency>
 			<dependency>
 				<groupId>org.junit.jupiter</groupId>
 				<artifactId>junit-jupiter-api</artifactId>
@@ -742,6 +808,28 @@
 				<scope>runtime</scope>
 			</dependency>
 
+			<!-- Locked snapshots (version invariant) -->
+			<dependency>
+				<groupId>com.velocitypowered</groupId>
+				<artifactId>velocity-brigadier</artifactId>
+				<version>1.0.0-20210613.082804-10</version>
+			</dependency>
+			<dependency>
+				<groupId>org.geysermc.floodgate</groupId>
+				<artifactId>api</artifactId>
+				<version>2.2.5-20260629.182344-18</version>
+			</dependency>
+			<dependency>
+				<groupId>org.geysermc.geyser</groupId>
+				<artifactId>common</artifactId>
+				<version>2.2.1-20240128.225244-3</version>
+			</dependency>
+			<dependency>
+				<groupId>org.geysermc.event</groupId>
+				<artifactId>events</artifactId>
+				<version>1.1-20230815.153219-4</version>
+			</dependency>
+
 			<!-- Other -->
 			<dependency>
 				<groupId>com.google.code.gson</groupId>
@@ -762,12 +850,10 @@
 	</dependencyManagement>
 
 	<dependencies>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>

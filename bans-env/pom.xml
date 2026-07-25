@@ -30,14 +30,13 @@
 
 	<artifactId>bans-env</artifactId>
 	<packaging>pom</packaging>
+	<description>hi</description>
 
 	<modules>
 		<module>adventure5-common</module>
 		<module>bungee</module>
-		<module>bungeeplugin</module>
-        <module>fabric</module>
+		<module>fabric</module>
 		<module>spigot</module>
-		<module>spigotplugin</module>
 		<module>sponge</module>
 		<module>spongeplugin</module>
 		<module>velocity</module>
@@ -63,12 +62,6 @@
 				        <artifactId>brigadier</artifactId>
 				    </exclusion>
 				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>org.spigotmc</groupId>
-				<artifactId>spigot-api</artifactId>
-				<version>${spigot.version}</version>
-				<scope>provided</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.spongepowered</groupId>

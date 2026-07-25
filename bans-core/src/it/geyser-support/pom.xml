@@ -1,6 +1,6 @@
 <!--
   ~ LibertyBans
-  ~ Copyright © 2022 Anand Beh
+  ~ Copyright © 2026 Anand Beh
   ~
   ~ LibertyBans is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as
@@ -22,20 +22,19 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>space.arim.libertybans</groupId>
-    <artifactId>it-core-geyser-support</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <parent>
+        <groupId>space.arim.libertybans.it</groupId>
+        <artifactId>invoker-it-parent</artifactId>
+        <version>@project.version@</version>
+    </parent>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <artifactId>it-core-geyser-support</artifactId>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
                 <configuration>
                     <release>17</release>
                 </configuration>
@@ -43,17 +42,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M5</version>
-                <configuration>
-                    <trimStackTrace>false</trimStackTrace>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.junit.jupiter</groupId>
-                        <artifactId>junit-jupiter-engine</artifactId>
-                        <version>@junit.version@</version>
-                    </dependency>
-                </dependencies>
             </plugin>
         </plugins>
     </build>
@@ -65,48 +53,21 @@
             <version>@project.version@</version>
         </dependency>
         <dependency>
-            <groupId>org.geysermc.floodgate</groupId>
-            <artifactId>api</artifactId>
-            <version>2.0-20211127.012735-84</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <!-- Used internally by Floodgate. Needed for mock resolution -->
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-            <version>4.1.68.Final</version>
-            <scope>provided</scope>
+            <groupId>space.arim.libertybans.dep</groupId>
+            <artifactId>dep-floodgate-api</artifactId>
+            <version>@project.version@</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>@junit.version@</version>
-            <scope>test</scope>
+            <artifactId>junit-jupiter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
-            <version>@mockito.version@</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>@slf4j.version@</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <repositories>
-        <repository>
-            <id>opencollab-snapshot-repo</id>
-            <url>https://repo.opencollab.dev/maven-snapshots/</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
-    </repositories>
 </project>

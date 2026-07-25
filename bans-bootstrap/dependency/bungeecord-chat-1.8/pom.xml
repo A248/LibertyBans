@@ -1,0 +1,54 @@
+<!--
+  ~ LibertyBans-bootstrap
+  ~ Copyright © 2026 Anand Beh
+  ~
+  ~ LibertyBans-bootstrap is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Lesser General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ LibertyBans-bootstrap is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ~ GNU Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with LibertyBans-bootstrap. If not, see <https://www.gnu.org/licenses/>
+  ~ and navigate to version 3 of the GNU Lesser General Public License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>space.arim.libertybans.dep</groupId>
+		<artifactId>dep-parent</artifactId>
+		<version>1.2.0-M1-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>dep-bungeecord-chat-1.8</artifactId>
+
+	<properties>
+		<dep.enforce-phase>initialize</dep.enforce-phase>
+		<dep.file-name>net.md-5.bungeecord-chat</dep.file-name>
+		<dep.jar-sig>06bf600ea314c0663cc660555f0123a14e4fb20ea1aaff683bac93ed84350b9ab1fe919d82a7512d7394e7451bf5e2b5582c5187038707a1d03a27097b52557e</dep.jar-sig>
+		<dep.pom-sig>42ddee4f3a9874686148c2326e9edfd395536ac46133164edf8d53f6fdf84f45fafd158227378d1027485205f9e4ae0f535a638c75386b00a0558c93334f0882</dep.pom-sig>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>net.md-5</groupId>
+			<artifactId>bungeecord-chat</artifactId>
+			<version>${bungeecord-chat-1.8.version}</version>
+		</dependency>
+	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>spigot</id>
+			<url>https://hub.spigotmc.org/nexus/content/repositories/public/</url>
+		</repository>
+	</repositories>
+</project>
