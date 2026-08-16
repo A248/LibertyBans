@@ -20,12 +20,33 @@ package space.arim.libertybans.core.commands.extra;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DurationParser {
 
 	private final Set<String> permanentArguments;
-	
+
+	/**
+	 * Matches one "segment" of a duration, i.e. a number followed by a unit token.
+	 * Units are tried longest-first in the alternation so that e.g. "mois" is not
+	 * shadowed by "mo", and "min"/"sem"/"sec" are not shadowed by their english
+	 * single-letter equivalents.
+	 *
+	 * Supported units:
+	 *  years   : y, an
+	 *  months  : mo, mois
+	 *  weeks   : w, sem
+	 *  days    : d, j
+	 *  hours   : h            (identical in English and French)
+	 *  minutes : m, min
+	 *  seconds : s, sec
+	 */
+	private static final Pattern SEGMENT = Pattern.compile(
+			"(\\d+)(mois|min|sem|sec|mo|an|w|y|d|j|h|m|s)", Pattern.CASE_INSENSITIVE);
+
 	public DurationParser(Set<String> permanentArguments) {
 		this.permanentArguments = Set.copyOf(permanentArguments);
 	}
@@ -35,7 +56,9 @@ public class DurationParser {
 	}
 
 	/**
-	 * Parses a duration from an argument
+	 * Parses a duration from an argument. Accepts both English tokens (y, mo, w, d, h, m, s)
+	 * and French tokens (an, mois, sem, j, h, min, sec), and allows chaining multiple
+	 * segments together without spaces, e.g. "1j12h" or "2mo3sem".
 	 *
 	 * @param argument the argument
 	 * @return the parsed duration, zero for permanent, a negative duration if unable to parse
@@ -44,32 +67,43 @@ public class DurationParser {
 		if (ContainsCI.containsIgnoreCase(permanentArguments, argument)) {
 			return Duration.ZERO;
 		}
-		char[] characters = argument.toCharArray();
-		int unitIndex = 0;
-		for (int n = 0; n < characters.length; n++) {
-			if (!Character.isDigit(characters[n])) {
-				unitIndex = n;
-				break;
+		Matcher matcher = SEGMENT.matcher(argument);
+		long totalNanos = 0L;
+		int consumedUpTo = 0;
+		boolean matchedAny = false;
+		while (matcher.find()) {
+			// Reject if there's a gap (unrecognized characters) between segments
+			if (matcher.start() != consumedUpTo) {
+				return Duration.ofNanos(-1L);
 			}
+			matchedAny = true;
+			consumedUpTo = matcher.end();
+
+			long number = Long.parseLong(matcher.group(1));
+			ChronoUnit unit = unitFor(matcher.group(2));
+			if (unit == null) {
+				return Duration.ofNanos(-1L);
+			}
+			// Do not use Duration.of which does not accept estimated durations
+			totalNanos += unit.getDuration().multipliedBy(number).toNanos();
 		}
-		if (unitIndex == 0) {
+		if (!matchedAny || consumedUpTo != argument.length()) {
 			return Duration.ofNanos(-1L);
 		}
-		long number = Long.parseLong(argument.substring(0, unitIndex));
-		ChronoUnit unit = switch (argument.substring(unitIndex)) {
-			case "Y", "y" -> ChronoUnit.YEARS;
-			case "MO", "mo" -> ChronoUnit.MONTHS;
-			case "W", "w" -> ChronoUnit.WEEKS;
-			case "D", "d" -> ChronoUnit.DAYS;
-			case "H", "h" -> ChronoUnit.HOURS;
-			case "M", "m" -> ChronoUnit.MINUTES;
+		return Duration.ofNanos(totalNanos);
+	}
+
+	private static ChronoUnit unitFor(String token) {
+		return switch (token.toLowerCase(Locale.ROOT)) {
+			case "y", "an" -> ChronoUnit.YEARS;
+			case "mo", "mois" -> ChronoUnit.MONTHS;
+			case "w", "sem" -> ChronoUnit.WEEKS;
+			case "d", "j" -> ChronoUnit.DAYS;
+			case "h" -> ChronoUnit.HOURS;
+			case "m", "min" -> ChronoUnit.MINUTES;
+			case "s", "sec" -> ChronoUnit.SECONDS;
 			default -> null;
 		};
-		if (unit == null) {
-			return Duration.ofNanos(-1L);
-		}
-		// Do not use Duration.of which does not accept estimated durations
-		return unit.getDuration().multipliedBy(number);
 	}
 
 }

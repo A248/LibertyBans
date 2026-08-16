@@ -53,7 +53,18 @@ public class DurationParserTest {
 				new ParsedDuration("1MO", ChronoUnit.MONTHS.getDuration()),
 				new ParsedDuration("2y", ChronoUnit.YEARS.getDuration().multipliedBy(2)),
 				new ParsedDuration("perm", Duration.ZERO),
-				new ParsedDuration("Perm", Duration.ZERO)
+				new ParsedDuration("Perm", Duration.ZERO),
+				// French units
+				new ParsedDuration("1min", Duration.ofMinutes(1L)),
+				new ParsedDuration("5sem", ChronoUnit.WEEKS.getDuration().multipliedBy(5)),
+				new ParsedDuration("30j", Duration.ofDays(30L)),
+				new ParsedDuration("1MOIS", ChronoUnit.MONTHS.getDuration()),
+				new ParsedDuration("2an", ChronoUnit.YEARS.getDuration().multipliedBy(2)),
+				new ParsedDuration("10sec", Duration.ofSeconds(10L)),
+				// Chained/composite segments
+				new ParsedDuration("1j12h30min", Duration.ofDays(1L).plusHours(12L).plusMinutes(30L)),
+				new ParsedDuration("2mo3sem", ChronoUnit.MONTHS.getDuration().multipliedBy(2)
+						.plus(ChronoUnit.WEEKS.getDuration().multipliedBy(3)))
 		).map(this::testCorrect);
 	}
 
@@ -65,7 +76,7 @@ public class DurationParserTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {"unparsable", "1", "d", "mo", "1p", "any other special case that needs testing?"})
+	@ValueSource(strings = {"unparsable", "1", "d", "mo", "1p", "1j2x", "any other special case that needs testing?"})
 	public void parseInvalid(String argument) {
 		Duration duration = parser.parse(argument);
 		assertTrue(duration.isNegative(), () -> "Should have failed to parse " + argument);
