@@ -20,6 +20,6 @@
 #
 
 echo "Updating all hashes"
-./mvnw -q clean verify help:effective-pom -Pskip-all-tests,-docker-enabled -Daether.artifactResolver.postProcessor.trustedChecksums.record=true
+./mvnw -q clean verify help:effective-pom dependency:go-offline dependency:resolve-plugins -Pskip-all-tests,-docker-enabled -Daether.artifactResolver.postProcessor.trustedChecksums.record=true
 echo "Finished"
 

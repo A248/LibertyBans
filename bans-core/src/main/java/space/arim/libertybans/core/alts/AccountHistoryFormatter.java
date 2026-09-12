@@ -44,20 +44,21 @@ public class AccountHistoryFormatter {
     }
 
 	public Component formatMessage(KeysetPage<KnownAccount, Instant> response, String target, int page) {
+		AccountHistorySection.Listing listingConf = configs.getMessagesConfig().accountHistory().listing();
 		return new FormatAccounts<>(
 				adventure5Compat,
-				configs.getMessagesConfig().accountHistory().listing(),
+				listingConf,
 				response
-		).format(target, page, new KnownAccountFormat(configs, formatter));
+		).format(target, page, new KnownAccountFormat(configs, listingConf, formatter));
 	}
 
-	private record KnownAccountFormat(Configs configs, InternalFormatter formatter)
+	private record KnownAccountFormat(Configs configs, AccountHistorySection.Listing listingConf, InternalFormatter formatter)
 			implements FormatAccounts.ElementFormat<KnownAccount> {
 
 		@Override
 		public ComponentLike format(String target, KnownAccount knownAccount) {
 			Instant recorded = knownAccount.recorded();
-			return configs.getMessagesConfig().accountHistory().listing().layout()
+			return listingConf.layout()
 					.replaceText("%TARGET%", target)
 					.replaceText("%USERNAME%", knownAccount.latestUsername().orElseGet(
 							() -> configs.getMessagesConfig().formatting().victimDisplay().playerNameUnknown()

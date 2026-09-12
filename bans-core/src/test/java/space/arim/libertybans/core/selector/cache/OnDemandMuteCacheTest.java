@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.selector.cache;
 
+import jakarta.inject.Provider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,9 +28,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.core.alts.AddressWhitelist;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.config.SqlConfig;
+import space.arim.libertybans.core.database.execute.QueryExecutor;
+import space.arim.libertybans.core.selector.EnforcementConfig;
 import space.arim.libertybans.core.selector.InternalSelector;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.core.service.SettableTimeImpl;
@@ -44,6 +49,8 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
@@ -74,8 +81,20 @@ public class OnDemandMuteCacheTest {
 		when(muteCaching.expirationSemantic()).thenReturn(SqlConfig.MuteCaching.ExpirationSemantic.EXPIRE_AFTER_WRITE);
 		when(sqlConfig.synchronization()).thenReturn(synchronization);
 		when(synchronization.enabled()).thenReturn(false);
+		{
+			var mainConfig = mock(MainConfig.class);
+			var enforcementConfig = mock(EnforcementConfig.class);
+			var whitelistConfig = mock(EnforcementConfig.IpWhitelist.class);
+			lenient().when(configs.getMainConfig()).thenReturn(mainConfig);
+			lenient().when(mainConfig.enforcement()).thenReturn(enforcementConfig);
+			lenient().when(enforcementConfig.ipWhitelist()).thenReturn(whitelistConfig);
+			lenient().when(whitelistConfig.enable()).thenReturn(false);
+		}
 
-		muteCache = new OnDemandMuteCache(configs, futuresFactory, selector, formatter, time);
+		Provider<QueryExecutor> queryExecutor = () -> { throw new UnsupportedOperationException(); };
+		muteCache = new OnDemandMuteCache(
+				configs, futuresFactory, queryExecutor, new AddressWhitelist(queryExecutor, time),
+				selector, formatter, time);
 		muteCache.startup();
 
 		uuid = UUID.randomUUID();

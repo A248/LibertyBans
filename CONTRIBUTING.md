@@ -179,7 +179,7 @@ To run a specific integration test (e.g. PaginationIT), you can select it:
 mvn clean verify -Dinvoker.skip=true -Dit.test=PaginationIT -P-docker-enabled
 
 # Alternatively
-build/choose-its PaginationIT -P-docker-enabled
+build/choose-its.sh PaginationIT -P-docker-enabled
 ```
 
 **Notes on Docker Usage**
@@ -273,7 +273,7 @@ The downstream consumer of a locked snapshot should refer to the module in `bans
 
 ## Repository filtering and prefixes
 
-While not strictly necessary from a security perspective, repository filtering prevents remote repositories from serving unexpected artifacts. For example, the SpigotMC repository shouldn't be responsible for serving an artifact like `slf4j-api`, which is found on Maven Central.
+While not strictly necessary from a security perspective, repository filtering improves efficiency and prevents remote repositories from serving unexpected artifacts. For example, the SpigotMC repository shouldn't be responsible for serving an artifact like `slf4j-api`, which is found on Maven Central.
 
 Repositories are managed in two places:
 1. In the `.mvn/rrf` directory.

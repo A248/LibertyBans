@@ -233,7 +233,7 @@
 								<forcedType>
 									<userType>java.time.Instant</userType>
 									<converter>space.arim.libertybans.core.database.jooq.InstantConverter</converter>
-									<includeExpression>.*\.(updated|start|time)$</includeExpression>
+									<includeExpression>.*\.(updated|start|time|whitelisted_on)$</includeExpression>
 									<includeTypes>^BIGINT$</includeTypes>
 								</forcedType>
 								<forcedType>
@@ -259,7 +259,7 @@
 								<forcedType>
 									<userType>space.arim.libertybans.api.Operator</userType>
 									<binding>space.arim.libertybans.core.database.jooq.OperatorBinding</binding>
-									<includeExpression>.*\.operator$</includeExpression>
+									<includeExpression>.*\.(operator|whitelisted_by)$</includeExpression>
 									<includeTypes>^UUID$</includeTypes>
 								</forcedType>
 								<forcedType>

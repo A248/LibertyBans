@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -64,7 +64,7 @@ public interface AccountHistorySection {
 		Component permission();
 
 		@ConfKey("none-found")
-		@ConfDefault.DefaultString("&7Page does not exist.")
+		@ConfDefault.DefaultString("&7Page %PAGE% does not exist.")
 		ComponentText noneFound();
 
 		@Override

@@ -34,6 +34,7 @@ import space.arim.dazzleconf.annote.ConfDefault.DefaultMap;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultString;
 import space.arim.dazzleconf.annote.ConfDefault.DefaultStrings;
 import space.arim.libertybans.core.alts.AccountHistorySection;
+import space.arim.libertybans.core.alts.AddressWhitelistListLayout;
 import space.arim.libertybans.core.alts.AltsSection;
 import space.arim.libertybans.core.config.displayid.IdAlgorithm;
 
@@ -580,5 +581,134 @@ public interface MessagesConfig {
 		}
 		
 	}
-	
+
+	@ConfKey("ip-records")
+	@SubSection
+	IpRecordsSection ipRecords();
+
+	interface IpRecordsSection {
+
+		@DefaultString("&cUsage: /libertybans ip-records <purge|whitelist>.")
+		Component usage();
+
+		@ConfComments({
+				"Some commands require an IP address as an argument.",
+				"If the player's argument is not an IP address, this error message is shown."
+		})
+		@ConfKey("not-an-address")
+		@DefaultString("&cArgument '%TARGET%' is not an IP address.")
+		ComponentText notAnAddress();
+
+		@SubSection
+		Purge purge();
+
+		interface Purge {
+
+			@DefaultString("&cYou may not use this command.")
+			Component permission();
+
+			@ConfComments({
+					"Message when the command succeeded",
+					"Available variables: %COUNT% (number of records deleted) and %ADDRESS% (the IP address)"
+			})
+			@DefaultString("&aDeleted &e%COUNT%&a records relating to &7%ADDRESS&a.")
+			ComponentText success();
+
+		}
+
+		@ConfComments({
+				"Messages regarding the IP whitelist.",
+				"Where logical, the %ADDRESS% variable represents the target IP address"
+		})
+		@SubSection
+		Whitelist whitelist();
+
+		interface Whitelist {
+
+			@ConfKey("not-enabled")
+			@ConfComments("Error message when the IP whitelist is not enabled in the config.yml.")
+			@DefaultString("&cThis command is disabled (IP whitelisting is disabled in the configuration).")
+			Component notEnabled();
+
+			@DefaultString("&cUsage: /libertybans ip-records whitelist <add|remove|list>")
+			Component usage();
+
+			interface AddOrRemove {
+				ComponentText success();
+
+				ComponentText failed();
+			}
+
+			@SubSection
+			Add add();
+
+			interface Add extends AddOrRemove {
+
+				@DefaultString("&cYou may not add IPs to the whitelist.")
+				Component permission();
+
+				@Override
+				@ConfComments("Message when the command succeeded")
+				@DefaultString("&aThe IP address &e%ADDRESS%&a was whitelisted.")
+				ComponentText success();
+
+				@Override
+				@ConfComments("If the IP address is already whitelisted, this error message is shown")
+				@DefaultString("&cThe IP address &e%ADDRESS%&c is already whitelisted.")
+				ComponentText failed();
+			}
+
+			@SubSection
+			Remove remove();
+
+			interface Remove extends AddOrRemove {
+
+				@DefaultString("&cYou may not remove IPs from the whitelist.")
+				Component permission();
+
+				@Override
+				@ConfComments("Message when the command succeeded")
+				@DefaultString("&aThe IP address &e%ADDRESS%&a was removed from the whitelist.")
+				ComponentText success();
+
+				@Override
+				@ConfComments("If the IP address is not whitelisted, this error message is shown")
+				@DefaultString("&cThe IP address &e%ADDRESS%&c is not on the whitelist.")
+				ComponentText failed();
+			}
+
+			@SubSection
+			List list();
+
+			interface List {
+
+				@DefaultString("&cUsage: /libertybans ip-records whitelist list [page].")
+				Component usage();
+
+				@DefaultString("&cYou may not view the list of IPs on the whitelist.")
+				Component permission();
+
+				@ConfKey("no-pages")
+				@DefaultString("&7There are no IP addresses on the whitelist.")
+				Component noPages();
+
+				@ConfKey("max-pages")
+				@DefaultString("&7Page &e%PAGE%&7 does not exist.")
+				ComponentText maxPages();
+
+				@ConfComments("Amount of addresses to display per page")
+				@ConfKey("per-page")
+				@IntegerRange(min = 1)
+				@ConfDefault.DefaultInteger(10)
+				int perPage();
+
+				@SubSection
+				AddressWhitelistListLayout layout();
+
+			}
+
+		}
+
+	}
+
 }

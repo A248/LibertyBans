@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,14 +19,24 @@
 
 package space.arim.libertybans.core.selector.cache;
 
+import jakarta.inject.Provider;
+import space.arim.libertybans.api.AddressVictim;
+import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.select.PunishmentSelector;
+import space.arim.libertybans.core.alts.AddressWhitelist;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.SqlConfig;
 import space.arim.libertybans.core.config.SqlConfig.MuteCaching.ExpirationSemantic;
+import space.arim.libertybans.core.database.execute.QueryExecutor;
+import space.arim.libertybans.core.database.execute.SQLFunction;
+import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
+import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -37,11 +47,18 @@ import java.util.function.Predicate;
 abstract class BaseMuteCache implements MuteCache {
 
 	private final Configs configs;
+	private final FactoryOfTheFuture futuresFactory;
+	private final Provider<QueryExecutor> queryExecutor;
+	private final AddressWhitelist addressWhitelist;
 	private final PunishmentSelector selector;
 
-	BaseMuteCache(Configs configs, PunishmentSelector selector) {
+	BaseMuteCache(Configs configs, FactoryOfTheFuture futuresFactory, Provider<QueryExecutor> queryExecutor,
+				  AddressWhitelist addressWhitelist, PunishmentSelector selector) {
 		this.configs = configs;
-		this.selector = selector;
+        this.futuresFactory = futuresFactory;
+        this.queryExecutor = queryExecutor;
+        this.addressWhitelist = addressWhitelist;
+        this.selector = selector;
 	}
 
 	// Setup
@@ -66,7 +83,34 @@ abstract class BaseMuteCache implements MuteCache {
 	final CentralisedFuture<Optional<Punishment>> queryPunishment(MuteCacheKey key) {
 		return selector
 				.getApplicablePunishment(key.uuid(), key.address(), PunishmentType.MUTE)
-				.toCompletableFuture();
+				.toCompletableFuture()
+				.thenCompose(optPunishment -> {
+					Victim victim;
+					if (optPunishment.isEmpty() || (victim = optPunishment.get().getVictim()) instanceof PlayerVictim
+							|| !configs.getMainConfig().enforcement().ipWhitelist().enable()) {
+						return futuresFactory.completedFuture(optPunishment);
+					}
+					NetworkAddress victimAddress;
+					if (victim instanceof AddressVictim addressVictim) {
+						victimAddress = addressVictim.getAddress();
+					} else if (victim instanceof CompositeVictim compositeVictim) {
+						if (compositeVictim.getUUID().equals(key.uuid())) {
+							return futuresFactory.completedFuture(optPunishment);
+						}
+						victimAddress = compositeVictim.getAddress();
+					} else {
+						throw MiscUtil.unknownVictimType(victim.getType());
+					}
+					return queryExecutor.get().query(SQLFunction.readOnly(context -> {
+						return addressWhitelist.isWhitelisted(context, victimAddress);
+					})).thenApply(whitelisted -> {
+						if (whitelisted) {
+							return Optional.empty();
+						} else {
+							return optPunishment;
+						}
+					});
+				});
 	}
 
 	// Management

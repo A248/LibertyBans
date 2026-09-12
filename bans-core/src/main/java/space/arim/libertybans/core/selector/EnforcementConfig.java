@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -172,5 +172,33 @@ public interface EnforcementConfig {
 		@ConfKey("should-register-on-connection")
 		@ConfDefault.DefaultBoolean(true)
 		boolean shouldRegisterOnConnection();
+	}
+
+	@ConfComments({
+			"Controls the IP whitelist.",
+			"",
+			"The IP whitelist manages a list of IP address which are exempt from IP punishments and alt checking.",
+			"It is intended to be used with staff members and other exceptional cases where players share known IP addresses.",
+			"",
+			"If an IP address is whitelisted:",
+			" - Punishments targeting the IP will not be enforced.",
+			" - Automatic alt checks will not be performed on players with the IP.",
+			" - The connection limiter for that IP will not be enforced.",
+			"",
+			"However, other parts of the plugin may still show an IP as punished. If you don't want an IP to be banned,",
+			"you should remove any punishments applying to it (remember that 'address-strictness' can have a wide effect)."
+	})
+	@ConfKey("ip-whitelist")
+	@SubSection
+	IpWhitelist ipWhitelist();
+
+	interface IpWhitelist {
+
+		@ConfComments({
+				"Enables the IP whitelist (it's recommended to keep this 'false' if you do not use it)."
+		})
+		@ConfDefault.DefaultBoolean(false)
+		boolean enable();
+
 	}
 }

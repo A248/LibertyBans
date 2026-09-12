@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,14 +20,17 @@
 package space.arim.libertybans.core.selector.cache;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.select.PunishmentSelector;
+import space.arim.libertybans.core.alts.AddressWhitelist;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.env.EnvUserResolver;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -69,10 +72,10 @@ public final class AlwaysAvailableMuteCache extends BaseMuteCache {
 	static final Duration PURGE_TASK_INTERVAL = Duration.ofMinutes(3L);
 
 	@Inject
-	public AlwaysAvailableMuteCache(Configs configs, FactoryOfTheFuture futuresFactory,
-									PunishmentSelector selector, EnhancedExecutor enhancedExecutor,
+	public AlwaysAvailableMuteCache(Configs configs, FactoryOfTheFuture futuresFactory, Provider<QueryExecutor> queryExecutor,
+									AddressWhitelist addressWhitelist, PunishmentSelector selector, EnhancedExecutor enhancedExecutor,
 									EnvUserResolver envUserResolver, InternalFormatter formatter, Time time) {
-		super(configs, selector);
+		super(configs, futuresFactory, queryExecutor, addressWhitelist, selector);
 		this.futuresFactory = futuresFactory;
 		this.enhancedExecutor = enhancedExecutor;
 		this.envUserResolver = envUserResolver;

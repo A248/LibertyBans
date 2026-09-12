@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -23,14 +23,17 @@ import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Scheduler;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import org.slf4j.LoggerFactory;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.select.PunishmentSelector;
+import space.arim.libertybans.core.alts.AddressWhitelist;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
 import space.arim.omnibus.util.concurrent.FactoryOfTheFuture;
@@ -54,9 +57,9 @@ public final class OnDemandMuteCache extends BaseMuteCache {
 	private volatile AsyncLoadingCache<MuteCacheKey, Optional<Punishment>> cache;
 
 	@Inject
-	public OnDemandMuteCache(Configs configs, FactoryOfTheFuture futuresFactory,
-							 PunishmentSelector selector, InternalFormatter formatter, Time time) {
-		super(configs, selector);
+	public OnDemandMuteCache(Configs configs, FactoryOfTheFuture futuresFactory, Provider<QueryExecutor> queryExecutor,
+							 AddressWhitelist addressWhitelist, PunishmentSelector selector, InternalFormatter formatter, Time time) {
+		super(configs, futuresFactory, queryExecutor, addressWhitelist, selector);
 		this.futuresFactory = futuresFactory;
 		this.formatter = formatter;
 		this.time = time;

@@ -21,18 +21,18 @@ package space.arim.libertybans.core.alts;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.api.jsonchat.adventure.util.Adventure5Compat;
 import space.arim.api.jsonchat.adventure.util.ComponentText;
-import space.arim.libertybans.api.user.AccountBase;
 import space.arim.libertybans.core.database.pagination.KeysetPage;
 
 import java.util.ArrayList;
 import java.util.List;
 
-record FormatAccounts<A extends AccountBase, F>(Adventure5Compat adventure5Compat,
-                                                AccountListFormatting config, KeysetPage<A, F> response) {
+record FormatAccounts<A, F>(Adventure5Compat adventure5Compat,
+                            AccountListFormatting config, KeysetPage<A, F> response) {
 
-    Component format(String target, int page, ElementFormat<A> elementFormat) {
+    Component format(@Nullable String target, int page, ElementFormat<A> elementFormat) {
         // Construct the form of the message
         ComponentText built;
         {
@@ -41,7 +41,9 @@ record FormatAccounts<A extends AccountBase, F>(Adventure5Compat adventure5Compa
 
             ComponentText header = config.header();
             if (!header.isEmpty()) {
-                messages.add(header.replaceText("%TARGET%", target));
+                if (target != null) {
+                    messages.add(header.replaceText("%TARGET%", target));
+                }
                 messages.add(Component.newline());
             }
             for (int n = 0; n < data.size(); n++) {
@@ -64,7 +66,9 @@ record FormatAccounts<A extends AccountBase, F>(Adventure5Compat adventure5Compa
             built = ComponentText.create(concat, adventure5Compat);
         }
         // Add in the variable content
-        built = built.replaceText("%TARGET%", target);
+        if (target != null) {
+            built = built.replaceText("%TARGET%", target);
+        }
         if (page != -1) {
             built = built.replaceText(response.new VariableReplacer(page));
         }
@@ -72,7 +76,7 @@ record FormatAccounts<A extends AccountBase, F>(Adventure5Compat adventure5Compa
     }
 
     interface ElementFormat<T> {
-        ComponentLike format(String target, T element);
+        ComponentLike format(@Nullable String target, T element);
     }
 
 }

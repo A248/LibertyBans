@@ -28,8 +28,7 @@ public final class KeysetPage<R, F> {
     private final List<R> data;
     private final KeysetAnchor<F> lastPageAnchor;
     private final KeysetAnchor<F> nextPageAnchor;
-
-    private transient final BorderValueHandle<F> borderValueHandle;
+    private final BorderValueHandle<F> borderValueHandle;
 
     public KeysetPage(List<R> data, KeysetAnchor<F> lastPageAnchor, KeysetAnchor<F> nextPageAnchor,
                       BorderValueHandle<F> borderValueHandle) {
@@ -49,6 +48,10 @@ public final class KeysetPage<R, F> {
 
     public KeysetAnchor<F> nextPageAnchor() {
         return nextPageAnchor;
+    }
+
+    public BorderValueHandle<F> borderValueHandle() {
+        return borderValueHandle;
     }
 
     public final class VariableReplacer implements UnaryOperator<String> {

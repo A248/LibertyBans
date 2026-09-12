@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -25,8 +25,12 @@ import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jooq.DSLContext;
 import space.arim.api.env.annote.PlatformPlayer;
+import space.arim.libertybans.api.AddressVictim;
+import space.arim.libertybans.api.CompositeVictim;
 import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.api.PlayerVictim;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.scope.ServerScope;
 import space.arim.libertybans.api.select.SelectionPredicate;
@@ -40,6 +44,7 @@ import space.arim.libertybans.core.database.pagination.KeysetPage;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.env.EnvEnforcer;
 import space.arim.libertybans.core.punish.Association;
+import space.arim.libertybans.core.punish.MiscUtil;
 import space.arim.libertybans.core.service.FuturePoster;
 import space.arim.libertybans.core.service.Time;
 import space.arim.omnibus.util.concurrent.CentralisedFuture;
@@ -57,23 +62,25 @@ public final class Gatekeeper {
 	private final FactoryOfTheFuture futuresFactory;
 	private final Provider<QueryExecutor> queryExecutor;
 	private final InternalFormatter formatter;
-	private final ConnectionLimiter connectionLimiter;
+	private final AddressManagement addressManagement;
+	private final AddressWhitelist addressWhitelist;
 	private final AltDetection altDetection;
 	private final AltNotification altNotification;
 	private final Time time;
 
 	@Inject
 	public Gatekeeper(Configs configs, FuturePoster futurePoster, FactoryOfTheFuture futuresFactory,
-					  Provider<QueryExecutor> queryExecutor, InternalFormatter formatter,
-					  ConnectionLimiter connectionLimiter, AltDetection altDetection, AltNotification altNotification,
-					  Time time) {
+                      Provider<QueryExecutor> queryExecutor, InternalFormatter formatter,
+                      AddressManagement addressManagement, AddressWhitelist addressWhitelist, AltDetection altDetection, 
+					  AltNotification altNotification, Time time) {
 		this.configs = configs;
         this.futurePoster = futurePoster;
         this.futuresFactory = futuresFactory;
 		this.queryExecutor = queryExecutor;
 		this.formatter = formatter;
-		this.connectionLimiter = connectionLimiter;
-		this.altDetection = altDetection;
+        this.addressManagement = addressManagement;
+        this.addressWhitelist = addressWhitelist;
+        this.altDetection = altDetection;
 		this.altNotification = altNotification;
 		this.time = time;
 	}
@@ -95,20 +102,50 @@ public final class Gatekeeper {
 					.canAssumeUserRecorded(recordUserAssociation)
 					.build()
 					.findFirstSpecificPunishment(context, currentTime, SortPunishments.LATEST_END_DATE_FIRST);
-			if (ban != null) {
-				return ban;
+			var enforcementConfig = configs.getMainConfig().enforcement();
+			boolean addressWhitelistEnable = enforcementConfig.ipWhitelist().enable();
+			boolean addressWhitelisted;
+			// Want to short-circuit if banned, but otherwise check if IP address whitelisted
+			if (ban == null) {
+				addressWhitelisted = addressWhitelistEnable && addressWhitelist.isWhitelisted(context, address);
+			} else {
+				// If whitelist applicable, check if bypass applies. Otherwise, return punishment
+				Victim victim;
+				if (!addressWhitelistEnable || (victim = ban.getVictim()) instanceof PlayerVictim) {
+					return ban;
+				}
+				NetworkAddress victimAddress;
+				if (victim instanceof AddressVictim addressVictim) {
+					victimAddress = addressVictim.getAddress();
+					if (!addressWhitelist.isWhitelisted(context, victimAddress)) {
+						return ban;
+					}
+				} else if (victim instanceof CompositeVictim compositeVictim) {
+					victimAddress = compositeVictim.getAddress();
+					if (compositeVictim.getUUID().equals(uuid) || !addressWhitelist.isWhitelisted(context, victimAddress)) {
+						return ban;
+					}
+				} else {
+					throw MiscUtil.unknownVictimType(victim.getType());
+				}
+				// If we got here, it means that victimAddress is whitelisted
+				assert addressWhitelist.isWhitelisted(context, victimAddress) : "if not whitelisted, ban applies";
+				addressWhitelisted = victimAddress.equals(address) || addressWhitelist.isWhitelisted(context, address);
 			}
-			Component connectionLimitMessage = connectionLimiter.hasExceededLimit(context, address, currentTime);
-			if (connectionLimitMessage != null) {
-				return connectionLimitMessage;
-			}
-			// The player may join, but should be checked for alts
-			EnforcementConfig.AltsAutoShow altsAutoShow = configs.getMainConfig().enforcement().altsAutoShow();
-			if (altsAutoShow.enable() && !altsAutoShow.enableBypassPermission()) {
-				var formatting = configs.getMessagesConfig().alts().autoShow();
-                return altDetection.detectAlts(context, new AltInfoRequest(
-						uuid, address, altsAutoShow.showWhichAlts(), formatting.oldestFirst(), formatting.limit()
-				));
+			if (!addressWhitelisted) {
+				Component connectionLimitMessage = addressManagement.hasExceededLimit(context, enforcementConfig, address, currentTime);
+				if (connectionLimitMessage != null) {
+					return connectionLimitMessage;
+				}
+				// The player may join, but should be checked for alts
+				// If using bypass permissions, auto-show must be delayed until the join event (below)
+				EnforcementConfig.AltsAutoShow altsAutoShow = enforcementConfig.altsAutoShow();
+				if (altsAutoShow.enable() && !altsAutoShow.enableBypassPermission()) {
+					var formatting = configs.getMessagesConfig().alts().autoShow();
+					return altDetection.detectAlts(context, new AltInfoRequest(
+							uuid, address, altsAutoShow.showWhichAlts(), formatting.oldestFirst(), formatting.limit()
+					));
+				}
 			}
 			return null;
 		}).thenCompose((banOrLimitMessageOrDetectedAltsOrNull) -> {
@@ -136,7 +173,8 @@ public final class Gatekeeper {
 		}
 		return queryExecutor.get().queryWithRetry((context, transaction) -> {
 			Instant currentTime = time.currentTimestamp();
-			var altsRegistry = configs.getMainConfig().enforcement().altsRegistry();
+			var enforcementConfig = configs.getMainConfig().enforcement();
+			var altsRegistry = enforcementConfig.altsRegistry();
 			boolean registerOnConnection = altsRegistry.shouldRegisterOnConnection();
 			List<String> serversWithoutAssociation = altsRegistry.serversWithoutRegistration();
 
@@ -145,12 +183,28 @@ public final class Gatekeeper {
 				doAssociation(uuid, name, address, currentTime, context);
 			}
 
-			return selector.selectionByApplicabilityBuilder(uuid, address)
+			Punishment ban = selector.selectionByApplicabilityBuilder(uuid, address)
 					.type(PunishmentType.BAN)
 					.scopes(SelectionPredicate.matchingOnly(serverScope))
 					.canAssumeUserRecorded(registerOnConnection || recordUserAssociation)
 					.build()
 					.findFirstSpecificPunishment(context, currentTime, SortPunishments.LATEST_END_DATE_FIRST);
+			if (ban != null && enforcementConfig.ipWhitelist().enable()) {
+				Victim victim = ban.getVictim();
+				NetworkAddress victimAddress;
+				if (victim instanceof AddressVictim addressVictim) {
+					victimAddress = addressVictim.getAddress();
+					if (addressWhitelist.isWhitelisted(context, victimAddress)) {
+						return null;
+					}
+				} else if (victim instanceof CompositeVictim compositeVictim) {
+					victimAddress = compositeVictim.getAddress();
+					if (compositeVictim.getUUID().equals(uuid) || !addressWhitelist.isWhitelisted(context, victimAddress)) {
+						return ban;
+					}
+				}
+			}
+			return ban;
 		}).thenCompose((punishment) -> {
 			if (punishment != null) {
 				return formatter.getPunishmentMessage(punishment);
@@ -169,6 +223,7 @@ public final class Gatekeeper {
 
 	<@PlatformPlayer P> CentralisedFuture<Void> onJoin(P player, EnvEnforcer<P> envEnforcer) {
 		EnforcementConfig.AltsAutoShow altsAutoShow = configs.getMainConfig().enforcement().altsAutoShow();
+		// If using bypass permissions, auto-show must be executed here
 		if (altsAutoShow.enable() && altsAutoShow.enableBypassPermission()) {
 			boolean bypass = envEnforcer.hasPermission(player, "libertybans.alts.bypass.autoshow");
 			if (!bypass) {
@@ -187,10 +242,13 @@ public final class Gatekeeper {
 		AltInfoRequest request = new AltInfoRequest(
 				uuid, address, whichAlts, formatting.oldestFirst(), formatting.limit()
 		);
-		return queryExecutor.get().query(SQLFunction.readOnly(
-				(context) -> altDetection.detectAlts(context, request)
-		)).thenCompose(
-				(detectedAlts) -> altNotification.notifyFoundAlts(detectedAlts, name)
+		return queryExecutor.get().query(SQLFunction.readOnly((context) -> {
+			if (configs.getMainConfig().enforcement().ipWhitelist().enable() && addressWhitelist.isWhitelisted(context, address)) {
+				return null;
+			}
+			return altDetection.detectAlts(context, request);
+		})).thenCompose((detectedAlts) -> detectedAlts == null ?
+				futuresFactory.completedFuture(null) : altNotification.notifyFoundAlts(detectedAlts, name)
 		);
 	}
 }

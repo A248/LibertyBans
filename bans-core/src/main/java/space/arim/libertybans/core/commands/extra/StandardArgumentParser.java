@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -123,14 +123,19 @@ public class StandardArgumentParser implements ArgumentParser {
 		if (ContainsCI.containsIgnoreCase(configs.getMessagesConfig().formatting().consoleArguments(), operatorArg)) {
 			return completedFuture(ConsoleOperator.INSTANCE);
 		}
-		return parseOrLookupUUID(sender, operatorArg).thenApply((uuid) -> {
-			return (uuid == null) ? null : PlayerOperator.of(uuid);
-		});
+		return parseOrLookupUUID(sender, operatorArg)
+				.thenApply((uuid) -> (uuid == null) ? null : PlayerOperator.of(uuid));
+	}
+
+	@Override
+	public @Nullable NetworkAddress parseAddress(String targetArg) {
+		// TODO: parse IPv6 too
+		return AddressParser.parseIpv4(targetArg);
 	}
 
 	@Override
 	public CentralisedFuture<@Nullable Victim> parseVictim(CmdSender sender, String targetArg, ParseVictim how) {
-		NetworkAddress parsedAddress = AddressParser.parseIpv4(targetArg);
+		NetworkAddress parsedAddress = parseAddress(targetArg);
 		if (parsedAddress != null) {
 			return completedFuture(AddressVictim.of(parsedAddress));
 		}

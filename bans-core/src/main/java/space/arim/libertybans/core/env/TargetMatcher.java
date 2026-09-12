@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,6 +28,14 @@ import java.util.UUID;
 public interface TargetMatcher {
 
 	boolean matches(UUID uuid, @Nullable InetAddress address);
+
+	record None() implements TargetMatcher {
+
+		@Override
+		public boolean matches(UUID uuid, @Nullable InetAddress address) {
+			return false;
+		}
+	}
 
 	record UUIDs(Set<UUID> uuids) implements TargetMatcher {
 

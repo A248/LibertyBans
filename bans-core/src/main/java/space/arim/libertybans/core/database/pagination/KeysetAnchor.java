@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -87,7 +87,7 @@ public record KeysetAnchor<F>(int page, F borderValue, boolean fromForwardScroll
         return new KeysetPage<>(queryResults, lastPageAnchor, nextPageAnchor, anchorLiaison.borderValueHandle());
     }
 
-    String chatCode(BorderValueHandle<F> borderValueHandle) {
+    public String chatCode(BorderValueHandle<F> borderValueHandle) {
         StringBuilder builder = new StringBuilder();
         builder.append(CHAT_CODE_PREFIX);
         builder.append(page);
@@ -114,6 +114,10 @@ public record KeysetAnchor<F>(int page, F borderValue, boolean fromForwardScroll
 
     public static @Nullable KeysetAnchor<StartTimeThenId> startTimeThenId(CommandPackage command) {
         return new Build<>(StartTimeThenId.borderValueHandle()).fromCommand(command);
+    }
+
+    public static @Nullable KeysetAnchor<InstantThenAddress> instantThenAddress(CommandPackage command) {
+        return new Build<>(InstantThenAddress.borderValueHandle()).fromCommand(command);
     }
 
     record Build<F>(BorderValueHandle<F> borderValueHandle) {
