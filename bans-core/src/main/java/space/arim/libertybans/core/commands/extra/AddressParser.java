@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,13 +19,14 @@
 
 package space.arim.libertybans.core.commands.extra;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import space.arim.libertybans.api.NetworkAddress;
 
 final class AddressParser {
 
 	private AddressParser() { }
 
-	static NetworkAddress parseIpv4(String targetArg) {
+	static @Nullable NetworkAddress parseIpv4(String targetArg) {
 		String[] octetStrings = targetArg.split("\\.");
 		if (octetStrings.length != 4) {
 			return null;
@@ -45,5 +46,10 @@ final class AddressParser {
 			ipv4[n] = (byte) octet;
 		}
 		return NetworkAddress.of(ipv4);
+	}
+
+	static @Nullable NetworkAddress parseIpv6(String targetArg) {
+		// TODO: use a new library for IPv6 parsing
+		return null;
 	}
 }

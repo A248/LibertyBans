@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -50,5 +50,13 @@ public class AddressParserTest {
 	public void parseRandomIpv4() {
 		NetworkAddress address = randomIpv4();
 		assertEquals(address, AddressParser.parseIpv4(ipv4ToString(address)));
+	}
+
+	@Test
+	public void parseFixedIpv4() {
+		assertEquals(
+				NetworkAddress.of(new byte[] {10, 24, 18, 2}),
+				AddressParser.parseIpv4("10.24.18.2")
+		);
 	}
 }

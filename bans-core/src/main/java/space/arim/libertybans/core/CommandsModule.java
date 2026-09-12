@@ -27,6 +27,7 @@ import space.arim.libertybans.core.commands.AddressUnpunishCommands;
 import space.arim.libertybans.core.commands.AdminCommands;
 import space.arim.libertybans.core.commands.AltCommands;
 import space.arim.libertybans.core.commands.ImportCommands;
+import space.arim.libertybans.core.commands.IpRecordCommands;
 import space.arim.libertybans.core.commands.ListCommands;
 import space.arim.libertybans.core.commands.PlayerPunishCommands;
 import space.arim.libertybans.core.commands.PlayerUnpunishCommands;
@@ -77,6 +78,11 @@ public final class CommandsModule {
 	@MultiBinding
 	public SubCommandGroup accountHistoryCommands(AccountHistoryCommands accountHistoryCommands) {
 		return accountHistoryCommands;
+	}
+
+	@MultiBinding
+	public SubCommandGroup ipRecordCommands(IpRecordCommands ipRecordCommands) {
+		return ipRecordCommands;
 	}
 
 	@MultiBinding

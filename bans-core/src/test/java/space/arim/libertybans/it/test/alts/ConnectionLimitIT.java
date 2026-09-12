@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,10 +28,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.NetworkAddress;
+import space.arim.libertybans.core.alts.AddressManagement;
 import space.arim.libertybans.core.alts.ConnectionLimitConfig;
-import space.arim.libertybans.core.alts.ConnectionLimiter;
-import space.arim.libertybans.core.config.Configs;
-import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.selector.Guardian;
 import space.arim.libertybans.core.selector.EnforcementConfig;
@@ -58,7 +56,7 @@ public class ConnectionLimitIT {
 	private final SettableTime time;
 	private final ConnectionLimitConfig conf;
 
-	private ConnectionLimiter limiter;
+	private AddressManagement limiter;
 
 	@Inject
 	public ConnectionLimitIT(Provider<QueryExecutor> queryExecutor, SettableTime time,
@@ -70,21 +68,16 @@ public class ConnectionLimitIT {
 
 	@BeforeEach
 	public void setupConfiguration() {
-		Configs configs = mock(Configs.class);
-		MainConfig mainConfig = mock(MainConfig.class);
-		EnforcementConfig enforcementConfig = mock(EnforcementConfig.class);
-		when(configs.getMainConfig()).thenReturn(mainConfig);
-		when(mainConfig.enforcement()).thenReturn(enforcementConfig);
-		when(enforcementConfig.connectionLimiter()).thenReturn(conf);
 		when(conf.enable()).thenReturn(true);
-
-		limiter = new ConnectionLimiter(configs);
+		limiter = new AddressManagement(queryExecutor);
 	}
 
 	private Component exceededLimit(NetworkAddress address) {
-		return queryExecutor.get().query((context) -> {
-			return limiter.hasExceededLimit(context, address, time.currentTimestamp());
-		}).join();
+		EnforcementConfig enforcementConfig = mock(EnforcementConfig.class);
+		when(enforcementConfig.connectionLimiter()).thenReturn(conf);
+		return queryExecutor.get().query((context) ->
+				limiter.hasExceededLimit(context, enforcementConfig, address, time.currentTimestamp())
+		).join();
 	}
 
 	@TestTemplate

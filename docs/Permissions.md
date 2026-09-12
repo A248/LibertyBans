@@ -66,7 +66,11 @@ For obvious reasons, there are no duration permissions for kicks; moreover there
 * `libertybans.admin.restart` - /libertybans restart
 * `libertybans.admin.addon` - /libertybans addon
 * `libertybans.admin.import` - /libertybans import
-* `libertybans.admin.viewips` - Allows staff to view IP addresses if *censor-ip-addresses* is turned on in the configuration.
+* `libertybans.admin.viewips` - Allows staff to view IP addresses if *censor-ip-addresses* is turned on in the messages configuration.
+* `libertybans.admin.iprecord.purge` - /libertybans ip-records purge
+* `libertybans.admin.iprecord.whitelist.add` - /libertybans ip-records whitelist add
+* `libertybans.admin.iprecord.whitelist.remove` - /libertybans ip-records whitelist remove
+* `libertybans.admin.iprecord.whitelist.list` - /libertybans ip-records whitelist list
 
 ### Scopes
 

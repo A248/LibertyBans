@@ -40,6 +40,7 @@ import space.arim.libertybans.api.punish.EnforcementOptions.Broadcasting;
 import space.arim.libertybans.api.punish.Punishment;
 import space.arim.libertybans.api.select.AddressStrictness;
 import space.arim.libertybans.api.select.PunishmentSelector;
+import space.arim.libertybans.core.alts.AddressWhitelist;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
 import space.arim.libertybans.core.config.PunishmentAdditionSection;
@@ -76,6 +77,7 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 	private final FactoryOfTheFuture futuresFactory;
 	private final Provider<QueryExecutor> queryExecutor;
 	private final InternalScopeManager scopeManager;
+	private final AddressWhitelist addressWhitelist;
 	private final PunishmentSelector selector;
 	private final InternalFormatter formatter;
 	private final EnvEnforcer<P> envEnforcer;
@@ -85,13 +87,14 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 
 	@Inject
 	public StandardLocalEnforcer(InstanceType instanceType, Configs configs, FactoryOfTheFuture futuresFactory,
-                                 Provider<QueryExecutor> queryExecutor, InternalScopeManager scopeManager, PunishmentSelector selector,
+                                 Provider<QueryExecutor> queryExecutor, InternalScopeManager scopeManager, AddressWhitelist addressWhitelist, PunishmentSelector selector,
                                  InternalFormatter formatter, EnvEnforcer<P> envEnforcer, MuteCache muteCache) {
 		this.instanceType = instanceType;
 		this.configs = configs;
 		this.futuresFactory = futuresFactory;
 		this.queryExecutor = queryExecutor;
         this.scopeManager = scopeManager;
+        this.addressWhitelist = addressWhitelist;
         this.selector = selector;
 		this.formatter = formatter;
 		this.envEnforcer = envEnforcer;
@@ -273,9 +276,10 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 				return matchAddressPunishment(strictness, address)
 						.thenApply(targetMatcher -> {
 							if (!targetMatcher.matches(uuid, null)) {
-								// Rare condition, but possible in two situations
+								// Rare condition, but possible in three situations
 								// 1) lenient strictness
 								// 2) API shenanigans, adding punishments for players never seen before
+								// 3) IP address is whitelisted
 								targetMatcher = new TargetMatcher.Combined(targetMatcher, new TargetMatcher.UUIDs(Set.of(uuid)));
 							}
 							return new Police<>(targetMatcher, serverNameMatch, enforcementCallback);
@@ -322,15 +326,34 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 		};
 	}
 
-	private CentralisedFuture<TargetMatcher> matchAddressPunishment(AddressStrictness strictness,
-																	NetworkAddress address) {
+	private CentralisedFuture<TargetMatcher> matchAddressPunishment(
+			AddressStrictness strictness, NetworkAddress address
+	) {
 		return switch (strictness) {
 			// If lenient, we only need to match the address
-			case LENIENT -> completedFuture(new TargetMatcher.Address(address));
+			case LENIENT -> {
+				TargetMatcher addressMatcher = new TargetMatcher.Address(address);
+				if (configs.getMainConfig().enforcement().ipWhitelist().enable()) {
+					yield queryExecutor.get().query(SQLFunction.readOnly(context -> {
+						if (addressWhitelist.isWhitelisted(context, address)) {
+							return new TargetMatcher.None();
+						} else {
+							return addressMatcher;
+						}
+					}));
+				} else {
+					yield completedFuture(addressMatcher);
+				}
+			}
 			// Otherwise, we need to contact the database + find matching players
 			case NORMAL, STERN, STRICT -> queryExecutor.get().query(SQLFunction.readOnly(context -> {
-				return strictness == AddressStrictness.NORMAL ?
-						normal_matchDatabaseUsers(context, address) : stern_strict_matchDatabaseUsers(context, address);
+				if (configs.getMainConfig().enforcement().ipWhitelist().enable() && addressWhitelist.isWhitelisted(context, address)) {
+					return Set.<UUID>of();
+				}
+				if (strictness == AddressStrictness.NORMAL) {
+					return normal_matchDatabaseUsers(context, address);
+				}
+				return stern_strict_matchDatabaseUsers(context, address);
 			})).thenApply(uuids -> {
 				return new TargetMatcher.Combined(
 						// Add the address, in case the user is not recorded yet (cracked network support)

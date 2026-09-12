@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2023 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,6 +20,7 @@
 package space.arim.libertybans.core.commands.extra;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.Operator;
 import space.arim.libertybans.api.Victim;
 import space.arim.libertybans.core.commands.CommandPackage;
@@ -38,6 +39,8 @@ public interface ArgumentParser {
 	CentralisedFuture<@Nullable UUIDAndAddress> parsePlayer(CmdSender sender, String targetArg);
 
 	CentralisedFuture<@Nullable Operator> parseOperator(CmdSender sender, String operatorArg);
+
+	@Nullable NetworkAddress parseAddress(String targetArg);
 
 	<R> @Nullable R parseScope(CmdSender sender, CommandPackage command, ParseScope<R> how);
 

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2025 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -51,8 +51,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.jooq.impl.DSL.*;
-import static space.arim.libertybans.core.schema.tables.Addresses.ADDRESSES;
-import static space.arim.libertybans.core.schema.tables.LatestNames.LATEST_NAMES;
+import static space.arim.libertybans.core.schema.Tables.ADDRESS_WHITELIST;
+import static space.arim.libertybans.core.schema.Tables.ADDRESSES;
+import static space.arim.libertybans.core.schema.Tables.LATEST_NAMES;
 
 public class AltDetection {
 
@@ -79,9 +80,9 @@ public class AltDetection {
 
  		Alt detection
 
- 		This implementation includes multiple components. We need to detect non-expired alts, fetch their names,
- 		and order them by time, UUID pair. We also need to fetch punishment information (bans, mutes, warns) and in
- 		some cases, remove alts which don't have any punishments directly on them.
+ 		This implementation includes multiple components. We need to filter whitelisted IPs, detect non-expired alts,
+ 		fetch their names, and order them by time, UUID pair. We also need to fetch punishment information (bans, mutes,
+ 		warns) and in some cases, remove alts which don't have any punishments directly on them.
 
  		Pagination is handled for us. However, to make the keyset/seek method work, we can't perform post-processing.
  		Thus filtering for "has_ban" and "has_mute" must happen in the join, and we decide between LEFT or INNER join
@@ -102,10 +103,12 @@ public class AltDetection {
 		List<NetworkAddress> lookForAddresses = context
 				.select(ADDRESSES.ADDRESS)
 				.from(ADDRESSES)
+				.leftJoin(ADDRESS_WHITELIST)
+				.on(ADDRESSES.ADDRESS.eq(ADDRESS_WHITELIST.ADDRESS))
 				.where(ADDRESSES.UUID.eq(query.uuid()))
+				.and(ADDRESS_WHITELIST.ADDRESS.isNull())
 				.and(new AccountExpirationCondition(ADDRESSES.UPDATED).isNotExpired(configs, currentTime))
 				.fetch(ADDRESSES.ADDRESS);
-
 		var detectedAlt = ADDRESSES;
 		List<SelectField<?>> selectFields = new ArrayList<>(List.of(
 				detectedAlt.ADDRESS, detectedAlt.UUID,
@@ -207,7 +210,6 @@ public class AltDetection {
 					(context) -> impl.detectAlts(context, request)
 			)).thenApply(KeysetPage::data);
 		}
-
 	}
 
 	public KeysetPage<DetectedAlt, InstantThenUUID> detectAlts(DSLContext context, AltInfoRequest retrieval) {

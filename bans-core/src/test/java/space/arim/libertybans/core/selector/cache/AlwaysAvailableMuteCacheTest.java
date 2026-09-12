@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2022 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,7 @@
 
 package space.arim.libertybans.core.selector.cache;
 
+import jakarta.inject.Provider;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,10 +30,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import space.arim.libertybans.api.NetworkAddress;
 import space.arim.libertybans.api.PunishmentType;
 import space.arim.libertybans.api.punish.Punishment;
+import space.arim.libertybans.core.alts.AddressWhitelist;
 import space.arim.libertybans.core.config.Configs;
 import space.arim.libertybans.core.config.InternalFormatter;
+import space.arim.libertybans.core.config.MainConfig;
 import space.arim.libertybans.core.config.SqlConfig;
+import space.arim.libertybans.core.database.execute.QueryExecutor;
 import space.arim.libertybans.core.env.EnvUserResolver;
+import space.arim.libertybans.core.selector.EnforcementConfig;
 import space.arim.libertybans.core.selector.InternalSelector;
 import space.arim.libertybans.core.service.SettableTime;
 import space.arim.libertybans.core.service.SettableTimeImpl;
@@ -53,9 +58,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 import static space.arim.libertybans.core.selector.cache.AlwaysAvailableMuteCache.GRACE_PERIOD_NANOS;
 import static space.arim.libertybans.core.selector.cache.AlwaysAvailableMuteCache.PURGE_TASK_INTERVAL;
 
@@ -101,9 +105,20 @@ public class AlwaysAvailableMuteCacheTest {
 			scheduledTasks.add(command);
 			return null;
 		});
+		{
+			var mainConfig = mock(MainConfig.class);
+			var enforcementConfig = mock(EnforcementConfig.class);
+			var whitelistConfig = mock(EnforcementConfig.IpWhitelist.class);
+			lenient().when(configs.getMainConfig()).thenReturn(mainConfig);
+			lenient().when(mainConfig.enforcement()).thenReturn(enforcementConfig);
+			lenient().when(enforcementConfig.ipWhitelist()).thenReturn(whitelistConfig);
+			lenient().when(whitelistConfig.enable()).thenReturn(false);
+		}
 
+		Provider<QueryExecutor> queryExecutor = () -> { throw new UnsupportedOperationException(); };
 		muteCache = new AlwaysAvailableMuteCache(
-				configs, futuresFactory, selector, enhancedExecutor, envUserResolver, formatter, time);
+				configs, futuresFactory, queryExecutor, new AddressWhitelist(queryExecutor, time),
+				selector, enhancedExecutor, envUserResolver, formatter, time);
 		muteCache.startup();
 
 		uuid = UUID.randomUUID();
