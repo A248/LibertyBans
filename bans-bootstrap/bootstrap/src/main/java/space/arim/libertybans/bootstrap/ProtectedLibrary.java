@@ -44,7 +44,8 @@ public enum ProtectedLibrary {
 	KYORI_ADVENTURE("Kyori-Adventure", "net.kyori.adventure", "audience.Audience"),
 	KYORI_EXAMINATION("Kyori-Examination", "net.kyori.examination", "Examinable"),
 	SLF4J_API("Slf4j", "org.slf4j", "Logger"),
-	SLF4J_SIMPLE("Slf4j-Simple", "org.slf4j.simple", "SimpleLogger");
+	SLF4J_SIMPLE("Slf4j-Simple", "org.slf4j.simple", "SimpleLogger"),
+	IPADDRESS("seancfoley-IPAddress", "inet.ipaddr", "IPAddress");
 
 	private final String libName;
 	private final String basePackage;

@@ -1,6 +1,6 @@
 /*
  * LibertyBans
- * Copyright © 2021 Anand Beh
+ * Copyright © 2026 Anand Beh
  *
  * LibertyBans is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -47,22 +47,35 @@ public final class RandomUtil {
 		return random().nextBoolean();
 	}
 
-	/**
-	 * Random Ipv4 or Ipv6 address bytes
-	 * 
-	 * @return network address bytes
-	 */
-	private static byte[] randomAddressBytes() {
-		return randomBytes((random().nextBoolean()) ? 4 : 16);
+	private static byte[] randomAddressBytes(int size) {
+		return randomBytes(size);
 	}
-	
+
 	/**
-	 * Random Ipv4 or Ipv6 InetAddress
+	 * Random Ipv4 address
+	 *
+	 * @return the network address
+	 */
+	public static NetworkAddress randomIpv4() {
+		return NetworkAddress.of(randomAddressBytes(4));
+	}
+
+	/**
+	 * Random Ipv6 address
+	 *
+	 * @return the network address
+	 */
+	public static NetworkAddress randomIpv6() {
+		return NetworkAddress.of(randomAddressBytes(16));
+	}
+
+	/**
+	 * Random Ipv4 or Ipv6 address
 	 * 
 	 * @return the network address 
 	 */
 	public static NetworkAddress randomAddress() {
-		return NetworkAddress.of(randomAddressBytes());
+		return random().nextBoolean() ? randomIpv4() : randomIpv6();
 	}
 
 	/**
