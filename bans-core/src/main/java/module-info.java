@@ -40,6 +40,7 @@ module space.arim.libertybans.core {
 	requires space.arim.injector;
 	requires transitive space.arim.libertybans.api;
 	requires transitive space.arim.libertybans.bootstrap;
+	requires inet.ipaddr;
 	exports space.arim.libertybans.core;
 	exports space.arim.libertybans.core.addon;
 	exports space.arim.libertybans.core.addon.exempt;

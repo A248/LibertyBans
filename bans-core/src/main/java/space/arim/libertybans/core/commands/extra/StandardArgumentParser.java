@@ -129,8 +129,8 @@ public class StandardArgumentParser implements ArgumentParser {
 
 	@Override
 	public @Nullable NetworkAddress parseAddress(String targetArg) {
-		// TODO: parse IPv6 too
-		return AddressParser.parseIpv4(targetArg);
+		NetworkAddress ipv4 = AddressParser.parseIpv4(targetArg);
+		return ipv4 != null ? ipv4 : AddressParser.parseIpv6(targetArg);
 	}
 
 	@Override
