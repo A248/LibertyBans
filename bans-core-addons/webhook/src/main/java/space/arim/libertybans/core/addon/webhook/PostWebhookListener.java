@@ -108,7 +108,7 @@ public final class PostWebhookListener {
             }
         }
         var future = formatted.thenCompose(component -> {
-            String json = ((TextComponent) component).content();
+            String json = plainText(component);
             return postWebhook(webhookUrl, json);
         });
         futurePoster.postFuture(future);
@@ -129,5 +129,29 @@ public final class PostWebhookListener {
                 logger.warn("Received unexpected status code {} from webhook API", statusCode);
             }
         });
+    }
+
+    /*
+     * Substituting a component-valued variable such as %SILENCE% splits the payload across child
+     * components, leaving only the text before the first match on the root. Reading the root's
+     * content truncated the payload and sent invalid JSON, so walk the whole tree instead.
+     *
+     * Adventure's plain-text serializer cannot do this here. Adventure 4 calls it
+     * PlainComponentSerializer and Adventure 5 calls it PlainTextComponentSerializer, and both are
+     * supported at runtime, so neither can be compiled against.
+     */
+    static String plainText(Component component) {
+        StringBuilder builder = new StringBuilder();
+        appendPlainText(component, builder);
+        return builder.toString();
+    }
+
+    private static void appendPlainText(Component component, StringBuilder builder) {
+        if (component instanceof TextComponent textComponent) {
+            builder.append(textComponent.content());
+        }
+        for (Component child : component.children()) {
+            appendPlainText(child, builder);
+        }
     }
 }
