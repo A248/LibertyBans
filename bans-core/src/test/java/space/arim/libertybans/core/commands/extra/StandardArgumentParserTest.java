@@ -69,6 +69,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static space.arim.libertybans.it.util.RandomUtil.randomIpv4;
 
 @ExtendWith(MockitoExtension.class)
 public class StandardArgumentParserTest {
@@ -281,9 +282,22 @@ public class StandardArgumentParserTest {
 		}
 
 		@Test
+		public void parseIpv6() {
+			NetworkAddress address = NetworkAddress.of(new byte[] {
+					(byte) 90, (byte) 0, (byte) 255, (byte) 38,
+					(byte) 90, (byte) 0, (byte) 255, (byte) 38,
+					(byte) 90, (byte) 0, (byte) 255, (byte) 38,
+					(byte) 90, (byte) 0, (byte) 255, (byte) 38
+			});
+			assertEquals(AddressVictim.of(address), parseVictim("5A00:FF26:5A00:FF26:5A00:FF26:5A00:FF26"));
+			verify(uuidManager, never()).lookupAddress(any());
+			verify(sender, never()).sendMessage(any());
+		}
+
+		@Test
 		public void lookupAddressVictim() {
 			String name = "A248";
-			NetworkAddress address = AddressParserTest.randomIpv4();
+			NetworkAddress address = randomIpv4();
 			when(uuidManager.lookupAddress(name)).thenReturn(completedFuture(address));
 
 			assertEquals(AddressVictim.of(address), parseVictim(name));

@@ -26,21 +26,15 @@ import space.arim.libertybans.api.NetworkAddress;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static space.arim.libertybans.it.util.RandomUtil.randomIpv4;
+import static space.arim.libertybans.it.util.RandomUtil.randomIpv6;
 
 @ExtendWith(MockitoExtension.class)
 public class AddressBorderValueTest {
 
     private final BorderValueHandle<NetworkAddress> handle = new AddressBorderValue();
-
-    static NetworkAddress sizedAddress(int size) {
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        byte[] address = new byte[size];
-        random.nextBytes(address);
-        return NetworkAddress.of(address);
-    }
 
     private void roundTrip(NetworkAddress address) {
         List<String> parts = new ArrayList<>();
@@ -58,11 +52,11 @@ public class AddressBorderValueTest {
 
     @RepeatedTest(4)
     public void roundTripIpv4() {
-        roundTrip(sizedAddress(4));
+        roundTrip(randomIpv4());
     }
 
     @RepeatedTest(4)
     public void roundTripIpv6() {
-        roundTrip(sizedAddress(16));
+        roundTrip(randomIpv6());
     }
 }

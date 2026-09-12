@@ -19,24 +19,20 @@
 
 package space.arim.libertybans.core.commands.extra;
 
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import space.arim.libertybans.api.NetworkAddress;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static space.arim.libertybans.it.util.RandomUtil.randomIpv4;
+import static space.arim.libertybans.it.util.RandomUtil.randomIpv6;
 
 public class AddressParserTest {
-
-	static NetworkAddress randomIpv4() {
-		Random random = ThreadLocalRandom.current();
-		byte[] result = new byte[4];
-		random.nextBytes(result);
-		return NetworkAddress.of(result);
-	}
 
 	private static String ipv4ToString(NetworkAddress ipv4) {
 		List<String> octets = new ArrayList<>(4);
@@ -46,7 +42,7 @@ public class AddressParserTest {
 		return String.join(".", octets);
 	}
 
-	@Test
+	@RepeatedTest(4)
 	public void parseRandomIpv4() {
 		NetworkAddress address = randomIpv4();
 		assertEquals(address, AddressParser.parseIpv4(ipv4ToString(address)));
@@ -58,5 +54,20 @@ public class AddressParserTest {
 				NetworkAddress.of(new byte[] {10, 24, 18, 2}),
 				AddressParser.parseIpv4("10.24.18.2")
 		);
+	}
+
+	@RepeatedTest(4)
+	public void parseRandomIpv6AndToString() {
+		NetworkAddress address = randomIpv6();
+		assertEquals(address, AddressParser.parseIpv6(address.toString()));
+	}
+
+	@Test
+	public void rejectBadIpv6() {
+		assertNull(AddressParser.parseIpv6(""));
+		assertNull(AddressParser.parseIpv6(" "));
+		assertNull(AddressParser.parseIpv6("6:2"));
+		assertNull(AddressParser.parseIpv6("MyUsername"));
+		assertNull(AddressParser.parseIpv6(UUID.randomUUID().toString().replace("-", "")));
 	}
 }
