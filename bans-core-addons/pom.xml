@@ -23,12 +23,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>space.arim.libertybans</groupId>
+        <groupId>org.libertybans</groupId>
         <artifactId>bans-parent</artifactId>
         <version>1.2.0-M1-SNAPSHOT</version>
     </parent>
 
-    <groupId>space.arim.libertybans.addon</groupId>
+    <groupId>org.libertybans.addon</groupId>
     <artifactId>bans-core-addons</artifactId>
     <packaging>pom</packaging>
     <description>Parent pom for core addons.</description>
@@ -52,8 +52,38 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-deploy</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>build-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>central-publishing</id>
+                                <phase>none</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <modules>
         <module>command-changereason</module>
@@ -73,7 +103,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>space.arim.libertybans</groupId>
+            <groupId>org.libertybans</groupId>
             <artifactId>bans-core</artifactId>
         </dependency>
     </dependencies>

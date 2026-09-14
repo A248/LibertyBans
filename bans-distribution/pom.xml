@@ -23,7 +23,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>
-		<groupId>space.arim.libertybans</groupId>
+		<groupId>org.libertybans</groupId>
 		<artifactId>bans-parent</artifactId>
 		<version>1.2.0-M1-SNAPSHOT</version>
 	</parent>
@@ -53,31 +53,68 @@
 		</pluginManagement>
 	</build>
 
+	<profiles>
+		<profile>
+			<id>build-release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.sonatype.central</groupId>
+						<artifactId>central-publishing-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>central-publishing</id>
+								<phase>none</phase>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 	<modules>
 		<module>flyway-patch</module>
 		<module>download</module>
 		<module>distributable</module>
 		<module>executable</module>
+		<module>release-integrator</module>
 	</modules>
 
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>flyway-patch</artifactId>
 				<version>${project.version}</version>
 				<scope>runtime</scope>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-distributable</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-download</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.libertybans</groupId>
+				<artifactId>bans-executable</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+
+	<repositories>
+		<repository>
+			<id>arim-mvn-lgpl3</id>
+			<url>https://mvn-repo.arim.space/lesser-gpl3/</url>
+		</repository>
+		<repository>
+			<id>arim-mvn-gpl3</id>
+			<url>https://mvn-repo.arim.space/gpl3/</url>
+		</repository>
+	</repositories>
 </project>

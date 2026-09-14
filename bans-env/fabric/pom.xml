@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>space.arim.libertybans</groupId>
+        <groupId>org.libertybans</groupId>
         <artifactId>bans-env</artifactId>
         <version>1.2.0-M1-SNAPSHOT</version>
     </parent>
@@ -156,6 +156,7 @@
                         <configuration>
                             <arguments>
                                 <argument>build</argument>
+                                <argument>--stacktrace</argument>
                             </arguments>
                         </configuration>
                     </execution>
@@ -220,6 +221,34 @@
 
     <profiles>
         <profile>
+            <id>build-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>build-gradle</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>
+                                        <argument>build</argument>
+                                        <argument>--dependency-verification</argument>
+                                        <argument>lenient</argument>
+                                        <argument>--stacktrace</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>skip-all-tests</id>
             <build>
                 <plugins>
@@ -238,6 +267,37 @@
                                         <argument>build</argument>
                                         <argument>-x</argument>
                                         <argument>test</argument>
+                                        <argument>--stacktrace</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>update-dependency-hashes</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>build-gradle</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>
+                                        <argument>--write-verification-metadata</argument>
+                                        <argument>sha512</argument>
+                                        <argument>build</argument>
+                                        <argument>-x</argument>
+                                        <argument>test</argument>
+                                        <argument>--stacktrace</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -250,17 +310,17 @@
 
     <dependencies>
         <dependency>
-            <groupId>space.arim.libertybans</groupId>
+            <groupId>org.libertybans</groupId>
             <artifactId>bans-core</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>space.arim.libertybans</groupId>
+            <groupId>org.libertybans</groupId>
             <artifactId>bans-bootstrap</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>space.arim.libertybans</groupId>
+            <groupId>org.libertybans</groupId>
             <artifactId>bans-env-adventure5-common</artifactId>
             <scope>provided</scope>
         </dependency>

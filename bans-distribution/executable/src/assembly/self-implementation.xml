@@ -43,15 +43,15 @@
                 <!-- snakeyaml.xml -->
                 <exclude>org.yaml:snakeyaml</exclude>
                 <!-- bootstrap-related -->
-                <exclude>space.arim.libertybans:bans-api</exclude>
-                <exclude>space.arim.omnibus:omnibus</exclude>
-                <exclude>space.arim.libertybans:bans-bootstrap</exclude>
-                <exclude>space.arim.libertybans:bans-env-bungeeplugin</exclude>
-                <exclude>space.arim.libertybans:bans-env-fabric:jar:mod</exclude>
-                <exclude>space.arim.libertybans:bans-env-spigotplugin</exclude>
-                <exclude>space.arim.libertybans:bans-env-spongeplugin</exclude>
-                <exclude>space.arim.libertybans:bans-env-velocityplugin</exclude>
-                <exclude>space.arim.libertybans:bans-env-standalonelauncher</exclude>
+                <exclude>org.libertybans:bans-api</exclude>
+                <exclude>org.libertybans:omnibus</exclude>
+                <exclude>org.libertybans:bans-bootstrap</exclude>
+                <exclude>org.libertybans:bans-env-bungeeplugin</exclude>
+                <exclude>org.libertybans:bans-env-fabric:jar:mod</exclude>
+                <exclude>org.libertybans:bans-env-spigotplugin</exclude>
+                <exclude>org.libertybans:bans-env-spongeplugin</exclude>
+                <exclude>org.libertybans:bans-env-velocityplugin</exclude>
+                <exclude>org.libertybans:bans-env-standalonelauncher</exclude>
                 <!-- platform-provided -->
                 <exclude>com.google.code.gson:gson</exclude>
                 <!-- useless annotations -->

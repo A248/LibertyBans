@@ -23,7 +23,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>
-		<groupId>space.arim.libertybans</groupId>
+		<groupId>org.libertybans</groupId>
 		<artifactId>bans-distribution</artifactId>
 		<version>1.2.0-M1-SNAPSHOT</version>
 	</parent>
@@ -40,9 +40,9 @@
 					<artifactSet>
 						<excludes>
 							<!-- bootstrap-related -->
-							<exclude>space.arim.libertybans:bans-api</exclude>
-							<exclude>space.arim.omnibus:omnibus</exclude>
-							<exclude>space.arim.libertybans:bans-bootstrap</exclude>
+							<exclude>org.libertybans:bans-api</exclude>
+							<exclude>org.libertybans:omnibus</exclude>
+							<exclude>org.libertybans:bans-bootstrap</exclude>
 							<!-- platform-provided -->
 							<exclude>org.slf4j:slf4j-api</exclude>
 							<exclude>org.yaml:snakeyaml</exclude>
@@ -121,31 +121,31 @@
 	
 	<dependencies>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-env-bungee</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-env-fabric</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-env-spigot</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-env-sponge</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-env-velocity</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-env-standalone</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>flyway-patch</artifactId>
 		</dependency>
 	</dependencies>

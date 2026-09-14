@@ -23,7 +23,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>space.arim.libertybans.dep</groupId>
+		<groupId>org.libertybans.dep</groupId>
 		<artifactId>dep-geyser</artifactId>
 		<version>1.2.0-M1-SNAPSHOT</version>
 	</parent>

@@ -1,69 +1,44 @@
 ## Dependency Information
 
-The dependency FQDN is:
+The dependency FQDN is available on Maven Central as:
 
 ````
-space.arim.libertybans:bans-api:{VERSION}
+org.libertybans:bans-api:{VERSION}
 ````
 
-It is available from:
-
-```
-https://mvn-repo.arim.space/affero-gpl3/
-```
 <!-- tabs:start -->
 
 #### **Maven**
 
-With maven, this would be applied as follows:
+With maven, just add the dependency:
 
 ```xml
 <dependencies>
 	<dependency>
-		<groupId>space.arim.libertybans</groupId>
+		<groupId>org.libertybans</groupId>
 		<artifactId>bans-api</artifactId>
 		<version>{INSERT_LATEST_VERSION}</version>
 	</dependency>
 	...
 </dependencies>
-
-<repositories>
-	<repository>
-		<id>arim-mvn-agpl3</id>
-		<url>https://mvn-repo.arim.space/affero-gpl3/</url>
-	</repository>
-	...
-</repositories>
 ```
 
 #### **Gradle**
 
-```gradle
-repositories {
-  ...
-    maven { 
-      name= 'arim-mvn-lgpl3' 
-      url = 'https://mvn-repo.arim.space/lesser-gpl3/' 
-    }
-    maven { 
-      name= 'arim-mvn-gpl3' 
-      url = 'https://mvn-repo.arim.space/gpl3/' 
-    }
-    maven { 
-      name= 'arim-mvn-agpl3' 
-      url = 'https://mvn-repo.arim.space/affero-gpl3/' 
-    }
-  ...
-}
+With Gradle, you will need add the repository for Maven Central, if you haven't already.
 
+```gradle
 dependencies {
   ...
-    compileOnly "space.arim.libertybans:bans-api:{INSERT_LATEST_VERSION}"
+    compileOnly "org.libertybans:bans-api:{INSERT_LATEST_VERSION}"
+}
+
+repositories {
+    mavenCentral()
 }
 ```
 
 <!-- tabs:end -->
-
 
 ### Javadoc
 
