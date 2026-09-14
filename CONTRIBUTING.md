@@ -9,9 +9,9 @@ You will need:
 2. Maven 3.9.3 or greater
 3. JDK 25 or greater
 
-These can be installed through your package manager of choice.
-
 Maven is technically optional and can be substituted with the Maven wrapper - use `./mvnw` instead of `mvn` in commands. This guide will use both commands interchangeably.
+
+The other commands can be installed using your package manager.
 
 ## Cloning and Building
 
@@ -138,15 +138,15 @@ Installed addon jars are loaded by the isolated classloader, functioning as if p
 
 ## Distribution
 
-LibertyBans is distributed in two ways.
+LibertyBans is distributed in two ways. Snapshot builds are created automatically by the CI server (currently, Github Actions). Full releases are executed locally using the build/orchestrate-release.sh script.
 
-### The release distribution
+### The release distribution (full releases)
 
-The release distribution is a lightweight jar which downloads its dependencies at runtime, with SHA-512 hash verification. This jar is published to SpigotMC and Github Releases.
+The release distribution is a lightweight jar which downloads its dependencies at runtime, with SHA-512 hash verification. This jar is published to SpigotMC and Github Releases. It is what most users download.
 
-### The development distribution
+### The development distribution (snapshot builds)
 
-The development distribution is intended for compiling and running from source. It uses a nested jar format and extracts these jars at runtime.
+The development distribution is intended for compiling and running from source. It uses a nested jar format and extracts these jars at runtime. Snapshot jars distributed over Discord or Modrinth use this packaging.
 
 ## Testing
 
@@ -213,16 +213,6 @@ Using a debugger is possible. You will need to add your debugger's command line 
 See the section "Cloning and building" for how to obtain a plugin jar.
 
 You can run `mvn package` to run unit tests and jar packaging in a single build.
-
-## Making a release
-
-I make releases with a few steps:
-
-1. `mvn versions:set -DnewVersion={theNextVersion}`
-2. `build/prepare-release.sh` to see the new dependency hashes for own-project dependencies
-3. Update the dependency hashes in the parent pom
-4. Perform the deployment with `./mvnw clean deploy -Pbuild-release,-docker-enabled -DskipTests -Dinvoker.skip=true`
-5. Commit and tag the results.
 
 # Build integrity and security
 

@@ -19,6 +19,8 @@
 # and navigate to version 3 of the GNU Affero General Public License.
 #
 
+set -eo pipefail
+
 TEST=$1
 shift 1
 EXTRA_ARGS=$@

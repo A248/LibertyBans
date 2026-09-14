@@ -19,4 +19,7 @@
 # and navigate to version 3 of the GNU Affero General Public License.
 #
 
+set -euo pipefail
+
 ./mvnw clean package -Psnap-build,build-snapshot,skip-all-tests,-docker-enabled
+

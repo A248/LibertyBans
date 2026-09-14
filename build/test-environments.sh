@@ -19,5 +19,7 @@
 # and navigate to version 3 of the GNU Affero General Public License.
 #
 
+set -eo pipefail
+
 EXTRA_ARGS=$@
 ./mvnw clean verify -DskipTests -P-docker-enabled $EXTRA_ARGS

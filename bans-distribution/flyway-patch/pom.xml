@@ -23,7 +23,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>space.arim.libertybans</groupId>
+		<groupId>org.libertybans</groupId>
 		<artifactId>bans-distribution</artifactId>
 		<version>1.2.0-M1-SNAPSHOT</version>
 	</parent>
@@ -50,6 +50,24 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>build-snapshot</id>
+			<build>
+				<plugins>
+					<!-- Skip deployment -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-deploy-plugin</artifactId>
+						<configuration>
+							<skip>true</skip>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 	<dependencies>
 		<dependency>

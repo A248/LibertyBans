@@ -23,7 +23,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>
-		<groupId>space.arim.libertybans</groupId>
+		<groupId>org.libertybans</groupId>
 		<artifactId>bans-env-velocity-parent</artifactId>
 		<version>1.2.0-M1-SNAPSHOT</version>
 	</parent>
@@ -64,7 +64,7 @@
 			<artifactId>velocity-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-bootstrap</artifactId>
 		</dependency>
 

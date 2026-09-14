@@ -14,6 +14,7 @@
   * [Addons](Addons.md)
 * Versioning and Upgrades
   * [Versioning and Support Policy](Versioning-and-Support-Policies)
+  * [Upgrading 1.1.x -> 1.2.0](Upgrading-to-LibertyBans-1.2.0-from-1.1.x.md) + [Full changelog for 1.2.0](Changes-in-LibertyBans-1.2.0.md)
   * [Upgrading 1.0.x -> 1.1.0](Upgrading-to-LibertyBans-1.1.0-from-1.0.x.md) + [Full changelog for 1.1.0](Changes-in-LibertyBans-1.1.0.md)
   * [Upgrading 0.8.x -> 1.0.0](Upgrading-to-LibertyBans-1.0.0-from-0.8.x) + [Full changelog for 1.0.0](Changes-in-LibertyBans-1.0.0)
 * Technical

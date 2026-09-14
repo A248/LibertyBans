@@ -23,7 +23,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>space.arim.libertybans</groupId>
+		<groupId>org.libertybans</groupId>
 		<artifactId>bans-distribution</artifactId>
 		<version>1.2.0-M1-SNAPSHOT</version>
 	</parent>
@@ -107,40 +107,40 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-bootstrap</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-env-bungeeplugin</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-env-fabric</artifactId>
 			<classifier>mod</classifier>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-env-spigotplugin</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-env-spongeplugin</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-env-velocityplugin</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-env-standalonelauncher</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans.addon</groupId>
+			<groupId>org.libertybans.addon</groupId>
 			<artifactId>addon-integration</artifactId>
 		</dependency>
 	</dependencies>

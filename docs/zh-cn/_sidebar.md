@@ -14,6 +14,7 @@
   * [附加组件](zh-cn/Addons.md)
 * 版本和升级
   * [版本与支持规范](zh-cn/Versioning-and-Support-Policies.md)
+  * [从 1.1.x 升级至 1.2.0](zh-cn/Upgrading-to-LibertyBans-1.2.0-from-1.1.x.md) + [1.2.0 完整更新日志](zh-cn/Changes-in-LibertyBans-1.2.0.md)
   * [从 1.0.x 升级至 1.1.0](zh-cn/Upgrading-to-LibertyBans-1.1.0-from-1.0.x.md) + [1.1.0 完整更新日志](zh-cn/Changes-in-LibertyBans-1.1.0.md)
   * [从 0.8.x 升级至 1.0.0](zh-cn/Upgrading-to-LibertyBans-1.0.0-from-0.8.x.md) + [1.0.0 完整更新日志](zh-cn/Changes-in-LibertyBans-1.0.0.md)
 * 技术性内容

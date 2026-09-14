@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>space.arim.libertybans.addon</groupId>
+        <groupId>org.libertybans.addon</groupId>
         <artifactId>bans-core-addons</artifactId>
         <version>1.2.0-M1-SNAPSHOT</version>
     </parent>
@@ -33,12 +33,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>space.arim.libertybans.dep</groupId>
+            <groupId>org.libertybans.dep</groupId>
             <artifactId>dep-spigot-api-1.8.8</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>space.arim.libertybans.dep</groupId>
+            <groupId>org.libertybans.dep</groupId>
             <artifactId>dep-vault</artifactId>
             <version>${project.version}</version>
         </dependency>

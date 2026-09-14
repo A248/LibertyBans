@@ -23,19 +23,20 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>
-		<groupId>space.arim.libertybans</groupId>
+		<groupId>org.libertybans</groupId>
 		<artifactId>bans-parent</artifactId>
 		<version>1.2.0-M1-SNAPSHOT</version>
 	</parent>
 	
 	<artifactId>bans-api</artifactId>
-	<description>API for LibertyBans</description>
+	<name>LibertyBans API</name>
+	<description>The stable API for the LibertyBans punishment plugin</description>
 
 	<properties>
 		<!-- Prevents javadocs 'Error fetching link' -->
 		<maven.compiler.release>17</maven.compiler.release>
 	</properties>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -122,7 +123,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>space.arim.omnibus</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>omnibus</artifactId>
 		</dependency>
 

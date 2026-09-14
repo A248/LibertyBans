@@ -71,16 +71,16 @@
             <unpack>true</unpack>
             <useStrictFiltering>true</useStrictFiltering>
             <includes>
-                <include>space.arim.libertybans:bans-api</include>
-                <include>space.arim.omnibus:omnibus</include>
-                <include>space.arim.libertybans:bans-bootstrap</include>
-                <include>space.arim.libertybans:bans-env-bungeeplugin</include>
-                <include>space.arim.libertybans:bans-env-fabric:jar:mod</include>
-                <include>space.arim.libertybans:bans-env-spigotplugin</include>
-                <include>space.arim.libertybans:bans-env-spongeplugin</include>
-                <include>space.arim.libertybans:bans-env-velocityplugin</include>
-                <include>space.arim.libertybans:bans-env-standalonelauncher</include>
-                <include>space.arim.libertybans.addon:addon-integration</include>
+                <include>org.libertybans:bans-api</include>
+                <include>org.libertybans:omnibus</include>
+                <include>org.libertybans:bans-bootstrap</include>
+                <include>org.libertybans:bans-env-bungeeplugin</include>
+                <include>org.libertybans:bans-env-fabric:jar:mod</include>
+                <include>org.libertybans:bans-env-spigotplugin</include>
+                <include>org.libertybans:bans-env-spongeplugin</include>
+                <include>org.libertybans:bans-env-velocityplugin</include>
+                <include>org.libertybans:bans-env-standalonelauncher</include>
+                <include>org.libertybans.addon:addon-integration</include>
             </includes>
             <unpackOptions>
                 <excludes>

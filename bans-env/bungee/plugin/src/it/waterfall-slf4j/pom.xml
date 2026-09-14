@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>space.arim.libertybans.it</groupId>
+        <groupId>org.libertybans.it</groupId>
         <artifactId>invoker-it-parent</artifactId>
         <version>@project.version@</version>
     </parent>
@@ -48,7 +48,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>space.arim.libertybans</groupId>
+            <groupId>org.libertybans</groupId>
             <artifactId>bans-env-bungee</artifactId>
             <version>@project.version@</version>
             <classifier>tests</classifier>
@@ -62,12 +62,12 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>space.arim.libertybans</groupId>
+            <groupId>org.libertybans</groupId>
             <artifactId>bans-env-bungeeplugin</artifactId>
             <version>@project.version@</version>
         </dependency>
         <dependency>
-            <groupId>space.arim.libertybans.dep</groupId>
+            <groupId>org.libertybans.dep</groupId>
             <artifactId>dep-waterfall-api-1.16</artifactId>
             <version>@project.version@</version>
             <scope>provided</scope>

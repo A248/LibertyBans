@@ -26,5 +26,5 @@ sourceSets {
 }
 
 dependencies {
-    implementation("space.arim.libertybans:bans-bootstrap:${project.version}")
+    implementation("org.libertybans:bans-bootstrap:${project.version}")
 }

@@ -21,8 +21,8 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
 val mockitoAgent = configurations.create("mockitoAgent")
 dependencies {
-    implementation("space.arim.libertybans:bans-core:${project.version}")
-    implementation("space.arim.libertybans:bans-env-adventure5-common:${project.version}")
+    implementation("org.libertybans:bans-core:${project.version}")
+    implementation("org.libertybans:bans-env-adventure5-common:${project.version}")
     implementation(project(path = ":bans-env-fabric-mod"))
     implementation("net.kyori:adventure-platform-fabric:${project.findProperty("adventure_platform_version")}")
     testImplementation("space.arim.api:arimapi-util-testing:${project.findProperty("arimapi_version")}")

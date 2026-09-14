@@ -22,7 +22,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>space.arim.libertybans</groupId>
+	<groupId>org.libertybans</groupId>
 	<artifactId>bans-parent</artifactId>
 	<version>1.2.0-M1-SNAPSHOT</version>
 	<packaging>pom</packaging>
@@ -35,8 +35,8 @@
 	<properties>
 		<!-- Build related -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<deployment.deploy-url>https://maven.cloudsmith.io/anand-beh/affero-gpl3/</deployment.deploy-url>
-		<deployment.self-impl-hash>1dfb80352adbb90d3d25a3cc4f1d6d0dc310c22c96d95906c7b7947558ad90e545a7becef36fd0c5b28c7472099251a42e753efdec975157e68b46d51f3bd70a</deployment.self-impl-hash>
+		<deployment.distribution-url>https://maven.cloudsmith.io/anand-beh/affero-gpl3/</deployment.distribution-url>
+		<deployment.self-impl-hash>invalid-use-release-script</deployment.self-impl-hash>
 		<maven-surefire.version>3.5.5</maven-surefire.version>
 		<maven-invoker.local-repo-path>${session.executionRootDirectory}/target/invoker-it/local-repo</maven-invoker.local-repo-path>
 
@@ -46,7 +46,7 @@
 		<h2.version>2.1.210</h2.version>
 
 		<!-- API dependencies -->
-		<omnibus.version>1.1.0-RC2</omnibus.version>
+		<omnibus.version>1.1.0</omnibus.version>
 
 		<!-- Internal dependencies -->
 		<jakarta-inject.version>2.0.0</jakarta-inject.version>
@@ -63,8 +63,8 @@
 		<seaniplib.version>5.6.2</seaniplib.version>
 		<adventure.version>4.7.0</adventure.version>
 		<examination.version>1.3.0</examination.version>
-		<arimapi.version>0.28.0</arimapi.version>
-		<managedwaits.version>0.1.3</managedwaits.version>
+		<arimapi.version>0.28.2</arimapi.version>
+		<managedwaits.version>0.2.0</managedwaits.version>
 		<morepaperlib.version>0.5.3</morepaperlib.version>
 		<checkerqual.version>3.49.2</checkerqual.version>
 
@@ -93,7 +93,7 @@
 	<scm>
 		<connection>scm:git:ssh://git@github.com/A248/LibertyBans.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com/A248/LibertyBans.git</developerConnection>
-		<url>http://github.com/A248/LibertyBans</url>
+		<url>https://github.com/A248/LibertyBans</url>
 	</scm>
 
 	<licenses>
@@ -167,10 +167,10 @@
 									<message>Snapshot dependencies lead to unstable builds. Use release versions.</message>
 									<searchTransitive>true</searchTransitive>
 									<excludes>
-										<exclude>space.arim.libertybans:*</exclude>
-										<exclude>space.arim.libertybans.addon:*</exclude>
-										<exclude>space.arim.libertybans.dep:*</exclude>
-										<exclude>space.arim.libertybans.it:*</exclude>
+										<exclude>org.libertybans:*</exclude>
+										<exclude>org.libertybans.addon:*</exclude>
+										<exclude>org.libertybans.dep:*</exclude>
+										<exclude>org.libertybans.it:*</exclude>
 
 										<exclude>org.spigotmc:spigot-api:${spigot-1.8.8.version}</exclude>
 										<exclude>org.spigotmc:spigot-api:${spigot-1.17.1.version}</exclude>
@@ -261,13 +261,8 @@
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-deploy-plugin</artifactId>
-					<version>3.1.4</version>
-				</plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.5.0</version>
+					<artifactId>maven-resources-plugin</artifactId>
+					<version>3.5.0</version>
 					<executions>
 						<execution>
 							<id>copy-local-repo</id>
@@ -285,7 +280,7 @@
 							</configuration>
 						</execution>
 					</executions>
-                </plugin>
+				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
@@ -354,11 +349,11 @@
 					<artifactId>build-helper-maven-plugin</artifactId>
 					<version>3.6.1</version>
 				</plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>exec-maven-plugin</artifactId>
-                    <version>3.5.1</version>
-                </plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>exec-maven-plugin</artifactId>
+					<version>3.5.1</version>
+				</plugin>
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>
 					<artifactId>versions-maven-plugin</artifactId>
@@ -409,9 +404,74 @@
 						<streamLogsOnFailures>true</streamLogsOnFailures>
 					</configuration>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-gpg-plugin</artifactId>
+					<version>3.2.7</version>
+					<configuration>
+						<bestPractices>true</bestPractices>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>3.1.4</version>
+				</plugin>
+				<plugin>
+					<groupId>org.sonatype.central</groupId>
+					<artifactId>central-publishing-maven-plugin</artifactId>
+					<version>0.11.0</version>
+					<configuration>
+						<publishingServerId>central</publishingServerId>
+						<checksums>all</checksums>
+						<deploymentName>libertybans api</deploymentName>
+					</configuration>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
+
+	<!--
+	Distribution Destinations
+
+	Here we determine which kind of artifact is produced (snapshot/release) and how to distribute it.
+	In particular, there are two target repositories for plugin and API jars:
+	* Maven Central
+	* Private server at mvn-repo.arim.space
+
+	These repositories have different purposes. Sometimes we deploy to both of them, sometimes neither, depending on
+	the project module. The profiles 'build-snapshot' and 'build-release', defined here, influence both the destination
+	repository and the stringency of metadata (GPG signing, checksums) included with the deployment.
+
+	### SNAPSHOT jars
+
+	Snapshots are automatically produced by the CI server. For archival purposes and snapshot APIs, the parent, API,
+	and distribution modules are uploaded to the private server with the regular maven-deploy-plugin. The bootstrap,
+	core, addons, and env modules do not go anywhere. At runtime, the plugin has a snapshot version; it unpacks and
+	starts itself according to the 'bans-distribution/executable' module and its jar-of-jars approach.
+
+	### Release jars
+
+	Release jars are built locally and signed with GPG. They adhere to reproducible builds using a fixed zip entry
+	timestamp. The runtime plugin uses bans-distribution/distributable as a lightweight jar that fetches and saves
+	bans-distribution/download after verifying its reproducible hash. This download contacts the CDN for the private
+	server to obtain the jar. The release steps are executed using build/orchestrate-release.sh.
+
+	The parent, API, and distribution modules are therefore uploaded to the private server via the maven-deploy-plugin.
+	For API consumers, the parent and API modules are also sent to Maven Central using the central-publishing-plugin.
+	Like with snapshots, bootstrap/core/addons/env are not deployed. For user trust, checksums of the built artifacts
+	are also published to the repository itself, including in the release-tagged commit.
+
+	Note that the central-publishing-plugin's main documentation is NOT followed. It recommends enabling <extensions>,
+	a feature which covertly disables executions of the maven-deploy-plugin. This is not suitable for us, so we manage
+	executions of both plugins (maven-deploy and central-publishing) separately.
+
+	## In summary
+
+	Parent and API: published everywhere, to Maven Central (release) and private server (always)
+	distribution: published only to private server
+	bootstrap, core, addons, and env: never published
+	-->
 
 	<profiles>
 		<profile>
@@ -447,7 +507,7 @@
 			</build>
 		</profile>
 		<profile>
-			<id>build-release</id>
+			<id>build-reproducible</id>
 			<properties>
 				<project.build.outputTimestamp>2022-01-04T00:00:00Z</project.build.outputTimestamp>
 				<plugin.version>${project.version}</plugin.version>
@@ -470,6 +530,89 @@
 										</requireJavaVersion>
 									</rules>
 								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>build-release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-enforcer-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>release-profile-implies-reproducible</id>
+								<goals>
+									<goal>enforce</goal>
+								</goals>
+								<configuration>
+									<rules>
+										<requireActiveProfile>
+											<profiles>build-reproducible</profiles>
+											<message>You need to enable the build-reproducible profile, a dependency of the build-release profile.</message>
+										</requireActiveProfile>
+									</rules>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+								<configuration>
+									<gpgArguments>
+										<arg>--pinentry-mode</arg>
+										<arg>loopback</arg>
+									</gpgArguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.sonatype.central</groupId>
+						<artifactId>central-publishing-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>central-publishing</id>
+								<phase>deploy</phase>
+								<goals>
+									<goal>publish</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<!-- This plugin is not present otherwise, meaning its hashes won't be computed -->
+			<id>update-dependency-hashes</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.sonatype.central</groupId>
+						<artifactId>central-publishing-maven-plugin</artifactId>
+						<configuration>
+							<skipPublishing>true</skipPublishing>
+						</configuration>
+						<executions>
+							<execution>
+								<id>mock-publication-run</id>
+								<phase>package</phase>
+								<goals>
+									<goal>publish</goal>
+								</goals>
 							</execution>
 						</executions>
 					</plugin>
@@ -534,11 +677,11 @@
 	<distributionManagement>
 		<repository>
 			<id>cloudsmith-deploy</id>
-			<url>${deployment.deploy-url}</url>
+			<url>${deployment.distribution-url}</url>
 		</repository>
 		<snapshotRepository>
 			<id>cloudsmith-deploy</id>
-			<url>${deployment.deploy-url}</url>
+			<url>${deployment.distribution-url}</url>
 		</snapshotRepository>
 	</distributionManagement>
 
@@ -555,83 +698,83 @@
 		<dependencies>
 			<!-- Own dependencies -->
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-bootstrap</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-env-bungee</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-env-fabric</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-env-spigot</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-env-sponge</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-env-velocity</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-env-bungeeplugin</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-env-fabric</artifactId>
 				<version>${project.version}</version>
 				<classifier>mod</classifier>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-env-spigotplugin</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-env-spongeplugin</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-env-velocityplugin</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-env-standalone</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-env-standalonelauncher</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans.addon</groupId>
+				<groupId>org.libertybans.addon</groupId>
 				<artifactId>addon-integration</artifactId>
 				<version>${project.version}</version>
 				<exclusions>
@@ -682,7 +825,7 @@
 
 			<!-- API dependencies -->
 			<dependency>
-				<groupId>space.arim.omnibus</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>omnibus</artifactId>
 				<version>${omnibus.version}</version>
 			</dependency>
@@ -862,15 +1005,4 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
-	<repositories>
-		<repository>
-			<id>arim-mvn-lgpl3</id>
-			<url>https://mvn-repo.arim.space/lesser-gpl3/</url>
-		</repository>
-		<repository>
-			<id>arim-mvn-gpl3</id>
-			<url>https://mvn-repo.arim.space/gpl3/</url>
-		</repository>
-	</repositories>
 </project>
