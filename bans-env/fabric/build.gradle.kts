@@ -40,7 +40,7 @@ allprojects {
         resolutionStrategy {
             eachDependency {
                 val resolvedVersion = this.requested.version!!
-                if (resolvedVersion.endsWith("-SNAPSHOT") && !this.requested.group.startsWith("space.arim.libertybans")) {
+                if (resolvedVersion.endsWith("-SNAPSHOT") && !this.requested.group.startsWith("org.libertybans")) {
                     throw org.gradle.api.GradleException("Found snapshot dependency ${resolvedVersion}")
                 }
             }

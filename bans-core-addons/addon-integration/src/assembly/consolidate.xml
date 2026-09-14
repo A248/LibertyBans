@@ -33,7 +33,7 @@
             <useStrictFiltering>true</useStrictFiltering>
             <outputFileNameMapping>${artifact.artifactId}.jar</outputFileNameMapping>
             <includes>
-                <include>space.arim.libertybans.addon:*</include>
+                <include>org.libertybans.addon:*</include>
             </includes>
         </dependencySet>
     </dependencySets>

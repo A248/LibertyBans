@@ -3,14 +3,9 @@
 The dependency FQDN is:
 
 ````
-space.arim.libertybans:bans-api:{VERSION}
+org.libertybans:bans-api:{VERSION}
 ````
 
-It is available from:
-
-```
-https://mvn-repo.arim.space/affero-gpl3/
-```
 <!-- tabs:start -->
 
 #### **Maven**
@@ -20,45 +15,20 @@ With maven, this would be applied as follows:
 ```xml
 <dependencies>
 	<dependency>
-		<groupId>space.arim.libertybans</groupId>
+		<groupId>org.libertybans</groupId>
 		<artifactId>bans-api</artifactId>
 		<version>{INSERT_LATEST_VERSION}</version>
 	</dependency>
 	...
 </dependencies>
-
-<repositories>
-	<repository>
-		<id>arim-mvn-agpl3</id>
-		<url>https://mvn-repo.arim.space/affero-gpl3/</url>
-	</repository>
-	...
-</repositories>
 ```
 
 #### **Gradle**
 
 ```gradle
-repositories {
-  ...
-    maven { 
-      name= 'arim-mvn-lgpl3' 
-      url = 'https://mvn-repo.arim.space/lesser-gpl3/' 
-    }
-    maven { 
-      name= 'arim-mvn-gpl3' 
-      url = 'https://mvn-repo.arim.space/gpl3/' 
-    }
-    maven { 
-      name= 'arim-mvn-agpl3' 
-      url = 'https://mvn-repo.arim.space/affero-gpl3/' 
-    }
-  ...
-}
-
 dependencies {
   ...
-    compileOnly "space.arim.libertybans:bans-api:{INSERT_LATEST_VERSION}"
+    compileOnly "org.libertybans:bans-api:{INSERT_LATEST_VERSION}"
 }
 ```
 

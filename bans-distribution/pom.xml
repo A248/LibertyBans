@@ -23,7 +23,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>
-		<groupId>space.arim.libertybans</groupId>
+		<groupId>org.libertybans</groupId>
 		<artifactId>bans-parent</artifactId>
 		<version>1.2.0-M1-SNAPSHOT</version>
 	</parent>
@@ -53,6 +53,26 @@
 		</pluginManagement>
 	</build>
 
+	<profiles>
+		<profile>
+			<id>build-release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.sonatype.central</groupId>
+						<artifactId>central-publishing-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>central-publishing</id>
+								<phase>none</phase>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 	<modules>
 		<module>flyway-patch</module>
 		<module>download</module>
@@ -63,18 +83,18 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>flyway-patch</artifactId>
 				<version>${project.version}</version>
 				<scope>runtime</scope>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-distributable</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>space.arim.libertybans</groupId>
+				<groupId>org.libertybans</groupId>
 				<artifactId>bans-download</artifactId>
 				<version>${project.version}</version>
 			</dependency>

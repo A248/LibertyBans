@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>space.arim.libertybans.it</groupId>
+        <groupId>org.libertybans.it</groupId>
         <artifactId>invoker-it-parent</artifactId>
         <version>@project.version@</version>
     </parent>
@@ -59,7 +59,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>space.arim.libertybans</groupId>
+            <groupId>org.libertybans</groupId>
             <artifactId>bans-core</artifactId>
         </dependency>
         <dependency>

@@ -23,7 +23,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>
-		<groupId>space.arim.libertybans</groupId>
+		<groupId>org.libertybans</groupId>
 		<artifactId>bans-parent</artifactId>
 		<version>1.2.0-M1-SNAPSHOT</version>
 	</parent>
@@ -304,6 +304,16 @@
 				<groupId>io.fabric8</groupId>
 				<artifactId>docker-maven-plugin</artifactId>
 				<version>0.48.1</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>default-deploy</id>
+						<phase>none</phase>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
@@ -827,6 +837,23 @@
 				</plugins>
 			</build>
 		</profile>
+		<profile>
+			<id>build-release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.sonatype.central</groupId>
+						<artifactId>central-publishing-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>central-publishing</id>
+								<phase>none</phase>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
 	
 	<dependencies>
@@ -851,11 +878,11 @@
 
 		<!-- Internal dependencies -->
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>space.arim.libertybans</groupId>
+			<groupId>org.libertybans</groupId>
 			<artifactId>bans-bootstrap</artifactId>
 		</dependency>
 		<dependency>
