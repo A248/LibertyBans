@@ -1,4 +1,4 @@
-space.arim.libertybans
+org.libertybans
 bans-download
 ${project.version}
 ${deployment.self-impl-hash}
