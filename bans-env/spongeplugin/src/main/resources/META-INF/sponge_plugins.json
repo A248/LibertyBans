@@ -33,7 +33,7 @@
         "source": "${plugin.url}",
         "issues": "${plugin.url}/issues"
       },
-      "entrypoint": "${project.groupId}.env.sponge.plugin.SpongePlugin"
+      "entrypoint": "space.arim.libertybans.env.sponge.plugin.SpongePlugin"
     }
   ]
 }

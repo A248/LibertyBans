@@ -1,5 +1,5 @@
 
-LibertyBans 1.2.0 is fully compatible with 1.1.x, but please note the following.
+LibertyBans 1.2.0 is mostly compatible with 1.1.x, but please note the following.
 
 ## API dependency - Developers Please Read
 
@@ -10,6 +10,14 @@ The repository `mvn-repo.arim.space` should be **REMOVED** from all dependent pr
 ### Shading
 
 Note that if your build files involve shading, you may need to update your exclusion filters for the new groupId. It's now `org.libertybans:bans-api` and `org.libertybans:omnibus`. Don't shade the LibertyBans API; don't shade these artifacts.
+
+## Sponge Users
+
+**First, tell me that you exist.** It's not clear that anyone actually uses Sponge. However, if a single server is running LibertyBans with Sponge, we will keep it supported.
+
+Secondly:
+* LibertyBans now requires Sponge API 15 and above. To keep running API 13 (or below) servers, stay on version 1.1.x.
+* The `register-ban-service` configuration option was removed. This switch was redundant with Sponge's own configuration. Go to services > plugins > ban-service in the `config/sponge/sponge.conf` to change which plugin is registered as the ban service.
 
 ## Multi-instance network compatibility
 

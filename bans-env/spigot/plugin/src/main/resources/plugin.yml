@@ -1,5 +1,5 @@
 name: ${plugin.name}
-main: ${project.groupId}.env.spigot.plugin.SpigotPlugin
+main: space.arim.libertybans.env.spigot.plugin.SpigotPlugin
 version: ${plugin.version}
 author: '${plugin.author}'
 description: ${plugin.description}
