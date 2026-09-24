@@ -166,6 +166,7 @@ public class Formatter implements InternalFormatter {
 		TRACK,
 		TRACK_ID,
 		TRACK_NAMESPACE,
+		IS_SILENT,
 		;
 
 		String getVariable() {
@@ -290,6 +291,7 @@ public class Formatter implements InternalFormatter {
 				componentReplacements.put(ComponentReplaceable.HAS_EXPIRED, (notExpired) ? display.notExpired() : display.expired());
 			}
 			if (silence != null) {
+				simpleReplacements.put(SimpleReplaceable.IS_SILENT, Boolean.toString(silence));
 				var silenceDisplay = formatting.silence();
 				componentReplacements.put(ComponentReplaceable.SILENCE, (silence) ? silenceDisplay.silent() : silenceDisplay.notSilent());
 			}

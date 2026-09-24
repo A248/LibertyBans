@@ -75,6 +75,7 @@ import space.arim.libertybans.core.config.displayid.IdAlgorithm;
 		"The following variables have limited availability:",
 		"%TARGET% - the original target argument of a command. For example, in '/ipban Player1', %TARGET% is Player1",
 		"%SILENCE% - a user-defined variable that changes based on the command's silent status. Only available in notification messages.",
+		"%IS_SILENT% - true or false based on the command's silent status. Only available in notification messages.",
 		"%PAGE% - the number of the current page in a list",
 		"%NEXTPAGE% - the number of the next page",
 		"%LASTPAGE% - the number of the last page",
