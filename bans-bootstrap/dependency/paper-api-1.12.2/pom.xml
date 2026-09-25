@@ -50,5 +50,13 @@
 			<id>paper-snapshots</id>
 			<url>https://repo.papermc.io/repository/maven-snapshots/</url>
 		</repository>
+		<repository>
+			<id>paper-releases</id>
+			<url>https://repo.papermc.io/repository/maven-releases/</url>
+		</repository>
+		<repository>
+			<id>spigot</id>
+			<url>https://hub.spigotmc.org/nexus/content/repositories/public/</url>
+		</repository>
 	</repositories>
 </project>
