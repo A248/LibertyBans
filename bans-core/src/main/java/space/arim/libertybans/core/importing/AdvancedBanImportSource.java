@@ -86,16 +86,21 @@ public class AdvancedBanImportSource implements ImportSource {
 
 		@Override
 		public Optional<PortablePunishment> mapRow(ResultSet resultSet) throws SQLException {
-			return mapType(resultSet).map((advancedBanType) -> {
+			return mapType(resultSet).flatMap((advancedBanType) -> {
 				try {
 					Integer id = resultSet.getInt("id");
 					logger.trace("Mapping row with AdvancedBan punishment ID {}", id);
-					return new PortablePunishment(
+					Optional<PortablePunishment.KnownDetails> knownDetails =
+							mapKnownDetails(resultSet, advancedBanType, id);
+					if (knownDetails.isEmpty()) {
+						return Optional.empty();
+					}
+					return Optional.of(new PortablePunishment(
 							id,
-							mapKnownDetails(resultSet, advancedBanType),
+							knownDetails.get(),
 							mapVictimInfo(resultSet, advancedBanType),
 							mapOperatorInfo(resultSet),
-							active);
+							active));
 				} catch (SQLException ex) {
 					throw new ImportException(ex);
 				}
@@ -122,8 +127,8 @@ public class AdvancedBanImportSource implements ImportSource {
 		 * because AdvancedBan's schema lacks constraints.
 		 */
 
-		private PortablePunishment.KnownDetails mapKnownDetails(
-				ResultSet resultSet, AdvancedBanPunishmentType advancedBanType) throws SQLException {
+		private Optional<PortablePunishment.KnownDetails> mapKnownDetails(
+				ResultSet resultSet, AdvancedBanPunishmentType advancedBanType, int id) throws SQLException {
 			// AdvancedBan's start and end times have milliseconds precision
 			long startMillis = resultSet.getLong("start");
 			if (startMillis == 0L) { // SQL NULL -> 0L
@@ -142,12 +147,17 @@ public class AdvancedBanImportSource implements ImportSource {
 			} else {
 				end = Instant.ofEpochMilli(endMillis);
 			}
+			if (end.isBefore(start)) {
+				logger.warn("Skipping AdvancedBan punishment with ID {} because its end time {} is before its start time {}",
+						id, end, start);
+				return Optional.empty();
+			}
 			String reason = getNonnullString(resultSet, "reason");
-			return new PortablePunishment.KnownDetails(
+			return Optional.of(new PortablePunishment.KnownDetails(
 					advancedBanType.type(),
 					reason,
 					scopeManager.globalScope(), // AdvancedBan does not support scopes
-					start, end);
+					start, end));
 		}
 
 		private PortablePunishment.VictimInfo mapVictimInfo(

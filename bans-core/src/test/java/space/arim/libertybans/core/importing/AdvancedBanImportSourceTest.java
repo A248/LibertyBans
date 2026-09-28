@@ -114,8 +114,8 @@ public class AdvancedBanImportSourceTest {
 	public void activeReplacesHistorical(String punishmentType) {
 		String uuidString = "394aef836e3f482b9988933cabe3b1cd";
 		UUID uuid = UUIDUtil.fromShortString(uuidString);
-		long startTime = System.currentTimeMillis();
-		long endTime = startTime - 1000L;
+		long startTime = System.currentTimeMillis() - 2000L;
+		long endTime = startTime + 1000L;
 		insertHistory(
 				"creeperfreddy", uuidString, "bug exploit",
 				"CONSOLE", punishmentType, startTime, endTime);
