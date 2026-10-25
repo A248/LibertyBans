@@ -972,10 +972,6 @@
 
 	<repositories>
 		<repository>
-			<id>arim-mvn-lgpl3</id>
-			<url>https://mvn-repo.arim.space/lesser-gpl3/</url>
-		</repository>
-		<repository>
 			<id>arim-mvn-gpl3</id>
 			<url>https://mvn-repo.arim.space/gpl3/</url>
 		</repository>

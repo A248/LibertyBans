@@ -117,4 +117,11 @@
             <artifactId>bans-core</artifactId>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>arim-mvn-gpl3</id>
+            <url>https://mvn-repo.arim.space/gpl3/</url>
+        </repository>
+    </repositories>
 </project>
