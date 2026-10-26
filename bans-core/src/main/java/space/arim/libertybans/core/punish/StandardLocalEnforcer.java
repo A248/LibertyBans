@@ -112,13 +112,13 @@ public final class StandardLocalEnforcer<@PlatformPlayer P> implements LocalEnfo
 		if (enforcementOptions.broadcasting() == Broadcasting.NONE) {
 			return arrestsAndNotices;
 		}
+		boolean silent = enforcementOptions.broadcasting() == Broadcasting.SILENT;
 		return arrestsAndNotices.thenCompose((ignore) -> {
-			return formatter.formatWithPunishment(
+			return formatter.formatNotificationIssue(
 					enforcementOptions.replaceTargetArgument(section.successNotification()),
-					punishment
+					punishment, silent
 			);
 		}).thenCompose((notification) -> {
-			boolean silent = enforcementOptions.broadcasting() == Broadcasting.SILENT;
 			return envEnforcer.sendToThoseWithPermission(
 					new PunishmentPermission(
 							punishment.getType(), Mode.DO
